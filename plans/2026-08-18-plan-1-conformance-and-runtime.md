@@ -31,7 +31,7 @@ The spec was validated against a real 42k-line application and three review pass
 ## File Structure
 
 ```
-minion-agent/
+minion-agent-python/
   pyproject.toml                          # deps, pytest/ruff/mypy/coverage config
   src/minion_agent/
     __init__.py
@@ -115,7 +115,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "minion-agent"
+name = "minion-agent-python"
 version = "0.1.0"
 description = "Agent runtime with a Cordis-inspired plugin architecture"
 requires-python = ">=3.12"

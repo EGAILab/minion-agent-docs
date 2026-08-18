@@ -28,7 +28,7 @@ Everything in Plan 1's Global Constraints still applies — Python floor, interp
 ## File Structure
 
 ```
-minion-agent/
+minion-agent-python/
   src/minion_agent/
     llm/
       __init__.py            # public surface

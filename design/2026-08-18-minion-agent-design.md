@@ -67,7 +67,7 @@ durable operation state machine and isolation realms are correctly deferred.
 ## 2. Repository layout
 
 ```
-minion-agent/
+minion-agent-python/
   pyproject.toml
   src/minion_agent/
     runtime/         # plugin runtime: context, fiber, service, registry, events, effects
