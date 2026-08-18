@@ -90,11 +90,13 @@ queues, commitments, embeddings, tombstones), and canonical Markdown memory.
 
 ### A — Product behavior (preserve)
 
-Persistent per-conversation history; multiple named agents; concurrent
-independent conversations; proactive/scheduled agent activity; commitments
-delivered to the conversation they came from; memory recall injected per turn;
-compaction; tool use with human approval for dangerous operations; multimodal
-input; streaming; slash commands; subagent delegation; skills.
+Persistent per-conversation history; multiple named agents; many concurrent
+independent conversations of the *same* named agent; proactive/scheduled agent
+activity; commitments delivered to the conversation they came from; memory
+recall injected per turn; compaction; tool use with human approval for dangerous
+operations; multimodal input; streaming; slash commands; subagent delegation;
+skills; **voice interaction** (VAD → STT → agent → TTS, with barge-in and
+latency-reduced prompt/history).
 
 ### B — Operational/runtime requirements
 
@@ -153,40 +155,73 @@ bad: a second non-service tool path (bypassing the framework), or filtering
 bolted onto request assembly (capability scoping living somewhere other than the
 layer that owns capabilities).
 
-**The correction to my earlier analysis.** I previously called this "isolation
-realms are required on day one." That was wrong. DSH separates two mechanisms:
+**Not isolation realms.** DSH separates two mechanisms, and only one is needed:
 
-- `core/scope` — *scoped registration*. "`createScope(ctx, key)` creates a
-  tagged Cordis context whose backing fiber owns every registration made
-  through it… **The agent loop creates one scope per live agent**… the mechanism
-  is key-agnostic so lower-level packages can use it without depending on
-  either."
+- `core/scope` — *scoped registration*, a tagged context whose backing fiber
+  owns every registration made through it.
 - `isolate` realms — *replacing a whole service implementation* per realm.
 
 This workload needs the **former** and never the latter: agents share one
 `ctx.llm` and select models per request; they need different *registrations*,
-not different *services*. So realms can and should stay deferred.
+not different *services*. Realms stay correctly deferred.
+
+**Scopes must nest.** A single flat per-agent scope is insufficient. The
+workload exhibits at least three distinct registration lifetimes:
+
+```
+root
+ └── agent definition        persona, prompt sections, normal tools, policy
+      └── agent instance     one live conversation: its inbox, log, turn state
+           └── turn          ReactToMessageTool, heartbeat-only tools
+```
+
+`ReactToMessageTool` is built for one room and one event and must vanish when
+that turn ends; heartbeat tools behave identically. A named agent's persona and
+tool set, by contrast, are shared by every conversation instance of it.
+
+DSH's scope chain provides exactly this: *"Keys form an optional parent chain…
+registration views inherit **down** it — a child scope sees its ancestors'
+layers, nearest shadowing farthest — and event admission extends **up** it — a
+listener tagged with an ancestor receives a descendant key's events, never the
+reverse."* And it already models the definition/instance split: *"The agent loop
+creates one scope per live agent **and an agent preset's standing mount is a
+parent scope over its agents**."*
+
+**Terminology must be fixed first**, or "one scope per agent" is ambiguous the
+moment it is written:
+
+| Term | Meaning |
+|---|---|
+| **AgentDefinition** | Reusable configuration: persona, capability composition, policy |
+| **AgentInstance** | One live execution identity: one inbox, one active-turn state, one session log, one lifecycle owner |
+
+One definition has many instances — `Ada` in room A, room B, room C.
 
 **Where the fix belongs.** `minion-agent`.
 
-**Smallest change.** Three additions to the design:
-1. §6 gains an agents-registry subsection: creation and resume, a handle owning
-   teardown, and every `agent/*` event identifying its agent.
-2. §3 gains scoped registration, with DSH's contract adopted verbatim because it
-   is the load-bearing part: *the registration context determines both
-   visibility and ownership*, so a registration can never be visible in one
-   scope but disposed with another.
-3. Event dispatch gains scope filtering with the additive rule — an untagged
-   listener is always admitted; a tagged one only for its own key or a
-   descendant.
+**Smallest change.** Four additions:
+1. §3 gains **arbitrarily nested** scoped registration, with the inherit-down /
+   admit-up rules above and DSH's load-bearing contract adopted directly: *the
+   registration context determines both visibility and ownership*, so a
+   registration can never be visible in one scope but disposed with another.
+2. Event dispatch gains scope filtering, additively — an untagged listener is
+   always admitted; a tagged one only for its own key or a descendant.
+3. §6 gains an agents-registry subsection distinguishing AgentDefinition from
+   AgentInstance: creation and resume, a handle owning teardown, and every
+   `agent/*` event identifying its instance.
+4. A stated rule for turn-scope disposal racing an in-flight tool: turn-scoped
+   registrations are disposed only after the turn's tool executions settle, so a
+   running tool never loses a registration mid-execution.
 
-**Why this is general.** Scoping is key-agnostic and mentions no channel,
-conversation, or product concept. Any runtime hosting more than one agent needs
-it: subagents with restricted tools, per-tenant capability sets, evaluation
-harnesses running variants side by side. Point (3) is purely additive, so it
-does not disturb Phase 1's event semantics — but it must be *specified* before
-Phase 1's conformance scenarios become normative, because visibility-and-
-ownership coupling is a contract, not an implementation detail.
+**Why this is general, and where the line is.** The *mechanism* is arbitrary
+nesting with key-agnostic tags — it mentions no channel, conversation, or
+product concept. The four levels above are **how `minion-assist` uses it**, not a
+hierarchy core should hardcode; core guarantees nesting, applications choose
+depth. That distinction is what keeps this from being an overfit: a different
+application might use two levels or five, and an eval harness might scope by
+variant rather than by conversation. Points (1) and (2) are additive to Phase 1's
+semantics, but must be *specified* before its conformance scenarios become
+normative, because visibility-and-ownership coupling is a contract.
 
 ### BLOCKER-2 — No provenance or delivery model for a turn
 
@@ -214,15 +249,36 @@ magic string, which is a protocol in the wrong layer.
 **Where the fix belongs.** `minion-agent` for provenance; the application for
 routing.
 
-**Smallest change.** Inbox entries carry an **opaque, caller-supplied `origin`**
-that the runtime never interprets and that survives into `turn/end`. Plus one
-sentence in §6: a turn may complete without producing any delivered output;
-delivery is not a loop guarantee.
+**A single `turn.origin` is not well-defined.** §6 specifies claim policies of
+`all | one-at-a-time`. Under `claim=all`, one turn provably consumes several
+inputs at once — a Matrix message, a queued injection, and a scheduled prompt
+may enter the same turn with three different origins. Any design carrying one
+origin per turn contradicts a semantic the design has already committed to.
 
-**Why this is general.** `origin` is an opaque token — core never learns what a
-room, channel, or user is. The same seam serves a webhook-triggered agent, a
-cron-triggered agent, a multi-channel deployment, or an eval harness correlating
-turns to cases. This is the smallest abstraction that solves the class; a
+**Smallest change.** Provenance attaches to *inputs*, and turns record which
+inputs they claimed:
+
+```
+InputEnvelope { id, message, origin }      # origin opaque to the runtime, JSON-safe
+Turn          { causes: [envelope_id, …] }
+turn/end      { causes: [{ id, origin }, …] }
+```
+
+Plus one sentence in §6: a turn may complete without producing any delivered
+output; delivery is not a loop guarantee.
+
+`origin` must be **JSON-safe** rather than an arbitrary object, because §5
+validates the log as JSON at append and because a Rust implementation must carry
+the same values through the same log.
+
+**Why this is general.** The runtime never interprets `origin` — it never learns
+what a room, channel, or user is. The rule is:
+
+> Inputs carry provenance; turns carry their causal inputs; delivery is an
+> application concern.
+
+The same seam serves webhook-triggered work, scheduled work, API-triggered work,
+batched inbox claims, and an eval harness correlating turns to cases. A
 "channel" or "reply-to" concept in core would be the overfitted version.
 
 ### HIGH-1 — No observability seam exists in the design at all
@@ -255,15 +311,41 @@ have a defined place to scrub known secrets, or every application reinvents it.
 **Where the fix belongs.** `minion-agent`.
 
 **Smallest change.** Add a section defining `ctx.telemetry` as a capability seam
-with a typed span vocabulary for the operations core already owns — provider
-request, tool execution, turn, step — plus a redaction hook applied before
-emission. Providers are plugins, so a deployment can mount OpenTelemetry, a file
-logger, or nothing.
+with a typed span vocabulary for the operations core already owns — turn, step,
+provider request, tool execution — and a **mandatory sanitize boundary that sits
+before sinks, not after them**:
 
-**Why this is general.** It mirrors what both references independently
-converged on, mentions no product concept, and is a seam rather than an
-implementation. The span vocabulary is also language-neutral, so a Rust
-implementation emits the same spans — which the conformance suite can assert.
+```
+core / provider data
+   ↓
+sanitize + redact          ← single mandatory boundary
+   ↓
+safe structured telemetry
+   ↓
+sinks  (OpenTelemetry · file logger · debug sink · none)
+```
+
+Ordering is the whole point. If redaction is a listener among listeners, a sink
+registered earlier observes raw secrets, and the guarantee silently depends on
+registration order. The alternative formulation — typed sensitive fields that
+cannot serialize without a policy — is equally acceptable and equally explicit.
+
+**Telemetry stays observational.** It must not become a second semantic source
+of truth:
+
+| Layer | Role |
+|---|---|
+| Session log | Semantic truth |
+| Runtime events | Extension and control surface |
+| Telemetry | Observational projection |
+
+Correctness stays defined by session and runtime semantics and by conformance
+scenarios — never by telemetry contents.
+
+**Why this is general.** It mirrors what both references independently converged
+on, mentions no product concept, and is a seam rather than an implementation.
+The span vocabulary is language-neutral, so a Rust implementation emits the same
+spans.
 
 ### HIGH-2 — `request/header` volume under a months-long session
 
@@ -293,17 +375,59 @@ header state, not surface state. The problem is purely volume.
 
 **Where the fix belongs.** `minion-agent`.
 
-**Smallest change.** Specify `request/header` as **change-triggered rather than
-per-step**: log the full header when it differs from the last logged one, and a
-content hash otherwise. The invariant then compares the hash against its
-reconstruction, preserving full force at constant cost. DSH already gestures at
-this shape — "the latest snapshot reconstructs the request header", and
-`request/context` is "logged only when the route or capacity changes."
+**Whole-header change detection does not work.** An earlier draft of this
+finding proposed logging the full header when it changed and a hash otherwise.
+That fails on exactly the workload that motivates the finding, because the
+header changes almost every turn while being almost entirely stable:
 
-**Why this is general.** Long-lived sessions are a property of assistants,
-monitors, and any resident agent — not of chatbots specifically. The change is
-a logging-granularity rule, adds no concepts, and strengthens the design against
-a class of workload it had not considered.
+| Component | Size | Changes per turn? |
+|---|---|---|
+| Bootstrap | ~15,000 tokens | no |
+| Skills | ~1,000 | no |
+| Tool schemas | ~3,000 | no |
+| Memory recall | ~500 | **yes** |
+| Budget context | ~30 | **yes** |
+
+A 530-token change forces a ~19,000-token snapshot. The mechanism is wrong, not
+merely imprecise.
+
+**Smallest change: content-addressed components.** The header becomes a
+composition of references rather than a snapshot:
+
+```
+request/header
+    system_base:  sha256:abc…
+    skills:       sha256:def…
+    tools:        sha256:ghi…
+    memory:       sha256:jkl…
+    task:         sha256:mno…
+    budget:       sha256:pqr…
+```
+
+Each distinct component is stored once, by hash. Reconstruction resolves the
+references and compares against the dispatched request, so the invariant keeps
+its full force. The 15k bootstrap is stored once for the life of the session
+regardless of how often the memory block changes.
+
+The semantic rule, which is what the design should state:
+
+> Reconstruct request state from content-addressed components, never from
+> repeated monolithic snapshots.
+
+**This is a real scope increase, not a free swap.** It adds an artifact store
+beside the log, and the design must say two more things: artifacts holding
+model-visible content inherit the never-delete discipline that already governs
+entries, and no artifact may be reclaimed while any header references it.
+
+**Conformance must assert reconstruction, not storage.** Scenarios verify that
+the reconstructed model input matches what was dispatched — never that a
+particular hashing or storage scheme was used. That keeps a Rust implementation
+free to store differently while proving the same property.
+
+**Why this is general.** Large, mostly-stable, partly-dynamic prompt context is
+a property of any resident agent — assistants, monitors, long-running coding
+sessions with big system prompts. Content addressing adds one concept and
+removes a whole class of growth problem.
 
 ### HIGH-3 — `ctx.subprocess` is required, not deferrable
 
@@ -344,37 +468,60 @@ compaction are operations on a session, invocable without a model turn.*
 
 **Design.** §5 describes the log and derivation but not its mutating operations.
 
+**Method names are not enough under an append-only log.** `reset()` cannot mean
+`history.clear()` — nothing is ever cleared. Each operation needs stated
+append-only semantics, and the choices are real:
+
+- Does reset append an event after which prior surface is excluded from
+  derivation, or does it mint a new session identity?
+- Does fork record ancestry by reference, or copy prior surface forward?
+- How does compaction interact with a branch created by fork?
+- What does `derive_messages()` return immediately after each?
+
 **Where the fix belongs.** `minion-agent` for the operations; the application
 owns command vocabulary and dispatch (no `ctx.commands` seam is needed in core).
 
-**Smallest change.** Enumerate fork, reset, and compact-now in §5 as
-session-service API.
+**Smallest change.** Specify fork, reset, and compact-now in §5 as
+session-service operations **with their log events and their effect on
+derivation**, before the session package's conformance becomes normative.
 
 **Why this is general.** Fork and reset are conversation primitives any agent
-application needs; they are already implied by the design's own compaction and
-branch-summary discussion.
+application needs, and they are already implied by the design's own compaction
+and branch-summary discussion — which is precisely why their derivation
+semantics cannot be left implicit.
 
-### MEDIUM-2 — Tool hooks may block indefinitely; the design must guarantee it
+### MEDIUM-2 — Agent progress isolation must be a stated guarantee
 
 **Evidence.** Exec approval suspends a tool call for up to 60 seconds awaiting a
 human reaction **in a different conversation**, while other rooms keep running.
 
-**Requirement extracted.** *A pre-execute policy hook may await external input
-for an unbounded time without stalling unrelated agents.*
+**Requirement extracted.** *Any await inside one agent — hook, policy, tool, or
+external input — must not prevent unrelated agents from making progress.*
+
+The requirement is broader than approval hooks. The same shape covers an
+`ask_user` interaction, a remote tool call, an MCP request to a slow server, a
+subagent awaited by its parent, and any network-bound tool. Scoping the
+guarantee to `tools/pre-execute` would under-state it.
 
 **Design.** `tools/pre-execute` is an async waterfall, which handles this
 naturally — better than the current thread-bridged implementation. The gap is
 that nothing *states* it, so an implementation could reasonably introduce a
-shared lock, a global timeout, or serialized dispatch and break it silently.
+runtime-global lock, a shared timeout, or serialized dispatch and break it
+silently while every existing scenario still passes.
 
 **Where the fix belongs.** `minion-agent`, as a documented guarantee plus a
 conformance scenario.
 
-**Smallest change.** One sentence in §6's decision-algebra section, and the
-scenario in §9 below.
+**Smallest change.** State it at the agent-isolation level in §6:
+
+> Awaiting anything within one agent must not occupy a runtime-global critical
+> section or block another agent's progress.
+
+Plus the scenario in §9.
 
 **Why this is general.** Human-in-the-loop approval is a core agent-safety
-pattern, not a chat feature.
+pattern, and every other case in the list above is ordinary distributed-systems
+latency. This is a concurrency property of the runtime, not a chat feature.
 
 ### MEDIUM-3 — Background work has no stated lifetime contract
 
@@ -408,6 +555,34 @@ replacement model/thinking/context.
 **Smallest change.** Confirm in §6 that `Enter` may carry system-prompt and
 history-window overrides for that step. Tool-set variation is resolved by
 BLOCKER-1, not here.
+
+### NOT A GAP — Voice, and why it is the report's strongest positive evidence
+
+**Evidence.** A 1,694-line voice subsystem: microphone → VAD → STT → agent →
+TTS → speaker, with real barge-in (`stream.abort()` discards buffered audio; a
+`cancelled` event stops the synth thread mid-playback), and latency-driven
+per-turn behavior (`max_history_turns=6`, `skip_bootstrap=True`).
+
+**Why it matters.** `minion-assist` is not a Matrix chatbot with extras — it is
+an application with **two structurally different channels** over one agent core.
+That is direct evidence that agent input/output semantics are already
+channel-neutral, and it is the best available check on whether BLOCKER-2's
+provenance model is Matrix-shaped: a voice utterance is simply another
+`InputEnvelope` with a different opaque `origin`, and TTS is another delivery
+layer.
+
+**No new seam required.** The layering holds:
+
+```
+voice frontend  →  minion-agent  →  streamed agent events  →  TTS
+```
+
+Barge-in maps onto cancellation plus steering, both already designed. Per-turn
+prompt and history reduction maps onto MEDIUM-4. Temporary tools, if voice ever
+needs them, map onto the turn scope of BLOCKER-1.
+
+Recorded because omitting it from the first inventory was an error, and because
+a validation that examines only one channel cannot claim channel-neutrality.
 
 ### LOW-1 — Image content blocks absent from §4's vocabulary
 
@@ -555,19 +730,42 @@ New cases the suite should carry, all language-neutral:
 - `scoped-registration-ownership` — disposing scope A removes exactly its
   registrations and leaves B's intact.
 - `scoped-event-admission` — an untagged listener receives every dispatch; a
-  tagged listener receives only its own key's.
+  tagged listener receives only its own key's and its descendants'.
+- `nested-scope-inheritance` — a child scope sees ancestors' registrations,
+  nearest shadowing farthest; an ancestor never sees a descendant's.
+- `nested-scope-disposal` — disposing a middle scope removes it and its
+  descendants, leaving ancestors and siblings intact.
 
 **`agent/`**
-- `concurrent-agents-isolated-logs` — two agents run turns concurrently; neither
-  log contains the other's entries.
-- `origin-survives-to-turn-end` — an inbox entry's opaque origin is reported at
-  `turn/end` unchanged.
+- `concurrent-agents-isolated-logs` — two agent instances run turns
+  concurrently; neither log contains the other's entries.
+- `instances-share-definition-registrations` — two instances of one definition
+  both see its tools; neither sees the other's instance-scoped ones.
+- `turn-scope-disposed-at-turn-end` — a turn-scoped tool is unavailable in the
+  next turn.
+- `turn-scope-awaits-inflight-tool` — a turn-scoped registration survives until
+  a still-executing tool settles.
+- `origin-survives-one-at-a-time` — a single claimed input's origin is reported
+  unchanged at `turn/end`.
+- `causes-preserved-under-claim-all` — three inputs with distinct origins are
+  claimed into one turn; `turn/end` reports all three causes in order.
+- `proactive-turn-carries-provenance` — a turn with no user input carries its
+  scheduler-supplied origin.
 - `turn-completes-undelivered` — a turn completes normally with no delivered
   output.
-- `blocking-pre-execute-does-not-stall-peers` — a pre-execute listener blocks
-  while a second agent completes a turn.
-- `request-header-change-triggered` — an unchanged header logs a hash; a changed
-  one logs in full; the invariant passes in both cases.
+- `blocked-agent-does-not-stall-peers` — agent A blocks in a policy or tool
+  await while agent B completes a full turn.
+- `request-header-component-reuse` — a header whose memory component changes but
+  whose bootstrap does not reuses the bootstrap artifact; reconstruction still
+  matches the dispatched request exactly.
+
+**`session/`**
+- `fork-ancestry-derivation` — a forked session derives the expected messages;
+  ancestry is recorded.
+- `reset-excludes-prior-surface` — derivation after reset returns the specified
+  result.
+- `compact-now-then-derive` — forced compaction yields the summary plus retained
+  tail, with no double-projection.
 
 ---
 
@@ -627,6 +825,36 @@ entirely (now HIGH-1).
 Downgraded to MEDIUM and reframed as a documentation contract, because effects
 already provide the mechanism and a scheduling service would be premature.
 
+### Corrections from design review (2026-08-18)
+
+**11.4 Scopes must nest; I misread my own citation.** This report quoted DSH's
+"the agent loop creates one scope per live agent" and **dropped the second half
+of that sentence** — "and an agent preset's standing mount is a parent scope
+over its agents." The reference already models definition→instance as a parent
+chain, and its scope keys form an explicit hierarchy with inherit-down /
+admit-up rules. Flat per-agent scoping is insufficient; BLOCKER-1 now specifies
+arbitrary nesting, and the AgentDefinition/AgentInstance distinction that makes
+"one scope per agent" unambiguous.
+
+**11.5 A singular `turn.origin` contradicts the design's own claim policies.**
+Not merely insufficient — inconsistent. §6 specifies `claim = all |
+one-at-a-time`, so a turn can consume several inputs with different origins and
+no single `turn.origin` exists. BLOCKER-2 now attaches provenance to input
+envelopes and has turns record a causal set.
+
+**11.6 The proposed `request/header` fix was wrong, not just imprecise.**
+Whole-header change detection fails on the exact workload that motivates the
+finding: a 530-token change to a 19,000-token header forces a full snapshot
+every turn. HIGH-2 now specifies content-addressed components.
+
+**11.7 Voice was omitted from the inventory.** A 1,694-line second channel with
+barge-in is the report's strongest evidence for channel-neutrality, and leaving
+it out weakened the analysis it should have supported. Added as NOT A GAP.
+
+**11.8 MEDIUM-1 and MEDIUM-2 were under-specified.** Session operations need
+stated append-only semantics rather than method names; the progress guarantee
+belongs at the agent-isolation level rather than scoped to one hook.
+
 ---
 
 ## 12. Verdict
@@ -653,16 +881,26 @@ semantics.
 
 **Order before implementation resumes:**
 
-1. BLOCKER-1 — specify the agents registry (§6) and scoped registration (§3),
-   with the visibility-equals-ownership contract; add the three `runtime/`
+1. **BLOCKER-1** — fix terminology (AgentDefinition vs AgentInstance), specify
+   arbitrarily nested scoped registration in §3 with inherit-down / admit-up and
+   the visibility-equals-ownership contract, add the agents registry to §6, and
+   state the turn-scope-versus-in-flight-tool rule. Add the five `runtime/`
    scenarios to Phase 0.
-2. BLOCKER-2 — add opaque `origin` to inbox entries, surfacing at `turn/end`;
-   state that turns may complete undelivered.
-3. HIGH-1 — add a `ctx.telemetry` section with a span vocabulary and redaction
-   hook.
-4. HIGH-2 — make `request/header` change-triggered.
-5. HIGH-3 — move `ctx.subprocess` into Phase 6.
+2. **BLOCKER-2** — replace singular origin with `InputEnvelope{id, message,
+   origin}` and `Turn.causes[]`; require `origin` to be JSON-safe; state that
+   turns may complete undelivered.
+3. **HIGH-1** — add `ctx.telemetry` with a typed span vocabulary and a mandatory
+   sanitize boundary *before* sinks; state that telemetry is observational, not
+   a second source of truth.
+4. **HIGH-2** — specify content-addressed request components with a retention
+   rule; require conformance to assert reconstruction rather than storage.
+5. **HIGH-3** — move `ctx.subprocess` into Phase 6 under the same
+   execution-world compatibility rule as `ctx.fs` and `ctx.shell`.
+6. **MEDIUM-1** — define log events and derivation effects for fork, reset, and
+   compact-now before the session package's conformance freezes.
+7. **MEDIUM-2** — state the agent-progress isolation guarantee.
 
-The MEDIUMs are wording and can ride along in the same pass. Plan 1 then needs a
-revision: Phase 0 gains the runtime scenarios above, and Phase 1's service and
-event tasks gain scope-awareness.
+Items 1, 2, 6, and 7 must land before Phase 0/Phase 1 conformance becomes
+normative; 3, 4, and 5 can land during the same pass but bind later phases.
+Plan 1 then needs revision: Phase 0 gains the `runtime/` scenarios, and Phase 1's
+service and event tasks gain scope-awareness.
