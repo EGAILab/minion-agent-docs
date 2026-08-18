@@ -1,8 +1,9 @@
-# Minion Agent Rust — Phases 0–2 Design
+# Minion Agent Rust — Phases 0–2 Implementation Design
 
 **Date:** 2026-08-18  
 **Status:** Approved for implementation planning  
-**Implements:** Phases 0–2 of `2026-08-18-minion-agent-design.md`
+**Implements:** Phases 0–2 of the language-neutral
+`design/2026-08-18-minion-agent-design.md`
 
 ## 1. Purpose and scope
 
@@ -80,7 +81,9 @@ carrying fiber ownership plus optional scope identity.
 
 Services have a normative string name. That string is the only semantic key.
 Rust `TypeId` validates the associated service contract but never creates a
-second key space.
+second key space. Rust newtypes compare normative names by string value;
+`TypeId`, allocation identity, and pointer identity are never consulted for
+semantic equality.
 
 A normative service name is associated with one compatible Rust type contract
 for the lifetime of its `RuntimeCore`. Unloading a provider removes its active
@@ -95,7 +98,9 @@ settlement, session derivation, or any other semantic result.
 ### 3.2 Fibers and effects
 
 A fiber owns validated plugin configuration, lifecycle state, and an ordered
-async disposer stack. Its states are:
+async disposer stack. The complete normative state graph, stable `Failed`
+semantics, and loading-versus-unwind exclusion are defined in §3 of the
+language-neutral design. Rust represents those states directly:
 
 ```text
 Pending | Loading | Active | Failed | Unloading | Disposed
@@ -107,7 +112,7 @@ attempted even when earlier cleanup fails. The final aggregate preserves
 reverse execution order so diagnostics are deterministic. Double disposal is a
 no-op, and creating an effect through a disposed owner fails.
 
-Plugin mounting follows this lifecycle:
+Rust realizes the normative lifecycle as follows:
 
 1. Deserialize and validate configuration.
 2. Create the child context and `Fiber(Pending)`.
@@ -117,7 +122,8 @@ Plugin mounting follows this lifecycle:
    registrations remain externally invisible while the owner is not `Active`.
 6. On successful initialization, re-check the lifecycle generation, disposal
    state, and dependency visibility before committing to `Active`.
-7. On plugin failure, unwind created effects and settle at `Failed`.
+7. On a represented `PluginInitError`, unwind created effects and settle at
+   `Failed`; panics and impossible transition states remain invariant failures.
 8. On dependency invalidation, unwind and settle at `Pending` without ever
    committing a stale activation.
 9. On explicit disposal, invalidate in-flight work, unwind exactly once, and
@@ -125,6 +131,11 @@ Plugin mounting follows this lifecycle:
 
 Lifecycle transitions for one fiber are serialized. A generation/cancellation
 signal can invalidate an awaited transition without holding a global lock.
+Invalidation first cancels or drops the initialization future and closes the
+effect-registration gate for that generation. Unwind begins only after the
+attempt can no longer create an owned effect. Every effect-registration call
+checks that its owning generation remains live. Reconciliation never retries a
+`Failed` fiber; disposal followed by a new mount is the recovery path.
 Runtime-global service, event, and scope locks are never held across plugin,
 listener, or disposer awaits.
 
@@ -248,12 +259,15 @@ aborted, under-scripted, and malformed-stream cases.
 
 Session event identity is an extensible normative string, represented by an
 ergonomic Rust newtype. Core event names are associated constants, not a closed
-enum.
+enum. The log accepts any well-formed event name without prior registration,
+matching §5's open-namespace rule.
 
 `SessionService` supports lifecycle-owned registration of open event-kind
-strings with validation and optional surface projection. Its internal extension
-table is not a public architectural abstraction. Plugin-specific projections
-remain implementation-specific unless separately standardized.
+strings with additional validation and optional surface projection.
+Registration attaches behavior; it does not create the string identity or
+admit the event to model history by itself. Its internal extension table is not
+a public architectural abstraction. Plugin-specific projections remain
+implementation-specific unless separately standardized.
 
 All append paths share one boundary:
 
@@ -335,15 +349,13 @@ repository revision, exact file set, and hashes. `xtask conformance verify`
 fails on any mismatch. Normal Rust tests and builds never require the sibling
 Python checkout.
 
-Semantic changes use this sequence:
-
-1. Add or extend a canonical schema and scenario.
-2. Demonstrate the expected failure against an affected existing implementation.
-3. Apply the minimum correction required by the frozen rule.
-4. Restore Python tests and conformance to green.
-5. Sync the exact snapshot into Rust.
-6. Implement Rust against the same scenario.
-7. Require both implementations to remain green.
+Semantic changes follow §8's canonical workflow. `xtask` supports both branches:
+an alignment case that exposes and minimally corrects a divergence, and a
+coverage case that pins behavior existing implementations already satisfy. It
+never requires manufacturing a failure before a scenario may be vendored.
+After all capable existing implementations are green, `xtask` records and
+syncs the exact snapshot; Rust then implements or verifies the same case, and
+all applicable implementations remain green.
 
 The Python event-kind and post-return stream alignment has already landed in
 commit `6c47c0d`. Plan 2 verifies and preserves it. The canonical `agent/`
