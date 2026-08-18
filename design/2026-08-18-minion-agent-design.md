@@ -156,6 +156,45 @@ default and `require` is the type-checked one.
 One loaded plugin instance: lifecycle state, validated config, and its
 disposable list.
 
+The lifecycle is normative:
+
+```text
+Pending
+  ├─ dependencies satisfied → Loading
+  └─ dispose → Disposed
+
+Loading
+  ├─ successful valid commit → Active
+  ├─ dependency invalidation → unwind → Pending
+  ├─ initialization failure → unwind → Failed
+  └─ dispose → unwind → Disposed
+
+Active
+  ├─ dependency loss → Unloading → unwind → Pending
+  └─ dispose → Unloading → unwind → Disposed
+
+Failed
+  └─ dispose → Disposed
+
+Disposed
+  └─ dispose → no-op
+```
+
+`Failed` is stable: dependency changes do not retry a failed plugin. This phase
+has no restart operation, so recovery is disposal followed by a fresh mount.
+`Failed` represents a legitimate, reported plugin-initialization failure. An
+impossible runtime state or broken state-machine invariant remains a framework
+failure; it does not become an ordinary failed fiber.
+
+Loading is a transaction over owned effects. A fiber becomes `ACTIVE` only
+after plugin initialization succeeds and every dependency is still actively
+visible. Dependency loss or explicit disposal invalidates the attempt. An
+invalidated loading attempt cannot continue creating owned effects while its
+existing effects are being unwound: the attempt must first be stopped, settled,
+or otherwise prevented from registering another effect, and only then may
+reverse sequential unwind begin. The cancellation, generation, or transition-
+serialization mechanism is implementation-specific; the no-race result is not.
+
 ### Service resolution
 
 `ctx.tools` and `ctx.require(ToolService)` are two views over one canonical
@@ -165,6 +204,11 @@ mechanism. These rules follow Cordis's `reflect.ts` and are normative.
 Cordis allocates one symbol per name on the root context and resolves through
 a single slot. `ctx.require(ToolService)` resolves by the name the Protocol
 declares; it is a typed view, never a second key space.
+
+**Normative names compare by string value.** Language object identity, enum
+singleton identity, allocation or pointer identity, and a language's type
+identity never participate in semantic identity. This rule applies to service
+names, event names, session event kinds, and future named extension points.
 
 **Registration is exclusive.** Two plugins cannot provide the same service in
 one realm. The second `provide()` raises, naming the fiber that already holds
@@ -545,6 +589,13 @@ admit it to model history. A plugin event is log-only until the deployment
 declares it as surface, exactly as `turn/start` is. Conflating the two would
 let any plugin inject into what the model sees merely by choosing a name, which
 is the opposite of the two-tier contract above.
+
+The logging namespace is truly open: the session log accepts any well-formed
+event-name string without requiring prior registration. Extension registration
+may attach additional validation and/or a surface projection; it does not
+create the underlying identity. Merely appending or recognizing a plugin event
+therefore never makes it model-visible. Surface admission requires an explicit
+deployment projection or a projection standardized by this specification.
 
 The first rule has no executable backstop for the *operations* path: the
 session scenario format constructs reset and compaction through the API, so it
@@ -1155,6 +1206,24 @@ refine
 must be represented in `conformance/`. Sometimes that means extending or
 parameterizing an existing scenario rather than adding a file.
 
+Canonical additions cover two legitimate cases. An **alignment scenario**
+exposes an existing implementation that contradicts a frozen rule; a
+**coverage scenario** makes already-correct behavior executable. Both follow
+one workflow:
+
+1. Add or extend the canonical schema and scenario.
+2. Run it against every existing implementation capable of executing it.
+3. If an implementation contradicts the frozen rule, demonstrate the
+   divergence, apply the minimum correction, and restore it to green.
+4. If existing implementations already conform, retain the scenario as added
+   compatibility coverage without manufacturing a failure.
+5. Sync or vendor the canonical case into implementations that carry a copy.
+6. Implement or verify each implementation against the same case.
+7. Keep every applicable implementation green.
+
+An implementation need not fail before a canonical scenario is valuable. The
+scenario's role is to pin compatibility, not to prove that a bug once existed.
+
 **Normativity.** Finite example scenarios cannot exhaustively define the
 behavior of a reactive plugin runtime, so the two artifacts divide the work:
 
@@ -1297,10 +1366,21 @@ implementation was being built against this spec:
   makes two implementations disagree about the same log.
 - **An open event namespace is not an open surface** (§5). A plugin event is
   log-only until a deployment declares it as surface.
+- **Event registration is not identity creation** (§5). Any well-formed event
+  name may be logged; registration attaches validation or projection, while
+  explicit surface admission remains separate.
+- **Fiber loading and unwind cannot race** (§3). Invalidating a loading attempt
+  prevents further owned-effect creation before unwind begins; a stale attempt
+  cannot commit `ACTIVE`. `Failed` is stable until disposal/remount and denotes
+  plugin initialization failure rather than a framework invariant violation.
+- **Canonical additions may align or cover** (§8). A new scenario either
+  exposes a divergence or pins behavior implementations already satisfy; the
+  workflow never manufactures a failure merely to justify coverage.
 
-Both were divergences found in the first implementation rather than gaps found
-by review, which is why they are recorded here as clarifications of §5 rather
-than as new decisions.
+The event-identity and surface rules were divergences found in the first
+implementation. The lifecycle and workflow rules were ambiguities found while
+designing the second. All are clarifications of existing contracts rather than
+new subsystem features.
 
 Resolved by design review of the revised spec (2026-08-18):
 
