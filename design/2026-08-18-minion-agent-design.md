@@ -527,6 +527,30 @@ function, and nothing in this design asks it to. If cross-language third-party
 plugins later become a requirement, their projection format needs its own
 portable schema; that is out of scope here.
 
+Two consequences of an open namespace are normative, and neither is
+self-evident — both were re-derived the hard way during cross-language
+alignment.
+
+**The event name is the identity, and is compared by value.** A language may
+offer constants for the core names — an enum, a set of `const`s — but those are
+ergonomics. `"session/reset"` and whatever constant a language uses for it are
+the *same event*. An implementation that compares by identity rather than value
+will silently ignore the literal spelling: a reset appended as a plain string
+would not floor derivation, and two implementations would disagree about the
+same log. Every lookup that matches an event by kind — reset, compaction, and
+any future operation — matches on the string.
+
+**An open namespace is not an open surface.** Declaring an event name does not
+admit it to model history. A plugin event is log-only until the deployment
+declares it as surface, exactly as `turn/start` is. Conflating the two would
+let any plugin inject into what the model sees merely by choosing a name, which
+is the opposite of the two-tier contract above.
+
+The first rule has no executable backstop for the *operations* path: the
+session scenario format constructs reset and compaction through the API, so it
+cannot express a raw-named operation event. Scenarios pin the surface path;
+the operations path rests on this text plus each implementation's own tests.
+
 ---
 
 ## 6. The agent loop (`ctx.agent_loop`)
@@ -1264,6 +1288,19 @@ Resolved by validation against a real workload (2026-08-18), documented in
 - **Telemetry** — `ctx.telemetry` with a mandatory sanitize boundary ahead of
   sinks; observational, never normative (§7).
 - **`ctx.subprocess`** — promoted out of deferral into Phase 6 (§7, §9).
+
+Resolved during cross-language alignment (2026-08-18), while a second
+implementation was being built against this spec:
+
+- **Event identity is the name string, compared by value** (§5). Constants are
+  ergonomics; an identity comparison silently ignores the literal spelling and
+  makes two implementations disagree about the same log.
+- **An open event namespace is not an open surface** (§5). A plugin event is
+  log-only until a deployment declares it as surface.
+
+Both were divergences found in the first implementation rather than gaps found
+by review, which is why they are recorded here as clarifications of §5 rather
+than as new decisions.
 
 Resolved by design review of the revised spec (2026-08-18):
 

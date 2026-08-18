@@ -3330,12 +3330,21 @@ git commit -m "feat: mount the agents registry, tools, and loop as plugins"
 
 **Files:**
 - Create: `tests/conformance/agent_runner.py`, `tests/conformance/test_agent_conformance.py`
-- Create: `conformance/agent/*.yaml` (six scenarios)
+- Create: `conformance/agent/*.yaml` (eleven scenarios)
 - Modify: `tests/conformance/test_schema_validation.py` (drop `agent` from `UNPOPULATED`)
 
 **Interfaces:**
 - Produces: `async def run_agent_scenario(document) -> dict` returning `{"events": [...], "messages": [...]}` — the projected Pi event stream and the derived messages, which are the two observable surfaces §8 names.
-- Six scenarios: `turn-lifecycle`, `origin-survives-one-at-a-time`, `causes-preserved-under-claim-all`, `proactive-turn-carries-provenance`, `tool-round-trip`, `max-steps-bounds-a-turn`.
+- Six loop scenarios: `turn-lifecycle`, `origin-survives-one-at-a-time`, `causes-preserved-under-claim-all`, `proactive-turn-carries-provenance`, `tool-round-trip`, `max-steps-bounds-a-turn`.
+- Five **stream-boundary** scenarios (Step 4): `premature-eof-synthesizes-error-terminal`, `premature-eof-preserves-partial-message`, `public-stream-fuses-after-first-terminal`, `eager-invalid-model-fails-before-stream`, `represented-provider-error-rides-stream`.
+
+**Why the stream cases live here.** §4's boundary is currently pinned only by
+Python tier-2 tests, which a second-language implementation cannot run. The
+cases belong in `conformance/agent/` because the agent family asserts the log
+projection, and a settled error surfaces there as an assistant message — but
+that family has no runner until this task builds one, which is why they were
+deferred to this plan rather than landed with the fix. Leaving them out would
+mean the never-raises contract stays unverifiable across languages.
 
 - [ ] **Step 1: Write the runner**
 
@@ -3704,12 +3713,75 @@ expect_messages:
 Two assistant messages and two results, not three: the bound stops the turn
 after the second step.
 
-- [ ] **Step 4: Run the conformance suite**
+- [ ] **Step 4: Write the stream-boundary scenarios**
+
+These pin §4's contract — eager on one side of the stream's return, in-band on
+the other. The mock adapter's `stop_reason: error` produces a settled error
+message; a `provider_script` entry with `truncated: true` ends the raw stream
+without a terminal, which the service must settle rather than raise.
+
+Extend the mock adapter config and `agent-scenario.schema.json` with that
+`truncated` flag, then create `conformance/agent/premature-eof-synthesizes-error-terminal.yaml`:
+
+```yaml
+name: a truncated provider stream settles instead of raising
+description: >
+  §4 is absolute after the stream is returned: nothing escapes iteration. A
+  provider stream that ends before emitting a terminal is a runtime streaming
+  failure -- a truncated response is the ordinary case -- so it settles as an
+  error rather than propagating an exception through the loop.
+provider_script:
+  - content: [{ type: text, text: half a sen }]
+    stop_reason: stop
+    truncated: true
+steps:
+  - followup: hello
+  - await_idle: true
+expect_events:
+  - agent_start
+  - turn_start
+  - message_start
+  - message_end
+  - message_start
+  - message_end
+  - turn_end
+  - agent_end
+expect_assistant_stop_reason: error
+```
+
+Create `premature-eof-preserves-partial-message.yaml`: the same shape, asserting
+`expect_messages` still carries the partial text rather than an empty message —
+replacing a real partial response with an unrelated empty one loses what the
+model actually produced.
+
+Create `public-stream-fuses-after-first-terminal.yaml`: a script whose entry
+emits a terminal and then further chunks, asserting exactly one assistant
+message reaches the log.
+
+Create `represented-provider-error-rides-stream.yaml`: a `stop_reason: error`
+entry, asserting the turn completes with an error-stopped assistant message and
+no exception.
+
+Create `eager-invalid-model-fails-before-stream.yaml`: config naming a model no
+adapter supplies, asserting the scenario raises before any turn is logged —
+
+```yaml
+expect_error:
+  type: UnknownModelError
+  before_any_event: true
+```
+
+The last one is the only agent scenario that asserts a raised error, and
+deliberately so: it is the *other* side of the boundary. Add `expect_error` and
+`expect_assistant_stop_reason` to `agent-scenario.schema.json`, and teach
+`test_agent_conformance.py` to honour both.
+
+- [ ] **Step 5: Run the conformance suite**
 
 Run: `uv run pytest tests/conformance -v`
-Expected: PASS — seven runtime, four session, and six agent scenarios.
+Expected: PASS — seven runtime, nine session, and eleven agent scenarios.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add conformance/agent tests/conformance
@@ -3941,7 +4013,8 @@ git push origin main
 
 - [ ] `uv run pytest` passes with 100% coverage of `runtime`, `llm`, `session`, `telemetry`, `agent`, and `agent_loop`
 - [ ] `uv run ruff check`, `ruff format --check`, and `mypy` are clean
-- [ ] Seven runtime, four session, and six agent scenarios execute and pass
+- [ ] Seven runtime, nine session, and eleven agent scenarios execute and pass
+- [ ] §4's stream boundary is pinned by conformance, not only by Python tests: a truncated stream settles, and an unknown model raises before any event is logged
 - [ ] The Phase 3 milestone runs end to end: mock LLM → tool_call → loop → mock tool result → second request
 - [ ] A turn's `causes` match its claimed envelopes under both claim policies
 - [ ] Hard termination (`max_steps`, `cancelled`, nothing owed) precedes `agent/turn-stopping`, verified by a test asserting the event is not dispatched
