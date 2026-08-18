@@ -4,11 +4,13 @@
 
 **Goal:** Build the language-neutral conformance scenario formats and the Cordis-semantic plugin runtime they validate, so every later subsystem mounts as a plugin against a runtime whose semantics are pinned by executable cases.
 
-**Architecture:** A `Context` is a repository of services. A `Fiber` is one loaded plugin instance owning validated config, lifecycle state, and a reverse-ordered disposable list. Services register exclusively by name; dependents load when their injected services appear and unload when any disappears, unwinding effects in reverse. Events dispatch in four declared modes. Conformance scenarios are YAML data describing plugins declaratively and asserting an ordered lifecycle/effect trace.
+**Architecture:** A `Context` is a repository of services. A `Fiber` is one loaded plugin instance owning validated config, lifecycle state, and a reverse-ordered disposable list. Services register exclusively by name; dependents load when their injected services appear and unload when any disappears, unwinding effects in reverse. Scopes nest arbitrarily and own what is registered through them, so many agents can share one service graph while differing in registrations. Events dispatch in four declared modes, with scope-filtered admission. Conformance scenarios are YAML data describing plugins declaratively and asserting an ordered lifecycle/effect trace.
 
 **Tech Stack:** Python 3.12+, `pydantic` v2 (plugin config + JSON Schema export), `pytest` + `pytest-asyncio`, `hypothesis` (property tests), `PyYAML` (scenario files), `jsonschema` (scenario validation), `ruff` (lint/format), `mypy` (types), `pytest-cov` (coverage gate).
 
-**Spec:** `minion-agent-docs/design/2026-08-18-minion-agent-design.md` — read §3 (plugin runtime), §8 (validation), §9 (build order) before starting. The plan argues from the spec; where they disagree, the spec wins and the plan is the bug.
+**Spec:** `minion-agent-docs/design/2026-08-18-minion-agent-design.md`, **frozen for implementation** — read §3 (plugin runtime, including scoped registration and the normative waterfall contract), §8 (validation), and §9 (build order) before starting. The plan argues from the spec; where they disagree, the spec wins and the plan is the bug.
+
+The spec was validated against a real 42k-line application and three review passes; `2026-08-18-foundation-validation.md` records what that changed and why. Two results shape this plan: scoped registration is in scope (isolation realms are not), and `waterfall` has one normative contract serving both decision and transformation patterns.
 
 ## Global Constraints
 
@@ -18,8 +20,10 @@
 - **Naming:** the package is `minion_agent.runtime`. Cordis is credited in prose and docstrings as design lineage ("Cordis-semantic", "Cordis-inspired") and **never** appears in a module path, class name, or public identifier.
 - **Coverage:** `src/minion_agent/runtime/**` targets 100% per-file. Exceptions require a `# pragma: no cover` with a written reason on the same line.
 - **Conformance rule:** every externally meaningful runtime behavior change must be represented in `conformance/`. Extending or parameterizing an existing scenario counts.
+- **Scope contract:** the registration context determines both visibility and ownership. A registration must never be visible in one scope but disposed with another.
+- **Layer purity:** `minion_agent.runtime` knows nothing of tools, agents, or sessions. A rule that needs one of those concepts belongs in the layer that has it.
 - **Normativity:** for behavior a scenario covers, the executable result is the oracle. Prose defines the general rule elsewhere.
-- **Deferred, do not implement:** isolation realms, service shadowing (they are one mechanism), the declarative YAML loader, hot module replacement. A child context **cannot** shadow a parent service in this phase.
+- **Deferred, do not implement:** isolation realms and service shadowing (they are one mechanism), the declarative YAML loader, hot module replacement, `ctx.jobs`, telemetry sinks. A child context **cannot** shadow a parent *service* in this phase. Scoped *registration* is different and is in scope.
 - **Commit style:** conventional commits (`feat:`, `test:`, `chore:`, `docs:`). Commit at the end of every task.
 
 ---
@@ -35,19 +39,24 @@ minion-agent/
       __init__.py                         # public surface re-exports
       errors.py                           # exception hierarchy
       disposable.py                       # Disposer type, DisposableList
-      events.py                           # EventBus, DispatchMode, declarations
+      events.py                           # EventBus, DispatchMode, scoped admission
       service.py                          # ServiceRegistry, Impl, resolution
+      scope.py                            # ScopeKey, Scope, scope_of
+      scoped_registry.py                  # eligibility-only scoped storage
       fiber.py                            # Fiber, FiberState, effects, lifecycle
-      context.py                          # Context, service access, plugin mounting
+      context.py                          # Context, service access, scopes, mounting
       plugin.py                           # @plugin decorator, PluginSpec
   conformance/
     schema/
       runtime-scenario.schema.json        # runtime/ family format
       agent-scenario.schema.json          # agent/ family format
+      session-scenario.schema.json        # session/ family format
       README.md                           # runner contract
     runtime/
       *.yaml                              # executable kernel cases
     agent/
+      .gitkeep                            # populated in Plan 2
+    session/
       .gitkeep                            # populated in Plan 2
   tests/
     conformance/
@@ -209,7 +218,7 @@ The `runtime/` family asserts a generic lifecycle and effect trace. Unlike agent
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the runtime scenario format. Task 15's runner reads exactly these keys: top-level `name`, `description`, `plugins`, `steps`, `expect_trace`, optional `expect_result`, optional `expect_error`. A plugin entry has `id`, optional `inject` (list of service names), optional `provides` (service name), optional `config` (object), optional `effects` (list of `{label}`), optional `listeners` (list of `{event, action, tag, returns?}`), optional `fails` (bool). A step is exactly one of `{mount: id}`, `{unmount: id}`, or `{dispatch: {event, mode, args?}}`. Trace entries are `{event, ...fields}` where `event` is one of `fiber_state`, `effect_created`, `effect_disposed`, `listener_entered`, `service_provided`, `service_revoked`.
+- Produces: the runtime scenario format. Task 19's runner reads exactly these keys: top-level `name`, `description`, `plugins`, `steps`, `expect_trace`, optional `expect_result`, optional `expect_error`. A plugin entry has `id`, optional `inject` (list of service names), optional `provides` (service name), optional `config` (object), optional `effects` (list of `{label}`), optional `listeners` (list of `{event, action, tag, returns?}`), optional `fails` (bool). A step is exactly one of `{mount: id}`, `{unmount: id}`, or `{dispatch: {event, mode, args?}}`. Trace entries are `{event, ...fields}` where `event` is one of `fiber_state`, `effect_created`, `effect_disposed`, `listener_entered`, `service_provided`, `service_revoked`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -303,7 +312,8 @@ Create `conformance/schema/runtime-scenario.schema.json`:
             "ServiceConflictError",
             "InactiveFiberError",
             "ServiceNotFoundError",
-            "EventModeError"
+            "EventModeError",
+            "WaterfallError"
           ]
         },
         "message_contains": { "type": "string" }
@@ -320,6 +330,8 @@ Create `conformance/schema/runtime-scenario.schema.json`:
         "id": { "type": "string", "minLength": 1 },
         "inject": { "type": "array", "items": { "$ref": "#/$defs/serviceName" } },
         "provides": { "$ref": "#/$defs/serviceName" },
+        "scope": { "type": "string", "minLength": 1 },
+        "scope_parent": { "type": "string", "minLength": 1 },
         "config": { "type": "object" },
         "fails": { "type": "boolean", "default": false },
         "effects": {
@@ -339,7 +351,17 @@ Create `conformance/schema/runtime-scenario.schema.json`:
             "additionalProperties": false,
             "properties": {
               "event": { "type": "string", "minLength": 1 },
-              "action": { "enum": ["delegate", "short_circuit", "observe", "raise"] },
+              "action": {
+                "enum": [
+                  "delegate",
+                  "short_circuit",
+                  "observe",
+                  "raise",
+                  "transform",
+                  "delegate_twice"
+                ]
+              },
+              "replacement": {},
               "tag": { "type": "string", "minLength": 1 },
               "returns": {}
             }
@@ -355,6 +377,7 @@ Create `conformance/schema/runtime-scenario.schema.json`:
       "properties": {
         "mount": { "type": "string" },
         "unmount": { "type": "string" },
+        "dispose_scope": { "type": "string" },
         "dispatch": {
           "type": "object",
           "required": ["event", "mode"],
@@ -362,7 +385,9 @@ Create `conformance/schema/runtime-scenario.schema.json`:
           "properties": {
             "event": { "type": "string", "minLength": 1 },
             "mode": { "enum": ["emit", "parallel", "serial", "waterfall"] },
-            "args": { "type": "array" }
+            "args": { "type": "array" },
+            "scope": { "type": "string" },
+            "terminal": {}
           }
         }
       }
@@ -379,9 +404,11 @@ Create `conformance/schema/runtime-scenario.schema.json`:
             "effect_disposed",
             "listener_entered",
             "service_provided",
-            "service_revoked"
+            "service_revoked",
+            "scope_disposed"
           ]
         },
+        "scope": { "type": "string" },
         "plugin": { "type": "string" },
         "state": {
           "enum": ["pending", "loading", "active", "failed", "unloading", "disposed"]
@@ -394,6 +421,13 @@ Create `conformance/schema/runtime-scenario.schema.json`:
   }
 }
 ```
+
+A plugin declaring `scope` registers its effects and listeners in a scope of
+that name rather than on its own fiber; `scope_parent` names the enclosing
+scope, building the nesting the spec leaves to applications. A `transform`
+listener delegates with its `replacement` value, which is how a scenario
+exercises the transformation pattern; `delegate_twice` calls `next` twice and
+must raise.
 
 - [ ] **Step 4: Write the two example scenarios**
 
@@ -678,9 +712,149 @@ git commit -m "feat: add agent conformance scenario format and runner contract"
 
 ---
 
+## Task 4: Session scenario format
+
+The frozen design adds a third conformance family. `session/` scenarios drive the
+log directly — operations in, derived messages out — with no model in play, which
+is what makes derivation after fork, reset, and repeated compaction assertable
+without a provider.
+
+**Files:**
+- Create: `conformance/schema/session-scenario.schema.json`
+- Create: `conformance/session/.gitkeep`
+- Modify: `tests/conformance/test_schema_validation.py`
+
+**Interfaces:**
+- Consumes: the test module from the agent-format task.
+- Produces: the session scenario format — top-level `name`, `description`, `steps`, `expect_messages`, optional `expect_error`. A step is exactly one of `{append: {role, text}}`, `{fork: {at}}`, `{reset: {}}`, `{compact: {summary, keep}}`, or `{derive: {}}`. Scenarios are populated in Plan 2.
+
+- [ ] **Step 1: Write the failing test**
+
+In `tests/conformance/test_schema_validation.py`, extend the family map:
+
+```python
+FAMILIES = {
+    "runtime": CONFORMANCE / "schema" / "runtime-scenario.schema.json",
+    "agent": CONFORMANCE / "schema" / "agent-scenario.schema.json",
+    "session": CONFORMANCE / "schema" / "session-scenario.schema.json",
+}
+
+# Families whose scenarios arrive in a later plan. Their schema must still exist
+# and must still be a valid JSON Schema.
+UNPOPULATED = {"agent", "session"}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `.venv/Scripts/pytest tests/conformance/test_schema_validation.py -v`
+Expected: FAIL - `test_family_schema_is_wellformed[session]` raises `FileNotFoundError`.
+
+- [ ] **Step 3: Write the schema**
+
+Create `conformance/schema/session-scenario.schema.json`:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minion-agent.dev/conformance/session-scenario.schema.json",
+  "title": "Minion Agent session conformance scenario",
+  "type": "object",
+  "required": ["name", "steps", "expect_messages"],
+  "additionalProperties": false,
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "expect_messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role"],
+        "additionalProperties": false,
+        "properties": {
+          "role": { "enum": ["user", "assistant", "tool_result"] },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "expect_error": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "message_contains": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "append": {
+          "type": "object",
+          "required": ["role", "text"],
+          "additionalProperties": false,
+          "properties": {
+            "role": { "enum": ["user", "assistant", "tool_result"] },
+            "text": { "type": "string" }
+          }
+        },
+        "fork": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "at": { "type": "integer", "minimum": 0 } }
+        },
+        "reset": { "type": "object", "additionalProperties": false },
+        "compact": {
+          "type": "object",
+          "required": ["summary"],
+          "additionalProperties": false,
+          "properties": {
+            "summary": { "type": "string" },
+            "keep": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "derive": { "type": "object", "additionalProperties": false }
+      }
+    }
+  }
+}
+```
+
+`fork` omitting `at` means fork at the current head. `compact.keep` is the
+retained-tail length, whose interaction with `expect_messages` is what pins the
+no-double-projection rule.
+
+- [ ] **Step 4: Create the directory and run tests**
+
+```bash
+mkdir -p conformance/session && touch conformance/session/.gitkeep
+```
+
+Run: `.venv/Scripts/pytest tests/conformance/test_schema_validation.py -v`
+Expected: PASS - `session` skips its scenario test and passes wellformedness.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add conformance/schema conformance/session tests/conformance
+git commit -m "feat: add session conformance scenario format"
+```
+
+---
+
+
 # Phase 1 — Plugin runtime
 
-## Task 4: Errors and the disposable list
+## Task 5: Errors and the disposable list
 
 **Files:**
 - Create: `src/minion_agent/runtime/errors.py`
@@ -891,7 +1065,7 @@ git commit -m "feat: add runtime error hierarchy and reverse-ordered disposable 
 
 ---
 
-## Task 5: Event bus — declarations, `on`, and `emit`
+## Task 6: Event bus — declarations, `on`, and `emit`
 
 **Files:**
 - Create: `src/minion_agent/runtime/events.py`
@@ -1129,14 +1303,14 @@ git commit -m "feat: add event bus with mode declarations and emit dispatch"
 
 ---
 
-## Task 6: Event bus — `parallel` and `serial`
+## Task 7: Event bus — `parallel` and `serial`
 
 **Files:**
 - Modify: `src/minion_agent/runtime/events.py`
 - Test: `tests/runtime/test_events_async.py`
 
 **Interfaces:**
-- Consumes: `EventBus` from Task 5.
+- Consumes: `EventBus` from Task 10.
 - Produces: `async parallel(name: str, *args: Any) -> None` and `async serial(name: str, *args: Any) -> Any` on `EventBus`.
 
 - [ ] **Step 1: Write the failing test**
@@ -1303,86 +1477,99 @@ git commit -m "feat: add parallel and serial event dispatch"
 
 ---
 
-## Task 7: Event bus — `waterfall`
+## Task 8: Event bus — `waterfall`
 
-Around-middleware. A listener receives `next` as its final positional argument and either delegates or short-circuits by returning without calling it.
+Around-middleware, and the runtime's most subtle contract. The frozen design
+(§3) defines it once and normatively; the decision pattern (`pre-step`,
+`pre-execute`) and the transformation pattern (`post-execute`) are usage
+patterns of this one mechanism, not separate dispatch modes.
 
 **Files:**
 - Modify: `src/minion_agent/runtime/events.py`
+- Modify: `src/minion_agent/runtime/errors.py`
 - Test: `tests/runtime/test_events_waterfall.py`
 
 **Interfaces:**
-- Consumes: `EventBus` from Tasks 5–6.
-- Produces: `async waterfall(name: str, *args: Any) -> Any` on `EventBus`. Listeners are invoked as `listener(*args, next)` where `next` is a zero-argument awaitable returning the downstream result.
+- Consumes: `EventBus` from Tasks 10-6.
+- Produces:
+  - `class WaterfallError(RuntimeError_)` in `errors.py`.
+  - `async waterfall(name: str, *args: Any, terminal: Any = None) -> Any` on `EventBus`.
+  - Listeners are invoked as `listener(*args, next)`.
+  - `next()` delegates with the current arguments; `next(*replacement)` delegates with replacements.
+  - `next` may be called **at most once**; a second call raises `WaterfallError`.
+  - Delegating past the last listener yields `terminal`; an empty chain yields `terminal`.
+  - Returning without calling `next` short-circuits; that return value is the chain result.
 
 - [ ] **Step 1: Write the failing test**
 
 Create `tests/runtime/test_events_waterfall.py`:
 
 ```python
-"""Waterfall is around-middleware: delegate via next, or short-circuit."""
+"""Waterfall: one contract serving both decision and transformation patterns."""
 
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import pytest
+
+from minion_agent.runtime.errors import WaterfallError
 from minion_agent.runtime.events import DispatchMode, EventBus
 
 
-async def test_listeners_delegate_through_next() -> None:
+def _bus() -> EventBus:
     bus = EventBus()
     bus.declare("test/waterfall", DispatchMode.WATERFALL)
+    return bus
+
+
+async def test_listeners_delegate_through_next() -> None:
+    bus = _bus()
     seen: list[str] = []
 
-    async def outer(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def outer(next_: Callable[..., Awaitable[Any]]) -> Any:
         seen.append("outer-before")
         result = await next_()
         seen.append("outer-after")
         return result
 
-    async def inner(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def inner(next_: Callable[..., Awaitable[Any]]) -> Any:
         seen.append("inner")
         return "inner-result"
 
     bus.on("test/waterfall", outer)
     bus.on("test/waterfall", inner)
 
-    result = await bus.waterfall("test/waterfall")
-
+    assert await bus.waterfall("test/waterfall") == "inner-result"
     assert seen == ["outer-before", "inner", "outer-after"]
-    assert result == "inner-result"
 
 
 async def test_short_circuit_skips_downstream_listeners() -> None:
-    bus = EventBus()
-    bus.declare("test/waterfall", DispatchMode.WATERFALL)
+    bus = _bus()
     seen: list[str] = []
 
-    async def decider(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def decider(next_: Callable[..., Awaitable[Any]]) -> Any:
         seen.append("decider")
         return "decided"
 
-    async def never(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def never(next_: Callable[..., Awaitable[Any]]) -> Any:
         seen.append("never")
         return "never-result"
 
     bus.on("test/waterfall", decider)
     bus.on("test/waterfall", never)
 
-    result = await bus.waterfall("test/waterfall")
-
+    assert await bus.waterfall("test/waterfall") == "decided"
     assert seen == ["decider"]
-    assert result == "decided"
 
 
-async def test_a_listener_may_replace_the_downstream_result() -> None:
-    bus = EventBus()
-    bus.declare("test/waterfall", DispatchMode.WATERFALL)
+async def test_upstream_may_replace_the_downstream_result() -> None:
+    bus = _bus()
 
-    async def replacer(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def replacer(next_: Callable[..., Awaitable[Any]]) -> Any:
         await next_()
         return "replaced"
 
-    async def original(next_: Callable[[], Awaitable[Any]]) -> Any:
+    async def original(next_: Callable[..., Awaitable[Any]]) -> Any:
         return "original"
 
     bus.on("test/waterfall", replacer)
@@ -1391,111 +1578,164 @@ async def test_a_listener_may_replace_the_downstream_result() -> None:
     assert await bus.waterfall("test/waterfall") == "replaced"
 
 
-async def test_arguments_reach_every_listener() -> None:
-    bus = EventBus()
-    bus.declare("test/waterfall", DispatchMode.WATERFALL)
+async def test_terminal_is_returned_when_every_listener_delegates() -> None:
+    """The transformation pattern depends on this: a fully cooperative chain
+    must yield the transformed payload, never None."""
+    bus = _bus()
     seen: list[int] = []
 
-    async def first(number: int, next_: Callable[[], Awaitable[Any]]) -> Any:
-        seen.append(number)
-        return await next_()
+    async def first(value: int, next_: Callable[..., Awaitable[Any]]) -> Any:
+        seen.append(value)
+        return await next_(value + 1)
 
-    async def second(number: int, next_: Callable[[], Awaitable[Any]]) -> Any:
-        seen.append(number * 2)
-        return number
+    async def second(value: int, next_: Callable[..., Awaitable[Any]]) -> Any:
+        seen.append(value)
+        return await next_(value + 1)
 
     bus.on("test/waterfall", first)
     bus.on("test/waterfall", second)
 
-    assert await bus.waterfall("test/waterfall", 21) == 21
-    assert seen == [21, 42]
+    result = await bus.waterfall("test/waterfall", 1, terminal="unset")
+
+    assert seen == [1, 2]
+    assert result == "unset"
 
 
-async def test_waterfall_without_listeners_returns_none() -> None:
-    bus = EventBus()
-    bus.declare("test/waterfall", DispatchMode.WATERFALL)
+async def test_replacement_arguments_reach_downstream_listeners() -> None:
+    bus = _bus()
+    seen: list[str] = []
+
+    async def rewriter(text: str, next_: Callable[..., Awaitable[Any]]) -> Any:
+        seen.append(text)
+        return await next_("rewritten")
+
+    async def last(text: str, next_: Callable[..., Awaitable[Any]]) -> Any:
+        seen.append(text)
+        return text
+
+    bus.on("test/waterfall", rewriter)
+    bus.on("test/waterfall", last)
+
+    assert await bus.waterfall("test/waterfall", "original") == "rewritten"
+    assert seen == ["original", "rewritten"]
+
+
+async def test_empty_chain_returns_the_terminal() -> None:
+    bus = _bus()
+
+    assert await bus.waterfall("test/waterfall", terminal="fallback") == "fallback"
+
+
+async def test_terminal_defaults_to_none() -> None:
+    bus = _bus()
 
     assert await bus.waterfall("test/waterfall") is None
 
 
-async def test_next_called_twice_returns_the_same_result() -> None:
-    bus = EventBus()
-    bus.declare("test/waterfall", DispatchMode.WATERFALL)
-    calls: list[str] = []
+async def test_calling_next_twice_raises() -> None:
+    """Memoizing next is incoherent once it accepts replacement arguments:
+    a second call carrying different arguments has no defensible answer."""
+    bus = _bus()
 
-    async def caller(next_: Callable[[], Awaitable[Any]]) -> Any:
-        first = await next_()
-        second = await next_()
-        return (first, second)
+    async def greedy(next_: Callable[..., Awaitable[Any]]) -> Any:
+        await next_()
+        await next_()
+        return "unreachable"
 
-    async def terminal(next_: Callable[[], Awaitable[Any]]) -> Any:
-        calls.append("terminal")
+    async def last(next_: Callable[..., Awaitable[Any]]) -> Any:
         return "value"
 
-    bus.on("test/waterfall", caller)
-    bus.on("test/waterfall", terminal)
+    bus.on("test/waterfall", greedy)
+    bus.on("test/waterfall", last)
 
-    assert await bus.waterfall("test/waterfall") == ("value", "value")
-    assert calls == ["terminal"]
+    with pytest.raises(WaterfallError, match="at most once"):
+        await bus.waterfall("test/waterfall")
+
+
+async def test_sync_listeners_are_supported() -> None:
+    bus = _bus()
+    bus.on("test/waterfall", lambda next_: "sync-result")
+
+    assert await bus.waterfall("test/waterfall") == "sync-result"
 ```
-
-The last test pins a decision worth stating: `next` is memoized, so a listener that delegates twice does not re-run the downstream chain.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pytest tests/runtime/test_events_waterfall.py -v`
-Expected: FAIL — `AttributeError: 'EventBus' object has no attribute 'waterfall'`
+Run: `.venv/Scripts/pytest tests/runtime/test_events_waterfall.py -v`
+Expected: FAIL - `ImportError: cannot import name 'WaterfallError'`
 
-- [ ] **Step 3: Write the implementation**
+- [ ] **Step 3: Add the error type**
 
-Append to `EventBus` in `src/minion_agent/runtime/events.py`:
+Append to `src/minion_agent/runtime/errors.py`:
 
 ```python
-    async def waterfall(self, name: str, *args: Any) -> Any:
+class WaterfallError(RuntimeError_):
+    """A waterfall listener misused its `next` continuation."""
+```
+
+- [ ] **Step 4: Write the implementation**
+
+Add `WaterfallError` to the `errors` import at the top of
+`src/minion_agent/runtime/events.py`, then append to `EventBus`:
+
+```python
+    async def waterfall(self, name: str, *args: Any, terminal: Any = None) -> Any:
         """Invoke listeners as around-middleware.
 
-        Each listener receives `next` as its final positional argument. Calling
-        it delegates to the rest of the chain and yields their result; returning
-        without calling it short-circuits. `next` is memoized, so delegating
-        twice does not re-run the downstream chain.
+        Each listener receives `next` as its final positional argument.
+        `next()` delegates with the current arguments; `next(*replacement)`
+        delegates with replacements. Returning without calling `next`
+        short-circuits, and that return value becomes the chain result.
+
+        Delegating past the last listener yields `terminal`, as does an empty
+        chain. Events declare their own terminal so that a chain whose
+        listeners all cooperatively delegate returns the transformed payload
+        rather than None - the transformation pattern depends on it.
+
+        `next` may be called at most once; a second call raises. Memoizing it
+        instead would be incoherent, since a second call may carry different
+        replacement arguments.
         """
         self._require_mode(name, DispatchMode.WATERFALL)
         callbacks = self._chain(name)
 
-        async def step(index: int) -> Any:
+        async def step(index: int, current: tuple[Any, ...]) -> Any:
             if index >= len(callbacks):
-                return None
+                return terminal
 
-            settled = False
-            value: Any = None
+            used = False
 
-            async def next_() -> Any:
-                nonlocal settled, value
-                if not settled:
-                    value = await step(index + 1)
-                    settled = True
-                return value
+            async def next_(*replacement: Any) -> Any:
+                nonlocal used
+                if used:
+                    raise WaterfallError(
+                        f"`next` may be called at most once per listener "
+                        f"(event {name!r}, listener index {index})"
+                    )
+                used = True
+                return await step(index + 1, replacement or current)
 
-            return await self._call(callbacks[index], *args, next_)
+            return await self._call(callbacks[index], *current, next_)
 
-        return await step(0)
+        return await step(0, args)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [ ] **Step 5: Run tests to verify they pass**
 
-Run: `pytest tests/runtime/test_events_waterfall.py -v`
-Expected: PASS — six tests.
+Run: `.venv/Scripts/pytest tests/runtime/test_events_waterfall.py -v`
+Expected: PASS - nine tests.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/minion_agent/runtime/events.py tests/runtime/test_events_waterfall.py
-git commit -m "feat: add waterfall event dispatch with memoized delegation"
+git add src/minion_agent/runtime/events.py src/minion_agent/runtime/errors.py tests/runtime/test_events_waterfall.py
+git commit -m "feat: add waterfall dispatch with replacement args and terminal continuation"
 ```
 
 ---
 
-## Task 8: Service registry
+
+## Task 9: Service registry
 
 Exclusive registration by name, `ACTIVE`-gated visibility, no fallback stack. These rules are normative — see spec §3 "Service resolution".
 
@@ -1509,7 +1749,7 @@ Exclusive registration by name, `ACTIVE`-gated visibility, no fallback stack. Th
   - `@dataclass class Impl` with fields `name: str`, `value: Any`, `owner: Any` (the providing fiber), `check: Callable[[], bool] | None`.
   - `class ServiceRegistry` with `provide(name, value, owner, check=None) -> Callable[[], None]`, `resolve(name, *, strict=True) -> Any | None`, `impl_of(name) -> Impl | None`, `has(name) -> bool`, `names() -> frozenset[str]`.
   - `resolve` returns `None` when no provider exists, when the owner is not active, or when `check()` is falsey. `strict=False` bypasses only the active-state gate.
-- Note: `owner` is typed `Any` here to avoid a circular import with `fiber.py`. Task 11 supplies real `Fiber` instances. The registry's only requirement is that `owner` has a `state` attribute comparable to `FiberState.ACTIVE`.
+- Note: `owner` is typed `Any` here to avoid a circular import with `fiber.py`. Task 17 supplies real `Fiber` instances. The registry's only requirement is that `owner` has a `state` attribute comparable to `FiberState.ACTIVE`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1620,7 +1860,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.runtime.s
 
 - [ ] **Step 3: Write the implementation**
 
-First create the `FiberState` enum that both this task and Task 11 need. Create `src/minion_agent/runtime/fiber.py` with only the enum for now:
+First create the `FiberState` enum that both this task and Task 17 need. Create `src/minion_agent/runtime/fiber.py` with only the enum for now:
 
 ```python
 """Fibers: one loaded plugin instance, its lifecycle, config, and effects."""
@@ -1770,7 +2010,7 @@ git commit -m "feat: add service registry with exclusive registration and gated 
 
 ---
 
-## Task 9: Plugin declaration
+## Task 10: Plugin declaration
 
 **Files:**
 - Create: `src/minion_agent/runtime/plugin.py`
@@ -1981,7 +2221,7 @@ git commit -m "feat: add plugin declaration decorator and spec resolution"
 
 ---
 
-## Task 10: Context — service access and extension
+## Task 11: Context — service access and extension
 
 **Files:**
 - Create: `src/minion_agent/runtime/context.py`
@@ -1995,7 +2235,7 @@ git commit -m "feat: add plugin declaration decorator and spec resolution"
   - `require[T](self, protocol: type[T]) -> T` — typed lookup by the protocol's `__service_name__`
   - `extend(self, **meta: Any) -> Context` — a child sharing the registry and bus
   - properties `registry: ServiceRegistry`, `events: EventBus`, `root: Context`, `fiber: Fiber | None`
-- Note: Task 12 adds `plugin()`, `on()`, and `effect()` to this class.
+- Note: Task 17 adds `plugin()`, `on()`, and `effect()` to this class.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2220,7 +2460,7 @@ git commit -m "feat: add context with attribute and protocol service access"
 
 ---
 
-## Task 11: Fiber lifecycle and effects
+## Task 12: Fiber lifecycle and effects
 
 **Files:**
 - Modify: `src/minion_agent/runtime/fiber.py`
@@ -2235,7 +2475,7 @@ git commit -m "feat: add context with attribute and protocol service access"
   - `async load(self) -> None`, `async unload(self) -> None`, `async dispose(self) -> None`
   - `on_state_change: Callable[[Fiber, FiberState], None] | None` — the hook the conformance runner uses to record `fiber_state` trace entries
   - `on_effect: Callable[[Fiber, str, str], None] | None` — called with `(fiber, "created" | "disposed", label)`
-- Note: `Context` (Task 10) and `PluginSpec` (Task 9) already exist. Import them under `if TYPE_CHECKING:` to avoid a runtime import cycle.
+- Note: `Context` (Task 17) and `PluginSpec` (Task 10) already exist. Import them under `if TYPE_CHECKING:` to avoid a runtime import cycle.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2537,7 +2777,7 @@ git commit -m "feat: add fiber lifecycle with reversible effects"
 
 ---
 
-## Task 12: Mounting plugins and reactive dependency
+## Task 13: Mounting plugins and reactive dependency
 
 The heart of the runtime. A fiber loads when every injected service is visible and unloads when any disappears.
 
@@ -2922,14 +3162,706 @@ git commit -m "feat: add plugin mounting and reactive dependency reconciliation"
 
 ---
 
-## Task 13: Public surface
+## Task 14: Scope keys and minting
+
+Scoped registration is the mechanism that lets many agents share one service
+graph while differing in what is registered. The runtime provides arbitrary
+nesting and key-agnostic tags; it does not define a hierarchy.
+
+**Files:**
+- Create: `src/minion_agent/runtime/scope.py`
+- Modify: `src/minion_agent/runtime/context.py`
+- Modify: `src/minion_agent/runtime/disposable.py` (adds a `disposed` property)
+- Test: `tests/runtime/test_scope.py`
+
+**Interfaces:**
+- Consumes: `Context`, `DisposableList`, `InactiveFiberError`.
+- Produces:
+  - `@dataclass(frozen=True, slots=True) class ScopeKey` with `name: str`, `parent: ScopeKey | None = None`, and `chain() -> tuple[ScopeKey, ...]` returning self-then-ancestors, nearest first.
+  - `class Scope` with `key: ScopeKey`, `ctx: Context`, and `async dispose() -> None` (idempotent).
+  - `Context.scope(key: ScopeKey) -> Scope` — mints a tagged child context.
+  - `scope_of(ctx: Context) -> ScopeKey | None`.
+  - Effects created through a scope's context are owned by the scope, not the plugin fiber.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/runtime/test_scope.py`:
+
+```python
+"""Scopes nest, own their registrations, and dispose independently."""
+
+import pytest
+
+from minion_agent.runtime.context import Context
+from minion_agent.runtime.scope import ScopeKey, scope_of
+
+
+def test_chain_is_nearest_first() -> None:
+    root = ScopeKey("definition")
+    instance = ScopeKey("instance", parent=root)
+    turn = ScopeKey("turn", parent=instance)
+
+    assert turn.chain() == (turn, instance, root)
+    assert root.chain() == (root,)
+
+
+def test_scope_of_reads_the_tag() -> None:
+    ctx = Context()
+    key = ScopeKey("agent-1")
+
+    scope = ctx.scope(key)
+
+    assert scope_of(scope.ctx) is key
+    assert scope_of(ctx) is None
+
+
+def test_derived_contexts_inherit_the_tag() -> None:
+    ctx = Context()
+    scope = ctx.scope(ScopeKey("agent-1"))
+
+    child = scope.ctx.extend(label="derived")
+
+    assert scope_of(child) is scope.key
+
+
+def test_nested_scope_shadows_to_the_nearest_tag() -> None:
+    ctx = Context()
+    outer = ctx.scope(ScopeKey("outer"))
+    inner_key = ScopeKey("inner", parent=outer.key)
+
+    inner = outer.ctx.scope(inner_key)
+
+    assert scope_of(inner.ctx) is inner_key
+
+
+async def test_scope_owns_its_effects() -> None:
+    order: list[str] = []
+    ctx = Context()
+    scope = ctx.scope(ScopeKey("agent-1"))
+
+    scope.ctx.effect(lambda: lambda: order.append("scoped"), "scoped")
+
+    await scope.dispose()
+
+    assert order == ["scoped"]
+
+
+async def test_dispose_is_idempotent() -> None:
+    order: list[str] = []
+    ctx = Context()
+    scope = ctx.scope(ScopeKey("agent-1"))
+    scope.ctx.effect(lambda: lambda: order.append("once"), "once")
+
+    await scope.dispose()
+    await scope.dispose()
+
+    assert order == ["once"]
+
+
+async def test_effects_unwind_in_reverse_within_a_scope() -> None:
+    order: list[str] = []
+    ctx = Context()
+    scope = ctx.scope(ScopeKey("agent-1"))
+    for label in ("first", "second", "third"):
+        scope.ctx.effect(lambda label=label: lambda: order.append(label), label)
+
+    await scope.dispose()
+
+    assert order == ["third", "second", "first"]
+
+
+async def test_disposing_a_scope_leaves_a_sibling_intact() -> None:
+    order: list[str] = []
+    ctx = Context()
+    left = ctx.scope(ScopeKey("left"))
+    right = ctx.scope(ScopeKey("right"))
+    left.ctx.effect(lambda: lambda: order.append("left"), "left")
+    right.ctx.effect(lambda: lambda: order.append("right"), "right")
+
+    await left.dispose()
+
+    assert order == ["left"]
+
+    await right.dispose()
+
+    assert order == ["left", "right"]
+
+
+async def test_effect_on_a_disposed_scope_raises() -> None:
+    from minion_agent.runtime.errors import InactiveFiberError
+
+    ctx = Context()
+    scope = ctx.scope(ScopeKey("agent-1"))
+    await scope.dispose()
+
+    with pytest.raises(InactiveFiberError):
+        scope.ctx.effect(lambda: None, "too-late")
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_scope.py -v`
+Expected: FAIL - `ModuleNotFoundError: No module named 'minion_agent.runtime.scope'`
+
+- [ ] **Step 3: Write the implementation**
+
+Create `src/minion_agent/runtime/scope.py`:
+
+```python
+"""Scoped registration: tagged contexts that own what is registered through them.
+
+The governing contract, from the design spec section 3: the registration
+context determines both visibility and ownership. A registration can therefore
+never be visible in one scope but disposed with another.
+
+Nesting depth is the application's choice. The runtime guarantees arbitrary
+nesting and key-agnostic tags; it defines no hierarchy of its own.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from .disposable import DisposableList
+
+if TYPE_CHECKING:
+    from .context import Context
+
+
+@dataclass(frozen=True, slots=True)
+class ScopeKey:
+    """An opaque scope identity with an optional parent.
+
+    Parents are fixed at construction, so a cycle is unrepresentable and no
+    rebinding protocol is needed.
+    """
+
+    name: str
+    parent: "ScopeKey | None" = None
+
+    def chain(self) -> tuple["ScopeKey", ...]:
+        """This key then its ancestors, nearest first."""
+        out: list[ScopeKey] = []
+        node: ScopeKey | None = self
+        while node is not None:
+            out.append(node)
+            node = node.parent
+        return tuple(out)
+
+
+class Scope:
+    """A tagged context plus the disposables registered through it."""
+
+    __slots__ = ("key", "ctx", "_disposables", "_disposed")
+
+    def __init__(self, key: ScopeKey, ctx: "Context", disposables: DisposableList) -> None:
+        self.key = key
+        self.ctx = ctx
+        self._disposables = disposables
+        self._disposed = False
+
+    @property
+    def disposed(self) -> bool:
+        return self._disposed
+
+    async def dispose(self) -> None:
+        """Unwind this scope's registrations in reverse. Idempotent."""
+        if self._disposed:
+            return
+        self._disposed = True
+        await self._disposables.dispose_all()
+
+
+def scope_of(ctx: "Context") -> ScopeKey | None:
+    """The nearest scope key a context carries, or None if context-global."""
+    return getattr(ctx, "_scope_key", None)
+```
+
+- [ ] **Step 4: Wire minting into Context**
+
+In `src/minion_agent/runtime/context.py`, import `Scope`, `ScopeKey`, and
+`DisposableList`, add `"scope"` to `_RESERVED`, initialise `self._scope_key = None`
+and `self._scope_disposables = None` in `__init__`, and carry both through
+`extend`:
+
+```python
+        child._scope_key = meta.pop("scope_key", self._scope_key)
+        child._scope_disposables = meta.pop("scope_disposables", self._scope_disposables)
+```
+
+Then add the minting method:
+
+```python
+    def scope(self, key: ScopeKey) -> Scope:
+        """Mint a scope under this context.
+
+        Registrations made through the returned context are visible to that
+        scope and its descendants, and are disposed with it.
+        """
+        disposables = DisposableList()
+        tagged = self.extend(scope_key=key, scope_disposables=disposables)
+        return Scope(key, tagged, disposables)
+```
+
+Finally, make `effect()` route to the scope's disposable list when the context
+carries one, so ownership follows the registration context:
+
+```python
+    def effect(
+        self,
+        execute: Callable[[], Disposer | AbstractContextManager[Any] | None],
+        label: str | None = None,
+    ) -> Callable[[], Any]:
+        """Register a reversible effect, owned by the nearest scope or the fiber."""
+        if self._scope_disposables is not None:
+            return _scoped_effect(self, self._scope_disposables, execute, label)
+        if self._fiber is None:
+            raise RuntimeError("ctx.effect() requires a fiber; call it inside a plugin")
+        return self._fiber.effect(execute, label)
+```
+
+Add the module-level helper, which mirrors `Fiber.effect` but collects into the
+scope's list:
+
+```python
+def _scoped_effect(
+    ctx: "Context",
+    disposables: DisposableList,
+    execute: Callable[[], Any],
+    label: str | None,
+) -> Callable[[], Any]:
+    from .errors import InactiveFiberError
+
+    if disposables.disposed:
+        raise InactiveFiberError(
+            f"cannot create effect {label!r} on a disposed scope"
+        )
+
+    outcome = execute()
+    disposer = None if outcome is None else outcome
+    settled = False
+
+    async def run_disposer() -> None:
+        nonlocal settled
+        if settled:
+            return
+        settled = True
+        if disposer is not None:
+            result = disposer()
+            if inspect.isawaitable(result):
+                await result
+
+    remove = disposables.push(run_disposer)
+
+    async def dispose() -> None:
+        remove()
+        await run_disposer()
+
+    return dispose
+```
+
+Add a `disposed` property to `DisposableList` returning `self._disposed`, and
+`import inspect` to `context.py`.
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_scope.py -v`
+Expected: PASS - nine tests.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/minion_agent/runtime/scope.py src/minion_agent/runtime/context.py src/minion_agent/runtime/disposable.py tests/runtime/test_scope.py
+git commit -m "feat: add scope keys, nesting, and scope-owned effects"
+```
+
+---
+
+## Task 15: Scoped registry helper
+
+The runtime decides which registrations are *eligible*; each service decides how
+eligible registrations *compose*. Shadowing suits a keyed registry such as tools
+and is wrong for an additive one such as prompt sections, so this helper returns
+visible entries in nearest-first order and takes no position on collisions.
+
+**Files:**
+- Create: `src/minion_agent/runtime/scoped_registry.py`
+- Test: `tests/runtime/test_scoped_registry.py`
+
+**Interfaces:**
+- Consumes: `ScopeKey`.
+- Produces: `class ScopedRegistry[V]` with:
+  - `add(key: ScopeKey | None, name: str, value: V) -> Callable[[], None]`
+  - `visible_from(key: ScopeKey | None) -> list[tuple[str, V]]` — nearest-first; untagged entries last
+  - `__len__`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/runtime/test_scoped_registry.py`:
+
+```python
+"""Eligibility inherits down the scope chain; composition is the caller's."""
+
+from minion_agent.runtime.scope import ScopeKey
+from minion_agent.runtime.scoped_registry import ScopedRegistry
+
+DEFINITION = ScopeKey("definition")
+INSTANCE = ScopeKey("instance", parent=DEFINITION)
+TURN = ScopeKey("turn", parent=INSTANCE)
+OTHER = ScopeKey("other", parent=DEFINITION)
+
+
+def test_untagged_entries_are_visible_everywhere() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(None, "global", "g")
+
+    assert registry.visible_from(TURN) == [("global", "g")]
+    assert registry.visible_from(None) == [("global", "g")]
+
+
+def test_descendant_sees_ancestor_entries_nearest_first() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(None, "u", "untagged")
+    registry.add(DEFINITION, "d", "definition")
+    registry.add(INSTANCE, "i", "instance")
+    registry.add(TURN, "t", "turn")
+
+    assert registry.visible_from(TURN) == [
+        ("t", "turn"),
+        ("i", "instance"),
+        ("d", "definition"),
+        ("u", "untagged"),
+    ]
+
+
+def test_ancestor_never_sees_descendant_entries() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(TURN, "t", "turn")
+
+    assert registry.visible_from(DEFINITION) == []
+    assert registry.visible_from(None) == []
+
+
+def test_siblings_are_invisible_to_each_other() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(INSTANCE, "i", "instance")
+    registry.add(OTHER, "o", "other")
+
+    assert registry.visible_from(INSTANCE) == [("i", "instance")]
+    assert registry.visible_from(OTHER) == [("o", "other")]
+
+
+def test_same_name_at_two_depths_is_returned_twice_nearest_first() -> None:
+    """The helper does not shadow. A keyed registry takes the first; an
+    additive one takes both. That choice is not the runtime's to make."""
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(DEFINITION, "bash", "definition-bash")
+    registry.add(TURN, "bash", "turn-bash")
+
+    assert registry.visible_from(TURN) == [
+        ("bash", "turn-bash"),
+        ("bash", "definition-bash"),
+    ]
+
+
+def test_remove_handle_withdraws_one_entry() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    remove = registry.add(INSTANCE, "i", "instance")
+    registry.add(INSTANCE, "j", "other")
+
+    remove()
+
+    assert registry.visible_from(INSTANCE) == [("j", "other")]
+
+
+def test_insertion_order_is_preserved_within_one_scope() -> None:
+    registry: ScopedRegistry[str] = ScopedRegistry()
+    registry.add(INSTANCE, "a", "first")
+    registry.add(INSTANCE, "b", "second")
+
+    assert registry.visible_from(INSTANCE) == [("a", "first"), ("b", "second")]
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_scoped_registry.py -v`
+Expected: FAIL - `ModuleNotFoundError: No module named 'minion_agent.runtime.scoped_registry'`
+
+- [ ] **Step 3: Write the implementation**
+
+Create `src/minion_agent/runtime/scoped_registry.py`:
+
+```python
+"""Scope-aware storage for services that hold registrations.
+
+The runtime decides eligibility; the owning service decides composition.
+This helper answers only "which entries are visible from here", nearest scope
+first, and deliberately takes no position on same-name collisions: a keyed
+registry shadows by taking the first match, an additive one keeps every entry.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Generic, TypeVar
+
+from .scope import ScopeKey
+
+V = TypeVar("V")
+
+
+class ScopedRegistry(Generic[V]):
+    """Entries filed by scope, queried by visibility."""
+
+    __slots__ = ("_entries",)
+
+    def __init__(self) -> None:
+        # Insertion-ordered per scope; None keys the untagged (global) bucket.
+        self._entries: dict[ScopeKey | None, list[tuple[str, V] | None]] = {}
+
+    def __len__(self) -> int:
+        return sum(
+            1 for bucket in self._entries.values() for entry in bucket if entry is not None
+        )
+
+    def add(self, key: ScopeKey | None, name: str, value: V) -> Callable[[], None]:
+        """File `value` under `key`; returns a handle that withdraws it."""
+        bucket = self._entries.setdefault(key, [])
+        index = len(bucket)
+        bucket.append((name, value))
+
+        def remove() -> None:
+            bucket[index] = None
+
+        return remove
+
+    def visible_from(self, key: ScopeKey | None) -> list[tuple[str, V]]:
+        """Entries visible from `key`: its own, then ancestors', then untagged.
+
+        Nearest-first ordering is what lets a keyed registry shadow by taking
+        the first match for a name.
+        """
+        chain: tuple[ScopeKey | None, ...] = key.chain() if key is not None else ()
+        out: list[tuple[str, V]] = []
+        for scope in (*chain, None):
+            for entry in self._entries.get(scope, ()):
+                if entry is not None:
+                    out.append(entry)
+        return out
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_scoped_registry.py -v`
+Expected: PASS - seven tests.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/minion_agent/runtime/scoped_registry.py tests/runtime/test_scoped_registry.py
+git commit -m "feat: add scoped registry helper with eligibility-only semantics"
+```
+
+---
+
+## Task 16: Scoped event admission
+
+Registration visibility inherits *down* the scope chain; event admission extends
+*up* it. A listener tagged with an ancestor hears a descendant's events, never
+the reverse, and an untagged listener hears everything. The rule is additive, so
+no existing unscoped behavior changes.
+
+**Files:**
+- Modify: `src/minion_agent/runtime/events.py`
+- Test: `tests/runtime/test_events_scoped.py`
+
+**Interfaces:**
+- Consumes: `EventBus`, `ScopeKey`.
+- Produces: `scope: ScopeKey | None = None` keyword on `EventBus.on(...)`, and on `emit`, `parallel`, `serial`, and `waterfall`. Admission: an untagged listener is always admitted; a tagged listener is admitted only when its key is the dispatch key or an ancestor of it; a dispatch with no key admits untagged listeners only.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/runtime/test_events_scoped.py`:
+
+```python
+"""Event admission extends up the scope chain; untagged listeners hear all."""
+
+from minion_agent.runtime.events import DispatchMode, EventBus
+from minion_agent.runtime.scope import ScopeKey
+
+DEFINITION = ScopeKey("definition")
+INSTANCE = ScopeKey("instance", parent=DEFINITION)
+TURN = ScopeKey("turn", parent=INSTANCE)
+OTHER = ScopeKey("other", parent=DEFINITION)
+
+
+def _bus() -> EventBus:
+    bus = EventBus()
+    bus.declare("test/emit", DispatchMode.EMIT)
+    return bus
+
+
+def test_untagged_listener_hears_every_dispatch() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("untagged"))
+
+    bus.emit("test/emit", scope=TURN)
+    bus.emit("test/emit")
+
+    assert seen == ["untagged", "untagged"]
+
+
+def test_ancestor_listener_hears_a_descendant_dispatch() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("definition"), scope=DEFINITION)
+
+    bus.emit("test/emit", scope=TURN)
+
+    assert seen == ["definition"]
+
+
+def test_descendant_listener_does_not_hear_an_ancestor_dispatch() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("turn"), scope=TURN)
+
+    bus.emit("test/emit", scope=DEFINITION)
+
+    assert seen == []
+
+
+def test_siblings_do_not_hear_each_other() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("other"), scope=OTHER)
+
+    bus.emit("test/emit", scope=INSTANCE)
+
+    assert seen == []
+
+
+def test_unscoped_dispatch_admits_only_untagged_listeners() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("untagged"))
+    bus.on("test/emit", lambda: seen.append("tagged"), scope=INSTANCE)
+
+    bus.emit("test/emit")
+
+    assert seen == ["untagged"]
+
+
+def test_admission_order_follows_registration_order() -> None:
+    bus = _bus()
+    seen: list[str] = []
+    bus.on("test/emit", lambda: seen.append("first"), scope=DEFINITION)
+    bus.on("test/emit", lambda: seen.append("second"))
+    bus.on("test/emit", lambda: seen.append("third"), scope=TURN)
+
+    bus.emit("test/emit", scope=TURN)
+
+    assert seen == ["first", "second", "third"]
+
+
+async def test_waterfall_honours_admission() -> None:
+    bus = EventBus()
+    bus.declare("test/waterfall", DispatchMode.WATERFALL)
+
+    async def excluded(next_):  # noqa: ANN001, ANN202
+        return "excluded"
+
+    async def included(next_):  # noqa: ANN001, ANN202
+        return "included"
+
+    bus.on("test/waterfall", excluded, scope=OTHER)
+    bus.on("test/waterfall", included, scope=DEFINITION)
+
+    assert await bus.waterfall("test/waterfall", scope=TURN) == "included"
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_events_scoped.py -v`
+Expected: FAIL - `TypeError: on() got an unexpected keyword argument 'scope'`
+
+- [ ] **Step 3: Write the implementation**
+
+In `src/minion_agent/runtime/events.py`, import `ScopeKey`, give `_Listener` a
+`scope` field, accept `scope` in `on()`, and filter in `_chain`:
+
+```python
+class _Listener:
+    __slots__ = ("callback", "scope")
+
+    def __init__(self, callback: Callable[..., Any], scope: "ScopeKey | None") -> None:
+        self.callback = callback
+        self.scope = scope
+```
+
+```python
+    def on(
+        self,
+        name: str,
+        listener: Callable[..., Any],
+        *,
+        prepend: bool = False,
+        scope: "ScopeKey | None" = None,
+    ) -> Callable[[], None]:
+        """Register `listener` for `name`; returns a disposer that removes it."""
+        self.mode_of(name)
+        entry = _Listener(listener, scope)
+        ...
+```
+
+```python
+    @staticmethod
+    def _admits(listener_scope: "ScopeKey | None", dispatch_scope: "ScopeKey | None") -> bool:
+        """Admission extends up the chain: an ancestor hears a descendant."""
+        if listener_scope is None:
+            return True
+        if dispatch_scope is None:
+            return False
+        return listener_scope in dispatch_scope.chain()
+
+    def _chain(self, name: str, scope: "ScopeKey | None" = None) -> list[Callable[..., Any]]:
+        return [
+            entry.callback
+            for entry in self._listeners.get(name, ())
+            if self._admits(entry.scope, scope)
+        ]
+```
+
+Then thread `scope` through each dispatch method — `emit`, `parallel`, `serial`,
+and `waterfall` each gain a `scope: ScopeKey | None = None` keyword and pass it
+to `self._chain(name, scope)`.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `.venv/Scripts/pytest tests/runtime/test_events_scoped.py tests/runtime/test_events_emit.py tests/runtime/test_events_async.py tests/runtime/test_events_waterfall.py -v`
+Expected: PASS - the new suite plus every earlier event test unchanged, which is
+what confirms the rule is additive.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/minion_agent/runtime/events.py tests/runtime/test_events_scoped.py
+git commit -m "feat: add scope-filtered event admission"
+```
+
+---
+
+
+## Task 17: Public surface
 
 **Files:**
 - Modify: `src/minion_agent/runtime/__init__.py`
 - Test: `tests/runtime/test_public_surface.py`
 
 **Interfaces:**
-- Consumes: everything from Tasks 4–12.
+- Consumes: everything from Tasks 10–12.
 - Produces: `minion_agent.runtime` re-exporting `Context`, `Fiber`, `FiberState`, `PluginSpec`, `plugin`, `spec_of`, `DispatchMode`, `EventBus`, `ServiceRegistry`, `Impl`, `DisposableList`, `Disposer`, and the five error types, with `__all__` set.
 
 - [ ] **Step 1: Write the failing test**
@@ -2954,10 +3886,15 @@ EXPECTED = {
     "InactiveFiberError",
     "PluginSpec",
     "RuntimeError_",
+    "Scope",
+    "ScopeKey",
+    "ScopedRegistry",
     "ServiceConflictError",
     "ServiceNotFoundError",
     "ServiceRegistry",
+    "WaterfallError",
     "plugin",
+    "scope_of",
     "spec_of",
 }
 
@@ -3042,7 +3979,7 @@ git commit -m "feat: export the runtime public surface"
 
 ---
 
-## Task 14: Conformance runner
+## Task 18: Conformance runner
 
 Makes the Phase 0 scenarios executable.
 
@@ -3055,7 +3992,8 @@ Makes the Phase 0 scenarios executable.
 - Produces:
   - `class TraceRecorder` with `entries: list[dict[str, Any]]` and `record(entry: dict[str, Any]) -> None`.
   - `async def run_runtime_scenario(document: dict[str, Any]) -> RunOutcome` where `RunOutcome` is a dataclass with `trace: list[dict[str, Any]]`, `result: Any`, `error: Exception | None`.
-  - `def build_plugin(entry: dict[str, Any], recorder: TraceRecorder) -> PluginSpec` — turns a declarative plugin entry into a real plugin.
+  - `class ScopeTable` — resolves scenario scope names into `ScopeKey` chains, keeps one live `Scope` per name, and disposes a scope with its descendants deepest-first.
+  - `def build_plugin(entry, recorder, scopes) -> PluginSpec` — turns a declarative plugin entry into a real plugin, registering through its declared scope when it has one.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -3112,7 +4050,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from minion_agent.runtime import Context, DispatchMode, PluginSpec
+from minion_agent.runtime import Context, DispatchMode, PluginSpec, Scope, ScopeKey
 from minion_agent.runtime.errors import RuntimeError_
 
 
@@ -3143,6 +4081,7 @@ def _make_listener(
     action = spec["action"]
     tag = spec["tag"]
     returns = spec.get("returns")
+    replacement = spec.get("replacement")
 
     async def listener(*args: Any) -> Any:
         recorder.record({"event": "listener_entered", "plugin": plugin_id, "tag": tag})
@@ -3150,26 +4089,82 @@ def _make_listener(
 
         if action == "raise":
             raise ValueError(f"{tag} raised")
-        if action == "short_circuit":
+        if action in ("short_circuit", "observe"):
             return returns
-        if action == "observe":
+        if next_ is None:
             return returns
-        if next_ is not None:
+        if action == "transform":
+            return await next_(replacement)
+        if action == "delegate_twice":
+            await next_()
             return await next_()
-        return returns
+        return await next_()
 
     return listener
 
 
-def build_plugin(entry: dict[str, Any], recorder: TraceRecorder) -> PluginSpec:
+class ScopeTable:
+    """Scope keys and live scopes, keyed by the names scenarios use.
+
+    Scenarios name scopes with plain strings and declare parents by name; this
+    resolves those into real `ScopeKey` chains and keeps one live `Scope` per
+    name so a `dispose_scope` step can find it.
+    """
+
+    def __init__(self, recorder: TraceRecorder) -> None:
+        self._recorder = recorder
+        self.keys: dict[str, ScopeKey] = {}
+        self.live: dict[str, Scope] = {}
+
+    def key_for(self, name: str, parent_name: str | None) -> ScopeKey:
+        if name not in self.keys:
+            parent = self.keys.get(parent_name) if parent_name else None
+            self.keys[name] = ScopeKey(name, parent=parent)
+        return self.keys[name]
+
+    def open(self, ctx: Context, name: str, parent_name: str | None) -> Scope:
+        if name not in self.live:
+            self.live[name] = ctx.scope(self.key_for(name, parent_name))
+        return self.live[name]
+
+    async def dispose(self, name: str) -> None:
+        """Dispose `name` and every descendant, deepest first."""
+        target = self.keys[name]
+        descendants = [
+            other
+            for other, key in self.keys.items()
+            if other in self.live and target in key.chain()
+        ]
+        descendants.sort(key=lambda other: -len(self.keys[other].chain()))
+        for other in descendants:
+            await self.live.pop(other).dispose()
+            self._recorder.record({"event": "scope_disposed", "scope": other})
+
+
+def build_plugin(
+    entry: dict[str, Any],
+    recorder: TraceRecorder,
+    scopes: ScopeTable,
+) -> PluginSpec:
     """Turn one declarative plugin entry into a mountable PluginSpec."""
     plugin_id = entry["id"]
     provides = entry.get("provides")
     effects = entry.get("effects", [])
     listeners = entry.get("listeners", [])
     fails = entry.get("fails", False)
+    scope_name = entry.get("scope")
+    scope_parent = entry.get("scope_parent")
 
     async def apply(ctx: Context, config: Any) -> None:  # noqa: ARG001
+        # A plugin declaring a scope registers through it, so visibility and
+        # ownership both follow the scope rather than this fiber.
+        target = ctx
+        scope_key: ScopeKey | None = None
+        if scope_name is not None:
+            scope = scopes.open(ctx, scope_name, scope_parent)
+            target = scope.ctx
+            scope_key = scope.key
+
         if provides is not None:
             ctx.provide(provides, {"service": provides})
             recorder.record(
@@ -3177,11 +4172,14 @@ def build_plugin(entry: dict[str, Any], recorder: TraceRecorder) -> PluginSpec:
             )
 
         for effect in effects:
-            label = effect["label"]
-            ctx.effect(lambda: None, label)
+            target.effect(lambda: None, effect["label"])
 
         for listener in listeners:
-            ctx.on(listener["event"], _make_listener(listener, plugin_id, recorder))
+            target.on(
+                listener["event"],
+                _make_listener(listener, plugin_id, recorder),
+                scope=scope_key,
+            )
 
         if fails:
             raise ValueError(f"{plugin_id} failed on purpose")
@@ -3219,7 +4217,11 @@ async def run_runtime_scenario(document: dict[str, Any]) -> RunOutcome:
     """Mount the scenario's plugins, run its steps, and return the trace."""
     recorder = TraceRecorder()
     root = Context()
-    specs = {entry["id"]: build_plugin(entry, recorder) for entry in document["plugins"]}
+    scopes = ScopeTable(recorder)
+    specs = {
+        entry["id"]: build_plugin(entry, recorder, scopes)
+        for entry in document["plugins"]
+    }
     configs = {entry["id"]: entry.get("config") for entry in document["plugins"]}
     fibers: dict[str, Any] = {}
     result: Any = None
@@ -3238,20 +4240,31 @@ async def run_runtime_scenario(document: dict[str, Any]) -> RunOutcome:
                 plugin_id = step["unmount"]
                 await root.registry_of_plugins.unmount(fibers[plugin_id])
 
+            elif "dispose_scope" in step:
+                await scopes.dispose(step["dispose_scope"])
+
             elif "dispatch" in step:
                 dispatch = step["dispatch"]
                 name = dispatch["event"]
                 mode = DispatchMode(dispatch["mode"])
                 args = dispatch.get("args", [])
+                scope_key = (
+                    scopes.keys.get(dispatch["scope"]) if "scope" in dispatch else None
+                )
                 root.events.declare(name, mode)
                 if mode is DispatchMode.EMIT:
-                    root.events.emit(name, *args)
+                    root.events.emit(name, *args, scope=scope_key)
                 elif mode is DispatchMode.PARALLEL:
-                    await root.events.parallel(name, *args)
+                    await root.events.parallel(name, *args, scope=scope_key)
                 elif mode is DispatchMode.SERIAL:
-                    result = await root.events.serial(name, *args)
+                    result = await root.events.serial(name, *args, scope=scope_key)
                 else:
-                    result = await root.events.waterfall(name, *args)
+                    result = await root.events.waterfall(
+                        name,
+                        *args,
+                        scope=scope_key,
+                        terminal=dispatch.get("terminal"),
+                    )
 
         except RuntimeError_ as error:
             return RunOutcome(trace=recorder.entries, result=result, error=error)
@@ -3259,7 +4272,7 @@ async def run_runtime_scenario(document: dict[str, Any]) -> RunOutcome:
     return RunOutcome(trace=recorder.entries, result=result)
 ```
 
-Listener registration must happen before the event is dispatched, so scenarios declare listeners on plugins mounted in earlier steps. `root.events.declare` is called at dispatch time and is idempotent for a matching mode, which is why re-declaring the same mode is allowed (Task 5).
+Listener registration must happen before the event is dispatched, so scenarios declare listeners on plugins mounted in earlier steps. `root.events.declare` is called at dispatch time and is idempotent for a matching mode, which is why re-declaring the same mode is allowed (Task 10).
 
 - [ ] **Step 4: Reconcile the runner against the scenarios**
 
@@ -3273,7 +4286,7 @@ Iterate until both scenarios pass.
 - [ ] **Step 5: Run the whole suite**
 
 Run: `pytest -v`
-Expected: PASS — all tests including both conformance scenarios.
+Expected: PASS — all tests including the two conformance scenarios authored so far. The remaining five land in Task 19.
 
 - [ ] **Step 6: Commit**
 
@@ -3284,62 +4297,27 @@ git commit -m "feat: add runtime conformance runner and execute the kernel scena
 
 ---
 
-## Task 15: Remaining kernel scenarios
+## Task 19: Remaining kernel scenarios
 
-Fill out the `runtime/` family named in the spec: `waterfall-short-circuit`, `service-exclusivity`, `service-visibility`, `double-dispose`.
+Fill out the `runtime/` family. The scope and waterfall cases are the ones a
+second-language implementation most needs, because they pin semantics that are
+invisible to a single-implementation test suite.
 
 **Files:**
-- Create: `conformance/runtime/waterfall-short-circuit.yaml`
 - Create: `conformance/runtime/service-exclusivity.yaml`
+- Create: `conformance/runtime/scoped-registration-visibility.yaml`
+- Create: `conformance/runtime/nested-scope-disposal.yaml`
+- Create: `conformance/runtime/scoped-event-admission.yaml`
+- Create: `conformance/runtime/waterfall-terminal-continuation.yaml`
+- Create: `conformance/runtime/waterfall-next-called-twice.yaml`
 - Test: existing `tests/conformance/test_runtime_conformance.py` picks them up automatically.
 
 **Interfaces:**
-- Consumes: the runner from Task 14.
-- Produces: two additional executable cases. `double-dispose` and `service-visibility` are covered by tier-2 tests (Tasks 4 and 8) because they assert idempotence and predicate evaluation rather than an ordered trace; this is recorded here so the coverage gap is a decision, not an oversight.
+- Consumes: the runner from Task 18.
+- Produces: six additional executable cases, bringing `conformance/runtime/` to seven.
+- Deliberately tier-2 instead: `service-visibility` and `double-dispose` assert predicate evaluation and idempotence rather than an ordered trace, and `waterfall-delegation` / `waterfall-result-replacement` assert return values already pinned by Task 8's suite. Recorded so the split is a decision rather than an oversight.
 
-- [ ] **Step 1: Write the scenarios**
-
-Create `conformance/runtime/waterfall-short-circuit.yaml`:
-
-```yaml
-name: a waterfall listener that short-circuits skips every downstream listener
-description: >
-  Waterfall is around-middleware. A listener that returns without delegating
-  owns the decision, and listeners registered after it never run. Short-circuit
-  is the design for policy events, not an edge case.
-plugins:
-  - id: observer
-    listeners:
-      - event: test/policy
-        action: delegate
-        tag: observer
-  - id: decider
-    listeners:
-      - event: test/policy
-        action: short_circuit
-        tag: decider
-        returns: blocked
-  - id: unreachable
-    listeners:
-      - event: test/policy
-        action: delegate
-        tag: unreachable
-steps:
-  - mount: observer
-  - mount: decider
-  - mount: unreachable
-  - dispatch: { event: test/policy, mode: waterfall }
-expect_trace:
-  - { event: fiber_state, plugin: observer, state: loading }
-  - { event: fiber_state, plugin: observer, state: active }
-  - { event: fiber_state, plugin: decider, state: loading }
-  - { event: fiber_state, plugin: decider, state: active }
-  - { event: fiber_state, plugin: unreachable, state: loading }
-  - { event: fiber_state, plugin: unreachable, state: active }
-  - { event: listener_entered, plugin: observer, tag: observer }
-  - { event: listener_entered, plugin: decider, tag: decider }
-expect_result: blocked
-```
+- [ ] **Step 1: Write the service-exclusivity scenario**
 
 Create `conformance/runtime/service-exclusivity.yaml`:
 
@@ -3368,45 +4346,257 @@ expect_error:
   message_contains: holder
 ```
 
-Note the interaction with `Fiber.load`: a body that raises is caught and the fiber transitions to `FAILED` rather than propagating. So this scenario asserts the trace, and `expect_error` documents intent.
+- [ ] **Step 2: Write the scope scenarios**
 
-- [ ] **Step 2: Teach the test to check `expect_error`**
+Create `conformance/runtime/scoped-registration-visibility.yaml`:
 
-Add to `tests/conformance/test_runtime_conformance.py`:
+```yaml
+name: registrations are visible down the scope chain and never up it
+description: >
+  A descendant sees its ancestors' registrations; an ancestor never sees a
+  descendant's. This is what lets many agents share one service graph while
+  differing in what is registered.
+plugins:
+  - id: definition-plugin
+    scope: definition
+    effects:
+      - label: definition-tool
+  - id: instance-plugin
+    scope: instance
+    scope_parent: definition
+    effects:
+      - label: instance-tool
+steps:
+  - mount: definition-plugin
+  - mount: instance-plugin
+  - dispose_scope: instance
+expect_trace:
+  - { event: fiber_state, plugin: definition-plugin, state: loading }
+  - { event: effect_created, plugin: definition-plugin, label: definition-tool }
+  - { event: fiber_state, plugin: definition-plugin, state: active }
+  - { event: fiber_state, plugin: instance-plugin, state: loading }
+  - { event: effect_created, plugin: instance-plugin, label: instance-tool }
+  - { event: fiber_state, plugin: instance-plugin, state: active }
+  - { event: effect_disposed, plugin: instance-plugin, label: instance-tool }
+  - { event: scope_disposed, scope: instance }
+```
+
+Disposing the instance scope removes only its own registration — the
+definition's survives, which is the ancestor-unaffected half of the rule.
+
+Create `conformance/runtime/nested-scope-disposal.yaml`:
+
+```yaml
+name: disposing a scope removes its descendants and leaves ancestors intact
+description: >
+  Ownership follows the registration context. Disposing a middle scope unwinds
+  it and everything beneath it, in reverse creation order, while its parent and
+  siblings are untouched.
+plugins:
+  - id: outer-plugin
+    scope: outer
+    effects:
+      - label: outer-effect
+  - id: middle-plugin
+    scope: middle
+    scope_parent: outer
+    effects:
+      - label: middle-first
+      - label: middle-second
+steps:
+  - mount: outer-plugin
+  - mount: middle-plugin
+  - dispose_scope: middle
+  - dispose_scope: outer
+expect_trace:
+  - { event: fiber_state, plugin: outer-plugin, state: loading }
+  - { event: effect_created, plugin: outer-plugin, label: outer-effect }
+  - { event: fiber_state, plugin: outer-plugin, state: active }
+  - { event: fiber_state, plugin: middle-plugin, state: loading }
+  - { event: effect_created, plugin: middle-plugin, label: middle-first }
+  - { event: effect_created, plugin: middle-plugin, label: middle-second }
+  - { event: fiber_state, plugin: middle-plugin, state: active }
+  - { event: effect_disposed, plugin: middle-plugin, label: middle-second }
+  - { event: effect_disposed, plugin: middle-plugin, label: middle-first }
+  - { event: scope_disposed, scope: middle }
+  - { event: effect_disposed, plugin: outer-plugin, label: outer-effect }
+  - { event: scope_disposed, scope: outer }
+```
+
+Create `conformance/runtime/scoped-event-admission.yaml`:
+
+```yaml
+name: event admission extends up the scope chain
+description: >
+  A listener tagged with an ancestor hears a descendant's dispatch; a listener
+  tagged with a descendant does not hear an ancestor's. An untagged listener
+  hears everything. Registration visibility and event admission run in opposite
+  directions, and this pins that.
+plugins:
+  - id: ancestor-listener
+    scope: definition
+    listeners:
+      - event: test/policy
+        action: observe
+        tag: ancestor
+  - id: descendant-listener
+    scope: instance
+    scope_parent: definition
+    listeners:
+      - event: test/policy
+        action: observe
+        tag: descendant
+  - id: untagged-listener
+    listeners:
+      - event: test/policy
+        action: observe
+        tag: untagged
+steps:
+  - mount: ancestor-listener
+  - mount: descendant-listener
+  - mount: untagged-listener
+  - dispatch: { event: test/policy, mode: emit, scope: instance }
+  - dispatch: { event: test/policy, mode: emit, scope: definition }
+expect_trace:
+  - { event: fiber_state, plugin: ancestor-listener, state: loading }
+  - { event: fiber_state, plugin: ancestor-listener, state: active }
+  - { event: fiber_state, plugin: descendant-listener, state: loading }
+  - { event: fiber_state, plugin: descendant-listener, state: active }
+  - { event: fiber_state, plugin: untagged-listener, state: loading }
+  - { event: fiber_state, plugin: untagged-listener, state: active }
+  - { event: listener_entered, plugin: ancestor-listener, tag: ancestor }
+  - { event: listener_entered, plugin: descendant-listener, tag: descendant }
+  - { event: listener_entered, plugin: untagged-listener, tag: untagged }
+  - { event: listener_entered, plugin: ancestor-listener, tag: ancestor }
+  - { event: listener_entered, plugin: untagged-listener, tag: untagged }
+```
+
+The second dispatch admits the ancestor and the untagged listener but not the
+descendant — three entries for the first dispatch, two for the second.
+
+- [ ] **Step 3: Write the waterfall scenarios**
+
+Create `conformance/runtime/waterfall-terminal-continuation.yaml`:
+
+```yaml
+name: a fully delegating transformation chain yields the terminal, not null
+description: >
+  Every waterfall event declares a terminal continuation. Without it, a chain
+  whose listeners all cooperatively delegate would discard the value it just
+  finished transforming — the failure mode the transformation pattern exists to
+  avoid.
+plugins:
+  - id: first-transform
+    listeners:
+      - event: test/transform
+        action: transform
+        tag: first
+        replacement: after-first
+  - id: second-transform
+    listeners:
+      - event: test/transform
+        action: transform
+        tag: second
+        replacement: after-second
+steps:
+  - mount: first-transform
+  - mount: second-transform
+  - dispatch:
+      event: test/transform
+      mode: waterfall
+      args: [original]
+      terminal: terminal-value
+expect_trace:
+  - { event: fiber_state, plugin: first-transform, state: loading }
+  - { event: fiber_state, plugin: first-transform, state: active }
+  - { event: fiber_state, plugin: second-transform, state: loading }
+  - { event: fiber_state, plugin: second-transform, state: active }
+  - { event: listener_entered, plugin: first-transform, tag: first }
+  - { event: listener_entered, plugin: second-transform, tag: second }
+expect_result: terminal-value
+```
+
+Create `conformance/runtime/waterfall-next-called-twice.yaml`:
+
+```yaml
+name: delegating twice from one listener is an error
+description: >
+  `next` may be called at most once. Memoizing it instead would be incoherent,
+  because a second call may carry different replacement arguments and there is
+  no defensible answer for which set the downstream chain saw.
+plugins:
+  - id: greedy
+    listeners:
+      - event: test/greedy
+        action: delegate_twice
+        tag: greedy
+  - id: downstream
+    listeners:
+      - event: test/greedy
+        action: short_circuit
+        tag: downstream
+        returns: value
+steps:
+  - mount: greedy
+  - mount: downstream
+  - dispatch: { event: test/greedy, mode: waterfall }
+expect_trace:
+  - { event: fiber_state, plugin: greedy, state: loading }
+  - { event: fiber_state, plugin: greedy, state: active }
+  - { event: fiber_state, plugin: downstream, state: loading }
+  - { event: fiber_state, plugin: downstream, state: active }
+  - { event: listener_entered, plugin: greedy, tag: greedy }
+  - { event: listener_entered, plugin: downstream, tag: downstream }
+expect_error:
+  type: WaterfallError
+  message_contains: at most once
+```
+
+- [ ] **Step 4: Teach the test to check `expect_error`**
+
+In `tests/conformance/test_runtime_conformance.py`, make the error assertion
+conditional and check the declared type:
 
 ```python
     if "expect_error" in document:
         expected = document["expect_error"]
-        failed = [
+        observed = outcome.error
+        failed_fibers = [
             entry
             for entry in outcome.trace
             if entry["event"] == "fiber_state" and entry["state"] == "failed"
         ]
-        assert failed, f"expected a failed fiber for {expected['type']}"
-```
-
-Change the existing unconditional assertion so a scenario declaring `expect_error` is not required to be error-free:
-
-```python
-    if "expect_error" not in document:
+        assert observed is not None or failed_fibers, (
+            f"expected {expected['type']} to surface as a raised error or a failed fiber"
+        )
+        if observed is not None:
+            assert type(observed).__name__ == expected["type"]
+            if "message_contains" in expected:
+                assert expected["message_contains"] in str(observed)
+    else:
         assert outcome.error is None, f"scenario raised: {outcome.error!r}"
 ```
 
-- [ ] **Step 3: Run the conformance suite**
+A plugin body that raises is caught by `Fiber.load` and becomes a `failed`
+state rather than a propagating error, while an error raised by a dispatch step
+propagates — this accepts either, and checks the type whenever one propagated.
 
-Run: `pytest tests/conformance -v`
-Expected: PASS — four scenarios plus schema validation.
+- [ ] **Step 5: Run the conformance suite**
 
-- [ ] **Step 4: Commit**
+Run: `.venv/Scripts/pytest tests/conformance -v`
+Expected: PASS — seven scenarios plus schema validation.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add conformance/runtime tests/conformance/test_runtime_conformance.py
-git commit -m "feat: add waterfall short-circuit and service exclusivity scenarios"
+git commit -m "feat: add scope, waterfall, and service-exclusivity conformance scenarios"
 ```
 
 ---
 
-## Task 16: Property tests and the coverage gate
+
+## Task 20: Property tests and the coverage gate
 
 **Files:**
 - Create: `tests/runtime/test_properties.py`
@@ -3521,12 +4711,15 @@ git push -u origin main
 
 - [ ] `pytest` passes with 100% coverage of `src/minion_agent/runtime/**`
 - [ ] `ruff check`, `ruff format --check`, and `mypy` are clean
-- [ ] Four scenarios in `conformance/runtime/` execute and pass
-- [ ] Both JSON Schemas validate, and every scenario validates against its schema
+- [ ] Seven scenarios in `conformance/runtime/` execute and pass
+- [ ] All three JSON Schemas validate, and every scenario validates against its schema
 - [ ] No identifier in `minion_agent.runtime.__all__` contains "cordis"
+- [ ] `minion_agent.runtime` imports nothing from `tools`, `agent`, or `session` — the layer-purity constraint is checked, not assumed
 - [ ] `conformance/schema/README.md` documents the runner contract
 - [ ] Work is pushed to `origin/main`
 
 ## What Plan 2 picks up
 
-LLM message vocabulary and the never-raises stream contract, the scripted mock adapter, the session log with `derive_messages()`, and the agent loop through a complete tool round-trip. It writes `conformance/agent/*.yaml` against the format fixed in Task 3, mounting every subsystem as a plugin on the runtime this plan delivers.
+LLM message vocabulary (including image content blocks) and the never-raises stream contract with its eager/in-band boundary, the scripted mock adapter, the session log with `derive_messages()` and its operations, content-addressed request state, and the telemetry span vocabulary with a recording no-op service. It writes `conformance/agent/*.yaml` and `conformance/session/*.yaml` against the formats fixed in Tasks 3 and 4, mounting every subsystem as a plugin on the runtime this plan delivers.
+
+The agent loop, `AgentDefinition`/`AgentInstance`, input provenance, and the decision events that consume this plan's waterfall contract follow in Plan 2's second half or Plan 3, depending on how Plan 2 sizes out once the runtime exists to inform it.
