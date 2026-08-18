@@ -3763,13 +3763,25 @@ entry, asserting the turn completes with an error-stopped assistant message and
 no exception.
 
 Create `eager-invalid-model-fails-before-stream.yaml`: config naming a model no
-adapter supplies, asserting the scenario raises before any turn is logged —
+adapter supplies, asserting the scenario raises rather than settling the failure
+into history —
 
 ```yaml
 expect_error:
   type: UnknownModelError
-  before_any_event: true
+  message_contains: no-such-model
+expect_messages:
+  - { role: user, text: hello }
+expect_assistant_stop_reasons: []
 ```
+
+> **Deviation, recorded during execution.** This step originally specified
+> `before_any_event: true`, which the loop cannot satisfy: a turn opens, claims
+> its prompt, and records its request header *before* the model is resolved, so
+> those entries exist by the time `UnknownModelError` is raised. The eager
+> contract is about where the failure surfaces, not about the log being empty.
+> The shape above pins it without the false claim, and `before_any_event` was
+> never added to the schema.
 
 The last one is the only agent scenario that asserts a raised error, and
 deliberately so: it is the *other* side of the boundary. Add `expect_error` and
@@ -4014,7 +4026,7 @@ git push origin main
 - [ ] `uv run pytest` passes with 100% coverage of `runtime`, `llm`, `session`, `telemetry`, `agent`, and `agent_loop`
 - [ ] `uv run ruff check`, `ruff format --check`, and `mypy` are clean
 - [ ] Seven runtime, nine session, and eleven agent scenarios execute and pass
-- [ ] §4's stream boundary is pinned by conformance, not only by Python tests: a truncated stream settles, and an unknown model raises before any event is logged
+- [ ] §4's stream boundary is pinned by conformance, not only by Python tests: a truncated stream settles in-band, and an unknown model raises rather than settling the failure into history (see the deviation note in Task 17, Step 4)
 - [ ] The Phase 3 milestone runs end to end: mock LLM → tool_call → loop → mock tool result → second request
 - [ ] A turn's `causes` match its claimed envelopes under both claim policies
 - [ ] Hard termination (`max_steps`, `cancelled`, nothing owed) precedes `agent/turn-stopping`, verified by a test asserting the event is not dispatched
