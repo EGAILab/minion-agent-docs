@@ -95,9 +95,16 @@ minion-agent-python/
   tests/             # Python unit and property tests
   evals/             # model-backed tier
 minion-agent-docs/
-  design/            # this document
-  spec/              # normative semantic rules
+  design/            # this document — language-neutral
+  spec/              # normative semantic rules — language-neutral
+  plans/
+    python/          # implementation plans for this implementation
 ```
+
+The split follows the same line as the repository name. `design/`, `spec/`,
+and `conformance/` describe the project and are shared by any implementation;
+an implementation plan is a sequence of tasks against one language's
+libraries, tooling, and idioms, so it lives under that language.
 
 One distribution, not one per plugin. DSH's package-per-plugin split buys
 independent npm versioning that a single-language project does not need. The
