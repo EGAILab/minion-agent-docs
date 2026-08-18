@@ -15,7 +15,8 @@ The spec was validated against a real 42k-line application and three review pass
 ## Global Constraints
 
 - **Python floor:** 3.12. Use `type` statements, `StrEnum`, and PEP 695 generics freely.
-- **Interpreter, on this machine:** bare `python` on PATH is the Windows Store stub — it exits with code 49 and does nothing, which fails *silently* inside shell pipelines. Real interpreters are `py -3.12` (`E:\AI\Python\Python312`) and `py -3.13`. `uv` is installed at `~/.local/bin/uv`. Create the environment once with `uv venv --python 3.12 && uv pip install -e ".[dev]"`, then run tools from `.venv/Scripts/` (Windows) so no command depends on PATH resolution. Never invoke bare `python` in a script or CI step.
+- **Package manager: uv, in project mode.** Dependencies are declared in `pyproject.toml` (`[project.dependencies]` and the `[dependency-groups] dev` group) and pinned in a committed `uv.lock`. Set up with `uv sync`; run every tool with `uv run <tool>`.
+- **Never invoke bare `python`.** On this machine it resolves to the Windows Store stub, which exits 49 and does nothing — failing *silently* inside shell pipelines. `uv run` sidesteps PATH resolution entirely, which is the main reason to prefer it over activating a venv. Where a raw interpreter is genuinely needed, use `py -3.12`.
 - **Async:** `asyncio` throughout. Every lifecycle operation that can await, awaits.
 - **Naming:** the package is `minion_agent.runtime`. Cordis is credited in prose and docstrings as design lineage ("Cordis-semantic", "Cordis-inspired") and **never** appears in a module path, class name, or public identifier.
 - **Coverage:** `src/minion_agent/runtime/**` targets 100% per-file. Exceptions require a `# pragma: no cover` with a written reason on the same line.
@@ -124,7 +125,7 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -186,16 +187,19 @@ Cordis-semantic, not a Cordis port. See the design spec, section 3.
 Run, from the repository root:
 
 ```bash
-uv venv --python 3.12
-uv pip install -e ".[dev]"
-.venv/Scripts/pytest tests/test_scaffold.py -v
+uv sync
+uv run pytest tests/test_scaffold.py -v
 ```
+
+`uv sync` resolves from `pyproject.toml`, writes `uv.lock`, and creates the
+environment. Commit the lock file — it is what makes the environment
+reproducible for anyone else who runs `uv sync`.
 
 Expected: PASS
 
-Every later `pytest`, `ruff`, and `mypy` invocation in this plan means the one
-in `.venv/Scripts/`. Bare `python` is the Store stub and must never be used
-(see Global Constraints).
+Every later `pytest`, `ruff`, and `mypy` invocation in this plan means
+`uv run <tool>`. Bare `python` is the Store stub and must never be used (see
+Global Constraints).
 
 - [ ] **Step 5: Commit**
 
@@ -746,7 +750,7 @@ UNPOPULATED = {"agent", "session"}
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/conformance/test_schema_validation.py -v`
+Run: `uv run pytest` tests/conformance/test_schema_validation.py -v`
 Expected: FAIL - `test_family_schema_is_wellformed[session]` raises `FileNotFoundError`.
 
 - [ ] **Step 3: Write the schema**
@@ -839,7 +843,7 @@ no-double-projection rule.
 mkdir -p conformance/session && touch conformance/session/.gitkeep
 ```
 
-Run: `.venv/Scripts/pytest tests/conformance/test_schema_validation.py -v`
+Run: `uv run pytest` tests/conformance/test_schema_validation.py -v`
 Expected: PASS - `session` skips its scenario test and passes wellformedness.
 
 - [ ] **Step 5: Commit**
@@ -1661,7 +1665,7 @@ async def test_sync_listeners_are_supported() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_events_waterfall.py -v`
+Run: `uv run pytest` tests/runtime/test_events_waterfall.py -v`
 Expected: FAIL - `ImportError: cannot import name 'WaterfallError'`
 
 - [ ] **Step 3: Add the error type**
@@ -1722,7 +1726,7 @@ Add `WaterfallError` to the `errors` import at the top of
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_events_waterfall.py -v`
+Run: `uv run pytest` tests/runtime/test_events_waterfall.py -v`
 Expected: PASS - nine tests.
 
 - [ ] **Step 6: Commit**
@@ -3300,7 +3304,7 @@ async def test_effect_on_a_disposed_scope_raises() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_scope.py -v`
+Run: `uv run pytest` tests/runtime/test_scope.py -v`
 Expected: FAIL - `ModuleNotFoundError: No module named 'minion_agent.runtime.scope'`
 
 - [ ] **Step 3: Write the implementation**
@@ -3466,7 +3470,7 @@ Add a `disposed` property to `DisposableList` returning `self._disposed`, and
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_scope.py -v`
+Run: `uv run pytest` tests/runtime/test_scope.py -v`
 Expected: PASS - nine tests.
 
 - [ ] **Step 6: Commit**
@@ -3585,7 +3589,7 @@ def test_insertion_order_is_preserved_within_one_scope() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_scoped_registry.py -v`
+Run: `uv run pytest` tests/runtime/test_scoped_registry.py -v`
 Expected: FAIL - `ModuleNotFoundError: No module named 'minion_agent.runtime.scoped_registry'`
 
 - [ ] **Step 3: Write the implementation**
@@ -3653,7 +3657,7 @@ class ScopedRegistry(Generic[V]):
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_scoped_registry.py -v`
+Run: `uv run pytest` tests/runtime/test_scoped_registry.py -v`
 Expected: PASS - seven tests.
 
 - [ ] **Step 5: Commit**
@@ -3784,7 +3788,7 @@ async def test_waterfall_honours_admission() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_events_scoped.py -v`
+Run: `uv run pytest` tests/runtime/test_events_scoped.py -v`
 Expected: FAIL - `TypeError: on() got an unexpected keyword argument 'scope'`
 
 - [ ] **Step 3: Write the implementation**
@@ -3840,7 +3844,7 @@ to `self._chain(name, scope)`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/runtime/test_events_scoped.py tests/runtime/test_events_emit.py tests/runtime/test_events_async.py tests/runtime/test_events_waterfall.py -v`
+Run: `uv run pytest` tests/runtime/test_events_scoped.py tests/runtime/test_events_emit.py tests/runtime/test_events_async.py tests/runtime/test_events_waterfall.py -v`
 Expected: PASS - the new suite plus every earlier event test unchanged, which is
 what confirms the rule is additive.
 
@@ -4583,7 +4587,7 @@ propagates — this accepts either, and checks the type whenever one propagated.
 
 - [ ] **Step 5: Run the conformance suite**
 
-Run: `.venv/Scripts/pytest tests/conformance -v`
+Run: `uv run pytest` tests/conformance -v`
 Expected: PASS — seven scenarios plus schema validation.
 
 - [ ] **Step 6: Commit**

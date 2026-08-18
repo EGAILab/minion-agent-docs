@@ -139,7 +139,7 @@ def test_blocks_are_frozen() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/llm/test_content.py -v`
+Run: `uv run pytest` tests/llm/test_content.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm'`
 
 - [ ] **Step 3: Write the implementation**
@@ -214,7 +214,7 @@ type ContentBlock = TextBlock | ThinkingBlock | ImageBlock | ToolCallBlock
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/llm/test_content.py -v`
+Run: `uv run pytest` tests/llm/test_content.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 5: Commit**
@@ -342,7 +342,7 @@ def test_messages_are_frozen() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/llm/test_messages.py -v`
+Run: `uv run pytest` tests/llm/test_messages.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm.messages'`
 
 - [ ] **Step 3: Write the implementation**
@@ -449,7 +449,7 @@ def text_of(message: Message) -> str:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/llm/test_messages.py -v`
+Run: `uv run pytest` tests/llm/test_messages.py -v`
 Expected: PASS — nine tests.
 
 - [ ] **Step 5: Commit**
@@ -561,7 +561,7 @@ async def test_deltas_carry_the_partial_message() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/llm/test_stream.py -v`
+Run: `uv run pytest` tests/llm/test_stream.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm.stream'`
 
 - [ ] **Step 3: Write the errors module**
@@ -728,7 +728,7 @@ async def collect(stream: AssistantStream) -> AssistantMessage:
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/llm/test_stream.py -v`
+Run: `uv run pytest` tests/llm/test_stream.py -v`
 Expected: PASS — four tests.
 
 - [ ] **Step 6: Commit**
@@ -861,7 +861,7 @@ def test_unregistering_withdraws_the_models() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/llm/test_service.py -v`
+Run: `uv run pytest` tests/llm/test_service.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm.service'`
 
 - [ ] **Step 3: Write the implementation**
@@ -963,7 +963,7 @@ class LlmService:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/llm/test_service.py -v`
+Run: `uv run pytest` tests/llm/test_service.py -v`
 Expected: PASS — five tests.
 
 - [ ] **Step 5: Commit**
@@ -1100,7 +1100,7 @@ async def test_usage_is_carried_through() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/llm/test_mock_adapter.py -v`
+Run: `uv run pytest` tests/llm/test_mock_adapter.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm.adapters'`
 
 - [ ] **Step 3: Write the implementation**
@@ -1212,7 +1212,7 @@ class MockAdapter:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/llm/test_mock_adapter.py -v`
+Run: `uv run pytest` tests/llm/test_mock_adapter.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 5: Commit**
@@ -1288,7 +1288,7 @@ def test_operation_events_exist_and_are_not_surface() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_events.py -v`
+Run: `uv run pytest` tests/session/test_events.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session'`
 
 - [ ] **Step 3: Write the implementation**
@@ -1366,7 +1366,7 @@ def is_surface(event: SessionEvent) -> bool:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/test_events.py -v`
+Run: `uv run pytest` tests/session/test_events.py -v`
 Expected: PASS — four tests.
 
 - [ ] **Step 5: Commit**
@@ -1472,7 +1472,7 @@ def test_the_log_reports_its_session_id_and_length() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_log.py -v`
+Run: `uv run pytest` tests/session/test_log.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session.log'`
 
 - [ ] **Step 3: Write the implementation**
@@ -1554,7 +1554,7 @@ class SessionLog:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/test_log.py -v`
+Run: `uv run pytest` tests/session/test_log.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 5: Commit**
@@ -1694,7 +1694,7 @@ def test_encoded_messages_are_json_safe() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_derive.py -v`
+Run: `uv run pytest` tests/session/test_derive.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session.derive'`
 
 - [ ] **Step 3: Write the implementation**
@@ -1853,7 +1853,7 @@ def derive_messages(log: SessionLog) -> tuple[Message, ...]:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/test_derive.py -v`
+Run: `uv run pytest` tests/session/test_derive.py -v`
 Expected: PASS — eight tests.
 
 - [ ] **Step 5: Commit**
@@ -1948,7 +1948,7 @@ def test_the_store_has_no_delete() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_artifacts.py -v`
+Run: `uv run pytest` tests/session/test_artifacts.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session.artifacts'`
 
 - [ ] **Step 3: Write the implementation**
@@ -2017,7 +2017,7 @@ class ArtifactStore:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/test_artifacts.py -v`
+Run: `uv run pytest` tests/session/test_artifacts.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 5: Commit**
@@ -2127,7 +2127,7 @@ def test_the_model_is_recorded_alongside_the_components() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_request_header.py -v`
+Run: `uv run pytest` tests/session/test_request_header.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session.request_header'`
 
 - [ ] **Step 3: Write the implementation**
@@ -2188,7 +2188,7 @@ def reconstruct_header(event: SessionEvent, store: ArtifactStore) -> dict[str, s
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/test_request_header.py -v`
+Run: `uv run pytest` tests/session/test_request_header.py -v`
 Expected: PASS — six tests.
 
 - [ ] **Step 5: Commit**
@@ -2293,7 +2293,7 @@ def test_reset_appends_a_reset_event() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_reset.py -v`
+Run: `uv run pytest` tests/session/test_reset.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.session.operations'`
 
 - [ ] **Step 3: Write the operations module**
@@ -2355,7 +2355,7 @@ def derive_messages(log: SessionLog) -> tuple[Message, ...]:
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/ -v`
+Run: `uv run pytest` tests/session/ -v`
 Expected: PASS — every session test, including the earlier derivation suite unchanged.
 
 - [ ] **Step 6: Commit**
@@ -2490,7 +2490,7 @@ def test_reset_after_compaction_clears_the_summary_too() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_compaction.py -v`
+Run: `uv run pytest` tests/session/test_compaction.py -v`
 Expected: FAIL — `ImportError: cannot import name 'compact'`
 
 - [ ] **Step 3: Add the operation**
@@ -2571,7 +2571,7 @@ Add `EventKind` and `TextBlock` to `derive.py`'s imports.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/ -v`
+Run: `uv run pytest` tests/session/ -v`
 Expected: PASS — every session test.
 
 - [ ] **Step 6: Commit**
@@ -2719,7 +2719,7 @@ def test_reset_inside_a_fork_clears_inherited_history() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/session/test_fork.py -v`
+Run: `uv run pytest` tests/session/test_fork.py -v`
 Expected: FAIL — `ImportError: cannot import name 'fork'`
 
 - [ ] **Step 3: Give the log an ancestor**
@@ -2806,7 +2806,7 @@ what `test_compaction_inside_a_fork_does_not_affect_the_ancestor` checks.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/session/ -v`
+Run: `uv run pytest` tests/session/ -v`
 Expected: PASS — every session test.
 
 If compaction inside a fork misbehaves, the cause is almost certainly the
@@ -3037,7 +3037,7 @@ In `tests/conformance/test_schema_validation.py`, change `UNPOPULATED` to
 
 - [ ] **Step 5: Run the conformance suite**
 
-Run: `.venv/Scripts/pytest tests/conformance -v`
+Run: `uv run pytest` tests/conformance -v`
 Expected: PASS — seven runtime scenarios, four session scenarios, and schema
 validation across all three families.
 
@@ -3155,7 +3155,7 @@ def test_the_error_field_is_scrubbed_too() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/telemetry/test_sanitize.py -v`
+Run: `uv run pytest` tests/telemetry/test_sanitize.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.telemetry'`
 
 - [ ] **Step 3: Write the span vocabulary**
@@ -3279,7 +3279,7 @@ class Sanitizer:
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/telemetry/test_sanitize.py -v`
+Run: `uv run pytest` tests/telemetry/test_sanitize.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 6: Commit**
@@ -3389,7 +3389,7 @@ def test_emitting_with_no_sinks_is_harmless() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/telemetry/test_service.py -v`
+Run: `uv run pytest` tests/telemetry/test_service.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.telemetry.service'`
 
 - [ ] **Step 3: Write the implementation**
@@ -3467,7 +3467,7 @@ class TelemetryService:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/telemetry/test_service.py -v`
+Run: `uv run pytest` tests/telemetry/test_service.py -v`
 Expected: PASS — six tests.
 
 - [ ] **Step 5: Commit**
@@ -3598,7 +3598,7 @@ async def test_telemetry_records_by_default() -> None:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.venv/Scripts/pytest tests/test_composition.py -v`
+Run: `uv run pytest` tests/test_composition.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'minion_agent.llm.plugin'`
 
 - [ ] **Step 3: Write the LLM plugins**
@@ -3735,7 +3735,7 @@ add it there rather than attaching the attribute dynamically here.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `.venv/Scripts/pytest tests/test_composition.py -v`
+Run: `uv run pytest` tests/test_composition.py -v`
 Expected: PASS — seven tests.
 
 - [ ] **Step 7: Commit**
@@ -3930,7 +3930,7 @@ source = [
 
 - [ ] **Step 5: Reach 100%**
 
-Run: `.venv/Scripts/pytest`
+Run: `uv run pytest`
 
 Expect gaps on first run — misuse guards, the `decode_message` and
 `_decode_block` error branches, and adapter edges. Write tests for reachable
@@ -3938,7 +3938,7 @@ lines; use `# pragma: no cover` only with a written reason on the same line.
 
 - [ ] **Step 6: Run lint and types**
 
-Run: `.venv/Scripts/ruff check . && .venv/Scripts/ruff format --check . && .venv/Scripts/mypy`
+Run: `uv run ruff` check . && `uv run ruff` format --check . && `uv run mypy`
 Expected: clean.
 
 - [ ] **Step 7: Commit and push**
