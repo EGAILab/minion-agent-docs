@@ -209,12 +209,27 @@ another — the failure mode that makes ad-hoc capability filtering unsafe.
 
 | Direction | Rule |
 |---|---|
-| **Registration visibility inherits _down_** | A child sees its ancestors' registrations, nearest shadowing farthest. An ancestor never sees a descendant's. |
+| **Registration visibility inherits _down_** | A child scope sees registrations owned by itself and its ancestors. An ancestor never sees a descendant's. |
 | **Event admission extends _up_** | A listener tagged with an ancestor receives a descendant's events. Never the reverse. |
 | **Untagged** | An untagged listener is admitted for every dispatch; an untagged registration is visible everywhere. |
 
 Disposing a scope removes exactly its own and its descendants' registrations,
 leaving ancestors and siblings intact.
+
+**The runtime decides eligibility; each registry decides composition.** Scoping
+answers only *which registrations are visible here*. What to do when several are
+visible is the owning service's business, and the right answer differs by
+registry:
+
+| Registry | Composition |
+|---|---|
+| Tools | Keyed by name; a nearer same-name registration shadows a farther one |
+| Prompt sections | Additive |
+| Event listeners | All admitted listeners participate |
+| Telemetry sinks | Additive |
+
+Putting a shadowing rule in the generic layer would impose keyed-collision
+semantics on registries that are additive by nature.
 
 **Nesting depth is the application's choice.** The runtime guarantees arbitrary
 nesting and key-agnostic tags; it does not define a hierarchy. A chat
@@ -222,9 +237,11 @@ application may use definition → instance → turn; an eval harness may scope 
 variant; a simple tool may use none. Hardcoding a level structure here would
 bind the runtime to one application's shape.
 
-**Disposal never races an in-flight tool.** A scope disposed at the end of a
-unit of work — a turn, typically — settles only after tool executions started
-under it have finished. A running tool never loses a registration mid-execution.
+The runtime contract stops here: nested visibility, ownership, descendant
+disposal, and deterministic effect reversal. Subsystems that need disposal to
+wait on their own in-flight work state that in their own layer (§6), because a
+generic "active-use lease" with one consumer would be an imagined extension
+rather than an extension point.
 
 ### Reactive dependency
 
@@ -253,10 +270,33 @@ Four dispatch modes, matching Cordis:
 | `serial` | yes | registration order | yes |
 | `waterfall` | yes | registration order | yes |
 
-`waterfall` is around-middleware: a listener receives `next` and either
-delegates or short-circuits by returning without calling it. Dispatch mode is
-part of an event's public contract and is declared where the event is
-declared; a mismatch between declaration and dispatch site is a startup error.
+Dispatch mode is part of an event's public contract and is declared where the
+event is declared; a mismatch between declaration and dispatch site is a startup
+error.
+
+**Waterfall, defined once and normatively.** A listener is invoked as
+`listener(*args, next)`:
+
+- **Not calling `next`** — downstream listeners do not run, and this listener's
+  return value is the chain's result.
+- **Calling `next()`** — the downstream chain runs with the current arguments.
+  **Calling `next(*replacement)`** runs it with replacements instead. Either way
+  the downstream result is returned to this listener, which may return it
+  unchanged, replace it, or transform it.
+- **`next` may be called at most once.** A second call raises. (An earlier draft
+  memoized `next` so repeat calls were harmless; that is incoherent once `next`
+  accepts replacement arguments, and a single-use contract is simpler to reason
+  about than a cached one.)
+- **An empty chain** returns `None`.
+
+Every waterfall event in this design is specified in exactly these terms (§6).
+Two distinct usage patterns fall out of the one mechanism, and neither is a
+separate dispatch mode:
+
+| Pattern | Shape |
+|---|---|
+| **Decision** | A listener with no opinion delegates; a listener that owns the decision returns without delegating. "First decision wins" is the consequence, not a second mechanism. |
+| **Transformation** | A listener transforms the payload and delegates with the replacement, so registration order equals application order. |
 
 **Scope filtering is additive.** A dispatch may carry a scope key. Admission
 follows §3's admit-up rule: an untagged listener is always admitted; a tagged
@@ -279,20 +319,42 @@ it.
 
 Our own types, mirroring pi's semantics:
 
-- Content blocks: `text`, `thinking`, `tool_call`
+- Content blocks: `text`, `thinking`, `image`, `tool_call`
 - `StopReason`: `pending | stop | length | tool_use | error | aborted`
 - `Usage`: input, output, cache read, cache write, reasoning; plus computed cost
 - Stream chunks: `start`, `{text,thinking,tool_call}_{start,delta,end}`, `done`,
   `error` — each carrying the partial message, so a UI can render any prefix
 
+**Image content** is part of the provider-neutral vocabulary, not an adapter
+detail. The `read` tool returns images (§7) and applications accept them as
+input, so without a normative block there is no defined way to send image
+content to a multimodal model. The V1 contract carries only what an adapter
+needs to translate it:
+
+```
+Image { mime_type, data | reference }
+```
+
+Whether bytes travel inline or by reference is an implementation choice; the
+`mime_type` and the model-visible presence of an image are not. Images do not
+stream — they have no delta chunks — which is why the stream-chunk list above
+covers only `text`, `thinking`, and `tool_call`.
+
 ### The never-raises contract
 
-Copied verbatim from pi and load-bearing: **the stream never raises.**
-Request, model, and runtime failures are encoded *in* the stream as a final
-message with `stop_reason` of `error` or `aborted` plus an error message.
+Copied from pi and load-bearing: **the stream never raises.** The boundary is
+the moment the stream object is returned, and both sides of it are normative:
 
-This removes most error-path branching from the loop and is directly
-assertable by conformance.
+| Phase | Behavior |
+|---|---|
+| **Before a stream is returned** | Ordinary exceptions. Programming errors, invalid arguments, service-resolution failures, configuration errors, and unsupported model or provider selections raise normally — these are caller bugs, discoverable immediately. |
+| **After a stream is returned** | Nothing escapes iteration. Provider failures, network failures, model failures, cancellation, and runtime streaming failures terminate the stream with a final message carrying `stop_reason` of `error` or `aborted` plus an error message. |
+
+Stating the boundary matters: "never raises" read absolutely would force a
+mistyped model name to be reported as a streamed error message, burying a caller
+bug in the transcript. Read as above, it removes error-path branching from the
+loop for exactly the failures the loop must handle in-band, and is directly
+assertable by conformance on both sides.
 
 ### API and provider split
 
@@ -457,6 +519,12 @@ that for registrations valid only while the turn runs. The runtime imposes none
 of this — it is the arrangement an application with definitions and instances
 naturally builds from arbitrary nesting.
 
+**A turn-owned scope is not disposed until every tool execution started under
+that turn has settled.** A running tool therefore never loses a registration
+mid-execution. This rule belongs here rather than in §3: the runtime's scope
+contract knows nothing about tools, and inverting that dependency to serve one
+consumer would put an agent concept inside the generic layer.
+
 ### The loop
 
 A **step** is one model request plus the tools it calls. A **turn** is zero or
@@ -572,9 +640,12 @@ tool *results*, not over listeners.
 Dispatch mode fixes execution order but not semantic combination. Every
 decision event declares both. These rules are normative and conformance-tested.
 
-**`agent/pre-step`** — waterfall. Returns `Reject | Enter(messages)`. A
-listener either delegates via `next` or short-circuits by returning a
-decision. The first returned decision wins.
+**`agent/pre-step`** — waterfall, **decision** pattern. Returns
+`Reject | Enter(messages)`. A listener with no opinion calls `next()`; a
+listener that owns the decision returns one without delegating, which ends the
+chain. If every listener delegates, the loop's default decision applies. "First
+decision wins" is the consequence of §3's short-circuit rule, not a separate
+mechanism.
 
 **`agent/pre-step` carries a reason.** Pi's `transformContext` and
 `prepareNextTurn` fire at different lifecycle points — `transformContext`
@@ -602,14 +673,28 @@ registration order. An order-independent "any `Stop` wins" rule was considered
 and rejected because it collapses `Continue` into `NoOpinion` and diverges
 from the pattern used everywhere else.
 
-**`tools/pre-execute`** — waterfall. Returns
-`Block(reason, terminate) | Proceed(args)`. First decision wins.
+**`tools/pre-execute`** — waterfall, **decision** pattern, identical in shape to
+`agent/pre-step`. Returns `Block(reason, terminate) | Proceed(args)`. Delegate
+to abstain; return a decision to own it.
 
-**`tools/post-execute`** — waterfall, composing rather than deciding. **Each
-listener receives the finalized output of the previous listener. Fields the
-listener explicitly returns replace those fields; omitted fields remain
-unchanged. No deep merge occurs at any level.** This preserves pi's
-`afterToolCall` merge semantics across a listener chain.
+**`tools/post-execute`** — waterfall, **transformation** pattern. A listener
+transforms the result and delegates with the replacement:
+
+```python
+async def audit(result, next_):
+    return await next_(replace(result, details={**result.details, "audited": True}))
+```
+
+Because each listener transforms *before* delegating, **registration order
+equals application order**, and the chain's result is the fully transformed
+value. A listener may also inspect what `next_` returns, but transformation on
+the delegating edge is the documented pattern — transforming on the return edge
+instead would reverse application order relative to registration, which is a
+trap rather than a feature.
+
+Merge semantics per listener are unchanged from pi's `afterToolCall`: **fields
+the listener supplies replace those fields; omitted fields remain unchanged; no
+deep merge occurs at any level.**
 
 ### Agent progress isolation
 
@@ -689,21 +774,36 @@ arbitrary combinations coherent. A local Windows `ctx.fs` paired with a remote
 Linux `ctx.shell` composes without complaint and then fails at the first
 `process_path` — the path one seam produces is meaningless to the other.
 
-The governing invariant:
+The governing rule:
 
-> A shell or subprocess may consume an FS-backed target only when the providers
-> share an execution world.
+> Execution-capability providers declare an opaque **execution-world identity**.
+> A component that requires multiple execution capabilities to address the same
+> resources validates their execution-world identities during activation.
+> Merely mounting capabilities from different worlds is not itself invalid.
+> Cross-world resource transfer requires an explicit bridge capability.
 
-We enforce it. Each `ctx.fs`, `ctx.shell`, and `ctx.subprocess` provider declares
-an **execution-world identity**, and mounting an incompatible set fails at
-activation with a diagnostic naming the providers. One rule covers all three
-seams — pointing them at a remote sandbox moves every consumer together.
+**Validation is the consumer's, not the runtime's.** Mixed worlds are a
+legitimate deployment: local `ctx.fs` for configuration alongside a remote
+`ctx.shell`, or local MCP servers over `ctx.subprocess` beside a sandboxed
+shell. Nothing is wrong until something tries to carry a resource across.
+Requirements are therefore declared where they exist:
 
-This deliberately exceeds the references. DSH states the same constraint —
-"a deployment must mount filesystem and subprocess providers for the same
-execution world; split-world composition is invalid" — but enforces nothing,
-so an incompatible pairing is only discovered at first use. Failing at mount is
-cheap and turns a confusing runtime error into a boot-time one.
+| Consumer | Requires |
+|---|---|
+| `read`, `glob`, `grep` | `fs` only |
+| MCP over stdio | `subprocess` only |
+| `bash` | `fs` + `shell`, **same world** |
+| edit-via-process | `fs` + `subprocess`, **same world** |
+
+A same-world consumer fails at activation with a diagnostic naming the
+providers; an unrelated consumer mounts happily beside it.
+
+This still exceeds the references. DSH states the constraint — "a deployment
+must mount filesystem and subprocess providers for the same execution world;
+split-world composition is invalid" — but enforces nothing, so an incompatible
+pairing surfaces at first use. Checking at activation turns a confusing runtime
+error into a boot-time one, while a global rule would have banned compositions
+that are perfectly sound.
 
 **Error style.** Pi's contract holds and is current: execution-seam operations
 **never raise**; every failure, including unexpected backend failures, returns a
@@ -871,17 +971,23 @@ the agent loop's:
 
 ```
 conformance/
-  runtime/    reactive-dependency · effect-reversal · waterfall-short-circuit
+  runtime/    reactive-dependency · effect-reversal
               service-exclusivity · service-visibility · double-dispose
               scoped-registration-visibility · scoped-registration-ownership
               scoped-event-admission · nested-scope-inheritance
               nested-scope-disposal
+              waterfall-short-circuit · waterfall-delegation
+              waterfall-result-propagation · waterfall-result-replacement
+              waterfall-replacement-arguments · waterfall-next-called-twice
   agent/      turn-lifecycle · steering · tools · cancellation
               concurrent-agents-isolated-logs · blocked-agent-does-not-stall-peers
               origin-survives-one-at-a-time · causes-preserved-under-claim-all
               proactive-turn-carries-provenance · turn-completes-undelivered
               turn-scope-disposed-at-turn-end · turn-scope-awaits-inflight-tool
               request-header-component-reuse
+              post-execute-multi-listener-order · post-execute-field-replacement
+              post-execute-omitted-fields-preserved · post-execute-no-deep-merge
+              stream-error-rides-the-stream · stream-bad-model-raises-eagerly
   session/    fork-ancestry-derivation · reset-excludes-prior-surface
               compact-now-then-derive · compaction-repeated-and-nested
 ```
@@ -1003,9 +1109,13 @@ kernel's semantics get pinned while they are still cheap to change.
 1. **Plugin runtime.** Context, fiber, service resolution, registry, events,
    effects, reactive load and unload. Covered by `conformance/runtime/` plus
    Tier 2 for the Python-specific surface.
-2. **LLM vocabulary, mock adapter, session log.** `derive_messages()`, surface
-   versus log-only events, the never-raises stream contract. First conformance
-   scenarios land here.
+2. **LLM vocabulary, mock adapter, session log, telemetry vocabulary.**
+   `derive_messages()`, surface versus log-only events, the never-raises stream
+   contract. Also the telemetry span vocabulary, the sanitize contract, and a
+   recording no-op `ctx.telemetry` — defined here because every later subsystem
+   emits into it, and retrofitting instrumentation across four phases is how
+   observability ends up inconsistent. Production sinks come in Phase 7. First
+   conformance scenarios land here.
 3. **Agent loop.** Turn and step lifecycle, inbox and claim policies, `agent/*`
    events, the pi event-stream projection, cancellation. Includes the
    tool-call/result vocabulary and a trivial mock tool service, so that by the
@@ -1024,7 +1134,8 @@ kernel's semantics get pinned while they are still cheap to change.
 6. **Execution seams and built-in tools.** `ctx.fs`, `ctx.shell`, and
    `ctx.subprocess` under one execution-world rule, then bash, read, write,
    edit, glob, grep.
-7. **Prompt, skills, compaction, telemetry.**
+7. **Prompt, skills, compaction, telemetry sinks.** OpenTelemetry, file, and
+   debug sinks behind the vocabulary established in Phase 2.
 8. **Model-backed evals.**
 
 Phases 1–4 produce a correct agent driven entirely by a mock. Phase 5 is the
@@ -1060,8 +1171,9 @@ recorded here for traceability:
   plus Codex, rather than Anthropic.
 - **Architecture** — imperative driver plugin with log-as-truth and invariants,
   matching what both references actually run, rather than a pure step machine.
-- **Error style** — `Result` at the fs and shell seams only, split into
-  `FsError` and `ShellError`, with an explicit operational-value versus
+- **Error style** — `Result` is confined to the filesystem, shell, and
+  subprocess capability seams, using `FsError`, `ShellError`, and
+  `SubprocessError` respectively, with an explicit operational-value versus
   programming-exception boundary (§7).
 
 Resolved in design review (2026-08-18):
@@ -1094,6 +1206,32 @@ Resolved by validation against a real workload (2026-08-18), documented in
 - **Telemetry** — `ctx.telemetry` with a mandatory sanitize boundary ahead of
   sinks; observational, never normative (§7).
 - **`ctx.subprocess`** — promoted out of deferral into Phase 6 (§7, §9).
+
+Resolved by design review of the revised spec (2026-08-18):
+
+- **Execution-world validation is consumer-side.** Mixed-world mounts are legal;
+  a component requiring several execution capabilities to address the same
+  resources validates their worlds at activation. A global rejection rule would
+  have banned sound compositions such as local `fs` beside a sandboxed `shell`
+  (§7).
+- **Runtime scopes stay tool-agnostic.** The "disposal waits on in-flight work"
+  rule moved from §3 to §6, where the concept of a tool exists. The runtime
+  contract is nested visibility, ownership, descendant disposal, and
+  deterministic reversal — nothing more.
+- **Waterfall has one normative definition** (§3), with `next` accepting
+  optional replacement arguments and callable at most once. `pre-step` and
+  `pre-execute` are its *decision* pattern; `post-execute` is its
+  *transformation* pattern, transforming on the delegating edge so registration
+  order equals application order. An earlier draft memoized `next`; that is
+  incoherent once `next` takes arguments.
+- **Scope decides eligibility; each registry decides composition** (§3).
+  Shadowing is right for keyed registries such as tools and wrong for additive
+  ones such as prompt sections, so the generic layer no longer mandates it.
+- **`image` is part of the LLM vocabulary** (§4), not an adapter detail.
+- **The never-raises boundary is the stream's return** (§4): caller bugs raise
+  eagerly, in-band failures ride the stream.
+- **Telemetry vocabulary lands in Phase 2**, production sinks in Phase 7 (§9),
+  so subsystems instrument as they are built rather than retroactively.
 - **Service resolution** — name-keyed identity, exclusive registration, no
   fallback stack, `ACTIVE`-gated visibility; shadowing deferred with realms (§3).
 - **Execution world** — declared world identity with activation-time
