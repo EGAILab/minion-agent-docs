@@ -1,7 +1,7 @@
 # Minion Agent — Design
 
 **Date:** 2026-08-18
-**Status:** Approved design; implementation plan pending.
+**Status:** Frozen for implementation. Validated against a real workload and three review passes; see §10 for the decision log.
 
 Minion Agent preserves the functional scope and semantics of Pi `agent-core`
 (`packages/agent`) while rebuilding the architecture on Cordis principles:
@@ -287,7 +287,20 @@ error.
   memoized `next` so repeat calls were harmless; that is incoherent once `next`
   accepts replacement arguments, and a single-use contract is simpler to reason
   about than a cached one.)
-- **An empty chain** returns `None`.
+- **Every waterfall event declares a terminal continuation** — the value
+  produced when the innermost listener delegates, and the result of an empty
+  chain. It is never implicitly `None`.
+
+That last rule is load-bearing for transformation chains. If delegating past the
+last listener yielded `None`, a chain in which every listener cooperatively
+delegates would discard the very value it spent the chain transforming.
+Terminals per event:
+
+| Event | Terminal continuation |
+|---|---|
+| `agent/pre-step` | `Enter(messages)` with the claimed messages unchanged |
+| `tools/pre-execute` | `Proceed(args)` with the validated arguments unchanged |
+| `tools/post-execute` | The tool result as currently transformed |
 
 Every waterfall event in this design is specified in exactly these terms (§6).
 Two distinct usage patterns fall out of the one mechanism, and neither is a
@@ -339,6 +352,22 @@ Whether bytes travel inline or by reference is an implementation choice; the
 `mime_type` and the model-visible presence of an image are not. Images do not
 stream — they have no delta chunks — which is why the stream-chunk list above
 covers only `text`, `thinking`, and `tool_call`.
+
+**A reference must be immutable.** Model-visible means logged (§5), and §8's
+invariant reconstructs each request from the log and compares it against what
+was dispatched. A `reference` naming a mutable filesystem path or a remote URL
+breaks that: the bytes the model saw and the bytes reconstruction fetches can
+differ, silently, with nothing detecting it.
+
+So **before dispatch, model-visible image content resolves to immutable
+identity** — in practice the content-addressed artifact store §5 already defines
+for request components, which is exactly the right shape and needs no second
+mechanism. A path or URL may be how an image *arrives*; it is never how an image
+is *logged*.
+
+Provider-specific representations — a vendor upload handle, a signed URL, a
+base64 wire encoding — remain wire-level details owned by the adapter, below the
+logged vocabulary and outside reconstruction.
 
 ### The never-raises contract
 
@@ -667,6 +696,18 @@ short-circuits**; later listeners do not run. If every listener returns
 `NoOpinion`, the result is `Continue`, matching pi's boolean default of
 `false`.
 
+**Hard termination takes precedence and is not overridable.** The `terminate`
+batch rule — the loop stops when *every* finalized tool result in the batch sets
+it — is evaluated **before** `agent/turn-stopping` is dispatched. When it fires,
+the turn ends and the event is not dispatched at all.
+
+This ordering matters because the two mechanisms are not peers. `terminate` is a
+loop invariant inherited from pi, where a hook could only ever *request* a stop
+and never force continuation. Introducing an explicit `Continue` decision
+created a conflict pi never had; resolving it in favor of the plugin would let a
+listener override semantics this design promises to preserve. `turn-stopping`
+therefore decides only among turns the loop was otherwise willing to continue.
+
 This is consistent with the short-circuit pattern used by the other decision
 events. The trade-off is recorded deliberately: the outcome depends on
 registration order. An order-independent "any `Stop` wins" rule was considered
@@ -830,9 +871,15 @@ The boundary between the two mechanisms is normative:
 | **Values** — expected operational and environmental failures | not found · permission denied · invalid path · stale version · timeout · abort · non-zero process exit · I/O failure · remote unavailable |
 | **Exceptions** — framework and provider invariant violations | invalid internal state · impossible state transition · broken provider implementation · assertion failure · programming error |
 
-Generic backend errors — a bare `OSError`, for instance — are mapped into the
-capability error vocabulary rather than escaping as exceptions. An unmapped
-backend exception escaping a seam is itself a provider bug.
+Stated as one rule: **an execution seam normalizes operational and environmental
+failures into typed `Result` errors; framework and provider invariant violations
+and programming errors remain exceptions.**
+
+Normalization is the provider's obligation, not the caller's. A bare `OSError`,
+a transport error, or a vendor SDK exception is translated into the capability's
+error vocabulary before it crosses the seam. An unmapped backend exception
+escaping a seam is itself a provider bug — the seam's contract is that its
+callers never write `except` around ordinary I/O.
 
 This is deliberately un-Pythonic and deliberately confined. It keeps "tool
 failed" (becomes an error tool result the model sees) structurally distinct
@@ -979,6 +1026,7 @@ conformance/
               waterfall-short-circuit · waterfall-delegation
               waterfall-result-propagation · waterfall-result-replacement
               waterfall-replacement-arguments · waterfall-next-called-twice
+              waterfall-terminal-continuation · waterfall-empty-chain-terminal
   agent/      turn-lifecycle · steering · tools · cancellation
               concurrent-agents-isolated-logs · blocked-agent-does-not-stall-peers
               origin-survives-one-at-a-time · causes-preserved-under-claim-all
@@ -988,6 +1036,9 @@ conformance/
               post-execute-multi-listener-order · post-execute-field-replacement
               post-execute-omitted-fields-preserved · post-execute-no-deep-merge
               stream-error-rides-the-stream · stream-bad-model-raises-eagerly
+              terminate-precedes-turn-stopping · terminate-not-overridable
+              post-execute-all-delegate-preserves-result
+              image-reference-is-immutable
   session/    fork-ancestry-derivation · reset-excludes-prior-surface
               compact-now-then-derive · compaction-repeated-and-nested
 ```
@@ -1232,6 +1283,20 @@ Resolved by design review of the revised spec (2026-08-18):
   eagerly, in-band failures ride the stream.
 - **Telemetry vocabulary lands in Phase 2**, production sinks in Phase 7 (§9),
   so subsystems instrument as they are built rather than retroactively.
+
+Resolved at design freeze (2026-08-18):
+
+- **Every waterfall event declares a terminal continuation** (§3). An implicit
+  `None` terminal would have let a fully cooperative transformation chain
+  discard the value it had just transformed.
+- **Hard termination precedes `agent/turn-stopping`** (§6). The `terminate`
+  batch rule is a loop invariant inherited from pi, where no hook could force
+  continuation; an explicit `Continue` decision must not override it.
+- **Model-visible image references resolve to immutable identity before
+  dispatch** (§4), reusing §5's content-addressed artifacts. A mutable path or
+  URL would break request reconstruction silently.
+- **Execution seams normalize operational failures into typed `Result` errors**
+  (§7); invariant violations and programming errors stay exceptions.
 - **Service resolution** — name-keyed identity, exclusive registration, no
   fallback stack, `ACTIVE`-gated visibility; shadowing deferred with realms (§3).
 - **Execution world** — declared world identity with activation-time
