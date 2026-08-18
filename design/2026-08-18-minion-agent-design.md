@@ -52,8 +52,15 @@ designed so a durable backend is added behind its existing interface rather
 than by restructuring.
 
 Also deferred, with the trigger for each recorded in §9: Cordis's declarative
-YAML loader, hot module replacement, isolation realms, and the
-`ctx.subprocess` seam.
+YAML loader, hot module replacement, isolation realms (service shadowing — not
+to be confused with scoped registration in §3, which is in scope), and a
+`ctx.jobs` scheduling service.
+
+This scope was validated against a real long-lived multi-agent application
+before implementation; see `2026-08-18-foundation-validation.md`. That exercise
+added scoped registration, input provenance, telemetry, content-addressed
+request state, and `ctx.subprocess` to the design, and confirmed that the
+durable operation state machine and isolation realms are correctly deferred.
 
 ---
 
@@ -73,15 +80,18 @@ minion-agent/
     system_prompt/   # section and schema assembly
     fs/              # filesystem capability seam + local provider
     shell/           # shell capability seam + local provider
+    subprocess/      # argv spawning + stdio lifecycle seam + local provider
     builtin_tools/   # bash, read, write, edit, glob, grep
     skills/
     compaction/
+    telemetry/       # span vocabulary + sanitize boundary; sinks are plugins
     invariants/      # central registry service only; checks are package-owned
     testkit/
   conformance/       # language-neutral executable compatibility cases
     runtime/         #   plugin-kernel semantics (lifecycle, effects, events, services)
-    agent/           #   agent and session semantics
-    schema/          #   JSON Schema for both scenario formats + runner contract
+    agent/           #   agent-loop semantics
+    session/         #   log operations, derivation, request reconstruction
+    schema/          #   JSON Schema per scenario format + runner contract
   tests/             # Python unit and property tests
   evals/             # model-backed tier
 minion-agent-docs/
@@ -168,12 +178,53 @@ its providing fiber is `ACTIVE`, and a provider may attach a `check` predicate
 narrowing visibility further. A registered-but-inactive provider is invisible
 to injection.
 
-**Shadowing is deferred, because shadowing _is_ isolation realms.** In Cordis a
-child context shadows a parent service via `ctx.isolate(name)`, which allocates
-a fresh symbol for that name in a child realm. Shadowing and realms are one
-mechanism, not two. Realms are deferred (§9), so **child contexts cannot shadow
-parent services in this phase.** That is a consequence of the deferral, not a
-separate limitation.
+**Service shadowing is deferred, because shadowing _is_ isolation realms.** In
+Cordis a child context shadows a parent *service* via `ctx.isolate(name)`, which
+allocates a fresh symbol for that name in a child realm. Service shadowing and
+realms are one mechanism, not two. Realms are deferred (§9), so **child contexts
+cannot shadow parent services in this phase.** That is a consequence of the
+deferral, not a separate limitation.
+
+Scoped registration (below) is a **different mechanism** and is not deferred.
+Realms replace a whole service implementation; scopes vary the *registrations
+within* a shared service. Applications overwhelmingly need the latter.
+
+### Scoped registration
+
+A runtime that hosts more than one agent needs registrations — tools, prompt
+sections, event listeners — that are visible to some agents and not others.
+Service resolution above cannot express this: there is one `tools` service and
+one `ctx.llm` for the process, which is correct. Variation belongs *inside* a
+service's registration table, not in which service you resolve.
+
+**A scope is a tagged context whose backing fiber owns every registration made
+through it.** `ctx.scope(key)` mints one. Its governing contract:
+
+> The registration context determines both visibility and ownership.
+
+A registration can therefore never be visible in one scope but disposed with
+another — the failure mode that makes ad-hoc capability filtering unsafe.
+
+**Scopes nest arbitrarily**, and the two directions differ:
+
+| Direction | Rule |
+|---|---|
+| **Registration visibility inherits _down_** | A child sees its ancestors' registrations, nearest shadowing farthest. An ancestor never sees a descendant's. |
+| **Event admission extends _up_** | A listener tagged with an ancestor receives a descendant's events. Never the reverse. |
+| **Untagged** | An untagged listener is admitted for every dispatch; an untagged registration is visible everywhere. |
+
+Disposing a scope removes exactly its own and its descendants' registrations,
+leaving ancestors and siblings intact.
+
+**Nesting depth is the application's choice.** The runtime guarantees arbitrary
+nesting and key-agnostic tags; it does not define a hierarchy. A chat
+application may use definition → instance → turn; an eval harness may scope by
+variant; a simple tool may use none. Hardcoding a level structure here would
+bind the runtime to one application's shape.
+
+**Disposal never races an in-flight tool.** A scope disposed at the end of a
+unit of work — a turn, typically — settles only after tool executions started
+under it have finished. A running tool never loses a registration mid-execution.
 
 ### Reactive dependency
 
@@ -206,6 +257,13 @@ Four dispatch modes, matching Cordis:
 delegates or short-circuits by returning without calling it. Dispatch mode is
 part of an event's public contract and is declared where the event is
 declared; a mismatch between declaration and dispatch site is a startup error.
+
+**Scope filtering is additive.** A dispatch may carry a scope key. Admission
+follows §3's admit-up rule: an untagged listener is always admitted; a tagged
+listener is admitted only when its key is the dispatch's key or an ancestor of
+it. A dispatch with no key admits untagged listeners only. Because untagged
+listeners are always admitted, adding scope filtering changes no unscoped
+behavior.
 
 ### Config
 
@@ -280,6 +338,69 @@ Everything else is **log-only**: `turn/start`, `turn/end`, `step/start`,
 `step/end`, `assistant/chunk` (token-level replay fidelity), `tool/call`,
 `request/header`.
 
+### Session operations
+
+Three operations mutate a session. Under an append-only log none of them can be
+specified as a method name alone — each needs a log event and a stated effect on
+derivation, or implementations will diverge on behavior the conformance suite
+cannot see.
+
+| Operation | Log event | Effect on `derive_messages()` |
+|---|---|---|
+| `fork(source, at)` | `session/forked` on the new session, recording `source` and the boundary sequence | The fork **references** its ancestor's surface up to the boundary; nothing is copied. Derivation walks the ancestry chain, then the fork's own entries. |
+| `reset()` | `session/reset` appended to the same session | Session identity is **preserved**. Derivation excludes all surface entries at or before the reset event. History remains readable for search and audit. |
+| `compact_now()` | The ordinary compaction event (§7) | Identical to automatic compaction, bypassing only the trigger check. |
+
+Reset preserves identity rather than minting a new session because a session id
+is a durable external handle: an application binds conversations to it, and
+silently changing it under a clear-history operation would break those bindings.
+"Start over" is a derivation change, not a new conversation.
+
+Fork references rather than copies for the same reason the log never deletes:
+copying would duplicate model-visible content and create two places for one
+truth. Compaction inside a fork affects only that branch.
+
+### Content-addressed request state
+
+The assembled system prompt is model-visible and must be reconstructable from
+the log. Logging it whole on every step does not scale: a resident agent's
+prompt is large, mostly stable, and partly dynamic, so a small change forces a
+large snapshot. Change detection on the whole header does not help, because in
+practice *something* changes nearly every step.
+
+`request/header` therefore records a **composition of content-addressed
+components** rather than a snapshot:
+
+```
+request/header
+    system_base:  sha256:…
+    skills:       sha256:…
+    tools:        sha256:…
+    memory:       sha256:…
+    task:         sha256:…
+```
+
+Each distinct component is stored once, keyed by its hash. A stable block is
+stored once for the life of the session however often its neighbours change.
+
+The rule, stated normatively:
+
+> Reconstruct request state from content-addressed components, never from
+> repeated monolithic snapshots.
+
+Two consequences follow and are binding:
+
+- **Artifacts holding model-visible content are never deleted**, inheriting the
+  discipline that already governs entries. No artifact may be reclaimed while
+  any header references it.
+- **Conformance asserts the reconstruction, never the storage.** Scenarios verify
+  that the reconstructed model input matches what was dispatched. Hashing scheme
+  and artifact layout are implementation choices, which keeps a second-language
+  implementation free to store differently while proving the same property.
+
+The §8 invariant is unchanged in force: it resolves the references and compares
+the reconstruction against the dispatched request.
+
 ### Relationship to pi's `convertToLlm`
 
 This replaces pi's `convertToLlm` structurally. Pi filters an in-memory
@@ -311,6 +432,32 @@ portable schema; that is out of scope here.
 ---
 
 ## 6. The agent loop (`ctx.agent_loop`)
+
+### Definitions and instances
+
+Two things are routinely called "the agent" and must be separated before
+anything else in this section is unambiguous:
+
+| Term | Meaning |
+|---|---|
+| **AgentDefinition** | Reusable configuration: persona, capability composition, policy. Holds no conversation state. |
+| **AgentInstance** | One live execution identity: one inbox, one active-turn state, one session log, one lifecycle owner. |
+
+One definition has many instances. A named assistant answering in three
+different conversations is one definition and three instances.
+
+`ctx.agents` is the registry. It creates and resumes instances, and each
+creation returns a **handle** that owns that instance's teardown. Every
+`agent/*` event identifies the instance it concerns. Instances are concurrent
+and independent: §8's progress guarantee applies between them.
+
+Scopes (§3) follow the same structure. A definition's registrations are mounted
+in a parent scope; each instance mints a child; each turn may mint a child of
+that for registrations valid only while the turn runs. The runtime imposes none
+of this — it is the arrangement an application with definitions and instances
+naturally builds from arbitrary nesting.
+
+### The loop
 
 A **step** is one model request plus the tools it calls. A **turn** is zero or
 more steps.
@@ -347,6 +494,44 @@ DSH's `send(message, target, wakeup)` generalizes pi's two queues:
 | `followup` | next-turn FIFO | yes |
 | `steer` | next-step inbox | yes |
 | `inject` | next-step inbox | no |
+
+### Input provenance and delivery
+
+A turn is not always requested by a user, and its output does not always have a
+destination. A scheduler may start a turn nobody asked for; a turn may complete
+having decided to say nothing; a result may belong to a conversation other than
+the one that triggered the work.
+
+The runtime therefore carries provenance on **inputs**, and records which inputs
+each turn consumed:
+
+```
+InputEnvelope { id, message, origin }
+Turn          { causes: [envelope_id, …] }
+turn/end      { causes: [{ id, origin }, …] }
+```
+
+`origin` is **opaque to the runtime** — it is never inspected, matched, or
+interpreted — and must be **JSON-safe**, because it travels in the log (§5) and
+must survive a reimplementation in another language.
+
+Provenance attaches to inputs rather than to turns because **a turn can have
+more than one cause**. Under the `all` claim policy below, one turn may consume
+several queued inputs with different origins; a single `turn.origin` would not
+be well defined.
+
+Two rules complete the model:
+
+- **A turn may complete without producing delivered output.** Delivery is not a
+  loop guarantee.
+- **Delivery is an application concern.** The runtime reports causes; deciding
+  where a result goes, or that it goes nowhere, belongs above it.
+
+Stated as one sentence: *inputs carry provenance; turns carry their causal
+inputs; delivery is an application concern.* This is deliberately smaller than a
+channel or reply-to concept — the runtime never learns what a room, user, or
+channel is, and the same seam serves webhooks, schedulers, API calls, and eval
+harnesses correlating turns to cases.
 
 Pi's `steeringMode` and `followUpMode` survive as **two independent claim
 policies**, each `all` or `one-at-a-time`:
@@ -426,6 +611,21 @@ listener explicitly returns replace those fields; omitted fields remain
 unchanged. No deep merge occurs at any level.** This preserves pi's
 `afterToolCall` merge semantics across a listener chain.
 
+### Agent progress isolation
+
+> Awaiting anything within one agent instance must not occupy a runtime-global
+> critical section or block another instance's progress.
+
+This is normative and covers every await inside a turn, not only policy hooks:
+human approval, an interactive question to a user, a remote tool call, a slow
+MCP server, a subagent awaited by its parent, or any network-bound tool.
+
+A listener or tool may legitimately await external input for an unbounded time.
+An implementation that introduces a shared lock, a global timeout, or serialized
+cross-agent dispatch would break this while every single-agent scenario
+continued to pass — which is why the guarantee is stated here and pinned by a
+conformance scenario (§8) rather than left to be inferred.
+
 **Pi's event stream becomes a derived projection.** The log is the source of
 truth; a projection plugin rebuilds pi's `AgentEvent` union from it.
 Conformance asserts that projection, so pi's observable semantics stay pinned
@@ -450,7 +650,18 @@ tool-result messages in **assistant source** order.
 
 ### Capability seams
 
-Two seams: `ctx.fs` and `ctx.shell`.
+Three seams: `ctx.fs`, `ctx.shell`, and `ctx.subprocess`.
+
+`ctx.subprocess` spawns argv directly and exposes process and stdio lifecycle;
+it **never shell-interprets** its arguments — a consumer wanting a shell passes
+one explicitly. `ctx.shell` runs shell commands and, in its local provider,
+spawns through `ctx.subprocess`.
+
+The distinction is load-bearing rather than decorative. Tool integrations that
+speak a protocol over a child process's pipes — MCP over stdio, language servers
+over JSON-RPC, browser automation — need raw streams and process lifetime, not
+command execution. Routing them through a shell would mean shell-interpreting
+argv for a structured transport, wrong on correctness and safety alike.
 
 Pi defines `FileSystem` and `Shell` as separate interfaces but also defines
 `ExecutionEnv extends FileSystem, Shell`, and every consumer depends on the
@@ -480,12 +691,13 @@ Linux `ctx.shell` composes without complaint and then fails at the first
 
 The governing invariant:
 
-> A shell may consume an FS-backed target only when the two providers share an
-> execution world.
+> A shell or subprocess may consume an FS-backed target only when the providers
+> share an execution world.
 
-We enforce it. Each `ctx.fs` and `ctx.shell` provider declares an
-**execution-world identity**, and mounting an incompatible pair fails at
-activation with a diagnostic naming both providers.
+We enforce it. Each `ctx.fs`, `ctx.shell`, and `ctx.subprocess` provider declares
+an **execution-world identity**, and mounting an incompatible set fails at
+activation with a diagnostic naming the providers. One rule covers all three
+seams — pointing them at a remote sandbox moves every consumer together.
 
 This deliberately exceeds the references. DSH states the same constraint —
 "a deployment must mount filesystem and subprocess providers for the same
@@ -493,18 +705,23 @@ execution world; split-world composition is invalid" — but enforces nothing,
 so an incompatible pairing is only discovered at first use. Failing at mount is
 cheap and turns a confusing runtime error into a boot-time one.
 
-**Error style.** Pi's contract holds and is current: filesystem and shell
-operations **never raise**; every failure, including unexpected backend
-failures, returns a typed error value. In Python that means `Result[T, E]` at
-these two seams and ordinary exceptions everywhere above them.
+**Error style.** Pi's contract holds and is current: execution-seam operations
+**never raise**; every failure, including unexpected backend failures, returns a
+typed error value. In Python that means `Result[T, E]` at these three seams and
+ordinary exceptions everywhere above them.
 
 Separate error domains per seam, as pi has (`FileError` and `ExecutionError`
 are distinct types with distinct code enums):
 
 ```
-Result[T, FsError]        # ctx.fs
-Result[T, ShellError]     # ctx.shell
+Result[T, FsError]          # ctx.fs
+Result[T, ShellError]       # ctx.shell
+Result[T, SubprocessError]  # ctx.subprocess
 ```
+
+A spawn failure, a vanished child, and a broken pipe are operational conditions
+a caller must handle, not programming errors — so `ctx.subprocess` follows the
+same discipline as its siblings.
 
 The boundary between the two mechanisms is normative:
 
@@ -565,6 +782,51 @@ Skills load from `SKILL.md` files with YAML frontmatter (`name`, `description`,
 files rather than failing the load. They render as the agentskills.io XML block,
 matching pi's format so skills are portable between the two.
 
+### Telemetry (`ctx.telemetry`)
+
+A runtime that issues provider requests and executes tools must be observable,
+and must not leak credentials while being observed. Both references treat this
+as first-class: pi ships a generated span schema; DSH exposes `telemetry/*` as a
+capability seam.
+
+A typed span vocabulary covers the operations the runtime already owns — turn,
+step, provider request, tool execution — with declared start and end attributes.
+The vocabulary is language-neutral, so a second implementation emits the same
+spans.
+
+**Sanitization is a mandatory boundary, not a listener.**
+
+```
+core / provider data
+   ↓
+sanitize + redact          ← single mandatory boundary
+   ↓
+safe structured telemetry
+   ↓
+sinks   (OpenTelemetry · file · debug · none)
+```
+
+Ordering is the whole point. If redaction were a listener among listeners, a
+sink registered earlier would observe raw secrets and the guarantee would depend
+silently on registration order. Redaction is known-value: the runtime scrubs
+credentials it has been told about, wherever they appear — including inside
+prompt content, which may carry secrets the runtime never issued. An equivalent
+formulation, typed sensitive fields that cannot serialize without a policy, is
+acceptable; what is not acceptable is redaction downstream of an extension point.
+
+**Telemetry is observational and never normative:**
+
+| Layer | Role |
+|---|---|
+| Session log | Semantic truth |
+| Runtime events | Extension and control surface |
+| Telemetry | Observational projection |
+
+Correctness is defined by session and runtime semantics and pinned by
+conformance scenarios. No invariant, no conformance case, and no runtime
+behavior may depend on telemetry contents. Sinks are plugins; a deployment may
+mount none.
+
 ### Compaction
 
 Pi's settings and trigger unchanged: `{enabled, reserve_tokens: 16384,
@@ -603,20 +865,38 @@ compaction, and retained-tail overlap.
 ### Three tiers
 
 **Tier 1 — conformance scenarios** (`conformance/`, language-neutral).
-Declarative YAML in two families, because the plugin kernel's semantics matter
-to a Rust implementation exactly as much as the agent loop's:
+Declarative YAML in three families, because the plugin kernel's and the session
+layer's semantics matter to a second-language implementation exactly as much as
+the agent loop's:
 
 ```
 conformance/
   runtime/    reactive-dependency · effect-reversal · waterfall-short-circuit
               service-exclusivity · service-visibility · double-dispose
-  agent/      turn-lifecycle · steering · tools · cancellation · compaction
+              scoped-registration-visibility · scoped-registration-ownership
+              scoped-event-admission · nested-scope-inheritance
+              nested-scope-disposal
+  agent/      turn-lifecycle · steering · tools · cancellation
+              concurrent-agents-isolated-logs · blocked-agent-does-not-stall-peers
+              origin-survives-one-at-a-time · causes-preserved-under-claim-all
+              proactive-turn-carries-provenance · turn-completes-undelivered
+              turn-scope-disposed-at-turn-end · turn-scope-awaits-inflight-tool
+              request-header-component-reuse
+  session/    fork-ancestry-derivation · reset-excludes-prior-surface
+              compact-now-then-derive · compaction-repeated-and-nested
 ```
 
+The `session/` family is new: §5's operations and content-addressed request
+state are behavior a second-language implementation must reproduce exactly, and
+several of its cases (derivation after fork, after reset, and after repeated
+compaction) are precisely where independent implementations would otherwise
+diverge unnoticed.
+
 `agent/` scenarios assert the log projection and the derived pi event stream.
-`runtime/` scenarios assert a generic lifecycle and effect trace instead —
-mount and unmount operations in, ordered lifecycle transitions and effect
-disposals out.
+`session/` scenarios assert derivation after log operations, driving the log
+directly with no model in play. `runtime/` scenarios assert a generic lifecycle
+and effect trace instead — mount and unmount operations in, ordered lifecycle
+transitions and effect disposals out.
 
 The `runtime/` family needs something the `agent/` family gets for free. In
 agent scenarios the "program" is already data: a provider script and tool
@@ -712,10 +992,11 @@ artificial tests around provider-adapter defensive branches to protect a number.
 
 Each phase ends with green conformance scenarios for the behavior it adds.
 
-**Phase 0 — conformance scenario formats.** Design and schema-fix both scenario
-vocabularies before Phase 1: the `agent/` format (provider script, tool stubs,
-config, expected trace) and the `runtime/` format (declarative plugin
-descriptions and expected lifecycle/effect traces). Phase 1 has conformance
+**Phase 0 — conformance scenario formats.** Design and schema-fix all three
+scenario vocabularies before Phase 1: the `agent/` format (provider script, tool
+stubs, config, expected trace), the `runtime/` format (declarative plugin
+descriptions and expected lifecycle/effect traces), and the `session/` format
+(log operations in, derived messages out). Phase 1 has conformance
 coverage from its first commit rather than acquiring it retroactively, and the
 kernel's semantics get pinned while they are still cheap to change.
 
@@ -740,9 +1021,10 @@ kernel's semantics get pinned while they are still cheap to change.
    and batch contagion, streaming results, `terminate` folding.
 5. **Real providers.** `openai-completions` (OpenRouter, Ollama, LM Studio),
    then `codex-responses`.
-6. **Execution seams and built-in tools.** `ctx.fs` and `ctx.shell`, then bash,
-   read, write, edit, glob, grep.
-7. **Prompt, skills, compaction.**
+6. **Execution seams and built-in tools.** `ctx.fs`, `ctx.shell`, and
+   `ctx.subprocess` under one execution-world rule, then bash, read, write,
+   edit, glob, grep.
+7. **Prompt, skills, compaction, telemetry.**
 8. **Model-backed evals.**
 
 Phases 1–4 produce a correct agent driven entirely by a mock. Phase 5 is the
@@ -753,10 +1035,14 @@ blocked on, or contaminated by, provider quirks.
 
 | Deferred | Introduce when |
 |---|---|
-| `ctx.subprocess` | First consumer needing argv spawning that is not shell-interpreted: a PTY terminal tool, an LSP integration, or a subagent over a spawned process. DSH's split is real — `subprocess` never shell-interprets argv and owns PTY allocation and tree-scoped termination — but with only the bash tool in scope it would be a seam with one consumer that immediately delegates. |
-| Isolation realms | Subagents, or per-session capability presets. The service registry is designed so realms slot in without rework. |
+| Isolation realms (service shadowing) | An application needs a *different implementation* of a service per agent, rather than different registrations within a shared one. Scoped registration (§3) covers the latter and is not deferred; validation against a real multi-agent workload found no demand for the former. |
+| `ctx.jobs` | A second independent consumer needs shared scheduling semantics. Fiber effects already give background work owned lifetime (§3), which is what a single consumer actually needs; a scheduling service now would be an imagined extension rather than an extension point. |
 | Declarative loader, HMR | Configuration-driven composition becomes a user-facing requirement. |
-| Durable operation state machine | Crash recovery becomes a requirement. Added behind the existing session interface. |
+| Durable operation state machine | **An in-flight turn's side effects must survive process death.** Stated this narrowly on purpose: durable conversation history, durable session identity, and durable application-level queues are all achievable without it, and a validated real workload needed none of the stronger guarantees. Added behind the existing session interface. |
+
+`ctx.subprocess` was previously deferred here and has been promoted into Phase 6
+(§9, above): protocol-over-stdio integrations such as MCP need argv spawning
+with raw stream access, which `ctx.shell` cannot correctly provide.
 
 ---
 
@@ -785,6 +1071,29 @@ Resolved in design review (2026-08-18):
 - **Naming** — the plugin runtime package is `minion_agent.runtime`; Cordis is
   credited as design lineage in prose ("Cordis-inspired", "Cordis-semantic")
   but kept out of API and package names (§3).
+
+Resolved by validation against a real workload (2026-08-18), documented in
+`2026-08-18-foundation-validation.md`:
+
+- **Scoped registration** — arbitrarily nested, inherit-down for visibility and
+  admit-up for events, with visibility and ownership bound to the same context.
+  Distinct from isolation realms, which stay deferred (§3).
+- **AgentDefinition vs AgentInstance** — one definition, many concurrent live
+  instances; `ctx.agents` registers instances and hands out owning handles (§6).
+- **Input provenance** — `InputEnvelope{id, message, origin}` with turns
+  recording a causal set. Attached to inputs rather than turns because the `all`
+  claim policy lets one turn have several causes (§6).
+- **Delivery** — not a loop guarantee; a turn may complete undelivered (§6).
+- **Agent progress isolation** — an await inside one instance never blocks
+  another (§6).
+- **Session operations** — fork, reset, and compact-now specified by log event
+  and effect on derivation; reset preserves session identity; fork references
+  rather than copies (§5).
+- **Content-addressed request state** — `request/header` composes component
+  hashes; conformance asserts reconstruction, never storage (§5).
+- **Telemetry** — `ctx.telemetry` with a mandatory sanitize boundary ahead of
+  sinks; observational, never normative (§7).
+- **`ctx.subprocess`** — promoted out of deferral into Phase 6 (§7, §9).
 - **Service resolution** — name-keyed identity, exclusive registration, no
   fallback stack, `ACTIVE`-gated visibility; shadowing deferred with realms (§3).
 - **Execution world** — declared world identity with activation-time
