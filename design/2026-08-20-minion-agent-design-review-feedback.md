@@ -141,11 +141,32 @@ conformance scenarios and any exhaustive `match`/`if`-chain over `StopReason` in
 
 This isn't a defect in the design — the changes are, as verified above, accurate Pi-parity
 corrections. It's a scope/sequencing observation the document should state explicitly: freezing this
-revision commits to a **migration plan** for already-merged Phase 2 code, and §9's build order doesn't
-currently name that migration as its own line item (it reads as if Phase 2's original vocabulary
-still stands, with these differences folded in retroactively). Recommend adding an explicit "Phase 2
-vocabulary migration" note to §9, scoped like the other build-order phases, so this doesn't become
-invisible rework discovered mid-Phase-5.
+revision commits to a **migration** for already-merged Phase 2 code, and §9's build order doesn't
+currently name that as its own line item (it reads as if Phase 2's original vocabulary still stands,
+with these differences folded in retroactively). Recommend adding an explicit "Phase 2 vocabulary
+realignment" note to §9, scoped like the other build-order phases, so this doesn't become invisible
+rework discovered mid-Phase-5. The project owner has confirmed a fresh reimplementation of the
+affected Phase 2 code is an acceptable alternative to incremental migration where it's cleaner — this
+finding is about naming the scope explicitly in §9, not about which of the two approaches to take.
+
+---
+
+## On resolving the BLOCKING and first HIGH finding: the project owner has set the deciding rule
+
+Not a finding, a note for whoever is reconciling the two items above. The project owner has confirmed
+that Pi observable-behavior fidelity is a non-negotiable, top-priority constraint, and that once this
+document is signed off it becomes retroactively authoritative over prior design work, including the
+Phase 5 amendment. Concretely, that means the expected resolution direction for both items above is
+already decided, not a three-way tradeoff to negotiate further:
+
+- **Cancellation**: this document's mandatory active-cancellation requirement stands as written; the
+  Phase 5 amendment's deferral is what needs to change (option 1 in the BLOCKING finding above), not
+  this document's MUST language.
+- **Signature vocabulary**: this document's naming (`thinking_signature`, `redacted`,
+  `text_signature`, `thought_signature`) is what the Phase 5 amendment should be updated to match.
+
+Both are still genuinely open until this document is signed off — it remains in draft — but the
+reconciliation direction, once that happens, is not expected to be in question.
 
 ---
 
@@ -185,14 +206,15 @@ asserted. All checked against `git show b7bb00b936dbe21b8e160b3e89efdec361846699
 
 ## Minor — process
 
-- **Local `ref-repos/pi` was stale relative to the claimed audit baseline.** The checked-out commit
-  was `209bc7b9` (2026-08-17); the claimed baseline `b7bb00b9` (2026-08-19, not 2026-08-20 as this
-  document's reference table states — a one-day date discrepancy, minor) required a `git fetch` to
-  even become reachable locally. The commit is real and the content genuinely matches, so this is not
-  a fabrication concern, but it means the local reference checkout drifted out of sync with what was
-  actually audited. Recommend pinning `ref-repos/pi` to the exact audited commit (or recording it
-  somewhere machine-checkable) so "verify against Pi" is reproducible without a fetch-and-guess step,
-  consistent with this document's own emphasis on drift governance.
+- **RESOLVED during this review.** Local `ref-repos/pi` was initially stale relative to the claimed
+  audit baseline — checked out at `209bc7b9` (2026-08-17) while the claimed baseline `b7bb00b9`
+  (2026-08-19, not 2026-08-20 as this document's reference table states — a one-day date discrepancy,
+  still minor) required a `git fetch` to even become reachable locally. The commit was real and the
+  content genuinely matched (that's how the verification above was performed), so this was never a
+  fabrication concern — only a drift-governance gap. `ref-repos/pi` has since been pulled to
+  `b7bb00b9` and now matches the audited baseline exactly. Recommend keeping it pinned there (or
+  recording the commit somewhere machine-checkable) so future "verify against Pi" passes don't need
+  their own fetch-and-guess step, consistent with this document's own drift-governance emphasis.
 - **Thinking-compatibility table has one uncovered cell.** The table in §4 doesn't state the
   different-model + empty + non-redacted case. The code removes it (the empty-check runs before the
   same/different-model branch), and this document's rules are consistent with that outcome by
