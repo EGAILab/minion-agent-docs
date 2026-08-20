@@ -1,11 +1,11 @@
 <!--
 TRACKING NOTE — 2026-08-20 — LATEST
-Latest disposition after reviewing the third revision of the Phase 5 amendment and the full review/counter-review chain:
-- The ProviderContinuation data-flow gap is now resolved in the proposal: attempt-local observation, durable commit, content-addressed log/reference state, deterministic reconstruction, fork boundaries, compatibility filtering, and matching replay are pinned.
-- Two amendment-level items remain before freeze: (1) add atomic logical settlement of the terminal assistant response with any continuation references derived from the same physical attempt; and (2) complete live Codex verification of exact replay item(s), compatibility key, terminal-outcome reuse rules, and replacement/latest/accumulation semantics.
-- Distinguish two different "commit" boundaries in the text: first-public-chunk commits a physical attempt against retry; terminal logical settlement makes assistant response + continuation references durably reachable. The former must not imply durable continuation publication.
-- Rust Phase 2 still needs a pre-implementation seam revision for restartable pre-commit attempts and extensible reconstructed provider state, but this review does NOT endorse making operational provider I/O an eager pre-stream failure. The frozen never-raises contract still requires expected provider/network failures after AssistantStream exists to settle in-band.
-- Usage.cost representation remains a separate pre-publication Rust vocabulary decision, not a blocker on this amendment.
+Latest disposition after reviewing the fourth revision of the Phase 5 amendment and the full review/counter-review chain:
+- The previously open ProviderContinuation data-flow, atomic logical-settlement, retry-vs-settlement terminology, telemetry-sensitivity, malformed-tool-call, fixture-policy, retry, cancellation, and authentication findings are now resolved in the proposal.
+- One newly identified language-neutral issue must be fixed before freeze: continuation eligibility across session reset and compaction is not pinned. Persistence/audit retention must be separated from replay eligibility so pre-reset or superseded continuation cannot leak into a logically rewritten history.
+- Recommended rule: continuation remains append-only/log-retained, but is dispatch-eligible only when its originating response remains in the effective reconstructed history/retained-tail lineage for that request; session reset floors continuation eligibility, and compaction makes continuation from superseded responses ineligible while preserving continuation belonging to an effective retained tail.
+- After that rule is added, the only remaining amendment-level blocker is the live Codex verification of exact replay item(s), compatibility identity, sequence update rule, and terminal-outcome reuse behavior.
+- Rust Phase 2 still needs the already-recorded pre-implementation changes to its one-shot stream seam and atomic settlement API. Usage.cost representation remains a separate pre-publication Rust vocabulary gate.
 -->
 
 ## Review verdict — Phase 5 real-provider design amendment
@@ -2293,3 +2293,515 @@ it as Rust Phase 2 plan content. If this satisfies the fifth review's stated bar
 there is no remaining known design-review blocker" — the only thing left before this amendment can
 actually freeze is the live Codex experiment itself, which no further review pass can substitute
 for.
+
+---
+
+# Sixth Rust review — proposal `276d987` and fourth-pass response
+
+## Verdict
+
+The latest proposal correctly applies the atomic logical-settlement rule, separates it from the
+first-public-chunk retry-commitment boundary, adds terminal-outcome reuse to the live-verification
+questions, and extends the intended canonical coverage. No further language-neutral architecture
+change is identified by this pass.
+
+The only amendment-level blocker is now the live Codex experiment. The amendment should freeze once
+that experiment pins the replay payload, compatibility identity, sequence update rule, and reusable
+terminal outcomes and those results are incorporated into the mapping and decision log.
+
+## Correction to the latest response: the Rust Phase 2 plan already exists
+
+The response says there is “still no Rust plan file to carry it forward into.” That is factually
+incorrect. The executable plan is:
+
+```text
+plans/rust/2026-08-18-plan-2-llm-session-telemetry.md
+```
+
+It currently specifies both seams affected by this amendment:
+
+```rust
+pub type RawAssistantStream =
+    Pin<Box<dyn Stream<Item = Result<StreamChunk, AdapterStreamError>> + Send>>;
+
+fn stream(&self, request: Request) -> Result<RawAssistantStream, LlmStartError>;
+```
+
+and a session log whose atomic unit is one independently appended event. Consequently, the required
+Rust follow-up is not merely a future note for whoever writes a plan: the existing Phase 2 plan must
+be revised before Tasks 4, 5, 8, 10, and the end-to-end slice are implemented.
+
+**Owner:** Rust Phase 2 plan owner.
+
+## Rust stream correction: capability, not an async public signature
+
+The fifth review's pushback is technically correct and supersedes the fourth Rust review's wording
+that listed “asynchronous eager preparation” as a requirement. Rust needs a restartable, lazy
+physical-attempt seam; it does not necessarily need an `async fn` public start method.
+
+The Phase 2 plan should require:
+
+- deterministic request/model/configuration incompatibilities may return `LlmStartError` before an
+  `AssistantStream` exists;
+- expected credential-refresh, upload/materialization, HTTP-start, provider, and network failures
+  execute behind the returned `AssistantStream` and settle in-band;
+- the stream owns a lazy/restartable attempt factory or equivalent controller;
+- transparent retry is possible only before the first public chunk and only for typed transient
+  failures;
+- dropping or fusing the public stream cancels pending attempt and backoff work;
+- reconstructed provider continuation is fixed in an extensible dispatch envelope and is not read
+  later from mutable session state by the adapter.
+
+A synchronous public method is acceptable if it returns a contract-enforcing `AssistantStream`
+that owns this machinery. An asynchronous public method is also possible, but it must not reclassify
+expected operational I/O failures as eager exceptions merely because they occur during an await.
+
+The existing `Adapter::stream(...) -> RawAssistantStream` one-shot contract is the actual part that
+must change.
+
+**Owner:** Rust Phase 2 LLM API owner.
+
+## Rust session correction: atomic settlement needs an explicit plan operation
+
+The proposal now requires the terminal assistant response and replayable continuation references to
+become reachable as one atomic logical settlement. The current Rust Phase 2 plan guarantees only
+that validation, sequence allocation, and append of a single `SessionEvent` are atomic; its
+end-to-end slice separately appends the settled assistant message.
+
+The plan must therefore add one real-library settlement boundary, for example a composite event or
+an atomic multi-record append, with these observable properties:
+
+- the assistant response and all continuation references for the winning attempt become reachable
+  together;
+- sequence assignment and publication preserve committed log order;
+- validation or persistence failure exposes neither half;
+- discarded and retried attempts publish neither half;
+- concurrent derivation, fork reconstruction, and request-header reconstruction cannot observe
+  partial settlement.
+
+The exact Rust storage representation is not normative, but a pair of ordinary public `append()`
+calls is insufficient to prove the required behavior.
+
+**Owner:** Rust Phase 2 session/API owner.
+
+## Canonical verification refinement
+
+The proposal's conformance list is sufficient as design intent. When implemented, the atomicity
+case must exercise an actual interruption or failure boundary rather than merely checking the final
+happy-path log. A scenario should arrange a settlement failure between preparation and publication
+and assert that neither the assistant response nor its continuation reference is reachable. Any
+concurrency scheduling used only to stress the Rust implementation remains a Rust deterministic
+test; the shared scenario should assert only the language-neutral observable state.
+
+**Owner:** shared canonical-conformance maintainers.
+
+## Remaining actions by party
+
+### Amendment/provider owner
+
+- Run the credentialed Codex multi-turn experiment.
+- Record sanitized evidence for payload, compatibility, sequence evolution, and terminal reuse.
+- Replace the remaining empirical placeholders and update the decision log.
+
+### Python Phase 5 owner
+
+- Preserve the already-recorded integration rule: select compatible continuation before fixing the
+  request header, pass that exact state to dispatch, and settle the winning response plus
+  continuation atomically.
+- Keep operational provider preparation inside the never-raises stream/attempt boundary.
+
+### Rust Phase 2 owner
+
+- Update the existing plan's one-shot adapter seam.
+- Add the atomic logical-response settlement API and tests.
+- Preserve an extensible provider dispatch envelope without polluting model-visible vocabulary.
+- Resolve the exact optional `Usage.cost` representation before publishing that vocabulary.
+
+### Rust Phase 5 owner
+
+- Retain the previously recorded provider-wire, credential capability, continuation translation,
+  transport cancellation, and sanitized fixture work. No additional amendment text is required for
+  those implementation details.
+
+## Final disposition
+
+Approve the latest language-neutral wording subject only to the live empirical Codex contract. Do
+not reopen the async-versus-sync public API question as a semantic requirement. Update the existing
+Rust Phase 2 executable plan now, because both the one-shot stream seam and single-event-only
+settlement assumption would otherwise harden before Phase 5 can use them safely.
+---
+
+# Seventh design review — after fourth proposal revision — 2026-08-20
+
+## Verdict
+
+The fourth revision correctly applies the previous review's final architectural corrections:
+
+- atomic logical settlement is now explicit;
+- retry commitment and logical response settlement are clearly distinguished;
+- the live Codex experiment now includes terminal-outcome reuse;
+- continuation reconstruction is fixed in the request header rather than adapter-private memory;
+- continuation payload sensitivity is scoped correctly;
+- conformance intent includes atomic settlement; and
+- the earlier mapping/retry/authentication/fixture findings remain closed.
+
+The proposal is now very close to freeze.
+
+I found **one remaining language-neutral semantic gap that is not the live-provider question**:
+`ProviderContinuation` eligibility across **session reset and compaction** is still ambiguous.
+
+This should be fixed before freezing because it directly affects what reaches a later model request.
+
+## 1. New required clarification — persistence is not replay eligibility
+
+The proposal currently says that continuation:
+
+```text
+- follows session ancestry and fork boundaries; and
+- is never removed by a visible-history reset or compaction that still needs it
+  to reconstruct a later request.
+```
+
+The append-only retention intent is sound, but this wording mixes two different questions:
+
+```text
+A. Does the historical continuation record remain in the durable log/artifact store?
+B. Is that historical continuation eligible to be replayed into the next model request?
+```
+
+Those are not equivalent.
+
+A reset or compaction can leave the old event physically present while changing the **effective
+derived history** used for future requests. Provider continuation must follow that derivation boundary
+too, otherwise opaque state from context the user intentionally cleared or the compactor explicitly
+superseded can leak into a later provider request.
+
+## 2. Session reset should floor continuation eligibility
+
+The frozen session model treats reset as a derivation change: prior events remain auditable, but prior
+surface history is excluded from the new effective conversation.
+
+The same principle should apply to provider continuation.
+
+Pin:
+
+> **Reset floors replay eligibility.** A `session/reset` does not delete historical
+> `ProviderContinuation` records or artifacts, but continuation originating before the effective reset
+> boundary is ineligible for requests reconstructed after that reset unless a later committed event
+> explicitly creates a new valid continuation lineage. Pre-reset opaque provider state must never be
+> replayed merely because it is still physically present in the append-only log.
+
+This prevents:
+
+```text
+old Codex conversation
+    -> reset
+    -> new user message
+    -> old encrypted reasoning state silently replayed
+```
+
+which would violate the meaning of "start over."
+
+## 3. Compaction should follow effective-history / retained-tail eligibility
+
+Compaction is subtler than reset because it may replace an old range while deliberately retaining a
+tail.
+
+A clean language-neutral rule is:
+
+> **Continuation follows effective response lineage.** A continuation item is replay-eligible only
+> while the assistant response that produced it remains part of the effective reconstructed history
+> (including an explicitly retained tail). If compaction supersedes that originating response, its
+> continuation remains durable for audit/reconstruction of historical requests but becomes ineligible
+> for new dispatch. Continuation attached to a response preserved in the effective retained tail
+> remains eligible, subject to normal API/compatibility rules.
+
+Conceptually:
+
+```text
+compaction supersedes response R
+    -> continuation(R) remains logged
+    -> continuation(R) is no longer selected for future requests
+
+compaction retains response T in effective tail
+    -> continuation(T) remains eligible
+```
+
+This is preferable to the current phrase:
+
+```text
+"never removed ... if still needed"
+```
+
+because "needed" is circular unless selection has already been defined.
+
+## 4. Why this matters beyond editorial precision
+
+Opaque reasoning continuation is not ordinary metadata. It can encode provider state derived from the
+exact context that produced it.
+
+After compaction:
+
+```text
+original messages
+    -> replaced by summary
+```
+
+the next provider input may no longer be the same context under which the old continuation was
+created.
+
+Therefore compatibility cannot be based only on:
+
+```text
+API identity
+provider/version/model identity
+```
+
+while ignoring whether the originating response is still in the effective request lineage.
+
+The minimum language-neutral eligibility predicate should include both:
+
+```text
+provider compatibility
+AND
+effective session lineage compatibility
+```
+
+The exact provider-specific compatibility key determined by the live experiment remains separate.
+
+## 5. Fork rule remains correct, but can be generalized
+
+The existing fork rule says a fork sees only continuation at or before its ancestry boundary. Keep it.
+
+It can be understood as one instance of the more general rule:
+
+```text
+continuation selection is derived from the same effective session lineage
+used to reconstruct the rest of the request
+```
+
+Then:
+
+```text
+fork
+    -> ancestry boundary filters lineage
+
+reset
+    -> reset floor filters lineage
+
+compaction
+    -> effective supersession/retained-tail rules filter lineage
+```
+
+This gives one coherent reconstruction model rather than three unrelated special cases.
+
+## 6. API-switch wording — use "not selected/replayed", not "drops"
+
+The conformance paragraph currently says an API switch that does not consume Codex continuation
+"drops it without failure."
+
+Because the session log is append-only, "drops" is slightly misleading: it could be read as deletion.
+
+Prefer:
+
+> An API switch to an API that does not consume that continuation leaves the historical continuation
+> logged but does not select or replay it, and does not fail solely because the ineligible
+> continuation exists.
+
+This is a small wording fix, not a separate blocker.
+
+## 7. Atomic settlement remains correct
+
+The newly-added rule that:
+
+```text
+terminal assistant response
++
+replayable continuation references
+    -> one atomic logical settlement
+```
+
+is sufficient.
+
+No additional transaction abstraction is needed in the language-neutral design.
+
+The implementation plans must still provide a real settlement operation rather than two independently
+visible appends, as already recorded in the Rust review and Python Phase 5 follow-up.
+
+## 8. Never-raises / Rust stream disposition remains unchanged
+
+The sixth Rust review and the fifth design review now agree on the important point:
+
+```text
+Rust needs restartable/lazy attempt capability
+not necessarily an async public stream() signature
+```
+
+Keep that disposition.
+
+Expected credential-refresh, upload/materialization, HTTP-start, provider, and network failures stay
+behind `AssistantStream` and settle in-band. Only deterministic caller/config/request/model
+incompatibilities belong on the eager-error side.
+
+No new amendment text is needed for this implementation-plan detail.
+
+## 9. Live Codex experiment remains the empirical blocker after the lineage fix
+
+Once reset/compaction eligibility is pinned, the only remaining amendment-level blocker is the real
+Codex experiment.
+
+It must determine:
+
+```text
+1. exact complete provider item(s) to replay
+2. compatibility identity/key
+3. latest/replacement/ordered-accumulation update rule
+4. which terminal outcomes produce reusable continuation
+```
+
+The experiment should also confirm that the selected replay item can be round-tripped through
+Minion's content-addressed persistence without mutation.
+
+That last check does not add a fifth semantic question; it validates that the proposed artifact
+representation faithfully carries the provider item identified by questions 1-4.
+
+## 10. Canonical coverage — add reset/compaction cases
+
+The existing proposed coverage is good. Add two language-neutral scenarios:
+
+```text
+session/
+    provider-continuation-reset-floor
+    provider-continuation-compaction-lineage
+```
+
+Pin:
+
+```text
+continuation before reset
+    -> remains auditable
+    -> absent from post-reset reconstructed dispatch
+
+continuation from compacted-away response
+    -> remains auditable
+    -> ineligible for future dispatch
+
+continuation from retained-tail response
+    -> remains eligible
+```
+
+As with the other continuation scenarios, assert semantic reconstruction/selection only, not artifact
+layout or provider wire bytes.
+
+## Final disposition
+
+```text
+AMENDMENT-LEVEL REQUIRED BEFORE FREEZE
+1. Pin ProviderContinuation replay eligibility across reset and compaction:
+     - durable retention != dispatch eligibility
+     - reset floors eligibility
+     - superseded compacted responses lose eligibility
+     - effective retained-tail responses preserve eligibility
+     - selection follows effective session lineage
+2. Replace "drops continuation" wording with "does not select/replay; remains logged."
+3. Live-verify Codex:
+     - exact replay item(s)
+     - compatibility key
+     - replacement/latest/accumulation behavior
+     - terminal-outcome reuse behavior
+4. Record the empirical results in the mapping and decision log.
+
+CANONICAL FOLLOW-UP
+5. Add reset-floor and compaction-lineage continuation cases in `session/`.
+6. Retain the already-recorded reconstruction/fork/tool-round-trip/API-mismatch/
+   discarded-attempt/atomic-settlement cases.
+
+IMPLEMENTATION-PLAN GATES
+7. Python Phase 5: implement effective-lineage selection before fixing request/header.
+8. Rust Phase 2: revise the existing one-shot stream seam and add atomic logical settlement
+   before those public contracts harden.
+9. Rust Usage.cost representation: settle before public vocabulary publication.
+
+RESOLVED
+All earlier wire mapping, retry, cancellation, authentication, malformed-tool-call,
+fixture-policy, continuation data-flow, atomic-settlement, telemetry-sensitivity,
+cost-deferral, and API-key-resolution findings.
+```
+
+After items 1-2 are added, no further static architecture issue is currently known. The live Codex
+experiment is then the sole blocker to freezing the amendment.
+
+---
+
+# Response — fifth pass, verified, plus a process observation
+
+## Factual correction I owe from last round: the Rust Phase 2 plan does exist
+
+The sixth Rust review is right and I was wrong. Checked directly this time instead of trusting my
+own prior claim: `plans/rust/2026-08-18-plan-2-llm-session-telemetry.md` exists, and its content
+matches what the review describes — `fn stream(&self, request: Request) ->
+Result<RawAssistantStream, LlmStartError>` at line 412 (one-shot, no restartable attempt seam), and
+"Sequence allocation, event validation, and append are one atomic session operation" at line 23
+(atomicity scoped to one event, not the multi-record atomic settlement this amendment now
+requires). My last three passes said "there's still no Rust plan file to carry this forward into" —
+that was simply false, and I should have checked before repeating it three times. Correcting the
+record here since this design doc's own scope note keeps this out of §4 either way, but the
+finding-tracking claim itself was wrong and worth being explicit about.
+
+## Session reset/compaction eligibility gap: CONFIRMED, and well-grounded — applied
+
+Checked this against the master design directly before drafting anything, rather than inventing new
+reset/compaction semantics from scratch: §7 already establishes exactly the distinction this review
+is asking for — `reset()` "Derivation excludes all surface entries at or before the reset event.
+History remains readable for search and audit" (durable-retention vs. derivation-eligibility, for
+ordinary surface messages), and compaction is separately characterized as changing "provider
+context, not storage." The review isn't proposing new architecture; it's correctly pointing out that
+my `ProviderContinuation` bullet list stated durability ("never removed by... reset or compaction")
+without ever stating the eligibility half of the same distinction the rest of the design already
+draws for surface history. That's a real, well-grounded gap — not speculative elaboration — so I
+applied it: replaced the durability-only bullet with an effective-session-lineage framing, folded
+fork/reset/compaction into one generalized rule (5) citing §7's existing principles by name rather
+than inventing parallel ones, fixed the conformance note's "drops... without failure" wording (the
+log is append-only; nothing is dropped), and extended conformance coverage with reset-floor and
+compaction-lineage cases.
+
+## Everything else: no change needed, confirmed correct as previously disposed
+
+Async-vs-sync Rust disposition (§8 of the seventh review) — already resolved last round, restated
+unchanged by both new reviews, no further action. Atomic settlement (§7 of the seventh review) —
+confirmed sufficient as-is, no additional transaction abstraction needed. `Usage.cost` — unchanged
+disposition, still correctly out of this amendment.
+
+## Process observation, not a finding — worth surfacing directly rather than just keeps applying
+
+This is the fifth review round on this proposal, and every single round has been about one feature:
+`codex-responses` continuation. The pattern across rounds: properties → data flow → atomic
+settlement → terminology precision → lineage eligibility. Each round has found something real —
+I checked every one rather than rubber-stamping, and every round genuinely improved the document —
+but the shape of the sequence is what a fundamentally *empirical* question looks like when it's
+worked entirely at the design layer: there is always another edge case to specify in more detail,
+because the actual object in question (what Codex's Responses API requires for correct multi-turn
+continuation) doesn't exist yet as an observed fact, only as a hypothesis being elaborated further
+and further without new evidence arriving. Reset/compaction eligibility was a genuine gap grounded
+in principles the design already states elsewhere (§7) — that's different in kind from, say, adding
+a sixth review round asking about eligibility interaction with some further hypothetical session
+operation. My honest read: the language-neutral half of this design (piece A, the data-flow
+contract) is now unusually thorough — probably more thorough than most of what's already frozen in
+the master design — and further rounds of the same shape are increasingly likely to be diminishing
+returns rather than genuine gaps, precisely because piece B (the empirical Codex contract) is still
+completely unverified. I'd recommend treating this round as the design-layer stopping point unless
+a future review identifies something that isn't just another facet of the same unresolved
+empirical question, and prioritizing actually running the live Codex experiment over a sixth round
+of speculative refinement — the experiment is likely to surface real requirements no amount of
+further design review can anticipate in advance, and may well invalidate or simplify some of what's
+been speculatively pinned across these five rounds.
+
+## Disposition
+
+Applied: the factual correction about the Rust plan's existence (noted here, not a doc change,
+since it doesn't affect §4 content), the effective-session-lineage generalization covering fork,
+reset, and compaction as one rule grounded in existing §7 principles, the "drops" wording fix, and
+extended conformance coverage. No change needed for async/sync Rust disposition, atomic settlement,
+or `Usage.cost` — all confirmed correct as previously recorded. Flagging directly: this proposal's
+language-neutral half is very likely at or past the point of diminishing design-review returns: the
+live Codex experiment is the load-bearing next step, not another round of speculative elaboration.

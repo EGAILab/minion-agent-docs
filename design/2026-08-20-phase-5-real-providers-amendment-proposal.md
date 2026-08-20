@@ -4,14 +4,15 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 (four times) to apply corrections
-from four rounds of design review, including two Rust-side passes (see the sibling
+review, the pattern this proposal follows. Revised 2026-08-20 (five times) to apply corrections
+from five rounds of design review, including three Rust-side passes (see the sibling
 `-review-feedback.md` file and its appended counter-reviews). The remaining open item on
 `codex-responses` continuation splits into two pieces that should not be conflated:
 **(A) the language-neutral Minion data-flow contract** — how continuation moves from decoder
 output through an atomic logical-settlement point (distinct from the retry-commitment boundary),
-into content-addressed request reconstruction, fork boundaries, and API-mismatch handling —
-**is now fully pinned below** (see the `codex-responses` reasoning subsection); **(B) the
+into content-addressed request reconstruction, effective-session-lineage eligibility (fork, reset,
+and compaction treated as one rule per §7's existing derivation principles), and API-mismatch
+handling — **is now fully pinned below** (see the `codex-responses` reasoning subsection); **(B) the
 empirical Codex replay contract** — the exact provider item(s), compatibility key,
 replacement-vs-accumulation semantics, and which terminal outcomes yield reusable continuation —
 **remains genuinely open** and requires live verification against a real Codex multi-turn
@@ -119,9 +120,9 @@ the architecture should reserve the facility now rather than retrofit it later:
 >   `encrypted_content` scalar;
 > - is reconstructable from Minion's own log/artifact store (§8), independent of provider-side
 >   session state;
-> - follows session ancestry and fork boundaries the same way other log-only state does;
-> - is never removed by a visible-history reset or compaction that still needs it to reconstruct a
->   later request;
+> - is selected only from the same **effective session lineage** used to reconstruct the rest of
+>   the request — durable retention in the append-only log and replay *eligibility* are different
+>   questions, and this facility is governed by the latter;
 > - fails eagerly when continuation is required but missing or incompatible, rather than being
 >   silently omitted from the next request;
 > - the opaque payload bytes are never serialized into ordinary telemetry or diagnostics — only
@@ -182,13 +183,33 @@ in an artifact store. So this proposal also pins the behavioral path:
 >    deterministic production order rather than assuming later state silently replaces earlier
 >    state; the live experiment determines whether Codex replay is latest-only, replacement-based,
 >    or an ordered accumulated sequence.
-> 5. **Forks see only their ancestry prefix.** A fork reaches exactly the continuation committed at
->    or before its ancestry boundary; continuation produced after that boundary cannot leak into it.
-> 6. **API/provider mismatch is disambiguated, not conflated.** Switching to an API that does not
->    consume Codex continuation makes old continuation simply ineligible — not a failure. The
->    selected API/provider requiring continuation while only missing or incompatible continuation
->    exists is an eager preparation failure before the stream is returned (same boundary as
->    `ThinkingBlock` rejection above).
+> 5. **Selection follows effective session lineage — one rule, three instances.** Continuation
+>    selection is derived from the same effective lineage already used to reconstruct the rest of
+>    the request (§7's derivation rules), not merely from what is durably present in the append-only
+>    log:
+>    - *Fork:* a fork reaches exactly the continuation committed at or before its ancestry boundary;
+>      continuation produced after that boundary cannot leak into it.
+>    - *Reset floors eligibility:* `session/reset` does not delete historical `ProviderContinuation`
+>      records — they remain auditable, exactly as reset excludes prior surface entries from
+>      derivation without deleting them (§7) — but continuation originating at or before the reset
+>      boundary is ineligible for requests reconstructed after that reset, unless a later committed
+>      event explicitly establishes a new continuation lineage. Pre-reset opaque provider state is
+>      never replayed merely because it is still physically present in the log.
+>    - *Compaction follows superseded/retained-tail status:* consistent with §7's "compaction
+>      changes provider context, not storage," a continuation item stays replay-eligible only while
+>      the assistant response that produced it remains part of the effective reconstructed
+>      history — including an explicitly retained tail. If compaction supersedes that originating
+>      response, its continuation stays durable for audit and historical reconstruction but becomes
+>      ineligible for new dispatch; continuation attached to a response preserved in the retained
+>      tail stays eligible, subject to the ordinary compatibility rules below.
+> 6. **API/provider mismatch is disambiguated, not conflated.** An API switch to an API that does
+>    not consume Codex continuation leaves the historical continuation logged but not selected or
+>    replayed — not a failure, and not a deletion. The selected API/provider requiring continuation
+>    while only missing or incompatible continuation exists (whether by provider mismatch or by rule
+>    5's lineage-eligibility rules making the only available continuation ineligible) is an eager
+>    preparation failure before the stream is returned (same boundary as `ThinkingBlock` rejection
+>    above). The eligibility predicate is therefore always two-part: provider/API compatibility
+>    **and** effective-lineage compatibility — never provider compatibility alone.
 > 7. **Never model-visible.** `ProviderContinuation` remains request state — never a `ThinkingBlock`,
 >    `AssistantMessage`, or any other surface message type, regardless of how the flow above is
 >    implemented.
@@ -216,13 +237,18 @@ endpoints elsewhere in this proposal.
 `agent/` families once the mechanism above is implemented): continuation present in a committed
 response is reachable in the next reconstructed request; a discarded pre-commit retry attempt's
 continuation is absent from reconstruction; a fork at sequence N reaches only continuation at or
-before N; an API switch that doesn't consume Codex continuation drops it without failure; an API
-that requires continuation with only incompatible continuation available fails eagerly before the
-stream is returned; and the terminal assistant response together with its continuation references
-becomes observable as one atomic logical settlement — never a half-settled state where one is
-reachable without the other. These scenarios assert semantic reconstruction and selection, not
-artifact layout or provider wire bytes, consistent with how wire fixtures are excluded from
-semantic conformance elsewhere in this proposal.
+before N; an API switch to one that does not consume Codex continuation leaves the historical
+continuation logged but not selected or replayed, without failing solely because ineligible
+continuation exists; an API that requires continuation with only incompatible continuation
+available fails eagerly before the stream is returned; continuation from before a `session/reset`
+remains auditable but is absent from post-reset reconstructed dispatch; continuation from a
+compaction-superseded response remains auditable but is ineligible for future dispatch, while
+continuation from a response preserved in compaction's retained tail stays eligible; and the
+terminal assistant response together with its continuation references becomes observable as one
+atomic logical settlement — never a half-settled state where one is reachable without the other.
+These scenarios assert semantic reconstruction and selection, not artifact layout or provider wire
+bytes, consistent with how wire fixtures are excluded from semantic conformance elsewhere in this
+proposal.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -466,10 +492,15 @@ reasonably assume they were settled by omission:
     attempts; an explicit, atomic logical-settlement point distinct from the retry-commitment
     boundary — the assistant response and its continuation references become reachable together or
     not at all; continuation as an explicit component of content-addressed request reconstruction,
-    not adapter-private memory; deterministic selection order; fork-boundary scoping; API-mismatch
-    disambiguation; never model-visible) are pinned as language-neutral regardless of outcome. A
-    provider-hosted `previous_response_id` alone is explicitly rejected as a substitute, since it
-    depends on remote state outside Minion's log. Open: the working hypothesis, backed by OpenAI's
+    not adapter-private memory; deterministic selection order; selection scoped to effective session
+    lineage — one rule covering fork-ancestry scoping, reset-floored eligibility, and
+    compaction-superseded-vs-retained-tail eligibility, matching §7's existing "compaction changes
+    provider context, not storage" and reset-excludes-prior-surface principles rather than inventing
+    new ones; API-mismatch disambiguation (now a two-part predicate: provider/API compatibility AND
+    effective-lineage compatibility); never model-visible) are pinned as language-neutral regardless
+    of outcome. A provider-hosted `previous_response_id` alone is explicitly rejected as a
+    substitute, since it depends on remote state outside Minion's log. Open: the working hypothesis,
+    backed by OpenAI's
     own reasoning-items guidance and observed turn-2 failure reports, is that `encrypted_content` is
     required opaque continuation state — but the exact provider item(s), compatibility key,
     replacement-vs-accumulated-sequence semantics, and which terminal outcomes produce reusable
@@ -492,7 +523,10 @@ reasonably assume they were settled by omission:
 17. Continuation conformance coverage is scoped to extend the existing `session/` and `agent/`
     families (no new `conformance/` family needed) once the mechanism is implemented: committed
     continuation reachable in reconstruction; discarded pre-commit-retry continuation absent;
-    fork-boundary scoping; API-switch drop without failure; incompatible-continuation eager
-    failure; atomic settlement of the terminal assistant response with its continuation references
-    (never observable half-settled). Asserts semantic reconstruction/selection, not artifact layout
-    or wire bytes.
+    fork-boundary scoping; an ineligible-API-switch leaving continuation logged but unselected
+    (not "dropped" — the log is append-only, nothing is deleted); incompatible-continuation eager
+    failure; reset-floored eligibility (auditable, absent from post-reset dispatch); compaction
+    lineage eligibility (superseded response's continuation ineligible but auditable, retained-tail
+    response's continuation still eligible); atomic settlement of the terminal assistant response
+    with its continuation references (never observable half-settled). Asserts semantic
+    reconstruction/selection, not artifact layout or wire bytes.
