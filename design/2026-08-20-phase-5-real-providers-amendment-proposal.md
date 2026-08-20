@@ -1,32 +1,27 @@
 # Proposed amendment to §4 — Real providers
 
-**Date:** 2026-08-20
-**Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
-same review this project applies to cross-language design changes (Rust-side + design reviewer) —
-see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 (six times) to apply corrections
-from five rounds of design review plus one research-driven architectural revision (see the sibling
-`-review-feedback.md` file and its appended counter-reviews). **The `codex-responses` continuation
-question that drove five review rounds is now resolved**, not by further design-layer elaboration
-but by checking a real production implementation: pi's actual `openai-codex-responses` adapter
-confirms `encrypted_content` continuation is genuinely required (Case B, confirmed as fact) and
-handles it far more simply than this proposal previously did — as an opaque `signature` field
-carried directly on `ThinkingBlock`, not a separate `ProviderContinuation` facility with its own
-commit point and lineage rules. This proposal now amends §4's `ThinkingBlock` vocabulary
-accordingly (see the `codex-responses` reasoning subsection) and retires the more elaborate
-five-round design in favor of it. Every other reviewed item below reflects the resolved, corrected
-wording from the five prior review rounds, including the malformed-fragmented-tool-call settlement
-rule and the fixture-wording fix.
-**Target:** `2026-08-18-minion-agent-design.md`, §4 "The LLM seam." §4 currently states the
-never-raises contract, the API/provider split table, and the auth-seam principle at a level that
-doesn't yet commit to how two concrete APIs (`openai-completions`, `codex-responses`) actually
-satisfy them. This proposal is that elaboration, in two distinct categories: the wire-vocabulary
-mapping, retry/never-raises composition, and credential-ownership sections are language-neutral
-*runtime semantic rules* — normative content a Rust implementation is equally bound by, targeted at
-§4. The wire-fixture testing section is *shared project verification policy*, not a runtime
-semantic rule — both implementations should verify the same classes of behavior, but how a fixture
-stores bytes is test infrastructure, not part of the behavioral contract; it is proposed as an
-addition to §8 for that reason, kept separate from §4 rather than folded into it.
+**Date:** 2026-08-20 (reconciled 2026-08-21)
+**Status:** RECONCILED against `2026-08-20-minion-agent-design.md`, now FROZEN. That master
+revision's own "Supersession and normative authority" section names two conflicts with the version
+of this proposal it superseded — the cooperative-only cancellation deferral, and the generic
+`ThinkingBlock.signature` vocabulary proposal — and states both are decided in the master's favor.
+This revision applies that reconciliation: the master's mandatory active-cancellation requirement
+and its `thinking_signature`/`redacted`/`text_signature`/`thought_signature`/`namespace` vocabulary
+are adopted here rather than re-litigated, per the project owner's explicit priority that Pi
+fidelity is non-negotiable and the frozen master is retroactively authoritative. Still pending: the
+one open empirical item this proposal was never able to resolve at the design layer — the exact
+Codex `encrypted_content` replay payload/compatibility-key/state-evolution contract, which requires
+a live credentialed Codex session (see the `codex-responses` reasoning subsection).
+**Target:** `2026-08-20-minion-agent-design.md`, §4 "The LLM seam" — now frozen, and now containing
+substantially more of this material directly than when this proposal was first drafted against the
+2026-08-18 design. The master's own §4 now specifies the provider-neutral replay-signature
+vocabulary, the mandatory target-model transformation stage, and the mandatory active-cancellation
+requirement (§6). This proposal's remaining job has narrowed to what the master leaves API-specific:
+the `codex-responses`/`openai-completions` wire-level encode/decode mapping, retry/never-raises
+composition (including its required interaction with the now-mandatory abort signal), and
+credential ownership — normative *runtime semantic rules* a Rust implementation is equally bound
+by. The wire-fixture testing section remains *shared project verification policy*, not a runtime
+semantic rule, targeted at §8 rather than §4 for that reason.
 
 **Scope note:** this document intentionally excludes everything that is Python-specific
 implementation (file layout, concrete config classes, references to existing Python functions).
@@ -65,16 +60,19 @@ not mechanically converted regardless of role.
 | `TextBlock` | text content part |
 | `ImageBlock` (inline `data`) | base64 data URL |
 | `ImageBlock` (`reference`) | The reference is an immutable content-addressed identity (§5). If the wire format needs a URL, materializing the artifact into a provider-fetchable one is provider-specific preparation that may perform I/O (artifact read, upload, signed-URL generation) — it happens before structural encoding and produces a *wire representation* only; the semantic reference is never rewritten as though a mutable URL were the source of truth. |
-| `ThinkingBlock` | **Explicit unsupported-content error, raised eagerly before the stream is returned — never a silent drop, and never encoded as an in-band stream failure.** `thinking` is frozen provider-neutral vocabulary (§4); silently losing it between the semantic request and what's dispatched is exactly the drift §8's log-reconstruction invariant exists to catch. A request containing content the selected API cannot represent is a deterministic request-compatibility error, not a provider/network runtime failure — it therefore falls on the "before stream returned" side of §4's never-raises boundary table, alongside `UnknownModelError`, unless the selected provider explicitly declares a compatible mapping. |
+| `ThinkingBlock` | **Should never reach this encoder unconverted — §4's mandatory target-model transformation runs first.** An earlier draft of this proposal specified an eager unsupported-content error here; that conflicted with §4's now-frozen thinking-compatibility rule, which is unconditional on model identity, not on target-API capability: since `openai-completions` decode has no reasoning/thinking wire shape (below), any `ThinkingBlock` reaching this adapter is necessarily a *different-model* case, and §4 mandates that case convert non-redacted thinking to ordinary text (signature dropped) or omit redacted thinking — never error. A `ThinkingBlock` still reaching this encoder unconverted indicates §4's transformation stage was skipped or violated, which is an internal consistency failure to fix at that stage, not a provider-compatibility condition for this adapter to invent its own error path for. |
 | `ToolSchema` | OpenAI function-tool shape. `strict` mode is provider-specific, not part of the common schema. |
 
 Decode: `delta.tool_calls[index]` accumulates per array index — `id`, `function.name`, and
 `function.arguments` fragments arrive independently, not necessarily together, finalized only when
 the stream signals completion. `finish_reason` maps `stop→stop`, `length→length`,
-`tool_calls→tool_use`. `StopReason` is a closed six-value enum (`pending | stop | length | tool_use
-| error | aborted`), so "preserved diagnostically" is not by itself a complete rule — an
-**unknown** finish reason must still resolve to one of the six: it maps to `StopReason.error`, with
-the raw provider value preserved in diagnostic detail, never silently coerced to `stop`.
+`tool_calls→tool_use`. `StopReason` is a closed vocabulary — `pending | stop | length | tool_use |
+error | aborted | deferred` (§4) — so "preserved diagnostically" is not by itself a complete rule —
+an **unknown** finish reason must still resolve to one of those values: it maps to `StopReason.error`,
+with the raw provider value preserved in diagnostic detail, never silently coerced to `stop`. Chat
+Completions has no `deferred` outcome for an implemented API, so that value is not reachable through
+this adapter; it is listed for completeness against the shared vocabulary, not because this section
+introduces it.
 
 ### `codex-responses`
 
@@ -87,69 +85,56 @@ differently; `output_item.done` finalizes an item.
 `role: tool` shape at all, which is itself evidence the two adapters cannot share even a generic
 message encoder.
 
-Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock`. Reasoning
-**summary** events are recognized but have **no V1 projection** — not merged into `ThinkingBlock`,
-not allowed to corrupt `reasoning_text` accumulation for the same item.
+Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock.thinking`. Per §4's
+"Responses reasoning presentation" rule, `reasoning_summary_text` deltas also contribute to that
+same visible `thinking`: on item finalization, visible thinking prefers provider summary text when
+present, otherwise reasoning-content text, otherwise the accumulated streamed thinking — summary is
+not a discarded, unprojected event as an earlier draft of this proposal stated. The full replayable
+reasoning item is tracked separately (see below) and is never conflated with the visible-text
+preference order.
 
-**`encrypted_content` continuation — resolved, verified against a real production implementation
-rather than left as a hypothesis.** The agent loop already performs `request → tool call → tool
-result → second model request`, and Phase 5 is where that loop first contacts a real provider — so
-this was never an optional future "multi-turn reasoning" feature. Checked directly against pi's
-actual `openai-codex-responses` adapter (`ref-repos/pi/packages/ai/src/api/openai-codex-responses.ts`
-and `openai-responses-shared.ts`) rather than continuing to speculate: every Codex request sets
-`include: ["reasoning.encrypted_content"]`, and on every subsequent request, whatever reasoning item
-was captured is unconditionally replayed — no compatibility check, no replace-vs-accumulate
-decision, no separate continuation-state machine. **Case B is confirmed as fact.** A
-provider-hosted `previous_response_id` alone is not used for this in pi's default (SSE) transport
-either — it resends full history each request, exactly as Minion already does.
+**`encrypted_content` continuation and `ThinkingBlock.thinking_signature`: the vocabulary and
+architecture are now specified directly by the frozen master (§4 "Responses-family replay
+signatures"), not proposed here.** An earlier revision of this proposal spent five review rounds
+building a `ProviderContinuation` facility for this, then replaced it with a generic
+`ThinkingBlock.signature` field after checking pi's real `openai-codex-responses` adapter — that
+generic field is itself now superseded: the master's frozen vocabulary is `thinking_signature`
+(plus `redacted: bool`), matching Pi's actual field name exactly, and the master already states the
+governing rules generically for all Responses-family APIs: a retained same-model signed thinking
+block is replayed by the compatible adapter; the adapter never synthesizes a provider reasoning item
+from visible thinking text alone; a same-model unsigned thinking block contributes no replay item.
+This section's remaining job is only the `codex-responses`-specific realization of that already-
+frozen rule:
 
-**Resolution: add an opaque `signature` field to `ThinkingBlock` (§4 vocabulary), not a separate
-continuation-state facility.** Pi's actual mechanism is structurally simpler than the
-`ProviderContinuation` design explored across this proposal's first five review rounds (see the
-decision log below): it stores the complete opaque reasoning item as a string carried directly on
-the content block it belongs to, rather than as a parallel structure with its own commit point,
-lineage rules, and settlement semantics. This proposal adopts that mechanism. `ThinkingBlock`
-(currently `thinking` text only) gains one additional field:
+> On decode, `codex-responses` requests `include: ["reasoning.encrypted_content"]` on every
+> request and captures the complete `reasoning` item (including `encrypted_content`) as
+> `ThinkingBlock.thinking_signature`. On encode, if a same-model `ThinkingBlock` being replayed
+> carries a `thinking_signature`, `codex-responses` parses it back into the request as that same
+> reasoning item, unconditionally — no compatibility check, no replace-vs-accumulate decision, no
+> separate continuation-state machine, matching pi's actual behavior exactly. A provider-hosted
+> `previous_response_id` alone is not used for this in pi's default (SSE) transport either — it
+> resends full history each request, exactly as Minion already does.
 
-> `signature` — optional, opaque, provider-specific round-trip data, never interpreted, validated,
-> or displayed outside the adapter that produced it. On decode, `codex-responses` captures the
-> complete `reasoning` item (including `encrypted_content`) as the block's `signature`. On encode,
-> if a `ThinkingBlock` being replayed carries a `signature`, `codex-responses` parses it back into
-> the request as that same reasoning item, unconditionally. An adapter encoding a `ThinkingBlock`
-> whose `signature` it does not recognize — produced by a different API/provider than the one now
-> being dispatched to — drops the signature and encodes only the visible `thinking` text; the
-> signature is optional round-trip metadata, not model-visible content, so dropping it is not
-> subject to the `ThinkingBlock`-rejection rule above (that rule concerns an API with no concept of
-> `thinking` content at all, e.g. Chat Completions, which still eagerly rejects the whole block
-> exactly as already specified — a signature never changes whether the block itself is
-> representable).
+`ToolCall.thought_signature` and `TextBlock.text_signature` are likewise now master vocabulary
+(§4), not proposed here. For `codex-responses` specifically: `text_signature` follows the V1/legacy
+wire format the master names (`{v: 1, id, phase?}` JSON, phase constrained to
+`commentary | final_answer`, falling back to treating any non-JSON or malformed-JSON string as a
+bare legacy message id) — this proposal's earlier draft flagged `TextBlock` signature continuity as
+"related but out of scope"; the master has since closed that gap directly, so it is in scope and
+already specified, not a follow-up.
 
-This needs **no new architecture**. No separate commit point: a `ThinkingBlock` and its `signature`
-are one field of one content block inside one `AssistantMessage`, which already settles as a single
-log entry — nothing new to make atomic. No lineage-eligibility rule: a signature inside a message
-already excluded from derivation by fork, reset, or compaction is excluded the same way the rest of
-that message already is, under §7's existing rules, unmodified. No separate telemetry carve-out:
-`signature` is treated like any other potentially-sensitive field, excluded from telemetry by
-default, consistent with how the design already treats provider response bodies generally.
+**What remains genuinely open — not resolvable at the design layer, requires a live Codex
+session:** the exact complete provider item(s) that must round-trip through `thinking_signature`
+for a real multi-turn Codex tool-call exchange, and whether any provider-specific edge case (a
+malformed or expired `thinking_signature` on replay, for instance) needs handling beyond "signature
+parse/conversion failures follow the ordinary provider-stream error path" (already stated in §4).
+This is empirical verification work against a real Codex account, not a further design question.
 
-**Related, not fixed by this proposal:** pi uses the identical opaque-signature pattern on
-`TextBlock` too (`textSignature`, carrying the Responses API message `id`/`phase` needed for
-correct message-ID reuse across turns) — a related gap in the same already-frozen vocabulary, out
-of scope here since it was never part of the reasoning-continuation blocker this section resolves.
-Worth its own follow-up if `codex-responses` text-message continuity turns out to need it.
-
-The `ProviderContinuation` facility, its production→settlement→reconstruction→replay data flow, its
-atomic-settlement rule, and its fork/reset/compaction lineage-eligibility rules — built across this
-proposal's first five review rounds — are **superseded** by the resolution above, not silently
-dropped: recorded as superseded in the decision log, since the review thread reasoned about them in
-good faith, across genuine uncertainty, before this simpler answer was found by checking a real
-reference implementation instead of continuing to reason from first principles.
-
-**Conformance coverage:** none proposed beyond what already exists. A `ThinkingBlock.signature`,
-once added to the vocabulary, is covered by whatever `session`/`agent` conformance already asserts
-round-trip fidelity for ordinary message content — content blocks already survive log/reconstruct
-unchanged, and fork/reset/compaction already govern message inclusion. No new scenario category,
-no new conformance family.
+**Conformance coverage:** already covered by the master's own §8 conformance families —
+`same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed`,
+`cross-model-thinking-converts-to-text`, `cross-model-redacted-thinking-omitted`, and
+`responses-text-signature-replayed` are already checked in as canonical `agent/` scenarios. No new
+scenario category or family is proposed by this section.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -219,19 +204,42 @@ existing table alone.
 > rule fixes the commitment boundary and the failure-class distinction above, not identical retry
 > schedules across Python and Rust.
 
-**Live mid-stream cancellation is out of scope for this proposal, and the existing cancellation
-contract is boundary-only, not being relaxed here.** The frozen design's `agent/cancellation`
-conformance scenario, and the never-raises table's cancellation entry (in-band `aborted` once a
-stream is active), describe the consequence of cancelling an active stream — they do not assert
-that active mid-stream interruption exists as a required capability. The actual mechanism, verified
-directly against the implementation: `AgentLoop.cancel()` sets a flag checked cooperatively between
-turn-loop steps (`agent_loop/driver.py`); there is no code path today that closes a live provider
-stream mid-flight. Stated explicitly as the language-neutral rule this section relies on: **agent
-cancellation currently prevents subsequent work at cooperative loop boundaries; V1 does not require
-asynchronous interruption of an already-running provider stream.** Given that, deferring the
-transport half of live cancellation is sound — building it ahead of the loop half would solve a
-problem in isolation that needs to be solved as one cross-layer feature. The existing `aborted`
-stop-reason semantics are unaffected and remain ready for whenever that capability exists.
+**Live mid-stream cancellation is now mandatory, reversing this section's earlier deferral.** §6
+"Active abort/cancellation" (frozen master) states plainly: "Minion MUST expose equivalent
+[Pi] behavior... Abort does not mean 'wait until the next provider-request boundary.' It is an
+active cancellation request," with the signal required to propagate to "provider stream / pending
+provider attempt." §9's Phase 5 build-order entry makes the scope explicit for this proposal
+specifically: "This phase MUST consume the master vocabulary above and propagate the run-scoped
+abort signal through pending attempts, retry/backoff, provider streaming, and transport
+cancellation as Pi does." This proposal's earlier justification — citing `AgentLoop.cancel()`'s
+cooperative, boundary-only implementation as evidence the frozen design's position was
+cooperative-only — was accurate about the *implementation at the time*, but the master's
+subsequent Pi-fidelity audit found that implementation itself was the gap, not the design's actual
+requirement (Pi's own `Agent.abort()` genuinely calls `AbortController.abort()`, and that signal is
+threaded into the provider `fetch()` call). This proposal now pins how the mandatory abort signal
+composes with retry and the never-raises boundary, matching pi's actual behavior
+(`sleep(delayMs, signal)` in pi's retry loop rejects immediately on abort rather than waiting out
+the backoff; each retry attempt checks `signal?.aborted` before starting):
+
+> **Cancellation always takes precedence over retry, at any point in the retry-commitment
+> lifecycle.** An abort signal received while a pre-commitment attempt is in flight, or during its
+> retry backoff wait, cancels that attempt and the retry loop immediately — it is not queued behind
+> the current attempt's natural completion, and the two-gate retry-eligibility rule above (no chunk
+> yet yielded, transient-failure-classified) never overrides an abort: cancellation is a distinct
+> signal from retry-worthiness, not a third gate to satisfy alongside them.
+>
+> **After the retry-commitment boundary (first public chunk), cancellation settles exactly as §4's
+> never-raises contract already states**: in-band, as `aborted`, through the returned
+> `AssistantStream` — this proposal adds no new mechanism here, since the master's "Cancellation
+> after stream creation remains in-band as `aborted`" rule already covers it directly.
+>
+> **Releasing/closing a stream cancels owned pending provider work**, per §4's never-raises
+> section — for a real adapter, that means the transport's in-flight request/connection is actually
+> torn down (an aborted `fetch()`/HTTP request), not merely stopped being read from.
+
+The retry commitment boundary, the two-gate eligibility rule, and retry-exhaustion-settles-in-band
+above are unaffected by this change — cancellation is layered on top of them, not a replacement for
+any of them.
 
 ---
 
@@ -338,15 +346,23 @@ reasonably assume they were settled by omission:
 
 ## Decision log for this proposal
 
-1. `ThinkingBlock` on `openai-completions` encode is an explicit error, not a silent drop —
-   consistent with §4's existing framing that the block is frozen vocabulary.
+1. **REVERSED.** `ThinkingBlock` on `openai-completions` encode is never an eager error — an
+   earlier draft's "explicit error, not a silent drop" rule conflicted with the frozen master's
+   unconditional (model-identity-based, not API-capability-based) cross-model thinking-compatibility
+   rule: since this adapter's decode side has no reasoning/thinking wire shape, any `ThinkingBlock`
+   it encounters is necessarily a different-model case, which §4 mandates converting to plain text
+   (or omitting if redacted) upstream in the mandatory transformation stage, before this adapter's
+   encoder ever runs. An unconverted `ThinkingBlock` reaching this encoder is now a transformation-
+   stage bug to fix, not a condition this adapter manufactures its own error path for.
 2. `codex-responses` function calls stream incrementally (`function_call_arguments.delta`), not
    only as complete finalized items — verified against the real Responses streaming event set, not
    assumed.
-3. `codex-responses` reasoning *summary* is recognized-but-unprojected in V1, kept distinct from
-   `reasoning_text`, rather than collapsed into one undifferentiated `ThinkingBlock`.
-   `encrypted_content` is treated separately (item 18 below) — confirmed required continuation
-   state, resolved via a `ThinkingBlock.signature` field rather than a separate facility.
+3. `codex-responses` reasoning *summary* text contributes to visible `ThinkingBlock.thinking`
+   (preferring summary text, then reasoning-content text, then accumulated streamed thinking on
+   finalization) — corrected from an earlier draft's "no V1 projection" claim, which was wrong: the
+   frozen master's "Responses reasoning presentation" rule states summary text is projected. The
+   full replayable reasoning item is tracked separately in `thinking_signature` (item 19 below),
+   never conflated with this visible-text preference order.
 4. `completed` is not automatically `stop` — splits on whether a finalized tool call is pending.
    `incomplete` is keyed by its specific reason rather than blanket-mapped to `length` — only
    output/token-limit exhaustion maps to `length`; `content_filter` and other non-length reasons
@@ -358,12 +374,17 @@ reasonably assume they were settled by omission:
    timing alone would let a malformed-data failure before the first chunk qualify for retry, which
    it must never do. Retry count, backoff, jitter, and provider-specific retryable-status
    classification are implementation/provider policy, not part of this language-neutral rule.
-7. Live mid-stream cancellation is deferred, consistent with (not a relaxation of) the existing
-   frozen cancellation contract: verified directly against `AgentLoop.cancel()` in
-   `agent_loop/driver.py`, cancellation today is cooperative and boundary-only (a flag checked
-   between turn-loop steps), with no code path that interrupts a live provider stream. Building
-   the transport half of active cancellation ahead of the loop half would solve part of a
-   cross-layer feature in isolation.
+7. **REVERSED.** Live mid-stream cancellation is mandatory, not deferred — the frozen master's §6
+   requires the run-scoped abort signal to reach "provider stream / pending provider attempt," and
+   §9's Phase 5 entry requires it to propagate "through pending attempts, retry/backoff, provider
+   streaming, and transport cancellation." Cancellation always takes precedence over retry at any
+   point in the retry-commitment lifecycle; after the retry-commitment boundary it settles exactly
+   as the existing never-raises `aborted` rule already states — no new mechanism needed there. This
+   proposal's earlier deferral correctly read the *implementation at the time* (`AgentLoop.cancel()`
+   was genuinely cooperative-only, verified against `agent_loop/driver.py`), but the master's
+   Pi-fidelity audit found the implementation, not the design's actual intent, was the gap — Pi's
+   own `Agent.abort()` genuinely calls `AbortController.abort()`, threaded into the provider
+   `fetch()` call itself.
 8. Credential ownership follows persistence ownership, generalized around granted authority rather
    than a blanket prohibition: an implementation does not independently refresh or mutate
    externally-owned credentials unless the owner exposes an explicit supported interoperability
@@ -385,7 +406,7 @@ reasonably assume they were settled by omission:
 12. API-key resolution has no fallback chain in V1 — recorded as the one language-neutral policy
     sentence from the excluded Python config material, since it is behavioral policy rather than
     file/config structure.
-13. **SUPERSEDED by item 18 below.** `codex-responses` continuation was originally addressed with a
+13. **SUPERSEDED, twice over — see item 19 below.** `codex-responses` continuation was originally addressed with a
     `ProviderContinuation` facility (API/compatibility identity, log-reconstructable,
     session-ancestry-aware, eager-fails when required-but-missing, sanitized non-payload metadata
     only in diagnostics; a production→logical-settlement→log-reference→request-reconstruction→replay
@@ -393,7 +414,7 @@ reasonably assume they were settled by omission:
     scoped to effective session lineage covering fork/reset/compaction as one rule; two-part
     API-and-lineage compatibility), built across five review rounds against an open empirical
     question (Case A vs. Case B). Retained here for the historical record of what was reasoned
-    through, not because it remains the design — see item 18 for the resolution that replaces it.
+    through, not because it remains the design — see item 19 for what is actually in force now.
 14. Malformed fragmented tool-call settlement is pinned identically for both APIs: conflicting
     IDs/names, impossible index/`item_id` reuse, non-JSON or non-object finalized arguments, and
     incomplete finalization are protocol errors that settle in-band as `StopReason.error` — never
@@ -408,23 +429,28 @@ reasonably assume they were settled by omission:
     neutral vocabulary before Phase 5 (see master design's LLM vocabulary). It is tracked as a
     follow-up against that earlier decision, not folded into this amendment, since resolving it is
     not specific to real-provider wire behavior.
-17. **SUPERSEDED by item 18 below.** The conformance coverage note built for the
+17. **SUPERSEDED — see item 19 below.** The conformance coverage note built for the
     `ProviderContinuation` facility (committed-continuation reachability, discarded-retry absence,
     fork-boundary scoping, ineligible-API-switch handling, incompatible-continuation eager failure,
-    reset/compaction lineage eligibility, atomic settlement) is no longer needed — see item 18.
-18. **Resolution, verified against pi's real `openai-codex-responses` adapter rather than continued
-    speculation:** `encrypted_content` continuation is confirmed required (Case B, confirmed as
-    fact — every request includes `reasoning.encrypted_content`, every subsequent request
-    unconditionally replays it, no compatibility check or accumulation logic). Pi's actual
-    mechanism is an opaque `signature` field carried directly on `ThinkingBlock`, not a separate
-    continuation-state facility — this proposal adopts that mechanism instead of items 13/17's
-    `ProviderContinuation` design. This needs no new architecture: no separate commit point (a
-    signature is one field of one content block inside one `AssistantMessage`, which already
-    settles as a single log entry), no lineage-eligibility rule (a signature inside an
-    excluded-by-derivation message is already excluded the same way the rest of that message is,
-    under §7's existing rules), no new telemetry carve-out (treated like any other sensitive field,
-    excluded from telemetry by default), and no new conformance coverage (already covered by
-    existing round-trip and derivation conformance for ordinary message content). Related but
-    explicitly out of scope: pi uses the identical pattern on `TextBlock` (`textSignature`, for
-    Responses API message-ID/phase reuse) — a separate gap in the same vocabulary, not addressed
-    here since it was never part of the reasoning-continuation blocker this item resolves.
+    reset/compaction lineage eligibility, atomic settlement) is no longer needed — see item 19.
+18. **SUPERSEDED by item 19 below.** This proposal's own prior resolution — a generic
+    `ThinkingBlock.signature` field, adopted after checking pi's real adapter directly — is itself
+    superseded by the frozen master's vocabulary, which uses different naming (`thinking_signature`)
+    and is broader in scope (also pins `redacted`, `TextBlock.text_signature`, and
+    `ToolCall.thought_signature`, none of which this item covered). Retained for the historical
+    record of the reasoning that led to checking pi's source in the first place — a real
+    methodological improvement over the five rounds before it — not because its specific field name
+    or scope remains current. See item 19.
+19. **Master vocabulary adopted directly, not re-specified here.** `ThinkingBlock.thinking_signature`
+    and `redacted`, `TextBlock.text_signature`, and `ToolCall.thought_signature` are frozen master
+    §4 vocabulary (`2026-08-20-minion-agent-design.md`), independently verified there against Pi's
+    real `types.ts` field-for-field (see that document's own review feedback). This proposal's
+    remaining contribution is only the `codex-responses`-specific wire realization of that
+    already-frozen vocabulary: the `include: ["reasoning.encrypted_content"]` request flag,
+    unconditional same-model replay with no compatibility check or accumulation logic (Case B,
+    confirmed against pi's real adapter behavior — not a hypothesis), and the V1/legacy
+    `text_signature` wire format. `TextBlock` signature continuity — flagged by an earlier draft of
+    this item as "related, out of scope" — is closed by the master directly, not deferred. The one
+    item genuinely still open is empirical: the exact complete provider item(s), compatibility
+    identity, and state-evolution behavior for a real multi-turn Codex tool-call exchange, which
+    needs a live credentialed Codex session to verify and is not resolvable by further design work.
