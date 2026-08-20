@@ -1,12 +1,11 @@
 <!--
 TRACKING NOTE — 2026-08-20 — LATEST
-Latest disposition after reviewing the twice-revised Phase 5 amendment and the full review/counter-review chain:
-- All earlier mapping, retry, cancellation, authentication, malformed-tool-call, fixture-policy, cost-deferral, and API-key-resolution corrections are now resolved in the amendment.
-- One amendment-level blocker remains, with two parts that must be closed together before freezing:
-  (1) live Codex verification must pin the exact provider-continuation replay payload, compatibility key, and accumulation/replacement behavior; and
-  (2) the language-neutral design must pin the complete ProviderContinuation data flow from decoder output -> attempt-local pending state -> committed session/log state -> request-header reconstruction -> matching adapter replay, including retry/abandon/fork/API-mismatch behavior.
-- Rust Phase 2 API sequencing remains a separate implementation-plan gate: revise the public LLM/request contracts before implementing them so Phase 5 does not force a breaking redesign.
-- Usage.cost representation remains a pre-publication Rust vocabulary decision, not a blocker on this language-neutral amendment.
+Latest disposition after reviewing the third revision of the Phase 5 amendment and the full review/counter-review chain:
+- The ProviderContinuation data-flow gap is now resolved in the proposal: attempt-local observation, durable commit, content-addressed log/reference state, deterministic reconstruction, fork boundaries, compatibility filtering, and matching replay are pinned.
+- Two amendment-level items remain before freeze: (1) add atomic logical settlement of the terminal assistant response with any continuation references derived from the same physical attempt; and (2) complete live Codex verification of exact replay item(s), compatibility key, terminal-outcome reuse rules, and replacement/latest/accumulation semantics.
+- Distinguish two different "commit" boundaries in the text: first-public-chunk commits a physical attempt against retry; terminal logical settlement makes assistant response + continuation references durably reachable. The former must not imply durable continuation publication.
+- Rust Phase 2 still needs a pre-implementation seam revision for restartable pre-commit attempts and extensible reconstructed provider state, but this review does NOT endorse making operational provider I/O an eager pre-stream failure. The frozen never-raises contract still requires expected provider/network failures after AssistantStream exists to settle in-band.
+- Usage.cost representation remains a separate pre-publication Rust vocabulary decision, not a blocker on this amendment.
 -->
 
 ## Review verdict — Phase 5 real-provider design amendment
@@ -1755,3 +1754,542 @@ and `Usage.cost`'s Rust representation (predates this amendment). If the next re
 data-flow rules sufficient, this amendment has no known remaining language-neutral blocker other
 than the live Codex experiment itself — which is genuinely implementation-time work requiring a
 real Codex OAuth session, not something further design-review iteration can resolve.
+
+---
+
+# Fourth Rust review — action register after proposal `b3410d3`
+
+## Verdict
+
+The latest proposal resolves the previously open language-neutral `ProviderContinuation` data-flow
+architecture. From a Rust perspective, one semantic clarification and one empirical verification
+remain before the amendment freezes. Several implementation and conformance follow-ups must also be
+assigned now so they are not mistaken for optional Phase 5 cleanup.
+
+## Required before amendment freeze
+
+### 1. Pin atomic logical settlement
+
+The proposal correctly makes continuation data attempt-local until the physical attempt commits, but
+it does not yet explicitly require the terminal assistant response and the continuation references
+derived from that attempt to become reachable atomically.
+
+Add this language-neutral rule:
+
+> The settled assistant response and every continuation reference derived from the same physical
+> attempt become reachable as one atomic logical settlement. Artifact bytes may be stored earlier,
+> but no committed log state exposes the terminal response without its required continuation, or a
+> continuation from a response that did not commit.
+
+This does not require one particular event encoding or storage transaction API. An implementation
+may use a composite event, transactional append, or another mechanism, provided concurrent readers,
+reconstruction, and recovery cannot observe a half-settled response. Without this rule, Python could
+append the assistant response and continuation as independently visible operations while Rust uses a
+single logical commit, producing a cross-language difference after cancellation, persistence failure,
+or concurrent observation.
+
+**Owner:** language-neutral amendment/design owner.
+
+### 2. Complete the live Codex verification
+
+The real Codex OAuth experiment still must determine:
+
+- the exact provider item or item sequence that must be replayed;
+- the API/version/model compatibility identity that admits replay;
+- whether successful turns replace, extend, or otherwise transform the prior continuation sequence;
+- which terminal outcomes produce reusable continuation state and which discard it.
+
+Record sanitized evidence and update the proposal's open fields and decision log before freeze. This
+work requires a real credentialed multi-turn tool-call exchange and cannot be resolved by further
+static review.
+
+**Owner:** Phase 5 provider implementation/design owner with access to a real Codex OAuth session.
+
+## Required shared canonical-conformance work
+
+After the live contract is pinned, add language-neutral cases through the existing canonical
+families. At minimum, cover:
+
+- a committed continuation being selected for the next compatible request;
+- continuation from a discarded/retried physical attempt not entering committed state;
+- fork reconstruction observing only continuation state within the fixed ancestry boundary;
+- API or compatibility mismatch preventing replay;
+- a deterministically incompatible request failing eagerly before stream return;
+- the terminal assistant response and its continuation references becoming observable as one
+  logical settlement.
+
+The adapters may arrange fixtures and project results, but continuation selection, settlement,
+reconstruction, and compatibility decisions must execute in the real Python and Rust libraries.
+
+**Owner:** shared canonical-conformance maintainers, coordinated with both implementation owners.
+
+## Required Python Phase 5 plan changes
+
+The Python Phase 5 implementation must not bolt continuation replay onto the provider after request
+history has already been committed. Its agent-loop flow must:
+
+1. resolve the target provider/API compatibility identity;
+2. reconstruct and select eligible continuation state;
+3. include the selected continuation identity in the request header before dispatch;
+4. keep decoder output attempt-local across retries;
+5. atomically settle the terminal assistant response with continuation references only for the
+   winning physical attempt.
+
+The current Python flow records a request header before `llm.stream(request)` and later appends the
+assistant response. The Phase 5 plan therefore needs an explicit integration change at that boundary,
+not only adapter-local decoding logic.
+
+**Owner:** Python Phase 5 plan/implementation owner.
+
+## Required Rust Phase 2 plan changes
+
+This is the most time-sensitive Rust action. The current Phase 2 plan publishes a synchronous,
+one-shot adapter start shape:
+
+```rust
+fn stream(&self, request: Request) -> Result<RawAssistantStream, LlmStartError>;
+```
+
+That contract should be revised before Phase 2 implementation freezes. The public and internal
+boundaries must reserve room for:
+
+- asynchronous eager preparation before `AssistantStream` is returned;
+- restartable physical attempts before logical commit;
+- typed classification of retryable and non-retryable start/stream outcomes;
+- reconstructed provider request state through an extensible dispatch context or separate provider
+  envelope rather than continually expanding the closed provider-neutral `Request` vocabulary;
+- cancellation/release of a pending physical attempt when the public stream is dropped or fuses.
+
+The provider-neutral request/message vocabulary should remain stable. Provider continuation is
+reconstructed request state, not a model-visible message and not an invitation to add provider wire
+types to the semantic `Request` structure.
+
+**Owner:** Rust Phase 2 plan and LLM API owner. This action is required before implementing the
+published Phase 2 adapter surface; it must not be deferred until the Rust Phase 5 plan.
+
+## Required Rust Phase 5 plan items
+
+The later Rust Phase 5 plan should explicitly cover the amendment's provider-specific realization:
+
+- open provider wire-event envelopes and tolerant decoding;
+- checked tool-call correlation and response-ID maps;
+- credential-source capability reporting without secret exposure;
+- Codex continuation extraction, artifact persistence, compatibility checks, and replay translation;
+- transport cancellation and retry-attempt ownership;
+- sanitized fixture capture plus offline deterministic replay.
+
+These do not require further language-neutral amendment text unless implementation discovers a new
+observable semantic difference.
+
+**Owner:** future Rust Phase 5 plan owner.
+
+## Separate pre-publication Rust vocabulary gate
+
+`Usage.cost` still needs an exact optional representation before Rust publishes its provider-neutral
+`Usage` API. It should not default to binary floating point merely for convenience. This issue
+predates the amendment and does not block amendment freeze, but it must be resolved before the Rust
+Phase 2 public vocabulary becomes a compatibility commitment.
+
+**Owner:** Rust Phase 2 vocabulary/API owner.
+
+## Final disposition
+
+Do not request another broad architectural redesign. Close the atomic-settlement sentence and the
+live provider experiment, then freeze the amendment. In parallel, update the Rust Phase 2 plan before
+its LLM surface is implemented. Once the empirical contract is known, add the shared canonical cases
+and apply the corresponding Python Phase 5 and later Rust Phase 5 implementation work.
+---
+
+# Fifth design review — after third proposal revision — 2026-08-20
+
+## Verdict
+
+The third revision resolves the previously identified language-neutral continuation **data-flow**
+gap. The proposal now explicitly carries continuation from decoder observation through attempt-local
+state, a durable commit, content-addressed reconstruction, fork scoping, compatibility filtering,
+and matching replay; it also adds the requested conformance-coverage obligations.
+
+Do not freeze yet, but the remaining amendment work is now small and concrete:
+
+1. pin **atomic logical settlement** of the terminal assistant response and continuation references
+   from the same physical attempt; and
+2. complete the live Codex experiment that fixes the concrete replay payload/compatibility contract.
+
+I agree with the fourth Rust review that atomic settlement is a real cross-language semantic rule.
+I do **not** agree that the Rust public `stream()` API necessarily has to become asynchronous merely
+because provider preparation may perform I/O; that recommendation needs to be constrained by the
+already-frozen never-raises boundary.
+
+## 1. ProviderContinuation data flow — resolved
+
+The proposal now correctly pins:
+
+```text
+physical attempt
+    -> decoder observes continuation attempt-locally
+    -> defined response-settlement point
+    -> content-addressed artifact + committed log reference
+    -> deterministic request reconstruction
+    -> request/header references exact selected provider state
+    -> compatible adapter replay
+```
+
+It also correctly specifies:
+
+- no durable continuation from discarded/retried attempts;
+- explicit request-reconstruction participation rather than adapter-private memory;
+- deterministic ordering pending the live contract;
+- fork ancestry boundaries;
+- API mismatch as ineligibility rather than automatic failure;
+- eager failure only when the selected API/provider actually requires compatible continuation;
+- continuation never becoming `ThinkingBlock` or other surface content; and
+- opaque payload exclusion from diagnostics/telemetry while allowing sanitized metadata.
+
+Those earlier findings are closed.
+
+## 2. Required amendment fix — atomic logical response settlement
+
+The fourth Rust review identifies the remaining semantic hole correctly.
+
+Today the text says continuation remains attempt-local until a response-settlement point and then
+becomes committed, but it does not explicitly require the **terminal assistant response** and the
+continuation references derived from that same physical attempt to become visible as one logical
+settlement.
+
+Add a rule equivalent to:
+
+> **Atomic logical settlement.** The settled assistant response and every continuation reference
+> selected from the same physical provider attempt become reachable as one atomic logical
+> settlement. Artifact bytes may be persisted earlier, but no committed session state may expose
+> the terminal assistant response without the continuation references required to reconstruct it,
+> and no continuation reference from an uncommitted response may become reachable independently.
+
+This is behavioral, not a storage prescription. Python may use a transactional append/composite
+operation and Rust may use a different mechanism; both must make half-settled state unobservable to:
+
+```text
+concurrent readers
+fork/reconstruction
+process-recovery logic
+the next request
+```
+
+The rule should apply only to continuation actually selected as replayable for that response.
+A provider response with no continuation requirement continues to settle normally.
+
+Add canonical coverage for the half-settlement case once the concrete continuation contract is
+pinned.
+
+## 3. Clarify that there are two different commitment boundaries
+
+The current amendment uses "commit" in two nearby but different senses:
+
+```text
+A. retry commitment
+   first public StreamChunk
+   -> physical attempt can no longer be transparently retried
+
+B. durable logical settlement
+   terminal response settlement
+   -> assistant response + replayable continuation become committed session state
+```
+
+These must not be conflated.
+
+The first-public-chunk rule does **not** mean provider continuation observed by that point becomes
+durable. Continuation remains attempt-local until the response reaches the separate logical
+settlement point.
+
+Recommended terminology:
+
+```text
+retry commitment boundary
+logical response settlement
+```
+
+rather than calling both simply "commit point."
+
+This is especially important for a stream that has emitted `StreamStart` or partial text and later
+fails: retry is already forbidden, but whether any continuation from that response is reusable is a
+separate terminal-outcome rule determined by the Codex contract.
+
+## 4. Live Codex verification — expand the recorded answer by one item
+
+The proposal already asks:
+
+```text
+1. exact provider item(s) to replay
+2. compatibility key
+3. replacement/latest/ordered accumulation behavior
+```
+
+The fourth Rust review correctly adds:
+
+```text
+4. which terminal outcomes produce reusable continuation state?
+```
+
+That fourth question is necessary because the generic logical-settlement rule needs to know whether,
+for example, continuation from a completed tool-use response is replayable while continuation from a
+failed/incomplete response is discarded.
+
+The live exchange should therefore pin:
+
+```text
+payload/item sequence
+compatibility identity
+ordering/replacement semantics
+terminal-outcome reuse semantics
+```
+
+and then update the proposal's open fields and decision log.
+
+## 5. Request-header integration — current direction is correct
+
+The proposal now makes provider continuation an explicit component of content-addressed request
+reconstruction and requires:
+
+```text
+reconstructed continuation == continuation supplied to dispatch
+```
+
+That is the right language-neutral rule.
+
+One implementation consequence should remain explicit in the Python Phase 5 plan:
+
+```text
+select compatible continuation
+    -> include its identity in the logical request/header
+    -> dispatch that reconstructed request
+```
+
+The adapter must not reach back into mutable session state after the request header is fixed and pick
+a different continuation.
+
+No additional §4 abstraction is needed beyond the rule already present.
+
+## 6. Correction to the Rust sequencing advice — do not move operational I/O across the never-raises boundary
+
+The Rust reviews are right that the Phase 2 **one-shot raw stream** shape is too narrow for
+transparent pre-first-chunk retry and reconstructed provider state.
+
+However, this proposed Rust change:
+
+```text
+asynchronous provider preparation/start
+    -> Result<AssistantStream, LlmStartError>
+```
+
+must not be interpreted as permission to perform arbitrary operational provider I/O before the
+public stream exists and raise those failures eagerly.
+
+The frozen semantic boundary remains:
+
+```text
+before AssistantStream exists
+    deterministic caller/config/request/model-selection failures may raise
+
+after AssistantStream exists
+    expected provider/network/model/streaming operational failures settle in-band
+```
+
+Therefore:
+
+- deterministic unsupported-content validation may remain eager;
+- resolved-model/provider/config validation may remain eager;
+- **network-bound credential refresh, provider upload/materialization, HTTP start, and other expected
+  operational I/O should not escape as eager exceptions merely because an implementation chooses an
+  async public method**;
+- such operational work can live behind `AssistantStream` in a lazy async attempt factory/future and
+  settle through the existing stream contract.
+
+A synchronous public Rust shape is therefore still viable in principle:
+
+```rust
+fn stream(&self, request: Request)
+    -> Result<AssistantStream, LlmStartError>
+```
+
+provided `AssistantStream` owns a restartable/lazy async attempt factory rather than a one-shot
+`RawAssistantStream`.
+
+The required Rust Phase 2 correction is the **capability**, not necessarily `async fn` at the public
+boundary:
+
+```text
+restartable pre-first-chunk attempt construction
+typed transient/non-transient failure classification
+extensible reconstructed provider request state
+cancellation of pending attempt/backoff work on drop/fusion
+```
+
+If Rust still chooses an asynchronous public start API, its eager-error classification must preserve
+the same language-neutral boundary; operational network failures must not become caller-visible
+exceptions just because they occurred during an awaited preparation phase.
+
+This should replace the tracking language that treats "asynchronous eager preparation/start" as
+already decided.
+
+## 7. Python Phase 5 implication
+
+The same boundary applies symmetrically to Python.
+
+Do not implement provider auth refresh/artifact upload/continuation preparation as arbitrary code
+that can throw out of iteration after `AssistantStream` has already been returned.
+
+The Python Phase 5 plan should separate:
+
+```text
+eager deterministic validation
+    -> may raise before stream return
+
+operational provider preparation / physical attempts
+    -> owned by the raw stream/attempt controller
+    -> normalized by AssistantStream
+    -> retryable only before first public chunk when transient
+```
+
+This follows the frozen design rather than introducing a provider-specific exception path.
+
+## 8. Canonical conformance disposition
+
+The proposal's new coverage note is now sufficient as design intent. When the concrete contract is
+pinned, scenarios should cover at least:
+
+```text
+committed continuation -> selected in next compatible request
+discarded/retried attempt -> continuation absent
+fork boundary -> only reachable prefix selected
+API not consuming continuation -> state ineligible without failure
+required incompatible continuation -> eager request error
+terminal assistant response + continuation refs -> one logical settlement
+```
+
+No new `conformance/llm/` family is needed; keep these in existing `session/` and `agent/` families.
+
+## 9. Usage.cost
+
+No change to the previous disposition.
+
+`Usage.cost` representation is a real Rust pre-publication vocabulary decision, but it predates this
+amendment and does not block Phase 5 amendment freeze.
+
+## Final disposition
+
+```text
+AMENDMENT-LEVEL REQUIRED BEFORE FREEZE
+1. Add atomic logical settlement of terminal assistant response + continuation references.
+2. Distinguish retry commitment from durable logical response settlement in wording.
+3. Live-verify Codex:
+     - exact replay item(s)
+     - compatibility key
+     - replacement/latest/accumulation behavior
+     - terminal-outcome reuse behavior
+4. Update the proposal/decision log with those empirical results.
+
+CANONICAL FOLLOW-UP
+5. Add continuation reconstruction/fork/tool-round-trip/API-mismatch/discarded-attempt cases.
+6. Add atomic-settlement coverage.
+
+IMPLEMENTATION-PLAN GATES
+7. Python Phase 5: integrate continuation selection into request-header construction and keep
+   provider I/O behind the never-raises stream boundary.
+8. Rust Phase 2: replace the one-shot attempt seam before implementation, but do not assume the
+   public API must become async; preserve the never-raises classification across whichever API
+   shape is chosen.
+9. Rust Usage.cost representation: settle before public vocabulary publication.
+
+RESOLVED
+All earlier mapping, retry, cancellation, authentication, malformed-tool-call,
+fixture-policy, continuation-data-flow, cost-deferral, and API-key-resolution findings.
+```
+
+After items 1–4, there is no remaining known design-review blocker. The amendment can freeze and the
+canonical/implementation work can proceed from the pinned contract.
+
+---
+
+# Response — fourth pass, verified against the current proposal text
+
+Two more independent review threads (a fourth Rust review, and a fifth design review that
+explicitly checks the fourth Rust review's own recommendations rather than rubber-stamping them).
+The fact that the fifth review pushes back on part of the fourth is itself useful signal — I should
+apply that same scrutiny rather than average the two.
+
+## Atomic logical settlement: CONFIRMED gap, applied
+
+Checked my own rule 2 text from the last pass: it said continuation "stays attempt-local until a
+defined response-settlement point commits it to the session" — that establishes *a* commit point
+exists, but never says the assistant response and its continuation references become reachable
+*together*. Both reviews independently caught the same hole, and it's real: without atomicity, nothing
+stops an implementation from appending the assistant response and its continuation as two
+independently-visible log operations, which is exactly the kind of cross-language divergence (one
+implementation observes a half-settled response after a crash/cancel, the other doesn't) this
+project's process exists to catch before it's discovered in two divergent implementations. Applied
+the atomic-settlement rule into rule 2 directly, plus added it to the conformance-coverage note and
+decision-log item 17.
+
+## Two distinct commitment boundaries: agree, real terminology bug
+
+Grepped my own text: "commit point" was used for the pre-existing retry-commitment boundary
+(first public chunk) *and*, unqualified, for the new continuation-settlement point — genuinely
+ambiguous, and worse, conflatable in a way that matters: someone could misread "commits the
+attempt" (retry boundary) as also meaning "commits the continuation" (settlement boundary), which
+are different points in the same stream's lifecycle. Renamed the continuation-specific term to
+"logical response settlement" throughout and added an explicit disambiguating note distinguishing
+it from the retry-commitment boundary, per both reviews' recommended terminology.
+
+## Fourth live-verification question: agree, applied
+
+"Which terminal outcomes produce reusable continuation state" is a real fourth question the prior
+three (payload, compatibility key, replacement semantics) don't cover — a completed tool-use
+response and a failed one could plausibly differ in whether their continuation is reusable at all,
+and the atomic-settlement rule specifically needs to know this to decide what "whatever is reachable
+is reachable atomically" is being applied to. Added as question 4.
+
+## Rust-sequencing correction (design review point 6, correcting the fourth Rust review): agree with the correction, no design-doc change needed either way
+
+This is the one place the two new reviews disagree with each other, and I checked which is right
+rather than deferring to whichever arrived first. The fourth Rust review recommended Rust's public
+`stream()` become `async fn` to accommodate I/O-bearing preparation. The fifth design review
+correctly pushes back: the frozen never-raises boundary is about *when* a failure category may
+raise (before vs. after the stream exists), not about whether the public method signature is sync
+or async — collapsing "needs restartable pre-commit attempts and typed failure classification" into
+"needs an async public function" would let operational I/O failures (credential refresh, upload,
+HTTP start) raise as eager exceptions merely because they happened during an awaited phase, which is
+exactly the boundary violation the never-raises contract exists to prevent. I agree with the
+correction. Neither version changes anything in this design doc either way — both explicitly frame
+themselves as Rust Phase 2 plan content, and the actual language-neutral rule (the two-phase
+never-raises boundary itself) is already stated in the existing "never-raises boundary applied to
+real providers" section, unchanged by either review. Flagging the disagreement and its resolution
+here for whoever eventually writes the Rust Phase 2 plan revision, since — as in the last two
+passes — there's still no Rust plan file to carry it forward into.
+
+## Python Phase 5 integration note (design review §5, §7): agree, correctly scoped as plan content, no design-doc change
+
+The design review itself says "No additional §4 abstraction is needed beyond the rule already
+present" — I agree; the `reconstructed continuation == continuation supplied to dispatch` invariant
+is already stated in rule 3, and the sequencing detail (resolve compatibility → select continuation
+→ fix it in the request header → dispatch, adapter must not reach back into mutable session state
+afterward) is an implementation-plan constraint on how Python's agent loop integrates with a rule
+already pinned, not a new rule itself.
+
+## Canonical conformance, Usage.cost: no change, confirmed correct as previously disposed
+
+The design review's coverage list matches what's already in the conformance-coverage note (now
+including atomic settlement); no new family needed, consistent with the prior round. `Usage.cost`
+disposition is restated unchanged by both reviews — no action.
+
+## Disposition
+
+Applied: the atomic-settlement rule (folded into rule 2, not a separate rule 8, since it's the same
+commit point gaining a completeness property rather than a new phase in the flow), the
+retry-commitment/logical-settlement terminology split, and the fourth live-verification question —
+all reflected in the data-flow block, the verification-questions list, the conformance-coverage
+note, and decision-log items 13 and 17. The one substantive disagreement between the two new
+reviews (Rust async-vs-sync sequencing) is resolved in favor of the fifth review's more precise
+reading of the never-raises boundary, but doesn't touch this document regardless, since both framed
+it as Rust Phase 2 plan content. If this satisfies the fifth review's stated bar — "after items 1-4,
+there is no remaining known design-review blocker" — the only thing left before this amendment can
+actually freeze is the live Codex experiment itself, which no further review pass can substitute
+for.

@@ -4,17 +4,19 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 (three times) to apply corrections
-from three rounds of design review, including two Rust-side passes (see the sibling
+review, the pattern this proposal follows. Revised 2026-08-20 (four times) to apply corrections
+from four rounds of design review, including two Rust-side passes (see the sibling
 `-review-feedback.md` file and its appended counter-reviews). The remaining open item on
 `codex-responses` continuation splits into two pieces that should not be conflated:
 **(A) the language-neutral Minion data-flow contract** — how continuation moves from decoder
-output through a defined commit point, into content-addressed request reconstruction, fork
-boundaries, and API-mismatch handling — **is now fully pinned below** (see the `codex-responses`
-reasoning subsection); **(B) the empirical Codex replay contract** — the exact provider item(s),
-compatibility key, and replacement-vs-accumulation semantics — **remains genuinely open** and
-requires live verification against a real Codex multi-turn tool-call exchange before that
-subsection's specific payload details can freeze. (A) does not depend on (B)'s outcome; the
+output through an atomic logical-settlement point (distinct from the retry-commitment boundary),
+into content-addressed request reconstruction, fork boundaries, and API-mismatch handling —
+**is now fully pinned below** (see the `codex-responses` reasoning subsection); **(B) the
+empirical Codex replay contract** — the exact provider item(s), compatibility key,
+replacement-vs-accumulation semantics, and which terminal outcomes yield reusable continuation —
+**remains genuinely open** and requires live verification against a real Codex multi-turn
+tool-call exchange before that subsection's specific payload details can freeze. (A) does not
+depend on (B)'s outcome; the
 generic facility is proposed regardless of what the experiment finds. Every other reviewed item
 below reflects the resolved, corrected wording, including a newly-pinned malformed-fragmented-
 tool-call settlement rule and a fixture-wording self-contradiction fixed in an earlier revision.
@@ -136,9 +138,9 @@ in an artifact store. So this proposal also pins the behavioral path:
 >     ↓
 > decoder observes provider continuation item(s)          (attempt-local, not yet durable)
 >     ↓
-> response settles at a defined commit point               (see rule 2 below)
->     ↓
-> content-addressed artifact + committed log reference
+> logical response settlement                              (see rule 2 below — distinct from the
+>     ↓                                                      retry commitment boundary above)
+> content-addressed artifact + committed log reference, atomically with the assistant response
 >     ↓
 > request reconstruction selects applicable continuation deterministically
 >     ↓
@@ -148,15 +150,29 @@ in an artifact store. So this proposal also pins the behavioral path:
 > ```
 >
 > Exact event names, structs, artifact layout, and language-specific storage types remain
-> implementation detail; the path above and the rules below are the language-neutral contract:
+> implementation detail; the path above and the rules below are the language-neutral contract. Note
+> that **"retry commitment" and "logical response settlement" are two distinct boundaries, not one**:
+> the retry-commitment boundary (first public `StreamChunk`) only fixes that the physical attempt can
+> no longer be transparently retried — it does not make any continuation observed by that point
+> durable. Continuation stays attempt-local until the later, separate logical-settlement point below.
 >
 > 1. **No ghost continuation from discarded attempts.** A pre-commit attempt retried under the
 >    retry-commitment rule above, or any abandoned attempt, must never publish durable continuation
 >    state — only the selected/committed physical attempt may.
-> 2. **The commit point is explicit.** Continuation may be observed incrementally by the decoder,
->    but stays attempt-local until a defined response-settlement point commits it to the session.
->    (The live experiment below determines which terminal outcomes yield replayable continuation;
->    this rule fixes that there must be one defined point, not where it falls.)
+> 2. **Logical response settlement is explicit, and atomic with the assistant response.**
+>    Continuation may be observed incrementally by the decoder, but stays attempt-local until a
+>    defined logical-settlement point commits it to the session. At that point, the settled
+>    assistant response and every continuation reference derived from the same physical attempt
+>    become reachable as one atomic logical settlement: artifact bytes may be persisted earlier, but
+>    no committed session state may expose the terminal assistant response without the continuation
+>    references required to reconstruct it, nor may a continuation reference from a response that
+>    did not itself commit become independently reachable. This is behavioral, not a storage
+>    prescription — a transactional append, a composite event, or another mechanism may satisfy it,
+>    provided concurrent readers, fork reconstruction, and process-recovery logic can never observe
+>    a half-settled response. The rule applies only to continuation actually selected as replayable
+>    for that response; a response with no continuation requirement settles normally. (The live
+>    experiment below determines which terminal outcomes yield replayable continuation at all; this
+>    rule fixes that whatever is reachable is reachable atomically, not where the line falls.)
 > 3. **Continuation is part of request reconstruction, not adapter-private memory.** The
 >    content-addressed request-header composition (§8) gets an explicit provider-state/continuation
 >    component (the exact component name is not normative) referencing the committed artifact, so
@@ -178,11 +194,14 @@ in an artifact store. So this proposal also pins the behavioral path:
 >    implemented.
 
 **Before this section is frozen**, a live experiment against a real Codex multi-turn tool-call
-sequence must answer three concrete questions the data-flow rules above deliberately leave open:
+sequence must answer four concrete questions the data-flow rules above deliberately leave open:
 
 1. What complete provider item(s) must be replayed?
 2. What compatibility key determines whether replay is legal?
 3. Is replay replacement-based, latest-only, or an ordered accumulated sequence?
+4. Which terminal outcomes produce reusable continuation state at all — does continuation from,
+   say, a completed tool-use response differ in reusability from continuation attached to a
+   failed or incomplete one?
 
 using a real exchange (`request 1 → reasoning/tool call + continuation → tool result → request 2`,
 verifying both the success path and the omission/incompatibility failure path). That experiment
@@ -199,9 +218,11 @@ response is reachable in the next reconstructed request; a discarded pre-commit 
 continuation is absent from reconstruction; a fork at sequence N reaches only continuation at or
 before N; an API switch that doesn't consume Codex continuation drops it without failure; an API
 that requires continuation with only incompatible continuation available fails eagerly before the
-stream is returned. These scenarios assert semantic reconstruction and selection, not artifact
-layout or provider wire bytes, consistent with how wire fixtures are excluded from semantic
-conformance elsewhere in this proposal.
+stream is returned; and the terminal assistant response together with its continuation references
+becomes observable as one atomic logical settlement — never a half-settled state where one is
+reachable without the other. These scenarios assert semantic reconstruction and selection, not
+artifact layout or provider wire bytes, consistent with how wire fixtures are excluded from
+semantic conformance elsewhere in this proposal.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -440,18 +461,20 @@ reasonably assume they were settled by omission:
 13. `codex-responses` continuation state splits into a resolved piece and an open piece. Resolved:
     the `ProviderContinuation` facility's properties (API/compatibility identity,
     log-reconstructable, session-ancestry-aware, eager-fails when required-but-missing, sanitized
-    non-payload metadata only in diagnostics) and its full production→commit→log-reference→
-    request-reconstruction→replay data flow (no ghost continuation from discarded attempts; an
-    explicit commit point; continuation as an explicit component of content-addressed request
-    reconstruction, not adapter-private memory; deterministic selection order; fork-boundary
-    scoping; API-mismatch disambiguation; never model-visible) are pinned as language-neutral
-    regardless of outcome. A provider-hosted `previous_response_id` alone is explicitly rejected as
-    a substitute, since it depends on remote state outside Minion's log. Open: the working
-    hypothesis, backed by OpenAI's own reasoning-items guidance and observed turn-2 failure reports,
-    is that `encrypted_content` is required opaque continuation state — but the exact provider
-    item(s), compatibility key, and replacement-vs-accumulated-sequence semantics await live
-    verification against a real Codex multi-turn tool-call exchange before the `codex-responses`
-    mapping section's payload details fully freeze.
+    non-payload metadata only in diagnostics) and its full production→logical-settlement→
+    log-reference→request-reconstruction→replay data flow (no ghost continuation from discarded
+    attempts; an explicit, atomic logical-settlement point distinct from the retry-commitment
+    boundary — the assistant response and its continuation references become reachable together or
+    not at all; continuation as an explicit component of content-addressed request reconstruction,
+    not adapter-private memory; deterministic selection order; fork-boundary scoping; API-mismatch
+    disambiguation; never model-visible) are pinned as language-neutral regardless of outcome. A
+    provider-hosted `previous_response_id` alone is explicitly rejected as a substitute, since it
+    depends on remote state outside Minion's log. Open: the working hypothesis, backed by OpenAI's
+    own reasoning-items guidance and observed turn-2 failure reports, is that `encrypted_content` is
+    required opaque continuation state — but the exact provider item(s), compatibility key,
+    replacement-vs-accumulated-sequence semantics, and which terminal outcomes produce reusable
+    continuation at all await live verification against a real Codex multi-turn tool-call exchange
+    before the `codex-responses` mapping section's payload details fully freeze.
 14. Malformed fragmented tool-call settlement is pinned identically for both APIs: conflicting
     IDs/names, impossible index/`item_id` reuse, non-JSON or non-object finalized arguments, and
     incomplete finalization are protocol errors that settle in-band as `StopReason.error` — never
@@ -470,4 +493,6 @@ reasonably assume they were settled by omission:
     families (no new `conformance/` family needed) once the mechanism is implemented: committed
     continuation reachable in reconstruction; discarded pre-commit-retry continuation absent;
     fork-boundary scoping; API-switch drop without failure; incompatible-continuation eager
-    failure. Asserts semantic reconstruction/selection, not artifact layout or wire bytes.
+    failure; atomic settlement of the terminal assistant response with its continuation references
+    (never observable half-settled). Asserts semantic reconstruction/selection, not artifact layout
+    or wire bytes.
