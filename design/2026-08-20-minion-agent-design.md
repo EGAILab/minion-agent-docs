@@ -1,7 +1,7 @@
 # Minion Agent — Design
 
 **Date:** 2026-08-20  
-**Status:** Revised frozen design candidate. Supersedes the 2026-08-18 design after a Pi-fidelity audit against current Pi source. Implementation may proceed only against the semantics in this revision and its conformance/spec updates.
+**Status:** FROZEN. Supersedes `2026-08-18-minion-agent-design.md`. Rust sign-off completed after the focused Pi-fidelity re-review and final editorial cleanup. Existing implementation, conformance, phase amendments, and implementation plans MUST be realigned to this frozen contract.
 
 Minion Agent reproduces Pi's observable agent and provider semantics as closely as practical while rebuilding ownership, lifecycle, registration, and composition around the Minion plugin/runtime architecture.
 
@@ -33,7 +33,7 @@ Studied at these revisions:
 
 | Project | Revision | Used for |
 |---|---|---|
-| `earendil-works/pi` | `b7bb00b936dbe21b8e160b3e89efdec361846699`, 2026-08-20 | Normative behavioral oracle for `packages/ai`, `packages/agent`, and `packages/agent/src/harness`; model-backed eval patterns |
+| `earendil-works/pi` | `b7bb00b936dbe21b8e160b3e89efdec361846699`, 2026-08-19 | Normative behavioral oracle for `packages/ai`, `packages/agent`, and `packages/agent/src/harness`; model-backed eval patterns |
 | `deepseek-ai/deepseek-harness` | checkout of 2026-08-18 | Cordis architecture at scale; loop driver; capability seams; invariants; test strategy |
 | `cordiverse/cordis` | checkout of 2026-08-18 | Plugin runtime semantics: context, fiber, service, registry, events, effects |
 | `cordiverse/paper` | Draft of 2026-08-13 | Revertible effects and reactive coeffects, the theory behind Cordis |
@@ -55,6 +55,41 @@ Silence is not a valid disposition for a discovered Pi semantic change.
 Purely architectural differences that preserve Pi-visible behavior — for example append-only storage instead of Pi's in-memory transcript, or plugin-owned registration instead of direct object fields — do not require a behavioral-divergence label.
 
 The reference revision is not a permanent fork point. It is an audit checkpoint. Updating Pi parity is an explicit source-diff exercise, never a broad speculative redesign.
+
+
+### Supersession and normative authority
+
+Once this revised master design is approved, any earlier design, amendment, implementation plan,
+conformance case, or existing implementation behavior that conflicts with it is superseded at the
+conflicting point. The older artifact remains historical rationale; it is not competing normative
+authority.
+
+Normative semantic authority is split by scope rather than by a contradictory global precedence
+list:
+
+- **Canonical conformance is the executable oracle for the concrete examples it covers.**
+- **The language-neutral spec governs the general semantic rule and behavior outside finite
+  conformance examples.**
+- **The frozen master design records architecture, scope, adopted semantic decisions, and the
+  required mapping into spec/conformance.** It is not a tie-breaker for a stale contradiction
+  between prose and an executable case.
+- Phase-specific amendments/designs, implementation plans, and existing implementation behavior
+  are subordinate to that frozen semantic contract.
+
+A disagreement among frozen master design, normative spec, and applicable canonical conformance is
+a **release-blocking specification defect to repair immediately**, not permission to silently choose
+one artifact over another. A conflicting amendment, plan, conformance case, or implementation MUST
+be realigned before implementation proceeds in that affected area.
+
+This rule applies immediately to two already-discovered Phase 5 conflicts once this document is
+approved:
+
+- active cancellation is mandatory and must propagate through the real-provider transport; the
+  earlier cooperative-only cancellation deferral is superseded;
+- the shared vocabulary is `thinking_signature`, `redacted`, `text_signature`,
+  `thought_signature`, and `namespace`; earlier Phase 5 wording using a generic
+  `ThinkingBlock.signature` is superseded.
+
 
 
 ---
@@ -432,27 +467,133 @@ ToolCall
 
 The three signature fields are deliberately opaque strings, matching Pi rather than introducing a generalized provider-metadata envelope. Provider-neutral core code persists them but does not assign provider-independent meaning to their payload.
 
+The language-neutral serialized spelling is the **snake_case form shown in this document and the
+canonical schemas**. Language bindings may expose idiomatic field names internally, and provider
+adapters map to provider/Pi wire spellings, but Python and Rust session/conformance values MUST
+serialize identically.
+
+Pi-shaped user content is also explicit:
+
+```text
+UserMessage
+    role = user
+    content: string | [TextBlock | ImageBlock, ...]
+    timestamp
+```
+
+Legacy/untyped callers may provide null/undefined message content. Before the rest of
+target-model transformation runs, such content is normalized to the empty content list. This
+normalization is conformance-pinned rather than left to language-specific deserializers.
+
 `AssistantMessage` carries the Pi-visible response identity/state needed by provider replay and caller behavior:
 
 ```text
 AssistantMessage
+    role = assistant
     content: [TextBlock | ThinkingBlock | ToolCall, ...]
-    api
-    provider
-    model
-    response_model?
-    response_id?
-    diagnostics?
-    usage
-    stop_reason
-    deferred?
-    error_message?
-    raw_stop_reason?
-    end_turn?
-    timestamp
+    api: string
+    provider: string
+    model: string
+    response_model?: string
+    response_id?: string
+    diagnostics?: [AssistantMessageDiagnostic, ...]
+    usage: Usage
+    stop_reason: StopReason
+    deferred?: DeferredHandle
+    error_message?: string
+    raw_stop_reason?: string
+    end_turn?: bool
+    timestamp: number
 ```
 
-`ToolResultMessage` carries `tool_call_id`, `tool_name`, text/image content, structured `details`, optional tool-execution `usage`, `added_tool_names`, `is_error`, and timestamp.
+`ToolResultMessage` is likewise schema-pinned:
+
+```text
+ToolResultMessage
+    role = tool_result
+    tool_call_id: string
+    tool_name: string
+    content: [TextBlock | ImageBlock, ...]
+    details?: JsonValue
+    usage?: Usage
+    added_tool_names?: [string, ...]
+    is_error: bool
+    timestamp: number
+```
+
+Tool execution `usage` is not folded into main LLM context accounting.
+
+Deferred and diagnostic structures are part of the shared vocabulary, not adapter-private bags:
+
+```text
+DeferredHandle
+    provider: string
+    model_id: string
+    api: string
+    id: string
+    expires_at?: number
+    poll_after_ms?: number
+    data?: JsonValue
+
+DiagnosticError
+    message: string
+    name?: string
+    stack?: string
+    code?: string | number
+
+AssistantMessageDiagnostic
+    type: string
+    timestamp: number
+    error?: DiagnosticError
+    details?: { string: JsonValue }
+```
+
+The provider-neutral request context is likewise pinned:
+
+```text
+LlmContext
+    system_prompt?: string
+    messages: [Message, ...]
+    tools?: [ToolDefinition, ...]
+```
+
+For behavior that depends on model identity, the canonical identity is the triple
+`provider + api + model_id`; this is the identity used by target-model compatibility checks.
+Provider catalogs may carry additional capability/cost metadata, but those extra fields do not
+silently redefine identity.
+
+Canonical request/stream options use the same semantic fields as the adopted Pi source for
+implemented APIs. The shared schema MUST include, where supported:
+
+```text
+ProviderRequestOptions
+    timeout_ms?
+    max_retries?
+    max_retry_delay_ms?
+    headers?
+    env?
+    # signal / fetch / callbacks / telemetry context are runtime handles, not JSON values
+
+StreamOptions
+    temperature?
+    sampling_params?
+    max_tokens?
+    transport?: sse | websocket | websocket-cached | auto
+    cache_retention?: none | short | long
+    session_id?
+    websocket_connect_timeout_ms?
+    metadata?
+
+SimpleStreamOptions extends StreamOptions
+    tool_choice?: auto | none
+    reasoning?
+    deferred?: bool | { window?: 15m | 1h | 24h }
+    thinking_budgets?
+```
+
+API-specific option extensions remain plugin/adapter-owned, but every Pi-observable option for an
+implemented API must be schema-mapped or explicitly disposed as deferred parity/divergence in the
+Pi parity manifest.
 
 `StopReason` is:
 
@@ -511,6 +652,10 @@ This stage is not an optional convenience hook. The implementation may be owned 
 
 For the adopted Pi baseline, transformation includes:
 
+**Null/legacy content normalization.** Untyped/legacy message content that is null/undefined is
+normalized to an empty content list before any image, thinking, signature, tool-call-id, or orphan
+tool-result transformation is applied.
+
 **Unsupported images.** If the target model does not accept images:
 
 - user images become the text placeholder `(image omitted: model does not support images)`;
@@ -529,9 +674,12 @@ same provider/api/model + unsigned non-empty thinking
 same provider/api/model + empty unsigned thinking
     -> remove
 
-different target model + non-redacted thinking
+different target model + non-redacted non-empty thinking
     -> convert visible thinking to ordinary text
     -> provider replay signature does not survive
+
+different target model + non-redacted empty thinking
+    -> remove
 
 different target model + redacted thinking
     -> omit
@@ -842,29 +990,44 @@ Assignments/replacements of tool/message collections must not create aliasing th
 
 ### Run and turn lifecycle
 
-A run has this observable shape:
+A prompt run has this observable initial shape and ordering:
 
 ```text
 agent_start
-    [initial input message lifecycle]
+turn_start
+    message_start(initial prompt message)
+    message_end(initial prompt message)
+    ... one lifecycle pair per initial prompt message ...
 
-    turn_start
-        target-model request
-        assistant message streaming lifecycle
-        tool calls/results caused by that assistant response
-    turn_end
+    initial steering poll
+    message_start(initial steering message)
+    message_end(initial steering message)
+    ... for any steering claimed before the first request ...
 
-    prepare-next-turn phase
-    should-stop phase
-    steering poll
+    first target-model request
+    assistant message streaming lifecycle
+    tool calls/results caused by that assistant response
+turn_end
 
-    ... zero or more further turns ...
+prepare-next-turn phase
+should-stop phase
+steering poll
 
-    follow-up poll only when the run would otherwise stop
-    ... possibly more turns ...
+... zero or more further turns ...
+
+follow-up poll only when the run would otherwise stop
+... possibly more turns ...
 
 agent_end
 ```
+
+`turn_start` therefore precedes the lifecycle events for the initial prompt. Pi also performs one
+steering poll inside the already-open first turn before the first provider request.
+
+When `continue()` is invoked after an assistant message, the high-level Agent may first drain
+eligible steering/follow-up to construct the continuation input as described below. If it already
+drained steering for that invocation, the run starts with the initial steering poll suppressed so
+the same queue entry cannot be claimed twice.
 
 The package-internal driver remains imperative. Minion's session/log is semantic truth; Pi's `AgentEvent` stream is a projection whose trace is conformance-pinned.
 
@@ -878,7 +1041,7 @@ One Pi turn corresponds to one provider assistant response plus its tool batch. 
 
 - Empty transcript -> caller error.
 - Last message user/tool-result -> continue from the existing transcript.
-- Last message assistant -> first drain eligible steering according to steering mode; if none, drain eligible follow-up according to follow-up mode; if neither exists, caller error.
+- Last message assistant -> first drain eligible steering according to steering mode; if none, drain eligible follow-up according to follow-up mode; if neither exists, caller error. A run seeded by this pre-drain suppresses the corresponding initial steering poll so `continue()` never double-claims steering.
 
 `reset()` is idle-only and clears the active public transcript projection/runtime queues as defined by the higher-level Agent API. Durable Minion session reset remains the log operation in §5; the implementation must not conflate an active-run reset with an unsafe concurrent mutation.
 
@@ -912,7 +1075,7 @@ turn_end
 -> otherwise follow-up queue poll
 ```
 
-Hard termination from the finalized tool batch takes precedence before optional continuation policy.
+A finalized tool-batch `terminate` fold affects only tool-call-driven automatic continuation; it does not skip the normal prepare/stop/steering/follow-up sequence below.
 
 Queue clear/introspection operations are part of the Agent handle surface: clear steering, clear follow-up, clear all, and whether queued messages remain.
 
@@ -940,7 +1103,21 @@ effective session history
 -> provider request
 ```
 
-Pi's `transformContext` and `convertToLlm` contracts are failure-sensitive: application conversion/transform hooks should return safe fallback data rather than throw for ordinary application failure. Minion plugin equivalents may use the runtime event model, but a plugin bug remains a programming failure.
+Pi's `transformContext`, steering retrieval, and follow-up retrieval callbacks are contracts that
+should not throw/reject. Minion equivalents should return valid fallback/empty data for expected
+application failure.
+
+At the **high-level Agent boundary**, an unexpected failure from context conversion/transformation
+or queue-retrieval callbacks follows Pi-shaped failure settlement rather than becoming an arbitrary
+language-level difference: the Agent catches the loop failure, produces a terminal assistant failure
+message, projects its `message_start`/`message_end`, closes the current turn with `turn_end`, emits
+`agent_end`, and only then becomes idle. This recovery path is itself subject to Pi event-listener
+behavior: if a listener invoked while projecting the recovery trace fails, that listener failure may
+prevent later recovery events from being delivered.
+
+Low-level direct-loop APIs and Minion runtime invariant failures outside the Pi-compatible callback
+boundary remain distinct and may fail normally. The provider never-raises contract in §4 is not
+generalized to every plugin/runtime error.
 
 `prepareNextTurn` semantics are distinct from per-request context transformation. It runs only between completed turns and may replace the model, context, and thinking level for the next turn.
 
@@ -954,7 +1131,7 @@ Minion still expresses single-valued Pi hooks through plugin events, but plugin 
 initial | tool_results | steering | follow_up | continuation
 ```
 
-**`agent/turn-stopping`.** Represents Pi's `shouldStopAfterTurn`. It executes after `prepareNextTurn` and before steering polling, unless hard tool-batch termination already ended the run. Default is continue.
+**`agent/turn-stopping`.** Represents Pi's `shouldStopAfterTurn`. For every normally completed turn it executes after `prepareNextTurn` and before steering polling, including when the finalized tool batch's `terminate` fold suppressed tool-driven automatic continuation. Default is continue.
 
 **`tools/pre-execute`.** Represents Pi's `beforeToolCall`: after argument preparation/validation, may block execution with a reason and optional terminate hint.
 
@@ -1019,9 +1196,40 @@ Argument preparation is part of the tool's compatibility contract and occurs bef
 
 **Tool result fields.** Final/partial tool results may carry text/images, structured details, optional tool execution `usage`, `added_tool_names`, and `terminate`.
 
-**Terminate folding.** Early hard termination fires only when every finalized result in the assistant's tool batch has `terminate = true`. Blocked calls participate according to their finalized blocked result. When this rule fires, it precedes optional `shouldStopAfterTurn`/turn-stopping logic.
+**Terminate fold and continuation suppression.** The batch `terminate` flag becomes true only when
+every finalized result in the assistant's tool batch has `terminate = true`. Blocked calls
+participate according to their finalized blocked result.
 
-**Error conversion.** Expected tool execution failure becomes an error tool result visible to the model. Programming/invariant failure remains a programming failure.
+Its Pi meaning is intentionally narrow:
+
+```text
+batch terminate = true
+    -> the just-completed tool calls do not themselves require another automatic provider turn
+```
+
+It does **not** end the run. `turn_end`, `prepareNextTurn`, `shouldStopAfterTurn`, steering polling,
+and—when the run would otherwise stop—follow-up polling still occur normally. Queued steering or
+follow-up may therefore continue the same run after a terminated tool batch.
+
+**Tool and hook exception conversion.** Every thrown/rejected value crossing the Pi-compatible tool
+extension boundary is converted into an error tool result visible to the model. This boundary
+includes:
+
+```text
+prepare_arguments
+schema validation
+tools/pre-execute / beforeToolCall
+tool.execute
+tools/post-execute / afterToolCall
+```
+
+An `afterToolCall`/`tools/post-execute` failure replaces the previously produced result with the
+generated error result; it is not allowed to expose the earlier success and then escape.
+
+Minion runtime invariant failures remain programming failures only when they are produced by
+Minion-owned machinery **outside** that Pi-compatible tool/hook extension boundary. An arbitrary
+exception from a tool or tool hook may not be reclassified as a framework invariant merely to let
+it escape.
 
 ### Tool selection and constrained sampling
 
@@ -1057,6 +1265,18 @@ tool_execution_end(id, name, result, is_error)
 ```
 
 `agent_end` is the final emitted event, but awaited listeners are part of run settlement.
+
+`agent_end.messages` is the **message list produced/consumed by this invocation**, not the complete
+stored transcript:
+
+- for a prompt run it includes the initial prompt messages plus all messages produced or queued and
+  consumed during that run;
+- for a continuation run it excludes pre-existing context and contains only messages newly produced
+  or queue-consumed by that invocation;
+- steering and follow-up messages actually processed during the run join this list.
+
+The Agent's returned run result and the `agent_end.messages` projection use the same Pi-shaped
+invocation-local message set.
 
 
 ---
@@ -1398,6 +1618,11 @@ conformance/
 
   agent/      run-lifecycle · pi-turn-lifecycle · steering · follow-up · cancellation
               prompt-while-running-rejected · continue-ordering
+              initial-prompt-order-after-turn-start
+              initial-steering-before-first-request
+              continue-steering-no-double-drain
+              agent-end-messages-prompt-vs-continuation
+              high-level-callback-failure-settlement
               agent-idle-after-end-listeners
               concurrent-agents-isolated-logs · blocked-agent-does-not-stall-peers
               origin-survives-one-at-a-time · causes-preserved-under-claim-all
@@ -1406,10 +1631,18 @@ conformance/
               post-execute-multi-listener-order · post-execute-field-replacement
               post-execute-omitted-fields-preserved · post-execute-no-deep-merge
               stream-error-rides-the-stream · service-bad-model-fails-before-provider-stream
-              terminate-precedes-turn-stopping · terminate-not-overridable
+              terminate-suppresses-tool-driven-continuation
+              terminate-still-runs-prepare-and-stop-policy
+              terminate-does-not-discard-steering
+              terminate-allows-follow-up-when-otherwise-idle
               length-stop-executes-no-tools
               tool-end-completion-order-result-source-order
               late-tool-update-ignored
+              prepare-arguments-failure-becomes-tool-error
+              schema-validation-failure-becomes-tool-error
+              before-hook-failure-becomes-tool-error
+              execute-failure-becomes-tool-error
+              after-hook-failure-replaces-result-with-tool-error
               same-model-thinking-signature-replayed
               same-model-unsigned-thinking-not-replayed
               cross-model-thinking-converts-to-text
@@ -1419,6 +1652,8 @@ conformance/
               target-model-error-assistant-not-replayed
               nonvision-user-image-placeholder
               nonvision-tool-image-placeholder
+              null-content-normalizes-empty
+              public-llm-vocabulary-schema
 
   session/    fork-ancestry-derivation · reset-excludes-prior-surface
               compact-now-then-derive · compaction-repeated-and-nested
@@ -1552,15 +1787,64 @@ artificial tests around provider-adapter defensive branches to protect a number.
 
 ## 9. Build order
 
+### Existing implementation realignment
+
+Phases 1–4 were partially implemented against the superseded 2026-08-18 design. Adopting this
+revision therefore requires a one-time Pi-parity realignment before Phase 5 is considered complete.
+
+The realignment includes at least:
+
+- the revised LLM/content vocabulary, including replay signatures and richer `AssistantMessage`,
+  `Usage`, and `StopReason`;
+- the mandatory target-model message transformation stage;
+- corrected Pi run/turn semantics and public Agent-state projection;
+- active abort propagation rather than cooperative boundary-only cancellation;
+- tool-loop parity additions and the associated canonical scenarios;
+- session/provider reconstruction updates required by the revised vocabulary.
+
+An implementation MAY migrate existing modules incrementally or replace affected modules where a
+fresh implementation is simpler. Either way, the revised conformance suite is the acceptance
+boundary. Existing passing tests against the superseded design are not evidence of parity with this
+revision.
+
+The preferred one-time realignment strategy is:
+
+- **Python:** retain the plugin runtime, append-only session primitives, artifact store, and
+  deterministic test infrastructure where revised parity tests keep them green; reimplement the
+  agent-facing vertical slice fresh (`LLM vocabulary/transform -> Agent state/queues -> run/turn
+  driver -> tool prepare/execute/finalize -> active abort`) rather than preserving obsolete control
+  assumptions one patch at a time.
+- **Rust:** retain completed Phase 1 runtime unless revised runtime conformance exposes a conflict;
+  discard/rewrite superseded Phase 2+ executable plans before implementing those semantic layers.
+
+This is a migration strategy, not a semantic divergence: both implementations converge on the same
+master/spec/conformance contract.
+
 Each phase ends with green conformance scenarios for the Pi-visible behavior it adds. Before a phase freezes, run the Pi drift check in §Reference material for the source paths owned by that phase.
 
-**Phase 0 — conformance scenario formats and Pi baseline.** Schema-fix `runtime/`, `agent/`, and `session/` scenario families; record the adopted Pi revision and a machine/checklist-friendly mapping from Pi source areas to Minion semantic surfaces.
+**Phase 0 — conformance scenario formats, Pi baseline, and parity manifest.** Schema-fix
+`runtime/`, `agent/`, and `session/` scenario families; record the adopted Pi revision; and check in
+the Pi parity manifest that becomes the exit artifact for this phase.
+
+The manifest has one row per adopted Pi semantic surface:
+
+```text
+Pi source path + symbol
+    -> master-design/spec rule
+    -> canonical scenario(s) or explicit language-specific test
+    -> Python implementation location
+    -> Rust implementation location or planned phase
+    -> disposition: adopted | deferred parity | intentional divergence
+```
+
+Every row must have a disposition. Audit the exact pinned revision first; later Pi updates are
+separate source-diff exercises and MUST NOT be mixed into this one-time realignment.
 
 1. **Plugin runtime.** Context, fiber, service resolution, registry, events, effects, reactive load/unload. This is the primary intentional architectural divergence and is tested independently from Pi behavior.
 2. **LLM vocabulary, target-model transformation, mock adapter, session log, telemetry vocabulary.** Land the current Pi-equivalent content/message/usage/stop-reason vocabulary, signatures, target-model transformation, session derivation, never-raises provider-stream contract, and recording telemetry seam.
 3. **Agent loop.** Pi run/turn lifecycle, public Agent state projection, prompt/continue behavior, steering/follow-up order and modes, active abort signal, event projection, and mock provider/tool continuation.
 4. **Tools.** Real registry, prepare-arguments, constrained-sampling metadata, before/after pipelines, batching/contagion, `length` safety rule, streaming updates, ordering, usage, `added_tool_names`, terminate folding.
-5. **Real providers.** `openai-completions` and `codex-responses`, implemented by auditing the corresponding current Pi adapters/helper modules field-by-field. Wire fixtures and live/manual checks supplement but do not replace source parity.
+5. **Real providers.** `openai-completions` and `codex-responses`, implemented by auditing the corresponding current Pi adapters/helper modules field-by-field. This phase MUST consume the master vocabulary above and propagate the run-scoped abort signal through pending attempts, retry/backoff, provider streaming, and transport cancellation as Pi does. Wire fixtures and live/manual checks supplement but do not replace source parity.
 6. **Execution seams and built-in tools.** `ctx.fs`, `ctx.shell`, `ctx.subprocess`, execution-world compatibility, then bash/read/write/edit/glob/grep with Pi-equivalent observable behavior.
 7. **Prompt, skills, compaction, harness message projections, telemetry sinks.** Exact skill discovery/prompt format, Pi compaction estimator/cut points/summary requests, built-in harness message projections, production telemetry sinks.
 8. **Model-backed evals.**
@@ -1587,6 +1871,53 @@ Phases 1–4 produce a Pi-compatible agent driven entirely by a mock. Phase 5 ad
 No unresolved architectural question blocks the plugin runtime, but implementation planning MUST account for the explicit Pi parity work in this revision. The durable AgentHarness is a known deferred parity phase, not a closed omission. Items resolved during design and
 recorded here for traceability:
 
+
+Frozen after focused Rust re-review (2026-08-20):
+
+- **Final editorial contradiction removed** — the stale historical claim that tool-batch
+  `terminate` was a hard stop preceding `agent/turn-stopping` is now explicitly marked as the
+  superseded 2026-08-18 interpretation.
+- **Rust sign-off complete** — the substantive Pi semantics and Rust implementation direction were
+  approved by the focused re-review; no further Rust design round is required.
+- **Master status is FROZEN** — all prior conformance, amendments, Python agent-facing code, and
+  Rust Phase 2+ plans now realign through the checked-in Pi parity manifest.
+
+Resolved by Rust sign-off review (2026-08-20):
+
+- **Terminate semantics corrected** — all-results `terminate` suppresses only tool-driven automatic
+  continuation; prepare-next-turn, stop policy, steering, and follow-up still run normally.
+- **Initial event order corrected** — `agent_start -> turn_start -> initial prompt lifecycle`, with
+  an initial steering poll before the first provider request; `continue()` suppresses a duplicate
+  initial steering poll when it already pre-drained steering.
+- **Tool/hook exception boundary corrected** — failures from argument preparation, validation,
+  before hook, execution, and after hook become error tool results; after-hook failure replaces the
+  prior result.
+- **Normative authority corrected** — covered conformance examples are the executable oracle and the
+  spec governs the general rule; contradictions among frozen artifacts are release-blocking defects,
+  not resolved by silently preferring master prose.
+- **`agent_end.messages` pinned** — invocation-local messages, not the complete historical transcript.
+- **Public LLM schema expanded** — user string-or-block content, deferred handles, diagnostics,
+  context, canonical option spellings, and null-content normalization are explicit.
+- **High-level callback failure settlement pinned** — unexpected transform/queue callback failures
+  become the Pi-shaped terminal assistant failure trace before idle, subject to event-listener
+  failure behavior.
+- **Phase 0 parity manifest required** — every adopted Pi semantic surface maps source -> spec/design
+  -> tests -> Python/Rust -> explicit disposition.
+
+Resolved by review of the 2026-08-20 Pi-fidelity revision:
+
+- **Cross-document authority** — once approved, this master design supersedes conflicting earlier
+  amendments/plans/code at the conflicting point; lower-precedence artifacts must be realigned.
+- **Phase 5 cancellation** — active mid-stream cancellation remains mandatory; the earlier
+  cooperative-only deferral is superseded and real-provider transport must honor the run abort.
+- **Phase 5 signature vocabulary** — the master Pi-shaped fields replace the earlier generic
+  `ThinkingBlock.signature` proposal.
+- **Existing implementation realignment** — already-merged Phase 2/3 vocabulary and loop code are
+  explicitly recognized as migration/reimplementation work before Phase 5 completion.
+- **Pi baseline date** — `b7bb00b936dbe21b8e160b3e89efdec361846699` is recorded as
+  2026-08-19 (UTC commit date).
+- **Thinking transformation table** — different-model, non-redacted, empty thinking is explicitly
+  removed rather than converted to an empty text block.
 
 Resolved by Pi-fidelity audit (2026-08-20):
 
@@ -1703,9 +2034,10 @@ Resolved at design freeze (2026-08-18):
 - **Every waterfall event declares a terminal continuation** (§3). An implicit
   `None` terminal would have let a fully cooperative transformation chain
   discard the value it had just transformed.
-- **Hard termination precedes `agent/turn-stopping`** (§6). The `terminate`
-  batch rule is a loop invariant inherited from pi, where no hook could force
-  continuation; an explicit `Continue` decision must not override it.
+- **Superseded termination interpretation.** The 2026-08-18 design incorrectly treated the
+  all-results `terminate` fold as a hard stop preceding `agent/turn-stopping`. The 2026-08-20 Pi
+  audit corrected it: the fold only suppresses tool-driven automatic continuation, while normal
+  prepare/stop/steering/follow-up processing remains eligible.
 - **Model-visible image references resolve to immutable identity before
   dispatch** (§4), reusing §5's content-addressed artifacts. A mutable path or
   URL would break request reconstruction silently.
