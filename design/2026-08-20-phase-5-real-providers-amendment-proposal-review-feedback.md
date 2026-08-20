@@ -1,3 +1,8 @@
+<!--
+TRACKING NOTE — 2026-08-20
+Latest review disposition: the counter-review and Rust-side addendum are accepted. The revised proposal resolves the cancellation wording and the earlier mapping, retry, authentication, fixture-policy, and deferral corrections. The one remaining blocking language-neutral design issue is Codex provider-opaque continuation state: the amendment must pin the minimum continuation state required for stateless multi-step/tool-call Responses flows, keeping it log-only, compatibility-keyed, content-addressed, reconstructable, and distinct from `ThinkingBlock`. The Rust Phase 2 plan must then be revised before implementation to support an asynchronous eager-start phase and restartable pre-commit attempts.
+-->
+
 ## Review verdict — Phase 5 real-provider design amendment
 
 **Verdict: approve the direction, but do not merge the amendment into the frozen design exactly as written yet.**
@@ -864,3 +869,420 @@ confirmation the underlying rule was never actually in question. The six substan
 (3 through 7, plus the pure-I/O-free split) and the four confirmed-absent items (8, 12, 13, 14) all
 get applied. Proceeding to revise `2026-08-20-phase-5-real-providers-amendment-proposal.md` next,
 pending confirmation.
+
+---
+
+# Rust-side review of the revised proposal
+
+## Verdict
+
+The revision at `528971c` incorporates nearly all earlier review corrections correctly. From the
+Rust side, do not freeze it yet: the Responses continuation model remains under-specified, and that
+decision changes both session/request reconstruction and the Rust adapter interface.
+
+This is the right time to make those changes. The Rust repository has no LLM/provider module yet,
+so the Phase 2 contracts can still be revised without migrating a published API.
+
+## Corrections now resolved
+
+The revised proposal now correctly pins:
+
+- independently specified Chat Completions and Responses behavior without forbidding shared Rust
+  helpers;
+- deterministic structural codecs separated from potentially I/O-bearing artifact preparation;
+- eager rejection of unsupported `ThinkingBlock` content;
+- unknown Chat Completions finish reasons as `StopReason.error` plus diagnostics;
+- Responses incompleteness by specific reason rather than blanket `incomplete → length`;
+- first-public-chunk retry commitment plus transient-failure classification;
+- implementation-specific retry schedules;
+- cooperative step-boundary cancellation as the current V1 capability;
+- credential mutation by explicit ownership/authority;
+- provider fixtures as verification policy rather than semantic conformance;
+- arbitrary raw-byte segmentation tests;
+- explicit cost-policy and API-key-fallback deferrals.
+
+Those items no longer need further Rust-side changes in the amendment.
+
+## 1. Responses continuation should be specified as Case B
+
+The revised text still treats Case A versus Case B as open pending a live experiment. The live
+multi-step tool-call verification is worthwhile, but the normative model should now be biased more
+strongly than a working hypothesis. OpenAI's Responses documentation says reasoning items should
+be included in later inputs when an application manually manages context and exposes
+`encrypted_content` for stateless replay. A provider-hosted `previous_response_id` alone is not an
+adequate Minion source of truth because request reconstruction must not depend solely on mutable,
+expiring, or unavailable remote state.
+
+Recommended language-neutral shape:
+
+```text
+ProviderContinuation
+    API identity
+    compatibility/version identity
+    immutable artifact reference
+    originating response/turn association
+    deterministic replay order
+```
+
+Required rules:
+
+- continuation is log-only and never a `ThinkingBlock`;
+- its complete replay payload is reconstructable from Minion's artifact store;
+- only a matching API/compatibility identity may consume it;
+- required-but-missing or incompatible continuation fails eagerly rather than being silently
+  omitted;
+- it follows session ancestry and fork boundaries independently of model-visible surface
+  projection;
+- reset or compaction of the visible surface cannot remove continuation still needed to
+  reconstruct a later request;
+- opaque continuation is sensitive provider state and is excluded from ordinary telemetry and
+  diagnostics;
+- the artifact stores the complete provider item required for replay, not merely a detached
+  `encrypted_content` scalar.
+
+The exact bytes and Rust storage type are implementation details. Rust must not represent this as
+`Any` or as a provider-specific `ContentBlock`: it has to remain serde/log reconstructable while
+staying outside the model-visible vocabulary.
+
+The live verification should determine the exact replay payload and compatibility key, not whether
+the architecture needs a continuation slot at all.
+
+Reference: OpenAI Responses streaming/reference documentation describes reasoning-item replay and
+`encrypted_content`:
+<https://platform.openai.com/docs/api-reference/responses-streaming/response/refusal/delta>.
+
+## 2. The Rust Phase 2 adapter contract must change
+
+The current Rust plan defines a synchronous, one-attempt adapter:
+
+```rust
+fn stream(&self, request: Request)
+    -> Result<RawAssistantStream, LlmStartError>;
+```
+
+That shape cannot cleanly support the revised design's:
+
+- asynchronous credential loading or self-owned credential refresh;
+- I/O-bearing artifact materialization/provider upload;
+- provider-continuation preparation;
+- transparent creation of a replacement physical attempt after a transient pre-commit failure.
+
+Rust should use an asynchronous eager phase and a restartable internal attempt abstraction:
+
+```text
+validate semantic request
+    ↓
+asynchronous provider preparation/start
+    ↓
+Result<AssistantStream, LlmStartError>
+    ↓
+AssistantStream owns retryable attempt state
+```
+
+The public outcome remains unchanged: once returned, `AssistantStream` yields only `StreamChunk`
+values. Internally, however, a one-shot `source: RawAssistantStream` cannot centrally enforce the
+retry rule. The wrapper needs a typed attempt factory and typed failure classification rather than
+string matching.
+
+Commitment occurs when `poll_next` exposes the first public chunk, including `start`. Dropping or
+fusing the stream must cancel pending retry timers/requests; no retry work may continue in the
+background after fusion. Backoff tests should use injected deterministic time/randomness rather
+than wall-clock sleeps.
+
+This is a Rust implementation-plan correction, not an additional language-neutral runtime rule.
+
+## 3. Keep typed semantic APIs without closing provider wire vocabularies
+
+The Rust public API should remain strongly typed, but provider event discriminators should not be
+a closed serde enum that rejects every newly introduced provider event.
+
+Decode the outer wire envelope first as:
+
+```text
+event-name string
+raw JSON payload
+```
+
+Then let the API-specific state machine classify it as projected, recognized-but-unprojected,
+diagnostic/ignorable, or a terminal protocol violation. Chat Completions and Responses should have
+separately specified private state machines, while sharing framing, JSON, artifact, and diagnostic
+helpers where useful.
+
+## 4. Pin malformed fragmented tool-call behavior
+
+Tool-call fragments are untrusted provider input. Rust should accumulate them in checked maps keyed
+by call index or `item_id`, not resize sparse vectors from provider-controlled indices.
+
+At finalization:
+
+- argument fragments must parse as JSON;
+- the result must satisfy the provider-neutral tool-call argument shape (currently a JSON object);
+- conflicting IDs/names, impossible index reuse, incomplete finalization, invalid JSON, or a
+  non-object argument value settle as protocol errors;
+- no partial wire item becomes an executable semantic tool call.
+
+This behavior is externally observable and should be pinned sufficiently for Python and Rust to
+settle malformed streams the same way.
+
+## 5. Encode credential authority in Rust types
+
+Rust should not hand an external token and optional refresh token to a generic refresher. The auth
+boundary should carry an explicit capability:
+
+```text
+external/read-only
+self-owned/refreshable + owned persistence capability
+explicit interoperability authority
+```
+
+This makes independent refresh of Codex CLI credentials structurally unavailable. Secret-bearing
+types should not derive ordinary `Debug` or `Serialize`.
+
+Expiry discovered during asynchronous credential preparation is an eager start error. An
+authentication failure received after a public stream exists settles in-band. Both may share a
+diagnostic category without crossing the never-raises boundary.
+
+The revised rule that plugins consume already-resolved authentication is particularly appropriate
+for Rust: the library should not read process-global environment variables implicitly.
+
+## 6. One fixture wording contradiction remains
+
+The revised fixture body correctly says a sanitized provider-wire corpus can be shared and is not
+inherently tied to Python's or Rust's HTTP client. The introductory paragraph still says fixtures
+are "necessarily per-implementation artifacts (different HTTP clients, no shared wire bytes format
+implied)." Those statements conflict.
+
+Replace that introductory sentence with:
+
+> This is shared verification policy. Implementations may keep separate fixture corpora or
+> deliberately share provider-wire fixtures; fixture representation remains test infrastructure,
+> not Minion semantic conformance.
+
+For Rust, a replay transport should preserve status, relevant headers, and raw body bytes, then
+feed those bytes through the production framing and decoding stack under varied segmentation.
+
+## 7. Cost-policy deferral still requires a Rust representation decision
+
+Deferring pricing catalogs and computation is correct, but Rust needs a stable public `Usage.cost`
+representation before publishing the type. Cost should be optional while uncomputed, and its
+eventual monetary representation should be exact rather than `f64` (for example exact decimal or
+amount-plus-currency).
+
+This does not block the amendment, but it must be settled before the Rust provider-neutral
+vocabulary becomes a public compatibility commitment.
+
+## Rust merge disposition
+
+Approve promotion after:
+
+1. provider continuation is pinned as log-only, content-addressed, compatibility-keyed request
+   state, with live verification determining its exact wire payload;
+2. the remaining fixture-introduction contradiction is corrected;
+3. the Rust Phase 2 plan is revised to use asynchronous eager start and restartable pre-commit
+   attempts;
+4. malformed fragmented tool-call settlement and open wire-event decoding are accounted for in
+   the Rust provider plan;
+5. `Usage.cost` representation is settled before the Rust public type is implemented.
+
+No change is required to the approved provider-neutral stream outcome: consumers observe zero or
+more non-terminal chunks, exactly one terminal chunk, and no iteration errors.
+# Latest review of the revised proposal — 2026-08-20
+
+## Verdict
+
+Do not freeze the amendment yet.
+
+The latest proposal successfully incorporates nearly all objections from the original review and
+counter-review. One primary language-neutral semantic blocker remains — Responses continuation
+state — together with one required fixture-wording correction and a newly identified gap in the
+settlement of malformed fragmented tool calls.
+
+## Original objections now resolved
+
+The revised proposal now correctly specifies:
+
+- independently specified Chat Completions and Responses behavior without prohibiting shared implementation helpers;
+- deterministic structural codecs separated from I/O-bearing artifact preparation;
+- eager, pre-stream rejection of an unsupported `ThinkingBlock`;
+- unknown Chat Completions `finish_reason` as `StopReason.error` plus diagnostics;
+- Responses `incomplete` mapping according to its specific reason rather than blanket conversion to `length`;
+- `completed` as `tool_use` when a finalized function call awaits execution;
+- retry only before the first public chunk and only for transient transport/status failures;
+- retry schedules and exact retryable-status classification as provider/implementation policy;
+- cooperative step-boundary agent cancellation while preserving existing `aborted` semantics;
+- credential mutation according to ownership or explicitly granted authority;
+- fixture methodology as verification policy rather than runtime semantics;
+- raw-wire replay under varied transport segmentation;
+- explicit deferral of cost computation; and
+- no provider-specific API-key fallback chain in V1.
+
+The original cancellation objection is therefore resolved and is no longer a blocker.
+
+## Remaining blocker — Responses continuation state
+
+The proposal correctly recognizes that opaque continuation data is distinct from `ThinkingBlock`,
+must be immutable and log-reconstructable, and may be required for real multi-step tool-call
+continuation. It still leaves Case A versus Case B open and models Case B only at a high level.
+
+The design should reserve a provider-opaque continuation facility now, while live verification
+determines its exact wire contents. The minimum language-neutral shape should cover:
+
+```text
+ProviderContinuation
+    API identity
+    compatibility/version identity
+    originating response/turn association
+    immutable artifact reference
+    deterministic replay order
+```
+
+Required rules:
+
+- retain the complete replayable provider item, not merely a detached `encrypted_content` scalar;
+- missing required or incompatible continuation fails eagerly;
+- continuation follows session ancestry and fork boundaries;
+- visible-history reset or compaction cannot remove continuation still needed to reconstruct a later request;
+- continuation cannot be projected into a different provider/API mapping;
+- sensitive opaque payloads are excluded from ordinary diagnostics and telemetry; and
+- provider-held `previous_response_id` is not the sole reconstructable source of truth.
+
+The live tool-call experiment should determine the minimum replay payload and compatibility key,
+not whether the architecture has a place to retain provider continuation state.
+
+## Required editorial correction — fixture wording
+
+The fixture introduction still calls fixtures "necessarily per-implementation artifacts," while
+the body correctly says a sanitized provider-wire corpus may be shared. Replace the introductory
+claim with wording such as:
+
+> Implementations may maintain separate fixture corpora or deliberately share provider-wire
+> fixtures; fixture representation remains test infrastructure rather than Minion semantic
+> conformance.
+
+## New substantive issue — malformed fragmented tool calls
+
+The proposal describes fragment accumulation but does not fully pin how invalid or contradictory
+accumulated state settles. This is externally observable and must not diverge between Python and
+Rust. Specify that:
+
+- conflicting IDs or function names are protocol errors;
+- impossible index or `item_id` reuse is a protocol error;
+- finalized arguments must parse as JSON;
+- arguments must satisfy the provider-neutral tool argument shape, currently a JSON object;
+- incomplete finalization is a protocol error;
+- no partial or malformed provider item becomes an executable semantic tool call; and
+- once a stream exists, these failures settle in-band as `StopReason.error` with safe diagnostics.
+
+Using checked maps rather than blindly resizing sparse arrays from provider-controlled indices is
+appropriate implementation guidance, rather than an additional language-neutral structure rule.
+
+## Rust-plan follow-ups
+
+The Rust implementation plan still needs:
+
+- asynchronous eager preparation/start;
+- restartable pre-commit attempt construction;
+- typed retry/failure classification;
+- open provider wire-event envelopes rather than closed enums that reject every new event;
+- credential authority represented explicitly in types; and
+- an optional, exact monetary representation for `Usage.cost` rather than `f64`.
+
+These plan changes do not alter the approved public stream outcome, but should be completed before
+the corresponding Rust public contracts are implemented.
+
+## Latest disposition
+
+```text
+BLOCKING
+1. Pin the provider-opaque continuation model and verify its exact replay payload.
+2. Specify malformed fragmented tool-call settlement consistently across languages.
+
+REQUIRED EDITORIAL FIX
+3. Remove the fixture-corpus contradiction.
+
+RESOLVED
+All original mapping, retry, cancellation, authentication, fixture-policy,
+cost-deferral, and API-key-resolution objections.
+```
+
+After those items and the Rust plan revision, the amendment is ready for promotion into the frozen
+design.
+
+---
+
+# Response — second pass, verified against the codebase and the current proposal text
+
+Checked rather than accepted. Verdicts below.
+
+## Editorial fix — fixture-corpus contradiction: CONFIRMED, real bug in my own prior edit
+
+Grepped the committed proposal directly: line 217 (pre-fix) did still read "necessarily
+per-implementation artifacts (different HTTP clients, no shared wire bytes format implied)," three
+paragraphs before the body paragraph I *had* already corrected to say the opposite. My earlier
+revision fixed Point 11's body paragraph but missed the section's own introductory sentence — an
+incomplete application of a correction I'd already agreed to, not a new disagreement. Fixed now:
+the intro sentence states the shared-verification-policy framing directly instead of repeating the
+retracted claim.
+
+## New issue — malformed fragmented tool-call settlement: AGREE, genuine gap
+
+Checked the proposal's decode paragraphs for both APIs: neither said anything about conflicting
+IDs, impossible index/`item_id` reuse, non-JSON arguments, or incomplete finalization. This is
+externally observable (a caller sees either a clean tool call or a settled error, nothing else) and
+was silently unaddressed. It also fits the existing error taxonomy cleanly rather than requiring a
+new category: this is provider-sent malformed wire data, not an adapter bug, so it belongs with the
+`AdapterOperationalError`-settles-in-band path already established for real adapters, not with
+`AdapterProtocolError` (reserved for the adapter's own code violating the internal stream
+contract — a bug in *our* code, which correctly still raises). Added as a new subsection pinning
+this identically for both APIs.
+
+## Continuation state: AGREE with reserving the facility now, still Case-A/B-agnostic
+
+The push to specify `ProviderContinuation`'s shape now rather than leave it fully open is a
+reasonable middle ground — it doesn't prejudge whether Codex actually needs it (that's still the
+live-verification question), but it stops the architecture from having no place to put the answer
+if verification comes back Case B. I agree specifically with rejecting `previous_response_id` alone
+as a substitute: it would make request reconstruction depend on remote, mutable, expiring
+provider-side state, which conflicts with the frozen design's log-reconstruction invariant (§8) —
+this isn't a new principle, it's the same one already cited earlier in this review thread. Folded
+the full field list (API/compatibility identity, log-reconstructable, session-ancestry-aware,
+diagnostics-excluded, eager-fail-if-missing) into the `codex-responses` reasoning subsection,
+framed explicitly as proposed-regardless-of-outcome, with the live experiment scoped to determining
+payload and compatibility key rather than whether the facility exists at all.
+
+## Rust Phase 2 adapter contract, wire-envelope decoding, credential-capability types, checked-map guidance: agree these do NOT belong in this design doc
+
+The reviewer's own text self-classifies section 2 as "a Rust implementation-plan correction, not an
+additional language-neutral runtime rule" — correct, and the same reasoning applies to sections 3
+and 5 (open wire-event decoding, credential-authority Rust types) and the checked-map guidance in
+section 4. This document's own scope note excludes Python-specific implementation detail
+(file layout, config classes) from `design/`; the symmetric exclusion holds for Rust-specific
+implementation detail (async adapter signatures, serde representations, `Debug`/`Serialize`
+derives). None of that belongs promoted into §4 — it's implementation-plan material for whoever
+writes the Rust Phase 5 plan. No change made to the design doc for these; noting them here so
+they aren't lost, since there's no Rust plan file yet to carry them forward into.
+
+## `Usage.cost` representation: agree it's a real question, disagree it belongs in this amendment
+
+Checked the master design directly: `Usage.cost` ("computed cost") is already frozen provider-
+neutral vocabulary from before Phase 5 — it's not something this real-providers proposal introduces
+or is positioned to resolve. Its type representation (optional-while-uncomputed, exact decimal vs.
+float) is a legitimate open question, but it isn't specific to real-provider wire behavior; it would
+apply equally if Phase 5 never happened. Recorded as decision-log item 16, explicitly scoped as a
+follow-up against the earlier Usage-vocabulary decision rather than a blocker on this amendment —
+agree it should be settled before either implementation treats `Usage` as a stable public type, just
+not as a condition of merging this proposal.
+
+## Disposition
+
+Both blocking items from this round applied to the design doc: the fixture-wording contradiction is
+fixed, and malformed-fragmented-tool-call settlement is now pinned identically for both APIs. The
+continuation-state facility is now specified in shape (not merely gestured at), with the live
+Codex-verification question narrowed to payload/compatibility-key rather than left fully open. The
+Rust-implementation-plan-scoped items (adapter async contract, wire-envelope decode strategy,
+credential-capability types, checked-map fragment storage) are correctly out of this document's
+scope and are not applied here — they need to land wherever the Rust Phase 5 plan gets written.
+`Usage.cost` representation is logged as a tracked follow-up, explicitly not a blocker on this
+amendment. The one remaining blocker, as before both review rounds: empirical verification of Case
+A vs. Case B for `codex-responses` continuation, which is implementation-time work against a real
+Codex OAuth session, not resolvable at the design layer alone.

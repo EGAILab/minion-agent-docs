@@ -4,13 +4,16 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 to apply corrections from a design
-review (see the sibling `-review-feedback.md` file and its appended counter-review). **One item
-remains genuinely open and blocks freezing this proposal**: whether `codex-responses` requires
-provider-opaque `encrypted_content` continuation state for correct multi-turn tool-call sequences
-(see the `codex-responses` reasoning subsection below) — a working hypothesis is stated, but it
-needs empirical verification against a real Codex multi-turn tool-call exchange before this
-section can freeze. Every other reviewed item below reflects the resolved, corrected wording.
+review, the pattern this proposal follows. Revised 2026-08-20 (twice) to apply corrections from two
+rounds of design review, including a Rust-side pass (see the sibling `-review-feedback.md` file and
+its appended counter-reviews). **One item remains genuinely open and blocks freezing this
+proposal**: whether `codex-responses` requires provider-opaque `encrypted_content` continuation
+state for correct multi-turn tool-call sequences (see the `codex-responses` reasoning subsection
+below) — the `ProviderContinuation` facility's shape is now specified, but its exact wire payload
+and compatibility key need empirical verification against a real Codex multi-turn tool-call
+exchange before this section can freeze. Every other reviewed item below reflects the resolved,
+corrected wording, including a newly-pinned malformed-fragmented-tool-call settlement rule and a
+fixture-wording self-contradiction fixed in this revision.
 **Target:** `2026-08-18-minion-agent-design.md`, §4 "The LLM seam." §4 currently states the
 never-raises contract, the API/provider split table, and the auth-seam principle at a level that
 doesn't yet commit to how two concrete APIs (`openai-completions`, `codex-responses`) actually
@@ -85,25 +88,48 @@ Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock`. 
 **summary** events are recognized but have **no V1 projection** — not merged into `ThinkingBlock`,
 not allowed to corrupt `reasoning_text` accumulation for the same item.
 
-**`encrypted_content` continuation state — open question, working hypothesis stated below, must
-be verified before this section freezes.** The agent loop already performs
-`request → tool call → tool result → second model request`, and Phase 5 is where that loop first
-contacts a real provider — so this is not an optional future "multi-turn reasoning" feature; it
-determines whether a Codex agent's second turn works at all once a tool call is involved. OpenAI's
-own reasoning-items guidance states that reasoning items should be replayed in the input of
-subsequent Responses requests when manually managing context, and real reports of turn-2 400s when
-this is omitted exist in the wild (`openai/openai-python#3008`, `openai/codex#3841`). The working
-hypothesis is therefore **Case B**: `encrypted_content` is required provider-opaque continuation
-state, not discardable telemetry — but it still must never become `ThinkingBlock`. Modeled instead
-as a **provider continuation artifact**: log-only, immutable, associated with its
-request/response, replayed only to the same provider API, never projected as user/model-visible
-`ThinkingBlock` content. This fits the existing architecture: log-only state that must be
-reconstructable from the log (§8) but is never surfaced as semantic vocabulary is already how the
-design separates observable content from bookkeeping. **Before this section is frozen**, verify
-against a real Codex multi-turn tool-call sequence whether Case A (ordinary semantic history alone
-reconstructs an equivalent request) or Case B (opaque continuation state is genuinely required)
-holds, and record the verified answer here — the same treatment already given to the `auth.json`
-schema and OAuth endpoints elsewhere in this proposal.
+**`encrypted_content` continuation state — the facility is specified below; its exact wire payload
+and compatibility key are pending live verification before this section freezes.** The agent loop
+already performs `request → tool call → tool result → second model request`, and Phase 5 is where
+that loop first contacts a real provider — so this is not an optional future "multi-turn reasoning"
+feature; it determines whether a Codex agent's second turn works at all once a tool call is
+involved. OpenAI's own reasoning-items guidance states that reasoning items should be replayed in
+the input of subsequent Responses requests when manually managing context, and real reports of
+turn-2 400s when this is omitted exist in the wild (`openai/openai-python#3008`,
+`openai/codex#3841`). A provider-hosted `previous_response_id` is not an adequate substitute for
+Minion's own reconstruction, since it makes request reconstruction depend on mutable, expiring,
+remote state Minion doesn't control — the frozen design already requires anything reaching a model
+request to be reconstructable from Minion's own log (§8), not from provider-side session state.
+
+The working hypothesis is therefore **Case B**: `encrypted_content` is required provider-opaque
+continuation state, not discardable telemetry — but it still must never become `ThinkingBlock`, and
+the architecture should reserve the facility now rather than retrofit it later:
+
+> **`ProviderContinuation`** — log-only, content-addressed, associated with the response/turn that
+> produced it:
+> - carries an API identity and a compatibility/version identity, so continuation is never replayed
+>   to a mismatched API or an incompatible provider version;
+> - retains the complete replayable provider item required for replay, not a bare detached
+>   `encrypted_content` scalar;
+> - is reconstructable from Minion's own log/artifact store (§8), independent of provider-side
+>   session state;
+> - follows session ancestry and fork boundaries the same way other log-only state does;
+> - is never removed by a visible-history reset or compaction that still needs it to reconstruct a
+>   later request;
+> - is excluded from ordinary telemetry and diagnostics, since it is opaque provider state, not
+>   inspectable content;
+> - fails eagerly when continuation is required but missing or incompatible, rather than being
+>   silently omitted from the next request.
+
+**Before this section is frozen**, verify against a real Codex multi-turn tool-call sequence
+whether Case A (ordinary semantic history alone reconstructs an equivalent request) or Case B
+(opaque continuation state is genuinely required) holds. That live experiment determines the exact
+replay payload and compatibility key — it does not determine whether the architecture needs a
+continuation facility at all; the shape above is proposed as language-neutral regardless of which
+case the experiment confirms, since a Case-A finding just means the facility stays permanently
+unused for `codex-responses` until a provider that needs it arrives. Record the verified answer
+here — the same treatment already given to the `auth.json` schema and OAuth endpoints elsewhere in
+this proposal.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -122,6 +148,22 @@ token/output-length exhaustion:
 The `completed→stop` vs. `completed→tool_use` split preserves the provider-neutral distinction
 between a response that hands control back with text and one that hands control to tools — losing
 it would mean an implementation cannot tell those apart from `StopReason` alone.
+
+### Malformed fragmented tool-call settlement (both APIs)
+
+Both decoders above accumulate a tool call from independently-arriving fragments (`delta.tool_calls[index]`
+for `openai-completions`, `item_id`-keyed items for `codex-responses`) — untrusted provider wire
+input, not internal state. This is externally observable and must settle identically regardless of
+implementation:
+
+- Conflicting IDs or function names on what should be the same fragment, impossible index/`item_id`
+  reuse, or incomplete finalization are protocol errors.
+- Finalized `arguments` must parse as JSON and satisfy the provider-neutral tool-call argument
+  shape (currently a JSON object); anything else is a protocol error.
+- No partial or malformed wire item is ever surfaced as an executable semantic tool call.
+- These are provider-sent malformed data, not an adapter bug — they settle the same way any other
+  operational stream failure does under the never-raises boundary: in-band, as `StopReason.error`
+  with the raw diagnostic preserved, never by raising out of iteration.
 
 ---
 
@@ -213,9 +255,9 @@ ownership boundary.
 
 Real providers introduce a testing concern the mock-only phases didn't have: verifying wire-format
 translation against protocols this codebase doesn't control, without live network access in the
-automated suite. This is a testing *philosophy* both implementations should share, even though the
-fixtures themselves are necessarily per-implementation artifacts (different HTTP clients, no
-shared wire bytes format implied).
+automated suite. This is shared verification policy, not runtime semantics: implementations may
+keep separate fixture corpora or deliberately share provider-wire fixtures — fixture representation
+remains test infrastructure, not Minion semantic conformance, either way.
 
 > **Three layers, all exercising the same production translation code**: pure codec tests
 > (hand-authored edge cases, no I/O); recorded wire fixtures (sanitized captures from real
@@ -325,7 +367,24 @@ reasonably assume they were settled by omission:
     file/config structure.
 13. `codex-responses` continuation state is the one item in this proposal not yet resolved: the
     working hypothesis, backed by OpenAI's own reasoning-items guidance and observed turn-2 failure
-    reports, is that `encrypted_content` is required opaque continuation state and should be
-    modeled as a log-only, immutable, provider-replayed-only continuation artifact — distinct from
-    `ThinkingBlock` — but this must be verified against a real Codex multi-turn tool-call exchange
-    before the `codex-responses` mapping section freezes.
+    reports, is that `encrypted_content` is required opaque continuation state. The
+    `ProviderContinuation` facility (API/compatibility identity, log-reconstructable, session-
+    ancestry-aware, excluded from diagnostics, eager-fails when required-but-missing) is proposed
+    as language-neutral regardless of outcome; only its exact wire payload and compatibility key
+    await verification against a real Codex multi-turn tool-call exchange, before the
+    `codex-responses` mapping section fully freezes. A provider-hosted `previous_response_id` alone
+    is explicitly rejected as a substitute, since it depends on remote state outside Minion's log.
+14. Malformed fragmented tool-call settlement is pinned identically for both APIs: conflicting
+    IDs/names, impossible index/`item_id` reuse, non-JSON or non-object finalized arguments, and
+    incomplete finalization are protocol errors that settle in-band as `StopReason.error` — never
+    raised out of iteration, and never surfaced as an executable semantic tool call. This closes an
+    externally-observable gap the original mapping left unaddressed.
+15. The fixture-testing section's introductory paragraph previously stated fixtures are
+    "necessarily per-implementation artifacts," directly contradicting its own later paragraph
+    permitting a shared sanitized wire corpus. Corrected to state the shared-verification-policy
+    framing consistently throughout the section.
+16. `Usage.cost`'s concrete representation (optional-while-uncomputed; exact decimal vs. float) is
+    a real open question, but predates this proposal — `Usage.cost` was already frozen provider-
+    neutral vocabulary before Phase 5 (see master design's LLM vocabulary). It is tracked as a
+    follow-up against that earlier decision, not folded into this amendment, since resolving it is
+    not specific to real-provider wire behavior.
