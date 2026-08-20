@@ -1,11 +1,11 @@
 <!--
 TRACKING NOTE — 2026-08-20 — LATEST
-Latest disposition after reviewing the fourth revision of the Phase 5 amendment and the full review/counter-review chain:
-- The previously open ProviderContinuation data-flow, atomic logical-settlement, retry-vs-settlement terminology, telemetry-sensitivity, malformed-tool-call, fixture-policy, retry, cancellation, and authentication findings are now resolved in the proposal.
-- One newly identified language-neutral issue must be fixed before freeze: continuation eligibility across session reset and compaction is not pinned. Persistence/audit retention must be separated from replay eligibility so pre-reset or superseded continuation cannot leak into a logically rewritten history.
-- Recommended rule: continuation remains append-only/log-retained, but is dispatch-eligible only when its originating response remains in the effective reconstructed history/retained-tail lineage for that request; session reset floors continuation eligibility, and compaction makes continuation from superseded responses ineligible while preserving continuation belonging to an effective retained tail.
-- After that rule is added, the only remaining amendment-level blocker is the live Codex verification of exact replay item(s), compatibility identity, sequence update rule, and terminal-outcome reuse behavior.
-- Rust Phase 2 still needs the already-recorded pre-implementation changes to its one-shot stream seam and atomic settlement API. Usage.cost representation remains a separate pre-publication Rust vocabulary gate.
+Latest disposition after reviewing the fifth revision of the Phase 5 amendment:
+- Static design review is complete. The language-neutral ProviderContinuation contract is now sufficiently pinned: properties, data flow, atomic logical settlement, retry-vs-settlement distinction, effective-session-lineage eligibility across fork/reset/compaction, API mismatch, telemetry sensitivity, and canonical coverage intent are all resolved.
+- No new architecture issue is identified in this pass. Do not continue speculative design-review rounds unless the live provider experiment exposes a genuinely new observable semantic requirement.
+- One small editorial consistency fix is requested before the experiment: the codex-responses subsection's opening sentence still says only "exact wire payload and compatibility key" remain open, while the status block and live-verification list correctly name four empirical questions. Replace that sentence with the exact wording in the latest review below.
+- After that editorial fix, the sole blocker to freezing the amendment is the live Codex multi-turn experiment: exact replay item(s), compatibility identity/key, replacement/latest/accumulation rule, and reusable terminal outcomes.
+- Rust Phase 2 one-shot stream/settlement changes and Usage.cost representation remain separate implementation/pre-publication gates, not amendment blockers.
 -->
 
 ## Review verdict — Phase 5 real-provider design amendment
@@ -2805,3 +2805,261 @@ extended conformance coverage. No change needed for async/sync Rust disposition,
 or `Usage.cost` — all confirmed correct as previously recorded. Flagging directly: this proposal's
 language-neutral half is very likely at or past the point of diminishing design-review returns: the
 live Codex experiment is the load-bearing next step, not another round of speculative elaboration.
+---
+
+# Eighth design review — fifth proposal revision — 2026-08-20
+
+## Verdict
+
+**Static design review is complete.**
+
+I do not identify another language-neutral architectural gap in this revision. The latest proposal
+has now incorporated the reset/compaction lineage rule cleanly and consistently with the rest of the
+session model:
+
+```text
+durable retention != replay eligibility
+fork/reset/compaction all filter the same effective session lineage
+provider/API compatibility AND lineage compatibility determine selection
+```
+
+That closes the last static issue from the previous round.
+
+The proposal should **not** go through another speculative architecture-review/update cycle before the
+live Codex experiment. The feedback file itself now correctly observes that five rounds have all
+progressively elaborated one still-unobserved provider behavior. At this point the empirical contract,
+not another hypothetical edge case, is the load-bearing next step.
+
+There is only one small editorial consistency change I want before running the experiment.
+
+## 1. Exact wording to update now
+
+In the `codex-responses` subsection, the current opening sentence says:
+
+```text
+`encrypted_content` continuation state — the facility is specified below; its exact wire payload
+and compatibility key are pending live verification before this section freezes.
+```
+
+That is now stale because the same proposal correctly defines **four** empirical questions later:
+payload, compatibility key, sequence-update semantics, and terminal-outcome reuse.
+
+Replace that sentence **exactly** with:
+
+```markdown
+**`encrypted_content` continuation state — the language-neutral facility and its reconstruction
+semantics are fully specified below; only the empirical Codex replay contract remains open before
+this subsection freezes: the exact complete provider item(s) to replay, the compatibility identity
+that admits replay, whether successful continuation state replaces, extends, or otherwise updates
+the prior replay sequence, and which terminal outcomes produce reusable continuation.**
+```
+
+No other prose in that subsection needs to be rewritten before the experiment.
+
+## 2. Do not add more speculative ProviderContinuation rules before evidence
+
+The current language-neutral contract is already sufficient to receive either empirical result:
+
+```text
+Case A:
+    Codex does not require provider-opaque continuation
+    -> generic facility remains unused for codex-responses
+
+Case B:
+    Codex requires provider-opaque continuation
+    -> observed replay item(s) fit into the already-defined ProviderContinuation path
+```
+
+The experiment can still reveal that one of the currently pinned generic rules is wrong or
+insufficient. If that happens, revise the design from the observed evidence.
+
+But do not proactively add more rules for hypothetical provider behaviors before observing them.
+
+That is the important process correction for this round.
+
+## 3. Live experiment — exact acceptance criteria
+
+Run one credentialed real Codex/Responses sequence that exercises:
+
+```text
+request 1
+    -> reasoning + function call
+    -> capture complete provider response items / continuation material
+
+tool result
+
+request 2
+    -> replay Minion-reconstructed continuation
+    -> verify accepted and semantically continuous
+```
+
+Record sanitized evidence sufficient to answer exactly these four questions:
+
+```text
+1. Replay payload
+   What complete provider item or ordered item sequence must be supplied?
+
+2. Compatibility identity
+   Which API/provider/model/version properties determine whether that state may be replayed?
+
+3. State evolution
+   On each successful response, does new continuation:
+       - replace previous continuation,
+       - append to an ordered sequence,
+       - require latest-only state,
+       - or follow another deterministic transformation?
+
+4. Terminal reuse
+   Which terminal outcomes yield continuation that is legal to reuse?
+   At minimum compare:
+       - completed text
+       - completed tool_use
+       - incomplete/error if reproducible
+```
+
+Also run two negative checks:
+
+```text
+omit required continuation
+    -> record actual provider behavior
+
+supply deliberately incompatible/stale continuation if safely reproducible
+    -> record actual provider behavior
+```
+
+And one persistence check:
+
+```text
+captured provider continuation
+    -> persist through Minion's content-addressed representation
+    -> reconstruct bytes/item
+    -> verify replay is unchanged
+```
+
+The negative and persistence checks validate existing rules; they do not create additional design
+questions.
+
+## 4. What to update immediately after the experiment
+
+Once evidence exists, update only the empirical placeholders in this amendment.
+
+Replace the current four-question open block with a frozen Codex-specific rule such as:
+
+```text
+For codex-responses:
+
+replay payload:
+    <verified exact item/item-sequence rule>
+
+compatibility:
+    <verified compatibility identity>
+
+state evolution:
+    <verified replacement/append/latest rule>
+
+reusable terminal outcomes:
+    <verified outcome rule>
+```
+
+Then update decision-log item 13 to remove "working hypothesis/pending verification" language and
+record the verified result.
+
+If Case B is confirmed, retain the generic `ProviderContinuation` rules exactly as currently written
+unless the experiment contradicts one of them.
+
+If Case A is unexpectedly confirmed, leave the generic facility in the language-neutral design but
+state explicitly that `codex-responses` V1 does not populate or consume it.
+
+## 5. Freeze criterion
+
+After the exact wording fix in §1 and completion of the experiment in §3:
+
+```text
+if empirical results fit the existing generic continuation contract
+    -> incorporate the four verified answers
+    -> freeze the amendment
+    -> stop design review
+    -> write/update Python and Rust implementation plans + canonical cases
+
+if empirical results contradict an existing generic rule
+    -> reopen only that contradicted rule
+    -> revise from evidence
+    -> one focused review of that delta
+```
+
+Do **not** restart a broad review of the entire amendment.
+
+## 6. Implementation work that remains separate
+
+These remain valid but should not delay the provider experiment:
+
+```text
+Python Phase 5
+    - select continuation from effective lineage before request/header is fixed
+    - dispatch exactly the reconstructed continuation
+    - atomically settle winning assistant response + continuation references
+    - keep provider operational I/O behind AssistantStream
+
+Rust Phase 2
+    - revise the existing one-shot RawAssistantStream seam
+    - add restartable/lazy physical-attempt control
+    - add atomic logical settlement operation
+    - preserve extensible reconstructed provider request state
+
+Rust vocabulary
+    - settle exact optional Usage.cost representation before publishing Usage
+```
+
+They are implementation/pre-publication gates, not remaining §4 design questions.
+
+## Final disposition
+
+```text
+STATIC DESIGN REVIEW
+    COMPLETE
+
+EDITORIAL FIX BEFORE EXPERIMENT
+    Replace the stale two-field continuation sentence with the exact four-field wording above.
+
+SOLE AMENDMENT BLOCKER
+    Run live Codex verification and record:
+        1. replay payload
+        2. compatibility identity
+        3. state-evolution rule
+        4. reusable terminal outcomes
+
+AFTER EXPERIMENT
+    If evidence fits current generic contract:
+        incorporate results
+        freeze amendment
+        proceed to plans/conformance/implementation
+
+    If evidence contradicts a pinned generic rule:
+        reopen only that evidence-backed delta
+        perform one focused review
+```
+
+This should be the stopping point for design-only iteration. The next useful information has to come
+from the real provider, not from another speculative review pass.
+
+---
+
+# Response — sixth pass (editorial only)
+
+Checked before applying: the flagged sentence was genuinely stale — grepped it directly and it
+still read "its exact wire payload and compatibility key are pending live verification," a
+two-field holdover from before the third-round data-flow revision expanded the open empirical
+questions to four (payload, compatibility key, state-evolution, terminal-outcome reuse). Applied
+the exact replacement wording as given.
+
+No other change made. This review's own verdict — "static design review is complete," don't add
+more speculative rules before evidence — agrees with the process observation from the last pass
+rather than just tolerating it, which is worth taking as real confirmation rather than assuming
+agreement. Combined with the Rust side reporting clean, there is nothing further to apply from the
+design-review side. The amendment's language-neutral half (piece A) is done; piece B is now
+entirely gated on running the live Codex experiment per the eighth review's acceptance criteria
+(§3: payload, compatibility identity, state-evolution rule, terminal-outcome reuse, plus the two
+negative checks and the persistence round-trip check) and recording the results against
+decision-log item 13 and the `codex-responses` subsection's open block. That experiment is
+implementation-time work outside what this session can perform — it needs a real, credentialed
+Codex OAuth session. Not attempting to simulate or guess at the answer here.

@@ -95,8 +95,11 @@ Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock`. 
 **summary** events are recognized but have **no V1 projection** — not merged into `ThinkingBlock`,
 not allowed to corrupt `reasoning_text` accumulation for the same item.
 
-**`encrypted_content` continuation state — the facility is specified below; its exact wire payload
-and compatibility key are pending live verification before this section freezes.** The agent loop
+**`encrypted_content` continuation state — the language-neutral facility and its reconstruction
+semantics are fully specified below; only the empirical Codex replay contract remains open before
+this subsection freezes: the exact complete provider item(s) to replay, the compatibility identity
+that admits replay, whether successful continuation state replaces, extends, or otherwise updates
+the prior replay sequence, and which terminal outcomes produce reusable continuation.** The agent loop
 already performs `request → tool call → tool result → second model request`, and Phase 5 is where
 that loop first contacts a real provider — so this is not an optional future "multi-turn reasoning"
 feature; it determines whether a Codex agent's second turn works at all once a tool call is
