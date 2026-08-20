@@ -4,12 +4,23 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows.
+review, the pattern this proposal follows. Revised 2026-08-20 to apply corrections from a design
+review (see the sibling `-review-feedback.md` file and its appended counter-review). **One item
+remains genuinely open and blocks freezing this proposal**: whether `codex-responses` requires
+provider-opaque `encrypted_content` continuation state for correct multi-turn tool-call sequences
+(see the `codex-responses` reasoning subsection below) — a working hypothesis is stated, but it
+needs empirical verification against a real Codex multi-turn tool-call exchange before this
+section can freeze. Every other reviewed item below reflects the resolved, corrected wording.
 **Target:** `2026-08-18-minion-agent-design.md`, §4 "The LLM seam." §4 currently states the
 never-raises contract, the API/provider split table, and the auth-seam principle at a level that
 doesn't yet commit to how two concrete APIs (`openai-completions`, `codex-responses`) actually
-satisfy them. This proposal is that elaboration — normative content a Rust implementation is
-equally bound by, not implementation detail.
+satisfy them. This proposal is that elaboration, in two distinct categories: the wire-vocabulary
+mapping, retry/never-raises composition, and credential-ownership sections are language-neutral
+*runtime semantic rules* — normative content a Rust implementation is equally bound by, targeted at
+§4. The wire-fixture testing section is *shared project verification policy*, not a runtime
+semantic rule — both implementations should verify the same classes of behavior, but how a fixture
+stores bytes is test infrastructure, not part of the behavioral contract; it is proposed as an
+addition to §8 for that reason, kept separate from §4 rather than folded into it.
 
 **Scope note:** this document intentionally excludes everything that is Python-specific
 implementation (file layout, concrete config classes, references to existing Python functions).
@@ -21,12 +32,19 @@ in `design/`.
 ## Proposed addition to §4: wire vocabulary mapping
 
 Real adapters translate in two directions — provider-neutral vocabulary → wire format (encode),
-wire events → `StreamChunk` (decode) — as pure, I/O-free translations. `openai-completions` and
-`codex-responses` are genuinely different wire protocols (older Chat Completions shape vs. a newer
-event-oriented Responses shape) sharing almost nothing at the wire level, including how tool
-results encode — this is a property of the two real APIs, not a Python implementation choice, and
-any implementation should treat them as two independent translations rather than one
-format-parameterized abstraction.
+wire events → `StreamChunk` (decode). The structural encode/decode mappings themselves are
+deterministic and independently testable from transport; any provider-specific preparation that
+requires I/O (see the `ImageBlock` row below) occurs before or around structural encoding and never
+mutates the semantic reference it prepares. `openai-completions` and `codex-responses` are
+genuinely different wire protocols (older Chat Completions shape vs. a newer event-oriented
+Responses shape) sharing almost nothing at the wire level, including how tool results encode — this
+is a property of the two real APIs, not a Python implementation choice. `openai-completions` and
+`codex-responses` therefore have independently specified wire mappings because their observable
+protocols differ materially, including tool-result representation and streaming event structure; no
+behavior may be inferred for one API from the mapping of the other. This is a constraint on
+observable behavior, not on internal code structure — implementations may share internal helpers
+(generic state-machine components, serialization infrastructure) across the two adapters, but
+sharing must never introduce semantic coupling between the two mappings.
 
 ### `openai-completions`
 
@@ -40,15 +58,17 @@ not mechanically converted regardless of role.
 | `ToolResultMessage` | `role: tool`, explicit `tool_call_id` |
 | `TextBlock` | text content part |
 | `ImageBlock` (inline `data`) | base64 data URL |
-| `ImageBlock` (`reference`) | The reference is an immutable content-addressed identity (§5). If the wire format needs a URL, materializing the artifact into a provider-fetchable one produces a *wire representation* only — the semantic reference is never rewritten as though a mutable URL were the source of truth. |
-| `ThinkingBlock` | **Explicit unsupported-content error on encode, never a silent drop.** `thinking` is frozen provider-neutral vocabulary (§4); silently losing it between the semantic request and what's dispatched is exactly the drift §8's log-reconstruction invariant exists to catch. |
+| `ImageBlock` (`reference`) | The reference is an immutable content-addressed identity (§5). If the wire format needs a URL, materializing the artifact into a provider-fetchable one is provider-specific preparation that may perform I/O (artifact read, upload, signed-URL generation) — it happens before structural encoding and produces a *wire representation* only; the semantic reference is never rewritten as though a mutable URL were the source of truth. |
+| `ThinkingBlock` | **Explicit unsupported-content error, raised eagerly before the stream is returned — never a silent drop, and never encoded as an in-band stream failure.** `thinking` is frozen provider-neutral vocabulary (§4); silently losing it between the semantic request and what's dispatched is exactly the drift §8's log-reconstruction invariant exists to catch. A request containing content the selected API cannot represent is a deterministic request-compatibility error, not a provider/network runtime failure — it therefore falls on the "before stream returned" side of §4's never-raises boundary table, alongside `UnknownModelError`, unless the selected provider explicitly declares a compatible mapping. |
 | `ToolSchema` | OpenAI function-tool shape. `strict` mode is provider-specific, not part of the common schema. |
 
 Decode: `delta.tool_calls[index]` accumulates per array index — `id`, `function.name`, and
 `function.arguments` fragments arrive independently, not necessarily together, finalized only when
 the stream signals completion. `finish_reason` maps `stop→stop`, `length→length`,
-`tool_calls→tool_use`; an **unknown** finish reason is preserved diagnostically, never silently
-coerced to `stop`.
+`tool_calls→tool_use`. `StopReason` is a closed six-value enum (`pending | stop | length | tool_use
+| error | aborted`), so "preserved diagnostically" is not by itself a complete rule — an
+**unknown** finish reason must still resolve to one of the six: it maps to `StopReason.error`, with
+the raw provider value preserved in diagnostic detail, never silently coerced to `stop`.
 
 ### `codex-responses`
 
@@ -62,16 +82,40 @@ differently; `output_item.done` finalizes an item.
 message encoder.
 
 Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock`. Reasoning
-**summary** events and `encrypted_content` continuation blobs are recognized but have **no V1
-projection** — not merged into `ThinkingBlock`, not allowed to corrupt `reasoning_text`
-accumulation for the same item. If a later phase needs multi-turn reasoning continuation, that is
-a vocabulary extension to propose then, not something to retrofit into `ThinkingBlock` now.
+**summary** events are recognized but have **no V1 projection** — not merged into `ThinkingBlock`,
+not allowed to corrupt `reasoning_text` accumulation for the same item.
 
-Stop reason comes from **response-level completion state**, not the last content event:
+**`encrypted_content` continuation state — open question, working hypothesis stated below, must
+be verified before this section freezes.** The agent loop already performs
+`request → tool call → tool result → second model request`, and Phase 5 is where that loop first
+contacts a real provider — so this is not an optional future "multi-turn reasoning" feature; it
+determines whether a Codex agent's second turn works at all once a tool call is involved. OpenAI's
+own reasoning-items guidance states that reasoning items should be replayed in the input of
+subsequent Responses requests when manually managing context, and real reports of turn-2 400s when
+this is omitted exist in the wild (`openai/openai-python#3008`, `openai/codex#3841`). The working
+hypothesis is therefore **Case B**: `encrypted_content` is required provider-opaque continuation
+state, not discardable telemetry — but it still must never become `ThinkingBlock`. Modeled instead
+as a **provider continuation artifact**: log-only, immutable, associated with its
+request/response, replayed only to the same provider API, never projected as user/model-visible
+`ThinkingBlock` content. This fits the existing architecture: log-only state that must be
+reconstructable from the log (§8) but is never surfaced as semantic vocabulary is already how the
+design separates observable content from bookkeeping. **Before this section is frozen**, verify
+against a real Codex multi-turn tool-call sequence whether Case A (ordinary semantic history alone
+reconstructs an equivalent request) or Case B (opaque continuation state is genuinely required)
+holds, and record the verified answer here — the same treatment already given to the `auth.json`
+schema and OAuth endpoints elsewhere in this proposal.
+
+Stop reason comes from **response-level completion state**, keyed by the specific completion
+reason rather than the outer state alone, since not every form of incompleteness means
+token/output-length exhaustion:
 
 - `completed`, no pending tool call requiring execution → `stop`
 - `completed`, with a finalized function call requiring execution → `tool_use`
-- `incomplete` → `length`
+- `incomplete`, reason is output/token-limit exhaustion → `length`
+- `incomplete`, reason is `content_filter` or another recognized non-length operational reason →
+  `error`, with the specific reason preserved in diagnostic detail
+- `incomplete`, unknown/unrepresentable reason → `error`, with the raw reason preserved
+  diagnostically
 - `cancelled` → `aborted`
 - `failed` → `error`
 
@@ -107,13 +151,25 @@ existing table alone.
 >
 > Retry exhaustion is itself an ordinary post-return failure: it settles the stream in-band, per
 > the existing never-raises table. It does not raise.
+>
+> Retry count, backoff, jitter, and the exact provider-specific classification of retryable server
+> statuses are implementation/provider policy unless separately standardized — the language-neutral
+> rule fixes the commitment boundary and the failure-class distinction above, not identical retry
+> schedules across Python and Rust.
 
-**Live mid-stream cancellation is out of scope for this proposal.** It requires the agent loop
-itself to gain an interrupt capability it does not currently have (§6's loop is cooperative,
-checked between steps) — designing the transport half of cancellation ahead of the loop half would
-solve a problem in isolation that needs to be solved as one cross-layer feature. The existing
-`aborted` stop-reason semantics are unaffected and remain ready for whenever that capability
-exists.
+**Live mid-stream cancellation is out of scope for this proposal, and the existing cancellation
+contract is boundary-only, not being relaxed here.** The frozen design's `agent/cancellation`
+conformance scenario, and the never-raises table's cancellation entry (in-band `aborted` once a
+stream is active), describe the consequence of cancelling an active stream — they do not assert
+that active mid-stream interruption exists as a required capability. The actual mechanism, verified
+directly against the implementation: `AgentLoop.cancel()` sets a flag checked cooperatively between
+turn-loop steps (`agent_loop/driver.py`); there is no code path today that closes a live provider
+stream mid-flight. Stated explicitly as the language-neutral rule this section relies on: **agent
+cancellation currently prevents subsequent work at cooperative loop boundaries; V1 does not require
+asynchronous interruption of an already-running provider stream.** Given that, deferring the
+transport half of live cancellation is sound — building it ahead of the loop half would solve a
+problem in isolation that needs to be solved as one cross-layer feature. The existing `aborted`
+stop-reason semantics are unaffected and remain ready for whenever that capability exists.
 
 ---
 
@@ -127,11 +183,19 @@ another application's credential store is bound by it, not a Python-specific con
 
 > **Credential ownership follows persistence ownership.** A credential read from another
 > application's credential store remains owned by that application. An implementation may use a
-> currently-valid access token from it, but never independently refreshes it and never writes back
-> to that store — refreshing mutates remote OAuth state (rotating refresh tokens), and only the
-> owning application can safely do that without risking the *other* application's next use of its
-> own credential. Credentials an implementation's own login flow produces are owned by it end to
-> end: it refreshes them and persists every replacement to its own storage.
+> currently-valid access token from it, but does not independently refresh or mutate
+> externally-owned credentials **unless the owner exposes an explicit supported interoperability
+> contract granting that authority** — refreshing mutates remote OAuth state (rotating refresh
+> tokens), and only an application holding that granted authority can safely do so without risking
+> the *other* application's next use of its own credential. Credentials an implementation's own
+> login flow produces are owned by it end to end: it refreshes them and persists every replacement
+> to its own storage.
+>
+> For Codex CLI's current file-based interop, no such contract exists — reading `auth.json` is
+> reverse-engineered from open-source Codex, not a supported interoperability API — so the outcome
+> is unchanged: read-only, no independent refresh. The qualifier exists to keep the general rule
+> correct if a future provider ever offers a supported shared-credential service, not to change
+> Codex's behavior today.
 >
 > This means "read an external credential" and "refresh a credential" are not the same capability
 > applicable uniformly to any credential value — refresh applies only to self-owned credentials. If
@@ -159,10 +223,14 @@ shared wire bytes format implied).
 > optional live verification (manual, credentialed, non-gating, used only to refresh fixtures or
 > detect provider drift).
 >
-> **Provider wire fixtures are implementation-level, not shared cross-language conformance.** The
+> **Provider wire fixtures are not part of shared cross-language semantic conformance.** The
 > existing `runtime/`/`agent/`/`session/` conformance families stay semantic and language-neutral.
-> Raw provider wire payloads are specific to one implementation's HTTP client and do not belong in
-> the shared suite merely because both implementations eventually talk to similar APIs. A shared
+> This exclusion is not because raw wire payloads are inherently tied to one implementation's HTTP
+> client — a sanitized SSE/HTTP wire corpus is provider protocol data, not Python-httpx- or
+> Rust-reqwest-specific data, and could in principle be consumed by both implementations. The actual
+> reason is that fixture representation is test infrastructure, not part of the Minion behavioral
+> specification: implementations may maintain separate fixture corpora, or may deliberately share a
+> provider-wire corpus; either choice is a testing decision, not a semantic one. A shared
 > wire-fixture corpus between Python and Rust, if ever wanted, is a separate explicit decision, not
 > an automatic consequence of both implementing real providers.
 >
@@ -175,12 +243,34 @@ shared wire bytes format implied).
 >
 > **Recorded fixtures preserve raw wire bytes, not only parsed logical events** — a fixture storing
 > only `{event, data}` pairs bypasses the transport-framing layer and tests the decoder alone; a raw
-> fixture is what actually exercises framing.
+> fixture is what actually exercises framing. Raw bytes are the fixture's content; the exact chunk
+> segmentation observed during recording (which TCP/HTTP-client boundary a byte happened to fall on)
+> is not itself provider semantics — SSE parsing must be correct under arbitrary transport chunking,
+> so fixture infrastructure should replay the same raw bytes under varied segmentation (one large
+> chunk; one byte at a time; boundaries falling inside UTF-8 sequences, JSON tokens, and SSE lines),
+> not treat the recorded segmentation as normative.
 >
 > **This does not close the gap between "the fixture was captured from a real provider" and "the
 > provider still behaves this way."** Fixture provenance (provider, API family, model, capture
 > date, tooling/sanitizer version, purpose) is recorded so a later failure can be diagnosed as
 > adapter regression versus provider drift, rather than guessed at.
+
+---
+
+## Proposed addition to §4: deferred topics, recorded explicitly
+
+Two decisions this proposal touches on but does not resolve, recorded so a reader does not
+reasonably assume they were settled by omission:
+
+> **Cost computation remains deferred.** Phase 5 preserves the provider-neutral `Usage.cost` field
+> and all token categories required for future computation, but does not standardize a pricing
+> catalog or local cost-computation policy. Pricing source, provider/model precedence, historical
+> price versioning, and unknown-model behavior remain deferred.
+>
+> **API-key resolution has no fallback chain in V1.** Real-provider plugins consume
+> already-resolved authentication configuration; V1 does not define an additional
+> provider-specific environment-variable or credential fallback chain. (Concrete config classes and
+> file structure implementing this remain Python-plan material, not design content.)
 
 ---
 
@@ -191,22 +281,51 @@ shared wire bytes format implied).
 2. `codex-responses` function calls stream incrementally (`function_call_arguments.delta`), not
    only as complete finalized items — verified against the real Responses streaming event set, not
    assumed.
-3. `codex-responses` reasoning *summary* and `encrypted_content` are recognized-but-unprojected in
-   V1, kept distinct from `reasoning_text`, rather than collapsed into one undifferentiated
-   `ThinkingBlock`.
+3. `codex-responses` reasoning *summary* is recognized-but-unprojected in V1, kept distinct from
+   `reasoning_text`, rather than collapsed into one undifferentiated `ThinkingBlock`.
+   `encrypted_content` is treated separately (item 13 below) — reviewed evidence suggests it is
+   likely required continuation state, not discardable telemetry, pending empirical verification.
 4. `completed` is not automatically `stop` — splits on whether a finalized tool call is pending.
+   `incomplete` is keyed by its specific reason rather than blanket-mapped to `length` — only
+   output/token-limit exhaustion maps to `length`; `content_filter` and other non-length reasons
+   map to `error` with the reason preserved diagnostically.
 5. Retry commits at the first yielded chunk of any kind, not merely "first semantic content" —
    the stricter cutoff avoids needing cross-attempt continuity for state that belongs to one
    physical response.
 6. Retry requires two independent gates (no chunk yet yielded, AND transient-failure-classified) —
    timing alone would let a malformed-data failure before the first chunk qualify for retry, which
-   it must never do.
-7. Live mid-stream cancellation is deferred pending the agent loop gaining a real interrupt
-   capability — building only the transport half now would solve part of a cross-layer feature in
-   isolation.
-8. Credential ownership follows persistence ownership: an implementation must never refresh or
-   write into a credential store it does not own, because refresh mutates remote OAuth state via
-   rotating refresh tokens that the owning application depends on.
-9. Provider wire fixtures are excluded from the shared cross-language conformance suite by design,
-   not by oversight — they are implementation-specific by nature (tied to one HTTP client), unlike
-   the semantic conformance families.
+   it must never do. Retry count, backoff, jitter, and provider-specific retryable-status
+   classification are implementation/provider policy, not part of this language-neutral rule.
+7. Live mid-stream cancellation is deferred, consistent with (not a relaxation of) the existing
+   frozen cancellation contract: verified directly against `AgentLoop.cancel()` in
+   `agent_loop/driver.py`, cancellation today is cooperative and boundary-only (a flag checked
+   between turn-loop steps), with no code path that interrupts a live provider stream. Building
+   the transport half of active cancellation ahead of the loop half would solve part of a
+   cross-layer feature in isolation.
+8. Credential ownership follows persistence ownership, generalized around granted authority rather
+   than a blanket prohibition: an implementation does not independently refresh or mutate
+   externally-owned credentials unless the owner exposes an explicit supported interoperability
+   contract granting that authority. For Codex CLI's current file-based interop no such contract
+   exists, so the outcome is unchanged (read-only, no independent refresh); the generalization only
+   future-proofs the rule.
+9. Provider wire fixtures are excluded from the shared cross-language *semantic* conformance suite
+   by design, not by oversight — not because raw wire bytes are inherently tied to one
+   implementation's HTTP client (a sanitized wire corpus could in principle be shared), but because
+   fixture representation is test infrastructure, a project verification-policy decision, not part
+   of the runtime behavioral specification.
+10. Fixture infrastructure should replay recorded raw bytes under varied transport-chunk
+    segmentation (single chunk, byte-at-a-time, boundaries inside UTF-8/JSON/SSE-line structure) —
+    SSE parsing must be correct under arbitrary chunking, and the segmentation observed during
+    recording is not itself provider semantics worth pinning as normative.
+11. Cost computation deferral is recorded explicitly rather than left to be inferred by omission:
+    `Usage.cost` and its token categories are preserved, but pricing catalog, source, and
+    versioning policy remain out of scope for this proposal.
+12. API-key resolution has no fallback chain in V1 — recorded as the one language-neutral policy
+    sentence from the excluded Python config material, since it is behavioral policy rather than
+    file/config structure.
+13. `codex-responses` continuation state is the one item in this proposal not yet resolved: the
+    working hypothesis, backed by OpenAI's own reasoning-items guidance and observed turn-2 failure
+    reports, is that `encrypted_content` is required opaque continuation state and should be
+    modeled as a log-only, immutable, provider-replayed-only continuation artifact — distinct from
+    `ThinkingBlock` — but this must be verified against a real Codex multi-turn tool-call exchange
+    before the `codex-responses` mapping section freezes.
