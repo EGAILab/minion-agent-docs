@@ -4,23 +4,19 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 (five times) to apply corrections
-from five rounds of design review, including three Rust-side passes (see the sibling
-`-review-feedback.md` file and its appended counter-reviews). The remaining open item on
-`codex-responses` continuation splits into two pieces that should not be conflated:
-**(A) the language-neutral Minion data-flow contract** — how continuation moves from decoder
-output through an atomic logical-settlement point (distinct from the retry-commitment boundary),
-into content-addressed request reconstruction, effective-session-lineage eligibility (fork, reset,
-and compaction treated as one rule per §7's existing derivation principles), and API-mismatch
-handling — **is now fully pinned below** (see the `codex-responses` reasoning subsection); **(B) the
-empirical Codex replay contract** — the exact provider item(s), compatibility key,
-replacement-vs-accumulation semantics, and which terminal outcomes yield reusable continuation —
-**remains genuinely open** and requires live verification against a real Codex multi-turn
-tool-call exchange before that subsection's specific payload details can freeze. (A) does not
-depend on (B)'s outcome; the
-generic facility is proposed regardless of what the experiment finds. Every other reviewed item
-below reflects the resolved, corrected wording, including a newly-pinned malformed-fragmented-
-tool-call settlement rule and a fixture-wording self-contradiction fixed in an earlier revision.
+review, the pattern this proposal follows. Revised 2026-08-20 (six times) to apply corrections
+from five rounds of design review plus one research-driven architectural revision (see the sibling
+`-review-feedback.md` file and its appended counter-reviews). **The `codex-responses` continuation
+question that drove five review rounds is now resolved**, not by further design-layer elaboration
+but by checking a real production implementation: pi's actual `openai-codex-responses` adapter
+confirms `encrypted_content` continuation is genuinely required (Case B, confirmed as fact) and
+handles it far more simply than this proposal previously did — as an opaque `signature` field
+carried directly on `ThinkingBlock`, not a separate `ProviderContinuation` facility with its own
+commit point and lineage rules. This proposal now amends §4's `ThinkingBlock` vocabulary
+accordingly (see the `codex-responses` reasoning subsection) and retires the more elaborate
+five-round design in favor of it. Every other reviewed item below reflects the resolved, corrected
+wording from the five prior review rounds, including the malformed-fragmented-tool-call settlement
+rule and the fixture-wording fix.
 **Target:** `2026-08-18-minion-agent-design.md`, §4 "The LLM seam." §4 currently states the
 never-raises contract, the API/provider split table, and the auth-seam principle at a level that
 doesn't yet commit to how two concrete APIs (`openai-completions`, `codex-responses`) actually
@@ -95,163 +91,65 @@ Reasoning: `reasoning_text.delta/done` maps to `ThinkingDelta`/`ThinkingBlock`. 
 **summary** events are recognized but have **no V1 projection** — not merged into `ThinkingBlock`,
 not allowed to corrupt `reasoning_text` accumulation for the same item.
 
-**`encrypted_content` continuation state — the language-neutral facility and its reconstruction
-semantics are fully specified below; only the empirical Codex replay contract remains open before
-this subsection freezes: the exact complete provider item(s) to replay, the compatibility identity
-that admits replay, whether successful continuation state replaces, extends, or otherwise updates
-the prior replay sequence, and which terminal outcomes produce reusable continuation.** The agent loop
-already performs `request → tool call → tool result → second model request`, and Phase 5 is where
-that loop first contacts a real provider — so this is not an optional future "multi-turn reasoning"
-feature; it determines whether a Codex agent's second turn works at all once a tool call is
-involved. OpenAI's own reasoning-items guidance states that reasoning items should be replayed in
-the input of subsequent Responses requests when manually managing context, and real reports of
-turn-2 400s when this is omitted exist in the wild (`openai/openai-python#3008`,
-`openai/codex#3841`). A provider-hosted `previous_response_id` is not an adequate substitute for
-Minion's own reconstruction, since it makes request reconstruction depend on mutable, expiring,
-remote state Minion doesn't control — the frozen design already requires anything reaching a model
-request to be reconstructable from Minion's own log (§8), not from provider-side session state.
+**`encrypted_content` continuation — resolved, verified against a real production implementation
+rather than left as a hypothesis.** The agent loop already performs `request → tool call → tool
+result → second model request`, and Phase 5 is where that loop first contacts a real provider — so
+this was never an optional future "multi-turn reasoning" feature. Checked directly against pi's
+actual `openai-codex-responses` adapter (`ref-repos/pi/packages/ai/src/api/openai-codex-responses.ts`
+and `openai-responses-shared.ts`) rather than continuing to speculate: every Codex request sets
+`include: ["reasoning.encrypted_content"]`, and on every subsequent request, whatever reasoning item
+was captured is unconditionally replayed — no compatibility check, no replace-vs-accumulate
+decision, no separate continuation-state machine. **Case B is confirmed as fact.** A
+provider-hosted `previous_response_id` alone is not used for this in pi's default (SSE) transport
+either — it resends full history each request, exactly as Minion already does.
 
-The working hypothesis is therefore **Case B**: `encrypted_content` is required provider-opaque
-continuation state, not discardable telemetry — but it still must never become `ThinkingBlock`, and
-the architecture should reserve the facility now rather than retrofit it later:
+**Resolution: add an opaque `signature` field to `ThinkingBlock` (§4 vocabulary), not a separate
+continuation-state facility.** Pi's actual mechanism is structurally simpler than the
+`ProviderContinuation` design explored across this proposal's first five review rounds (see the
+decision log below): it stores the complete opaque reasoning item as a string carried directly on
+the content block it belongs to, rather than as a parallel structure with its own commit point,
+lineage rules, and settlement semantics. This proposal adopts that mechanism. `ThinkingBlock`
+(currently `thinking` text only) gains one additional field:
 
-> **`ProviderContinuation`** — log-only, content-addressed, associated with the response/turn that
-> produced it:
-> - carries an API identity and a compatibility/version identity, so continuation is never replayed
->   to a mismatched API or an incompatible provider version;
-> - retains the complete replayable provider item required for replay, not a bare detached
->   `encrypted_content` scalar;
-> - is reconstructable from Minion's own log/artifact store (§8), independent of provider-side
->   session state;
-> - is selected only from the same **effective session lineage** used to reconstruct the rest of
->   the request — durable retention in the append-only log and replay *eligibility* are different
->   questions, and this facility is governed by the latter;
-> - fails eagerly when continuation is required but missing or incompatible, rather than being
->   silently omitted from the next request;
-> - the opaque payload bytes are never serialized into ordinary telemetry or diagnostics — only
->   explicitly sanitized non-payload metadata (present/missing, API identity, a
->   compatibility-mismatch category) may cross the existing telemetry sanitization boundary.
+> `signature` — optional, opaque, provider-specific round-trip data, never interpreted, validated,
+> or displayed outside the adapter that produced it. On decode, `codex-responses` captures the
+> complete `reasoning` item (including `encrypted_content`) as the block's `signature`. On encode,
+> if a `ThinkingBlock` being replayed carries a `signature`, `codex-responses` parses it back into
+> the request as that same reasoning item, unconditionally. An adapter encoding a `ThinkingBlock`
+> whose `signature` it does not recognize — produced by a different API/provider than the one now
+> being dispatched to — drops the signature and encodes only the visible `thinking` text; the
+> signature is optional round-trip metadata, not model-visible content, so dropping it is not
+> subject to the `ThinkingBlock`-rejection rule above (that rule concerns an API with no concept of
+> `thinking` content at all, e.g. Chat Completions, which still eagerly rejects the whole block
+> exactly as already specified — a signature never changes whether the block itself is
+> representable).
 
-Reserving the facility's *properties* is not the same as pinning its *data flow*, and the latter is
-the part the frozen request-reconstruction invariant (§8) actually depends on: the exact state
-reaching a later request must be derivable from committed Minion state, not merely exist somewhere
-in an artifact store. So this proposal also pins the behavioral path:
+This needs **no new architecture**. No separate commit point: a `ThinkingBlock` and its `signature`
+are one field of one content block inside one `AssistantMessage`, which already settles as a single
+log entry — nothing new to make atomic. No lineage-eligibility rule: a signature inside a message
+already excluded from derivation by fork, reset, or compaction is excluded the same way the rest of
+that message already is, under §7's existing rules, unmodified. No separate telemetry carve-out:
+`signature` is treated like any other potentially-sensitive field, excluded from telemetry by
+default, consistent with how the design already treats provider response bodies generally.
 
-> ```text
-> physical provider attempt
->     ↓
-> decoder observes provider continuation item(s)          (attempt-local, not yet durable)
->     ↓
-> logical response settlement                              (see rule 2 below — distinct from the
->     ↓                                                      retry commitment boundary above)
-> content-addressed artifact + committed log reference, atomically with the assistant response
->     ↓
-> request reconstruction selects applicable continuation deterministically
->     ↓
-> request/header references the exact selected provider state
->     ↓
-> matching adapter receives and replays that reconstructed state
-> ```
->
-> Exact event names, structs, artifact layout, and language-specific storage types remain
-> implementation detail; the path above and the rules below are the language-neutral contract. Note
-> that **"retry commitment" and "logical response settlement" are two distinct boundaries, not one**:
-> the retry-commitment boundary (first public `StreamChunk`) only fixes that the physical attempt can
-> no longer be transparently retried — it does not make any continuation observed by that point
-> durable. Continuation stays attempt-local until the later, separate logical-settlement point below.
->
-> 1. **No ghost continuation from discarded attempts.** A pre-commit attempt retried under the
->    retry-commitment rule above, or any abandoned attempt, must never publish durable continuation
->    state — only the selected/committed physical attempt may.
-> 2. **Logical response settlement is explicit, and atomic with the assistant response.**
->    Continuation may be observed incrementally by the decoder, but stays attempt-local until a
->    defined logical-settlement point commits it to the session. At that point, the settled
->    assistant response and every continuation reference derived from the same physical attempt
->    become reachable as one atomic logical settlement: artifact bytes may be persisted earlier, but
->    no committed session state may expose the terminal assistant response without the continuation
->    references required to reconstruct it, nor may a continuation reference from a response that
->    did not itself commit become independently reachable. This is behavioral, not a storage
->    prescription — a transactional append, a composite event, or another mechanism may satisfy it,
->    provided concurrent readers, fork reconstruction, and process-recovery logic can never observe
->    a half-settled response. The rule applies only to continuation actually selected as replayable
->    for that response; a response with no continuation requirement settles normally. (The live
->    experiment below determines which terminal outcomes yield replayable continuation at all; this
->    rule fixes that whatever is reachable is reachable atomically, not where the line falls.)
-> 3. **Continuation is part of request reconstruction, not adapter-private memory.** The
->    content-addressed request-header composition (§8) gets an explicit provider-state/continuation
->    component (the exact component name is not normative) referencing the committed artifact, so
->    the invariant `reconstructed continuation == continuation actually supplied to dispatch` is
->    provable the same way the rest of request reconstruction already is.
-> 4. **Selection order is deterministic.** Absent live evidence otherwise, the facility preserves
->    deterministic production order rather than assuming later state silently replaces earlier
->    state; the live experiment determines whether Codex replay is latest-only, replacement-based,
->    or an ordered accumulated sequence.
-> 5. **Selection follows effective session lineage — one rule, three instances.** Continuation
->    selection is derived from the same effective lineage already used to reconstruct the rest of
->    the request (§7's derivation rules), not merely from what is durably present in the append-only
->    log:
->    - *Fork:* a fork reaches exactly the continuation committed at or before its ancestry boundary;
->      continuation produced after that boundary cannot leak into it.
->    - *Reset floors eligibility:* `session/reset` does not delete historical `ProviderContinuation`
->      records — they remain auditable, exactly as reset excludes prior surface entries from
->      derivation without deleting them (§7) — but continuation originating at or before the reset
->      boundary is ineligible for requests reconstructed after that reset, unless a later committed
->      event explicitly establishes a new continuation lineage. Pre-reset opaque provider state is
->      never replayed merely because it is still physically present in the log.
->    - *Compaction follows superseded/retained-tail status:* consistent with §7's "compaction
->      changes provider context, not storage," a continuation item stays replay-eligible only while
->      the assistant response that produced it remains part of the effective reconstructed
->      history — including an explicitly retained tail. If compaction supersedes that originating
->      response, its continuation stays durable for audit and historical reconstruction but becomes
->      ineligible for new dispatch; continuation attached to a response preserved in the retained
->      tail stays eligible, subject to the ordinary compatibility rules below.
-> 6. **API/provider mismatch is disambiguated, not conflated.** An API switch to an API that does
->    not consume Codex continuation leaves the historical continuation logged but not selected or
->    replayed — not a failure, and not a deletion. The selected API/provider requiring continuation
->    while only missing or incompatible continuation exists (whether by provider mismatch or by rule
->    5's lineage-eligibility rules making the only available continuation ineligible) is an eager
->    preparation failure before the stream is returned (same boundary as `ThinkingBlock` rejection
->    above). The eligibility predicate is therefore always two-part: provider/API compatibility
->    **and** effective-lineage compatibility — never provider compatibility alone.
-> 7. **Never model-visible.** `ProviderContinuation` remains request state — never a `ThinkingBlock`,
->    `AssistantMessage`, or any other surface message type, regardless of how the flow above is
->    implemented.
+**Related, not fixed by this proposal:** pi uses the identical opaque-signature pattern on
+`TextBlock` too (`textSignature`, carrying the Responses API message `id`/`phase` needed for
+correct message-ID reuse across turns) — a related gap in the same already-frozen vocabulary, out
+of scope here since it was never part of the reasoning-continuation blocker this section resolves.
+Worth its own follow-up if `codex-responses` text-message continuity turns out to need it.
 
-**Before this section is frozen**, a live experiment against a real Codex multi-turn tool-call
-sequence must answer four concrete questions the data-flow rules above deliberately leave open:
+The `ProviderContinuation` facility, its production→settlement→reconstruction→replay data flow, its
+atomic-settlement rule, and its fork/reset/compaction lineage-eligibility rules — built across this
+proposal's first five review rounds — are **superseded** by the resolution above, not silently
+dropped: recorded as superseded in the decision log, since the review thread reasoned about them in
+good faith, across genuine uncertainty, before this simpler answer was found by checking a real
+reference implementation instead of continuing to reason from first principles.
 
-1. What complete provider item(s) must be replayed?
-2. What compatibility key determines whether replay is legal?
-3. Is replay replacement-based, latest-only, or an ordered accumulated sequence?
-4. Which terminal outcomes produce reusable continuation state at all — does continuation from,
-   say, a completed tool-use response differ in reusability from continuation attached to a
-   failed or incomplete one?
-
-using a real exchange (`request 1 → reasoning/tool call + continuation → tool result → request 2`,
-verifying both the success path and the omission/incompatibility failure path). That experiment
-does not determine whether the architecture needs a continuation facility at all, or how it fits
-into request reconstruction — those are pinned above as language-neutral regardless of outcome,
-since even a Case-A finding (ordinary semantic history alone turns out to suffice) just means the
-facility stays unused for `codex-responses` until a provider that needs it arrives. Record the
-verified answers here — the same treatment already given to the `auth.json` schema and OAuth
-endpoints elsewhere in this proposal.
-
-**Conformance coverage** (no new `conformance/` family needed — extends existing `session/` and
-`agent/` families once the mechanism above is implemented): continuation present in a committed
-response is reachable in the next reconstructed request; a discarded pre-commit retry attempt's
-continuation is absent from reconstruction; a fork at sequence N reaches only continuation at or
-before N; an API switch to one that does not consume Codex continuation leaves the historical
-continuation logged but not selected or replayed, without failing solely because ineligible
-continuation exists; an API that requires continuation with only incompatible continuation
-available fails eagerly before the stream is returned; continuation from before a `session/reset`
-remains auditable but is absent from post-reset reconstructed dispatch; continuation from a
-compaction-superseded response remains auditable but is ineligible for future dispatch, while
-continuation from a response preserved in compaction's retained tail stays eligible; and the
-terminal assistant response together with its continuation references becomes observable as one
-atomic logical settlement — never a half-settled state where one is reachable without the other.
-These scenarios assert semantic reconstruction and selection, not artifact layout or provider wire
-bytes, consistent with how wire fixtures are excluded from semantic conformance elsewhere in this
-proposal.
+**Conformance coverage:** none proposed beyond what already exists. A `ThinkingBlock.signature`,
+once added to the vocabulary, is covered by whatever `session`/`agent` conformance already asserts
+round-trip fidelity for ordinary message content — content blocks already survive log/reconstruct
+unchanged, and fork/reset/compaction already govern message inclusion. No new scenario category,
+no new conformance family.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -447,8 +345,8 @@ reasonably assume they were settled by omission:
    assumed.
 3. `codex-responses` reasoning *summary* is recognized-but-unprojected in V1, kept distinct from
    `reasoning_text`, rather than collapsed into one undifferentiated `ThinkingBlock`.
-   `encrypted_content` is treated separately (item 13 below) — reviewed evidence suggests it is
-   likely required continuation state, not discardable telemetry, pending empirical verification.
+   `encrypted_content` is treated separately (item 18 below) — confirmed required continuation
+   state, resolved via a `ThinkingBlock.signature` field rather than a separate facility.
 4. `completed` is not automatically `stop` — splits on whether a finalized tool call is pending.
    `incomplete` is keyed by its specific reason rather than blanket-mapped to `length` — only
    output/token-limit exhaustion maps to `length`; `content_filter` and other non-length reasons
@@ -487,28 +385,15 @@ reasonably assume they were settled by omission:
 12. API-key resolution has no fallback chain in V1 — recorded as the one language-neutral policy
     sentence from the excluded Python config material, since it is behavioral policy rather than
     file/config structure.
-13. `codex-responses` continuation state splits into a resolved piece and an open piece. Resolved:
-    the `ProviderContinuation` facility's properties (API/compatibility identity,
-    log-reconstructable, session-ancestry-aware, eager-fails when required-but-missing, sanitized
-    non-payload metadata only in diagnostics) and its full production→logical-settlement→
-    log-reference→request-reconstruction→replay data flow (no ghost continuation from discarded
-    attempts; an explicit, atomic logical-settlement point distinct from the retry-commitment
-    boundary — the assistant response and its continuation references become reachable together or
-    not at all; continuation as an explicit component of content-addressed request reconstruction,
-    not adapter-private memory; deterministic selection order; selection scoped to effective session
-    lineage — one rule covering fork-ancestry scoping, reset-floored eligibility, and
-    compaction-superseded-vs-retained-tail eligibility, matching §7's existing "compaction changes
-    provider context, not storage" and reset-excludes-prior-surface principles rather than inventing
-    new ones; API-mismatch disambiguation (now a two-part predicate: provider/API compatibility AND
-    effective-lineage compatibility); never model-visible) are pinned as language-neutral regardless
-    of outcome. A provider-hosted `previous_response_id` alone is explicitly rejected as a
-    substitute, since it depends on remote state outside Minion's log. Open: the working hypothesis,
-    backed by OpenAI's
-    own reasoning-items guidance and observed turn-2 failure reports, is that `encrypted_content` is
-    required opaque continuation state — but the exact provider item(s), compatibility key,
-    replacement-vs-accumulated-sequence semantics, and which terminal outcomes produce reusable
-    continuation at all await live verification against a real Codex multi-turn tool-call exchange
-    before the `codex-responses` mapping section's payload details fully freeze.
+13. **SUPERSEDED by item 18 below.** `codex-responses` continuation was originally addressed with a
+    `ProviderContinuation` facility (API/compatibility identity, log-reconstructable,
+    session-ancestry-aware, eager-fails when required-but-missing, sanitized non-payload metadata
+    only in diagnostics; a production→logical-settlement→log-reference→request-reconstruction→replay
+    data flow; atomic settlement of the assistant response with continuation references; selection
+    scoped to effective session lineage covering fork/reset/compaction as one rule; two-part
+    API-and-lineage compatibility), built across five review rounds against an open empirical
+    question (Case A vs. Case B). Retained here for the historical record of what was reasoned
+    through, not because it remains the design — see item 18 for the resolution that replaces it.
 14. Malformed fragmented tool-call settlement is pinned identically for both APIs: conflicting
     IDs/names, impossible index/`item_id` reuse, non-JSON or non-object finalized arguments, and
     incomplete finalization are protocol errors that settle in-band as `StopReason.error` — never
@@ -523,13 +408,23 @@ reasonably assume they were settled by omission:
     neutral vocabulary before Phase 5 (see master design's LLM vocabulary). It is tracked as a
     follow-up against that earlier decision, not folded into this amendment, since resolving it is
     not specific to real-provider wire behavior.
-17. Continuation conformance coverage is scoped to extend the existing `session/` and `agent/`
-    families (no new `conformance/` family needed) once the mechanism is implemented: committed
-    continuation reachable in reconstruction; discarded pre-commit-retry continuation absent;
-    fork-boundary scoping; an ineligible-API-switch leaving continuation logged but unselected
-    (not "dropped" — the log is append-only, nothing is deleted); incompatible-continuation eager
-    failure; reset-floored eligibility (auditable, absent from post-reset dispatch); compaction
-    lineage eligibility (superseded response's continuation ineligible but auditable, retained-tail
-    response's continuation still eligible); atomic settlement of the terminal assistant response
-    with its continuation references (never observable half-settled). Asserts semantic
-    reconstruction/selection, not artifact layout or wire bytes.
+17. **SUPERSEDED by item 18 below.** The conformance coverage note built for the
+    `ProviderContinuation` facility (committed-continuation reachability, discarded-retry absence,
+    fork-boundary scoping, ineligible-API-switch handling, incompatible-continuation eager failure,
+    reset/compaction lineage eligibility, atomic settlement) is no longer needed — see item 18.
+18. **Resolution, verified against pi's real `openai-codex-responses` adapter rather than continued
+    speculation:** `encrypted_content` continuation is confirmed required (Case B, confirmed as
+    fact — every request includes `reasoning.encrypted_content`, every subsequent request
+    unconditionally replays it, no compatibility check or accumulation logic). Pi's actual
+    mechanism is an opaque `signature` field carried directly on `ThinkingBlock`, not a separate
+    continuation-state facility — this proposal adopts that mechanism instead of items 13/17's
+    `ProviderContinuation` design. This needs no new architecture: no separate commit point (a
+    signature is one field of one content block inside one `AssistantMessage`, which already
+    settles as a single log entry), no lineage-eligibility rule (a signature inside an
+    excluded-by-derivation message is already excluded the same way the rest of that message is,
+    under §7's existing rules), no new telemetry carve-out (treated like any other sensitive field,
+    excluded from telemetry by default), and no new conformance coverage (already covered by
+    existing round-trip and derivation conformance for ordinary message content). Related but
+    explicitly out of scope: pi uses the identical pattern on `TextBlock` (`textSignature`, for
+    Responses API message-ID/phase reuse) — a separate gap in the same vocabulary, not addressed
+    here since it was never part of the reasoning-continuation blocker this item resolves.

@@ -3044,6 +3044,79 @@ from the real provider, not from another speculative review pass.
 
 ---
 
+# Sixth pass — architectural revision, not another review round
+
+This entry departs from the pattern of the prior six: it isn't responding to incoming review
+comments. It documents a self-initiated finding that supersedes items 13 and 17 of the decision
+log, made while investigating how to actually run the live Codex experiment both this review track
+and the design review agreed was the sole remaining blocker.
+
+## What happened
+
+Attempting to design a low-risk live-experiment probe surfaced that OpenAI Codex's ChatGPT-plan
+auth mode talks to a private, undocumented backend (`https://chatgpt.com/backend-api/codex`), not
+the public `api.openai.com/v1/responses` endpoint — confirmed by grepping the real `codex.exe`
+binary's strings. Hand-crafting requests against that endpoint would have meant reverse-engineering
+required headers and session setup from binary strings alone, using a real account's OAuth token —
+a materially different and riskier undertaking than the "two REST calls" originally scoped, so I
+stopped and reported this rather than proceeding.
+
+That in turn led to checking a sibling project (`Minion-Assist`) with a working Codex integration,
+which uses a completely different strategy (the `codex app-server` JSON-RPC subprocess protocol,
+where the Codex binary itself owns thread continuity and never exposes `encrypted_content` to the
+caller at all) — raising the question of whether Phase 5's `codex-responses` should even be a direct
+HTTP adapter. Resolving that question meant checking what pi (Minion Agent's reference
+implementation) actually does, since the whole `codex-responses` design was built assuming pi's
+approach without anyone having actually read that specific file yet.
+
+## What pi's actual source shows
+
+`ref-repos/pi/packages/ai/src/api/openai-codex-responses.ts` and `openai-responses-shared.ts`,
+checked directly:
+
+- Pi's `codex-responses` **is** a direct HTTP/WebSocket adapter against
+  `https://chatgpt.com/backend-api/codex/responses` — confirming the private-endpoint architecture
+  this proposal assumed, not the app-server subprocess alternative.
+- Every request sets `include: ["reasoning.encrypted_content"]`. **Case B is confirmed as fact**,
+  not a hypothesis requiring further live verification — this closes the one item every review round
+  since the first agreed was the sole remaining blocker.
+- Pi's actual mechanism for carrying that continuation across turns is dramatically simpler than
+  this proposal's `ProviderContinuation` facility: the complete reasoning item is JSON-serialized
+  into a `thinkingSignature` string carried directly on the `ThinkingBlock`-equivalent content
+  block, and replayed unconditionally whenever present on encode. No compatibility check, no
+  replace-vs-accumulate logic, no separate state machine — and, structurally, no separate lineage,
+  commit-point, or atomic-settlement rules either, since the opaque payload rides inside the same
+  content block and message that already has all of those properties.
+- Checked against Minion Agent's own frozen vocabulary (`llm/content.py`): `ThinkingBlock` has only
+  a `thinking: str` field today — no signature-equivalent exists. This is a real, if small, gap in
+  the already-frozen Phase 2 vocabulary that the five-round `ProviderContinuation` design was built
+  to work around at far higher cost than the reference implementation's actual answer.
+
+## Disposition
+
+With the user's explicit direction, replaced `ProviderContinuation` (decision-log items 13 and 17,
+marked superseded rather than deleted, so the five rounds of good-faith reasoning that produced them
+stay in the record) with a proposed one-field addition to `ThinkingBlock` (decision-log item 18).
+The `codex-responses` reasoning subsection was rewritten accordingly: the elaborate data-flow
+diagram, atomic-settlement rule, and lineage-eligibility rules are gone, replaced by a much shorter
+resolution whose correctness rests on citing existing session/derivation rules (§7) rather than
+inventing new ones for continuation specifically. Conformance coverage collapses to "none needed
+beyond what already exists," since a signature riding on ordinary content-block round-trip has no
+special case left to test.
+
+Flagged, not fixed, in the same edit: pi uses the identical signature pattern on `TextBlock`
+(`textSignature`, for Responses-API message-ID/phase reuse) — a related gap in the same frozen
+vocabulary, deliberately left out of scope since it was never part of the reasoning-continuation
+blocker this pass resolves.
+
+This is now a genuinely new kind of change for the review thread to look at: not a wording fix or a
+missing rule, but a proposal to reopen and amend the *already-frozen Phase 2 vocabulary*
+(`ThinkingBlock`), which is a step beyond what §4-scoped elaboration has needed so far. Both review
+tracks should treat this as needing fresh scrutiny — the "static design review is complete" verdict
+from the eighth review applied to the `ProviderContinuation`-based design, not to this one.
+
+---
+
 # Response — sixth pass (editorial only)
 
 Checked before applying: the flagged sentence was genuinely stale — grepped it directly and it
