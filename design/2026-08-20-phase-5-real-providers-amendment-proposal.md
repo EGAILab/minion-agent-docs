@@ -4,16 +4,20 @@
 **Status:** PROPOSED. Not merged into `2026-08-18-minion-agent-design.md`. Not frozen. Pending the
 same review this project applies to cross-language design changes (Rust-side + design reviewer) —
 see the precedent of `840d414`, which promoted language-neutral rules into the master design after
-review, the pattern this proposal follows. Revised 2026-08-20 (twice) to apply corrections from two
-rounds of design review, including a Rust-side pass (see the sibling `-review-feedback.md` file and
-its appended counter-reviews). **One item remains genuinely open and blocks freezing this
-proposal**: whether `codex-responses` requires provider-opaque `encrypted_content` continuation
-state for correct multi-turn tool-call sequences (see the `codex-responses` reasoning subsection
-below) — the `ProviderContinuation` facility's shape is now specified, but its exact wire payload
-and compatibility key need empirical verification against a real Codex multi-turn tool-call
-exchange before this section can freeze. Every other reviewed item below reflects the resolved,
-corrected wording, including a newly-pinned malformed-fragmented-tool-call settlement rule and a
-fixture-wording self-contradiction fixed in this revision.
+review, the pattern this proposal follows. Revised 2026-08-20 (three times) to apply corrections
+from three rounds of design review, including two Rust-side passes (see the sibling
+`-review-feedback.md` file and its appended counter-reviews). The remaining open item on
+`codex-responses` continuation splits into two pieces that should not be conflated:
+**(A) the language-neutral Minion data-flow contract** — how continuation moves from decoder
+output through a defined commit point, into content-addressed request reconstruction, fork
+boundaries, and API-mismatch handling — **is now fully pinned below** (see the `codex-responses`
+reasoning subsection); **(B) the empirical Codex replay contract** — the exact provider item(s),
+compatibility key, and replacement-vs-accumulation semantics — **remains genuinely open** and
+requires live verification against a real Codex multi-turn tool-call exchange before that
+subsection's specific payload details can freeze. (A) does not depend on (B)'s outcome; the
+generic facility is proposed regardless of what the experiment finds. Every other reviewed item
+below reflects the resolved, corrected wording, including a newly-pinned malformed-fragmented-
+tool-call settlement rule and a fixture-wording self-contradiction fixed in an earlier revision.
 **Target:** `2026-08-18-minion-agent-design.md`, §4 "The LLM seam." §4 currently states the
 never-raises contract, the API/provider split table, and the auth-seam principle at a level that
 doesn't yet commit to how two concrete APIs (`openai-completions`, `codex-responses`) actually
@@ -116,20 +120,88 @@ the architecture should reserve the facility now rather than retrofit it later:
 > - follows session ancestry and fork boundaries the same way other log-only state does;
 > - is never removed by a visible-history reset or compaction that still needs it to reconstruct a
 >   later request;
-> - is excluded from ordinary telemetry and diagnostics, since it is opaque provider state, not
->   inspectable content;
 > - fails eagerly when continuation is required but missing or incompatible, rather than being
->   silently omitted from the next request.
+>   silently omitted from the next request;
+> - the opaque payload bytes are never serialized into ordinary telemetry or diagnostics — only
+>   explicitly sanitized non-payload metadata (present/missing, API identity, a
+>   compatibility-mismatch category) may cross the existing telemetry sanitization boundary.
 
-**Before this section is frozen**, verify against a real Codex multi-turn tool-call sequence
-whether Case A (ordinary semantic history alone reconstructs an equivalent request) or Case B
-(opaque continuation state is genuinely required) holds. That live experiment determines the exact
-replay payload and compatibility key — it does not determine whether the architecture needs a
-continuation facility at all; the shape above is proposed as language-neutral regardless of which
-case the experiment confirms, since a Case-A finding just means the facility stays permanently
-unused for `codex-responses` until a provider that needs it arrives. Record the verified answer
-here — the same treatment already given to the `auth.json` schema and OAuth endpoints elsewhere in
-this proposal.
+Reserving the facility's *properties* is not the same as pinning its *data flow*, and the latter is
+the part the frozen request-reconstruction invariant (§8) actually depends on: the exact state
+reaching a later request must be derivable from committed Minion state, not merely exist somewhere
+in an artifact store. So this proposal also pins the behavioral path:
+
+> ```text
+> physical provider attempt
+>     ↓
+> decoder observes provider continuation item(s)          (attempt-local, not yet durable)
+>     ↓
+> response settles at a defined commit point               (see rule 2 below)
+>     ↓
+> content-addressed artifact + committed log reference
+>     ↓
+> request reconstruction selects applicable continuation deterministically
+>     ↓
+> request/header references the exact selected provider state
+>     ↓
+> matching adapter receives and replays that reconstructed state
+> ```
+>
+> Exact event names, structs, artifact layout, and language-specific storage types remain
+> implementation detail; the path above and the rules below are the language-neutral contract:
+>
+> 1. **No ghost continuation from discarded attempts.** A pre-commit attempt retried under the
+>    retry-commitment rule above, or any abandoned attempt, must never publish durable continuation
+>    state — only the selected/committed physical attempt may.
+> 2. **The commit point is explicit.** Continuation may be observed incrementally by the decoder,
+>    but stays attempt-local until a defined response-settlement point commits it to the session.
+>    (The live experiment below determines which terminal outcomes yield replayable continuation;
+>    this rule fixes that there must be one defined point, not where it falls.)
+> 3. **Continuation is part of request reconstruction, not adapter-private memory.** The
+>    content-addressed request-header composition (§8) gets an explicit provider-state/continuation
+>    component (the exact component name is not normative) referencing the committed artifact, so
+>    the invariant `reconstructed continuation == continuation actually supplied to dispatch` is
+>    provable the same way the rest of request reconstruction already is.
+> 4. **Selection order is deterministic.** Absent live evidence otherwise, the facility preserves
+>    deterministic production order rather than assuming later state silently replaces earlier
+>    state; the live experiment determines whether Codex replay is latest-only, replacement-based,
+>    or an ordered accumulated sequence.
+> 5. **Forks see only their ancestry prefix.** A fork reaches exactly the continuation committed at
+>    or before its ancestry boundary; continuation produced after that boundary cannot leak into it.
+> 6. **API/provider mismatch is disambiguated, not conflated.** Switching to an API that does not
+>    consume Codex continuation makes old continuation simply ineligible — not a failure. The
+>    selected API/provider requiring continuation while only missing or incompatible continuation
+>    exists is an eager preparation failure before the stream is returned (same boundary as
+>    `ThinkingBlock` rejection above).
+> 7. **Never model-visible.** `ProviderContinuation` remains request state — never a `ThinkingBlock`,
+>    `AssistantMessage`, or any other surface message type, regardless of how the flow above is
+>    implemented.
+
+**Before this section is frozen**, a live experiment against a real Codex multi-turn tool-call
+sequence must answer three concrete questions the data-flow rules above deliberately leave open:
+
+1. What complete provider item(s) must be replayed?
+2. What compatibility key determines whether replay is legal?
+3. Is replay replacement-based, latest-only, or an ordered accumulated sequence?
+
+using a real exchange (`request 1 → reasoning/tool call + continuation → tool result → request 2`,
+verifying both the success path and the omission/incompatibility failure path). That experiment
+does not determine whether the architecture needs a continuation facility at all, or how it fits
+into request reconstruction — those are pinned above as language-neutral regardless of outcome,
+since even a Case-A finding (ordinary semantic history alone turns out to suffice) just means the
+facility stays unused for `codex-responses` until a provider that needs it arrives. Record the
+verified answers here — the same treatment already given to the `auth.json` schema and OAuth
+endpoints elsewhere in this proposal.
+
+**Conformance coverage** (no new `conformance/` family needed — extends existing `session/` and
+`agent/` families once the mechanism above is implemented): continuation present in a committed
+response is reachable in the next reconstructed request; a discarded pre-commit retry attempt's
+continuation is absent from reconstruction; a fork at sequence N reaches only continuation at or
+before N; an API switch that doesn't consume Codex continuation drops it without failure; an API
+that requires continuation with only incompatible continuation available fails eagerly before the
+stream is returned. These scenarios assert semantic reconstruction and selection, not artifact
+layout or provider wire bytes, consistent with how wire fixtures are excluded from semantic
+conformance elsewhere in this proposal.
 
 Stop reason comes from **response-level completion state**, keyed by the specific completion
 reason rather than the outer state alone, since not every form of incompleteness means
@@ -365,15 +437,21 @@ reasonably assume they were settled by omission:
 12. API-key resolution has no fallback chain in V1 — recorded as the one language-neutral policy
     sentence from the excluded Python config material, since it is behavioral policy rather than
     file/config structure.
-13. `codex-responses` continuation state is the one item in this proposal not yet resolved: the
-    working hypothesis, backed by OpenAI's own reasoning-items guidance and observed turn-2 failure
-    reports, is that `encrypted_content` is required opaque continuation state. The
-    `ProviderContinuation` facility (API/compatibility identity, log-reconstructable, session-
-    ancestry-aware, excluded from diagnostics, eager-fails when required-but-missing) is proposed
-    as language-neutral regardless of outcome; only its exact wire payload and compatibility key
-    await verification against a real Codex multi-turn tool-call exchange, before the
-    `codex-responses` mapping section fully freezes. A provider-hosted `previous_response_id` alone
-    is explicitly rejected as a substitute, since it depends on remote state outside Minion's log.
+13. `codex-responses` continuation state splits into a resolved piece and an open piece. Resolved:
+    the `ProviderContinuation` facility's properties (API/compatibility identity,
+    log-reconstructable, session-ancestry-aware, eager-fails when required-but-missing, sanitized
+    non-payload metadata only in diagnostics) and its full production→commit→log-reference→
+    request-reconstruction→replay data flow (no ghost continuation from discarded attempts; an
+    explicit commit point; continuation as an explicit component of content-addressed request
+    reconstruction, not adapter-private memory; deterministic selection order; fork-boundary
+    scoping; API-mismatch disambiguation; never model-visible) are pinned as language-neutral
+    regardless of outcome. A provider-hosted `previous_response_id` alone is explicitly rejected as
+    a substitute, since it depends on remote state outside Minion's log. Open: the working
+    hypothesis, backed by OpenAI's own reasoning-items guidance and observed turn-2 failure reports,
+    is that `encrypted_content` is required opaque continuation state — but the exact provider
+    item(s), compatibility key, and replacement-vs-accumulated-sequence semantics await live
+    verification against a real Codex multi-turn tool-call exchange before the `codex-responses`
+    mapping section's payload details fully freeze.
 14. Malformed fragmented tool-call settlement is pinned identically for both APIs: conflicting
     IDs/names, impossible index/`item_id` reuse, non-JSON or non-object finalized arguments, and
     incomplete finalization are protocol errors that settle in-band as `StopReason.error` — never
@@ -388,3 +466,8 @@ reasonably assume they were settled by omission:
     neutral vocabulary before Phase 5 (see master design's LLM vocabulary). It is tracked as a
     follow-up against that earlier decision, not folded into this amendment, since resolving it is
     not specific to real-provider wire behavior.
+17. Continuation conformance coverage is scoped to extend the existing `session/` and `agent/`
+    families (no new `conformance/` family needed) once the mechanism is implemented: committed
+    continuation reachable in reconstruction; discarded pre-commit-retry continuation absent;
+    fork-boundary scoping; API-switch drop without failure; incompatible-continuation eager
+    failure. Asserts semantic reconstruction/selection, not artifact layout or wire bytes.

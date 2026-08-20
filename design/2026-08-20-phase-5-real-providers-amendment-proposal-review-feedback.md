@@ -1,6 +1,12 @@
 <!--
-TRACKING NOTE — 2026-08-20
-Latest review disposition: the counter-review and Rust-side addendum are accepted. The revised proposal resolves the cancellation wording and the earlier mapping, retry, authentication, fixture-policy, and deferral corrections. The one remaining blocking language-neutral design issue is Codex provider-opaque continuation state: the amendment must pin the minimum continuation state required for stateless multi-step/tool-call Responses flows, keeping it log-only, compatibility-keyed, content-addressed, reconstructable, and distinct from `ThinkingBlock`. The Rust Phase 2 plan must then be revised before implementation to support an asynchronous eager-start phase and restartable pre-commit attempts.
+TRACKING NOTE — 2026-08-20 — LATEST
+Latest disposition after reviewing the twice-revised Phase 5 amendment and the full review/counter-review chain:
+- All earlier mapping, retry, cancellation, authentication, malformed-tool-call, fixture-policy, cost-deferral, and API-key-resolution corrections are now resolved in the amendment.
+- One amendment-level blocker remains, with two parts that must be closed together before freezing:
+  (1) live Codex verification must pin the exact provider-continuation replay payload, compatibility key, and accumulation/replacement behavior; and
+  (2) the language-neutral design must pin the complete ProviderContinuation data flow from decoder output -> attempt-local pending state -> committed session/log state -> request-header reconstruction -> matching adapter replay, including retry/abandon/fork/API-mismatch behavior.
+- Rust Phase 2 API sequencing remains a separate implementation-plan gate: revise the public LLM/request contracts before implementing them so Phase 5 does not force a breaking redesign.
+- Usage.cost representation remains a pre-publication Rust vocabulary decision, not a blocker on this language-neutral amendment.
 -->
 
 ## Review verdict — Phase 5 real-provider design amendment
@@ -1286,3 +1292,466 @@ scope and are not applied here — they need to land wherever the Rust Phase 5 p
 amendment. The one remaining blocker, as before both review rounds: empirical verification of Case
 A vs. Case B for `codex-responses` continuation, which is implementation-time work against a real
 Codex OAuth session, not resolvable at the design layer alone.
+
+---
+
+# Latest Rust verdict after `fa2bbf9`
+
+## Verdict
+
+The second-round revision resolves the previous mapping, cancellation, fixture, and malformed-
+tool-call findings. Do not freeze it yet: continuation payload verification remains open, and one
+important continuation data-flow rule is still missing.
+
+## Resolved in the latest proposal
+
+The proposal now correctly includes:
+
+- a concrete, log-only, content-addressed `ProviderContinuation` facility;
+- rejection of provider-held `previous_response_id` as the sole reconstruction source;
+- continuation compatibility identity, ancestry, sensitivity, and eager missing/incompatible
+  behavior;
+- malformed fragmented tool calls settling in-band as `StopReason.error` rather than becoming
+  executable semantic calls;
+- consistent shared-or-separate provider fixture wording;
+- the earlier wire mapping, retry, cancellation, authentication, and deferral corrections.
+
+Those findings are closed.
+
+## Remaining language-neutral gap: continuation data flow
+
+The proposal specifies continuation storage properties but not the complete semantic path:
+
+```text
+provider response decoder
+    -> continuation artifact created
+    -> committed log event/request-header reference
+    -> session ancestry/reset/compaction handling
+    -> next request reconstruction
+    -> matching adapter replay
+```
+
+The design should pin behaviorally:
+
+- how continuation produced during streaming reaches the committed session log;
+- whether it is committed only with a terminal response or may be published incrementally;
+- which request-header component references it, so Section 8 reconstruction includes it;
+- whether a new continuation replaces earlier state or appends an ordered sequence;
+- how a fork selects the exact continuation prefix at its ancestry boundary;
+- what happens when the next request changes API/provider compatibility identity;
+- that a failed, abandoned, or retried pre-commit physical attempt cannot publish continuation;
+- how reconstruction proves the exact continuation selected for dispatch was log-derived.
+
+These are observable cross-language rules, even if event names, structs, and artifact layouts remain
+implementation-specific. The existing `StreamChunk`/`AssistantMessage` vocabulary contains only
+model-visible assistant state, so the design cannot rely on continuation implicitly riding inside
+those types.
+
+Add canonical coverage, under an existing family, for at least:
+
+```text
+response produces continuation
+tool result is appended
+next request reconstructs and replays matching continuation
+provider/API mismatch follows the pinned compatibility rule
+```
+
+The live Codex experiment should determine the exact replay payload, compatibility key, and
+replacement-versus-accumulation rule. It should not leave the production/logging path unspecified.
+
+## Required Rust sequencing correction
+
+The second-pass response correctly excludes Rust signatures and storage structures from the
+language-neutral amendment, but it is too late to defer every Rust change to a future Phase 5 plan.
+
+The existing Rust Phase 2 plan publishes:
+
+```rust
+fn stream(&self, request: Request)
+    -> Result<RawAssistantStream, LlmStartError>;
+```
+
+and a closed `Request` struct containing model, system, messages, and output limit. Those are public
+contracts. Implementing them unchanged and waiting until Phase 5 would require a breaking change to
+support:
+
+- asynchronous credential/artifact/continuation preparation;
+- restartable physical attempts before first-public-chunk commitment;
+- typed retry classification;
+- reconstructable provider state carried into dispatch.
+
+Therefore the Rust Phase 2 plan must be revised before its LLM tasks execute. It should reserve:
+
+- asynchronous eager preparation/start;
+- a restartable internal attempt factory or equivalent;
+- a dispatch envelope or extensible request-component context separate from provider-neutral
+  messages;
+- cancellation of pending retry/start work when the public stream is dropped or fused.
+
+The mock adapter can implement the richer interface without introducing real-provider semantics
+early. Open wire-event decoding, credential-capability types, checked-map fragment storage, HTTP
+transport, and fixture details may still wait for the Rust Phase 5 implementation plan because
+they do not otherwise freeze an earlier public API.
+
+## `Usage.cost`
+
+`Usage.cost` remains outside this amendment, as the second-pass response states. Nevertheless, its
+Rust representation must be settled before the Rust Phase 2 vocabulary task publishes `Usage`.
+It should be optional while uncomputed and use an exact monetary representation rather than
+`f64`.
+
+## Final disposition
+
+Do not freeze yet. Require:
+
+1. live verification of the continuation payload, compatibility key, and replacement/accumulation
+   behavior;
+2. a language-neutral continuation production, logging, request-header, reconstruction, and replay
+   flow;
+3. canonical coverage for continuation across a tool-call round trip;
+4. revision of Rust Phase 2 before its public LLM interfaces are implemented;
+5. settlement of the Rust `Usage.cost` representation before that public type is introduced.
+
+After items 1-3, the amendment is ready for promotion. Items 4-5 are Rust implementation-plan
+gates and do not need to be inserted into the language-neutral Section 4 text.
+---
+
+# Latest design-review comment on the twice-revised proposal — 2026-08-20
+
+## Verdict
+
+The current amendment has closed the earlier review findings around wire mapping, retry, cancellation,
+authentication, malformed fragmented tool calls, fixture policy, cost deferral, and API-key resolution.
+
+**Do not freeze it yet.** The remaining issue is now narrower: the proposal defines the
+`ProviderContinuation` abstraction, but it still does not pin the complete language-neutral path by
+which continuation observed in a provider response becomes committed Minion request state and is
+reconstructed for the next dispatch.
+
+The amendment currently says continuation is log-only, content-addressed, ancestry-aware,
+compatibility-keyed, and reconstructable, while its status text says only the exact wire payload and
+compatibility key remain open. That is not quite enough. The frozen request-reconstruction invariant
+requires the exact provider state supplied on a later request to be derivable from committed Minion
+state, not merely to exist somewhere in an artifact store.
+
+## 1. Remaining amendment blocker — pin continuation data flow
+
+Add a language-neutral behavioral path equivalent to:
+
+```text
+physical provider attempt
+    ↓
+decoder observes provider continuation item(s)
+    ↓
+attempt-local pending continuation
+    ↓
+only the selected/committed physical attempt may publish continuation
+    ↓
+content-addressed artifact + committed log reference
+    ↓
+request reconstruction selects applicable continuation deterministically
+    ↓
+request/header references the exact selected provider state
+    ↓
+matching adapter receives/replays that reconstructed state
+```
+
+Exact event names, structs, artifact layout, and language-specific storage types remain implementation
+details.
+
+Required rules:
+
+1. **No ghost continuation from discarded attempts.** A transiently failed pre-commit attempt that is
+   retried before the first public `StreamChunk`, or any abandoned attempt, must not publish durable
+   continuation state.
+
+2. **Define the commit point.** Continuation may be observed incrementally by the decoder, but it stays
+   attempt-local until a defined response-settlement point commits it to the session. The live Codex
+   experiment may determine which terminal outcomes yield replayable continuation, but the commitment
+   rule itself must be explicit.
+
+3. **Make continuation part of request reconstruction.** Extend the content-addressed request-header
+   composition with an explicit provider-state/continuation component (the exact component name is not
+   normative), rather than letting an adapter fetch opaque state from private mutable memory.
+
+   The invariant must be able to establish:
+
+   ```text
+   reconstructed continuation == continuation actually supplied to dispatch
+   ```
+
+4. **Pin deterministic selection/order.** The live experiment should determine whether Codex needs one
+   latest item, an ordered sequence, or another replay shape. Until then the generic facility should
+   preserve deterministic production order rather than assume replacement.
+
+5. **Pin fork behavior.** A fork sees exactly the continuation prefix reachable at its ancestry
+   boundary. Continuation produced after that boundary cannot leak into the fork.
+
+6. **Disambiguate API mismatch.**
+
+   ```text
+   switch from codex-responses to an API that does not consume Codex continuation
+       -> old Codex continuation is ineligible; no failure
+
+   selected API/provider requires continuation but only missing/incompatible state exists
+       -> eager preparation failure before stream return
+   ```
+
+7. **Keep it outside model-visible vocabulary.** `ProviderContinuation` remains request state, not a
+   `ThinkingBlock`, `AssistantMessage`, or surface message type.
+
+## 2. Live verification should answer three concrete questions
+
+The proposal currently names payload and compatibility key. Add a third question:
+
+```text
+1. What complete provider item(s) must be replayed?
+2. What compatibility key determines whether replay is legal?
+3. Is replay replacement-based, latest-only, or an ordered accumulated sequence?
+```
+
+Use a real multi-step tool-call exchange:
+
+```text
+request 1
+    -> reasoning/tool call + continuation
+
+tool result
+
+request 2
+    -> succeeds using Minion-reconstructed continuation
+```
+
+Also verify omission/incompatibility behavior so the eager-failure rule is grounded in observed
+provider requirements.
+
+The architecture should no longer wait on the experiment: the continuation slot is already justified.
+The experiment determines Codex's concrete replay contract.
+
+## 3. Add canonical coverage under existing families
+
+No new `conformance/llm/` family is needed.
+
+Suggested language-neutral cases:
+
+```text
+session/
+    provider-continuation-request-reconstruction
+    provider-continuation-fork-boundary
+
+agent/
+    provider-continuation-tool-round-trip
+    provider-continuation-api-mismatch
+```
+
+Pin at least:
+
+```text
+retry-before-first-public-chunk
+    -> abandoned-attempt continuation absent
+
+committed response continuation
+    -> present in next reconstructed request
+
+fork at seq N
+    -> only continuation at/before N reachable
+
+different API that does not consume continuation
+    -> continuation not projected
+
+same API requiring incompatible continuation
+    -> eager failure before stream return
+```
+
+These scenarios assert semantic reconstruction and selection, not artifact layout or provider wire
+bytes.
+
+## 4. Small wording correction — continuation sensitivity
+
+The proposal currently says continuation is excluded from ordinary telemetry and diagnostics. The
+**opaque payload** should indeed never be serialized there, but the wording should not forbid all
+sanitized metadata.
+
+Recommended rule:
+
+> Provider-continuation payload bytes are sensitive opaque provider state and are never serialized
+> into ordinary telemetry or diagnostics. Only explicitly sanitized non-payload metadata may be
+> emitted through the existing telemetry sanitization boundary.
+
+That still allows useful safe diagnostics such as continuation present/missing, API identity, or a
+compatibility-mismatch category.
+
+## 5. Update the proposal status text
+
+The top status currently frames the one remaining open item as empirical verification of
+`encrypted_content`, payload, and compatibility key.
+
+Update it to distinguish two pieces:
+
+```text
+A. empirical Codex contract:
+   exact payload + compatibility key + replacement/accumulation semantics
+
+B. language-neutral Minion contract:
+   production + commit + log/reference + request reconstruction + replay path
+```
+
+Once B is pinned, only A depends on live provider verification.
+
+## 6. Rust sequencing — agree with the latest Rust review, but keep it out of §4
+
+The latest Rust review correctly identifies a separate implementation sequencing risk: if Rust Phase 2
+publishes a synchronous one-shot adapter and a closed request shape first, Phase 5 will immediately
+need to break those contracts.
+
+This is **not another language-neutral amendment blocker**, but it is a pre-implementation gate.
+
+Revise the Rust Phase 2 plan before its public LLM tasks execute so the seam can accommodate:
+
+```text
+asynchronous eager preparation/start
+restartable pre-commit physical attempts
+typed retry/failure classification
+extensible/log-reconstructable provider request state
+drop/fusion cancellation of pending start/retry work
+```
+
+The mock adapter can implement the richer seam without pulling real-provider behavior into Phase 2.
+Open provider-event decoding, credential-capability Rust types, checked-map fragment storage, HTTP
+transport, and fixture machinery may still remain Phase 5 implementation details.
+
+## 7. Usage.cost
+
+Keep the current disposition:
+
+```text
+pricing/catalog/computation policy
+    -> explicitly deferred by this amendment
+
+concrete Rust Usage.cost representation
+    -> settle before Rust publishes the provider-neutral Usage type
+    -> not a blocker on this Phase 5 language-neutral amendment
+```
+
+Do not pull exact-decimal/currency representation into this amendment unless the earlier frozen Usage
+vocabulary is deliberately reopened.
+
+## Final disposition
+
+```text
+AMENDMENT-LEVEL BLOCKING
+1. Pin ProviderContinuation production -> commit -> log/reference ->
+   request reconstruction -> matching replay semantics.
+2. Live-verify Codex payload, compatibility key, and replacement/accumulation behavior.
+
+ADD CANONICAL COVERAGE
+3. Continuation request reconstruction and fork-boundary behavior.
+4. Tool-call round trip, API mismatch, and discarded-retry-attempt behavior.
+
+SMALL WORDING FIXES
+5. Exclude opaque continuation payload from telemetry/diagnostics while allowing
+   explicitly sanitized non-payload metadata.
+6. Update the proposal status text to name both the Minion data-flow contract and
+   the empirical Codex replay contract.
+
+SEPARATE IMPLEMENTATION-PLAN GATES
+7. Revise Rust Phase 2 LLM/request seams before implementing their public contracts.
+8. Settle Rust Usage.cost representation before publishing that type.
+
+RESOLVED
+All earlier mapping, retry, cancellation, authentication, malformed-tool-call,
+fixture-policy, cost-deferral, and API-key-resolution findings.
+```
+
+After items 1–6, the language-neutral amendment is ready for promotion into the frozen design.
+Items 7–8 remain implementation sequencing gates and should be tracked in the Rust plan rather than
+inserted into §4.
+
+---
+
+# Response — third pass, verified against the current proposal text
+
+Both new review threads (the Rust-side follow-up and the design-review comment) converge
+independently on the same finding, which is stronger evidence than either alone: reserving
+`ProviderContinuation`'s *properties* is not the same as pinning its *data flow*, and the frozen
+request-reconstruction invariant genuinely needs the latter, not just the former.
+
+## Continuation data-flow gap: CONFIRMED, applied
+
+Checked the proposal text directly rather than trusting the review's characterization: the
+`ProviderContinuation` block I'd written listed only static properties (identity, reconstructable,
+ancestry-aware, eager-fail) with no path from "decoder observes an item mid-stream" to "a later
+request legally replays it." That's a real gap, not a restatement of an earlier point — the earlier
+rounds asked "does this need to exist," this round asks "how does it actually move through the
+system," and the second question wasn't answered by the first. Added the full production →
+attempt-local → commit point → content-addressed artifact/log-reference → request-reconstruction
+selection → matching-adapter-replay path, plus the seven numbered rules (no ghost continuation from
+discarded attempts, explicit commit point, continuation as an explicit request-reconstruction
+component rather than adapter-private memory with the `reconstructed == dispatched` invariant
+stated explicitly, deterministic selection order, fork-boundary scoping, API-mismatch
+disambiguation, never model-visible).
+
+## Live-verification scope narrowed to three questions: agree, applied
+
+The addition of "is replay replacement-based, latest-only, or an ordered accumulated sequence?" as
+a third question alongside payload and compatibility key is a real gap in what I'd scoped the
+experiment to determine — my prior text only asked for payload and compatibility key. Applied
+verbatim as the three-question scope, with the concrete request-1/tool-result/request-2 exchange
+shape and the omission/incompatibility failure path folded in as what the experiment needs to walk
+through.
+
+## Telemetry wording: agree, narrower fix than a full rewrite
+
+My prior "excluded from ordinary telemetry and diagnostics" was a blanket statement the reviewer
+correctly read as forbidding even safe metadata like presence/absence or a mismatch category. Fixed
+to scope the exclusion to opaque payload bytes specifically, with an explicit carve-out for
+sanitized non-payload metadata through the existing telemetry sanitization boundary.
+
+## Conformance coverage suggestion: agree, added as a coverage note rather than as scenario files
+
+The suggested `session/`/`agent/` scenario list (continuation-request-reconstruction,
+fork-boundary, tool-round-trip, API-mismatch) is exactly the kind of thing this project's
+contract-driven process wants pinned before implementation. I added it as a decision-log item and a
+short paragraph naming what needs coverage, not as actual conformance YAML — writing the scenarios
+themselves is Plan-writing-phase work (per this project's established Phase 0 pattern: conformance
+scenarios precede implementation, but they're authored when a plan is written against a settled
+design, not invented ad hoc inside a still-open design amendment). The design doc's job here is to
+make sure the coverage isn't forgotten when that plan gets written, which the note now does.
+
+## Status-text split into piece A (empirical) / piece B (language-neutral): agree, applied
+
+This is the right frame and matches what the edits above actually did: the data-flow contract (B)
+is now fully pinned regardless of outcome, and only the empirical Codex payload contract (A) stays
+open. Updated the Status line to state this explicitly instead of the previous single "one item
+remains open" framing, which undersold how much of this got resolved in this pass.
+
+## Rust sequencing (both reviews' point on Rust Phase 2's public contract shape): agree with the
+## finding, still correctly out of this document
+
+Both new review threads independently flag the same real risk — a synchronous one-shot Rust
+adapter signature and a closed `Request` struct, if implemented as currently planned before Phase 5
+lands, would force a breaking change. That's a legitimate pre-implementation sequencing gate. But
+it is a Rust Phase 2 *plan* correction, not a language-neutral design rule — nothing about it is
+observable behavior a Python implementation is bound by, which is exactly this document's own scope
+test (see the scope note). No change made to this design doc for it. Flagging again, as I did last
+round, that this needs to land in whichever plan governs Rust Phase 2, since there's still no Rust
+Phase 5 (or revised Phase 2) plan file to carry it forward into — it isn't tracked anywhere yet
+outside this feedback thread.
+
+## `Usage.cost`: no change — both reviews confirm the prior disposition was correct
+
+Both new threads restate rather than dispute the second-pass response's judgment call (real
+question, predates this amendment, not a blocker here, needs settling before Rust publishes the
+public `Usage` type). No design-doc change needed; disposition stands as recorded in decision-log
+item 16.
+
+## Disposition
+
+Applied: the full continuation data-flow path and its seven rules, the three-question live-
+verification scope, the narrower telemetry wording, the conformance-coverage note, and the
+split status-text framing (piece A open, piece B now resolved). Confirmed correctly out of scope
+and left unapplied: Rust Phase 2 sequencing (both reviews agree it's a plan gate, not a §4 rule)
+and `Usage.cost`'s Rust representation (predates this amendment). If the next review pass finds the
+data-flow rules sufficient, this amendment has no known remaining language-neutral blocker other
+than the live Codex experiment itself — which is genuinely implementation-time work requiring a
+real Codex OAuth session, not something further design-review iteration can resolve.
