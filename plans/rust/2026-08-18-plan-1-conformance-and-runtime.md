@@ -1,5 +1,12 @@
 # Minion Agent Rust — Plan 1: Conformance and Runtime Implementation Plan
 
+> **Status note (2026-08-21): written against the superseded 2026-08-18 design.** Per the frozen
+> `2026-08-20-minion-agent-design.md`'s realignment guidance (§9), Rust may retain completed Phase 1
+> runtime unless revised `runtime/` conformance exposes a conflict. The conformance scenario format
+> has since changed; cross-check against
+> `minion-agent-docs/process/2026-08-21-phase-0-spec-conformance-realignment.md` before treating
+> scenario-format details here as current.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the reproducible Rust workspace, vendored canonical-conformance workflow, and typed Cordis-semantic runtime whose lifecycle, services, events, scopes, and effects pass the shared runtime scenarios.

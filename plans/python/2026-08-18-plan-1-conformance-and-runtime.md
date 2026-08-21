@@ -1,5 +1,12 @@
 # Minion Agent — Plan 1: Conformance Harness and Plugin Runtime
 
+> **Status note (2026-08-21): written against the superseded 2026-08-18 design.** The plugin-runtime
+> content here is largely retained per the frozen `2026-08-20-minion-agent-design.md`'s realignment
+> guidance (§9, "Existing implementation realignment") — Python may keep the runtime where revised
+> `runtime/` conformance stays green. The conformance *scenario format* has since changed; cross-check
+> against `minion-agent-docs/process/2026-08-21-phase-0-spec-conformance-realignment.md` before
+> treating scenario-format details here as current.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the language-neutral conformance scenario formats and the Cordis-semantic plugin runtime they validate, so every later subsystem mounts as a plugin against a runtime whose semantics are pinned by executable cases.

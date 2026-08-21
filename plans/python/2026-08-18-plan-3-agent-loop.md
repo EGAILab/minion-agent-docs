@@ -1,5 +1,11 @@
 # Minion Agent — Plan 3: The Agent Loop
 
+> **Status note (2026-08-21): written against the superseded 2026-08-18 design.** Pi run/turn
+> semantics, initial event ordering, active-abort behavior, and terminate/turn-stopping ordering are
+> corrected by the frozen `2026-08-20-minion-agent-design.md` (see `minion-agent-docs/spec/agent.md`
+> and `pi-parity-manifest.yaml` rows `AG-*`). Do not implement or reference this plan's loop-ordering
+> content without cross-checking the current spec first.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the agent loop — definitions and live instances, an inbox that carries provenance, the turn/step lifecycle, the decision events, cancellation, and the Pi-compatible event stream — so that by the end a mock model can request a tool, receive its result, and be asked again, with every step reconstructable from the log.

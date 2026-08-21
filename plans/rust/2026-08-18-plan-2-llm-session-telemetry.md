@@ -1,5 +1,11 @@
 # Minion Agent Rust — Plan 2: LLM, Session, and Telemetry Implementation Plan
 
+> **Status note (2026-08-21): written against the superseded 2026-08-18 design.** Per the frozen
+> `2026-08-20-minion-agent-design.md`'s realignment guidance (§9), Rust must rewrite its Phase 2+
+> executable plans against the frozen master, `minion-agent-docs/spec/`, and `pi-parity-manifest.yaml`
+> before implementing semantic Phase 2+. Do not implement against this plan's LLM
+> vocabulary/transformation/session content without cross-checking the current spec first.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the provider-neutral LLM and self-enforcing stream boundary, append-only session semantics with content-addressed request state, and observational telemetry on the green Plan 1 runtime.

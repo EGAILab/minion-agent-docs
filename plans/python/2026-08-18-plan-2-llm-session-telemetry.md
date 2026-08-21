@@ -1,5 +1,13 @@
 # Minion Agent — Plan 2: LLM Vocabulary, Session Log, and Telemetry
 
+> **Status note (2026-08-21): written against the superseded 2026-08-18 design.** The LLM vocabulary,
+> target-model transformation, and much of this plan's session/telemetry content is superseded by the
+> frozen `2026-08-20-minion-agent-design.md` and its Phase 0 realignment
+> (`minion-agent-docs/process/2026-08-21-phase-0-spec-conformance-realignment.md`,
+> `minion-agent-docs/spec/llm.md`, `minion-agent-docs/spec/target-model-transformation.md`,
+> `pi-parity-manifest.yaml` rows `AI-*`). Do not implement or reference this plan's vocabulary/
+> transformation content without cross-checking the current spec first.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the provider-neutral LLM vocabulary, the append-only session log that is the system's semantic truth, and the telemetry seam every later subsystem emits into — so Plan 3's agent loop has a model to talk to, a log to derive from, and somewhere to report.

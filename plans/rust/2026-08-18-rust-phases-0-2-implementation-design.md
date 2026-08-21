@@ -1,9 +1,14 @@
 # Minion Agent Rust — Phases 0–2 Implementation Design
 
 **Date:** 2026-08-18  
-**Status:** Approved for implementation planning  
+**Status:** SUPERSEDED (2026-08-21) — written against `design/2026-08-18-minion-agent-design.md`,
+which `2026-08-20-minion-agent-design.md` supersedes. Per the frozen master's realignment guidance
+(§9), rewrite Rust's Phase 2+ executable plans against the frozen master,
+`minion-agent-docs/spec/`, and `pi-parity-manifest.yaml` before implementing semantic Phase 2+.
+Retained here as historical record of the original design intent, not as a current implementation
+target.  
 **Implements:** Phases 0–2 of the language-neutral
-`design/2026-08-18-minion-agent-design.md`
+`design/2026-08-18-minion-agent-design.md` (superseded — see status above)
 
 ## 1. Purpose and scope
 
