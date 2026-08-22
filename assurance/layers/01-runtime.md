@@ -2,8 +2,9 @@
 
 **Layer ID:** `01`  
 **Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-22 (Steps 0-2 complete; canonical conformance now covers all 23 RT-*
-requirements — 22 canonical, RT-010 by Python unit-test evidence; Steps 3-6 not started — see §17)  
+**Audit date:** 2026-08-23 (Python side of the audit essentially complete: canonical conformance
+covers all 23 RT-* requirements, §5/§6 deep audit and §8-14 review both done, 3 real implementation
+defects found and fixed; independent Rust cross-check still outstanding — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** `IMPLEMENTED` — both implementations have reached this layer, so final
@@ -259,17 +260,133 @@ fault coverage is unassessed — part of the independent Rust cross-check in §1
 
 ---
 
-## 8-14. Failure model / security / reliability / observability / performance / API / documentation
+## 8. Failure model
 
-**Not started.** These remain substantial certification work.
+Every raised exception across the 10 modules was checked for type, message content, and whether any
+path swallows a failure instead of surfacing it.
 
-Starting audit targets already identified:
+`ServiceConflictError` names the fiber already holding the service (`service.py:62`, `<{holder}>`).
+`InactiveFiberError` names the fiber and its current state (`fiber.py`) or carries the effect label
+for a disposed scope (`context.py`'s `_scoped_effect`). `ServiceNotFoundError` names the missing
+service (`context.py`, both `__getattr__` and `require()`). `EventModeError` names the event and both
+modes in conflict. `WaterfallError` names the event and listener index. All five carry enough to act
+on; none is under-informative.
 
-- Security: exclusive registration authority, disposed-owner misuse, scope isolation.
-- Reliability: loading/unwind races, dependency disappearance, disposer failures.
-- Observability: lifecycle/dependency transitions and cleanup failures.
-- Performance: service lookup, event dispatch, reactive reconciliation, scoped lookup.
-- API/docs: public runtime surface and documentation accuracy.
+`disposable.py`'s `dispose_all()` is the one place a failure could be swallowed, and it isn't: every
+disposer runs regardless of an earlier one failing, failures are collected, and a non-empty list is
+re-raised as one `ExceptionGroup` rather than dropped.
+
+Two raise sites used the bare builtin `RuntimeError` instead of the project's own `RuntimeError_`
+hierarchy — `context.py`'s `ctx.effect()`/`ctx.provide()` guards for "called outside a fiber",
+reachable by calling either directly on a root/unscoped context. This is the same defect class as
+`RT-F009` (found in a different file). See `RT-F010` — fixed.
+
+## 9. Security
+
+Reviewed: `ServiceRegistry.provide()`'s exclusivity, `InactiveFiberError` coverage after disposal, and
+whether scope isolation extends past registration visibility.
+
+**Exclusivity is unbypassable.** `_impls` is a private dict touched only through `provide()` (checks
+`existing is not None` before writing) and the closure `revoke()` returns (deletes only `if
+self._impls.get(name) is impl`, so a stale revoke from a superseded registration can't delete a
+newer one under the same name). No code path writes to `_impls` any other way.
+
+**Disposed/inactive-fiber misuse is fully rejected, not just at `effect()`.** `ctx.provide()` and
+`ctx.on()` (when fiber-owned) both route through `self.effect(...)` → `Fiber.effect()`, which checks
+`_LIVE_STATES` (`LOADING`/`ACTIVE` only) on every call — not cached, so a stale `ctx` reference used
+after the fiber has moved to `FAILED`/`UNLOADING`/`PENDING`/`DISPOSED` is rejected every time, not
+just once. A scope-owned effect gets the equivalent guard in `_scoped_effect()`. No use-after-dispose
+path was found.
+
+**Scope isolation is bounded to registration visibility, by design, not by accident.** A child
+context's `extend()` shares the same `_registry`/`_events`/`_plugins` objects as its parent (this is
+intentional — scoping varies registrations within one shared service, per `spec/runtime.md`'s scoped
+registration section, not object-level isolation). There is no separate "private state per scope"
+concept for a descendant to reach into; the only isolation the design claims is over registration
+visibility (RT-009/010), and that claim holds.
+
+No security finding. This category is solid.
+
+## 10. Reliability
+
+Walked `Fiber.load()`/`unload()`/`dispose()` and `PluginRegistry.reconcile()` for any window where a
+mid-transition exception could leave state inconsistent, and checked what a disposer raising during
+teardown actually does — reproduced with a throwaway script before writing anything down, per this
+project's standing verification discipline.
+
+**Confirmed and fixed: a disposer raising during `unload()`/`dispose()`/`load()`'s failure-unwind
+left the fiber permanently stuck in a non-terminal state.** All three methods called
+`self._disposables.dispose_all()` (via `_unwind()`) and only transitioned to the terminal/settled
+state on the *next* line — so when `dispose_all()` raised its aggregated `ExceptionGroup`, the state
+transition never ran. Reproduced directly: a fiber with one effect whose disposer raises, `unload()`d,
+ends up stuck at `unloading` forever. See `RT-F011` — fixed with `try`/`finally` in `fiber.py`, three
+new regression tests in `test_fiber.py`.
+
+**Open, not fixed: `PluginRegistry.reconcile()`'s two-pass loop aborts entirely if any one fiber's
+`load()`/`unload()` raises**, even after `RT-F011`'s fix (each individual fiber now reaches a valid
+state before the exception propagates, but sibling fibers still awaiting action in the same
+reconcile pass are left unprocessed until some later mount/unmount call triggers another pass). See
+`RT-F012` — recorded, not fixed; the correct shape mirrors `disposable.py`'s own aggregate-and-continue
+pattern one level up, which is a larger, riskier change than this pass's other fixes.
+
+## 11. Observability
+
+Checked whether every state transition and effect is actually observable from outside via the
+`on_state_change`/`on_effect` hooks, and whether the primary mount API gives a caller the chance to
+attach them before anything happens.
+
+**Confirmed real gap: `ctx.plugin()` — the API actually used throughout `tests/conformance/
+agent_runner.py` and most of `tests/runtime/`'s own test suite — mounts and reconciles before
+returning the fiber.** `Context.plugin()` calls `self._plugins.mount(...)` then immediately `await
+self._plugins.reconcile()`, and only then returns the fiber. A caller receiving that fiber has missed
+every transition through the first `reconcile()` call — `LOADING`, and possibly straight to `ACTIVE`
+or `FAILED` — with no way to have attached `on_state_change`/`on_effect` in time to observe them. The
+only way to observe from `PENDING` onward is the lower-level two-step
+(`ctx.plugins.mount(...)`; attach hooks; `await ctx.plugins.reconcile()`) that the conformance
+runner's own `execute_step()` uses — which works, but isn't what the ergonomic, documented `ctx.plugin()`
+entry point offers. See `RT-F013` — recorded, not fixed (closing it means an API decision: hook
+parameters on `ctx.plugin()`, or a documented two-step contract — not a small isolated change).
+
+Everything reachable once hooks are attached in time is fully observable: every `_transition()` call
+fires `on_state_change`, every effect creation/disposal fires `on_effect`, and nothing in the 10
+modules changes state or disposes an effect without going through one of those two choke points.
+
+## 12. Performance
+
+Reviewed for accidentally-quadratic patterns, not benchmarked (no perf harness exists and building
+one is out of scope for this review).
+
+`ServiceRegistry`/`ScopedRegistry`/`EventBus` are all dict/list-based with `O(1)`/`O(n)` operations
+appropriate to their size. `PluginRegistry.reconcile()`'s two-pass-per-iteration loop, bounded by
+`_MAX_PASSES = 100`, costs `O(fibers × passes)`; the pass count is bounded by dependency-chain depth,
+not fiber count squared — a chain of depth *D* genuinely needs *D* passes to cascade-activate, which
+is inherent to the reconciliation algorithm's correctness, not a scaling defect. `EventBus._chain()`
+recomputes its admitted-listener list fresh on every dispatch with no caching, which is fine at
+realistic listener counts (tens, not thousands) and keeps admission correct if listeners change
+between dispatches — caching would need invalidation logic to stay correct, trading simplicity for
+performance nobody currently needs.
+
+No performance finding. This category is solid at the scales this runtime is designed for.
+
+## 13-14. Public API and documentation
+
+Read `src/minion_agent/runtime/__init__.py`'s exports and `tests/runtime/test_public_surface.py`
+(which pins `__all__` to a literal expected set, checks every exported name resolves, checks no
+`cordis` leaks into public identifiers, and checks the runtime package imports no higher layer — all
+mechanical regression guards, not a completeness check against what *should* be exported).
+
+**Confirmed and fixed: `PluginRegistry` was not exported**, despite being the return type of the
+widely-used `ctx.plugins` property (`ctx.plugins.mount()`/`.unmount()`/`.reconcile()` appear
+throughout the test suite and the conformance runner) and despite its siblings `ServiceRegistry` and
+`EventBus` — accessible the same way via `ctx.registry`/`ctx.events` — both being exported. The
+mechanical `test_all_matches_expected_surface` check couldn't have caught this on its own: it only
+pins whatever `__all__` already contains, so an omission from day one stays invisible to it forever.
+See `RT-F014` — fixed.
+
+Checked `spec/runtime.md` against the actual public surface and behavior for drift: none found. The
+dispatch-mode matrix, waterfall mechanics, fiber lifecycle diagram, and service-resolution rules all
+match what the source does. (Not touching `spec/runtime.md` itself — shared-contract file, outside
+this task's scope even to note a typo in.)
 
 ---
 
@@ -286,6 +403,11 @@ Starting audit targets already identified:
 | RT-F007 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | The conformance runner built every listener callback as `async def`, but `EventBus.emit()` invokes listeners with a plain synchronous call and never awaits — so any listener registered under `emit` silently never ran its body (an unawaited coroutine, discarded). Only surfaced once a real `emit` scenario was written; RT-016 had no functioning `emit` coverage before this | Fixed in `runner.py`: non-delegating listener actions (`raise`, `echo_args`, `short_circuit`, `observe`) are now plain synchronous functions; only `delegate`/`transform`/`delegate_twice` (waterfall-only, need to await `next`) stay `async def`. Runtime implementation itself (`EventBus.emit()`) was already correct — this was a conformance-runner defect, not a `PI_PARITY_DEFECT` or implementation bug |
 | RT-F008 | LOW | `CONTRACT_ASSURANCE_DEFECT` | RT-015 ("creating an effect on an already-disposed owner raises") covers both fiber-owned and scope-owned effects — `context.py`'s `_scoped_effect()` has its own `InactiveFiberError` guard for a disposed scope, distinct from `Fiber.effect()`'s. The canonical scenario (`effect-after-fiber-disposed-raises`) only covers the fiber case; the scope case has unit-test evidence only (`test_scope.py::test_effect_on_a_disposed_scope_raises`). The current `attempt_effect` DSL step operates on a mounted plugin's fiber `ctx`; there is no equivalent hook for a scope's `ctx`, and `ScopeTable.dispose()` pops a disposed scope out of `live`, so no reference survives to attempt an effect against it through the current DSL even if a step existed | Not urgent — RT-015's substance is covered (canonical fiber case + unit-tested scope case). A future DSL extension (e.g. a runner-side side-table retaining disposed scopes' `ctx`, plus an `attempt_effect` variant addressing a scope by name) would close this fully; low priority, noted for whoever next touches the runtime scenario DSL |
 | RT-F009 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `registry.py`'s reconciliation cycle-guard (`_MAX_PASSES` exceeded) raised a bare builtin `RuntimeError`, not the project's own `RuntimeError_` hierarchy (`errors.py`) that every other runtime error derives from. Code that catches `RuntimeError_` — including the conformance runner's own `except RuntimeError_` clause — would NOT have caught a genuine plugin-dependency cycle; it would have propagated uncaught. Marked `# pragma: no cover` in source, so unreached by any test; a genuine implementation inconsistency, not a Pi-parity issue (no Pi equivalent for this kernel) | Fixed: `registry.py` now raises `RuntimeError_` directly (no existing subclass fits the "reconciliation didn't stabilize" case semantically). Full suite re-run clean after the change |
+| RT-F010 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `context.py`'s `ctx.effect()`/`ctx.provide()` "called outside a fiber" guards raised the bare builtin `RuntimeError`, the same defect class as `RT-F009` in a different file — reachable directly by calling either on a root/unscoped context | Fixed: both now raise `RuntimeError_`. `test_edges.py`'s two tests pinning the old builtin type updated to match. Full suite clean |
+| RT-F011 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `Fiber.load()`/`unload()`/`dispose()` transitioned to their terminal/settled state only on the line *after* calling `_unwind()` (via `dispose_all()`); if a disposer raised, the `ExceptionGroup` propagated before the state transition ran, leaving the fiber permanently stuck at `LOADING` (a failing load whose own failure-unwind also fails), `UNLOADING`, or mid-`dispose()` — reproduced directly with a throwaway script before fixing | Fixed: all three methods (and `_unwind()` itself) now use `try`/`finally` so the state always settles; the `ExceptionGroup` still propagates to the caller afterward, surfaced rather than swallowed — same principle `disposable.py` already applies to individual disposers, extended to the fiber's own state. Three new regression tests added to `test_fiber.py` (`test_unload_still_reaches_pending_when_a_disposer_raises`, `test_dispose_still_reaches_disposed_when_a_disposer_raises`, `test_load_failure_still_reaches_failed_when_the_unwind_also_raises`). Full suite clean |
+| RT-F012 | LOW-MEDIUM | `PARITY_NEUTRAL_HARDENING` | `PluginRegistry.reconcile()`'s two-pass loop aborts entirely if any one fiber's `load()`/`unload()` raises — even after `RT-F011`'s fix, sibling fibers still awaiting action in the same pass are left unprocessed until a later mount/unmount triggers another `reconcile()` call. Only manifests when a disposer itself fails during a multi-fiber reconciliation pass | Not fixed — the correct shape mirrors `disposable.py`'s own aggregate-and-continue pattern one level up (per-fiber try/except, collect failures, keep processing the pass, raise an aggregated `ExceptionGroup` at the end), which is a larger, riskier change than this pass's other fixes. Recorded for a future pass |
+| RT-F013 | MEDIUM | `PARITY_NEUTRAL_HARDENING` | `ctx.plugin()` — the mount API actually used throughout `tests/conformance/agent_runner.py` and most of `tests/runtime/`'s own suite — mounts and calls `reconcile()` before returning the fiber, so a caller has no opportunity to attach `on_state_change`/`on_effect` before the fiber's first transitions (`LOADING`, possibly straight to `ACTIVE` or `FAILED`) have already fired unobserved. The lower-level two-step (`ctx.plugins.mount()`, attach hooks, `await ctx.plugins.reconcile()`) — what the conformance runner itself uses — is the only way to observe from `PENDING` onward | Not fixed — closing this is an API design decision (hook parameters on `ctx.plugin()`, or documenting the two-step contract as the observability-sensitive path), not a small isolated change. Recorded for whoever next touches the `Context` mount API |
+| RT-F014 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `PluginRegistry` — the return type of the widely-used `ctx.plugins` property — was not exported from `minion_agent.runtime`, unlike its siblings `ServiceRegistry`/`EventBus` which are exported despite being reachable the same way via `ctx.registry`/`ctx.events`. `test_public_surface.py`'s mechanical check only pins whatever `__all__` already contains, so it couldn't have caught an omission from day one | Fixed: `PluginRegistry` added to `__init__.py`'s imports and `__all__`, and to `test_public_surface.py`'s `EXPECTED` set. Full suite clean |
 
 No `PARITY_CONSTRAINED_RISK`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` findings are currently
 recorded.
@@ -305,16 +427,16 @@ Rust tests where implemented             [ ]  not audited
 Property/invariant tests                 [x]  test_properties.py (Hypothesis) covers disposal/mount-churn/scope-depth/admission-depth
 Concurrency tests where applicable       [x]  test_events_async.py proves genuine concurrent parallel-listener interleaving
 Fault-injection tests where applicable   [x]  disposer-raises-mid-teardown covered (test_disposable.py, test_fiber.py)
-Security review                          [ ]  not started
-Reliability review                       [ ]  not started
-Observability review                     [ ]  not started
-Performance review                       [ ]  not started
-Public API review                        [ ]  not started
-Documentation                            [ ]  not started
+Security review                          [x]  §9 — exclusivity unbypassable, disposed-fiber misuse fully rejected, scope isolation bounded by design; no finding
+Reliability review                       [x]  §10 — RT-F011 (stuck-state bug) fixed; RT-F012 (reconcile abort-on-failure) recorded, not fixed
+Observability review                     [x]  §11 — RT-F013 (ctx.plugin() hook-timing gap) recorded, not fixed
+Performance review                       [x]  §12 — no accidentally-quadratic pattern found; no finding
+Public API review                        [x]  §13-14 — RT-F014 (PluginRegistry export) fixed
+Documentation                            [x]  §13-14 — spec/runtime.md checked against actual behavior, no drift found
 All findings classified                  [x]
 No unresolved Pi uncertainty             [x]
 No unresolved parity defect              [x]
-No unresolved contract-assurance defect  [~]  RT-F001-007, RT-F009 resolved; RT-F008 (LOW, not urgent) open; DSL/schema Rust review still open
+No unresolved contract-assurance defect  [~]  RT-F001-007, RT-F009-011, RT-F014 resolved; RT-F008/012/013 (LOW-MEDIUM, non-blocking) open; DSL/schema Rust review still open
 Deferred risks recorded                  [x]  none currently require risk-register entry
 ```
 
@@ -324,22 +446,29 @@ Deferred risks recorded                  [x]  none currently require risk-regist
 
 `spec/runtime.md` exists and every RT-001..RT-023 requirement now has an explicit disposition:
 canonical `conformance/runtime/*.yaml` evidence, direct unit-test evidence (RT-010), or an explicit
-scope-exclusion (RT-004, RT-023). The Python module deep audit (§5) and existing-test audit (§6) are
-both complete: all 10 runtime modules verified against their traced RT-* requirements (with two
-inventory corrections and two new low-severity findings, RT-F008/RT-F009), and all 15
-`tests/runtime/` files (133 tests) read, run, and classified — all `KEEP`, none need
-rewrite/strengthening/deletion. RT-F001-RT-F007 and RT-F009 are resolved; RT-F008 is open but low
-severity and non-blocking. What remains before certification: security/reliability/observability/
-performance/API/docs review (§8-14, entirely unstarted) and the independent Rust check.
+scope-exclusion (RT-004, RT-023). The Python module deep audit (§5), existing-test audit (§6), and
+the failure-model/security/reliability/observability/performance/API/documentation review (§8-14) are
+all complete. Two real implementation defects were found and fixed during this pass: `RT-F011`, a
+genuine reliability bug where a disposer raising during `unload()`/`dispose()`/a failed `load()`'s
+unwind left the fiber permanently stuck in a non-terminal state; and two more instances of `RT-F009`'s
+wrong-exception-type pattern (`RT-F010`), plus a public-API export gap (`RT-F014`). RT-F001-RT-F007,
+RT-F009, RT-F010, RT-F011, and RT-F014 are resolved. RT-F008 (scope-owned RT-015 canonical coverage),
+RT-F012 (`reconcile()` aborts a whole pass on one fiber's failure), and RT-F013 (`ctx.plugin()`'s
+observability hook-timing gap) remain open — all low-to-medium severity, all non-blocking, all
+requiring either a DSL extension or an API design decision bigger than this pass's scope. Python's
+side of this layer's certification work is now essentially complete. What remains: the independent
+Rust cross-check, and optionally closing the three open low/medium findings in a future pass.
 
 **Follow-up dependencies:**
 
-1. Send the three schema/runner changes from the previous pass (`provides: {name, visible}`,
+1. Send the three schema/runner changes from an earlier pass (`provides: {name, visible}`,
    `attempt_effect` step, `echo_args` action) to Rust for shared-contract review before they're
    treated as canonical per `process/implementation-conformance-workflow.md`'s reviewer rule.
 2. Perform the independent Rust audit against the same RT-* contract: module deep audit, existing-test
-   classification, and a `ScopedRegistry`-equivalent unit test for RT-010.
-3. Complete security/reliability/observability/performance/public-API/documentation review (§8-14).
-4. Optionally close `RT-F008` (scope-owner RT-015 canonical coverage) if a future DSL pass touches the
-   scenario runner for other reasons — not worth a dedicated pass on its own.
-5. Complete the full assurance gate before certification.
+   classification, a `ScopedRegistry`-equivalent unit test for RT-010, and its own §8-14 review —
+   including checking whether Rust's fiber-equivalent has `RT-F011`'s stuck-state bug (or already
+   avoids it) and whether `RT-F012`/`RT-F013` apply there too.
+3. Optionally close `RT-F008` (scope-owner RT-015 canonical coverage), `RT-F012` (`reconcile()`
+   per-fiber failure isolation), and `RT-F013` (`ctx.plugin()` hook-timing) in a future pass — none is
+   large enough to justify a dedicated one on its own.
+4. Complete the full assurance gate before certification.
