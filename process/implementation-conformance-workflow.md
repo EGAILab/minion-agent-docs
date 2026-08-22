@@ -134,11 +134,27 @@ During the current Pi-alignment program, **Pi behavioral fidelity remains the pr
 
 Security, reliability, observability, performance, operability, documentation, and production-quality reviews are mandatory, but they do not independently authorize observable divergence from Pi.
 
-Use this decision rule for every assurance finding:
+Use this classification order for every assurance finding:
 
 ```text
-Does fixing the issue change Pi-visible behavior?
+For a Pi-derived behavior, is Pi behavior uncertain?
+    -> PI_BEHAVIOR_UNCERTAIN
+
+Does Minion differ from known adopted Pi-visible behavior?
+    -> PI_PARITY_DEFECT
+
+Is Minion's frozen contract/spec/conformance/traceability/evidence incomplete or inconsistent?
+    -> CONTRACT_ASSURANCE_DEFECT
+
+Otherwise, does remediation preserve Pi-visible behavior?
+    YES -> PARITY_NEUTRAL_HARDENING
+    NO  -> PARITY_CONSTRAINED_RISK
 ```
+
+`CONTRACT_ASSURANCE_DEFECT` is an evidence/contract-integrity classification, not a new source of
+semantic authority. It is especially important for Minion-owned architectural surfaces such as the
+plugin/runtime layer, where a defect may be real even though there is no corresponding Pi runtime
+behavior to mismatch.
 
 ### 4.1 Pi parity defect
 
@@ -152,7 +168,26 @@ action:
     fix before certification
 ```
 
-### 4.2 Parity-neutral hardening
+### 4.2 Contract-assurance defect
+
+If the frozen Minion contract or its required evidence is incomplete or internally inconsistent:
+
+```text
+classification:
+    CONTRACT_ASSURANCE_DEFECT
+
+action:
+    repair spec / conformance / traceability / evidence before certification
+```
+
+Examples include a normative rule without executable evidence, a missing spec for a frozen
+Minion-owned layer, inconsistent contract references, or a requirement with no explicit evidence
+disposition.
+
+A contract-assurance defect is not accepted risk debt and does not go into
+`assurance/risk-register.md`.
+
+### 4.3 Parity-neutral hardening
 
 If the issue can be corrected without changing Pi-visible behavior:
 
@@ -166,7 +201,7 @@ action:
 
 Examples include secret redaction, internal type safety, resource-leak fixes, documentation correction, and diagnostic improvements that do not alter observable semantics.
 
-### 4.3 Parity-constrained risk
+### 4.4 Parity-constrained risk
 
 If remediation would change Pi-visible behavior:
 
@@ -182,7 +217,7 @@ action:
 
 Unless the normal governance path explicitly approves an intentional divergence.
 
-### 4.4 Pi behavior uncertain
+### 4.5 Pi behavior uncertain
 
 If Pi behavior is not known with sufficient confidence:
 
@@ -215,12 +250,13 @@ Every semantic phase follows this sequence:
 7. Add or repair implementation-specific tests
 8. Run the applicable assurance audit
 9. Remediate Pi parity defects
-10. Remediate parity-neutral hardening findings
-11. Record parity-constrained risks
-12. Make all applicable canonical conformance green
-13. Complete layer certification
-14. Complete phase review
-15. Freeze phase
+10. Remediate contract-assurance defects
+11. Remediate parity-neutral hardening findings
+12. Record parity-constrained risks
+13. Make all applicable canonical conformance green
+14. Complete layer certification
+15. Complete phase review
+16. Freeze phase
 ```
 
 Assurance should follow implementation closely enough to inspect real code and tests, but must occur before certification/freeze.
@@ -315,6 +351,10 @@ Every assurance finding must be classified.
 PI_PARITY_DEFECT
     -> fix now
 
+CONTRACT_ASSURANCE_DEFECT
+    -> repair contract/spec/conformance/traceability/evidence before certification
+    -> do not defer to the risk register
+
 PARITY_NEUTRAL_HARDENING
     -> normally fix now
 
@@ -350,6 +390,7 @@ A phase cannot freeze until:
 - all findings have a disposition;
 - no unresolved `PI_BEHAVIOR_UNCERTAIN` remains;
 - no unresolved Pi parity defect remains;
+- no unresolved `CONTRACT_ASSURANCE_DEFECT` remains;
 - parity-constrained risks are recorded in `assurance/risk-register.md`;
 - the affected layer certification gate is satisfied;
 - known deferred parity is explicitly recorded.
@@ -538,15 +579,11 @@ Forbidden examples include:
 
 If a runner can make an incorrect implementation pass by supplying missing semantics itself, the runner is invalid.
 
-**A mock provider/tool swapped in through the library's own real plugin/service seam is not covered
-by this rule and is expected.** Scenario scripts (`provider_script:`, `tools:`) drive the real
-library through its real public entry points with a scripted LLM/tool backend standing in for a
-live one — that is the whole mechanism this suite relies on, not a violation of it. The rule targets
-a runner that steps *around* the seam to hand-simulate loop/transform/termination/derivation
-behavior itself. The dividing line: if replacing the mock backend with a real provider, unmodified,
-would still exercise the same code path, it's a seam. If the runner's own code decides what the
-"correct" observable outcome is instead of asking the library, it's the library's job that leaked
-into the runner.
+A mock provider/tool swapped in through the library's own real plugin/service seam is not covered
+by this rule — that is the mechanism scenario scripts (`provider_script:`, `tools:`) rely on, not a
+violation of it. The dividing line: if a real provider, unmodified, would exercise the same code
+path as the mock, it's a seam. If the runner's own code decides the "correct" outcome instead of
+asking the library, that's the library's job leaking into the runner.
 
 ---
 
@@ -581,26 +618,18 @@ Both consume the same root-level canonical scenarios.
 
 ### 10.1 Scenario schema format and placeholder scenarios
 
-`conformance/schema/` may hold more than one scenario schema shape at once during a realignment —
-this is expected, not an error state to resolve immediately. A legacy per-family schema shape
-(`{name, provider_script, tools, steps, expect_*}`, one JSON Schema file per family,
-`additionalProperties: false`) coexists with a newer unified shape (`{name, family, status,
-authority, pi_revision, given, when, expect}`) while older scenarios are progressively rewritten
-into the newer shape. A scenario's own top-level `family` key is the discriminator a runner uses to
-pick the matching schema — its presence means the unified schema governs, not the legacy per-family
-one keyed by directory.
+`conformance/schema/` may hold more than one scenario schema shape at once during a realignment.
+Legacy per-family schemas may coexist with the newer unified scenario shape while older cases are
+progressively migrated. A scenario's own top-level `family` key selects the unified schema when
+present.
 
-A newly scaffolded scenario for behavior that has no implementation yet MAY exist as a structurally
-valid placeholder — any string value in the document starting with `TO_BE_` (e.g.
-`TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR`) — so its name and intended family are trackable before its
-content is written. Both language-specific execution runners and CI MUST detect this from the
-document itself (any `TO_BE_*` string value, walked recursively) rather than a hardcoded scenario
-name list, and mark the scenario `xfail`/expected-failure with a reason referencing this policy —
-not silently skip it, and not let it read as an ordinary failure. An `xfail` scenario that starts
-unexpectedly passing is a signal that real content should replace the placeholder and it should
-leave this list, not a state to leave standing. Migrating a legacy-shape scenario to the unified
-shape happens when the phase that owns its behavior is implemented against the realigned contract —
-not as a bulk mechanical rewrite disconnected from actual implementation work.
+A newly scaffolded scenario MAY contain string values beginning with `TO_BE_` as a structurally
+valid placeholder. Both language-specific runners and CI MUST detect such values recursively from
+the document itself and mark the case expected-failure/`xfail` with a reason referencing this
+policy. They MUST NOT silently skip it or hardcode a list of placeholder scenario names.
+
+Migration of legacy scenarios should occur with the phase that owns the behavior, not as an
+unrelated bulk mechanical rewrite.
 
 ---
 
@@ -703,6 +732,9 @@ the future decision/remediation path is recorded
 `PI_BEHAVIOR_UNCERTAIN` is not acceptable risk-register debt; the Pi behavior must first be resolved.
 
 A Pi parity defect is also not accepted risk debt; it must be fixed before certification.
+
+A `CONTRACT_ASSURANCE_DEFECT` is likewise not risk-register debt. Missing/inconsistent
+spec/conformance/traceability/evidence must be repaired before certification.
 
 After the Pi-compatible foundation is complete, the risk register becomes a primary input to the post-parity hardening phase.
 
@@ -812,14 +844,11 @@ Post-parity action:
 ```
 
 **Shared-contract reviewer rule (adopted, see
-`process/shared-contract-reviewer-policy-proposal.md`).** Changes under `conformance/**`,
-`spec/**`, or `/pi-parity-manifest.yaml` MUST receive explicit semantic-owner approval before
-merge. Where independent Python and Rust implementation maintainers exist, such changes SHOULD
-also receive review from the affected implementation owners before merge; semantic-owner approval
-alone is not sufficient once those roles exist. This is a current-stage rule sized to a project
-that may not yet have separate maintainers per language — it does not invent a two-approver
-requirement the project cannot satisfy. Promote to CODEOWNERS/branch-protection enforcement once
-those ownership roles are staffed.
+`process/shared-contract-reviewer-policy-proposal.md`).** Changes under `conformance/**`, `spec/**`, or
+`/pi-parity-manifest.yaml` MUST receive explicit semantic-owner approval before merge. Where
+independent Python and Rust implementation maintainers exist, such changes SHOULD also receive
+review from the affected implementation owners. Promote this to CODEOWNERS/branch-protection
+enforcement once those ownership roles are staffed.
 
 ---
 
@@ -899,12 +928,9 @@ change the shared contract and require the semantic gates for every implementati
 
 A language that has not yet implemented that layer records `NOT_IMPLEMENTED`; it is not required to invent an implementation merely to satisfy a contract-only PR.
 
-**Provider wire-fixture verification is never a CI gate.** Real-provider wire fixtures (recorded,
-sanitized captures from real providers) are covered separately by the real-providers design
-amendment's testing philosophy: pure codec tests and replayed sanitized fixtures run in ordinary CI;
-live, credentialed verification against a real provider is manual, non-gating, and used only to
-refresh fixtures or detect provider drift. No CI job in the decomposition above holds live provider
-credentials or makes live provider calls.
+**Provider wire-fixture verification is never a CI gate.** Recorded/sanitized fixtures and pure
+codec tests may run in ordinary CI; live credentialed provider verification remains manual and
+non-gating.
 
 ---
 
@@ -1045,15 +1071,16 @@ A production-hardening cleanup must never create accidental semantic divergence.
 10. **Assurance is mandatory before layer certification and phase freeze.**
 11. **Assurance does not redefine semantic authority.**
 12. **All assurance findings receive an explicit classification/disposition.**
-13. **Parity-neutral hardening should normally be fixed in the current phase.**
-14. **Parity-constrained risk is documented and deferred unless divergence is formally approved.**
-15. **Pi behavior uncertainty blocks semantic decision-making until source audit resolves it.**
-16. **A phase freezes only when its applicable contract, implementation, and assurance gates are satisfied.**
-17. **A language not yet at a layer may remain `NOT_IMPLEMENTED`; another implementation may still certify against the shared contract.**
-18. **Implementation-only changes may not silently change observable behavior.**
-19. **Documentation accuracy is part of assurance.**
-20. **Model-backed evals measure effectiveness, not Pi semantic correctness.**
-21. **Later Pi revisions are handled through explicit drift audits.**
+13. **Contract-assurance defects must be repaired before certification and are not deferred risk debt.**
+14. **Parity-neutral hardening should normally be fixed in the current phase.**
+15. **Parity-constrained risk is documented and deferred unless divergence is formally approved.**
+16. **Pi behavior uncertainty blocks semantic decision-making until source audit resolves it.**
+17. **A phase freezes only when its applicable contract, implementation, and assurance gates are satisfied.**
+18. **A language not yet at a layer may remain `NOT_IMPLEMENTED`; another implementation may still certify against the shared contract.**
+19. **Implementation-only changes may not silently change observable behavior.**
+20. **Documentation accuracy is part of assurance.**
+21. **Model-backed evals measure effectiveness, not Pi semantic correctness.**
+22. **Later Pi revisions are handled through explicit drift audits.**
 
 ---
 
@@ -1074,6 +1101,7 @@ implementation-specific tests
     ↓
 assurance audit
     ├── parity defects -> fix
+    ├── contract-assurance defects -> repair contract/evidence
     ├── parity-neutral hardening -> fix
     ├── parity-constrained risks -> risk register
     └── Pi uncertainty -> source audit

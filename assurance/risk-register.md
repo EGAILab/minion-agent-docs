@@ -36,6 +36,10 @@ A `PI BEHAVIOR UNCERTAIN` finding should not be placed here as a substitute for 
 
 A `PI PARITY DEFECT IN MINION` also does not belong here as accepted debt; it must be remediated before certification.
 
+A `CONTRACT_ASSURANCE_DEFECT` does not belong here either. Missing/inconsistent spec, conformance,
+traceability, evidence, or required dispositions must be repaired before certification rather than
+recorded as deferred production risk.
+
 A parity-constrained risk may remain through the baseline only when:
 
 ```text

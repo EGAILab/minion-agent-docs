@@ -217,9 +217,11 @@ For each meaningful failure define:
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| ... | `BLOCKER/HIGH/MEDIUM/LOW` | `PI PARITY DEFECT / PARITY-NEUTRAL HARDENING / PARITY-CONSTRAINED RISK / PI BEHAVIOR UNCERTAIN` | ... | ... |
+| ... | `BLOCKER/HIGH/MEDIUM/LOW` | `PI_PARITY_DEFECT / CONTRACT_ASSURANCE_DEFECT / PARITY_NEUTRAL_HARDENING / PARITY_CONSTRAINED_RISK / PI_BEHAVIOR_UNCERTAIN` | ... | ... |
 
 Any parity-constrained risk must also be entered into `../risk-register.md`.
+
+A `CONTRACT_ASSURANCE_DEFECT` must be repaired before certification; it is not risk-register debt.
 
 ---
 
@@ -245,6 +247,7 @@ Documentation                            [ ]
 All findings classified                  [ ]
 No unresolved Pi uncertainty             [ ]
 No unresolved parity defect              [ ]
+No unresolved contract-assurance defect  [ ]
 Deferred risks recorded                  [ ]
 ```
 

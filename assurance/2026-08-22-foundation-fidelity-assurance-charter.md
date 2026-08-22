@@ -44,17 +44,31 @@ A production-quality improvement does not automatically override Pi semantics.
 
 ## 3. Decision rule
 
-Every finding asks:
+Every finding is classified against both the Pi-compatible semantic baseline and Minion's own
+normative contract/evidence.
+
+Use this order:
 
 ```text
-Does fixing this issue change Pi-visible behavior?
+For a Pi-derived behavior, is the adopted Pi behavior still uncertain?
+    YES -> PI_BEHAVIOR_UNCERTAIN
+
+Is Minion known to differ from adopted Pi-visible semantics?
+    YES -> PI_PARITY_DEFECT
+
+Is the frozen Minion contract, spec, conformance, traceability, or certification evidence
+incomplete or internally inconsistent?
+    YES -> CONTRACT_ASSURANCE_DEFECT
+
+Otherwise, does fixing the issue preserve Pi-visible behavior?
+    YES -> PARITY_NEUTRAL_HARDENING
+    NO  -> PARITY_CONSTRAINED_RISK
 ```
 
-If **no**, it is parity-neutral hardening and may be fixed now.
+`CONTRACT_ASSURANCE_DEFECT` does not create a new semantic authority. It identifies a defect in the
+artifacts or evidence that are supposed to express and prove an already-governed Minion contract.
 
-If **yes**, preserve Pi-compatible behavior for the baseline and record the risk for later hardening.
-
-If unclear:
+If Pi behavior is unclear:
 
 ```text
 stop
@@ -73,21 +87,37 @@ Every finding must have exactly one classification:
 
 Minion differs from adopted Pi semantics.
 
-**Action:** fix now.
+**Action:** fix before certification.
 
-### B. PARITY-NEUTRAL HARDENING
+### B. CONTRACT ASSURANCE DEFECT
+
+The frozen Minion design/spec/conformance/traceability/evidence is incomplete, contradictory, or
+missing a required disposition, without itself establishing a Pi behavioral mismatch.
+
+Examples include:
+
+- a normative rule with no executable evidence;
+- a missing normative spec for a frozen Minion-owned architectural layer;
+- inconsistent scenario naming or contract references;
+- a requirement with no explicit conformance-vs-language-specific-test disposition;
+- assurance/process evidence that contradicts the active governance chain.
+
+**Action:** repair the contract/evidence defect before certification. Do not put it in the risk
+register as accepted debt.
+
+### C. PARITY-NEUTRAL HARDENING
 
 The implementation can be improved without changing Pi-visible behavior.
 
 **Action:** fix now when practical.
 
-### C. PARITY-CONSTRAINED RISK
+### D. PARITY-CONSTRAINED RISK
 
 The issue is real, but changing it would alter Pi-visible behavior.
 
-**Action:** document and defer.
+**Action:** document and defer in `assurance/risk-register.md`.
 
-### D. PI BEHAVIOR UNCERTAIN
+### E. PI BEHAVIOR UNCERTAIN
 
 The correct Pi-compatible behavior has not yet been established.
 

@@ -34,10 +34,11 @@ Every layer follows this sequence:
 12. Audit API / serialization contracts
 13. Classify every finding
 14. Fix Pi parity defects
-15. Fix parity-neutral hardening
-16. Add/repair conformance and tests
-17. Record parity-constrained risks
-18. Certify the layer
+15. Fix contract-assurance defects
+16. Fix parity-neutral hardening
+17. Add/repair conformance and tests
+18. Record parity-constrained risks
+19. Certify the layer
 ```
 
 ## 3. Requirement traceability
@@ -74,7 +75,31 @@ No Pi parity row may lack a disposition.
 
 No public serialized field may lack schema/test coverage.
 
-## 4. Implementation disposition
+## 4. Finding classification
+
+Every finding must use exactly one of these classes:
+
+```text
+PI_PARITY_DEFECT
+CONTRACT_ASSURANCE_DEFECT
+PARITY_NEUTRAL_HARDENING
+PARITY_CONSTRAINED_RISK
+PI_BEHAVIOR_UNCERTAIN
+```
+
+Use `CONTRACT_ASSURANCE_DEFECT` when the problem is in Minion's normative contract or its evidence,
+rather than in Pi parity or ordinary implementation hardening. Typical examples are a missing spec
+document, a frozen rule with no executable evidence, inconsistent contract references, or a
+requirement with no explicit evidence/disposition.
+
+A contract-assurance defect must be repaired before layer certification. It is not accepted risk
+debt and must not be placed in `risk-register.md` as a substitute for fixing the contract/evidence.
+
+This classification does not allow assurance to invent semantics. If the missing or contradictory
+contract concerns Pi-derived behavior whose correct Pi behavior is uncertain, classify it
+`PI_BEHAVIOR_UNCERTAIN` and source-audit Pi first.
+
+## 5. Implementation disposition
 
 Each audited module receives one evidence-based disposition:
 
@@ -89,7 +114,7 @@ DEFER
 
 Do not decide by directory name alone.
 
-## 5. Existing-test audit
+## 6. Existing-test audit
 
 Existing tests are themselves audit subjects.
 
@@ -129,7 +154,7 @@ Python already enforces 100% line coverage for the currently covered core packag
 Pi semantic parity
 ```
 
-## 6. Testing layers
+## 7. Testing layers
 
 ### Canonical conformance
 
@@ -205,7 +230,7 @@ during listener execution
 during persistence
 ```
 
-## 7. Security review
+## 8. Security review
 
 For every layer inspect:
 
@@ -241,7 +266,7 @@ Check agent, scope, run, tool, and session isolation.
 
 Security does not override Pi semantics automatically; apply the finding classification rules.
 
-## 8. Reliability / operational review
+## 9. Reliability / operational review
 
 Each applicable layer defines:
 
@@ -256,7 +281,7 @@ Each applicable layer defines:
 - persistence atomicity;
 - restart behavior.
 
-## 9. Observability review
+## 10. Observability review
 
 Each layer documents:
 
@@ -285,7 +310,7 @@ provider_request_id
 
 Telemetry/logging failure must not silently become a semantic dependency.
 
-## 10. Performance review
+## 11. Performance review
 
 Audit for:
 
@@ -299,7 +324,7 @@ Audit for:
 
 Performance hardening may happen immediately if Pi-visible semantics stay unchanged.
 
-## 11. Documentation audit
+## 12. Documentation audit
 
 Documentation is part of certification.
 
@@ -307,7 +332,7 @@ Documentation drift receives ordinary findings, usually `PARITY-NEUTRAL HARDENIN
 
 Current repository evidence already shows why this matters: implementation status can move ahead of README claims.
 
-## 12. Severity
+## 13. Severity
 
 ### BLOCKER
 
@@ -325,7 +350,7 @@ Robustness, maintainability, or documentation problem.
 
 Cleanup, ergonomics, minor documentation, optional optimization.
 
-## 13. Language status
+## 14. Language status
 
 For each layer record implementation status separately:
 
