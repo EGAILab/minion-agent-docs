@@ -29,7 +29,11 @@ implementation-specific; the no-race result is not.
 ## RT-004 to RT-008 — Service resolution
 
 Identity is `(name, realm)`, compared by string value only — never object/enum/pointer/type
-identity. Registration is exclusive: a second `provide()` for a held name raises, naming the fiber
+identity. Isolation realms are deferred (§9 of the frozen master); today there is exactly one
+implicit realm, so identity currently reduces to the name alone. A dedicated realm-comparison
+scenario is not constructible until realms exist — the string-value-comparison half is already
+satisfied by construction, since every `inject`/`provides` name in this runtime is a plain string
+compared with ordinary equality, with no enum/object/pointer identity path to exclude. Registration is exclusive: a second `provide()` for a held name raises, naming the fiber
 that already holds it; no last-wins, no priority. There is no fallback stack — revocation removes
 the slot and notifies dependents; an earlier provider is never retained and never resurfaces.
 Visibility is narrower than registration: a service resolves only while its providing fiber is
@@ -53,6 +57,12 @@ ancestor never sees a descendant's); event admission extends *up* (a listener ta
 ancestor receives a descendant's dispatch, never the reverse). An untagged listener/registration
 participates everywhere. Disposing a scope removes exactly its own and its descendants'
 registrations, in reverse creation order, leaving ancestors and siblings intact.
+
+`ScopedRegistry` is the kernel primitive implementing inherit-down visibility (`visible_from()`):
+own scope, then ancestors, nearest first, then untagged. It is exposed as a public runtime type but
+has no plugin/mount-facing surface of its own yet — no concrete registry (tools, prompt sections)
+wires it to `ctx` until a later phase builds one. Its ordering guarantee is still binding on both
+implementations today; it is verified directly rather than through a mounted-plugin scenario.
 
 ## RT-013 to RT-015 — Effects
 
