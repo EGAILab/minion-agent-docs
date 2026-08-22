@@ -2,13 +2,13 @@
 
 **Layer ID:** `01`  
 **Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-23 (Python side of the audit essentially complete: canonical conformance
-covers all 23 RT-* requirements, §5/§6 deep audit and §8-14 review both done, 3 real implementation
-defects found and fixed; independent Rust cross-check still outstanding — see §17)  
-**Auditor:** Claude (Python-driven, per adopted workflow)  
+**Audit date:** 2026-08-23 (Python and Rust implementation audits complete; RT-F015 resolved —
+descendant-scope disposal now runs through the real runtime, not the Python runner; certification
+remains blocked solely by the Rust-owned RT-F017)
+**Auditors:** Claude (Python-driven pass) and Codex (independent Rust pass)
 **Python status:** `IMPLEMENTED`  
-**Rust status:** `IMPLEMENTED` — both implementations have reached this layer, so final
-certification requires both.
+**Rust status:** `PARTIALLY IMPLEMENTED` — the runtime primitives are implemented and unit-tested,
+but the coordinated runtime required by RT-008 and a real canonical Runtime runner are absent.
 
 ---
 
@@ -83,7 +83,7 @@ those surfaces are certified by their own later conformance.
 | RT-009 | Scoped registration context owns both visibility and teardown | Frozen §3 Scoped registration | `scoped-registration-visibility` | COVERED |
 | RT-010 | Scoped registration visibility inherits down to descendants, never up | Frozen §3 Scoped registration | `tests/runtime/test_scoped_registry.py` (Python unit test, not canonical YAML conformance — see §4 Coverage notes) | COVERED |
 | RT-011 | Scoped event admission extends up; ancestor listeners see descendant dispatch, never reverse; untagged participates everywhere | Frozen §3 Scoped registration | `scoped-event-admission` | COVERED |
-| RT-012 | Disposing a scope removes its own + descendants' registrations, not ancestors/siblings, in reverse creation order | Frozen §3 Scoped registration | `nested-scope-disposal` | COVERED |
+| RT-012 | Disposing a scope removes its own + descendants' registrations, not ancestors/siblings, in reverse creation order | Frozen §3 Scoped registration | `nested-scope-disposal`, `disposing-a-scope-cascades-to-a-still-live-descendant` | COVERED |
 | RT-013 | `ctx.effect(fn)` runs immediately and disposers unwind in reverse order | Frozen §3 Effects | `effect-reversal` | COVERED |
 | RT-014 | Double disposal is a no-op | Frozen §3 Effects | `double-unmount-disposes-effects-once` | COVERED |
 | RT-015 | Creating an effect on an already-disposed owner raises | Frozen §3 Effects | `effect-after-fiber-disposed-raises` | COVERED |
@@ -96,10 +96,13 @@ those surfaces are certified by their own later conformance.
 | RT-022 | Scope filtering is additive; no-scope dispatch admits only untagged listeners | Frozen §3 Waterfall | `scoped-event-admission`, `unscoped-dispatch-admits-only-untagged` | COVERED |
 | RT-023 | Plugin config validates through Pydantic; JSON Schema export is available where required | Frozen §3 Config | none | **DISPOSED** — `spec/runtime.md` RT-023: Python-specific mechanism, outside the language-neutral runtime contract, no canonical conformance evidence required |
 
-All 23 RT-* requirements now have a disposition: 21 COVERED by canonical `conformance/runtime/`
-scenarios, 1 (RT-010) COVERED by direct Python unit-test evidence pending a plugin-facing DSL
-surface, 2 (RT-004, RT-023) DISPOSED as out of current scope by construction/deferral. Zero
-requirements remain GAP.
+All 23 RT-* requirements have a specification disposition. That is not yet equivalent to completed
+cross-language evidence: Rust lacks the coordinated runtime path needed to prove RT-008 and does
+not execute the canonical Runtime scenarios (RT-F017, Rust-owned, open). Python's own evidence
+defect is resolved — RT-012 descendant traversal now runs through the real `minion_agent.runtime`
+`ScopeTree`/`Scope.dispose()`, not the conformance runner (RT-F015, see §15 for the fix and §4's
+`disposing-a-scope-cascades-to-a-still-live-descendant` scenario for the proof). RT-F017 alone blocks
+certification now, on the Rust side.
 
 ### Coverage notes
 
@@ -120,8 +123,9 @@ concrete registry (tools, prompt sections) wires it in until a later phase build
 runtime scenario DSL only exercises what a mounted plugin can reach through `ctx`. Inventing
 synthetic DSL surface just to poke at an unwired primitive was rejected in favor of testing it
 directly, which is both cheaper and more precise. This is accepted as sufficient evidence for now,
-but it is Python-only: Rust needs an equivalent direct unit test of its own `ScopedRegistry`
-equivalent as part of the independent cross-check (§17), and true canonical cross-language
+but it was initially Python-only. Rust now has equivalent direct evidence in
+`runtime_scope.rs::scoped_entries_are_visible_nearest_first_without_sibling_or_descendant_leaks`;
+true canonical cross-language
 conformance should be added once a real registry wires this primitive to the plugin surface.
 
 Two runner changes landed alongside this batch of scenarios, beyond new `.yaml` files: (1) the
@@ -132,8 +136,31 @@ plugin's context from outside its own `apply()` body, which is the only way to r
 state its own load-time code can't observe — closing RT-015. (3) A new `echo_args` listener action
 returns the positional arguments a listener actually received (minus the trailing `next`), so a
 downstream listener can prove what it was called with — closing RT-019. All three are
-`conformance/**`/schema changes and fall under the shared-contract reviewer rule: they need Rust's
-review before they're canonical, and are flagged for that in §17.
+`conformance/**`/schema changes and fall under the shared-contract reviewer rule. The independent
+Rust review approved all three; see the shared-contract verdict below.
+
+**RT-F015 fix — real implementation path and runner-purity evidence.** `ScopeTable.dispose()` in
+`tests/conformance/runner.py` used to compute the set of live descendant scopes itself (walking
+`ScopeKey.chain()` against every tracked name) and call `.dispose()` on each, deepest first — the
+runner was supplying RT-012's ownership/traversal semantics rather than exercising them. The real
+`minion_agent.runtime` package had no equivalent capability at all: `Scope` carried no reference to
+its children, and `Context.scope()` minted a bare, disconnected `Scope` per call. Fixed by adding a
+new real primitive, `ScopeTree` (`scope.py`, exported from `minion_agent.runtime`), shared by a
+`Context` and everything `extend()`d from it the same way `_registry`/`_events`/`_plugins` are
+shared. `Context.scope()` now registers every minted `Scope` into that tree, and `Scope.dispose()`
+itself — the same method any real application calls, not a special test-only entry point — looks up
+its own live children through the tree and disposes them first, deepest first, before unwinding its
+own registrations. A new `on_disposed` hook (mirroring `Fiber.on_state_change`) lets an observer see
+every actual disposal, direct or cascaded, without computing the scope graph itself.
+`ScopeTable.dispose()` is now exactly `await self.live[name].dispose()` — lookup and invocation, no
+traversal. Verified with a throwaway repro script before writing anything down (disposing an
+ancestor scope while a descendant was still live, with no `dispose()` call on the descendant at all,
+correctly cascaded in the right order), then made permanent as a new canonical scenario,
+`disposing-a-scope-cascades-to-a-still-live-descendant`, plus three new `test_scope.py` unit tests.
+The existing `nested-scope-disposal` scenario never actually exercised multi-level cascade in one
+step (it disposes each scope explicitly, bottom-up) — the new scenario is the first canonical
+evidence that a single `dispose_scope` step correctly sweeps a still-live descendant through the
+real runtime. No schema/DSL change was needed or made.
 
 Writing `emit-dispatch-is-synchronous-registration-order.yaml` also surfaced a real runner bug: every
 listener the runner built was an `async def`, but `EventBus.emit()` calls listeners with a plain
@@ -162,7 +189,7 @@ checking its actual behavior against the traced requirements (not just the requi
 | `fiber.py` | Fiber lifecycle | audited, matches RT-* as traced — `_LIVE_STATES` gates `effect()` for every non-live state, not only `DISPOSED`; `dispose()` only announces `UNLOADING` when leaving `ACTIVE` | RT-001..RT-003, RT-015 |
 | `plugin.py` | `PluginSpec`, the `@plugin` decorator, `spec_of()` resolution | audited, matches RT-* as traced — no reconciliation logic lives here despite the file inventory's original RT-001 pairing; that belongs to `registry.py` | RT-023 (config model attachment only) |
 | `registry.py` | `PluginRegistry`: mount/unmount/reconcile | audited — reconciliation loop matches RT-001/RT-008 (loads satisfied PENDING fibers, unloads unsatisfied ACTIVE fibers, repeats to a fixed point); see `RT-F009` for the cycle-guard exception-type inconsistency | RT-001, RT-008 |
-| `scope.py` | `ScopeKey`/`Scope` mechanics | audited, matches RT-* as traced | RT-009, RT-012 |
+| `scope.py` | `ScopeKey`/`Scope` mechanics, `ScopeTree` (added this pass, RT-F015) | `Scope.dispose()` now settles live descendants itself via a shared `ScopeTree`, deepest first, before its own registrations — real RT-012 cascading ownership, not runner-computed | RT-009, RT-012 |
 | `scoped_registry.py` | `ScopedRegistry`: inherit-down visibility query | audited, matches RT-010 exactly (own scope, then ancestors nearest-first, then untagged) — still has no plugin-facing wiring, per RT-010's disposition in §4 | RT-010 |
 | `service.py` | `ServiceRegistry`/`Impl`: exclusive registration, ACTIVE+check visibility | audited, matches RT-* as traced | RT-004..RT-007 |
 
@@ -170,8 +197,30 @@ The original inventory paired RT-004/RT-005/RT-006 evidence with `registry.py`; 
 `registry.py` is the *plugin* registry (mount/reconcile, RT-001/RT-008), and `service.py` is the
 *service* registry (RT-004..RT-007). Corrected above.
 
-Rust equivalents are present and must receive an independent inventory/audit after the Python-driven
-pass. Neither implementation is an oracle for the other.
+### Rust inventory and disposition
+
+The independent Rust pass read every module under
+`minion-agent-rust/crates/minion-agent/src/runtime/` in full and assessed it against RT-001..RT-023.
+Python was used only as a risk hint and runner-boundary check, not as semantic authority.
+
+| Rust module | Disposition | RT-* evidence and action |
+|---|---|---|
+| `identity.rs` | RETAIN | Value-based service names and owner identity support RT-004; Rust `TypeId` is not a semantic key. |
+| `error.rs` | RETAIN | Concrete runtime errors preserve expected-failure boundaries. |
+| `disposable.rs` | RETAIN | Reverse sequential, attempt-all, idempotent disposal supports RT-013/RT-014. |
+| `fiber.rs` | RETAIN + HARDEN | Strong RT-001..RT-003/RT-013..RT-015 implementation. RT-F016 fixed the panic-plus-cleanup diagnostic loss; coordinated dependency notification remains outside this module. |
+| `plugin.rs` | MODIFY | Typed config/mount construction is valid, but it creates a standalone fiber whose dependency predicate and reconciliation are caller-driven; it is not the coordinated runtime required by RT-008. |
+| `service.rs` | MODIFY | Correct exclusivity, retained name/type contract, ACTIVE/check visibility and no fallback (RT-004..RT-007), but provider changes do not notify/reconcile dependents (RT-008). |
+| `scope.rs` | RETAIN + HARDEN | Real `ScopeTree::dispose` recursively settles descendants before the parent and preserves sibling/ancestor isolation (RT-009/RT-012); disposed nodes are retained indefinitely (RT-F018). |
+| `scoped_registry.rs` | RETAIN + HARDEN | Correct inherit-down admission (RT-010); removed entries leave permanent tombstones (RT-F018). |
+| `event.rs` | RETAIN | Real event path provides fixed snapshot admission, ordering/concurrency, waterfall delegation/replacement/single-next/terminal semantics (RT-011, RT-016..RT-022). |
+| `mod.rs` and crate exports | RETAIN + HARDEN | Public surface is coherent but largely undocumented (RT-F019). |
+| coordinated `RuntimeCore`/`Context`/plugin registry | CREATE | No component currently owns services, fibers, and dependency reconciliation as one runtime; RT-008 is not implemented end-to-end (RT-F017). |
+| Rust Runtime conformance adapter | CREATE | `xtask conformance verify` validates layout only; no canonical YAML scenario invokes the real typed Rust runtime (RT-F017). |
+
+The primitives should not be rewritten merely to obtain a different Rust shape. The required work
+is to add the missing coordination and thin conformance surfaces around them, then harden bounded
+retention and documentation.
 
 ---
 
@@ -203,7 +252,7 @@ DELETE               redundant with canonical conformance, adds nothing as a uni
 | `test_properties.py` | KEEP | RT-001, RT-008, RT-009, RT-011..RT-014 | Hypothesis property tests generalizing what fixed-example scenarios pin (arbitrary scope depth, arbitrary mount/unmount cycles) — strengthens confidence beyond the canonical examples' fixed sizes |
 | `test_public_surface.py` | KEEP | none (§8-14 material) | Public `__all__` surface, no-Cordis-in-identifiers, layering purity (runtime doesn't import higher layers) — relevant to the still-unstarted Public API review, not requirement traceability |
 | `test_reactive.py` | KEEP | RT-001, RT-008, RT-013, RT-023 | Dependent pending/active/reload cycle, config validation timing, one-reconcile cascade through a dependency chain |
-| `test_scope.py` | KEEP | RT-009, RT-012, RT-015 | Scope nesting/ownership/disposal; `test_effect_on_a_disposed_scope_raises` is RT-015's *scope*-owner evidence, complementing the canonical scenario's fiber-owner case (see `RT-F008`) |
+| `test_scope.py` | KEEP | RT-009, RT-012, RT-015 | Scope nesting/ownership/disposal; `test_effect_on_a_disposed_scope_raises` is RT-015's *scope*-owner evidence, complementing the canonical scenario's fiber-owner case (see `RT-F008`). Three tests added this pass (RT-F015): `test_disposing_a_parent_scope_disposes_a_still_live_child_first`, `test_disposing_a_child_scope_leaves_the_parent_live`, `test_on_disposed_fires_once_for_direct_and_cascaded_disposal` — direct `ScopeTree`/`Scope.dispose()` cascade evidence |
 | `test_scoped_registry.py` | KEEP | RT-010 | Already RT-010's evidence of record in §4 |
 | `test_service.py` | KEEP | RT-004..RT-007 | Exclusive registration, no-fallback, ACTIVE-gating, and `test_check_predicate_narrows_visibility` proving RT-007's check half at the `ServiceRegistry` level, predating the canonical scenario |
 
@@ -221,8 +270,24 @@ behavior. They exercise the runtime kernel only incidentally as the mounting mec
 assertions are about those higher layers, not this one, so they belong to those layers' own
 existing-test audits, not this one.
 
-Rust's `runtime_*.rs` equivalent audit is still open — part of the independent Rust cross-check
-in §17.
+### Rust existing-test classification
+
+All 72 pre-audit Rust runtime tests were read and run through the real runtime primitives. Three
+focused lifecycle tests were then added during the RT-F011-class probe, bringing the audited fiber
+file to 24 tests and the runtime total to 75.
+
+| Rust test target | Verdict | RT-* | Reason |
+|---|---|---|---|
+| `runtime_disposable.rs` | KEEP | RT-013, RT-014 | Direct reverse-order, attempt-all, idempotence, concurrent-join, and cancellation-safety evidence. |
+| `runtime_fiber.rs` | STRENGTHEN (done) | RT-001..RT-003, RT-013..RT-015 | Real lifecycle path. Added represented init+cleanup failure, dependency-loss cleanup failure, and panic+cleanup failure probes; RT-F016 fixed. |
+| `runtime_service.rs` | KEEP | RT-004..RT-007 | Direct typed service identity, exclusivity, ACTIVE/check visibility, retained type contract and no-fallback evidence. It does not prove RT-008 coordination. |
+| `runtime_scope.rs` | KEEP | RT-009, RT-010, RT-012, RT-015 | Includes the required Rust-specific RT-010 proof: `scoped_entries_are_visible_nearest_first_without_sibling_or_descendant_leaks` exercises the real `ScopedRegistry`. |
+| `runtime_event.rs` | KEEP, one REWRITE | RT-011, RT-016..RT-022 | Real event path, including deterministic parallel and deep waterfall tests. `the_first_terminal_is_retained_when_a_contract_is_redeclared` should be rewritten as an implementation-hardening test because first-terminal-wins redeclaration is not a specified shared behavior. |
+| internal `event.rs` unit test | KEEP | RT-021 | Stack-safety evidence for a deep waterfall through the real dispatcher. |
+| `xtask` tests | KEEP as tooling tests | none | Validate command parsing/layout only; they are not Runtime semantic or canonical evidence. |
+
+No existing Rust test should be moved to canonical conformance merely to disguise the missing
+runner. Canonical scenarios must separately traverse a thin adapter into these real APIs.
 
 ---
 
@@ -245,6 +310,8 @@ All previously-missing canonical scenarios are now written and passing:
 - [x] RT-019 replacement-argument propagation — `waterfall-replacement-args-reach-downstream-listener`
 - [x] RT-021 zero-listener terminal — `empty-waterfall-chain-yields-terminal`
 - [x] RT-022 dispatch with no scope key — `unscoped-dispatch-admits-only-untagged`
+- [x] RT-012 descendant-scope disposal through the real runtime, not the runner —
+  `disposing-a-scope-cascades-to-a-still-live-descendant` (RT-F015)
 
 RT-004 and RT-010 have non-canonical-scenario evidence instead (COVERED-BY-CONSTRUCTION and
 Python-unit-test respectively — see §4). RT-023 is DISPOSED, no evidence required.
@@ -390,6 +457,51 @@ this task's scope even to note a typo in.)
 
 ---
 
+### Rust §8-14 assurance review
+
+- **Failure model:** expected initialization and cleanup failures use typed `Result` errors; invariant
+  panics remain panics. Every represented cleanup-failure path examined settles `Failed`, `Pending`,
+  or `Disposed` before returning the error. RT-F016 closed the sole diagnostic-loss path found when
+  an initializer panic coincided with cleanup failure.
+- **Security:** service ownership is exclusive, scope admission does not leak across siblings or up
+  from descendants, inactive providers are not visible, and effect registration closes before
+  invalidated-generation unwind. No Rust-local security finding.
+- **Reliability/operations:** transitions for one fiber are serialized; no runtime-global lock is
+  held across an awaited plugin callback or disposer; event listener snapshots are fixed before
+  callbacks run; double disposal is safe. RT-008 is not coordinated end-to-end (RT-F017), and
+  registry/scope tombstones create long-lived retention risk (RT-F018).
+- **Observability:** callers receive a pending `FiberHandle` from `mount` and can subscribe before
+  reconciliation, so the Python RT-F013 hook-timing issue has no Rust equivalent. Complete trace
+  retention is useful but unbounded and belongs to RT-F018's retention review.
+- **Performance/complexity:** event admission and scope ancestry are linear in admitted/ancestor
+  counts as expected. `ScopedRegistry` scans permanent tombstones and `ScopeTree` retains disposed
+  nodes, so churn can grow memory and query cost without bound (RT-F018).
+- **Public API:** exports are typed and do not expose `anyhow`; the absence of coordinated
+  `Context`/runtime operations means the shared runtime API is incomplete (RT-F017). No speculative
+  Phase-3 API was found.
+- **Documentation:** public runtime types and methods are largely undocumented; `cargo doc` can be
+  warning-clean without proving API accuracy or completeness (RT-F019).
+
+### Rust decisions on Python risk hints
+
+- **RT-F012:** no like-for-like Rust defect can be assessed because Rust has no registry-wide
+  reconciliation pass. This is not inherited as a Rust finding; the missing coordinator under
+  RT-F017 must define and test pass-level failure isolation when implemented.
+- **RT-F013:** no corresponding Rust issue. `DynPluginSpec::mount` returns the `Pending` fiber before
+  reconciliation, allowing trace subscription first. No shared-contract change is indicated.
+
+### Shared-contract reviewer verdict
+
+| Extension | Verdict | Reason |
+|---|---|---|
+| `provides: {name, visible}` | **APPROVED** | Language-neutral fixture notation for RT-007. `visible` selects a scripted provider predicate through the real service seam; it does not decide service resolution in the runner and maps directly to a typed Rust closure. |
+| `attempt_effect` | **APPROVED** | Language-neutral operation needed to observe RT-015 after mount. A thin runner retains the real plugin context and calls its actual effect API; all owner-state admission remains in the runtime. |
+| `echo_args` | **APPROVED** | Language-neutral scripted-listener behavior needed for RT-019. The mock listener returns the arguments it actually receives (excluding the explicit waterfall continuation); the real event dispatcher remains solely responsible for replacement propagation, order, and continuation semantics. |
+
+All three preserve the mock-backend-versus-runner boundary and can be translated into typed Rust
+fixtures without embedding Fiber, service, scope, or event decisions in the adapter. This approval
+does not approve the Python runner's unrelated descendant-scope traversal (RT-F015).
+
 ## 15. Findings
 
 | ID | Severity | Classification | Description | Disposition / action |
@@ -399,7 +511,7 @@ this task's scope even to note a typo in.)
 | RT-F003 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | Frozen §8 names separate scoped-registration visibility/ownership scenarios while current conformance consolidates them | Kept consolidated; frozen §8 wording treated as descriptive, not a scenario-count requirement (see §4 Coverage notes) |
 | RT-F004 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | RT-023 lacked an explicit evidence/disposition decision | Disposed via `spec/runtime.md` RT-023: Python-specific mechanism, outside the language-neutral runtime contract, no canonical conformance evidence required |
 | RT-F005 | HIGH | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | No `spec/runtime.md` existed for the first certification layer; frozen §3 was the only normative prose | Created `spec/runtime.md`, promoting RT-001..RT-023 into stable normative headings |
-| RT-F006 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | RT-015 (effect creation on a disposed/inactive fiber) and RT-019 (waterfall replacement-argument propagation) were not expressible with the `runtime-scenario.schema.json` vocabulary as it stood: no step type let a plugin attempt `ctx.effect()` from outside its own `apply()` body at a later point, and no listener action let a listener assert on the arguments it actually received | Extended the DSL: `provides: {name, visible}` (also closes RT-007), a new `attempt_effect` step, and a new `echo_args` listener action. Scenarios written and passing. These are `conformance/**`/schema changes — need Rust's shared-contract review before they're canonical (§17) |
+| RT-F006 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | RT-015 (effect creation on a disposed/inactive fiber) and RT-019 (waterfall replacement-argument propagation) were not expressible with the `runtime-scenario.schema.json` vocabulary as it stood: no step type let a plugin attempt `ctx.effect()` from outside its own `apply()` body at a later point, and no listener action let a listener assert on the arguments it actually received | Extended the DSL: `provides: {name, visible}` (also closes RT-007), a new `attempt_effect` step, and a new `echo_args` listener action. Scenarios written and passing. Rust's independent shared-contract review approved all three extensions. |
 | RT-F007 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | The conformance runner built every listener callback as `async def`, but `EventBus.emit()` invokes listeners with a plain synchronous call and never awaits — so any listener registered under `emit` silently never ran its body (an unawaited coroutine, discarded). Only surfaced once a real `emit` scenario was written; RT-016 had no functioning `emit` coverage before this | Fixed in `runner.py`: non-delegating listener actions (`raise`, `echo_args`, `short_circuit`, `observe`) are now plain synchronous functions; only `delegate`/`transform`/`delegate_twice` (waterfall-only, need to await `next`) stay `async def`. Runtime implementation itself (`EventBus.emit()`) was already correct — this was a conformance-runner defect, not a `PI_PARITY_DEFECT` or implementation bug |
 | RT-F008 | LOW | `CONTRACT_ASSURANCE_DEFECT` | RT-015 ("creating an effect on an already-disposed owner raises") covers both fiber-owned and scope-owned effects — `context.py`'s `_scoped_effect()` has its own `InactiveFiberError` guard for a disposed scope, distinct from `Fiber.effect()`'s. The canonical scenario (`effect-after-fiber-disposed-raises`) only covers the fiber case; the scope case has unit-test evidence only (`test_scope.py::test_effect_on_a_disposed_scope_raises`). The current `attempt_effect` DSL step operates on a mounted plugin's fiber `ctx`; there is no equivalent hook for a scope's `ctx`, and `ScopeTable.dispose()` pops a disposed scope out of `live`, so no reference survives to attempt an effect against it through the current DSL even if a step existed | Not urgent — RT-015's substance is covered (canonical fiber case + unit-tested scope case). A future DSL extension (e.g. a runner-side side-table retaining disposed scopes' `ctx`, plus an `attempt_effect` variant addressing a scope by name) would close this fully; low priority, noted for whoever next touches the runtime scenario DSL |
 | RT-F009 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `registry.py`'s reconciliation cycle-guard (`_MAX_PASSES` exceeded) raised a bare builtin `RuntimeError`, not the project's own `RuntimeError_` hierarchy (`errors.py`) that every other runtime error derives from. Code that catches `RuntimeError_` — including the conformance runner's own `except RuntimeError_` clause — would NOT have caught a genuine plugin-dependency cycle; it would have propagated uncaught. Marked `# pragma: no cover` in source, so unreached by any test; a genuine implementation inconsistency, not a Pi-parity issue (no Pi equivalent for this kernel) | Fixed: `registry.py` now raises `RuntimeError_` directly (no existing subclass fits the "reconciliation didn't stabilize" case semantically). Full suite re-run clean after the change |
@@ -408,9 +520,14 @@ this task's scope even to note a typo in.)
 | RT-F012 | LOW-MEDIUM | `PARITY_NEUTRAL_HARDENING` | `PluginRegistry.reconcile()`'s two-pass loop aborts entirely if any one fiber's `load()`/`unload()` raises — even after `RT-F011`'s fix, sibling fibers still awaiting action in the same pass are left unprocessed until a later mount/unmount triggers another `reconcile()` call. Only manifests when a disposer itself fails during a multi-fiber reconciliation pass | Not fixed — the correct shape mirrors `disposable.py`'s own aggregate-and-continue pattern one level up (per-fiber try/except, collect failures, keep processing the pass, raise an aggregated `ExceptionGroup` at the end), which is a larger, riskier change than this pass's other fixes. Recorded for a future pass |
 | RT-F013 | MEDIUM | `PARITY_NEUTRAL_HARDENING` | `ctx.plugin()` — the mount API actually used throughout `tests/conformance/agent_runner.py` and most of `tests/runtime/`'s own suite — mounts and calls `reconcile()` before returning the fiber, so a caller has no opportunity to attach `on_state_change`/`on_effect` before the fiber's first transitions (`LOADING`, possibly straight to `ACTIVE` or `FAILED`) have already fired unobserved. The lower-level two-step (`ctx.plugins.mount()`, attach hooks, `await ctx.plugins.reconcile()`) — what the conformance runner itself uses — is the only way to observe from `PENDING` onward | Not fixed — closing this is an API design decision (hook parameters on `ctx.plugin()`, or documenting the two-step contract as the observability-sensitive path), not a small isolated change. Recorded for whoever next touches the `Context` mount API |
 | RT-F014 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `PluginRegistry` — the return type of the widely-used `ctx.plugins` property — was not exported from `minion_agent.runtime`, unlike its siblings `ServiceRegistry`/`EventBus` which are exported despite being reachable the same way via `ctx.registry`/`ctx.events`. `test_public_surface.py`'s mechanical check only pins whatever `__all__` already contains, so it couldn't have caught an omission from day one | Fixed: `PluginRegistry` added to `__init__.py`'s imports and `__all__`, and to `test_public_surface.py`'s `EXPECTED` set. Full suite clean |
+| RT-F015 | HIGH | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | The Python canonical runner's `ScopeTable.dispose()` computed and disposed descendant scopes itself, while the real Python `Scope.dispose()` only disposed that one scope and did not own descendant traversal. Consequently `nested-scope-disposal` could pass because the runner supplied RT-012 rather than proving the real runtime. | Fixed: added `ScopeTree` (`scope.py`), a real shared-per-`Context` primitive tracking every minted scope by key; `Scope.dispose()` now disposes its own live children (via the tree) deepest-first before its own registrations, and fires a new `on_disposed` hook. `ScopeTable.dispose()` in the runner is now lookup + invocation only (`await self.live[name].dispose()`), no traversal. New canonical scenario `disposing-a-scope-cascades-to-a-still-live-descendant` proves single-step ancestor-disposal cascade through the real runtime (the pre-existing `nested-scope-disposal` never exercised this — it disposes bottom-up explicitly). Three new `test_scope.py` unit tests. Full suite + `ruff` clean. No schema/DSL change. |
+| RT-F016 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED | Rust correctly settled all represented initializer/disposer failures, but both initializer-panic branches discarded an error returned by reverse cleanup before resuming the original panic. Cleanup was attempted and state reached `Disposed`, yet the cleanup failure was silently lost. | Fixed Rust-idiomatically: a common panic cleanup path settles state, resumes the original panic when cleanup succeeds, and reports both panic and cleanup failure when cleanup fails. Three focused lifecycle tests prove represented init+cleanup, dependency-loss cleanup, and panic+cleanup cases. |
+| RT-F017 | HIGH | `CONTRACT_ASSURANCE_DEFECT` | Rust has correct standalone Fiber/service/event/scope primitives but no coordinated runtime owning dependency notifications/reconciliation. Provider registration/removal does not trigger dependent reevaluation (RT-008). Rust also has no Runtime canonical runner: `xtask conformance verify` checks layout only and never executes YAML against the typed library. | **BLOCKER.** Implement the coordinated Runtime/Context path and a thin Runtime-family adapter that delegates every semantic decision to it; execute the shared Runtime scenarios, including RT-008, in Rust. |
+| RT-F018 | MEDIUM | `PARITY_NEUTRAL_HARDENING` | Rust `ScopedRegistry` permanently retains removal tombstones, `ScopeTree` retains disposed nodes/effect stores, and Fiber trace history is unbounded. Long-lived registration/scope/transition churn can therefore grow resident memory and registry scan cost without bound. | Open. Define bounded reclamation/compaction that preserves ownership, stable handles, and observability; add churn tests before claiming operational readiness. |
+| RT-F019 | MEDIUM | `PARITY_NEUTRAL_HARDENING` | Rust's exported Runtime API is largely missing rustdoc. A warning-clean `cargo doc` build does not verify that public lifecycle/error/concurrency contracts are documented. | Open. Document every public Phase-1 runtime surface actually supported, especially error and lifecycle behavior; verify documentation against the shared spec and real implementation. |
 
-No `PARITY_CONSTRAINED_RISK`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` findings are currently
-recorded.
+No `PARITY_CONSTRAINED_RISK`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` findings are recorded;
+Runtime remains Minion-owned under `MINION-001`.
 
 ---
 
@@ -421,60 +538,56 @@ Design alignment                         [x]  requirements traced to frozen §3
 Pi parity                                [~]  not directly applicable; MINION-001 intentional divergence
 Normative spec                           [x]  RT-F005 resolved — spec/runtime.md
 Parity manifest                          [x]  MINION-001
-Canonical conformance                    [x]  RT-F001 resolved — all 23 RT-* requirements dispositioned
+Canonical conformance                    [~]  Python side resolved (RT-F015); Rust has no executing runner (RT-F017, open, Rust-owned)
 Python tests where implemented           [x]  15 files/133 tests audited (§6), all KEEP, all passing
-Rust tests where implemented             [ ]  not audited
+Rust tests where implemented             [x]  all runtime tests audited; RT-F011-class probes added and passing
 Property/invariant tests                 [x]  test_properties.py (Hypothesis) covers disposal/mount-churn/scope-depth/admission-depth
 Concurrency tests where applicable       [x]  test_events_async.py proves genuine concurrent parallel-listener interleaving
-Fault-injection tests where applicable   [x]  disposer-raises-mid-teardown covered (test_disposable.py, test_fiber.py)
+Fault-injection tests where applicable   [x]  both languages cover disposer failures; Rust also covers panic+cleanup failure
 Security review                          [x]  §9 — exclusivity unbypassable, disposed-fiber misuse fully rejected, scope isolation bounded by design; no finding
-Reliability review                       [x]  §10 — RT-F011 (stuck-state bug) fixed; RT-F012 (reconcile abort-on-failure) recorded, not fixed
-Observability review                     [x]  §11 — RT-F013 (ctx.plugin() hook-timing gap) recorded, not fixed
-Performance review                       [x]  §12 — no accidentally-quadratic pattern found; no finding
-Public API review                        [x]  §13-14 — RT-F014 (PluginRegistry export) fixed
-Documentation                            [x]  §13-14 — spec/runtime.md checked against actual behavior, no drift found
+Reliability review                       [x]  RT-F011/016 fixed; RT-F012/017/018 recorded
+Observability review                     [x]  Python RT-F013 recorded; no Rust equivalent; unbounded trace noted RT-F018
+Performance review                       [x]  Python clean; Rust retention/scan growth recorded RT-F018
+Public API review                        [x]  Python RT-F014 fixed; Rust coordinated surface missing under RT-F017
+Documentation                            [ ]  Rust public Runtime documentation incomplete (RT-F019)
 All findings classified                  [x]
 No unresolved Pi uncertainty             [x]
 No unresolved parity defect              [x]
-No unresolved contract-assurance defect  [~]  RT-F001-007, RT-F009-011, RT-F014 resolved; RT-F008/012/013 (LOW-MEDIUM, non-blocking) open; DSL/schema Rust review still open
-Deferred risks recorded                  [x]  none currently require risk-register entry
+No unresolved contract-assurance defect  [ ]  RT-F015 resolved; RT-F017 (Rust-owned) remains the sole HIGH blocker
+Shared-contract reviewer approval        [x]  provides:{name,visible}, attempt_effect, echo_args approved
+Deferred risks recorded                  [x]  RT-F008/012/013/018/019 remain explicitly recorded
 ```
 
 ## 17. Certification result
 
-**Result:** `NOT YET ELIGIBLE`
+**Result:** `NOT YET ELIGIBLE / BLOCKED`
 
-`spec/runtime.md` exists and every RT-001..RT-023 requirement now has an explicit disposition:
-canonical `conformance/runtime/*.yaml` evidence, direct unit-test evidence (RT-010), or an explicit
-scope-exclusion (RT-004, RT-023). The Python module deep audit (§5), existing-test audit (§6), and
-the failure-model/security/reliability/observability/performance/API/documentation review (§8-14) are
-all complete. Two real implementation defects were found and fixed during this pass: `RT-F011`, a
-genuine reliability bug where a disposer raising during `unload()`/`dispose()`/a failed `load()`'s
-unwind left the fiber permanently stuck in a non-terminal state; and two more instances of `RT-F009`'s
-wrong-exception-type pattern (`RT-F010`), plus a public-API export gap (`RT-F014`). RT-F001-RT-F007,
-RT-F009, RT-F010, RT-F011, and RT-F014 are resolved. RT-F008 (scope-owned RT-015 canonical coverage),
-RT-F012 (`reconcile()` aborts a whole pass on one fiber's failure), and RT-F013 (`ctx.plugin()`'s
-observability hook-timing gap) remain open — all low-to-medium severity, all non-blocking, all
-requiring either a DSL extension or an API design decision bigger than this pass's scope. Python's
-side of this layer's certification work is now essentially complete. What remains: the independent
-Rust cross-check, and optionally closing the three open low/medium findings in a future pass.
+The independent Rust module, existing-test, RT-010, RT-F011-class, RT-F012/RT-F013, shared-DSL, and
+§8-14 reviews are complete. The three DSL/schema extensions are approved. Rust's real
+`ScopedRegistry` has direct RT-010 evidence. Represented teardown failures already settled the
+fiber correctly; the one Rust-local panic-plus-cleanup diagnostic defect was fixed and regression
+tested as RT-F016.
 
-The Rust handoff package — the shared contract, Python status summary, the `RT-F012`/`RT-F013`
-carry-forward, the `RT-F011` audit probe, the remaining Rust-owned certification work, and the
-shared-contract review checklist for the three DSL/schema extensions — is
-`assurance/layers/01-runtime-rust-handoff.md`. That file is the entry point for Rust's independent
-audit; this file's contract/evidence stays frozen while that audit runs.
+**RT-F015 is now resolved** (this pass): `ScopeTree`, a real primitive in `minion_agent.runtime`,
+gives `Scope.dispose()` itself — not the conformance runner — ownership of descendant-scope
+disposal. `ScopeTable.dispose()` in `tests/conformance/runner.py` is now lookup + invocation only.
+`disposing-a-scope-cascades-to-a-still-live-descendant`, a new canonical scenario, proves a
+single-step ancestor disposal correctly cascades to a still-live descendant through the real
+runtime — the pre-existing `nested-scope-disposal` scenario never actually exercised that path,
+since it disposes bottom-up explicitly. Full Python suite and `ruff` clean; no schema/DSL change was
+needed or made; no shared-contract extension was reopened.
 
-**Follow-up dependencies:**
+Runtime Layer certification is nevertheless still blocked, now by exactly one contract-assurance
+defect, owned by the Rust side:
 
-1. Send the three schema/runner changes from an earlier pass (`provides: {name, visible}`,
-   `attempt_effect` step, `echo_args` action) to Rust for shared-contract review before they're
-   treated as canonical per `process/implementation-conformance-workflow.md`'s reviewer rule.
-2. Perform the independent Rust audit against the same RT-* contract: module deep audit, existing-test
-   classification, a `ScopedRegistry`-equivalent unit test for RT-010, and its own §8-14 review —
-   including checking whether Rust's fiber-equivalent has `RT-F011`'s stuck-state bug (or already
-   avoids it) and whether `RT-F012`/`RT-F013` apply there too.
-3. Optionally close `RT-F008` (scope-owner RT-015 canonical coverage), `RT-F012` (`reconcile()`
-   per-fiber failure isolation), and `RT-F013` (`ctx.plugin()` hook-timing) in a future pass — none is
-   large enough to justify a dedicated one on its own.
-4. Complete the full assurance gate before certification.
+1. **RT-F017** (open, Rust-owned): Rust lacks both a coordinated runtime implementing
+   provider-driven dependent reconciliation (RT-008) and a thin adapter that executes canonical
+   Runtime scenarios against the typed library. This is not remediated in this pass — Rust
+   implementation work stays with the independent Rust/Codex process per the established ownership
+   boundary. Implement both and make the shared Runtime suite green there before certification.
+
+RT-F018 (bounded retention) and RT-F019 (Rust API documentation) remain open hardening work and
+must be dispositioned by the foundation release gate. RT-F008, RT-F012, and RT-F013 remain the
+previously recorded non-blocking Python-side items, carried forward unchanged — this pass found no
+new evidence that alters their disposition. No shared specification, schema, scenario, or
+parity-manifest change was made or is indicated by this Python remediation.
