@@ -149,20 +149,25 @@ runner's listener factory just couldn't observe it.
 
 ## 5. Implementation inventory
 
-Python inventory is identified but not yet deep-audited:
+Python inventory, deep-audited against the RT-* table in §4 by reading every module in full and
+checking its actual behavior against the traced requirements (not just the requirement prose):
 
 | File/module | Responsibility | Decision | Evidence |
 |---|---|---|---|
-| `context.py` | Context/service access/extend | pending deep audit | RT-004, RT-007, RT-008 |
-| `disposable.py` | disposer collection and unwind | pending | RT-013..RT-015 |
-| `errors.py` | runtime errors | pending | — |
-| `events.py` | dispatch modes/waterfall/scope admission | pending | RT-016..RT-022 |
-| `fiber.py` | Fiber lifecycle | pending | RT-001..RT-003 |
-| `plugin.py` | plugin mount/reconciliation | pending | RT-001, RT-023 |
-| `registry.py` | service registry | pending | RT-004..RT-006 |
-| `scope.py` | scope mechanics | pending | RT-009, RT-012 |
-| `scoped_registry.py` | scoped registration table | pending | RT-009, RT-010 |
-| `service.py` | service resolution | pending | RT-004..RT-008 |
+| `context.py` | Context/service access/extend, `ctx.effect`/`ctx.on`/`ctx.provide` routing to fiber or scope ownership | audited, matches RT-* as traced | RT-004, RT-007, RT-008, RT-009, RT-013, RT-015 |
+| `disposable.py` | disposer collection and unwind | audited, matches RT-* as traced — `dispose_all()` is idempotent at the list level, reverse-order, and collects all failures into one `ExceptionGroup` rather than stranding later disposers | RT-013, RT-014 |
+| `errors.py` | runtime error hierarchy (`RuntimeError_` base) | audited — see `RT-F009`: `registry.py`'s cycle guard raises a bare builtin `RuntimeError`, not this hierarchy | — |
+| `events.py` | dispatch modes/waterfall/scope admission | audited, matches RT-* as traced | RT-016..RT-022 |
+| `fiber.py` | Fiber lifecycle | audited, matches RT-* as traced — `_LIVE_STATES` gates `effect()` for every non-live state, not only `DISPOSED`; `dispose()` only announces `UNLOADING` when leaving `ACTIVE` | RT-001..RT-003, RT-015 |
+| `plugin.py` | `PluginSpec`, the `@plugin` decorator, `spec_of()` resolution | audited, matches RT-* as traced — no reconciliation logic lives here despite the file inventory's original RT-001 pairing; that belongs to `registry.py` | RT-023 (config model attachment only) |
+| `registry.py` | `PluginRegistry`: mount/unmount/reconcile | audited — reconciliation loop matches RT-001/RT-008 (loads satisfied PENDING fibers, unloads unsatisfied ACTIVE fibers, repeats to a fixed point); see `RT-F009` for the cycle-guard exception-type inconsistency | RT-001, RT-008 |
+| `scope.py` | `ScopeKey`/`Scope` mechanics | audited, matches RT-* as traced | RT-009, RT-012 |
+| `scoped_registry.py` | `ScopedRegistry`: inherit-down visibility query | audited, matches RT-010 exactly (own scope, then ancestors nearest-first, then untagged) — still has no plugin-facing wiring, per RT-010's disposition in §4 | RT-010 |
+| `service.py` | `ServiceRegistry`/`Impl`: exclusive registration, ACTIVE+check visibility | audited, matches RT-* as traced | RT-004..RT-007 |
+
+The original inventory paired RT-004/RT-005/RT-006 evidence with `registry.py`; that was wrong —
+`registry.py` is the *plugin* registry (mount/reconcile, RT-001/RT-008), and `service.py` is the
+*service* registry (RT-004..RT-007). Corrected above.
 
 Rust equivalents are present and must receive an independent inventory/audit after the Python-driven
 pass. Neither implementation is an oracle for the other.
@@ -171,16 +176,52 @@ pass. Neither implementation is an oracle for the other.
 
 ## 6. Existing-test audit
 
-Not started. Python `tests/runtime/` and related composition tests, and Rust `runtime_*.rs` tests,
-must each be mapped to RT-* requirements and classified:
+Python `tests/runtime/`'s 15 files (133 tests, all passing) read in full and each run individually
+to confirm current pass state before classifying:
 
 ```text
-KEEP
-STRENGTHEN
-MOVE TO CONFORMANCE
-REWRITE
-DELETE
+KEEP                 solid unit-level test, stays as implementation-detail coverage
+STRENGTHEN           real gap or weak assertion worth fixing
+MOVE TO CONFORMANCE  tests cross-language-relevant behavior that duplicates/should replace a scenario
+REWRITE              tests something real but is structured badly (asserts internals, not behavior)
+DELETE               redundant with canonical conformance, adds nothing as a unit test
 ```
+
+| File | Verdict | RT-* | Reason |
+|---|---|---|---|
+| `test_context_access.py` | KEEP | RT-004 | `ctx.tools`/`ctx.require()` two-views-one-mechanism, layering (child can't shadow parent) |
+| `test_disposable.py` | KEEP | RT-013, RT-014 | Reverse order, idempotency, async disposers, `ExceptionGroup` aggregation at the `DisposableList` primitive |
+| `test_edges.py` | KEEP | RT-001, RT-015 | Deliberate misuse-guard/edge-branch coverage (effect/provide/on outside a plugin, unloading a pending fiber, disposed-scope effect variants) |
+| `test_events_async.py` | KEEP | RT-016 | Proves genuine *concurrent* interleaving for `parallel` (via `asyncio.Event` timing), not just registration order — stronger evidence for the "concurrent" column than the canonical scenario, which only proves awaited+no-return |
+| `test_events_emit.py` | KEEP | RT-016 | `emit` registration order, prepend, disposer removal, argument passing, mode rules, at the `EventBus` primitive |
+| `test_events_scoped.py` | KEEP | RT-011, RT-022 | Admission-direction unit coverage; `test_unscoped_dispatch_admits_only_untagged_listeners` already proved RT-022's no-key case at the `EventBus` level before the canonical scenario existed — complementary, not redundant, since it isolates the primitive from plugin-mount machinery |
+| `test_events_waterfall.py` | KEEP | RT-017..RT-021 | Core waterfall mechanics; `test_replacement_arguments_reach_downstream_listeners` already proved RT-019 at the `EventBus` level before the canonical scenario existed — same complementary relationship |
+| `test_events_waterfall_terminal.py` | KEEP | RT-021 | Computed-terminal cases: constant, empty-chain, lone-transform-not-discarded, async-computed, callable-escape-hatch |
+| `test_fiber.py` | KEEP | RT-001..RT-003, RT-013..RT-015 | The core `Fiber` lifecycle unit suite — every state transition, idempotent dispose, effect ordering, FAILED path |
+| `test_plugin.py` | KEEP | none | Pure `PluginSpec`/decorator/`spec_of()` API-shape tests; Python-specific ergonomics, not a cross-language behavioral contract |
+| `test_properties.py` | KEEP | RT-001, RT-008, RT-009, RT-011..RT-014 | Hypothesis property tests generalizing what fixed-example scenarios pin (arbitrary scope depth, arbitrary mount/unmount cycles) — strengthens confidence beyond the canonical examples' fixed sizes |
+| `test_public_surface.py` | KEEP | none (§8-14 material) | Public `__all__` surface, no-Cordis-in-identifiers, layering purity (runtime doesn't import higher layers) — relevant to the still-unstarted Public API review, not requirement traceability |
+| `test_reactive.py` | KEEP | RT-001, RT-008, RT-013, RT-023 | Dependent pending/active/reload cycle, config validation timing, one-reconcile cascade through a dependency chain |
+| `test_scope.py` | KEEP | RT-009, RT-012, RT-015 | Scope nesting/ownership/disposal; `test_effect_on_a_disposed_scope_raises` is RT-015's *scope*-owner evidence, complementing the canonical scenario's fiber-owner case (see `RT-F008`) |
+| `test_scoped_registry.py` | KEEP | RT-010 | Already RT-010's evidence of record in §4 |
+| `test_service.py` | KEEP | RT-004..RT-007 | Exclusive registration, no-fallback, ACTIVE-gating, and `test_check_predicate_narrows_visibility` proving RT-007's check half at the `ServiceRegistry` level, predating the canonical scenario |
+
+No file merits `STRENGTHEN`/`REWRITE`/`DELETE`/`MOVE TO CONFORMANCE`. The suite is uniformly
+well-scoped: unit tests exercise primitives directly (`EventBus`, `ServiceRegistry`, `DisposableList`,
+`Fiber`) with fake owners and no plugin-mount machinery, while canonical `conformance/runtime/*.yaml`
+scenarios exercise the same behavior through the real plugin/mount/dispatch surface a second
+implementation must reproduce. Several unit tests independently reached the same conclusion the new
+canonical scenarios pin (RT-007, RT-019, RT-022) before those scenarios existed — cross-corroborating
+rather than duplicating, since each operates at a different level.
+
+`tests/test_composition.py` and `tests/test_agent_composition.py` were checked and excluded: both
+mount `llm_plugin`/`session_plugin`/`agent_loop_plugin`/etc. and assert on LLM/session/agent-loop
+behavior. They exercise the runtime kernel only incidentally as the mounting mechanism; their
+assertions are about those higher layers, not this one, so they belong to those layers' own
+existing-test audits, not this one.
+
+Rust's `runtime_*.rs` equivalent audit is still open — part of the independent Rust cross-check
+in §17.
 
 ---
 
@@ -209,7 +250,12 @@ Python-unit-test respectively — see §4). RT-023 is DISPOSED, no evidence requ
 
 ### Language-specific / property / concurrency / fault tests
 
-Not yet assessed; these depend on the existing-test and module-level audits.
+Assessed as part of §6: `tests/runtime/test_properties.py` already provides Hypothesis property
+coverage for disposal-order/idempotency, mount/unmount churn, arbitrary scope depth, and arbitrary
+admission-chain depth. `test_events_async.py::test_parallel_runs_listeners_concurrently` is a genuine
+concurrency test (timing-ordered via `asyncio.Event`), and `test_disposable.py`/`test_fiber.py` cover
+the fault-injection case of a disposer raising mid-teardown. Rust's equivalent property/concurrency/
+fault coverage is unassessed — part of the independent Rust cross-check in §17.
 
 ---
 
@@ -238,6 +284,8 @@ Starting audit targets already identified:
 | RT-F005 | HIGH | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | No `spec/runtime.md` existed for the first certification layer; frozen §3 was the only normative prose | Created `spec/runtime.md`, promoting RT-001..RT-023 into stable normative headings |
 | RT-F006 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | RT-015 (effect creation on a disposed/inactive fiber) and RT-019 (waterfall replacement-argument propagation) were not expressible with the `runtime-scenario.schema.json` vocabulary as it stood: no step type let a plugin attempt `ctx.effect()` from outside its own `apply()` body at a later point, and no listener action let a listener assert on the arguments it actually received | Extended the DSL: `provides: {name, visible}` (also closes RT-007), a new `attempt_effect` step, and a new `echo_args` listener action. Scenarios written and passing. These are `conformance/**`/schema changes — need Rust's shared-contract review before they're canonical (§17) |
 | RT-F007 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | The conformance runner built every listener callback as `async def`, but `EventBus.emit()` invokes listeners with a plain synchronous call and never awaits — so any listener registered under `emit` silently never ran its body (an unawaited coroutine, discarded). Only surfaced once a real `emit` scenario was written; RT-016 had no functioning `emit` coverage before this | Fixed in `runner.py`: non-delegating listener actions (`raise`, `echo_args`, `short_circuit`, `observe`) are now plain synchronous functions; only `delegate`/`transform`/`delegate_twice` (waterfall-only, need to await `next`) stay `async def`. Runtime implementation itself (`EventBus.emit()`) was already correct — this was a conformance-runner defect, not a `PI_PARITY_DEFECT` or implementation bug |
+| RT-F008 | LOW | `CONTRACT_ASSURANCE_DEFECT` | RT-015 ("creating an effect on an already-disposed owner raises") covers both fiber-owned and scope-owned effects — `context.py`'s `_scoped_effect()` has its own `InactiveFiberError` guard for a disposed scope, distinct from `Fiber.effect()`'s. The canonical scenario (`effect-after-fiber-disposed-raises`) only covers the fiber case; the scope case has unit-test evidence only (`test_scope.py::test_effect_on_a_disposed_scope_raises`). The current `attempt_effect` DSL step operates on a mounted plugin's fiber `ctx`; there is no equivalent hook for a scope's `ctx`, and `ScopeTable.dispose()` pops a disposed scope out of `live`, so no reference survives to attempt an effect against it through the current DSL even if a step existed | Not urgent — RT-015's substance is covered (canonical fiber case + unit-tested scope case). A future DSL extension (e.g. a runner-side side-table retaining disposed scopes' `ctx`, plus an `attempt_effect` variant addressing a scope by name) would close this fully; low priority, noted for whoever next touches the runtime scenario DSL |
+| RT-F009 | LOW | `PARITY_NEUTRAL_HARDENING` — RESOLVED | `registry.py`'s reconciliation cycle-guard (`_MAX_PASSES` exceeded) raised a bare builtin `RuntimeError`, not the project's own `RuntimeError_` hierarchy (`errors.py`) that every other runtime error derives from. Code that catches `RuntimeError_` — including the conformance runner's own `except RuntimeError_` clause — would NOT have caught a genuine plugin-dependency cycle; it would have propagated uncaught. Marked `# pragma: no cover` in source, so unreached by any test; a genuine implementation inconsistency, not a Pi-parity issue (no Pi equivalent for this kernel) | Fixed: `registry.py` now raises `RuntimeError_` directly (no existing subclass fits the "reconciliation didn't stabilize" case semantically). Full suite re-run clean after the change |
 
 No `PARITY_CONSTRAINED_RISK`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` findings are currently
 recorded.
@@ -252,11 +300,11 @@ Pi parity                                [~]  not directly applicable; MINION-00
 Normative spec                           [x]  RT-F005 resolved — spec/runtime.md
 Parity manifest                          [x]  MINION-001
 Canonical conformance                    [x]  RT-F001 resolved — all 23 RT-* requirements dispositioned
-Python tests where implemented           [ ]  not audited
+Python tests where implemented           [x]  15 files/133 tests audited (§6), all KEEP, all passing
 Rust tests where implemented             [ ]  not audited
-Property/invariant tests                 [ ]  not audited
-Concurrency tests where applicable       [ ]  not audited
-Fault-injection tests where applicable   [ ]  not audited
+Property/invariant tests                 [x]  test_properties.py (Hypothesis) covers disposal/mount-churn/scope-depth/admission-depth
+Concurrency tests where applicable       [x]  test_events_async.py proves genuine concurrent parallel-listener interleaving
+Fault-injection tests where applicable   [x]  disposer-raises-mid-teardown covered (test_disposable.py, test_fiber.py)
 Security review                          [ ]  not started
 Reliability review                       [ ]  not started
 Observability review                     [ ]  not started
@@ -266,7 +314,7 @@ Documentation                            [ ]  not started
 All findings classified                  [x]
 No unresolved Pi uncertainty             [x]
 No unresolved parity defect              [x]
-No unresolved contract-assurance defect  [~]  RT-F001-007 resolved; DSL/schema changes await Rust's shared-contract review
+No unresolved contract-assurance defect  [~]  RT-F001-007, RT-F009 resolved; RT-F008 (LOW, not urgent) open; DSL/schema Rust review still open
 Deferred risks recorded                  [x]  none currently require risk-register entry
 ```
 
@@ -276,17 +324,22 @@ Deferred risks recorded                  [x]  none currently require risk-regist
 
 `spec/runtime.md` exists and every RT-001..RT-023 requirement now has an explicit disposition:
 canonical `conformance/runtime/*.yaml` evidence, direct unit-test evidence (RT-010), or an explicit
-scope-exclusion (RT-004, RT-023). RT-F001-RT-F007 are all resolved. What remains before
-certification is no longer contract/evidence work — it is implementation/test deep audit,
-security/reliability/observability/performance/API/docs review, and the independent Rust check.
+scope-exclusion (RT-004, RT-023). The Python module deep audit (§5) and existing-test audit (§6) are
+both complete: all 10 runtime modules verified against their traced RT-* requirements (with two
+inventory corrections and two new low-severity findings, RT-F008/RT-F009), and all 15
+`tests/runtime/` files (133 tests) read, run, and classified — all `KEEP`, none need
+rewrite/strengthening/deletion. RT-F001-RT-F007 and RT-F009 are resolved; RT-F008 is open but low
+severity and non-blocking. What remains before certification: security/reliability/observability/
+performance/API/docs review (§8-14, entirely unstarted) and the independent Rust check.
 
 **Follow-up dependencies:**
 
-1. Send the three schema/runner changes from this pass (`provides: {name, visible}`, `attempt_effect`
-   step, `echo_args` action) to Rust for shared-contract review before they're treated as canonical
-   per `process/implementation-conformance-workflow.md`'s reviewer rule.
-2. Perform Python module/test deep audit (§5, §6) and remediation.
-3. Perform the independent Rust audit against the same RT-* contract, including a `ScopedRegistry`-
-   equivalent unit test for RT-010.
-4. Complete security/reliability/observability/performance/public-API/documentation review (§8-14).
+1. Send the three schema/runner changes from the previous pass (`provides: {name, visible}`,
+   `attempt_effect` step, `echo_args` action) to Rust for shared-contract review before they're
+   treated as canonical per `process/implementation-conformance-workflow.md`'s reviewer rule.
+2. Perform the independent Rust audit against the same RT-* contract: module deep audit, existing-test
+   classification, and a `ScopedRegistry`-equivalent unit test for RT-010.
+3. Complete security/reliability/observability/performance/public-API/documentation review (§8-14).
+4. Optionally close `RT-F008` (scope-owner RT-015 canonical coverage) if a future DSL pass touches the
+   scenario runner for other reasons — not worth a dedicated pass on its own.
 5. Complete the full assurance gate before certification.
