@@ -811,12 +811,15 @@ Why remediation changes Pi-visible behavior:
 Post-parity action:
 ```
 
-**OPEN ITEM — no stated required-reviewer rule for shared-contract changes.** This section defines
-PR shape and record-keeping, not who must approve one. Nothing here requires a change under
-`conformance/**`, `spec/**`, or `/pi-parity-manifest.yaml` to be reviewed by an owner on both the
-Python and Rust side before merge — the standard safeguard against one side unilaterally
-reinterpreting the shared contract in a polyglot monorepo. Needs a named owner/policy decision
-(e.g. a CODEOWNERS entry mapping those paths to both teams), not an invented rule.
+**Shared-contract reviewer rule (adopted, see
+`process/shared-contract-reviewer-policy-proposal.md`).** Changes under `conformance/**`,
+`spec/**`, or `/pi-parity-manifest.yaml` MUST receive explicit semantic-owner approval before
+merge. Where independent Python and Rust implementation maintainers exist, such changes SHOULD
+also receive review from the affected implementation owners before merge; semantic-owner approval
+alone is not sufficient once those roles exist. This is a current-stage rule sized to a project
+that may not yet have separate maintainers per language — it does not invent a two-approver
+requirement the project cannot satisfy. Promote to CODEOWNERS/branch-protection enforcement once
+those ownership roles are staffed.
 
 ---
 

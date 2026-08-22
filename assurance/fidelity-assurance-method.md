@@ -42,7 +42,9 @@ Every layer follows this sequence:
 
 ## 3. Requirement traceability
 
-Every normative requirement should have a stable ID.
+Every normative requirement should have a stable ID, following
+`process/requirement-id-convention.md` (prefixes, granularity, stability rules, and the
+relationship to parity-manifest IDs).
 
 Examples:
 

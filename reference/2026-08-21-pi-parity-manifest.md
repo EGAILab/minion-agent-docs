@@ -1,7 +1,7 @@
 # Minion Agent — Pi Parity Manifest
 
 > **Informational human-readable reference only.**  
-> The canonical machine-readable source of truth is `/conformance/pi-parity-manifest.yaml`.  
+> The canonical machine-readable source of truth is `/pi-parity-manifest.yaml` in the `minion-agent` code monorepo.  
 > If this document and the canonical YAML differ, update this reference from the YAML; do not treat this Markdown file as competing authority.
 
 **Date:** 2026-08-21  
@@ -24,7 +24,7 @@ The frozen design requires the canonical parity manifest as the Phase 0 exit art
 | AI-001 | 2 | `packages/ai/src/types.ts::TextContent` | text content + textSignature | LLM vocabulary: TextBlock{text,text_signature?}; opaque string replay metadata | `public-llm-vocabulary-schema`<br>`content-signatures-round-trip` | src/minion_agent/llm/content.py (rewrite) | Phase 2 llm vocabulary (new) | **adopted** |
 | AI-002 | 2 | `packages/ai/src/types.ts::ThinkingContent` | thinking content + thinkingSignature + redacted | ThinkingBlock{thinking,thinking_signature?,redacted} | `public-llm-vocabulary-schema`<br>`content-signatures-round-trip` | src/minion_agent/llm/content.py (rewrite) | Phase 2 llm vocabulary (new) | **adopted** |
 | AI-003 | 2 | `packages/ai/src/types.ts::ToolCall` | tool call + thoughtSignature + namespace | ToolCall{id,name,arguments,thought_signature?,namespace?} | `public-llm-vocabulary-schema` | src/minion_agent/llm/content.py (rewrite) | Phase 2 llm vocabulary (new) | **adopted** |
-| AI-004 | 2 | `packages/ai/src/types.ts::UserMessage` | user string-or-block content | UserMessage.content = string | [TextBlock|ImageBlock] | `public-llm-vocabulary-schema`<br>`null-content-normalizes-empty` | src/minion_agent/llm/messages.py (rewrite) | Phase 2 llm messages (new) | **adopted** |
+| AI-004 | 2 | `packages/ai/src/types.ts::UserMessage` | user string-or-block content | `UserMessage.content = string \| [TextBlock \| ImageBlock]` | `public-llm-vocabulary-schema`<br>`null-content-normalizes-empty` | src/minion_agent/llm/messages.py (rewrite) | Phase 2 llm messages (new) | **adopted** |
 | AI-005 | 2 | `packages/ai/src/types.ts::AssistantMessage` | assistant identity/state | AssistantMessage includes api/provider/model/response ids/diagnostics/usage/deferred/raw stop/endTurn/timestamp | `public-llm-vocabulary-schema` | src/minion_agent/llm/messages.py (rewrite) | Phase 2 llm messages (new) | **adopted** |
 | AI-006 | 2 | `packages/ai/src/types.ts::ToolResultMessage` | tool result shape | ToolResultMessage content/details/usage/added_tool_names/is_error | `public-llm-vocabulary-schema` | src/minion_agent/llm/messages.py (rewrite) | Phase 2 llm messages (new) | **adopted** |
 | AI-007 | 2 | `packages/ai/src/types.ts::Usage` | usage accounting | input/output/cacheRead/cacheWrite/cacheWrite1h/reasoning/totalTokens/cost breakdown | `public-llm-vocabulary-schema` | src/minion_agent/llm/messages.py (rewrite) | Phase 2 llm usage (new) | **adopted** |

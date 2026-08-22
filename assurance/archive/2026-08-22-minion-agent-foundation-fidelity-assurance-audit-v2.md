@@ -1,3 +1,20 @@
+> **HISTORICAL / SUPERSEDED CONSOLIDATED DRAFT**
+>
+> This document is retained as the consolidated pre-split assurance design from 2026-08-22.
+> It is not a competing normative authority.
+>
+> The active assurance framework is maintained in:
+>
+> - `../README.md`
+> - `../2026-08-22-foundation-fidelity-assurance-charter.md`
+> - `../fidelity-assurance-method.md`
+> - `../layer-certification-template.md`
+> - `../risk-register.md`
+> - `../foundation-release-gate.md`
+>
+> Follow `../../process/implementation-conformance-workflow.md` for the active development,
+> certification, and phase-freeze workflow.
+
 # Minion Agent — Foundation Fidelity & Assurance Audit
 
 **Date:** 2026-08-22  
