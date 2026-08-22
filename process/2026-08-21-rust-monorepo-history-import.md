@@ -1,7 +1,11 @@
 # Minion Agent — Rust Monorepo History Import
 
 **Date:** 2026-08-21
-**Status:** approved migration design; implementation pending
+**Status:** COMPLETE (2026-08-21). Verified against the actual `minion-agent` monorepo: source head
+`041b9975b87a5a9e79180c4229cabee8a10d4bc5` is a reachable ancestor of `main`
+(`git merge-base --is-ancestor` succeeds), no `minion-agent-rust/conformance/` directory exists in
+the checked-out tree, and exactly one root `conformance/`/`pi-parity-manifest.yaml` pair exists.
+Retained as the historical record of the executed migration strategy, not as a pending plan.
 **Applies to:** `minion-agent-rust/` and `minion-agent/`
 
 ## Goal
