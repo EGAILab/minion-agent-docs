@@ -459,6 +459,12 @@ requiring either a DSL extension or an API design decision bigger than this pass
 side of this layer's certification work is now essentially complete. What remains: the independent
 Rust cross-check, and optionally closing the three open low/medium findings in a future pass.
 
+The Rust handoff package — the shared contract, Python status summary, the `RT-F012`/`RT-F013`
+carry-forward, the `RT-F011` audit probe, the remaining Rust-owned certification work, and the
+shared-contract review checklist for the three DSL/schema extensions — is
+`assurance/layers/01-runtime-rust-handoff.md`. That file is the entry point for Rust's independent
+audit; this file's contract/evidence stays frozen while that audit runs.
+
 **Follow-up dependencies:**
 
 1. Send the three schema/runner changes from an earlier pass (`provides: {name, visible}`,
