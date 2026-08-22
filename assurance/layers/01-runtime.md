@@ -2,7 +2,8 @@
 
 **Layer ID:** `01`  
 **Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-22 (Step 0-2 complete; Steps 3-6 not started — see §17)  
+**Audit date:** 2026-08-22 (Steps 0-2 complete; canonical-conformance gap-filling in progress; Steps
+3-6 not started — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** `IMPLEMENTED` — both implementations have reached this layer, so final
@@ -50,7 +51,7 @@ same RT-* contract before this layer can certify.
 ## 2. Normative sources
 
 - Frozen design: `design/2026-08-20-minion-agent-design.md` §3, "The plugin runtime".
-- Spec: no dedicated `spec/runtime.md` exists yet — tracked as `RT-F005`.
+- Spec: `spec/runtime.md` — created; closes `RT-F005`.
 - `/pi-parity-manifest.yaml`: `MINION-001`, disposition `intentional divergence`.
 - Canonical conformance: `conformance/runtime/*.yaml`.
 - Pinned Pi source: not directly applicable to this Minion-owned runtime architecture.
@@ -75,7 +76,7 @@ those surfaces are certified by their own later conformance.
 | RT-003 | Loading is transactional; invalidated load cannot commit ACTIVE or race owned effects against unwind | Frozen §3 Fiber | `dependency-loss-during-loading-never-activates` | COVERED/PARTIAL MECHANISM |
 | RT-004 | Service identity is `(name, realm)` and compares name by string value | Frozen §3 Service resolution | none direct | **GAP** |
 | RT-005 | Registration is exclusive; duplicate provider raises, with no last-wins/priority behavior | Frozen §3 Service resolution | `service-exclusivity` | COVERED |
-| RT-006 | No fallback stack; disposing a provider does not resurrect an older provider | Frozen §3 Service resolution | none | **GAP** |
+| RT-006 | No fallback stack; disposing a provider does not resurrect an older provider | Frozen §3 Service resolution | `no-fallback-stack-after-provider-disposes` | COVERED |
 | RT-007 | Service visibility is ACTIVE-gated; `check` may narrow visibility | Frozen §3 Service resolution | none | **GAP** |
 | RT-008 | Dependents reconcile when a resolved provider appears/disappears | Frozen §3 reactive dependency | `reactive-dependency` | COVERED |
 | RT-009 | Scoped registration context owns both visibility and teardown | Frozen §3 Scoped registration | `scoped-registration-visibility` | COVERED |
@@ -83,16 +84,16 @@ those surfaces are certified by their own later conformance.
 | RT-011 | Scoped event admission extends up; ancestor listeners see descendant dispatch, never reverse; untagged participates everywhere | Frozen §3 Scoped registration | `scoped-event-admission` | COVERED |
 | RT-012 | Disposing a scope removes its own + descendants' registrations, not ancestors/siblings, in reverse creation order | Frozen §3 Scoped registration | `nested-scope-disposal` | COVERED |
 | RT-013 | `ctx.effect(fn)` runs immediately and disposers unwind in reverse order | Frozen §3 Effects | `effect-reversal` | COVERED |
-| RT-014 | Double disposal is a no-op | Frozen §3 Effects | none | **GAP** |
-| RT-015 | Creating an effect on an already-disposed owner raises | Frozen §3 Effects | none | **GAP** |
-| RT-016 | `emit`/`parallel`/`serial`/`waterfall` obey the frozen awaited/order/return matrix; mode mismatch is a startup error | Frozen §3 Events | no direct coverage for three modes/mismatch | **GAP** |
-| RT-017 | Waterfall short-circuit: listener not calling `next` terminates the chain with its own return | Frozen §3 Waterfall | none direct | **GAP** |
-| RT-018 | Waterfall delegation: `next()` runs downstream and returns downstream result unless transformed | Frozen §3 Waterfall | none primary-subject | **GAP** |
-| RT-019 | Waterfall replacement args propagate through `next(*replacement)` | Frozen §3 Waterfall | none direct | **GAP** |
+| RT-014 | Double disposal is a no-op | Frozen §3 Effects | `double-unmount-disposes-effects-once` | COVERED |
+| RT-015 | Creating an effect on an already-disposed owner raises | Frozen §3 Effects | none | **GAP** — not expressible via current scenario DSL, see `RT-F006` |
+| RT-016 | `emit`/`parallel`/`serial`/`waterfall` obey the frozen awaited/order/return matrix; mode mismatch is a startup error | Frozen §3 Events | `dispatch-mode-mismatch-is-startup-error` | **VERIFIED PARTIAL** — mode-mismatch startup error covered; per-mode awaited/order/return matrix for `emit`/`parallel`/`serial` not yet directly scenario-verified |
+| RT-017 | Waterfall short-circuit: listener not calling `next` terminates the chain with its own return | Frozen §3 Waterfall | `waterfall-short-circuit` | COVERED |
+| RT-018 | Waterfall delegation: `next()` runs downstream and returns downstream result unless transformed | Frozen §3 Waterfall | `waterfall-baseline-delegation` | COVERED |
+| RT-019 | Waterfall replacement args propagate through `next(*replacement)` | Frozen §3 Waterfall | none | **GAP** — not expressible via current scenario DSL, see `RT-F006` |
 | RT-020 | Waterfall `next` may be called at most once | Frozen §3 Waterfall | `waterfall-next-called-twice` | COVERED |
-| RT-021 | Waterfall declares explicit terminal continuation, including zero-listener empty chain | Frozen §3 Waterfall | `waterfall-terminal-continuation`, `computed-waterfall-terminal` | **VERIFIED PARTIAL** — zero-listener case absent |
-| RT-022 | Scope filtering is additive; no-scope dispatch admits only untagged listeners | Frozen §3 Waterfall | `scoped-event-admission` | **VERIFIED PARTIAL** — no-key dispatch subcase absent |
-| RT-023 | Plugin config validates through Pydantic; JSON Schema export is available where required | Frozen §3 Config | none | **UNDISPOSED** — needs explicit Tier-2/conformance disposition |
+| RT-021 | Waterfall declares explicit terminal continuation, including zero-listener empty chain | Frozen §3 Waterfall | `waterfall-terminal-continuation`, `computed-waterfall-terminal`, `empty-waterfall-chain-yields-terminal` | COVERED |
+| RT-022 | Scope filtering is additive; no-scope dispatch admits only untagged listeners | Frozen §3 Waterfall | `scoped-event-admission`, `unscoped-dispatch-admits-only-untagged` | COVERED |
+| RT-023 | Plugin config validates through Pydantic; JSON Schema export is available where required | Frozen §3 Config | none | **DISPOSED** — `spec/runtime.md` RT-023: Python-specific mechanism, outside the language-neutral runtime contract, no canonical conformance evidence required |
 
 ### Coverage notes
 
@@ -100,8 +101,11 @@ Existing scenarios that are valuable but not named one-for-one in the frozen §8
 coverage. Requirement IDs and scenario filenames are not required to be 1:1.
 
 The current consolidated `scoped-registration-visibility` scenario appears to cover both visibility
-and ownership semantics even though frozen §8 names visibility and ownership separately. That is
-tracked as a documentation/contract-evidence consistency finding rather than silently ignored.
+and ownership semantics even though frozen §8 names visibility and ownership separately.
+**Resolved (`RT-F003`):** kept consolidated — one scenario already exercises both properties
+without artificial duplication. Frozen §8's separate naming is descriptive prose, not a
+scenario-count requirement; splitting it would not add coverage. The frozen master file is edited
+only by its owner, so this disposition is recorded here rather than as an edit to §8 itself.
 
 ---
 
@@ -146,19 +150,20 @@ DELETE
 
 ### Canonical conformance
 
+- [x] RT-006 no fallback stack — `no-fallback-stack-after-provider-disposes`
+- [x] RT-014 double disposal — `double-unmount-disposes-effects-once`
+- [x] RT-016 mode-mismatch startup error — `dispatch-mode-mismatch-is-startup-error`
+- [x] RT-017 waterfall short-circuit — `waterfall-short-circuit`
+- [x] RT-018 waterfall baseline delegation — `waterfall-baseline-delegation`
+- [x] RT-021 zero-listener terminal — `empty-waterfall-chain-yields-terminal`
+- [x] RT-022 dispatch with no scope key — `unscoped-dispatch-admits-only-untagged`
 - [ ] RT-001 full Fiber lifecycle
 - [ ] RT-004 string-value service identity
-- [ ] RT-006 no fallback stack
 - [ ] RT-007 ACTIVE-gated visibility + `check`
 - [ ] RT-010 inherit-down scoped visibility
-- [ ] RT-014 double disposal
-- [ ] RT-015 effect after disposed owner
-- [ ] RT-016 emit/parallel/serial + mode mismatch
-- [ ] RT-017 waterfall short-circuit
-- [ ] RT-018 waterfall baseline delegation
-- [ ] RT-019 replacement-argument propagation
-- [ ] RT-021 zero-listener terminal
-- [ ] RT-022 dispatch with no scope key
+- [ ] RT-015 effect after disposed owner — blocked, see `RT-F006`
+- [ ] RT-016 per-mode `emit`/`parallel`/`serial` awaited/order/return matrix (mismatch sub-case now covered)
+- [ ] RT-019 replacement-argument propagation — blocked, see `RT-F006`
 
 ### Language-specific / property / concurrency / fault tests
 
@@ -184,11 +189,12 @@ Starting audit targets already identified:
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| RT-F001 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | 11/23 RT requirements have zero direct canonical evidence and RT-021/RT-022 each have a verified missing sub-case | Add missing canonical scenarios/sub-cases before certification |
-| RT-F002 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | Full scenario-body review narrowed RT-021/RT-022 from ambiguous gaps to precise missing sub-cases | Folded into RT-F001 with precise scope |
-| RT-F003 | LOW | `CONTRACT_ASSURANCE_DEFECT` | Frozen §8 names separate scoped-registration visibility/ownership scenarios while current conformance consolidates them | Explicitly keep consolidated and update docs, or split; do not leave ambiguous |
-| RT-F004 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | RT-023 lacks an explicit evidence/disposition decision | Record `language-specific test`, `needs conformance`, or another approved explicit disposition |
-| RT-F005 | HIGH | `CONTRACT_ASSURANCE_DEFECT` | No `spec/runtime.md` exists for the first certification layer; frozen §3 is currently the only normative prose | Create `spec/runtime.md` before certification and promote RT-* IDs into stable spec headings |
+| RT-F001 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | 6/23 RT requirements have zero direct canonical evidence (RT-001, RT-004, RT-007, RT-010, RT-015, RT-019); RT-016's per-mode matrix is separately partial | Add remaining canonical scenarios; RT-015/RT-019 blocked on DSL work tracked as `RT-F006` |
+| RT-F002 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | Full scenario-body review narrowed RT-021/RT-022 from ambiguous gaps to precise missing sub-cases | Both sub-cases closed: `empty-waterfall-chain-yields-terminal`, `unscoped-dispatch-admits-only-untagged` |
+| RT-F003 | LOW | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | Frozen §8 names separate scoped-registration visibility/ownership scenarios while current conformance consolidates them | Kept consolidated; frozen §8 wording treated as descriptive, not a scenario-count requirement (see §4 Coverage notes) |
+| RT-F004 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | RT-023 lacked an explicit evidence/disposition decision | Disposed via `spec/runtime.md` RT-023: Python-specific mechanism, outside the language-neutral runtime contract, no canonical conformance evidence required |
+| RT-F005 | HIGH | `CONTRACT_ASSURANCE_DEFECT` — RESOLVED | No `spec/runtime.md` existed for the first certification layer; frozen §3 was the only normative prose | Created `spec/runtime.md`, promoting RT-001..RT-023 into stable normative headings |
+| RT-F006 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | RT-015 (effect creation on a disposed/inactive fiber) and RT-019 (waterfall replacement-argument propagation) are not expressible with the current `runtime-scenario.schema.json` vocabulary: no step type lets a plugin attempt `ctx.effect()` from outside its own `apply()` body at a later point, and no listener action lets a listener assert on the arguments it actually received | Extend the scenario DSL (new step/listener-action kinds) before RT-015/RT-019 can get canonical evidence; until then these two requirements stay GAP, not silently dropped |
 
 No `PARITY_CONSTRAINED_RISK`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` findings are currently
 recorded.
@@ -200,9 +206,9 @@ recorded.
 ```text
 Design alignment                         [x]  requirements traced to frozen §3
 Pi parity                                [~]  not directly applicable; MINION-001 intentional divergence
-Normative spec                           [ ]  RT-F005
+Normative spec                           [x]  RT-F005 resolved — spec/runtime.md
 Parity manifest                          [x]  MINION-001
-Canonical conformance                    [ ]  RT-F001
+Canonical conformance                    [ ]  RT-F001 — 6 requirements still GAP (2 blocked on RT-F006)
 Python tests where implemented           [ ]  not audited
 Rust tests where implemented             [ ]  not audited
 Property/invariant tests                 [ ]  not audited
@@ -217,7 +223,7 @@ Documentation                            [ ]  not started
 All findings classified                  [x]
 No unresolved Pi uncertainty             [x]
 No unresolved parity defect              [x]
-No unresolved contract-assurance defect  [ ]  RT-F001/003/004/005 remain open
+No unresolved contract-assurance defect  [ ]  RT-F001/RT-F006 remain open
 Deferred risks recorded                  [x]  none currently require risk-register entry
 ```
 
@@ -225,16 +231,15 @@ Deferred risks recorded                  [x]  none currently require risk-regist
 
 **Result:** `NOT YET ELIGIBLE`
 
-Steps 0-2 have produced actionable contract/evidence findings. Implementation/test deep audit,
+`spec/runtime.md` now exists and RT-F002/RT-F003/RT-F004/RT-F005 are resolved; 6 of the 7 requirements
+that were `GAP` at audit start now have canonical evidence. Implementation/test deep audit,
 security/reliability/observability/performance/API/docs review, and independent Rust cross-check are
-still outstanding.
+still outstanding, and RT-001/RT-004/RT-007/RT-010/RT-015/RT-019/RT-016(matrix) remain open.
 
 **Follow-up dependencies:**
 
-1. Create `spec/runtime.md` and promote the RT-* rules into stable normative headings.
-2. Add the missing canonical runtime scenarios/sub-cases.
-3. Resolve the scoped-registration scenario naming/granularity decision.
-4. Give RT-023 an explicit evidence disposition.
-5. Perform Python module/test deep audit and remediation.
-6. Perform the independent Rust audit against the same RT-* contract.
-7. Complete the full assurance gate before certification.
+1. Add canonical scenarios for RT-001, RT-004, RT-007, RT-010, and the RT-016 per-mode matrix.
+2. Extend the scenario DSL to make RT-015 and RT-019 expressible (`RT-F006`), then add their scenarios.
+3. Perform Python module/test deep audit and remediation.
+4. Perform the independent Rust audit against the same RT-* contract.
+5. Complete the full assurance gate before certification.
