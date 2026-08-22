@@ -1,6 +1,6 @@
 # Minion Agent — Normative Requirement ID Convention
 
-**Status:** Proposed project convention for assurance traceability  
+**Status:** ADOPTED (2026-08-22) — normative traceability convention for assurance  
 **Purpose:** Give stable identities to normative requirements without creating a second semantic authority.
 
 ## 1. Principle
