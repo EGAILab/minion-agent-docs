@@ -1,21 +1,22 @@
 # Session + Artifacts — Fidelity Assurance & Certification
 
 **Layer ID:** `03`  
-**Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-23 (three passes: §1-7 completed first, against the frozen master design
+**Status:** `CERTIFIED`  
+**Audit date:** 2026-08-23 (four passes: §1-7 completed first, against the frozen master design
 §5/§6/§8, `spec/session.md`, `pi-parity-manifest.yaml`'s `MINION-002`/`MINION-003` rows, the pinned Pi
 session source (`ref-repos/pi/packages/agent/src/harness/session/`), all 8 Python session modules, and
-all 15 `conformance/session/*.yaml` scenarios. §8-14 completed second: all 11 Python test files read in
-full (172 test functions, all `KEEP`), the two design-named-but-missing canonical scenarios confirmed
-genuinely absent rather than assumed, and every category review (failure model, security,
-reliability/operations, observability, performance, public API, documentation) done — surfacing
-`RISK-001` (in-memory-only session storage, confirmed intentional per the design's own Phase-9
-commitment, recorded in `risk-register.md`). `SES-F001` remediated and resolved third: 6 placeholder
-scenarios filled, 2 missing-named scenarios authored, 1 (`request-reconstruction-after-target-transform`)
-verified genuinely `DEFERRED TO LAYER 04` rather than assumed fixable — required extending
-`session-scenario.schema.json`/`session_runner.py` first, following the `LLM-F010` pattern. `SES-F002`/
-`SES-F003` remain open; the certification decision requires both resolved and is not started this
-pass, per the standing one-layer-at-a-time sequencing rule.)  
+all 15 `conformance/session/*.yaml` scenarios. §8-14 completed second, surfacing `RISK-001`
+(in-memory-only session storage, confirmed intentional per the design's own Phase-9 commitment,
+recorded in `risk-register.md`). `SES-F001` remediated and resolved third: 6 placeholder scenarios
+filled, 2 missing-named scenarios authored, 1 (`request-reconstruction-after-target-transform`)
+verified genuinely `DEFERRED TO LAYER 04`. `SES-F002` resolved fourth via a dedicated Pi re-audit
+(`packages/agent/src/types.ts:428-443`'s `AgentEvent` union, confirmed structurally separate from
+Pi's persisted session storage) and a full Session/Agent ownership matrix: Outcome A, no Layer-03
+defect — the real mismatch lives entirely in `agent_loop/driver.py` (Layer 08), already tracked under
+`AG-001`/`AG-004`. `SES-F003` resolved the same pass once that boundary was settled: `spec/session.md`
+now states the by-value event-identity rule and the Session/Agent/XFORM boundary explicitly. No
+`session/*.py` or `agent_loop/*.py` code was changed to reach `SES-F002`'s resolution — it was a scope
+correction, not an implementation fix. All three findings resolved; certification follows.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** `NOT_IMPLEMENTED` (Phase 2 per `MINION-002`/`MINION-003`; no `session/` module exists
@@ -333,6 +334,124 @@ scope per §1 — their absence here is expected, not a gap.
   `decode_message`/`SessionService.fork`'s generic exception types, are recorded above (§8's note)
   rather than duplicated here.
 
+### `SES-F002` Pi audit and ownership matrix (this pass)
+
+**Scope of this pass:** determine which part of the run/turn/step event-vocabulary mismatch is
+Session-owned (Layer 03) versus Agent-owned (Layer 08), and whether the Layer 03/08 contract boundary
+is coherent — not to fix Layer 08's own behavior. No `agent_loop/`, `agent/`, or Rust code was
+touched this pass.
+
+**Pi re-audited directly, not re-trusted from the prior pass's wording.** Pinned commit
+`b7bb00b936dbe21b8e160b3e89efdec361846699`.
+
+- `packages/agent/src/types.ts:428-443` — `AgentEvent`, Pi's complete lifecycle notification union,
+  read in full:
+  ```text
+  agent_start                                    // Agent lifecycle
+  agent_end        { messages }
+  turn_start                                      // Turn lifecycle — "a turn is one assistant
+  turn_end          { message, toolResults }      //   response + any tool calls/results" (Pi's own comment, verbatim)
+  message_start     { message }                   // Message lifecycle — user/assistant/toolResult
+  message_update    { message, assistantMessageEvent }  // streaming only
+  message_end       { message }
+  tool_execution_start  { toolCallId, toolName, args }
+  tool_execution_update  { ...,  partialResult }
+  tool_execution_end     { ..., result, isError }
+  ```
+  Pi has **no third tier between "turn" and "message"/"tool_execution."** There is no Pi concept
+  resembling Minion's "step."
+- `packages/agent/src/harness/session/types.ts` and `session.ts` (both already read in full in the
+  prior pass) — re-checked specifically for any of the above nine event-type strings: **zero matches.**
+  Pi's persisted `SessionStorage` (`Entry`/`LaneRecord` types) never stores `agent_start`/`turn_start`/
+  `message_start`/`tool_execution_start` at all. `AgentEvent` is a separate, ephemeral pub/sub
+  notification stream (`Agent.subscribe()`) for live UI updates — structurally disjoint from what Pi's
+  Session persists. The closest persisted-and-lifecycle-adjacent Pi record is `StepAttemptRecord`
+  (`step: "assistant" | "branch_summary" | "compaction"`, for crash-recovery replay), which is part of
+  the durable-AgentHarness surface already recorded as `RISK-001` (Phase 9), not part of `AgentEvent`.
+- `spec/agent.md` (already frozen, read fresh this pass): "A run is one high-level prompt/continue
+  invocation. A turn is one assistant response plus tool calls/results caused by it," with the
+  prompt-run order `agent_start, turn_start, ..., turn_end` — matches Pi's source exactly, independent
+  confirmation.
+- `minion-agent-python/src/minion_agent/agent_loop/driver.py:1-9` (module docstring, re-read this
+  pass): **"A step is one model request plus the tools it calls. A turn is zero or more steps."** This
+  is Minion's own, explicit, deliberate internal terminology — not an accidental drift. It defines
+  "turn" as a whole multi-request run, which is exactly what design §6 says an implementation
+  "MUST NOT" do to the *observable* `turn`. The definition lives entirely inside `driver.py` — a
+  Layer-08 file — not in any `session/*.py` module.
+- `pi-parity-manifest.yaml`: **`AG-001`** (phase 3, `pi: packages/agent/src/agent-loop.ts::runAgentLoop`,
+  `rule: agent_start -> turn_start -> initial prompt message lifecycle`, `python: .../driver.py
+  (rewrite)`, `disposition: adopted`) and **`AG-004`** (phase 3, `surface: turn definition/order`,
+  `rule: one assistant response + resulting tool results; turn_end then prepareNextTurn then
+  shouldStopAfterTurn then steering`, `disposition: adopted`) **already exist, already cite the
+  correct Pi vocabulary, and already target `driver.py` for remediation** — found by direct manifest
+  search, not assumed absent. Their conformance evidence
+  (`conformance/agent/initial-prompt-order-after-turn-start.yaml`) is a real, non-placeholder-named
+  scenario file that is itself still `TO_BE_FILLED` and `xfailed` (confirmed by running it:
+  `1 xfailed`) — i.e., **the run/turn ordering and naming concern this pass investigated is not an
+  undiscovered gap. It is a known, already-tracked, already-dispositioned Agent-loop (`AG-###`, phase
+  3) requirement, awaiting Layer 08's own implementation/assurance pass**, exactly as the charter's
+  audit order predicts (item 8 comes after item 3).
+
+**Ownership matrix:**
+
+| Vocabulary item | Pi source | Producer | Consumer | Persisted in Pi session? | Persisted in Minion session? | Reconstructed by Session? | Needed for Session projection? | Layer owner | Current status | Action |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `agent_start`/`agent_end` | `types.ts:430-431` | Pi `Agent` class | UI/`Agent.subscribe()` | NO (ephemeral) | Emitted as `TURN_START`/`TURN_END` (misnamed relative to Pi; scoped to the whole multi-step run) | NO — log-only, excluded from surface | NO | `AGENT` | `AG-001`, adopted, `driver.py (rewrite)`, xfailed placeholder scenario | Layer 08's own future remediation; no Session action |
+| `turn_start`/`turn_end` | `types.ts:433-434` | Pi `Agent` class | UI/`Agent.subscribe()` | NO (ephemeral) | Emitted as `STEP_START`/`STEP_END` (misnamed relative to Pi, though behaviorally the correct one-request-plus-tools granularity) | NO | NO | `AGENT` | `AG-001`/`AG-004`, adopted, same xfailed scenario | Layer 08's own future remediation; no Session action |
+| `message_start`/`update`/`end` | `types.ts:436-439` | Pi `Agent` class | UI (live streaming) | NO (ephemeral; the *settled* message becomes a session Entry separately) | No direct equivalent log-only event; `ASSISTANT_CHUNK` is the closest (streaming fidelity, log-only) | Settled surface messages: YES (`SES-002`, `PASS`); streaming notification itself: NO | Settled messages: YES, already correct | `SHARED BOUNDARY` — settled-message persistence is `SESSION`; live notification is `AGENT` | Session's portion already `PASS` | None — Session's obligation already met |
+| `tool_execution_start`/`update`/`end` | `types.ts:441-443` | Pi `Agent`/tool pipeline | UI (live progress) | NO (ephemeral; `ToolStartedRecord` is a separate crash-recovery mechanism, `RISK-001`) | `TOOL_CALL` (log-only, single event) covers the request side; `TOOL_RESULT` (surface) covers the settled side | Settled `TOOL_RESULT`: YES, correct | Settled results: YES, already correct | `SHARED BOUNDARY` — settled-result persistence is `SESSION`; execution-progress notification is `TOOL`/`AGENT` (Layer 06/08) | Session's portion already `PASS` | None — Session's obligation already met |
+| `session/forked`, `session/reset`, `compaction`, `request/header` | N/A — Minion-owned (`MINION-002`/`MINION-003`) | `session/operations.py`, `session/request_header.py` | `derive_messages`, reconstruction | N/A | YES, with real interpreted `data` (`source`/`boundary`; `summary`/`superseded_through`/`retained`; component/tool references) | YES — these are the only log-only kinds `derive_messages` itself reads | YES | `SESSION` | `SES-006`/`SES-007`/`SES-008`/`SES-009`, all `PASS` | None — already correct, unaffected by this finding |
+| `causes`/origin metadata on `TURN_START`/`TURN_END`'s `data` | Agent-loop-internal (matches existing `AG-###` conformance names `causes-preserved-under-claim-all`, `origin-survives-one-at-a-time`) | `agent_loop/driver.py` | Agent-loop's own continuation logic | NO (ephemeral in Pi) | Stored as opaque JSON-safe `data` on a log-only event — Session stores it uniformly, never interprets it | NO | NO | `AGENT` | Existing `AG-###` scenarios | Session's storage mechanism already sufficient (any JSON-safe payload); semantic correctness is Layer 08's |
+
+**Session-owned portion, independently re-confirmed correct, not re-asserted:** `CORE_SURFACE_KINDS`
+is exactly `{user/message, assistant/message, tool/result}` (`test_events.py`,
+`test_plugin_events.py`); the by-value event-identity rule is enforced by `is_surface()`'s membership
+check and independently conformance-pinned (`event-name-identity-is-by-value.yaml`); JSON-safety,
+sequencing, and the three real Session-owned log-only kinds (`session/forked`, `session/reset`,
+`compaction`) plus `request/header` are all correct and already `PASS` in §4's requirement table. None
+of this required any change this pass.
+
+**Session runner thinness, re-audited:** `tests/conformance/session_runner.py` (including this pass's
+own `SES-F001` extensions) constructs real `SessionLog`/`ArtifactStore`/message objects, appends/reads
+through real public APIs, and normalizes real returned attributes — confirmed by re-reading the whole
+file this pass. It never emits `TURN_START`/`STEP_START`/`agent_start`-style events, never simulates
+Agent-loop ordering, and never fabricates cause/origin data. **No Agent simulation exists in the
+Session runner.**
+
+**Verdict: Outcome A — mixed boundary, no Layer-03 defect remains.** Session-owned stored/
+reconstruction semantics are already correct and complete. The mismatch this finding originally
+described concerns Agent run/turn/step lifecycle *emission and naming* — entirely `agent_loop/
+driver.py`'s own concern, already tracked under `AG-001`/`AG-004` with a real (if still-placeholder)
+conformance scenario and a `(rewrite)` note anticipating exactly this correction. Session does not
+need to synthesize, reconstruct, or interpret this vocabulary to do its own job, and already treats
+every log-only event — regardless of what any producer chooses to name it — uniformly and correctly.
+
+### Fresh placeholder recount (this pass, not copied from prior arithmetic)
+
+Independently re-run against the live repository, not reused from either prior pass's count:
+
+```text
+$ ls conformance/session/*.yaml | wc -l
+17
+
+$ for f in conformance/session/*.yaml; do
+    grep -q "TO_BE_FILLED\|TO_BE_BOUND\|TO_BE_PINNED" "$f" && echo "PLACEHOLDER: $f"
+  done
+PLACEHOLDER: request-reconstruction-after-target-transform.yaml
+```
+
+```text
+Filled current-layer (Session) scenarios:  16
+Layer-04-deferred scenarios:                1  (request-reconstruction-after-target-transform.yaml)
+Layer-08-deferred scenarios (within conformance/session/):  0
+Remaining true Layer-03 placeholders:       0
+```
+
+No scenario lives in `conformance/session/` today with its executable portion Layer-08-deferred — the
+one scenario this pass's investigation connects to Layer 08 (`initial-prompt-order-after-turn-start`)
+is cleanly filed in `conformance/agent/`, a different canonical family, and was not touched, filled,
+or moved this pass.
+
 ---
 
 ## 8. Failure model
@@ -529,8 +648,8 @@ handling note covers the relevant boundary instead).
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
 | `SES-F001` | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — **RESOLVED** | **Corrected count (§7): 6, not 5, of 17 `conformance/session/*.yaml` scenarios were unfilled placeholders** (`content-signatures-round-trip`, `deferred-handle-round-trip`, `diagnostic-round-trip`, `request-reconstruction-after-target-transform`, `request-reconstruction-with-artifacts`, `rich-assistant-message-round-trip` — the first pass's own count omitted the last of these, corrected honestly rather than silently). `MINION-003`'s own manifest row cited `request-reconstruction-with-artifacts` as its `tests:` evidence while it was still a placeholder — a normative rule backed by no real scenario, exactly the situation the charter's own `CONTRACT_ASSURANCE_DEFECT` definition names. Two further gaps of the identical shape were confirmed (not assumed) this pass: the design's own originally-planned `retained-tail-no-duplicate` and `request-header-component-reuse` scenarios had never been created under any name. All 8 had real, passing Python-unit-level coverage already, so none were unverified Python behavior — only cross-language canonical evidence was missing. | **Fixed and re-verified this pass.** One of the 8 (`request-reconstruction-after-target-transform`) was investigated first, not assumed fixable: confirmed via direct repository search (no `transform`/`xform` module exists anywhere in `minion-agent-python/src/`) that it is genuinely Layer-04-dependent — filling it now would mean the runner simulating XFORM semantics, the exact thin-runner violation this methodology forbids. Reclassified `DEFERRED TO LAYER 04, non-blocking`, matching the two Layer-02 replay scenarios' own Outcome A (§7 has the full investigation). **The remaining 7 were fixed:** extended `conformance/schema/session-scenario.schema.json` (new `contentBlock`/`usage`/`cost`/`diagnostic`/`diagnosticError`/`deferredHandle`/`toolStub`/`assistantDetail`/`toolResultDetail` `$defs`, a richer `step.append` accepting content blocks/usage/diagnostics/deferred/api/response identity/tool-result fields, a new `record_header` step, and `expect_assistant_details`/`expect_tool_result_details`/`expect_reconstructed_header`/`expect_artifact_count` top-level assertions — all additive, the pre-existing `{role, text}`-only shape still works unchanged, confirmed by re-running the original 10 real scenarios before writing any new content) and `tests/conformance/session_runner.py` (real object construction on the input side, real-attribute-only normalization on the output side, mirroring the `LLM-F010` pattern exactly). Filled the 5 placeholders and authored the 2 missing scenarios. **Verified, not just asserted:** an independent throwaway script (not reusing any authored scenario) constructed a fully-unset `AssistantMessage`/`ToolResultMessage` directly and confirmed every optional field normalizes to `None`, never a fabricated value. `pi-parity-manifest.yaml`'s `MINION-003` row updated to also cite `request-header-component-reuse`. Full suite re-run fresh: 724 passed/42 xfailed/0 failed (up from 715/47 — the exact `+9`/`-5` the 7 newly-real scenarios predict, verified arithmetically before trusting it), `ruff` clean, `mypy` clean on `session_runner.py` (checked alongside a `src/` file, matching the project's own `mypy.ini` scoping and `LLM-F010`'s precedent; `test_session_conformance.py`'s pre-existing `yaml`-stub gap is unrelated and outside the project's configured mypy scope). `SES-F001` is `RESOLVED`. |
-| `SES-F002` | HIGH | `CONTRACT_ASSURANCE_DEFECT` (pending Layer 08's full behavioral audit to determine whether it is also a `PI_PARITY_DEFECT`) | The frozen design's own §5 log-only event list names `run/start`, `run/end`, `turn/start`, `turn/end` as the four lifecycle kinds. `session/events.py`'s actual `EventKind` has `TURN_START`/`TURN_END` and `STEP_START`/`STEP_END` — no `run/*` kind exists at all, and `step/*` appears nowhere in the design's list. Worse: `agent_loop/driver.py` was read directly (not inferred) to check what these events are actually emitted around. `_run_turn()` (driver.py:107-173) wraps a `while True` loop calling `_run_step()` repeatedly until no tool calls remain — i.e., it spans **multiple model requests** — and appends `EventKind.TURN_START`/`TURN_END` at its boundaries. `_run_step()` (driver.py:214-306) makes exactly **one** model request plus its tool calls/results, and appends `EventKind.STEP_START`/`STEP_END` at its boundaries. Design §6, cross-referenced by §5's own log-only list, states explicitly and by name: "Run / invocation, bounded by `agent_start...agent_end`, may contain multiple turns. Turn: exactly one assistant response + the tool calls/results caused by that assistant response. An implementation may use a private 'step' object internally, but MUST NOT redefine observable `turn` to mean a whole multi-request run." The event literally named `turn/start`/`turn/end` is emitted around what the design's own words describe as a **Run**; the true Pi-Turn boundary (one request + its tools) is logged under `step/*`, a name the design's log-only list never mentions. This is the exact collision §6 warns against, found in the log vocabulary rather than in prose. | Open, not fixed this pass — this touches `agent_loop/driver.py` (Layer 08 territory) as well as `session/events.py` (Layer 03's own vocabulary), so a full fix belongs to whichever pass reconciles both. Flagged now because `events.py`'s vocabulary is Layer-03-owned and the design-vs-code mismatch is independently verifiable without touching driver.py. Classified `CONTRACT_ASSURANCE_DEFECT` for now (the frozen design and the implementation are internally inconsistent) rather than `PI_PARITY_DEFECT`, because this pass did not audit whether `_run_turn`'s actual *behavior* (not just its event name) is Pi-Run-correct — that full behavioral question belongs to Layer 08. If Layer 08 finds the behavior itself is also wrong, this should be reclassified then, not assumed now. |
-| `SES-F003` | LOW | `CONTRACT_ASSURANCE_DEFECT` | `spec/session.md` (4 short paragraphs) restates design §5's append/surface/fork/reset/compaction rules but never mentions the log-only lifecycle kind list (`run/*`/`turn/*`/`assistant/chunk`/`tool/call`/`request/header`) or the explicit by-value event-name-identity rule — both present in the frozen design §5 and both independently conformance-pinned (`event-name-identity-is-by-value.yaml`; the log-only kinds via `SES-F002`, once fixed). A normative spec document that is silent on rules the frozen master states explicitly and conformance already tests is incomplete relative to its own authority chain. | Open, not fixed this pass — `spec/session.md` is a shared-contract file; extending it should follow the same "does this make already-frozen semantics observable, or redefine them" review used for `LLM-F010`, once `SES-F002` settles what the correct log-only vocabulary actually is (no point extending the spec with a vocabulary this pass just found to be wrong). |
+| `SES-F002` | ~~HIGH~~ — **downgraded to informational** | ~~`CONTRACT_ASSURANCE_DEFECT`~~ — **Outcome A: no Layer-03 defect.** See the full ownership matrix and Pi re-audit (§7, "`SES-F002` Pi audit and ownership matrix"). | The frozen design's own §5 log-only event list names `run/start`, `run/end`, `turn/start`, `turn/end`; `session/events.py`'s actual `EventKind` has `TURN_START`/`TURN_END` and `STEP_START`/`STEP_END`, and `agent_loop/driver.py` emits `TURN_START`/`TURN_END` around a multi-request loop and `STEP_START`/`STEP_END` around a single request-plus-tools — exactly the Run/Turn conflation design §6 prohibits by name. This pass re-audited Pi directly (`packages/agent/src/types.ts:428-443`'s `AgentEvent` union) rather than re-trusting the prior pass's design-doc-only reading, and found: Pi's `agent_start`/`turn_start`/`message_*`/`tool_execution_*` vocabulary is an **ephemeral UI-notification stream, structurally separate from Pi's persisted `SessionStorage`** (confirmed: zero occurrences of any of those event-type strings in `session.ts`/`types.ts`'s `Entry`/`LaneRecord` definitions). Session never needs to store, reconstruct, or interpret this vocabulary to do its own job — it treats every log-only event uniformly regardless of name. The actual mismatch (`driver.py`'s own docstring: "A step is one model request... A turn is zero or more steps," redefining observable `turn` exactly as design §6 forbids) lives entirely inside `agent_loop/driver.py`, a Layer-08 file. | **Resolved this pass by re-scoping, not by code change.** `pi-parity-manifest.yaml` already carries `AG-001` (phase 3, `agent_start -> turn_start -> initial prompt message lifecycle`, `python: driver.py (rewrite)`, `disposition: adopted`) and `AG-004` (phase 3, `turn definition/order`, `disposition: adopted`) — found by direct search, not assumed absent — with real (if still-placeholder, `xfailed`-confirmed) conformance evidence (`initial-prompt-order-after-turn-start.yaml`). The run/turn naming-and-ordering concern this finding raised was never an undiscovered gap; it is already a known, dispositioned, Agent-loop-owned requirement awaiting Layer 08's own implementation/assurance pass, exactly matching the charter's audit order (item 8 after item 3). **Layer-03 portion: RESOLVED/VERIFIED** (Session's stored/reconstruction semantics were already correct and needed no change). **Remaining executable lifecycle evidence: DEFERRED TO LAYER 08**, owner `AG-001`/`AG-004`. **Layer-03 certification impact: NON-BLOCKING.** No `session/*.py` or `agent_loop/*.py` file was touched to reach this disposition — this is a boundary-scoping correction, not an implementation fix. `spec/session.md` updated (`SES-F003`) to state the boundary explicitly so a future audit doesn't re-raise this as a Session finding. |
+| `SES-F003` | LOW | `CONTRACT_ASSURANCE_DEFECT` — **RESOLVED** | `spec/session.md` (originally 4 short paragraphs) restated design §5's append/surface/fork/reset/compaction rules but never mentioned the explicit by-value event-name-identity rule (present in frozen design §5, independently conformance-pinned by `event-name-identity-is-by-value.yaml`), and said nothing about the Session/Agent/XFORM ownership boundary `SES-F002`'s investigation resolved this pass. It was blocked on `SES-F002` deliberately: writing spec text about a log-only vocabulary before knowing who owns it risked baking the wrong ownership into the spec. | **Fixed once `SES-F002`'s ownership was settled, not before.** `spec/session.md` now states the by-value event-identity rule explicitly, and adds an explicit boundary paragraph: Session owns the log itself, the surface/log-only classification, and the specific log-only kinds its own operations define (`session/forked`, `session/reset`, `compaction`, `request/header`); whatever else a producer appends as log-only data is stored and classified uniformly, without Session asserting ownership of its meaning — deliberately **not** a run/turn/step vocabulary list, since `SES-F002` established that vocabulary is Agent-owned. A third paragraph states the XFORM boundary explicitly (session projection ends at the Layer 02 vocabulary; target-model transformation is a distinct, later stage), matching design §5's own "Relationship to Pi's message projection" text, previously stated only in the frozen master and not restated here. This is a `spec/**` shared-contract change: per the established review rule, it is not treated as unconditionally closed — it is available for the same broader review `LLM-F010`-style shared-contract changes received, though as a clarifying, non-testable boundary statement (no new conformance requirement, no new Python/Rust behavior) its risk is low. `SES-F003` is `RESOLVED` for Layer-03 purposes. |
 
 No `PI_PARITY_DEFECT` and no `PI_BEHAVIOR_UNCERTAIN` findings this pass — every finding traces to an
 internal inconsistency in Minion's own frozen contract (design vs. spec vs. implementation vs.
@@ -542,12 +661,12 @@ mismatch against Pi.
 ## 16. Certification gate
 
 ```text
-Design alignment                         [~]  §5/§6 read directly and traced; SES-F002 found a design-vs-implementation mismatch in the log-only event vocabulary
-Pi parity                                [x]  MINION-002/003 are intentional divergences by the manifest's own disposition; no Pi-visible behavioral mismatch found this pass (SES-F002's mismatch is design-vs-code, not yet confirmed Pi-behavioral)
-Normative spec                           [ ]  SES-F003 — spec/session.md incomplete relative to frozen design §5
-Parity manifest                          [x]  MINION-002/003 both present, both dispositioned, both cite real test evidence (MINION-003 updated this pass to also cite request-header-component-reuse)
-Canonical conformance                    [x]  SES-F001 RESOLVED — 7 of 8 named session-family gaps filled/authored this pass; the 8th (request-reconstruction-after-target-transform) verified genuinely DEFERRED TO LAYER 04, non-blocking
-Python tests where implemented           [x]  172 test functions across 11 files read in full; plus 16 real session conformance scenarios (up from 9) and their schema-validation coverage, all passing fresh
+Design alignment                         [x]  §5/§6 re-traced against Pi source directly this pass; SES-F002's apparent design-vs-implementation mismatch resolved as a scope misattribution, not a Session defect (see ownership matrix, §7)
+Pi parity                                [x]  MINION-002/003 are intentional divergences by the manifest's own disposition; no Pi-visible behavioral mismatch found in Session; the only real Pi-derived mismatch (run/turn naming) is Agent-owned, already tracked (AG-001/AG-004)
+Normative spec                           [x]  spec/session.md updated this pass (SES-F003 resolved): by-value event-identity rule stated explicitly; Session/Agent/XFORM boundary stated explicitly
+Parity manifest                          [x]  MINION-002/003 both present, both dispositioned, both cite real test evidence; AG-001/AG-004 confirmed to already carry the correct Pi run/turn vocabulary and disposition
+Canonical conformance                    [x]  SES-F001 RESOLVED — all Layer-03-owned scenarios filled/authored; 0 remaining true Layer-03 placeholders (fresh recount, §7); the sole remaining placeholder is Layer-04-owned, non-blocking
+Python tests where implemented           [x]  172 test functions across 11 files read in full; 16 real session conformance scenarios, all passing fresh; session_runner.py re-audited for Agent simulation this pass -- none found
 Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), consistent with the manifest
 Property/invariant tests                 [x]  test_properties.py — 7 Hypothesis tests already exist
 Concurrency tests where applicable       [x]  §9/§10 reviewed — no concurrent-mutation surface exists in this layer (synchronous, in-memory, no locking needed); not applicable rather than missing
@@ -557,55 +676,58 @@ Reliability review                       [x]  §10 complete — RISK-001 (in-mem
 Observability review                     [x]  §11 complete — no finding; metrics/stats-query gap noted as a future convenience, not a defect
 Performance review                       [x]  §12 complete — one non-blocking observation (derive_messages re-derivation cost, not memoized)
 Public API review                        [x]  §13 complete — public/internal boundary confirmed clean; cross-language scope boundary (log wire format vs. reconstructed message shape) confirmed intentional
-Documentation                            [x]  §14 complete — SES-F002/F003 already captured; module docstrings found accurate throughout
+Documentation                            [x]  §14 complete; spec/session.md now current (SES-F003 resolved)
 All findings classified                  [x]  SES-F001..F003 classified
 No unresolved Pi uncertainty             [x]  none raised this pass
-No unresolved parity defect              [x]  none raised this pass (SES-F002 classified CONTRACT_ASSURANCE_DEFECT pending Layer 08)
-No unresolved contract-assurance defect  [ ]  ACTIVE: SES-F002, SES-F003. RESOLVED this pass: SES-F001.
-Deferred risks recorded                  [x]  RISK-001 (in-memory-only persistence, Phase 9) recorded in risk-register.md this pass
+No unresolved parity defect              [x]  none — Session has none; the one real Pi-derived vocabulary mismatch is Agent-owned (AG-001/AG-004), not a Layer-03 parity defect
+No unresolved contract-assurance defect  [x]  SES-F001, SES-F002, SES-F003 all RESOLVED this pass or the prior one
+Deferred risks recorded                  [x]  RISK-001 (in-memory-only persistence, Phase 9) recorded in risk-register.md
 ```
 
 ---
 
 ## 17. Certification result
 
-**Result:** `IN_AUDIT`
+**Result:** `CERTIFIED`
 
-§1-14 are complete with real grounding, across three passes. First pass: the frozen design §5/§6/§8
-was read directly, `spec/session.md` was checked against it and found incomplete (`SES-F003`),
-`MINION-002`/`MINION-003` were traced to their manifest rows, pinned Pi session source was read to
-confirm the storage-architecture divergence is intentional and scoped correctly, all 8 Python modules
-were read and inventoried, and all 15 canonical session scenarios were read and classified
-real-vs-placeholder. Second pass: all 11 test files were read in full (172 test functions, all `KEEP`),
-the two design-named scenarios with no canonical file were confirmed genuinely missing rather than
-assumed, and §8-14's category reviews were completed, surfacing `RISK-001`. Third pass (this update):
-`SES-F001` was remediated and resolved.
+§1-14 are complete with real grounding, across four passes. First pass: the frozen design §5/§6/§8
+was read directly, `spec/session.md` was checked against it, `MINION-002`/`MINION-003` were traced to
+their manifest rows, pinned Pi session source was read to confirm the storage-architecture divergence
+is intentional and scoped correctly, all 8 Python modules were read and inventoried, and all 15
+canonical session scenarios were read and classified real-vs-placeholder. Second pass: all 11 test
+files were read in full (172 test functions, all `KEEP`), the two design-named scenarios with no
+canonical file were confirmed genuinely missing rather than assumed, and §8-14's category reviews were
+completed, surfacing `RISK-001`. Third pass: `SES-F001` was remediated and resolved. Fourth pass (this
+update): `SES-F002` was re-scoped and resolved via a dedicated Pi re-audit and Session/Agent ownership
+matrix, and `SES-F003` was resolved once that boundary was settled.
 
-Two real findings remain open, both `CONTRACT_ASSURANCE_DEFECT`, none `PI_PARITY_DEFECT` or
-`PI_BEHAVIOR_UNCERTAIN`; one is now resolved:
+All three findings are now resolved, all were `CONTRACT_ASSURANCE_DEFECT`, none were `PI_PARITY_DEFECT`
+or `PI_BEHAVIOR_UNCERTAIN`:
 
-- **`SES-F001`** (MEDIUM) — **RESOLVED.** 6 placeholder scenarios were filled and 2 missing-named
-  scenarios were authored (7 total; the count itself was corrected this pass from a first-pass
-  undercount of "5," found and fixed honestly rather than silently). The 8th item
-  (`request-reconstruction-after-target-transform`) was investigated, not assumed, and confirmed
-  genuinely `DEFERRED TO LAYER 04` — no XFORM module exists anywhere in the repository, so filling it
-  now would mean the runner simulating semantics it doesn't own. `conformance/schema/session-scenario.schema.json`
-  and `tests/conformance/session_runner.py` were extended (additively — the original 10 real scenarios
-  still pass unchanged) to expose rich `AssistantMessage`/`ToolResultMessage` fields and a
-  `record_header`/artifact-observation path the DSL previously had no way to reach at all.
-  `pi-parity-manifest.yaml`'s `MINION-003` row updated. Full detail, including the independent
-  adversarial absence-check and the exact fresh gate numbers, is in `SES-F001`'s findings row (§15).
-- **`SES-F002`** (HIGH, still open): the frozen design's own log-only event vocabulary (`run/*`/`turn/*`)
-  doesn't match what `session/events.py` declares (`turn/*`/`step/*`, no `run/*`), and direct inspection
-  of `agent_loop/driver.py` shows the mismatch isn't cosmetic — the event literally named `turn/start`
-  is emitted around a multi-request loop, which is exactly the Run/Turn conflation design §6 explicitly
-  prohibits by name. Still the most significant open finding and still sits right at the Layer
-  03/Layer 08 boundary; the full behavioral verdict (is `_run_turn`'s actual control flow Pi-correct,
-  independent of its event names?) remains explicitly reserved for Layer 08's own audit — this pass
-  added no new evidence on that question, deliberately, to avoid working ahead of the sequencing rule.
-- **`SES-F003`** (LOW, still open): `spec/session.md` doesn't restate the frozen design's log-only kind
-  list or its by-value event-identity rule, both of which conformance already depends on (or will, once
-  `SES-F002` is resolved).
+- **`SES-F001`** (MEDIUM) — **RESOLVED** (prior pass). 6 placeholder scenarios filled, 2 missing-named
+  scenarios authored, 1 (`request-reconstruction-after-target-transform`) verified genuinely `DEFERRED
+  TO LAYER 04`. Full detail in `SES-F001`'s findings row (§15).
+- **`SES-F002`** (originally HIGH) — **RESOLVED this pass, downgraded to informational: Outcome A, no
+  Layer-03 defect.** Pi was re-audited directly (`packages/agent/src/types.ts:428-443`'s `AgentEvent`
+  union, not re-trusted from either prior pass's design-doc paraphrase) and found to keep its
+  `agent_start`/`turn_start`/`message_*`/`tool_execution_*` lifecycle vocabulary as an ephemeral
+  UI-notification stream, structurally separate from Pi's persisted session storage (confirmed: zero
+  occurrences of any of those event-type strings in Pi's `Entry`/`LaneRecord` definitions). Session
+  never needs this vocabulary to do its own job and already treats every log-only event uniformly
+  regardless of name. The real mismatch — `agent_loop/driver.py`'s own docstring literally defines "a
+  turn" as "zero or more steps," redefining observable `turn` to mean a multi-request run exactly as
+  design §6 forbids — lives entirely inside a Layer-08 file, and `pi-parity-manifest.yaml` already
+  carries `AG-001`/`AG-004` (phase 3, correct Pi vocabulary, disposition `adopted`, real but
+  `xfailed`-confirmed placeholder conformance evidence) tracking it. Full ownership matrix, event-by-
+  event, is in §7 ("`SES-F002` Pi audit and ownership matrix"). No `session/*.py` or `agent_loop/*.py`
+  file was changed — this was a scope correction, not an implementation fix.
+- **`SES-F003`** (LOW) — **RESOLVED this pass**, deliberately only after `SES-F002`'s boundary was
+  settled. `spec/session.md` now states the by-value event-identity rule explicitly, states exactly
+  what Session owns versus what a log-only-event producer owns, and states the XFORM boundary
+  explicitly — without specifying a run/turn/step vocabulary, since that's confirmed Agent-owned. This
+  is a `spec/**` shared-contract change and is recorded as available for the same broader review
+  `LLM-F010`-style changes received, not unilaterally closed, though its risk is low (a clarifying,
+  non-testable boundary statement, no new conformance requirement).
 
 `RISK-001` (`SessionLog`/`ArtifactStore` in-memory only, confirmed intentional per the design's own
 Phase-9 commitment, recorded in `risk-register.md`) needs no action from this layer — unchanged this
@@ -618,24 +740,42 @@ every reset/compaction/fork rule is implemented exactly as design §5 specifies.
 borne out by evidence**, per the charter's own instruction that a starting hypothesis is not a
 substitute for audit evidence.
 
-**Not started this pass, by design:** remediation of `SES-F002`/`SES-F003`, and the certification
-decision itself (which requires both resolved, per the charter's own "must be repaired before
-certification" rule for `CONTRACT_ASSURANCE_DEFECT`). Also not started: Layer 04 (XFORM), Layer 08
-(Agent run/turn state machine — deliberately not pulled forward even though `SES-F002` touches its
-territory), Rust implementation for this layer (Phase 2, not yet due), and any Phase-5 work.
+**Not started this pass, by design:** any implementation of Layer 08 (Agent loop), Layer 04 (XFORM),
+or Rust for this layer (Phase 2, not yet due). `agent_loop/driver.py` and `session/events.py` were
+read but not modified — `SES-F002`'s resolution is a documentation/scope correction, not a code
+change. `AG-001`/`AG-004`'s own remediation (renaming `driver.py`'s event emission, and deciding
+whether the underlying control-flow behavior itself is Pi-correct) is explicitly left for Layer 08's
+own future pass.
 
-**Follow-up dependencies:**
+**Final freeze-gate audit:**
 
-1. ~~Resolve `SES-F001`~~ — **done, this pass.**
-2. Resolve `SES-F002`: determine the correct log-only event vocabulary (add `run/*`? rename
-   `turn/*`↔`step/*`? something else the design doesn't yet state precisely enough to decide alone) —
-   needs Layer 08's own audit of `_run_turn`/`_run_step`'s actual control-flow correctness first. Do
-   not silently rename without confirming the behavior is Pi-correct; a naming fix over incorrect
-   behavior would hide the real defect. This is the one item in this layer's findings that may end up
-   waiting on Layer 08 rather than being fully closeable within Layer 03 alone — if so, the
-   certification gate should say so explicitly rather than force a premature resolution.
-3. Resolve `SES-F003` once `SES-F002` settles the correct vocabulary — extending `spec/session.md`
-   with a vocabulary this pass just found to be wrong would create more contract-assurance debt, not
-   less.
+```text
+SES-F001 RESOLVED?                                       YES
+SES-F002 current-layer resolved?                         YES (Outcome A -- no Layer-03 defect existed)
+SES-F002 future Agent portion explicitly deferred?        YES -- AG-001/AG-004, phase 3, adopted
+SES-F003 RESOLVED?                                        YES
+request-reconstruction-after-target-transform explicitly
+Layer-04 deferred?                                        YES
+All Layer-03-owned canonical cases executable?            YES -- 0 remaining true Layer-03 placeholders
+All future-layer cases have explicit owner?               YES -- Layer 04 (XFORM), Layer 08 (AG-001/AG-004)
+Active PI_PARITY_DEFECT?                                  NONE
+Active PI_BEHAVIOR_UNCERTAIN?                             NONE
+Active CONTRACT_ASSURANCE_DEFECT?                         NONE
+Runner simulating Agent/XFORM semantics?                  NO -- session_runner.py re-audited this pass, confirmed thin
+Parity manifest current?                                  YES
+spec/session.md current?                                  YES -- updated this pass
+```
+
+**Layer 03 — Session + Artifacts: `CERTIFIED`.**
+
+**Follow-up dependencies (none block this certification):**
+
+1. ~~Resolve `SES-F001`~~ — done.
+2. ~~Resolve `SES-F002`~~ — done, by ownership correction. `AG-001`/`AG-004`'s own executable
+   remediation remains Layer 08's future work, not a Layer-03 obligation.
+3. ~~Resolve `SES-F003`~~ — done.
 4. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
    recorded and cited.
+5. `spec/session.md`'s change should still receive the broader shared-contract review `LLM-F010`-style
+   changes received, even though it does not block this certification (documentation-only, no new
+   testable behavior).
