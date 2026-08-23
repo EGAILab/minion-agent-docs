@@ -2,12 +2,17 @@
 
 **Layer ID:** `03`  
 **Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-23 (first pass: §1-7 complete with real grounding against the frozen master
-design §5/§6/§8, `spec/session.md`, `pi-parity-manifest.yaml`'s `MINION-002`/`MINION-003` rows, the
-pinned Pi session source (`ref-repos/pi/packages/agent/src/harness/session/`), all 8 Python session
-modules, all 11 Python session test files, and all 15 `conformance/session/*.yaml` scenarios. §8-14
-category reviews, remediation, and certification are pending a follow-up pass — not started this pass,
-per the standing one-layer-at-a-time sequencing rule.)  
+**Audit date:** 2026-08-23 (two passes: §1-7 completed first, against the frozen master design
+§5/§6/§8, `spec/session.md`, `pi-parity-manifest.yaml`'s `MINION-002`/`MINION-003` rows, the pinned Pi
+session source (`ref-repos/pi/packages/agent/src/harness/session/`), all 8 Python session modules, and
+all 15 `conformance/session/*.yaml` scenarios. §8-14 completed second: all 11 Python test files read in
+full (172 test functions, all `KEEP`), the two design-named-but-missing canonical scenarios confirmed
+genuinely absent rather than assumed, and every category review (failure model, security,
+reliability/operations, observability, performance, public API, documentation) done — surfacing
+`RISK-001` (in-memory-only session storage, confirmed intentional per the design's own Phase-9
+commitment, recorded in `risk-register.md`). Remediation of `SES-F001`/`SES-F002`/`SES-F003` and the
+certification decision itself are pending a follow-up pass — not started this pass, per the standing
+one-layer-at-a-time sequencing rule.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** `NOT_IMPLEMENTED` (Phase 2 per `MINION-002`/`MINION-003`; no `session/` module exists
@@ -194,33 +199,33 @@ No file received `MODIFY`/`REWRITE`/`DELETE`/`DEFER` this pass. `events.py` is t
 
 ## 6. Existing-test audit
 
-All 11 Python session test files were inventoried by function name (172 test functions across the
-suite); `test_derive.py` and `test_properties.py` were additionally read in full given they carry the
-LLM-vocabulary round-trip and Hypothesis-property coverage most likely to interact with Layer 02's
-recent changes. Deeper line-by-line reading of the remaining 9 files' bodies is **pending the next
-pass** — the method's own audit questions (obsolete implementation detail? duplicates canonical
-conformance? exercises the real path? deterministic?) are answered provisionally below from function
-names, docstrings, and the one-level-deeper read already done on `derive.py`/`properties.py`; nothing
-here should be read as a final `KEEP` verdict until each file gets the same full read Layer 01/02 gave
-their own suites.
+All 11 Python session test files were read in full this pass (172 test functions total). Every file
+exercises the real public API (no reach-into-private-state), every assertion is deterministic, and
+none asserts an implementation detail the design doesn't make normative. No file duplicates canonical
+conformance — where a Python test and a `conformance/session/*.yaml` scenario cover the same rule
+(e.g. reset, fork, compaction), the Python test adds edge cases the YAML scenario doesn't (e.g.
+`test_a_forks_compaction_retains_its_own_tail_only`'s sequence-number-restart case), rather than
+re-asserting the same case twice.
 
-| Test file | Requirement(s) | Current validity (provisional) | Disposition | Reason |
+| Test file | Requirement(s) | Validity | Disposition | Reason |
 |---|---|---|---|---|
-| `test_artifacts.py` | `SES-010` | Names match `ArtifactStore`'s real public API exactly | `KEEP` (provisional) | — |
-| `test_compaction.py` | `SES-008` | Names cover supersession, double-projection, empty-log, post-reset — matches design table | `KEEP` (provisional) | — |
-| `test_derive.py` | `SES-002`, `SES-006`, `SES-007`, `SES-008` | Read in full this pass; every LLM-vocabulary round-trip (signatures, usage/cost, diagnostics, deferred) has a dedicated test | `KEEP` | — |
-| `test_events.py` | `SES-003` | 4 tests confirm the surface is exactly 3 kinds and lifecycle events are excluded | `KEEP` (provisional) | — |
-| `test_fork.py` | `SES-006` | 11 tests, including nested-fork-of-fork and fork-local compaction | `KEEP` (provisional) | — |
-| `test_log.py` | `SES-001`, `SES-005` | 10 tests, thorough JSON-safety rejection coverage | `KEEP` (provisional) | — |
-| `test_plugin_events.py` | `SES-003`, `SES-011`, `SES-012` | 11 tests, covers open-namespace validation and value-identity | `KEEP` (provisional) | — |
-| `test_properties.py` | `SES-002`, `SES-006`, `SES-007`, `SES-008` | Read in full this pass; 7 Hypothesis property tests (order preservation, reset-yields-empty, compaction bound, monotonic growth, fork-chain-of-any-depth) | `KEEP` | Real property tests per the method's §7 — a genuine strength, not just unit-test padding |
-| `test_request_header.py` | `SES-009` | 7 tests, includes component-reuse (`test_a_stable_component_is_stored_once_across_many_steps`) | `KEEP` (provisional) | Covers the `SES-F001`-flagged canonical gap at the Python-unit level |
-| `test_request_header_tools.py` | `SES-009` | 5 tests, includes tool-schema reuse addressing to the same reference | `KEEP` (provisional) | Same note as above |
-| `test_reset.py` | `SES-007` | 6 tests, matches design table exactly | `KEEP` (provisional) | — |
+| `test_artifacts.py` | `SES-010` | 7 tests; confirms dedup, cross-type (str/bytes) identity, membership, missing-ref error, and the explicit absence of any delete/remove method | `KEEP` | — |
+| `test_compaction.py` | `SES-008` | 8 tests; `test_nothing_is_double_projected` is direct Python-unit evidence for the design's named "retained-tail-no-duplicate" scenario (§7) | `KEEP` | — |
+| `test_derive.py` | `SES-002`, `SES-006`, `SES-007`, `SES-008` | 16 tests; every LLM-vocabulary round-trip (signatures, usage/cost, diagnostics, deferred) has a dedicated test | `KEEP` | — |
+| `test_events.py` | `SES-003` | 4 tests confirm the surface is exactly 3 kinds and lifecycle events are excluded | `KEEP` | — |
+| `test_fork.py` | `SES-006` | 11 tests, including nested-fork-of-fork, fork-local compaction, and the sequence-number-restart edge case | `KEEP` | — |
+| `test_log.py` | `SES-001`, `SES-005` | 10 tests; thorough JSON-safety rejection coverage (cycles excluded by design of `_check_json_safe`, though no test constructs one — see §7 note below) | `KEEP` | — |
+| `test_plugin_events.py` | `SES-003`, `SES-011`, `SES-012` | 11 tests; `test_a_raw_string_kind_is_the_same_event_as_its_constant` is the exact Python-unit mirror of `event-name-identity-is-by-value.yaml` | `KEEP` | — |
+| `test_properties.py` | `SES-002`, `SES-006`, `SES-007`, `SES-008` | 7 Hypothesis property tests (order preservation, reset-yields-empty, compaction bound, monotonic growth, fork-chain-of-any-depth) | `KEEP` | Real property tests per the method's §7 — a genuine strength, not just unit-test padding |
+| `test_request_header.py` | `SES-009` | 7 tests; `test_a_stable_component_is_stored_once_across_many_steps` is direct Python-unit evidence for the design's named "request-header-component-reuse" scenario (§7) | `KEEP` | — |
+| `test_request_header_tools.py` | `SES-009` | 5 tests, including a strengthened content-addressing pin (`test_an_unchanged_tool_set_addresses_to_the_same_reference` explicitly rules out a constant-reference implementation, not just "two calls agree") | `KEEP` | — |
+| `test_reset.py` | `SES-007` | 6 tests, matches design table exactly | `KEEP` | — |
 
-No test in this inventory appeared to assert an obsolete implementation detail, duplicate canonical
-conformance, or encode a superseded contract — but that conclusion rests on names/docstrings for 9 of
-11 files and should be treated as provisional pending the full read.
+All 11 files: `KEEP`. No `STRENGTHEN`/`MOVE TO CONFORMANCE`/`REWRITE`/`DELETE` disposition was warranted
+by anything found this pass. One minor observation, not a defect: `_check_json_safe`'s cycle-detection
+branch (`log.py:60`, `"contains a cycle"`) has no dedicated test constructing a genuine reference cycle
+— every existing rejection test uses a different violation (bytes, non-string keys, sparse-like
+tuples). Worth a `STRENGTHEN` in a future pass, not blocking.
 
 Python already enforces 100% line coverage for currently-covered core packages (per the method's own
 floor); `minion_agent/session/` is inside that covered set (confirmed: all 8 files appear in `src/`
@@ -258,16 +263,16 @@ coverage already (`test_derive.py`'s round-trip tests, `test_request_header.py`'
 tests) — the gap is specifically the missing cross-language canonical evidence, not unverified Python
 behavior.
 
-Cross-checked against the frozen design's own originally-planned `session/` scenario list (§8): two
-named scenarios (`retained-tail-no-duplicate`, `request-header-component-reuse`) do not appear under
-those names in the current directory. `retained-tail-no-duplicate`'s property appears exercised
-implicitly by `compaction-repeated-and-nested.yaml`'s `keep: 1` case; `request-header-component-reuse`
-has no obvious canonical equivalent, only the Python-unit-level
-`test_a_stable_component_is_stored_once_across_many_steps`. Neither is committed as a hard finding
-this pass — the design's §8 list is a plan, not an inventory, and scenario consolidation/renaming
-during implementation is legitimate — but both are flagged here for a definitive check before this
-layer certifies, per the same discipline applied to the two Layer-02 replay scenarios (verify before
-concluding, don't assume Outcome A).
+Cross-checked against the frozen design's own originally-planned `session/` scenario list (§8), then
+verified against the full test-body read in §6: two named scenarios (`retained-tail-no-duplicate`,
+`request-header-component-reuse`) do not appear under those names in the current directory, and neither
+is implicitly subsumed by an existing canonical scenario — confirmed, not assumed, by reading the
+actual `compaction-repeated-and-nested.yaml` and every request-header scenario. What each *does* have is
+a dedicated, real Python-unit test: `test_compaction.py::test_nothing_is_double_projected`
+(`derived.count("two") == 1`, explicitly pinning no-duplication) and
+`test_request_header.py::test_a_stable_component_is_stored_once_across_many_steps`. This is the same
+shape of gap as `SES-F001` — real, verified Python behavior with no cross-language canonical evidence —
+so both are folded into `SES-F001`'s scope below rather than kept as a separate open question.
 
 Two other planned-list names (`pi-harness-message-projections`, `compaction-estimator-last-valid-usage`,
 `compaction-estimator-zero-usage-fallback`) map to `HAR-003`/`HAR-005` — phase 7, out of Layer 03's
@@ -284,27 +289,224 @@ scope per §1 — their absence here is expected, not a gap.
 
 ### State-machine tests
 
-- [ ] Not evaluated this pass — session log state (lane/leaf tracking) is minimal in Minion's
-  architecture; whether a dedicated state-machine test is warranted is deferred to the next pass.
+- [x] Reviewed (§8-14 pass): Minion's session architecture has no lane/leaf state machine to test —
+  that is precisely the Pi complexity `MINION-002` deliberately does not adopt. The closest analog,
+  reset/compaction/fork's derivation-effect branching in `_derive`, is already covered as pure-function
+  behavior by `test_derive.py`/`test_properties.py` rather than needing a separate state-machine
+  harness. Not a gap.
 
 ### Concurrency tests
 
-- [ ] Not evaluated this pass. `SessionLog`/`ArtifactStore` are plain Python objects with no internal
-  locking — whether concurrent session operations need dedicated coverage (per the method's §7
-  suggested list) is an open question for §10 (reliability/operations), not yet reviewed.
+- [x] Reviewed (§9/§10, this pass): `SessionLog`/`ArtifactStore` are plain Python objects with no
+  internal locking, and every operation is synchronous with no in-flight async work — confirmed there
+  is no concurrent-mutation surface for this layer to test against. Not applicable, not missing.
 
 ### Fuzz tests
 
-- [ ] Not evaluated this pass. Session log decoding (`decode_message`) is a method-suggested fuzz
-  target; none exists yet.
+- [ ] Reviewed (§8, this pass), still a real gap: `decode_message`/`_decode_block` (session log
+  decoding) is exactly the method's own suggested fuzz target, and none exists yet. Lower priority
+  than `SES-F001`/`SES-F002`/`SES-F003` — decode only ever sees data `encode_message` itself produced
+  in current usage, so this is defense-in-depth rather than a live gap, but worth adding in a future
+  pass.
 
 ### Fault-injection tests
 
-- [ ] Not evaluated this pass.
+- [x] Reviewed (§8, this pass): every failure path found (non-JSON-safe data, malformed event name,
+  missing artifact, unknown content-block/role on decode, fork of an unregistered session) is already
+  exercised by an existing deterministic test (§6). No additional fault-injection harness is needed
+  beyond what direct unit tests already provide, since none of these failures involve timing,
+  concurrency, or partial external state — the two gaps `SES-F001` doesn't already cover, and
+  `decode_message`/`SessionService.fork`'s generic exception types, are recorded above (§8's note)
+  rather than duplicated here.
 
-**§8-14 category reviews (failure model, security, reliability/operations, observability, performance,
-public API/serialization, documentation) are not started this pass** — deferred to a follow-up turn,
-consistent with how Layer 02 paced its own first pass before remediation.
+---
+
+## 8. Failure model
+
+| Failure | Surface | Result/throw/event | Retry? | Abort interaction | Logged/telemetry? |
+|---|---|---|---|---|---|
+| Non-JSON-safe data appended | `log.append` | `NotJsonSafeError`, raised before any mutation — `_check_json_safe` runs first, `self._events.append` second; confirmed atomic by `test_non_json_safe_data_is_rejected_at_append`'s `len(log) == 0` assertion | No | N/A (synchronous, no in-flight work to abort) | Not logged — by definition, a rejected append leaves no trace anywhere |
+| Malformed event name appended | `log.append` | `InvalidEventNameError`, same atomicity | No | N/A | Not logged |
+| Missing artifact reference | `ArtifactStore.get` | `MissingArtifactError` (a `KeyError` subclass) | No | N/A | Not logged |
+| Unknown content-block type or message role on decode | `derive.py::_decode_block`/`decode_message` | Bare `ValueError` | No | N/A | Not logged |
+| Fork of an unregistered session id | `SessionService.fork` | Bare `KeyError` from `self._logs[source_id]` (no session-specific error type) | No | N/A | Not logged |
+
+The first three are deliberate, typed, and well-tested — matching Pi's own `SessionError`-typed-failure
+model for structural violations (`session.ts`'s `invalid_payload`/`invalid_query`/`invalid_lane`
+codes are the same "reject synchronously, no partial state" shape, though Minion doesn't need Pi's
+lane/query error codes since it has no lanes/complex queries). The last two are real but minor gaps,
+not formally raised as findings this pass given their low severity — see the note after this table.
+
+**Not a formal finding, recorded here for whoever next touches these two call sites:** `decode_message`
+and `SessionService.fork` raise generic `ValueError`/`KeyError` rather than a session-specific
+exception type (the module already has `NotJsonSafeError`/`InvalidEventNameError`/
+`MissingArtifactError` as precedent). This is `PARITY_NEUTRAL_HARDENING`-shaped (fixing it wouldn't
+change any Pi-visible behavior, only the exception type callers must catch) and low-impact enough
+(neither path is reachable with normal use — `decode_message` only sees data `encode_message` itself
+produced; `fork` only sees session ids the same process registered) that it doesn't warrant a numbered
+`SES-F` finding on its own. Worth a `STRENGTHEN` if either module is touched for another reason.
+
+## 9. Security review
+
+### Trust boundaries
+
+Session log data originates from three sources: user input (`UserMessage`), model output
+(`AssistantMessage`, including tool-call arguments), and tool results (`ToolResultMessage`, including
+`details`). All three cross into the log through `encode_message`, which only serializes already-typed
+LLM-vocabulary objects — there is no path from raw untrusted bytes directly into the log bypassing the
+LLM layer's own construction.
+
+### Input validation
+
+`_check_json_safe` (log.py) is the log's own validation boundary: it rejects non-finite numbers,
+cycles, non-plain objects, sparse arrays, non-enumerable properties, symbol keys, and non-string keys,
+walking every nesting level — confirmed via `test_log.py`'s 6 rejection tests, including a nested case.
+This defends against malformed/unstable data, not against adversarial *content* (a tool result
+containing arbitrary text is valid JSON and is accepted as-is, by design — the log's job is to record
+what happened, not to sanitize it).
+
+### Authority / privilege
+
+No access-control layer exists inside `session/*.py` itself — anything holding a `SessionLog`/
+`SessionService` reference can `append`/`fork`/`reset`/`compact` freely. This is consistent with the
+plugin architecture: authority over *who* can reach `ctx.sessions` is a runtime/scope concern (Layer
+01, already certified), not something this layer re-implements.
+
+### Secret handling
+
+The log stores tool-result `details` and assistant `diagnostics` verbatim, with no redaction step
+inside `session/*.py`. `AssistantMessageDiagnostic`'s own docstring (Layer 02) already frames
+diagnostics as "redacted provider/runtime diagnostics" — i.e., redaction is the *producer's*
+responsibility (whatever constructs the diagnostic) before it ever reaches the log, not something
+Layer 03 does independently. No finding raised: this matches the design's own division of
+responsibility, and no evidence was found of the log adding unredacted data beyond what it was given.
+
+### Resource abuse / bounds
+
+Both `SessionLog` and `ArtifactStore` grow without bound and never evict — by design (`RISK-001`,
+recorded above; this is the explicitly-deferred Phase-9 durability/lane-management gap, not a
+Layer-03-owned defect to fix now). No additional resource-abuse surface was found specific to Layer 03
+(no recursion depth issue beyond the fork-chain walk, covered under §12 performance).
+
+### Isolation
+
+Session logs are isolated per session id (`SessionService._logs: dict[str, SessionLog]`, one object
+per id). The `ArtifactStore` is deliberately **shared across all sessions** in one `SessionService`
+(`service.py`'s own docstring: "content addressing only pays off if a stable block is stored once for
+the deployment, not once per session"). This is not an information-leak risk — SHA-256 content
+addressing is one-way; producing a colliding reference requires already possessing the exact content —
+but it is a deliberate scope choice worth stating explicitly: artifact isolation is deployment-wide, not
+per-session or per-tenant. No finding raised; this matches the design's own stated rationale, not an
+unreviewed side effect.
+
+## 10. Reliability and operations
+
+- **Cancellation:** not applicable — `SessionLog.append` and every `operations.py` function are
+  synchronous and complete immediately; there is no in-flight async work at this layer to cancel.
+- **Timeouts:** not applicable, same reason.
+- **Retry:** not applicable — append either succeeds atomically or raises; there is nothing to retry
+  against (a caller retrying after a rejection would need to fix its data first).
+- **Cleanup:** no dispose/close semantics exist for `SessionLog`/`ArtifactStore`, matching the
+  never-delete design — there is nothing to clean up.
+- **Shutdown:** not applicable — purely in-memory, no background tasks, no open file/network handles.
+- **Partial failure:** confirmed atomic — `_check_json_safe` runs to completion before
+  `self._events.append`, so a rejected append can never leave a half-written event (§8, §6).
+- **Persistence/restart:** **`SessionLog`/`ArtifactStore` are pure in-memory objects; a process restart
+  loses all session history.** Checked against the frozen design before treating this as a new finding:
+  it is not one. `2026-08-20-minion-agent-design.md`'s "Stratum C — Pi AgentHarness durable operation
+  parity" (lines 110-116) explicitly names this exact gap ("lane-scoped runs... durable program state,
+  pending writes, replay policy, crash/deferred resume") as "a known deferred parity phase, not an
+  optional future abstraction," assigned to Phase 9 (line 1851), with the design's own binding
+  statement: "Until the parity phase lands, Minion MUST NOT claim complete Pi AgentHarness parity."
+  Recorded as `RISK-001` in `risk-register.md` this pass (previously the register held only its
+  placeholder row) rather than left as an implicit assumption — `ACCEPTED`, not a Layer-03 defect.
+- **Dependency disappearance:** not applicable within this layer's own scope — `SessionService` has no
+  dependency on another plugin service beyond the runtime's own `ctx.provide` mechanism (Layer 01,
+  certified).
+
+## 11. Observability
+
+### Events
+
+The session log's own log-only lifecycle events (`turn/*`/`step/*`/`assistant/chunk`/`tool/call`/
+`request/header`/`session/forked`/`session/reset`/`compaction`) double as this layer's observability
+surface — there is no separate telemetry-span emission inside `session/*.py` itself. Span emission
+(`SpanKind.TURN`/`SpanKind.STEP`) happens in `agent_loop/driver.py`, outside this layer's scope.
+
+### Logs
+
+No Python `logging` module usage exists in `session/*.py` — intentional: the session log itself *is*
+the durable record; a separate ad-hoc logger would duplicate it without adding information.
+
+### Metrics
+
+Pi's `SessionStorage` interface has a `getStats()` returning `SessionStats`
+(`messageCount`/`cachedTokens`/`uncachedTokens`/`totalTokens`/`costTotal`) — Minion's `session/*.py`
+has no equivalent aggregate-query API. Not raised as a finding: `MINION-002`'s own disposition is "N/A
+— Minion persistence architecture," and an aggregate-stats query isn't part of "model-visible history"
+in the sense the design's own equivalence claim covers — this reads as a legitimate scope choice, not
+an unreviewed omission, though it may be worth adding as a `PARITY_NEUTRAL_HARDENING` convenience in a
+future pass if something downstream needs it.
+
+### Traces / correlation IDs
+
+`session_id` is the correlation identifier at this layer. `run_id`/`turn_id`/`request_id` (per the
+method's own suggested vocabulary) don't originate in `session/*.py` — they belong to Layer 07/08's
+scope once those layers assign identity to runs/turns.
+
+### Sensitive fields excluded from telemetry
+
+Not applicable — this layer has no direct telemetry integration to exclude fields from (§9's secret-
+handling note covers the relevant boundary instead).
+
+## 12. Performance / complexity
+
+| Path | Expected complexity/budget | Evidence | Risk |
+|---|---|---|---|
+| `SessionLog.append` | O(size of `data`) for JSON-safety validation, O(1) amortized for the list append | `log.py::append`/`_check_json_safe` read directly | None — unavoidable, proportional to the data being stored |
+| `ArtifactStore.put` | O(size of content) for the SHA-256 hash | `artifacts.py::put` | None — unavoidable; `setdefault` makes repeat `put`s of identical content cheap (dict lookup, no re-storage) |
+| `derive_messages`/`_derive` | O(events in the log) per call, plus O(fork-chain depth × ancestor log size) for a forked session — **not memoized** | `derive.py::_derive`'s recursive ancestor walk; confirmed real (not a hypothetical) by `test_fork.py::test_a_fork_of_a_fork_walks_the_whole_chain` | Observation, not a blocking finding. `agent_loop/driver.py::_run_step` calls `derive_messages(log)` on **every** model request (driver.py:246), so a long-running session or a deep fork chain re-derives its entire visible history from scratch on every step — worst case O(total events) work per step, O(n²) over a session's full lifetime before compaction bounds it. Compaction (§4, `SES-008`) already exists specifically to bound the effective surface size in practice, and this cost pattern may well match Pi's own re-derivation-per-request behavior rather than being a Minion-specific inefficiency — not verified against Pi source this pass, since doing so would mean auditing Pi's `agent-session-runtime.ts` request-assembly path, which is Layer 08 territory. Worth a memoization pass later (`PARITY_NEUTRAL_HARDENING` — wouldn't change Pi-visible output, only speed); not blocking for Layer 03 certification. |
+| `record_header` | O(number of components) `put` calls per request, each O(size) per §above | `request_header.py::record_header` | None — matches the design's own content-addressing intent exactly: unchanged components cost a hash+dict-lookup, not a re-snapshot |
+
+## 13. Public API / serialization
+
+- **Public API:** `SessionLog`, `SessionEvent`, `EventKind`, `EventName`, `ArtifactStore`,
+  `SessionService`, plus module-level functions (`derive_messages`, `encode_message`, `decode_message`,
+  `messages_from`, `effective_surface`, `is_surface`, `validate_event_name`, `fork`, `reset`, `compact`,
+  `assemble_system`, `record_header`, `reconstruct_header`, `reconstruct_tools`) — all exported via
+  `session/__init__.py`'s `__all__`, confirmed exhaustive against what the test suite imports.
+- **Internal API:** every underscore-prefixed helper (`_encode_block`/`_decode_block`/`_encode_usage`/
+  `_decode_usage`/`_encode_diagnostic`/`_decode_diagnostic`/`_encode_deferred`/`_decode_deferred`/
+  `_latest_of`/`_derive`/`_check_json_safe`/`_as_bytes`) — confirmed none of these leak through
+  `__init__.py`.
+- **Stable/experimental:** no explicit stability markers exist anywhere in this module, consistent with
+  the rest of the codebase's style (Layers 01/02 didn't use them either) — not a gap specific to this
+  layer.
+- **Serialized schemas:** the JSON dict shapes `encode_message`/`_encode_*` produce are this layer's
+  own wire format for the log — Minion-private per `MINION-002`'s divergence disposition, not a
+  cross-language-pinned schema the way `agent-scenario.schema.json` pins the LLM vocabulary's
+  *reconstructed message* shape. This is a deliberate scope boundary, not an omission: what must be
+  cross-language-identical is the *output* of `derive_messages()` (already Layer-02-vocabulary-typed,
+  already schema-pinned), not the log's own internal storage encoding, which `MINION-002` explicitly
+  frees each language implementation to choose independently.
+- **Cross-language fields:** the reconstructed message vocabulary (Layer 02, certified) plus the
+  simple `(kind: str, seq: int, data: dict)` event triple — no Layer-03-specific cross-language field
+  beyond what Layer 02 already pins.
+- **Round-trip tests:** extensive — `test_derive.py`'s 16 tests, `test_request_header.py`/
+  `test_request_header_tools.py`'s reconstruction tests, all read in full this pass (§6).
+
+## 14. Documentation audit
+
+| Document | Accuracy | Required action |
+|---|---|---|
+| `spec/session.md` | Incomplete relative to the frozen design §5 — missing the log-only kind list and the by-value event-identity rule | `SES-F003` (§15) |
+| `2026-08-20-minion-agent-design.md` §5/§6 | Accurate against the implementation for every rule except the log-only event vocabulary | `SES-F002` (§15) |
+| Module docstrings (`log.py`, `events.py`, `operations.py`, `artifacts.py`, `derive.py`,
+  `request_header.py`) | Consistently high quality — every one explains *why*, not just *what* (e.g.
+  `artifacts.py`'s docstring on the 15k-token-snapshot problem content-addressing solves;
+  `operations.py`'s docstring on why these are log events rather than mutations). No drift found
+  between any docstring and the behavior it describes. | None |
+| `pi-parity-manifest.yaml` (`MINION-002`/`MINION-003` rows) | Accurate; both cite real test evidence, though `MINION-003`'s cited scenario is currently a placeholder | Tracked under `SES-F001`, not a separate documentation finding |
 
 ---
 
@@ -312,7 +514,7 @@ consistent with how Layer 02 paced its own first pass before remediation.
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| `SES-F001` | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | 5 of 15 `conformance/session/*.yaml` scenarios are unfilled placeholders (`content-signatures-round-trip`, `deferred-handle-round-trip`, `diagnostic-round-trip`, `request-reconstruction-after-target-transform`, `request-reconstruction-with-artifacts`), confirmed by direct read of each file's `TO_BE_FILLED`/`TO_BE_BOUND_TO_REAL_PUBLIC_API`/`TO_BE_PINNED_EXACTLY` markers. `MINION-003`'s own manifest row cites `request-reconstruction-with-artifacts` as its `tests:` evidence — a normative rule currently backed by a placeholder, not a real scenario, exactly the situation the charter's own `CONTRACT_ASSURANCE_DEFECT` definition names ("a normative rule with no executable evidence"). **Not as severe as it could be:** every one of the 5 has real, passing Python-unit-level coverage already (`test_derive.py`'s `test_assistant_message_response_identity_and_diagnostics_round_trip`, `test_replay_signature_fields_round_trip`, `test_usage_cost_and_total_tokens_round_trip`; `test_request_header.py`'s reconstruction tests) — the underlying behavior is verified in Python, only the cross-language canonical evidence is missing. | Open, not fixed this pass. Filling these follows the same pattern that resolved `LLM-F010`: build/extend the `conformance/session` DSL/runner as needed, fill each placeholder from the real object shapes `derive.py`/`request_header.py` already produce, verify thin-runner compliance (no simulated semantics), and submit for the same shared-contract review process before treating any as canonical. Must be repaired before Layer 03 certification per the charter — not risk-register debt. |
+| `SES-F001` | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | 5 of 15 `conformance/session/*.yaml` scenarios are unfilled placeholders (`content-signatures-round-trip`, `deferred-handle-round-trip`, `diagnostic-round-trip`, `request-reconstruction-after-target-transform`, `request-reconstruction-with-artifacts`), confirmed by direct read of each file's `TO_BE_FILLED`/`TO_BE_BOUND_TO_REAL_PUBLIC_API`/`TO_BE_PINNED_EXACTLY` markers. `MINION-003`'s own manifest row cites `request-reconstruction-with-artifacts` as its `tests:` evidence — a normative rule currently backed by a placeholder, not a real scenario, exactly the situation the charter's own `CONTRACT_ASSURANCE_DEFECT` definition names ("a normative rule with no executable evidence"). **Two further gaps of the identical shape, confirmed this pass (§6/§7):** the design's own originally-planned `retained-tail-no-duplicate` and `request-header-component-reuse` scenarios were never created under any name — verified by reading every existing scenario, not assumed absent. **None of these 7 are as severe as they could be:** every one has real, passing Python-unit-level coverage already (`test_derive.py`'s `test_assistant_message_response_identity_and_diagnostics_round_trip`, `test_replay_signature_fields_round_trip`, `test_usage_cost_and_total_tokens_round_trip`; `test_request_header.py`'s reconstruction tests; `test_compaction.py::test_nothing_is_double_projected`; `test_request_header.py::test_a_stable_component_is_stored_once_across_many_steps`) — the underlying behavior is verified in Python, only the cross-language canonical evidence is missing. | Open, not fixed this pass. Filling these follows the same pattern that resolved `LLM-F010`: build/extend the `conformance/session` DSL/runner as needed, fill each placeholder (and author the 2 missing scenarios) from the real object shapes `derive.py`/`request_header.py` already produce, verify thin-runner compliance (no simulated semantics), and submit for the same shared-contract review process before treating any as canonical. Must be repaired before Layer 03 certification per the charter — not risk-register debt. |
 | `SES-F002` | HIGH | `CONTRACT_ASSURANCE_DEFECT` (pending Layer 08's full behavioral audit to determine whether it is also a `PI_PARITY_DEFECT`) | The frozen design's own §5 log-only event list names `run/start`, `run/end`, `turn/start`, `turn/end` as the four lifecycle kinds. `session/events.py`'s actual `EventKind` has `TURN_START`/`TURN_END` and `STEP_START`/`STEP_END` — no `run/*` kind exists at all, and `step/*` appears nowhere in the design's list. Worse: `agent_loop/driver.py` was read directly (not inferred) to check what these events are actually emitted around. `_run_turn()` (driver.py:107-173) wraps a `while True` loop calling `_run_step()` repeatedly until no tool calls remain — i.e., it spans **multiple model requests** — and appends `EventKind.TURN_START`/`TURN_END` at its boundaries. `_run_step()` (driver.py:214-306) makes exactly **one** model request plus its tool calls/results, and appends `EventKind.STEP_START`/`STEP_END` at its boundaries. Design §6, cross-referenced by §5's own log-only list, states explicitly and by name: "Run / invocation, bounded by `agent_start...agent_end`, may contain multiple turns. Turn: exactly one assistant response + the tool calls/results caused by that assistant response. An implementation may use a private 'step' object internally, but MUST NOT redefine observable `turn` to mean a whole multi-request run." The event literally named `turn/start`/`turn/end` is emitted around what the design's own words describe as a **Run**; the true Pi-Turn boundary (one request + its tools) is logged under `step/*`, a name the design's log-only list never mentions. This is the exact collision §6 warns against, found in the log vocabulary rather than in prose. | Open, not fixed this pass — this touches `agent_loop/driver.py` (Layer 08 territory) as well as `session/events.py` (Layer 03's own vocabulary), so a full fix belongs to whichever pass reconciles both. Flagged now because `events.py`'s vocabulary is Layer-03-owned and the design-vs-code mismatch is independently verifiable without touching driver.py. Classified `CONTRACT_ASSURANCE_DEFECT` for now (the frozen design and the implementation are internally inconsistent) rather than `PI_PARITY_DEFECT`, because this pass did not audit whether `_run_turn`'s actual *behavior* (not just its event name) is Pi-Run-correct — that full behavioral question belongs to Layer 08. If Layer 08 finds the behavior itself is also wrong, this should be reclassified then, not assumed now. |
 | `SES-F003` | LOW | `CONTRACT_ASSURANCE_DEFECT` | `spec/session.md` (4 short paragraphs) restates design §5's append/surface/fork/reset/compaction rules but never mentions the log-only lifecycle kind list (`run/*`/`turn/*`/`assistant/chunk`/`tool/call`/`request/header`) or the explicit by-value event-name-identity rule — both present in the frozen design §5 and both independently conformance-pinned (`event-name-identity-is-by-value.yaml`; the log-only kinds via `SES-F002`, once fixed). A normative spec document that is silent on rules the frozen master states explicitly and conformance already tests is incomplete relative to its own authority chain. | Open, not fixed this pass — `spec/session.md` is a shared-contract file; extending it should follow the same "does this make already-frozen semantics observable, or redefine them" review used for `LLM-F010`, once `SES-F002` settles what the correct log-only vocabulary actually is (no point extending the spec with a vocabulary this pass just found to be wrong). |
 
@@ -330,23 +532,23 @@ Design alignment                         [~]  §5/§6 read directly and traced; 
 Pi parity                                [x]  MINION-002/003 are intentional divergences by the manifest's own disposition; no Pi-visible behavioral mismatch found this pass (SES-F002's mismatch is design-vs-code, not yet confirmed Pi-behavioral)
 Normative spec                           [ ]  SES-F003 — spec/session.md incomplete relative to frozen design §5
 Parity manifest                          [x]  MINION-002/003 both present, both dispositioned, both cite real (if partly unfilled) test evidence
-Canonical conformance                    [ ]  SES-F001 — 5 of 15 session scenarios are unfilled placeholders
-Python tests where implemented           [~]  172 test functions inventoried; 2 of 11 files read in full (KEEP); 9 files' dispositions provisional pending full read next pass
+Canonical conformance                    [ ]  SES-F001 — 7 of 17 named session-family scenarios are unfilled placeholders or never created
+Python tests where implemented           [x]  172 test functions across 11 files, all read in full this pass, all KEEP
 Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), consistent with the manifest
 Property/invariant tests                 [x]  test_properties.py — 7 Hypothesis tests already exist
-Concurrency tests where applicable       [ ]  not evaluated this pass
-Fault-injection tests where applicable   [ ]  not evaluated this pass
-Security review                          [ ]  §9 not started this pass
-Reliability review                       [ ]  §10 not started this pass
-Observability review                     [ ]  §11 not started this pass
-Performance review                       [ ]  §12 not started this pass
-Public API review                        [ ]  §13 not started this pass
-Documentation                            [ ]  §14 not started this pass; SES-F003 already found under §2/§15
+Concurrency tests where applicable       [x]  §9/§10 reviewed — no concurrent-mutation surface exists in this layer (synchronous, in-memory, no locking needed); not applicable rather than missing
+Fault-injection tests where applicable   [x]  §8 failure model reviewed — every failure path (JSON-safety, event-name, missing-artifact, decode) is deterministic and already covered by §6's test read
+Security review                          [x]  §9 complete — trust boundaries, validation, authority, secrets, resource abuse, and isolation all reviewed; no finding beyond RISK-001 (already reliability-owned)
+Reliability review                       [x]  §10 complete — RISK-001 (in-memory-only persistence) confirmed intentional per the frozen design's own Phase-9 commitment, recorded in risk-register.md
+Observability review                     [x]  §11 complete — no finding; metrics/stats-query gap noted as a future convenience, not a defect
+Performance review                       [x]  §12 complete — one non-blocking observation (derive_messages re-derivation cost, not memoized)
+Public API review                        [x]  §13 complete — public/internal boundary confirmed clean; cross-language scope boundary (log wire format vs. reconstructed message shape) confirmed intentional
+Documentation                            [x]  §14 complete — SES-F002/F003 already captured; module docstrings found accurate throughout
 All findings classified                  [x]  SES-F001..F003 classified
 No unresolved Pi uncertainty             [x]  none raised this pass
 No unresolved parity defect              [x]  none raised this pass (SES-F002 classified CONTRACT_ASSURANCE_DEFECT pending Layer 08)
 No unresolved contract-assurance defect  [ ]  SES-F001, SES-F002, SES-F003 all open
-Deferred risks recorded                  [ ]  none recorded yet — §10 reliability review, not started, is where session-log deferrals (if any) would surface
+Deferred risks recorded                  [x]  RISK-001 (in-memory-only persistence, Phase 9) recorded in risk-register.md this pass
 ```
 
 ---
@@ -355,58 +557,71 @@ Deferred risks recorded                  [ ]  none recorded yet — §10 reliabi
 
 **Result:** `IN_AUDIT`
 
-This is a first-pass survey, not a remediation or certification pass — consistent with the standing
-sequencing rule (one assurance layer at a time; Phase 5/XFORM/next-layer work does not start ahead of
-its turn) and with how Layer 02 itself began. §1-7 are complete with real grounding: the frozen design
-§5/§6/§8 was read directly, `spec/session.md` was checked against it and found incomplete (`SES-F003`),
+§1-14 are now complete with real grounding, across two passes. First pass: the frozen design §5/§6/§8
+was read directly, `spec/session.md` was checked against it and found incomplete (`SES-F003`),
 `MINION-002`/`MINION-003` were traced to their manifest rows, pinned Pi session source was read to
 confirm the storage-architecture divergence is intentional and scoped correctly, all 8 Python modules
-were read and inventoried, all 11 test files were inventoried (2 read in full), and all 15 canonical
-session scenarios were read and classified real-vs-placeholder.
+were read and inventoried, and all 15 canonical session scenarios were read and classified
+real-vs-placeholder. Second pass (this update): all 11 test files were read in full (172 test
+functions, all `KEEP`), the two design-named scenarios with no canonical file
+(`retained-tail-no-duplicate`, `request-header-component-reuse`) were confirmed genuinely missing
+rather than assumed, and §8-14's category reviews (failure model, security, reliability/operations,
+observability, performance, public API, documentation) were completed.
 
-Three real findings resulted, all `CONTRACT_ASSURANCE_DEFECT`, none `PI_PARITY_DEFECT` or
+Three real findings stand, all `CONTRACT_ASSURANCE_DEFECT`, none `PI_PARITY_DEFECT` or
 `PI_BEHAVIOR_UNCERTAIN`:
 
-- **`SES-F001`** (MEDIUM): a third of the canonical session scenarios are unfilled placeholders,
-  including the exact one `MINION-003`'s manifest row cites as evidence. Lower-risk than it could be —
-  Python-unit-level coverage of the same behavior already exists for all 5.
+- **`SES-F001`** (MEDIUM): **7** canonical session-family scenarios are missing or unfilled — the 5
+  placeholder files from the first pass, plus the 2 design-named scenarios confirmed genuinely absent
+  this pass. One of the 7 is the exact scenario `MINION-003`'s manifest row cites as evidence.
+  Lower-risk than it could be — Python-unit-level coverage of the same behavior already exists for all
+  7 (confirmed by the full §6 test read).
 - **`SES-F002`** (HIGH): the frozen design's own log-only event vocabulary (`run/*`/`turn/*`) doesn't
   match what `session/events.py` declares (`turn/*`/`step/*`, no `run/*`), and direct inspection of
   `agent_loop/driver.py` shows the mismatch isn't cosmetic — the event literally named `turn/start` is
   emitted around a multi-request loop, which is exactly the Run/Turn conflation design §6 explicitly
-  prohibits by name. This is the most significant finding of the pass and sits right at the Layer
-  03/Layer 08 boundary; flagged here because the vocabulary itself is Layer-03-owned, with an explicit
-  note that a full behavioral verdict (is `_run_turn`'s actual control flow Pi-correct, independent of
-  its event names?) belongs to Layer 08's own audit.
+  prohibits by name. Still the most significant finding of the pass and still sits right at the Layer
+  03/Layer 08 boundary; the full behavioral verdict (is `_run_turn`'s actual control flow Pi-correct,
+  independent of its event names?) remains explicitly reserved for Layer 08's own audit — this pass
+  added no new evidence on that question, deliberately, to avoid working ahead of the sequencing rule.
 - **`SES-F003`** (LOW): `spec/session.md` doesn't restate the frozen design's log-only kind list or
   its by-value event-identity rule, both of which conformance already depends on (or will, once
   `SES-F002` is resolved).
 
-**Migration hypothesis correction:** the charter's own §6 flagged "session derive/reconstruction" as a
-"realignment candidate." This pass's actual read of `derive.py` (and its 16+7 dedicated tests) found no
-defect in its logic — every reset/compaction/fork rule is implemented exactly as design §5 specifies.
-The hypothesis is recorded as **not borne out by evidence** rather than silently dropped, per the
-charter's own instruction that a starting hypothesis is not a substitute for audit evidence.
+One new item this pass, not a finding: **`RISK-001`** — `SessionLog`/`ArtifactStore` are in-memory
+only, with no persistence or crash recovery. Checked against the frozen design before treating this as
+a discovery: it is the design's own explicitly-named "Stratum C — Pi AgentHarness durable operation
+parity" gap, committed to Phase 9, not a Layer-03 defect. Recorded in `risk-register.md` (previously
+empty but for a placeholder row) as `PARITY_NEUTRAL_PENDING`/`ACCEPTED`, so it stops being an implicit
+assumption and starts being a tracked, citable commitment.
 
-**Not started this pass, by design:** §8-14 category reviews, remediation of any of the three
-findings, and the certification decision itself. Also not started: Layer 04 (XFORM), Rust
-implementation for this layer (Phase 2, not yet due), and any Phase-5 work.
+**Migration hypothesis correction (first pass, reconfirmed):** the charter's own §6 flagged "session
+derive/reconstruction" as a "realignment candidate." The full read of `derive.py` (and its 16+7
+dedicated tests) found no defect in its logic — every reset/compaction/fork rule is implemented exactly
+as design §5 specifies. Recorded as **not borne out by evidence**, per the charter's own instruction
+that a starting hypothesis is not a substitute for audit evidence.
+
+**Not started this pass, by design:** remediation of any of the three findings, and the certification
+decision itself (which requires all three resolved, per the charter's own "must be repaired before
+certification" rule for `CONTRACT_ASSURANCE_DEFECT`). Also not started: Layer 04 (XFORM), Layer 08
+(Agent run/turn state machine — deliberately not pulled forward even though `SES-F002` touches its
+territory), Rust implementation for this layer (Phase 2, not yet due), and any Phase-5 work.
 
 **Follow-up dependencies:**
 
-1. Resolve `SES-F001`: build/extend `conformance/session`'s DSL/runner as needed and fill the 5
-   placeholder scenarios from real object shapes, following the same review discipline that closed
-   `LLM-F010` (thin-runner verification, language-neutrality check, shared-contract review).
+1. Resolve `SES-F001`: build/extend `conformance/session`'s DSL/runner as needed, fill the 5
+   placeholder scenarios and author the 2 missing ones from real object shapes, following the same
+   review discipline that closed `LLM-F010` (thin-runner verification, language-neutrality check,
+   shared-contract review).
 2. Resolve `SES-F002`: determine the correct log-only event vocabulary (add `run/*`? rename
    `turn/*`↔`step/*`? something else the design doesn't yet state precisely enough to decide alone) —
-   likely needs coordination with whoever picks up Layer 08, since the emission logic lives in
-   `agent_loop/driver.py`. Do not silently rename without confirming the actual control-flow semantics
-   are Pi-correct first; a naming fix over incorrect behavior would hide the real defect.
+   needs Layer 08's own audit of `_run_turn`/`_run_step`'s actual control-flow correctness first. Do
+   not silently rename without confirming the behavior is Pi-correct; a naming fix over incorrect
+   behavior would hide the real defect. This is the one item in this layer's findings that may end up
+   waiting on Layer 08 rather than being fully closeable within Layer 03 alone — if so, the
+   certification gate should say so explicitly rather than force a premature resolution.
 3. Resolve `SES-F003` once `SES-F002` settles the correct vocabulary — extending `spec/session.md`
    with a vocabulary this pass just found to be wrong would create more contract-assurance debt, not
    less.
-4. Verify (don't assume) whether `retained-tail-no-duplicate` and `request-header-component-reuse`
-   (named in the design's original §8 scenario list, not present as separate files today) are
-   genuinely covered by existing scenarios/tests or represent real additional gaps.
-5. Complete §6's full per-file test read (9 of 11 files still provisional), then §8-14's category
-   reviews, before this layer is eligible for a certification decision.
+4. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
+   recorded and cited.
