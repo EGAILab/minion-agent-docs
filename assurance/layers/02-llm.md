@@ -10,7 +10,11 @@ adversarial review — see §8 and §15 for why this is PARITY_NEUTRAL_HARDENING
 Pi's own central dispatcher does not defend against this either. `LLM-F002` partially resolved —
 `AI-013` added to the parity manifest for Responses-family replay signatures, with a precise Pi
 source distinct from `XFORM-###`'s; the other 3 uncovered subsections deliberately left unresolved
-pending Phase 5. Rust handoff package prepared (`02-llm-rust-handoff.md`) — see §17)  
+pending Phase 5. Rust handoff package prepared (`02-llm-rust-handoff.md`). `LLM-F010` design/
+implementation pass since complete: observability matrix, `agent-scenario.schema.json`/
+`agent_runner.py`/`adapters/mock.py` extended, `public-llm-vocabulary-schema.yaml` filled and
+passing — implemented and verified, not yet marked resolved pending shared-contract review.
+Rust's own independent Layer 02 pass has separately landed (§18) — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** `IMPLEMENTED / READY FOR CROSS-LANGUAGE CERTIFICATION` — typed vocabulary,
@@ -335,10 +339,70 @@ here.
 
 ## 7. Missing test / conformance coverage
 
-Derivable from §4 now that it exists, but not separately itemized this pass — the gaps are the same
-ones §4/§15 already enumerate per-requirement (`LLM-001..002/004/006..014/017/019`, findings
-`LLM-F003..F006`). Revisit as its own checklist once remediation starts, mirroring how Runtime's §7
-tracked closure progress across several remediation passes.
+### `LLM-F010` observability matrix (complete)
+
+Built before any schema/runner change, per every frozen field in `AssistantMessage`, the
+content-block vocabulary, `Usage`/`Cost`, `DeferredHandle`, `AssistantMessageDiagnostic`/
+`DiagnosticError`, and `StopReason`. "Current DSL path" is what `agent-scenario.schema.json` could
+already express before this pass; "current runner path" is what `agent_runner.py` actually read from
+or wrote into the outcome dict.
+
+| Field | Status (before) | Current DSL path (before) | Current runner path (before) | Extension required |
+|---|---|---|---|---|
+| `AssistantMessage.content` | OBSERVABLE NOW | `scriptedResponse.content[]` (`contentBlock`) | `_block()`/`_ROLE`+`text_of()` (text only) | Content-block signature fields, see below |
+| `AssistantMessage.api` | NOT OBSERVABLE | none | derived internally, never projected | New `assistantMessageDetail.api` + runner read |
+| `AssistantMessage.provider` | NOT OBSERVABLE | none | derived internally, never projected | New `assistantMessageDetail.provider` + runner read |
+| `AssistantMessage.model` | NOT OBSERVABLE | none | derived internally, never projected | New `assistantMessageDetail.model` + runner read |
+| `AssistantMessage.response_model` | NOT OBSERVABLE | none | `ScriptedResponse` has no such field at all | New `ScriptedResponse.response_model` (production code) + DSL + runner |
+| `AssistantMessage.response_id` | NOT OBSERVABLE | none | same as above | New `ScriptedResponse.response_id` + DSL + runner |
+| `AssistantMessage.diagnostics` | NOT OBSERVABLE | none | same as above | New `ScriptedResponse.diagnostics` + DSL + runner |
+| `AssistantMessage.usage` (all sub-fields) | NOT OBSERVABLE | `scriptedResponse.usage: {type: object}` (untyped, unvalidated) | **declared but never read** — `_script()` never passed `response.get("usage")` into `ScriptedResponse` | Typed `$defs/usage`/`$defs/cost` + `_script()` fix + runner projection |
+| `AssistantMessage.stop_reason` | PARTIALLY OBSERVABLE | `stop_reason` enum missing `deferred` | `assistant_stop_reasons` projects the value | Add `deferred` to both enums |
+| `AssistantMessage.deferred` | NOT OBSERVABLE | none | `ScriptedResponse` has no such field | New `ScriptedResponse.deferred` + `$defs/deferredHandle` + runner |
+| `AssistantMessage.error_message` | OBSERVABLE NOW | `scriptedResponse.error_message` | round-trips already (existing scenarios rely on it) | none |
+| `AssistantMessage.raw_stop_reason` | NOT OBSERVABLE | none | `ScriptedResponse` has no such field | New `ScriptedResponse.raw_stop_reason` + DSL + runner |
+| `AssistantMessage.end_turn` | NOT OBSERVABLE | none | `ScriptedResponse` has no such field | New `ScriptedResponse.end_turn` + DSL + runner |
+| `AssistantMessage.timestamp` | NOT LAYER-02-OWNED | n/a | derived from call count | Not a Pi-observable field a scenario scripts; internal bookkeeping |
+| `TextBlock.text`/`ThinkingBlock.thinking`/`ToolCall.{id,name,arguments}` | OBSERVABLE NOW | `contentBlock` | `_block()` (text/tool_call only — **`thinking` type silently fell through to `TextBlock`**, a real pre-existing bug) | Fix `_block()`'s `thinking` branch |
+| `TextBlock.text_signature` | NOT OBSERVABLE | none | `_block()` never read it | Add to `contentBlock` + `_block()`/normalizer |
+| `ThinkingBlock.thinking_signature`/`redacted` | NOT OBSERVABLE | none | same | Add to `contentBlock` + `_block()`/normalizer |
+| `ToolCall.thought_signature`/`namespace` | NOT OBSERVABLE | none | same | Add to `contentBlock` + `_block()`/normalizer |
+| `DeferredHandle` (all fields) | NOT OBSERVABLE | none | type didn't exist in the runner's imports | New `$defs/deferredHandle` + runner construct/normalize |
+| `AssistantMessageDiagnostic`/`DiagnosticError` (all fields) | NOT OBSERVABLE | none | same | New `$defs/diagnostic`/`diagnosticError` + runner construct/normalize |
+| `StopReason.DEFERRED` | NOT OBSERVABLE | absent from both enums | `StopReason(response["stop_reason"])` would accept it once the schema does | Add `"deferred"` to both enums |
+
+Two things the matrix caught that a narrower "just add the missing fields" pass would have missed:
+(1) `scriptedResponse.usage` already existed in the schema but was **silently dead** — `_script()`
+never read it, so every prior scenario that might have tried to script usage was quietly ignored;
+(2) `_block()`'s `thinking`-type branch never actually existed — any scenario scripting
+`type: thinking` would have silently gotten a `TextBlock` instead. Neither was new damage from this
+pass, but both are exactly the kind of latent gap an observability matrix is meant to surface before
+extending anything.
+
+### `LLM-F001` placeholder reclassification (complete, all 42 pre-pass placeholders)
+
+Every placeholder in `conformance/agent/` re-classified by which layer's contract it actually
+exercises, using the same reasoning already established for the three replay-signature scenarios in
+§4's `LLM-017` row (same-model wire-format replay is this layer's `AI-013` mechanism; cross-model
+survival/stripping is `XFORM-###`'s rules 5-12 in `spec/target-model-transformation.md`) and applying
+it consistently to the rest.
+
+**A — Layer-02-owned (3 total, only category filled this pass):**
+
+| Scenario | Reasoning |
+|---|---|
+| `public-llm-vocabulary-schema` | The layer's own vocabulary-shape evidence. **Filled this pass** — see below. |
+| `same-model-thinking-signature-replayed` | Same-model Responses-wire-format replay retaining a signature — `AI-013`'s own mechanism (`openai-responses-shared.ts`), not a cross-model survival decision. **Not filled this pass** — needs the actual replay algorithm (Phase 5/`AI-013` implementation), which is separate work from the DSL/runner extension this pass delivered. |
+| `same-model-unsigned-thinking-not-replayed` | Same reasoning — same-model, wire-format concern. **Not filled this pass**, same blocker. |
+
+**B — `XFORM-###`-owned (10):** `cross-model-redacted-thinking-omitted` (rule 10), `cross-model-signatures-stripped` (rules 8/11/12 — this resolves the previously-open joint question: "stripped" is the survival decision, not the replay mechanism), `cross-model-thinking-converts-to-text` (rule 8), `nonvision-tool-image-placeholder` (rule 3, already cited as `AI-020`'s own test evidence in the manifest), `nonvision-user-image-placeholder` (rule 2, same), `null-content-normalizes-empty` (rule 1), `orphan-tool-result-synthesized` (rule 14), `tool-call-id-normalization` (rule 13), `aborted-assistant-excluded-from-replay` (rule 15), `errored-assistant-excluded-from-replay` (rule 15). None touched this pass.
+
+**C — `AGENT-###`-owned (29):** `abort-settles-before-idle`, `active-abort-provider`, `active-abort-tool`, `after-hook-failure-replaces-result-with-tool-error`, `agent-end-messages-prompt-vs-continuation`, `agent-state-streaming-projection`, `before-hook-failure-becomes-tool-error`, `continue-ordering`, `continue-steering-no-double-drain`, `execute-failure-becomes-tool-error`, `followup-only-when-otherwise-idle`, `high-level-callback-failure-settlement`, `idle-after-agent-end-listeners`, `initial-prompt-order-after-turn-start`, `initial-steering-before-first-request`, `late-tool-update-ignored`, `length-stop-executes-no-tools`, `parallel-tool-completion-vs-message-order`, `pending-tool-calls-state`, `prepare-arguments-failure-becomes-tool-error`, `prompt-while-running-rejected`, `schema-validation-failure-becomes-tool-error`, `terminate-allows-follow-up-when-otherwise-idle`, `terminate-does-not-discard-steering`, `terminate-still-runs-prepare-and-stop-policy`, `terminate-suppresses-tool-driven-continuation`, `tool-batch-parallel`, `tool-batch-sequential-contagion`, `turn-lifecycle-order` — all turn/tool/queue lifecycle semantics, agent-loop territory even though several construct `AssistantMessage`s as fixtures. None touched this pass.
+
+**D — other:** none found; every placeholder maps cleanly to A, B, or C.
+
+3 + 10 + 29 = 42, matching the pre-pass placeholder count exactly. Only the one category-A scenario
+ready without further Pi-behavior work (`public-llm-vocabulary-schema`) was filled.
 
 ---
 
@@ -479,7 +543,7 @@ packages) — just flagging the inconsistency for whoever next has reason to tou
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| LLM-F001 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | Survey complete (63 scenarios in `conformance/agent/`, 21 real/passing, 42 unfilled `TO_BE_...` placeholders). The never-raises contract (LLM-018) has genuine, real, passing canonical evidence commingled in `conformance/agent/` — acceptable, no dedicated family needed for that requirement, mirroring Runtime's non-1:1 precedent. But vocabulary/replay-signature evidence is essentially placeholder-only: `public-llm-vocabulary-schema`, `null-content-normalizes-empty`, `same-model-thinking-signature-replayed`, `cross-model-signatures-stripped` all exist as files but are unfilled `TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR` scaffolding, not executing evidence. | No dedicated `conformance/llm/` family is needed — `conformance/agent/` is the right home, matching how the seam is actually exercised (end-to-end via the agent loop and mock adapter, no standalone LLM-only runner exists or is needed). **Attempted to fill `public-llm-vocabulary-schema` and found the DSL/runner itself can't express what's needed — see `LLM-F010`, a real blocker discovered in the attempt, not fixed there.** Remaining work: resolve `LLM-F010` (extend `agent_runner.py`/`agent-scenario.schema.json` to expose the new vocabulary fields) before this specific placeholder can be filled meaningfully; the two replay-signature placeholders separately need the `LLM-017`/`XFORM-###` ownership question resolved first (see LLM-017's §4 row); `null-content-normalizes-empty` is `XFORM-###`'s own placeholder, not this layer's to fill. |
+| LLM-F001 | LOW | `CONTRACT_ASSURANCE_DEFECT` — Layer-02-owned portion RESOLVED | Survey complete (63 scenarios in `conformance/agent/`, 21 real/passing, 42 unfilled placeholders pre-pass). The never-raises contract (LLM-018) already had genuine, passing canonical evidence commingled in `conformance/agent/` — no dedicated `conformance/llm/` family needed. All 42 pre-pass placeholders reclassified by ownership (see §7's full A/B/C table): 3 Layer-02-owned, 10 `XFORM-###`-owned, 29 `AGENT-###`-owned, 0 unowned. | **Category A resolved: `public-llm-vocabulary-schema` filled** using the new `expect_assistant_details` DSL (`LLM-F010`), driven through the real agent loop and mock adapter — two turns, one scripting every optional field the reference adapter can carry (proving presence), one scripting none of them (proving the real object reports absence as `null`, not a runner-side fabrication). Passes; schema-validates; full suite/`ruff`/`mypy` clean. **Category A still open: the two same-model replay-signature scenarios** — the DSL can now express them, but filling them needs the actual Responses-family replay algorithm (`AI-013`, unimplemented — Phase 5 work, a different blocker than `LLM-F010`). **Categories B/C explicitly deferred to their owning layers**, not forced into Layer 02 to close this finding numerically. |
 | LLM-F002 | LOW | `CONTRACT_ASSURANCE_DEFECT` — PARTIALLY RESOLVED | `/pi-parity-manifest.yaml` had zero `AI-###` rows for four of frozen master §4's LLM-owned subsections: Responses-family replay signatures, the API/provider split, model/request options, and authentication. Only vocabulary and the never-raises contract (`AI-001..012`) had parity-manifest coverage. | **`AI-013` added** for Responses-family replay signatures — real, precise Pi source found (`api/openai-responses-shared.ts`), and the two existing placeholder scenarios (`same-model-thinking-signature-replayed`, `cross-model-signatures-stripped`) already name exactly this requirement (see LLM-017's updated row). **The other three deliberately not added.** Checked whether a real (not aspirational) row could be written for each: API/provider split has a real Pi symbol (`compat.ts::stream`/`registerApiProvider`) but zero existing conformance scenarios to cite as `tests:` (the manifest's own convention names real, even if placeholder, scenario files — inventing new ones now would mean authoring Phase-5-scoped conformance content ahead of any adapter to test it against); model/request options and authentication are in the same position. Adding rows for these three now would violate this finding's own resolution criterion ("describe real, not aspirational, behavior") in the opposite direction it was originally violated (an uncovered requirement vs. a manifest row with nothing real behind it). Revisit once Phase 5 gives each a real adapter/scenario to cite. |
 | LLM-F003 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | `AssistantMessage` — the vocabulary type carrying Pi-visible response identity/state for provider replay — had only 7 of the 15 fields Pi's `types.ts::AssistantMessage` and the frozen master both require (confirmed field-for-field match between Pi and master in §3, so this was not a spec ambiguity): missing `api, response_model, response_id, diagnostics, deferred, raw_stop_reason, end_turn`. | Fixed: all 7 fields added to `messages.py.AssistantMessage` (LLM-006). `api` defaults to `"mock"` (see `LLM-F006`'s disclosed compromise) but `service.py._empty_partial()` and `adapters/mock.py::build()` explicitly pass `api=request.model.api` rather than relying on the default. `session/derive.py` extended to round-trip all 7 fields, including new `_encode_diagnostic`/`_decode_diagnostic`/`_encode_deferred`/`_decode_deferred` helpers. 4 new unit tests plus a round-trip test. Full suite + `ruff` clean. |
 | LLM-F004 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | None of the three replay-signature fields existed anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` were all absent from `content.py`. This made the "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable. | Fixed: all three fields/pairs added to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004), all optional/defaulted (fully backward-compatible — every construction site in the codebase uses keyword args). `session/derive.py`'s `_encode_block`/`_decode_block` extended to round-trip them. 6 new unit tests plus a round-trip test. **Does not by itself close `LLM-F001`'s two replay-signature placeholder scenarios** — filling those meaningfully needs the actual replay implementation (`AI-013`, added this pass — see `LLM-F002`) and/or `XFORM-###`'s survival-filtering rules; which scenario needs which is not yet resolved (see LLM-017's updated §4 row). |
@@ -488,7 +552,7 @@ packages) — just flagging the inconsistency for whoever next has reason to tou
 | LLM-F007 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED (reclassified from an initial, incorrect `PI_PARITY_DEFECT` — see §8) | `service.py._settled()`'s `async for chunk in source:` loop had no `try`/`except`. An adapter that raises a Python exception mid-iteration instead of encoding its failure in-band (verified adversarially with a throwaway repro: a `ConnectionError` after a `StreamStart` chunk) propagated straight through `LlmService.stream()`'s iteration, uncaught. **Not a Pi-parity gap:** Pi's own central dispatcher (`compat.ts::stream()`) has no `try`/`catch` around `provider.stream(...)` either — confirmed by direct source read — so nothing centralizes this guarantee in Pi; each of Pi's built-in adapters separately implements the discipline itself. The master's "programming/invariant failures remain programming failures" carve-out plausibly already covered the pre-fix behavior. No existing test constructed this shape before this pass. | Fixed as a disclosed hardening choice, not a parity restoration: the loop now wraps in `try`/`except Exception`, converting the exception into an in-band `StreamError` terminal via a small shared `_error_terminal()` helper, preserving the accumulated partial exactly like the pre-existing premature-EOF path. `asyncio.CancelledError` (a `BaseException`, not `Exception`) is untouched — explicit cancellation still propagates and unwinds normally. New permanent regression test `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`. Full suite + `ruff` clean. Worth reconsidering whether a future pass wants this centralized, or prefers matching Pi's per-adapter-only discipline exactly — recorded as an open judgment call, not a closed decision. |
 | LLM-F008 | LOW | `CONTRACT_ASSURANCE_DEFECT` | `spec/llm.md` names the tool-call content block `ToolCall` (matching the frozen master's vocabulary sketch), but Python implements it as `ToolCallBlock` — inconsistent with `TextBlock`/`ThinkingBlock`/`ImageBlock`, which both the spec and Python name with a `Block` suffix. A naming-only drift, not a field/behavior gap: checked `spec/llm.md` field-by-field against the full post-remediation vocabulary and found no other discrepancy — the spec was already complete before this pass (it was written from the frozen master directly, not from Python's implementation state, so it never lagged; Python's implementation was what caught up). | Open, not fixed — `spec/llm.md` is a shared-contract file outside this pass's authority to edit, and renaming the Python class touches every construction site across several packages. Flagged for whoever next has reason to touch either side. |
 | LLM-F009 | LOW | `PARITY_NEUTRAL_HARDENING` | No LLM-layer hook exists for observing a real adapter's actual request/response traffic. `MockAdapter.requests`/`.pulled` provide this for tests, but neither is part of the `Adapter` protocol — a real (non-mock) adapter has no standardized way to expose what it sent/received for debugging or telemetry. | Open — this is `TEL-###` (telemetry) territory per the requirement-ID convention, not something to build in this layer's own pass. Recorded for whoever picks up the telemetry layer; does not block this layer's certification. |
-| LLM-F010 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | Attempting to fill `public-llm-vocabulary-schema.yaml` (`LLM-F001`) found the `agent`-family conformance DSL/runner cannot observe most of this pass's new vocabulary. `tests/conformance/agent_runner.py::run_agent_scenario` projects messages as `{"role": ..., "text": ...}` only (`_ROLE`/`text_of()`) — no path exposes `api`, `response_model`, `response_id`, `diagnostics`, `deferred`, `raw_stop_reason`, `end_turn`, or any `Usage`/`Cost` field. `scriptedResponse.usage` is declared in `agent-scenario.schema.json` but `_script()` never reads it — confirmed no existing scenario uses it either, so this predates this pass and is not new damage, just newly load-bearing now that `Usage.cost`/`cache_write_1h`/`total_tokens` exist to prove. Content-block signature fields (`text_signature`/`thinking_signature`/`redacted`/`thought_signature`/`namespace`) have no path through `_block()` either. Separately, `StopReason.DEFERRED` (added this pass, `LLM-F005`) is missing from both the `scriptedResponse.stop_reason` and `expect_assistant_stop_reasons` enums in `agent-scenario.schema.json`, so it can't even be scripted or asserted once its own agent-loop handling exists. | Not fixed — extending `agent_runner.py`'s message projection and `agent-scenario.schema.json`'s `scriptedResponse`/`contentBlock`/message shape to carry this pass's vocabulary is a real DSL expansion, not a narrow scenario fill (attempted as part of resolving `LLM-F001`, scope turned out too large for that pass). `public-llm-vocabulary-schema.yaml` deliberately left as a placeholder rather than filled with a weak assertion that would only prove the pre-existing 7-field/no-signature subset while `LLM-013`/`LLM-014` cite it as if it proved the full shape. Adding `"deferred"` to the two `stop_reason` enums alone was considered as a smaller partial fix, but scripting a `deferred` response through the full agent loop risks exercising deferred-execution handling that doesn't exist yet (Phase-5-adjacent, out of scope) rather than just proving the vocabulary carries the value — deferred alongside the rest rather than done partially and misleadingly. This is a `conformance/**`/`schema/**` change once undertaken — needs the shared-contract reviewer process. |
+| LLM-F010 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — Python implementation complete and verified; **OPEN pending shared-contract review** | Attempting to fill `public-llm-vocabulary-schema.yaml` (`LLM-F001`) found the `agent`-family conformance DSL/runner could not observe most of this pass's new vocabulary — full root cause in §7's observability matrix (built before any fix, per field). Confirmed two latent pre-existing gaps along the way, neither new damage: `scriptedResponse.usage` was declared in the schema but never read by `_script()`; `_block()`'s `thinking`-type branch never existed, so scripting one silently produced a `TextBlock` instead. | **Implemented and verified, this pass:** (1) production code — `adapters/mock.py::ScriptedResponse` extended with `response_model`/`response_id`/`diagnostics`/`deferred`/`raw_stop_reason`/`end_turn`, threaded into `build()`'s real `AssistantMessage` construction; proven with new `tests/llm/test_mock_adapter.py` cases, including one proving unset fields stay `None`, not synthesized. (2) shared schema — `conformance/schema/agent-scenario.schema.json`: `contentBlock` gained the 3 signature fields (nullable, `additionalProperties: false` now enforced, matching its sibling `$defs`); new `$defs/usage`, `/cost`, `/diagnostic`, `/diagnosticError`, `/deferredHandle`, `/assistantMessageDetail`; new top-level `expect_assistant_details` (exhaustive per-message shape, parallel to `expect_assistant_stop_reasons`); `deferred` added to both `stop_reason` enums. All new/changed properties nullable where the real object can legitimately be absent, `additionalProperties: false` throughout for language-neutral strictness. (3) Python runner — `agent_runner.py`: `_script()`/`_block()` now construct real `Usage`/`Cost`/`AssistantMessageDiagnostic`/`DiagnosticError`/`DeferredHandle`/content-block objects from scenario data (construct-real-inputs, not synthesize); new `_normalize_*` functions read real `AssistantMessage`/content-block objects' actual fields into the schema's dict shape (read-real-object-normalize, not fabricate) — verified thin by the explicit absence-stays-`null` test at both the adapter and (via the filled scenario's second turn) the full-stack level. **Category-A scenario filled:** `public-llm-vocabulary-schema.yaml`, passing, schema-validated. **Not treated as resolved**, per instruction: the shared-contract reviewer rule (`conformance/**`/`schema/**`) requires explicit review before a change is canonical; Rust's independent Layer 02 pass (§18) already confirms it hit the identical blocker and did not invent a private schema — its existing `tests/llm_conformance.rs` is direct evidence the DSL style is Rust-consumable, but that is corroboration, not the review itself. Send this schema/runner diff for that review before marking `LLM-F010` `RESOLVED`. |
 
 ---
 
@@ -499,9 +563,9 @@ Design alignment                         [x]  all 20 distinct LLM-### requiremen
 Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012/017 remain open, none severe; LLM-F007 is hardening beyond Pi, not a parity fix
 Normative spec                           [x]  spec/llm.md re-audited field-by-field against the full vocabulary — no drift found (LLM-F008 is naming-only)
 Parity manifest                          [~]  AI-001..012 vocabulary/stream contract, AI-013 Responses replay (new); LLM-F002 partially resolved — 3 subsections still uncovered, deliberately (no real behavior to describe yet)
-Canonical conformance                    [ ]  LLM-018 real+passing; vocabulary placeholders blocked on LLM-F010 (DSL/runner can't express the new fields yet), not just unattempted
+Canonical conformance                    [~]  LLM-018 real+passing; LLM-F010 implemented+verified (Python), public-llm-vocabulary-schema filled; open pending shared-contract review, not yet RESOLVED
 Python tests where implemented           [x]  8 files audited (§6), all KEEP, one STRENGTHEN applied (LLM-F007's regression test)
-Rust tests where implemented             [ ]  not audited
+Rust tests where implemented             [x]  §18 (Rust's own record) — 118 tests incl. 17 LLM, cargo fmt/clippy/doc/xtask all pass
 Property/invariant tests                 [ ]  none exist for this layer; not flagged as a gap this pass (no property space obviously needing one was found — the vocabulary is data-shape, not algorithmic)
 Concurrency tests where applicable       [~]  not directly applicable — this layer has no shared mutable state accessed concurrently beyond LlmService's dict, addressed under reliability (§10)
 Fault-injection tests where applicable   [x]  LLM-F007's adversarial raising-adapter test (a hardening probe, not a parity check) is exactly this; premature-EOF/empty-stream/double-terminal already covered pre-pass
@@ -514,7 +578,7 @@ Documentation                            [x]  §13-14 — spec/llm.md re-checked
 All findings classified                  [x]  LLM-F001..F010 classified
 No unresolved Pi uncertainty             [x]  none raised this pass — every ambiguity resolved by reading Pi source directly
 No unresolved parity defect              [x]  LLM-F003..F006 all resolved (LLM-F006 with a disclosed, documented compromise); LLM-F007 reclassified PARITY_NEUTRAL_HARDENING, not a parity defect
-No unresolved contract-assurance defect  [ ]  LLM-F001/F010 open (F010 blocks F001's remaining placeholders); LLM-F002 partially resolved (3 of 4 subsections deliberately deferred to Phase 5); LLM-F008 open (LOW/naming-only)
+No unresolved contract-assurance defect  [ ]  LLM-F001 Layer-02 portion resolved (2 A-category scenarios remain, blocked on Phase-5 replay logic, not on DSL); LLM-F010 implemented+verified but open pending shared-contract review; LLM-F002 partially resolved; LLM-F008 open (LOW/naming-only)
 Deferred risks recorded                  [x]  LLM-020, LLM-021 N/A pending Phase 5; LLM-F006's default flagged for removal then; LLM-F007's design choice (centralize vs. per-adapter) flagged for Rust-cross-check reconsideration; LLM-F009 open for the telemetry layer
 ```
 
@@ -562,8 +626,9 @@ drift; the spec itself turned out to have been complete and correct all along, s
 from the frozen master rather than from Python's implementation state) and `LLM-F009` (no adapter
 request/response observability hook yet, `TEL-###` territory).
 
-**`LLM-F002` partially resolved, `LLM-F001` attempted and found genuinely blocked, not just
-unstarted.** `AI-013` was added to the parity manifest for Responses-family replay signatures, with a
+**`LLM-F002` partially resolved; `LLM-F001` attempted and found genuinely blocked at the time, not
+just unstarted — since resolved for its Layer-02-owned portion (see the pass recorded just below).**
+`AI-013` was added to the parity manifest for Responses-family replay signatures, with a
 real Pi source distinct from `XFORM-###`'s own (`api/openai-responses-shared.ts` vs.
 `transform-messages.ts`); the other three uncovered subsections were deliberately left unresolved —
 no existing conformance scenario exists to cite for any of them, so a row now would be aspirational,
@@ -575,36 +640,61 @@ is missing from two schema enums. Recorded as `LLM-F010` rather than filled with
 would only prove the old 7-field subset while `LLM-013`/`LLM-014` cite it as if it proved the full
 shape — the placeholder was left as a placeholder, honestly, not silently converted to weak evidence.
 
-Not done this pass, and not blocked on anything found this pass either: the independent Rust
-cross-check (handed off, see below) and `LLM-F010`'s own resolution (a real DSL/schema expansion,
-sized more like Runtime's `attempt_effect`/`echo_args` additions than a narrow scenario fill — kept
-as its own deliberate next pass, the same way Runtime's audit and remediation passes stayed distinct
-from each other).
+**`LLM-F010` resolution pass (this pass, following the Rust handoff):** built the observability
+matrix first (§7, every frozen field, before touching anything), which surfaced two latent
+pre-existing gaps beyond the originally-diagnosed ones (`scriptedResponse.usage` declared but never
+read; `_block()`'s `thinking` branch never existed). Extended `adapters/mock.py::ScriptedResponse`
+(production code) with the six missing `AssistantMessage` fields; extended
+`agent-scenario.schema.json` with a new `expect_assistant_details` construct and supporting `$defs`
+(`usage`, `cost`, `diagnostic`, `diagnosticError`, `deferredHandle`), all nullable where the real
+object can legitimately be absent; extended `agent_runner.py` to construct real typed objects from
+scenario data and normalize real objects back to the schema's shape — verified thin with an explicit
+absence-stays-`null` test, not just code review. Filled `public-llm-vocabulary-schema.yaml`, the one
+category-A placeholder ready without further Pi-behavior work; full A/B/C reclassification of all 42
+pre-pass placeholders is in §7. **Not marked `RESOLVED`** — the shared-contract reviewer rule applies
+to this `conformance/**`/`schema/**` change, and that review hasn't happened yet. Full Python suite,
+`ruff`, and `mypy` (on every touched file) clean throughout.
+
+**Rust's independent Layer 02 pass has since landed (§18, `audit/llm-rust-assurance` branch)** —
+typed vocabulary, strict required three-part model identity (confirming `LLM-F006`'s Python default
+was a Python-specific compromise, not a necessary one), independently-adopted centralized
+never-raises hardening (confirming `LLM-F007`'s reclassification), and a working
+`tests/llm_conformance.rs` that already consumes the shared `conformance/agent/*.yaml` scenarios
+through the real typed Rust service. Rust explicitly confirmed it hit the identical `LLM-F010`
+blocker and did not invent a private scenario schema — direct, independent corroboration that this
+is a genuine shared-contract gap, not a Python-only one, and that the DSL shape chosen this pass is
+plausible for Rust to consume, though Rust's own review of the actual diff is still the thing that
+settles it.
 
 The Rust handoff package — the shared contract, Python status summary, the `LLM-F001`/`LLM-F002`
 carry-forward, the `LLM-F006`/`LLM-F007` independent-decision probes, and the from-scratch
-implementation scope (Rust has no `llm` module at all yet — confirmed via `lib.rs`) — is
-`assurance/layers/02-llm-rust-handoff.md`. Python continues `LLM-F001`/`LLM-F002` in parallel with
-Rust's work, not blocked on the handoff landing first.
+implementation scope as it stood before Rust's own pass — is `assurance/layers/02-llm-rust-handoff.md`.
+Python continued `LLM-F001`/`LLM-F010` in parallel with Rust's work, not blocked on the handoff
+landing first, per instruction.
 
 **Follow-up dependencies:**
 
-1. Resolve `LLM-F010` first: extend `agent_runner.py`'s message projection and
-   `agent-scenario.schema.json`'s `scriptedResponse`/`contentBlock`/message shape to expose this
-   pass's new vocabulary (the 7 `AssistantMessage` fields, `Usage.cost`/`cache_write_1h`/
-   `total_tokens`, the 3 content-block signature fields, `StopReason.DEFERRED`). Only then fill
-   `public-llm-vocabulary-schema` — attempting it directly found the DSL couldn't express what's
-   needed, so this is a real prerequisite, not busywork.
-2. Decide, jointly with whoever owns `XFORM-###`, which mechanism
-   `same-model-thinking-signature-replayed`/`cross-model-signatures-stripped` actually test — this
-   layer's Responses-specific wire-format replay (`AI-013`), `XFORM-###`'s general survival-filtering
-   rules, or one scenario per layer — before filling either. Not a re-open of `LLM-F004`, which is
-   about the vocabulary fields, already resolved.
+1. **`LLM-F010` is implemented and verified (this pass) but not resolved.** Send the schema/runner
+   diff (`agent-scenario.schema.json`'s `expect_assistant_details`/`usage`/`diagnostic`/
+   `deferredHandle`/`contentBlock` extensions, `agent_runner.py`'s `_script`/`_block`/`_normalize_*`
+   changes, `adapters/mock.py`'s `ScriptedResponse` extension) through the shared-contract reviewer
+   process before treating it as canonical — Rust's own Layer 02 pass (§18) independently hit the
+   same blocker and its existing `tests/llm_conformance.rs` is corroborating evidence the DSL style
+   is Rust-consumable, but that isn't the review itself.
+2. Once `LLM-F010` is formally approved, fill the two remaining category-A placeholders
+   (`same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed`) — blocked
+   now on the Responses-family replay algorithm itself (`AI-013`, Phase 5), not on the DSL. Decide,
+   jointly with whoever owns `XFORM-###`, whether `cross-model-signatures-stripped` (reclassified
+   category B this pass, §7) needs its own Layer-02-adjacent scenario or is fully `XFORM-###`'s.
 3. `LLM-F002` is partially resolved (`AI-013` added). The remaining three subsections (API/provider
    split, model/request options, authentication) stay unresolved until Phase 5 gives each a real
    adapter/scenario to cite — do not add aspirational rows for them before then.
-4. Independent Rust implementation and cross-check, per `02-llm-rust-handoff.md` — Rust decides
-   `LLM-F006`/`LLM-F007` independently rather than inheriting Python's compromises.
+4. ~~Independent Rust implementation and cross-check~~ — **done, see §18.** Rust independently
+   confirmed `LLM-F006` is Python-specific (Rust's own `api` is required, non-defaulted) and
+   independently arrived at the same `LLM-F007` `PARITY_NEUTRAL_HARDENING` classification. Rust's
+   existing `tests/llm_conformance.rs` consumes 5 shared scenarios; once this pass's schema diff is
+   reviewed and adopted, it should grow to include the now-real `public-llm-vocabulary-schema` too —
+   Rust's own follow-up, not Python's to make.
 5. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
    call site that relied on it, this time with real API values to assign, not a placeholder sweep.
 6. Optionally resolve `LLM-F008` (rename either side for naming consistency) and `LLM-F009` (an
