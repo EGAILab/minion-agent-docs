@@ -13,10 +13,11 @@ source distinct from `XFORM-###`'s; the other 3 uncovered subsections deliberate
 pending Phase 5. Rust handoff package prepared (`02-llm-rust-handoff.md`) — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
-**Rust status:** `NOT_IMPLEMENTED` — confirmed via `lib.rs`: no `llm` module exists yet. Handoff
-package prepared; Rust cross-check follows independently, in parallel with Python's continued work,
-the same sequence Runtime
-followed.
+**Rust status:** `IMPLEMENTED / READY FOR CROSS-LANGUAGE CERTIFICATION` — typed vocabulary,
+strict three-part model identity, adapter/service boundary, central settled `AssistantStream`,
+scripted real-trait adapter, Rust tests, and a thin partial agent-family conformance adapter are
+implemented on `audit/llm-rust-assurance`; see §18. Overall Layer 02 remains `IN_AUDIT` while the
+shared `LLM-F001`/`LLM-F010` vocabulary-conformance blocker is open.
 
 ---
 
@@ -609,3 +610,116 @@ Rust's work, not blocked on the handoff landing first.
 6. Optionally resolve `LLM-F008` (rename either side for naming consistency) and `LLM-F009` (an
    adapter observability hook) whenever something else already has reason to touch that code —
    neither is worth a dedicated pass on its own.
+
+---
+
+## 18. Rust implementation and independent assurance result
+
+**Rust pass date:** 2026-08-23
+
+**Branch:** `audit/llm-rust-assurance`
+
+**Result:** `RUST READY`; overall layer remains `IN_AUDIT` because `LLM-F001`/`LLM-F010` is shared
+canonical-contract work, not a missing Rust runtime behavior.
+
+### Implementation evidence
+
+- `crates/minion-agent/src/llm/model.rs` — validated value-identity
+  `provider + api + model_id`; all components are required for direct construction and serde
+  deserialization. Rust independently rejects Python's temporary `api = "mock"` fallback.
+- `crates/minion-agent/src/llm/vocabulary.rs` — typed snake_case content/message/usage/diagnostic/
+  deferred/context/options/chunk vocabulary. Tool-call arguments are object-typed, user content
+  supports Pi's string-or-block shape, and immutable references require `sha256:<64 hex>` identity.
+- `crates/minion-agent/src/llm/adapter.rs` — typed provider seam returning
+  `Stream<Item = Result<StreamChunk, AdapterStreamError>>`; eager adapter-start and operational
+  stream errors are distinct concrete Rust errors.
+- `crates/minion-agent/src/llm/assistant_stream.rs` — owns provider-neutral accumulation,
+  operational-error settlement, premature-EOF error settlement preserving the accumulated partial,
+  terminal normalization, fusion, and no-hidden-drain behavior. It does not catch Rust panics.
+- `crates/minion-agent/src/llm/service.rs` — exact model lookup and eager stream-creation boundary;
+  the adapter registry lock is released before adapter code runs.
+- `crates/minion-agent/src/llm/scripted.rs` — deliberately dumb scripted adapter implementing the
+  real trait. It records typed requests and emits raw script items without settlement semantics.
+
+### Executable evidence
+
+- `tests/llm_vocabulary.rs` — strict identity, common validation boundary, value equality,
+  snake_case/optional-field forms, stop reasons, usage, thinking default, and content-addressed
+  image-reference identity (`LLM-001..LLM-016`, excluding separately deferred behavior).
+- `tests/llm_adapter.rs` — unknown-model and adapter-start eager failures, real-trait scripted
+  request recording/exhaustion, and adapter boundary (`LLM-011`, `LLM-018`, `LLM-019`).
+- `tests/llm_assistant_stream.rs` — represented operational errors, cancellation, premature EOF,
+  partial preservation, malformed terminal normalization, exactly-one terminal, fusion, and
+  post-terminal suppression (`LLM-015`, `LLM-018`).
+- `tests/llm_conformance.rs` — thin partial agent-family adapter consumes the shared
+  `premature-eof-synthesizes-error-terminal`, `premature-eof-preserves-partial-message`,
+  `public-stream-fuses-after-first-terminal`, `represented-provider-error-rides-stream`, and
+  `eager-invalid-model-fails-before-stream` scenarios through the real typed Rust service/stream.
+  It translates fixture raw output and projects results only; settlement remains in the library.
+
+### Independent finding decisions
+
+- `LLM-F006`: **not a Rust defect.** Rust requires non-empty `provider`, `api`, and `model_id` and
+  applies the same validation during deserialization. The Python compatibility default remains a
+  Python-owned disclosed compromise.
+- `LLM-F007`: Rust independently adopts central typed operational-error settlement as
+  `PARITY_NEUTRAL_HARDENING`. The raw adapter reports expected failures as `AdapterStreamError`;
+  `AssistantStream` settles them. Panics are not caught or converted.
+- `LLM-F001`: **shared-contract concern, applicable to Rust.** Rust executes the five already-filled
+  Layer-02 stream-boundary scenarios. The full vocabulary placeholder remains honestly blocked by
+  `LLM-F010`; Rust does not invent a private scenario schema or claim weak evidence as canonical.
+- `LLM-F002`: **shared-contract concern, applicable but not Rust-owned.** `AI-013` is consumed. The
+  remaining parity rows stay deferred until implemented provider behavior has real evidence.
+- `LLM-F008`: Rust uses the normative `ToolCall` name, so no Rust-local naming drift.
+- `LLM-F009`: no production-provider traffic hook is introduced; remains deferred to telemetry.
+- `LLM-F010`: remains the exact overall certification blocker. Rust's typed serde tests provide
+  implementation evidence but do not substitute for the missing shared vocabulary DSL/projection.
+
+### §8-14 Rust review
+
+- Failure model: eager lookup/start errors are typed; expected post-return failures settle in-band;
+  malformed raw terminal errors receive a non-empty implementation diagnostic; panics propagate.
+- Security: dynamic JSON is limited to specified opaque/object fields; no eval/dynamic loading;
+  authentication remains Phase 5 and no implicit credential fallback was introduced.
+- Reliability/operations: service locks are narrow and never held through adapter code; dropping or
+  fusing releases the raw stream; scripted request retention is explicit test-adapter behavior.
+- Observability: typed terminal messages preserve provider error text and partial state; production
+  traffic hooks remain `LLM-F009`/telemetry scope.
+- Performance: large message/script enum variants are boxed after Clippy review; stream processing
+  is single-pass and does not drain after terminal.
+- Public API: every current Rust Layer-02 surface is used by direct or canonical tests; no agent,
+  target-transformation, real-provider, session, or telemetry API was introduced speculatively.
+- Documentation: module, adapter, service, and stream rustdoc state ownership/failure boundaries.
+
+### Shared-contract changes
+
+`NONE`. Rust consumed the committed specification, parity manifest, and canonical scenarios as-is.
+The existing `LLM-F010` governance path remains the correct place for the later shared DSL/schema
+expansion.
+
+### Rust verification gates
+
+Fresh results from the isolated worktree after the final implementation commit:
+
+```text
+cargo fmt --check
+    PASS
+
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+
+cargo test --workspace --all-features
+    PASS — 118 tests, 0 failed (including 17 LLM tests)
+
+cargo test -p minion-agent --test llm_conformance -- --nocapture
+    PASS — 2 adapter tests consuming 5 shared Layer-02 scenarios, 0 failed
+
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+    PASS
+
+cargo run -p xtask -- conformance verify
+    PASS
+
+cargo run -p xtask -- coverage verify
+    PASS (current repository command completed successfully; it emitted no detailed per-file report)
+```
