@@ -2,6 +2,17 @@
 
 **Layer ID:** `03`  
 **Status:** `IN_AUDIT`  
+**Rust implementation-owner review (2026-08-23):** `REJECTED — CONTRACT_ASSURANCE_DEFECT`. The
+formal review is recorded in `03-session-artifacts-rust-review.md`. It independently approved the
+`SES-F002` mixed Session/Agent boundary, the `SES-F003` by-value identity/XFORM clarification, and
+`MINION-003` traceability, but found four shared schema/evidence defects: incomplete
+`assistantDetail`, incomplete `toolResultDetail`, role-incompatible `step.append` inputs that the
+Python runner silently ignores, and a non-discriminated `contentBlock` definition that admits
+structurally impossible variants. Rust Session remains `NOT_IMPLEMENTED — planned Phase 2`, which is
+explicitly non-blocking under the adopted separate-status workflow; the shared-contract defects are
+blocking. Required next action: narrow shared remediation, fresh Python evidence, and a fresh Rust
+implementation-owner review of the corrected candidate.
+
 **Governance correction (2026-08-23, recorded transparently, not erased):** this record briefly
 carried `Status: CERTIFIED` after a fourth pass resolved `SES-F001`/`SES-F002`/`SES-F003`. That
 conclusion was **premature**: `SES-F001` and `SES-F003` changed shared-contract files
