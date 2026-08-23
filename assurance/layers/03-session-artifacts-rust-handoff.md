@@ -7,7 +7,7 @@ the required affected-implementation-owner review of the shared contract it had 
 requests that review, following exactly the governance discipline the `LLM-F010` cycle in Layer 02
 established: Python does not get to unilaterally certify a shared cross-language layer.
 
-**Reviewed commits:**
+**Reviewed commits (original candidate):**
 
 ```text
 minion-agent        3d6ffa4   SES-F001: session-scenario.schema.json / conformance/session/*.yaml /
@@ -15,6 +15,26 @@ minion-agent        3d6ffa4   SES-F001: session-scenario.schema.json / conforman
 minion-agent-docs   92579ee   spec/session.md (SES-F002/F003 boundary clarification) +
                                assurance/layers/03-session-artifacts.md
 ```
+
+**Status update (2026-08-24): Rust already performed this review and rejected the original
+candidate.** `REJECTED — CONTRACT_ASSURANCE_DEFECT`, recorded in full in
+`03-session-artifacts-rust-review.md`. Four defects: `assistantDetail`/`toolResultDetail` omitted
+`provider`/`model`/`timestamp`/`error_message`/`tool_call_id` under `additionalProperties: false`;
+`step.append` admitted role-incompatible field combinations the runner silently ignored;
+`contentBlock` was not type-discriminated, admitting structurally impossible variants. `SES-F002`/
+`SES-F003`/`MINION-003` were all independently approved by that same review. All four defects were
+independently reproduced against the schema before being accepted, then fixed narrowly in:
+
+```text
+minion-agent        cda6b50   SES-F001 remediation: the same 4 files, corrected
+```
+
+**This corrected candidate is what needs the fresh review** — every question in §9 below still
+applies to it, especially B.6/B.8 (do the fixed `assistantDetail`/`toolResultDetail` shapes now
+represent the frozen fields correctly?) and B.4/C (does the type-discriminated `contentBlock` and the
+role-conditional `step.append` map cleanly to idiomatic Rust?). The prior rejection is not superseded
+by this package restating the original questions — it is superseded only by a fresh review verdict on
+`cda6b50`.
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged since Layer 02).
 

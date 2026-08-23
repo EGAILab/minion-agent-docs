@@ -2,16 +2,29 @@
 
 **Layer ID:** `03`  
 **Status:** `IN_AUDIT`  
-**Rust implementation-owner review (2026-08-23):** `REJECTED — CONTRACT_ASSURANCE_DEFECT`. The
-formal review is recorded in `03-session-artifacts-rust-review.md`. It independently approved the
-`SES-F002` mixed Session/Agent boundary, the `SES-F003` by-value identity/XFORM clarification, and
-`MINION-003` traceability, but found four shared schema/evidence defects: incomplete
-`assistantDetail`, incomplete `toolResultDetail`, role-incompatible `step.append` inputs that the
-Python runner silently ignores, and a non-discriminated `contentBlock` definition that admits
-structurally impossible variants. Rust Session remains `NOT_IMPLEMENTED — planned Phase 2`, which is
-explicitly non-blocking under the adopted separate-status workflow; the shared-contract defects are
-blocking. Required next action: narrow shared remediation, fresh Python evidence, and a fresh Rust
-implementation-owner review of the corrected candidate.
+**Rust implementation-owner review (2026-08-23):** `REJECTED — CONTRACT_ASSURANCE_DEFECT`, reviewing
+`minion-agent@3d6ffa4` / `minion-agent-docs@c273df1`. The formal review is recorded in
+`03-session-artifacts-rust-review.md`. It independently approved the `SES-F002` mixed Session/Agent
+boundary, the `SES-F003` by-value identity/XFORM clarification, and `MINION-003` traceability, but
+found four shared schema/evidence defects: incomplete `assistantDetail`, incomplete
+`toolResultDetail`, role-incompatible `step.append` inputs that the Python runner silently ignored,
+and a non-discriminated `contentBlock` definition that admitted structurally impossible variants.
+Rust Session remains `NOT_IMPLEMENTED — planned Phase 2`, explicitly non-blocking under the adopted
+separate-status workflow; the shared-contract defects were blocking.
+
+**Remediation (2026-08-24, sixth pass):** all four defects independently reproduced against the
+schema before being accepted (not taken on the reviewer's word), then fixed narrowly in
+`minion-agent@cda6b50`: `assistantDetail`/`toolResultDetail` now require and expose
+`provider`/`model`/`timestamp`/`error_message` and `tool_call_id`/`timestamp` respectively, made
+genuinely scriptable through `step.append` (not just observable) per Rust's explicit remediation
+request; `step.append` now uses `allOf`/`if`/`then` conditionals so a role can no longer carry
+another role's fields; `contentBlock` is now a `type`-discriminated `oneOf` with four closed variants,
+including the `data`/`reference` exclusive-or `ImageBlock.__post_init__` actually enforces. Every one
+of Rust's own listed adversarial probes was independently re-run against the corrected schema and
+confirmed to now behave correctly. Full Python suite re-run fresh: 724 passed/42 xfailed/0 failed
+(unchanged counts), `ruff`/`mypy` clean. **This is a corrected candidate sent back for a fresh Rust
+implementation-owner review — the prior rejection is not treated as approval after a fix, and this
+pass does not self-approve the correction.**
 
 **Governance correction (2026-08-23, recorded transparently, not erased):** this record briefly
 carried `Status: CERTIFIED` after a fourth pass resolved `SES-F001`/`SES-F002`/`SES-F003`. That
@@ -27,17 +40,15 @@ affected Rust implementation-owner review of the finalized Layer-03 shared contr
 (`assurance/layers/03-session-artifacts-rust-handoff.md`, prepared and pushed this pass, reviewing
 `minion-agent@3d6ffa4` + `minion-agent-docs@92579ee`). Python's own semantic-owner review of that same
 diff is `APPROVED`, not self-extended to a cross-language approval (§17 has the full review).  
-**Audit date:** 2026-08-23 (five passes: §1-7 first, §8-14 second (surfacing `RISK-001`), `SES-F001`
+**Audit date:** 2026-08-23/24 (six passes: §1-7 first, §8-14 second (surfacing `RISK-001`), `SES-F001`
 remediated third, `SES-F002`/`SES-F003` resolved fourth via a dedicated Pi re-audit
-(`packages/agent/src/types.ts:428-443`) and Session/Agent ownership matrix (Outcome A — the real
-run/turn mismatch lives in `agent_loop/driver.py`, Layer 08, already tracked under `AG-001`/`AG-004`;
-no `session/*.py` code changed), and this fifth pass corrected the certification governance itself:
-identified that `SES-F001`/`SES-F003`'s shared-contract changes lacked Rust implementation-owner
-review, performed a fresh Python semantic-owner review specifically hunting for `LLM-F010`-class
-defects (two items flagged for Rust's independent judgment, not self-cleared — see the handoff
-package), confirmed Rust has no `session` module yet (`minion-agent-rust/crates/minion-agent/src/`
-contains only `runtime`/`llm`), and prepared/pushed the formal Rust review package. Certification is
-held pending that review's return.)  
+(`packages/agent/src/types.ts:428-443`) and Session/Agent ownership matrix, fifth pass corrected the
+certification governance itself and sent the finalized contract for formal Rust implementation-owner
+review, and this sixth pass received Rust's `REJECTED — CONTRACT_ASSURANCE_DEFECT` verdict,
+independently reproduced all four reported defects before accepting them, fixed each narrowly in
+`minion-agent@cda6b50`, re-verified against every one of Rust's own adversarial probes, and sent the
+corrected candidate back for a fresh review. Certification remains held pending that fresh review's
+return.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED` — semantic-owner review `APPROVED`, cross-language review `PENDING`  
 **Rust status:** `NOT_IMPLEMENTED` (confirmed this pass by direct inspection, not assumed; `MINION-002`/
@@ -668,7 +679,7 @@ handling note covers the relevant boundary instead).
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| `SES-F001` | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — **RESOLVED** | **Corrected count (§7): 6, not 5, of 17 `conformance/session/*.yaml` scenarios were unfilled placeholders** (`content-signatures-round-trip`, `deferred-handle-round-trip`, `diagnostic-round-trip`, `request-reconstruction-after-target-transform`, `request-reconstruction-with-artifacts`, `rich-assistant-message-round-trip` — the first pass's own count omitted the last of these, corrected honestly rather than silently). `MINION-003`'s own manifest row cited `request-reconstruction-with-artifacts` as its `tests:` evidence while it was still a placeholder — a normative rule backed by no real scenario, exactly the situation the charter's own `CONTRACT_ASSURANCE_DEFECT` definition names. Two further gaps of the identical shape were confirmed (not assumed) this pass: the design's own originally-planned `retained-tail-no-duplicate` and `request-header-component-reuse` scenarios had never been created under any name. All 8 had real, passing Python-unit-level coverage already, so none were unverified Python behavior — only cross-language canonical evidence was missing. | **Fixed and re-verified this pass.** One of the 8 (`request-reconstruction-after-target-transform`) was investigated first, not assumed fixable: confirmed via direct repository search (no `transform`/`xform` module exists anywhere in `minion-agent-python/src/`) that it is genuinely Layer-04-dependent — filling it now would mean the runner simulating XFORM semantics, the exact thin-runner violation this methodology forbids. Reclassified `DEFERRED TO LAYER 04, non-blocking`, matching the two Layer-02 replay scenarios' own Outcome A (§7 has the full investigation). **The remaining 7 were fixed:** extended `conformance/schema/session-scenario.schema.json` (new `contentBlock`/`usage`/`cost`/`diagnostic`/`diagnosticError`/`deferredHandle`/`toolStub`/`assistantDetail`/`toolResultDetail` `$defs`, a richer `step.append` accepting content blocks/usage/diagnostics/deferred/api/response identity/tool-result fields, a new `record_header` step, and `expect_assistant_details`/`expect_tool_result_details`/`expect_reconstructed_header`/`expect_artifact_count` top-level assertions — all additive, the pre-existing `{role, text}`-only shape still works unchanged, confirmed by re-running the original 10 real scenarios before writing any new content) and `tests/conformance/session_runner.py` (real object construction on the input side, real-attribute-only normalization on the output side, mirroring the `LLM-F010` pattern exactly). Filled the 5 placeholders and authored the 2 missing scenarios. **Verified, not just asserted:** an independent throwaway script (not reusing any authored scenario) constructed a fully-unset `AssistantMessage`/`ToolResultMessage` directly and confirmed every optional field normalizes to `None`, never a fabricated value. `pi-parity-manifest.yaml`'s `MINION-003` row updated to also cite `request-header-component-reuse`. Full suite re-run fresh: 724 passed/42 xfailed/0 failed (up from 715/47 — the exact `+9`/`-5` the 7 newly-real scenarios predict, verified arithmetically before trusting it), `ruff` clean, `mypy` clean on `session_runner.py` (checked alongside a `src/` file, matching the project's own `mypy.ini` scoping and `LLM-F010`'s precedent; `test_session_conformance.py`'s pre-existing `yaml`-stub gap is unrelated and outside the project's configured mypy scope). `SES-F001` is `RESOLVED`. |
+| `SES-F001` | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — Python self-review **RESOLVED**; Rust implementation-owner review **REJECTED** (4 defects, confirmed real); fixed in `cda6b50`; **OPEN pending fresh Rust re-review** | **Corrected count (§7): 6, not 5, of 17 `conformance/session/*.yaml` scenarios were unfilled placeholders** (`content-signatures-round-trip`, `deferred-handle-round-trip`, `diagnostic-round-trip`, `request-reconstruction-after-target-transform`, `request-reconstruction-with-artifacts`, `rich-assistant-message-round-trip` — the first pass's own count omitted the last of these, corrected honestly rather than silently). `MINION-003`'s own manifest row cited `request-reconstruction-with-artifacts` as its `tests:` evidence while it was still a placeholder — a normative rule backed by no real scenario, exactly the situation the charter's own `CONTRACT_ASSURANCE_DEFECT` definition names. Two further gaps of the identical shape were confirmed (not assumed) this pass: the design's own originally-planned `retained-tail-no-duplicate` and `request-header-component-reuse` scenarios had never been created under any name. All 8 had real, passing Python-unit-level coverage already, so none were unverified Python behavior — only cross-language canonical evidence was missing. | **Fixed and re-verified this pass.** One of the 8 (`request-reconstruction-after-target-transform`) was investigated first, not assumed fixable: confirmed via direct repository search (no `transform`/`xform` module exists anywhere in `minion-agent-python/src/`) that it is genuinely Layer-04-dependent — filling it now would mean the runner simulating XFORM semantics, the exact thin-runner violation this methodology forbids. Reclassified `DEFERRED TO LAYER 04, non-blocking`, matching the two Layer-02 replay scenarios' own Outcome A (§7 has the full investigation). **The remaining 7 were fixed:** extended `conformance/schema/session-scenario.schema.json` (new `contentBlock`/`usage`/`cost`/`diagnostic`/`diagnosticError`/`deferredHandle`/`toolStub`/`assistantDetail`/`toolResultDetail` `$defs`, a richer `step.append` accepting content blocks/usage/diagnostics/deferred/api/response identity/tool-result fields, a new `record_header` step, and `expect_assistant_details`/`expect_tool_result_details`/`expect_reconstructed_header`/`expect_artifact_count` top-level assertions — all additive, the pre-existing `{role, text}`-only shape still works unchanged, confirmed by re-running the original 10 real scenarios before writing any new content) and `tests/conformance/session_runner.py` (real object construction on the input side, real-attribute-only normalization on the output side, mirroring the `LLM-F010` pattern exactly). Filled the 5 placeholders and authored the 2 missing scenarios. **Verified, not just asserted:** an independent throwaway script (not reusing any authored scenario) constructed a fully-unset `AssistantMessage`/`ToolResultMessage` directly and confirmed every optional field normalizes to `None`, never a fabricated value. `pi-parity-manifest.yaml`'s `MINION-003` row updated to also cite `request-header-component-reuse`. Full suite re-run fresh: 724 passed/42 xfailed/0 failed (up from 715/47 — the exact `+9`/`-5` the 7 newly-real scenarios predict, verified arithmetically before trusting it), `ruff` clean, `mypy` clean on `session_runner.py` (checked alongside a `src/` file, matching the project's own `mypy.ini` scoping and `LLM-F010`'s precedent; `test_session_conformance.py`'s pre-existing `yaml`-stub gap is unrelated and outside the project's configured mypy scope). **This Python self-review's `RESOLVED` conclusion was incomplete** — Rust's independent implementation-owner review of this exact commit (`3d6ffa4`) found four real schema defects the self-review missed: `assistantDetail`/`toolResultDetail` omitted `provider`/`model`/`timestamp`/`error_message`/`tool_call_id` under `additionalProperties: false` (a Rust implementation could drop or fabricate these frozen fields and still pass); `step.append` admitted role-incompatible field combinations the runner silently ignored rather than rejected; `contentBlock` was not type-discriminated, admitting a text block with no text, an image with neither or both of `data`/`reference`, and cross-variant field mixing. Verdict: `REJECTED — CONTRACT_ASSURANCE_DEFECT`, recorded in full in `03-session-artifacts-rust-review.md`. All four independently reproduced against the schema before being accepted, then fixed narrowly in `cda6b50`: the two message-detail shapes now require and expose every previously-missing field, made genuinely *scriptable* through `step.append` (not just observable) per Rust's explicit request; `step.append` now uses `allOf`/`if`/`then` role-conditional restrictions; `contentBlock` is now a `type`-discriminated `oneOf` with four closed variants including the image-source exclusive-or `ImageBlock.__post_init__` enforces. Every one of Rust's own listed adversarial probes was independently re-run against the fix and confirmed correct. Full suite re-run fresh: 724 passed/42 xfailed/0 failed (unchanged), `ruff`/`mypy` clean. **This is a corrected candidate sent back for a fresh Rust implementation-owner review — the prior rejection is not treated as approved after a fix.** `SES-F001` is **OPEN, corrected, pending fresh cross-language review** — not `RESOLVED` until that review returns `APPROVED`. |
 | `SES-F002` | ~~HIGH~~ — **downgraded to informational** | ~~`CONTRACT_ASSURANCE_DEFECT`~~ — **Outcome A: no Layer-03 defect.** See the full ownership matrix and Pi re-audit (§7, "`SES-F002` Pi audit and ownership matrix"). | The frozen design's own §5 log-only event list names `run/start`, `run/end`, `turn/start`, `turn/end`; `session/events.py`'s actual `EventKind` has `TURN_START`/`TURN_END` and `STEP_START`/`STEP_END`, and `agent_loop/driver.py` emits `TURN_START`/`TURN_END` around a multi-request loop and `STEP_START`/`STEP_END` around a single request-plus-tools — exactly the Run/Turn conflation design §6 prohibits by name. This pass re-audited Pi directly (`packages/agent/src/types.ts:428-443`'s `AgentEvent` union) rather than re-trusting the prior pass's design-doc-only reading, and found: Pi's `agent_start`/`turn_start`/`message_*`/`tool_execution_*` vocabulary is an **ephemeral UI-notification stream, structurally separate from Pi's persisted `SessionStorage`** (confirmed: zero occurrences of any of those event-type strings in `session.ts`/`types.ts`'s `Entry`/`LaneRecord` definitions). Session never needs to store, reconstruct, or interpret this vocabulary to do its own job — it treats every log-only event uniformly regardless of name. The actual mismatch (`driver.py`'s own docstring: "A step is one model request... A turn is zero or more steps," redefining observable `turn` exactly as design §6 forbids) lives entirely inside `agent_loop/driver.py`, a Layer-08 file. | **Resolved this pass by re-scoping, not by code change.** `pi-parity-manifest.yaml` already carries `AG-001` (phase 3, `agent_start -> turn_start -> initial prompt message lifecycle`, `python: driver.py (rewrite)`, `disposition: adopted`) and `AG-004` (phase 3, `turn definition/order`, `disposition: adopted`) — found by direct search, not assumed absent — with real (if still-placeholder, `xfailed`-confirmed) conformance evidence (`initial-prompt-order-after-turn-start.yaml`). The run/turn naming-and-ordering concern this finding raised was never an undiscovered gap; it is already a known, dispositioned, Agent-loop-owned requirement awaiting Layer 08's own implementation/assurance pass, exactly matching the charter's audit order (item 8 after item 3). **Layer-03 portion: RESOLVED/VERIFIED** (Session's stored/reconstruction semantics were already correct and needed no change). **Remaining executable lifecycle evidence: DEFERRED TO LAYER 08**, owner `AG-001`/`AG-004`. **Layer-03 certification impact: NON-BLOCKING.** No `session/*.py` or `agent_loop/*.py` file was touched to reach this disposition — this is a boundary-scoping correction, not an implementation fix. `spec/session.md` updated (`SES-F003`) to state the boundary explicitly so a future audit doesn't re-raise this as a Session finding. |
 | `SES-F003` | LOW | `CONTRACT_ASSURANCE_DEFECT` — **RESOLVED** | `spec/session.md` (originally 4 short paragraphs) restated design §5's append/surface/fork/reset/compaction rules but never mentioned the explicit by-value event-name-identity rule (present in frozen design §5, independently conformance-pinned by `event-name-identity-is-by-value.yaml`), and said nothing about the Session/Agent/XFORM ownership boundary `SES-F002`'s investigation resolved this pass. It was blocked on `SES-F002` deliberately: writing spec text about a log-only vocabulary before knowing who owns it risked baking the wrong ownership into the spec. | **Fixed once `SES-F002`'s ownership was settled, not before.** `spec/session.md` now states the by-value event-identity rule explicitly, and adds an explicit boundary paragraph: Session owns the log itself, the surface/log-only classification, and the specific log-only kinds its own operations define (`session/forked`, `session/reset`, `compaction`, `request/header`); whatever else a producer appends as log-only data is stored and classified uniformly, without Session asserting ownership of its meaning — deliberately **not** a run/turn/step vocabulary list, since `SES-F002` established that vocabulary is Agent-owned. A third paragraph states the XFORM boundary explicitly (session projection ends at the Layer 02 vocabulary; target-model transformation is a distinct, later stage), matching design §5's own "Relationship to Pi's message projection" text, previously stated only in the frozen master and not restated here. This is a `spec/**` shared-contract change: per the established review rule, it is not treated as unconditionally closed — it is available for the same broader review `LLM-F010`-style shared-contract changes received, though as a clarifying, non-testable boundary statement (no new conformance requirement, no new Python/Rust behavior) its risk is low. `SES-F003` is `RESOLVED` for Layer-03 purposes. |
 
@@ -686,10 +697,10 @@ Design alignment                         [x]  §5/§6 re-traced against Pi sourc
 Pi parity                                [x]  MINION-002/003 are intentional divergences by the manifest's own disposition; no Pi-visible behavioral mismatch found in Session; the only real Pi-derived mismatch (run/turn naming) is Agent-owned, already tracked (AG-001/AG-004)
 Normative spec                           [x]  spec/session.md updated this pass (SES-F003 resolved): by-value event-identity rule stated explicitly; Session/Agent/XFORM boundary stated explicitly
 Parity manifest                          [x]  MINION-002/003 both present, both dispositioned, both cite real test evidence; AG-001/AG-004 confirmed to already carry the correct Pi run/turn vocabulary and disposition
-Canonical conformance                    [x]  SES-F001 RESOLVED — all Layer-03-owned scenarios filled/authored; 0 remaining true Layer-03 placeholders (fresh recount, §7); the sole remaining placeholder is Layer-04-owned, non-blocking
-Python tests where implemented           [x]  172 test functions across 11 files read in full; 16 real session conformance scenarios, all passing fresh; session_runner.py re-audited for Agent simulation this pass -- none found
-Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), confirmed by direct inspection this pass (no session module under minion-agent-rust/), consistent with the manifest
-Rust implementation-owner review         [ ]  PENDING — review package prepared and pushed this pass (03-session-artifacts-rust-handoff.md), reviewing minion-agent@3d6ffa4 + minion-agent-docs@92579ee; not yet returned
+Canonical conformance                    [~]  SES-F001's scenario content is complete (0 remaining true Layer-03 placeholders) but its schema was Rust-rejected and then corrected in cda6b50 -- pending fresh Rust re-review before this can read [x]
+Python tests where implemented           [x]  172 test functions across 11 files read in full; 16 real session conformance scenarios, all passing fresh against the corrected schema; session_runner.py re-audited for Agent simulation -- none found
+Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), confirmed by direct inspection (no session module under minion-agent-rust/), consistent with the manifest
+Rust implementation-owner review         [ ]  REJECTED (4 defects, 03-session-artifacts-rust-review.md) then corrected in cda6b50 -- fresh re-review PENDING, not yet returned
 Property/invariant tests                 [x]  test_properties.py — 7 Hypothesis tests already exist
 Concurrency tests where applicable       [x]  §9/§10 reviewed — no concurrent-mutation surface exists in this layer (synchronous, in-memory, no locking needed); not applicable rather than missing
 Fault-injection tests where applicable   [x]  §8 failure model reviewed — every failure path (JSON-safety, event-name, missing-artifact, decode) is deterministic and already covered by §6's test read
@@ -702,7 +713,7 @@ Documentation                            [x]  §14 complete; spec/session.md now
 All findings classified                  [x]  SES-F001..F003 classified
 No unresolved Pi uncertainty             [x]  none raised this pass
 No unresolved parity defect              [x]  none — Session has none; the one real Pi-derived vocabulary mismatch is Agent-owned (AG-001/AG-004), not a Layer-03 parity defect
-No unresolved contract-assurance defect  [x]  SES-F001, SES-F002, SES-F003 all RESOLVED this pass or the prior one
+No unresolved contract-assurance defect  [ ]  SES-F002/F003 resolved; SES-F001 corrected but OPEN pending fresh Rust re-review of cda6b50 -- the prior rejection is not treated as approved after a fix
 Deferred risks recorded                  [x]  RISK-001 (in-memory-only persistence, Phase 9) recorded in risk-register.md
 ```
 
@@ -727,24 +738,45 @@ package: `assurance/layers/03-session-artifacts-rust-handoff.md`, reviewing `min
 `SES-F003`'s underlying conclusions are being reopened or distrusted — they are the candidate finalized
 contract Rust now reviews independently.
 
-§1-14 are complete with real grounding, across five passes. First pass: the frozen design §5/§6/§8
+§1-14 are complete with real grounding, across six passes. First pass: the frozen design §5/§6/§8
 was read directly, `spec/session.md` was checked against it, `MINION-002`/`MINION-003` were traced to
 their manifest rows, pinned Pi session source was read to confirm the storage-architecture divergence
 is intentional and scoped correctly, all 8 Python modules were read and inventoried, and all 15
 canonical session scenarios were read and classified real-vs-placeholder. Second pass: all 11 test
 files were read in full (172 test functions, all `KEEP`), the two design-named scenarios with no
 canonical file were confirmed genuinely missing rather than assumed, and §8-14's category reviews were
-completed, surfacing `RISK-001`. Third pass: `SES-F001` was remediated and resolved. Fourth pass:
-`SES-F002` was re-scoped and resolved via a dedicated Pi re-audit and Session/Agent ownership matrix,
-and `SES-F003` was resolved once that boundary was settled. Fifth pass (this update): the certification
-governance itself was corrected — see above.
+completed, surfacing `RISK-001`. Third pass: `SES-F001` was remediated (self-review `RESOLVED`).
+Fourth pass: `SES-F002` was re-scoped and resolved via a dedicated Pi re-audit and Session/Agent
+ownership matrix, and `SES-F003` was resolved once that boundary was settled. Fifth pass: the
+certification governance itself was corrected, and a formal Rust implementation-owner review package
+was sent. Sixth pass (this update): Rust's review returned `REJECTED — CONTRACT_ASSURANCE_DEFECT`
+against `SES-F001`'s schema; all four reported defects were independently reproduced before being
+accepted, then fixed narrowly, and a corrected candidate was sent back for a fresh review.
 
-All three findings' Python-side dispositions stand, pending cross-language review. All were originally
-`CONTRACT_ASSURANCE_DEFECT`, none were `PI_PARITY_DEFECT` or `PI_BEHAVIOR_UNCERTAIN`:
+`SES-F002`/`SES-F003`'s Python-side dispositions stand, cross-language-approved by Rust's own review.
+`SES-F001` does not — see below. All three were originally `CONTRACT_ASSURANCE_DEFECT`, none were
+`PI_PARITY_DEFECT` or `PI_BEHAVIOR_UNCERTAIN`:
 
-- **`SES-F001`** (MEDIUM) — **RESOLVED** (prior pass). 6 placeholder scenarios filled, 2 missing-named
-  scenarios authored, 1 (`request-reconstruction-after-target-transform`) verified genuinely `DEFERRED
-  TO LAYER 04`. Full detail in `SES-F001`'s findings row (§15).
+- **`SES-F001`** (MEDIUM) — **Python self-review concluded `RESOLVED`; that conclusion was incomplete.**
+  6 placeholder scenarios filled, 2 missing-named scenarios authored, 1
+  (`request-reconstruction-after-target-transform`) verified genuinely `DEFERRED TO LAYER 04` — this
+  part stands. But Rust's independent implementation-owner review of the resulting schema
+  (`3d6ffa4`) found four real defects the self-review missed: `assistantDetail`/`toolResultDetail`
+  omitted `provider`/`model`/`timestamp`/`error_message`/`tool_call_id` under
+  `additionalProperties: false` (a Rust implementation could drop or fabricate these frozen fields and
+  still pass); `step.append` admitted role-incompatible field combinations the runner silently ignored;
+  `contentBlock` was not type-discriminated, admitting structurally impossible variants (a text block
+  with no text, an image with neither or both of `data`/`reference`). Full review:
+  `03-session-artifacts-rust-review.md`. All four independently reproduced against the schema before
+  being accepted — not taken on the reviewer's word — then fixed narrowly in `cda6b50`: both detail
+  shapes now require and expose every previously-missing field, made genuinely *scriptable* through
+  `step.append` (not just observable) per Rust's explicit remediation request; `step.append` gained
+  `allOf`/`if`/`then` role-conditional restrictions; `contentBlock` became a `type`-discriminated
+  `oneOf` with four closed variants, including the image-source exclusive-or `ImageBlock.__post_init__`
+  enforces. Every one of Rust's own listed adversarial probes was independently re-run against the fix
+  and confirmed correct. Full detail in `SES-F001`'s findings row (§15). **`SES-F001` is OPEN,
+  corrected, pending a fresh Rust implementation-owner review — not `RESOLVED` until that review
+  returns `APPROVED`.**
 - **`SES-F002`** (originally HIGH) — **RESOLVED this pass, downgraded to informational: Outcome A, no
   Layer-03 defect.** Pi was re-audited directly (`packages/agent/src/types.ts:428-443`'s `AgentEvent`
   union, not re-trusted from either prior pass's design-doc paraphrase) and found to keep its
@@ -758,14 +790,20 @@ All three findings' Python-side dispositions stand, pending cross-language revie
   carries `AG-001`/`AG-004` (phase 3, correct Pi vocabulary, disposition `adopted`, real but
   `xfailed`-confirmed placeholder conformance evidence) tracking it. Full ownership matrix, event-by-
   event, is in §7 ("`SES-F002` Pi audit and ownership matrix"). No `session/*.py` or `agent_loop/*.py`
-  file was changed — this was a scope correction, not an implementation fix.
-- **`SES-F003`** (LOW) — **RESOLVED this pass**, deliberately only after `SES-F002`'s boundary was
-  settled. `spec/session.md` now states the by-value event-identity rule explicitly, states exactly
-  what Session owns versus what a log-only-event producer owns, and states the XFORM boundary
-  explicitly — without specifying a run/turn/step vocabulary, since that's confirmed Agent-owned. This
-  is a `spec/**` shared-contract change and is recorded as available for the same broader review
-  `LLM-F010`-style changes received, not unilaterally closed, though its risk is low (a clarifying,
-  non-testable boundary statement, no new conformance requirement).
+  file was changed — this was a scope correction, not an implementation fix. **Cross-language
+  approved:** Rust's own implementation-owner review independently re-audited Pi (a wider symbol set,
+  including `packages/agent/src/harness/session/context.ts`, `harness/messages.ts::convertToLlm`, and
+  `harness/compaction/compaction.ts`) and reached the identical mixed-boundary conclusion,
+  characterizing it precisely: Session "may store valid producer-owned operational/log-only data" but
+  "does not acquire semantic ownership of that producer vocabulary" and "does not recreate the live
+  `AgentEvent` notification stream." `SES-F002` remains `RESOLVED`.
+- **`SES-F003`** (LOW) — **RESOLVED**, deliberately only after `SES-F002`'s boundary was settled.
+  `spec/session.md` now states the by-value event-identity rule explicitly, states exactly what
+  Session owns versus what a log-only-event producer owns, and states the XFORM boundary explicitly —
+  without specifying a run/turn/step vocabulary, since that's confirmed Agent-owned. **Cross-language
+  approved:** Rust's review confirms "event identity is the serialized string value; enum singleton,
+  allocation, pointer, reference, and language object identity do not participate," and confirms the
+  Session/XFORM boundary independently. `SES-F003` remains `RESOLVED`.
 
 `RISK-001` (`SessionLog`/`ArtifactStore` in-memory only, confirmed intentional per the design's own
 Phase-9 commitment, recorded in `risk-register.md`) needs no action from this layer — unchanged this
@@ -792,53 +830,73 @@ it there) — a completeness gap, not an observed correctness defect. Full detai
 review package (Pi evidence, ownership matrix, 17-scenario inventory, runner-thinness confirmation, all
 13 required review questions), is in `assurance/layers/03-session-artifacts-rust-handoff.md`.
 
-**Not started this pass, by design:** any implementation of Layer 08 (Agent loop), Layer 04 (XFORM), or
-Rust. Rust's actual current state was inspected, not assumed:
-`minion-agent-rust/crates/minion-agent/src/` contains only `runtime`/`llm` — no `session` module
-exists. `agent_loop/driver.py` and `session/events.py` were read but not modified this pass either —
-`SES-F002`'s resolution remains a documentation/scope correction, not a code change. `AG-001`/`AG-004`'s
-own remediation is explicitly left for Layer 08's own future pass.
+**Rust's implementation-owner review (this pass) and the remediation it required:** Rust returned
+`REJECTED — CONTRACT_ASSURANCE_DEFECT` against `3d6ffa4`/`c273df1`, recorded in full in
+`03-session-artifacts-rust-review.md`. All four reported defects were independently reproduced against
+the schema — using Rust's own adversarial probes, not summarized versions of them — before being
+accepted as real, matching the discipline `LLM-F010` established: a rejection is verified, not
+rubber-stamped, but also not defended against once confirmed. All four were then fixed narrowly in
+`cda6b50` (full technical detail in `SES-F001`'s findings row, §15, and in the header's remediation
+note). Every one of Rust's adversarial probes was re-run against the fix and now behaves correctly.
+Full Python suite re-run fresh: 724 passed/42 xfailed/0 failed (unchanged counts — no scenarios added
+or removed, only existing assertions extended), `ruff`/`mypy` clean. **This corrected candidate is
+sent back for a fresh Rust implementation-owner review — the first rejection is not treated as
+approval after a fix, and this pass does not self-approve the correction.**
+
+Rust's review also independently confirmed `SES-F002` (Outcome A, with a wider Pi symbol set than
+Python's own audit — `context.ts`, `harness/messages.ts::convertToLlm`,
+`harness/compaction/compaction.ts` — reaching the identical conclusion) and `SES-F003` (by-value
+identity, Session/XFORM boundary), and confirmed `MINION-003`'s traceability and the 17-scenario
+family placement are sound. It also independently confirmed the certification-applicability question
+this pass had left open: Rust Session implementation is `EXPLICITLY DEFERRED BY PLAN`, non-blocking,
+citing the same workflow provisions (`process/implementation-conformance-workflow.md` §7.3/§5.9,
+project invariant 19, `fidelity-assurance-method.md` §14) this record's own governance-correction
+section had already identified — Rust reached this independently rather than accepting Python's
+framing.
+
+**Not started this pass, by design:** any implementation of Layer 08 (Agent loop), Layer 04 (XFORM),
+or Rust. `agent_loop/driver.py` and `session/events.py` remain unmodified — `SES-F002`'s resolution
+is still a documentation/scope correction, not a code change. `AG-001`/`AG-004`'s own remediation
+remains explicitly left for Layer 08's own future pass.
 
 **Final freeze-gate audit:**
 
 ```text
-Pinned Pi audited?                                        YES -- types.ts:428-443, session.ts/types.ts, spec/agent.md, driver.py docstring
-Parity manifest current?                                  YES -- MINION-002/003, AG-001/AG-004 all present and dispositioned
-spec/session.md complete for current Session scope?       YES -- by-value identity rule + Session/Agent/XFORM boundary stated
-Canonical Session schema language-neutral?                YES, with 2 items flagged for Rust's independent check (see review package SS2) -- not self-cleared
-Python Session runner thin?                                YES -- re-audited in full this pass, no Agent/XFORM simulation found
-Rust implementation-owner review?                         PENDING -- package prepared and pushed this pass
-Rust implementation obligation for Layer 03?               Not yet determined -- depends on the review's own answer to whether Rust must have an existing implementation to review meaningfully; Rust currently NOT_IMPLEMENTED (confirmed)
-All current Layer-03 placeholders resolved?                YES -- 0 remaining true Layer-03 placeholders (fresh recount)
-Layer-04 deferred case explicitly owned?                   YES -- request-reconstruction-after-target-transform, owner Layer 04/XFORM
+Pinned Pi audited?                                        YES -- types.ts:428-443, session.ts/types.ts, spec/agent.md, driver.py docstring, re-audited independently by Rust with a wider symbol set
+Parity manifest current?                                  YES -- MINION-002/003, AG-001/AG-004 all present and dispositioned; MINION-003 traceability confirmed by Rust
+spec/session.md complete for current Session scope?       YES -- by-value identity rule + Session/Agent/XFORM boundary stated; confirmed by Rust
+Canonical Session schema language-neutral?                NO, as submitted (4 real defects, Rust-confirmed) -- YES as corrected in cda6b50, pending fresh Rust confirmation
+Python Session runner thin?                                YES -- re-audited in full, no Agent/XFORM simulation found
+Rust implementation-owner review?                         REJECTED on 3d6ffa4/c273df1 (4 defects); corrected in cda6b50; fresh re-review PENDING
+Rust implementation obligation for Layer 03?               EXPLICITLY DEFERRED BY PLAN, non-blocking -- confirmed by Rust's own review, not just Python's reading of the workflow docs
+All current Layer-03 placeholders resolved?                YES -- 0 remaining true Layer-03 placeholders; Rust independently confirmed the 17-scenario family placement
+Layer-04 deferred case explicitly owned?                   YES -- request-reconstruction-after-target-transform, owner Layer 04/XFORM, confirmed by Rust
 Agent lifecycle ownership explicit?                        YES -- AG-001/AG-004, phase 3, disposition adopted
 Active PI_PARITY_DEFECT?                                   NONE
 Active PI_BEHAVIOR_UNCERTAIN?                               NONE
-Active CONTRACT_ASSURANCE_DEFECT?                           NONE (all three findings resolved at the Python/semantic-owner level; the open item is a review gate, not an unresolved defect)
-Any conformance runner simulating Agent/XFORM semantics?    NO -- confirmed by full re-read this pass
+Active CONTRACT_ASSURANCE_DEFECT?                           SES-F001's schema defects, CONFIRMED REAL and FIXED this pass; certification blocked until a fresh Rust review approves the correction
+Any conformance runner simulating Agent/XFORM semantics?    NO -- confirmed by Rust's own independent review as well as Python's
 ```
 
 **Layer 03 — Session + Artifacts: `IN_AUDIT`.**
 
-**Exact remaining blocker:** formal Rust implementation-owner review of the finalized Layer-03 shared
-contract (`minion-agent@3d6ffa4` + `minion-agent-docs@92579ee`), per
-`assurance/layers/03-session-artifacts-rust-handoff.md`. Owner: whoever performs Rust's implementation-
-owner review, following the same parallel-session pattern that returned Layer 02's `LLM-F010` verdict.
+**Exact remaining blocker:** fresh Rust implementation-owner review of the corrected Layer-03 shared
+contract (`minion-agent@cda6b50`). The prior review (`REJECTED`, on `3d6ffa4`) does not carry forward
+as approval merely because the four defects it found have been fixed.
 
 **Follow-up dependencies:**
 
-1. `SES-F001`/`SES-F002`/`SES-F003` — Python-side conclusions stand; not reopened. Nothing further
-   required of Python unless Rust's review finds a genuine `CONTRACT_ASSURANCE_DEFECT`.
-2. **Rust implementation-owner review must return** one of `APPROVED` / `REJECTED —
-   CONTRACT_ASSURANCE_DEFECT` / `REJECTED — RUST IMPLEMENTATION DEFECT` / `PI_BEHAVIOR_UNCERTAIN`,
-   per the handoff package's §9. If rejected with a contract defect, follow the `LLM-F010`
-   remediation pattern exactly: reproduce the defect independently, verify against Pi, repair
-   narrowly, add regression evidence, rerun Python gates, push a corrected candidate SHA, and require
-   a *fresh* Rust re-review — do not treat the first review as approval after a fix.
-3. If Rust approves, determine the actual Rust Layer-03 implementation obligation from current
-   repository truth and the adopted build/assurance plan (not assumed) before deciding whether
-   certification requires a green Rust implementation or may proceed with implementation explicitly
-   deferred by plan.
-4. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
+1. `SES-F002`/`SES-F003` — cross-language approved (Python semantic-owner review + independent Rust
+   implementation-owner review both concur). Nothing further required.
+2. `SES-F001` — corrected in `cda6b50`; **requires a fresh Rust implementation-owner review** before
+   it can be marked `RESOLVED`. Do not self-approve; do not treat the fix as sufficient on its own.
+3. Once Rust's fresh review returns `APPROVED`: determine the actual Rust Layer-03 implementation
+   obligation is already answered (`EXPLICITLY DEFERRED BY PLAN`, both Python's and Rust's own
+   readings agree) — certification may then proceed without a green Rust implementation, per the
+   adopted separate-status workflow.
+4. If Rust's fresh review finds a *new* defect (not one of the four already fixed), treat it exactly
+   like this cycle: reproduce independently, verify against Pi, repair narrowly, rerun gates, push a
+   corrected candidate, request another fresh review.
+5. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
    recorded and cited.
-5. Do not start Layer 04, Layer 08, or any Rust implementation work in the meantime.
+6. Do not start Layer 04, Layer 08, or any Rust implementation work in the meantime.
