@@ -2,10 +2,12 @@
 
 **Layer ID:** `02`  
 **Status:** `IN_AUDIT`  
-**Audit date:** 2026-08-23 (Steps 0-2 complete: Pi source read directly, requirement traceability and
-Python module deep audit done; all 4 PI_PARITY_DEFECT findings (LLM-F003..F006) remediated and
-verified this pass — 3 fully, 1 (LLM-F006) with a disclosed compromise; §6 existing-test audit and
-§8-14 review not yet started — see §17)  
+**Audit date:** 2026-08-23 (§1-6 and §8-14 complete: Pi source read directly, requirement
+traceability, module and existing-test audits, and the full §8-14 review all done; 4 PI_PARITY_DEFECT
+findings (LLM-F003..F006) resolved in the prior pass; one more hardening fix (LLM-F007, centralizing
+the never-raises guarantee against a misbehaving adapter) made and verified during this pass's own
+adversarial review — see §8 and §15 for why this is PARITY_NEUTRAL_HARDENING, not a Pi-parity defect:
+Pi's own central dispatcher does not defend against this either — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** unassessed this pass — Python drives audit/remediation first, per the adopted
@@ -285,7 +287,42 @@ carries the metadata, not what the model reads.
 
 ## 6. Existing-test audit
 
-Not started.
+All 7 files in `tests/llm/` plus `tests/session/test_derive.py` (the vocabulary's own encode/decode
+round-trip suite, heavily extended in the prior remediation pass) read in full and run individually
+to confirm current pass state before classifying:
+
+```text
+KEEP                 solid unit-level test, stays as implementation-detail coverage
+STRENGTHEN           real gap or weak assertion worth fixing
+MOVE TO CONFORMANCE  tests cross-language-relevant behavior that duplicates/should replace a scenario
+REWRITE              tests something real but is structured badly (asserts internals, not behavior)
+DELETE               redundant with canonical conformance, adds nothing as a unit test
+```
+
+| File | Verdict | LLM-* | Reason |
+|---|---|---|---|
+| `test_content.py` | KEEP | LLM-001, LLM-002, LLM-003, LLM-004 | Every content-block field, including all 3 replay-signature additions from the prior pass, tested with explicit default-and-settable assertions; frozen-ness verified |
+| `test_messages.py` | KEEP | LLM-006, LLM-007, LLM-008, LLM-009, LLM-013, LLM-014 | Comprehensive coverage of the prior pass's additions (`AssistantMessage`'s 7 new fields, `Cost`/`Usage.total_tokens`/`cache_write_1h`, `StopReason.DEFERRED`, `ToolResultMessage`'s 4 new fields, `DeferredHandle`, `AssistantMessageDiagnostic`) — none stale, all current with the now-15-field shape |
+| `test_mock_adapter.py` | KEEP | LLM-018 | Script ordering, tool-call responses, in-band error/abort, request recording, usage pass-through — all behavioral, none assert internal shape |
+| `test_service.py` | KEEP | LLM-011, LLM-018, LLM-019 | Registration/withdrawal/replacement semantics plus the two `ModelId.api` tests added in the prior pass; `test_a_later_adapter_replaces_an_earlier_one_for_the_same_model` directly answers this pass's §10 question about overlapping registration — confirmed intentional, not incidental dict-overwrite behavior (see §10) |
+| `test_stream.py` | KEEP | LLM-015, LLM-018 | `collect()`'s settle/error/protocol-violation paths, partial-message propagation |
+| `test_stream_boundary.py` | KEEP | LLM-018 | The layer's most rigorous suite: premature EOF, empty stream, double-terminal fusing, well-formed pass-through, represented error, source-not-drained-past-terminal. **Strengthened this pass**: added `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`, the regression test for `LLM-F007` (found and fixed in this pass, see §8) |
+| `test_tool_schema.py` | KEEP | — | `ToolSchema`/`Request.tools` shape and canonical-form (order-independent, JSON-safe) hashing; genuinely `TOOL-###`-adjacent vocabulary, correctly living here per `messages.py`'s own layering note (model-facing, no tool-registry import) |
+| `tests/session/test_derive.py` | KEEP | LLM-001, LLM-002, LLM-004, LLM-006, LLM-007, LLM-008, LLM-009, LLM-013, LLM-014 | Round-trips every content-block type and the full `AssistantMessage`/`ToolResultMessage`/`Usage` shape through `encode_message`/`decode_message`; this is the vocabulary's own serialization-fidelity evidence, distinct from unit-level field tests |
+
+No file merits `STRENGTHEN` beyond the one already applied, `REWRITE`, `DELETE`, or `MOVE TO
+CONFORMANCE`. No stale tests found: every file already reflects the post-remediation shapes (the
+concern going in — that a test might still assert the old 7-field `AssistantMessage` or a
+`ModelId` with no `api` — did not materialize; the prior pass's own test updates were thorough).
+
+**Out of scope, excluded with reason:** `tests/agent_loop/*.py` and the rest of `tests/session/*.py`
+(`test_compaction.py`, `test_fork.py`, `test_properties.py`, `test_reset.py`) and `tests/agent/*.py`
+construct LLM messages only incidentally as fixtures for their own layer's semantics (agent-loop turn
+lifecycle, session fork/reset/compaction) — their assertions are about those layers, not this one.
+`tests/tools/test_result.py` is `TOOL-###`'s own test suite (`ToolResult`, the tool-execution
+pipeline's internal type) even though it's cited in §4 as `LLM-007` evidence for the
+`details`/`added_tool_names` threading fix — its own audit belongs to the tools layer, not repeated
+here.
 
 ---
 
@@ -298,9 +335,136 @@ tracked closure progress across several remediation passes.
 
 ---
 
-## 8-14. Failure model / security / reliability / observability / performance / API / documentation
+## 8. Failure model
 
-Not started.
+Every raised exception in `minion_agent/llm/` checked for type, message content, and whether any
+path swallows a failure instead of surfacing it: `LlmError` (base), `UnknownModelError` (names the
+unresolvable provider/model), `AdapterProtocolError` (raised only for a genuine adapter bug — an
+empty stream with no terminal at all, via `stream.py`'s `collect()`). All three are documented in
+`errors.py`'s own module docstring as the eager/lazy split's raising side.
+
+**Tested adversarially against a failure shape none of the existing tests constructed, and the
+result required correcting an initial mis-classification (`LLM-F007`) — recorded here as a caution
+for future review passes, not just a finding.** The never-raises contract (LLM-018) was probed with
+an adapter that raises a Python exception mid-iteration instead of encoding its failure in-band (a
+`ConnectionError` after a `StreamStart` chunk). `_settled()`'s `async for chunk in source:` had no
+`try`/`except`, so the exception propagated straight out of `LlmService.stream()`'s iteration.
+
+The first pass at this finding classified it `PI_PARITY_DEFECT` — wrong. Checked Pi's own central
+dispatcher directly (`ref-repos/pi/packages/ai/src/compat.ts::stream()`): it calls
+`provider.stream(model, context, options)` with **no `try`/`catch` around it at all**. If a
+registered Pi adapter has this exact bug, Pi's own dispatcher does not protect its caller either —
+each of Pi's *individual* built-in adapters (`anthropic-messages.ts`, `azure-openai-responses.ts`,
+etc.) separately wraps its own request logic, but nothing centralizes the guarantee the way this fix
+does. The frozen master's "Programming/invariant failures remain programming failures; this rule
+does not require swallowing impossible internal states" carve-out plausibly covers exactly this case
+(an adapter failing its own obligation is the adapter's bug, not the sort of expected
+provider/network failure the rule is about) — so the *pre-fix* Python behavior was arguably already
+consistent with both confirmed Pi behavior and a defensible reading of the master's own prose. There
+is no confirmed Pi behavior this fix restores; it goes beyond what Pi itself guarantees.
+
+**Fixed anyway, as a deliberate, disclosed hardening choice, not a parity restoration
+(`PARITY_NEUTRAL_HARDENING`, not `PI_PARITY_DEFECT` — see §15).** `_settled()`'s loop is now wrapped
+in `try`/`except Exception`, converting any adapter-raised exception into an in-band `StreamError`
+terminal that preserves the accumulated partial, via a small `_error_terminal()` helper shared with
+the pre-existing premature-EOF path. Verified with a throwaway repro script before and after, plus a
+new permanent regression test, `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`.
+`asyncio.CancelledError` is a `BaseException`, not `Exception`, so explicit consumer-driven
+cancellation is untouched — it still propagates and unwinds normally. The rationale for keeping the
+fix despite it not being Pi-required: a plugin architecture where third-party adapter authors
+(especially once Phase 5 lands) cannot be assumed to get their own obligation right benefits from the
+service enforcing it centrally too — but this is a judgment call about defense-in-depth, not
+something this pass had authority to decide is *required*, so it is recorded as hardening open to
+reconsideration, not as a settled parity fix.
+
+## 9. Security
+
+Reviewed: whether any caller-supplied or model-supplied value (model/provider names,
+`ToolCallBlock.arguments`, the new `details`/`data` blobs on `ToolResultMessage`/`DeferredHandle`/
+`AssistantMessageDiagnostic`) could reach somewhere unsafe. Grepped the whole package for
+`eval`/`exec`/`__import__`/`pickle`/`subprocess`/`os.system` — none found. `ToolCallBlock.arguments`
+and every new `dict[str, Any]`/`Any` field (`details`, `data`) are carried as opaque data; nothing in
+this layer interprets or executes them — that's `TOOL-###`'s job for `arguments` specifically, once
+that layer exists. `ModelId`/`Request` construction does no string formatting into anything
+execution-adjacent (SQL, shell, template). No security finding. This category is solid.
+
+## 10. Reliability and operations
+
+Walked `LlmService.register()`/`withdraw()`/`stream()` for any window where a mid-operation exception
+could leave state inconsistent. `register()` is fully synchronous with no `await` points — Python's
+own execution model makes it atomic with respect to any concurrent `asyncio` task, and its only loop
+(`for model_id in ids: self._adapters[model_id] = adapter`) iterates a `list` built from a
+`frozenset[str]` in one prior step, so there's no realistic partial-registration failure mode (a
+custom pathological `Adapter.models` implementation that raises mid-iteration is an adapter author's
+own bug, not a reachable reliability gap in `LlmService` itself). `withdraw()`'s own guard (`if
+self._adapters.get(model_id) is adapter`) already correctly prevents a superseded adapter's
+withdrawal from removing its replacement — directly tested
+(`test_a_later_adapter_replaces_an_earlier_one_for_the_same_model`).
+
+**"Last adapter wins" for a duplicate model registration — confirmed Pi-parity-correct, not merely
+untested dict-overwrite behavior.** Checked Pi source (`ref-repos/pi/packages/ai/src/compat.ts`,
+`registerApiProvider`): `apiProviderRegistry.set(provider.api, ...)` — a plain `Map.set()`, the exact
+same last-write-wins semantics as Python's `self._adapters[model_id] = adapter`. This is a genuinely
+different mechanism from Runtime's `ServiceRegistry` (RT-005: registration is *exclusive*, a second
+`provide()` raises) — the two are unrelated seams (`LlmService`'s adapter-to-model map is this
+layer's own internal registry, not the Runtime service seam `ctx.llm` itself resolves through), and
+this layer's overwrite semantics match Pi's own registry mechanism, not an accidental omission of
+Runtime-style exclusivity.
+
+No reliability finding beyond `LLM-F007` (already fixed, §8).
+
+## 11. Observability
+
+`MockAdapter.requests`/`.pulled` let a test inspect exactly what was sent and how much of the stream
+was actually consumed — but neither is part of the `Adapter` protocol (which only requires
+`provider`/`api`/`models`/`stream()`); they're `MockAdapter`'s own instrumentation for testability.
+**Gap noted, not urgent:** once a real (non-mock) adapter exists, there is no standardized
+LLM-layer hook for observing the actual request/response an adapter sent to its provider — no
+request/response logging or tracing seam at this layer. This is squarely `TEL-###` (telemetry)
+territory per the requirement-ID convention, not something to build here, and it doesn't block this
+layer's own certification — recorded as `LLM-F009` for whoever picks up the telemetry layer.
+
+Every state transition that matters here — a stream's chunks, in order, ending in exactly one
+terminal — is already the full observable surface `AssistantStream` offers; there's no silent
+transition the way Runtime's `ctx.plugin()` had one (RT-F013).
+
+## 12. Performance
+
+Reviewed for accidentally-quadratic patterns, not benchmarked (no perf harness exists, consistent
+with Runtime's own §12 scope decision). `LlmService._adapters: dict[ModelId, Adapter]` gives O(1)
+lookup in `stream()`; `register()` is `O(len(adapter.models))`; `models()` is `O(n)` over the dict.
+No caching, no repeated linear scans, nothing that would degrade with realistic adapter/model counts
+(single digits to low tens, not thousands). No performance finding. This category is solid.
+
+## 13-14. Public API and documentation
+
+`minion_agent/llm/__init__.py` re-checked: `Cost`, `DeferredHandle`, `AssistantMessageDiagnostic`,
+`DiagnosticError` are all present in both the import list and `__all__` (added in the prior pass),
+alphabetically ordered consistent with the rest of the list. Every exported class/field carries a
+docstring; spot-checked `tools.py::ToolSchema` (fully documented, including the deliberate
+plain-`dict`-not-pydantic design rationale) and the newly-added `messages.py` types — all documented
+in the prior pass already.
+
+**`spec/llm.md` checked against the now-much-larger real vocabulary for drift — none found, and the
+reason is worth recording precisely.** The expectation going into this check was that the spec
+predates this pass's fixes and would be missing `Cost`, the 8 new `AssistantMessage`/
+`ToolResultMessage` fields, the 3 signature fields, and `api` on model identity. It is not missing
+any of them — every field this pass added to the Python implementation was *already* present in
+`spec/llm.md`, because the spec was written from the frozen master's vocabulary directly (which
+always specified the full 15-field `AssistantMessage`, full replay signatures, etc.), not from
+Python's implementation state at the time it was written. It was the implementation that lagged the
+spec, not the spec that lagged the implementation — this pass's remediation caught Python up to a
+contract that was already correctly and completely documented. Field-by-field cross-check (content
+blocks, both messages, `Usage`/`Cost`, `DeferredHandle`, `AssistantMessageDiagnostic`/
+`DiagnosticError`, `StopReason`, model identity, the never-raises contract, Responses replay) found
+exactly zero discrepancies.
+
+**One real, minor naming drift found: `spec/llm.md` calls the tool-call content block `ToolCall`
+(matching the frozen master's own vocabulary sketch), but Python implements it as `ToolCallBlock`**
+— inconsistent with `TextBlock`/`ThinkingBlock`/`ImageBlock`, which the spec names with a `Block`
+suffix and Python matches exactly. Recorded as `LLM-F008`, LOW severity: not touching `spec/llm.md`
+(shared-contract file) or renaming the Python class (touches every construction site across several
+packages) — just flagging the inconsistency for whoever next has reason to touch either.
 
 ---
 
@@ -314,6 +478,9 @@ Not started.
 | LLM-F004 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | None of the three replay-signature fields existed anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` were all absent from `content.py`. This made the "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable. | Fixed: all three fields/pairs added to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004), all optional/defaulted (fully backward-compatible — every construction site in the codebase uses keyword args). `session/derive.py`'s `_encode_block`/`_decode_block` extended to round-trip them. 6 new unit tests plus a round-trip test. **Does not by itself close `LLM-F001`'s two replay-signature placeholder scenarios** — filling those meaningfully needs the same-model/cross-model *decision logic*, which is `XFORM-###` territory (see LLM-017's updated §4 row), not yet audited. |
 | LLM-F005 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED | Grouped vocabulary gaps, each confirmed against Pi source: (1) `Usage.cost` sub-object did not exist at all, `cache_write_1h` also missing; (2) `StopReason` enum was missing `DEFERRED`; (3) `ToolResultMessage` was missing `tool_name, details, usage, added_tool_names`; (4) `DeferredHandle` and `AssistantMessageDiagnostic`/`DiagnosticError` did not exist as types anywhere in `minion_agent/llm/`. | Fixed: new `Cost` dataclass and `Usage.cost`/`cache_write_1h`/`total_tokens` added (the pre-existing computed `.total` property kept unchanged, distinct from the new stored `total_tokens`); `StopReason.DEFERRED` added; `ToolResultMessage` extended with all 4 missing fields; `DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` added and exported. **Side effect, verified not just assumed:** `tools/result.py::ToolResult.to_message()` was silently dropping `details`/`added_tool_names` — it had nowhere to put them before this pass — now threads them through; `tool_name`/`usage` remain unpopulated (no source in `ToolResult`/its callers; threading one through the tool-execution pipeline is `TOOL-###` territory). All encode/decode round-trips extended. Full suite + `ruff` clean. |
 | LLM-F006 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED, with a disclosed compromise | Model identity was architecturally a `(provider, model)` pair (`service.py.ModelId`), not the `provider + api + model_id` triple the master requires. No `api` field existed anywhere in `ModelId`, `Request`, or the `Adapter` protocol. | `api: str` added to `ModelId` and the `Adapter` protocol; `LlmService.register()` threads it from adapter to model identity. **Not full Pi fidelity — disclosed, not silent:** Pi's `api` is required (no default). Making it required in Python broke 133 tests across `agent/`/`agent_loop/`/`conformance/` — positional 2-arg `ModelId(provider, model)` calls throughout those layers' own test suites, well outside this audit's scope to touch broadly in an LLM-layer pass. Reverted to `api: str = "mock"`, correct for every current caller (the sole registered adapter today). 3 fake `Adapter` test doubles inside `llm`/`agent_loop` test files (the only ones actually reached by `register()`) updated with a real `api` attribute. The default becomes actively wrong once a second API exists (Phase 5) and must be removed then — noted directly in the field's own docstring, not just here. |
+| LLM-F007 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED (reclassified from an initial, incorrect `PI_PARITY_DEFECT` — see §8) | `service.py._settled()`'s `async for chunk in source:` loop had no `try`/`except`. An adapter that raises a Python exception mid-iteration instead of encoding its failure in-band (verified adversarially with a throwaway repro: a `ConnectionError` after a `StreamStart` chunk) propagated straight through `LlmService.stream()`'s iteration, uncaught. **Not a Pi-parity gap:** Pi's own central dispatcher (`compat.ts::stream()`) has no `try`/`catch` around `provider.stream(...)` either — confirmed by direct source read — so nothing centralizes this guarantee in Pi; each of Pi's built-in adapters separately implements the discipline itself. The master's "programming/invariant failures remain programming failures" carve-out plausibly already covered the pre-fix behavior. No existing test constructed this shape before this pass. | Fixed as a disclosed hardening choice, not a parity restoration: the loop now wraps in `try`/`except Exception`, converting the exception into an in-band `StreamError` terminal via a small shared `_error_terminal()` helper, preserving the accumulated partial exactly like the pre-existing premature-EOF path. `asyncio.CancelledError` (a `BaseException`, not `Exception`) is untouched — explicit cancellation still propagates and unwinds normally. New permanent regression test `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`. Full suite + `ruff` clean. Worth reconsidering whether a future pass wants this centralized, or prefers matching Pi's per-adapter-only discipline exactly — recorded as an open judgment call, not a closed decision. |
+| LLM-F008 | LOW | `CONTRACT_ASSURANCE_DEFECT` | `spec/llm.md` names the tool-call content block `ToolCall` (matching the frozen master's vocabulary sketch), but Python implements it as `ToolCallBlock` — inconsistent with `TextBlock`/`ThinkingBlock`/`ImageBlock`, which both the spec and Python name with a `Block` suffix. A naming-only drift, not a field/behavior gap: checked `spec/llm.md` field-by-field against the full post-remediation vocabulary and found no other discrepancy — the spec was already complete before this pass (it was written from the frozen master directly, not from Python's implementation state, so it never lagged; Python's implementation was what caught up). | Open, not fixed — `spec/llm.md` is a shared-contract file outside this pass's authority to edit, and renaming the Python class touches every construction site across several packages. Flagged for whoever next has reason to touch either side. |
+| LLM-F009 | LOW | `PARITY_NEUTRAL_HARDENING` | No LLM-layer hook exists for observing a real adapter's actual request/response traffic. `MockAdapter.requests`/`.pulled` provide this for tests, but neither is part of the `Adapter` protocol — a real (non-mock) adapter has no standardized way to expose what it sent/received for debugging or telemetry. | Open — this is `TEL-###` (telemetry) territory per the requirement-ID convention, not something to build in this layer's own pass. Recorded for whoever picks up the telemetry layer; does not block this layer's certification. |
 
 ---
 
@@ -321,26 +488,26 @@ Not started.
 
 ```text
 Design alignment                         [x]  all 20 distinct LLM-### requirements traced to frozen §4
-Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012/017 remain open, none severe
-Normative spec                           [~]  spec/llm.md exists, not yet re-audited for completeness against the now-larger vocabulary
+Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012/017 remain open, none severe; LLM-F007 is hardening beyond Pi, not a parity fix
+Normative spec                           [x]  spec/llm.md re-audited field-by-field against the full vocabulary — no drift found (LLM-F008 is naming-only)
 Parity manifest                          [ ]  AI-001..012 cover vocabulary/stream contract; LLM-F002 — 4 subsections still uncovered
 Canonical conformance                    [ ]  LLM-018 real+passing; vocabulary placeholders in LLM-F001 not yet filled (fields now exist, but filling wasn't in this pass's scope)
-Python tests where implemented           [ ]  not audited (§6 not started)
+Python tests where implemented           [x]  8 files audited (§6), all KEEP, one STRENGTHEN applied (LLM-F007's regression test)
 Rust tests where implemented             [ ]  not audited
-Property/invariant tests                 [ ]  not audited
-Concurrency tests where applicable       [ ]  not audited
-Fault-injection tests where applicable   [ ]  not audited
-Security review                          [ ]  not started
-Reliability review                       [ ]  not started
-Observability review                     [ ]  not started
-Performance review                       [ ]  not started
-Public API review                        [ ]  not started
-Documentation                            [ ]  not started
-All findings classified                  [x]  LLM-F001..F006 classified
+Property/invariant tests                 [ ]  none exist for this layer; not flagged as a gap this pass (no property space obviously needing one was found — the vocabulary is data-shape, not algorithmic)
+Concurrency tests where applicable       [~]  not directly applicable — this layer has no shared mutable state accessed concurrently beyond LlmService's dict, addressed under reliability (§10)
+Fault-injection tests where applicable   [x]  LLM-F007's adversarial raising-adapter test (a hardening probe, not a parity check) is exactly this; premature-EOF/empty-stream/double-terminal already covered pre-pass
+Security review                          [x]  §9 — no unsafe eval/exec/dynamic-import; caller/model-supplied data carried as opaque, not executed; no finding
+Reliability review                       [x]  §10 — LLM-F007 fixed; "last adapter wins" confirmed Pi-parity-correct against real Pi source, not just untested
+Observability review                     [x]  §11 — LLM-F009 recorded (no adapter request/response hook), non-blocking, TEL-### territory
+Performance review                       [x]  §12 — no accidentally-quadratic pattern; no finding
+Public API review                        [x]  §13-14 — Cost/DeferredHandle/AssistantMessageDiagnostic/DiagnosticError exports confirmed, all documented
+Documentation                            [x]  §13-14 — spec/llm.md re-checked field-by-field, no drift beyond LLM-F008's naming note
+All findings classified                  [x]  LLM-F001..F009 classified
 No unresolved Pi uncertainty             [x]  none raised this pass — every ambiguity resolved by reading Pi source directly
-No unresolved parity defect              [x]  LLM-F003, F004, F005, F006 all resolved (LLM-F006 with a disclosed, documented compromise)
-No unresolved contract-assurance defect  [ ]  LLM-F001, LLM-F002 still open
-Deferred risks recorded                  [x]  LLM-020, LLM-021 explicitly N/A pending Phase 5; LLM-F006's default explicitly flagged to remove once Phase 5 adds a second API
+No unresolved parity defect              [x]  LLM-F003..F006 all resolved (LLM-F006 with a disclosed, documented compromise); LLM-F007 reclassified PARITY_NEUTRAL_HARDENING, not a parity defect
+No unresolved contract-assurance defect  [ ]  LLM-F001, LLM-F002, LLM-F008 still open (F008 LOW/naming-only)
+Deferred risks recorded                  [x]  LLM-020, LLM-021 N/A pending Phase 5; LLM-F006's default flagged for removal then; LLM-F007's design choice (centralize vs. per-adapter) flagged for Rust-cross-check reconsideration; LLM-F009 open for the telemetry layer
 ```
 
 ## 17. Certification result
@@ -353,7 +520,7 @@ was found in passing (`toolcall_start` vs `tool_call_start`, §3) and flagged fo
 rather than silently corrected. All 20 distinct `LLM-###` requirements are drafted (§4) and all 8
 Python modules are deep-audited (§5).
 
-**Remediation is also complete for this pass** (following the same survey-then-fix sequencing
+**Remediation from the prior pass is complete** (following the same survey-then-fix sequencing
 Runtime used): all four `PI_PARITY_DEFECT` findings (`LLM-F003`..`F006`) are resolved.
 `AssistantMessage` now carries all 15 Pi fields; the three replay-signature fields exist across the
 content-block vocabulary; `Usage.cost`/`StopReason.DEFERRED`/`ToolResultMessage`'s remaining
@@ -365,10 +532,32 @@ correct for every current caller and is explicitly flagged (in the field's own d
 to be removed once Phase 5 adds a second API. Every fix is covered by new unit tests and, where
 applicable, round-trip tests; the full Python suite and `ruff` are clean throughout.
 
+**§6 and §8-14 are also now complete.** All 8 in-scope test files (`tests/llm/`'s 7 plus
+`tests/session/test_derive.py`) were read in full, run, and classified — all `KEEP`, none stale
+against the post-remediation shapes. The §8-14 review adversarially tested the never-raises contract
+with an adapter that raises instead of encoding its failure in-band (a `ConnectionError` mid-stream)
+and found `_settled()` had no guard against it — but the finding this produced (`LLM-F007`) required
+a correction during this same pass: it was initially classified `PI_PARITY_DEFECT`, which direct
+verification against Pi's own central dispatcher (`compat.ts::stream()` — no `try`/`catch` around
+the adapter call) showed was wrong. Pi does not centrally defend against this either; nothing in
+confirmed Pi behavior was being violated. The fix (a `try`/`except` in `_settled()` preserving the
+accumulated partial, locked in with a permanent regression test) was kept anyway as a deliberate,
+disclosed hardening choice appropriate to a plugin architecture — but reclassified
+`PARITY_NEUTRAL_HARDENING` and recorded as an open judgment call, not a settled parity fix. This
+correction is itself worth noting: verify a fork's findings against primary source before accepting
+its classification, the same discipline this session has applied throughout — a finding produced by
+adversarial testing is not exempt from that check just because the underlying code behavior was
+confirmed by a repro script. Security and performance came back clean with no findings. Two
+low-severity, non-blocking findings also recorded: `LLM-F008` (a naming-only spec/implementation
+inconsistency — `ToolCall` vs `ToolCallBlock` — found while confirming `spec/llm.md` has no other
+drift; the spec itself turned out to have been complete and correct all along, since it was written
+from the frozen master rather than from Python's implementation state) and `LLM-F009` (no adapter
+request/response observability hook yet, `TEL-###` territory).
+
 **Not done this pass, deliberately:** filling `LLM-F001`'s 4 placeholder canonical scenarios (the
 vocabulary fields now exist, but two of the four need `XFORM-###`'s transformation logic, not just
-this layer's vocabulary — see LLM-017); resolving `LLM-F002` (parity-manifest rows); §6 (existing-test
-audit); §8-14. None of these were blocked by anything found this pass — they're simply the next
+this layer's vocabulary — see LLM-017); resolving `LLM-F002` (parity-manifest rows); the independent
+Rust cross-check. None of these were blocked by anything found this pass — they're simply the next
 slices of work, kept separate the same way Runtime's audit and remediation passes stayed distinct
 from each other.
 
@@ -382,8 +571,12 @@ from each other.
    not a re-open of `LLM-F004`.
 3. Resolve `LLM-F002` (parity-manifest rows) now that the vocabulary work makes rows for Responses
    replay signatures and authentication describable in terms of real, not aspirational, behavior.
-4. Deep-audit `minion_agent/llm/`'s existing tests (§6).
-5. Complete §8-14 review.
-6. Independent Rust cross-check, once Python's evidence is stable — same sequence Runtime followed.
-7. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
+4. Independent Rust cross-check, once this file is reviewed — same sequence Runtime followed. Worth
+   deciding, not just checking: should Rust's own stream wrapper centralize the same
+   `LLM-F007`-style guard, or is per-adapter discipline (matching Pi's actual mechanism) preferred
+   there? This is a cross-language design question, not a parity gap to close silently either way.
+5. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
    call site that relied on it, this time with real API values to assign, not a placeholder sweep.
+6. Optionally resolve `LLM-F008` (rename either side for naming consistency) and `LLM-F009` (an
+   adapter observability hook) whenever something else already has reason to touch that code —
+   neither is worth a dedicated pass on its own.
