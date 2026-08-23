@@ -177,14 +177,124 @@ Since nothing exists yet, this is implementation work, not an audit-and-harden p
 
 ## 6. No shared-contract DSL/schema changes this pass
 
-Unlike Runtime's handoff, there is nothing analogous to the three approved DSL extensions to review
-here — this Python pass touched only `minion_agent/llm/`'s implementation, `tests/`, and this
-assurance file; it did not write new `conformance/**` scenarios or touch `conformance/schema/`.
-`LLM-F001`'s eventual resolution (filling placeholder scenarios, and possibly adding new ones) will
-be a `conformance/**` change subject to the same shared-contract reviewer rule
-(`process/implementation-conformance-workflow.md` — quoted in Runtime's handoff,
-`assurance/layers/01-runtime-rust-handoff.md` §8) — flagging that rule's applicability in advance
-here so it's not a surprise when that work starts, on either side.
+**Superseded — see §9.** This was true when this handoff was first written; it no longer is. `LLM-F001`
+was attempted afterward, found genuinely blocked (`LLM-F010`), and the resulting DSL/schema/runner
+extension has since landed on `main` (commit `5d65a39`). §9 is the review package for that specific
+diff — read it before doing anything with `conformance/schema/agent-scenario.schema.json` or
+`tests/conformance/agent_runner.py`, since Rust's own `tests/llm_conformance.rs` will eventually need
+to consume the same shape.
+
+## 9. `LLM-F010` shared-contract review package
+
+Prepared 2026-08-23, after the Python/shared-contract-owner's own formal review of the diff (recorded
+in full in `02-llm.md` §7's "dedicated verification" and the `LLM-F010` finding row). That review
+covers what Rust's implementation-owner review must independently confirm — this package summarizes
+it; `02-llm.md` has the complete field-by-field evidence.
+
+**Status update (2026-08-23, later the same pass): Rust already performed this review and rejected
+commit `5d65a39`.** `REJECTED — CONTRACT_ASSURANCE_DEFECT`, PR #3 held, recorded in full in `02-llm.md`
+§18's "Formal Rust implementation-owner review of finalized LLM-F010 contract". Four concrete schema
+defects were found and independently re-verified against the schema text before being accepted:
+`assistantMessageDetail` forbade the frozen `timestamp` field via `additionalProperties: false`;
+`diagnostic.error`/`.details` and `deferredHandle.expires_at`/`.poll_after_ms` were non-nullable even
+though the runner legitimately emits `null` for each when absent; two timestamp-shaped fields were
+narrowed to `integer` where the frozen vocabulary specifies `number`. **All four are now fixed** in
+`agent-scenario.schema.json` and `agent_runner.py::_assistant_detail`, re-verified by independently
+constructing the exact edge-case documents Rust used to reproduce them (all now validate cleanly), and
+the full Python gate suite re-run clean. Question 6 below is answered by this: Rust's own review is the
+"reason to want it exposed" the question anticipated — `timestamp` is now a required, non-nullable
+`number` field on `assistantMessageDetail`. **This is a corrected diff, not the original one under
+review — it needs a fresh Rust implementation-owner pass, not silent acceptance on the strength of
+Rust's earlier rejection having named the fix.** The rest of this package (files, semantic-surface
+framing, thin-runner proof, scenario intent, deferred-scenario list) still describes the diff's
+content accurately; only the review outcome and question 6 are superseded.
+
+**Files changed** (originally on `main` at commit `5d65a39804add4b3f5913fdd67a9e484c3dd6039` --
+the commit Rust reviewed and rejected; the fix for all 4 defects is now on `main` at commit
+`37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`, pending Rust's fresh re-review):
+- `conformance/schema/agent-scenario.schema.json`
+- `conformance/agent/public-llm-vocabulary-schema.yaml`
+- `minion-agent-python/tests/conformance/agent_runner.py`
+- `minion-agent-python/src/minion_agent/llm/adapters/mock.py` (production code, not test-only —
+  `ScriptedResponse` gained the same 6 fields `AssistantMessage` gained in the earlier `LLM-F003` pass,
+  so the reference adapter can carry them)
+
+**What semantic surface each change exposes, and why this is observability-only, not new/redefined
+behavior:**
+
+Before this diff, the `agent`-family conformance runner's message projection was `{role, text}` only
+— none of `AssistantMessage`'s extended fields (`api`, `response_model`, `response_id`, `diagnostics`,
+`deferred`, `raw_stop_reason`, `end_turn`), any `Usage`/`Cost` field, the three content-block signature
+fields, or `StopReason.DEFERRED` were observable through a canonical scenario at all, even though every
+one of them was already a frozen field on the Python vocabulary type (`LLM-F003`/`LLM-F004`/`LLM-F005`,
+resolved in an earlier pass). The diff adds a schema/runner path to observe them; it does not add or
+change what those fields *mean* — every field traces to `spec/llm.md`/frozen master §4/pinned Pi
+`types.ts` exactly as already documented, verified field-by-field this pass (`02-llm.md` §7). Two
+latent pre-existing bugs were also fixed in the same diff, not introduced by it:
+`scriptedResponse.usage` was declared in the schema but never read by the runner; `_block()` had no
+`"thinking"` branch at all (silently produced a `TextBlock` instead).
+
+**Thin-runner invariants, verified adversarially, not just asserted:** input-side functions
+(`_script`/`_block`/`_usage`/`_diagnostic`/`_deferred`) only deserialize scenario YAML into real typed
+constructor calls — no derived/computed values (e.g. `total_tokens` is read directly from the
+scenario, never summed from the other `Usage` fields, matching Pi's own semantics that a provider's
+reported total need not equal the sum of parts). Output-side functions (`_normalize_*`,
+`_assistant_detail`) only read real object attributes — verified by an explicit regression test
+(`test_unset_response_identity_fields_stay_absent_not_synthesized`) and independently re-confirmed
+this pass with a throwaway adversarial script constructing a real `AssistantMessage` with every new
+field at its unset default and asserting the normalized projection reflects that absence exactly
+(`None`/zero-valued `Usage`), never a fabricated value.
+
+**`public-llm-vocabulary-schema.yaml`'s intent:** two turns through the real agent loop and mock
+adapter — one scripts every optional field the reference adapter can carry (proving presence survives
+real construction/derivation), one scripts none of them (proving the real implementation reports
+absence as `null`, not the runner or adapter inventing a value). This is deliberately the *only*
+placeholder filled this pass.
+
+**Known deferred Phase-5 replay scenarios, so Rust doesn't have to re-derive this:**
+`same-model-thinking-signature-replayed` and `same-model-unsigned-thinking-not-replayed` remain
+unfilled placeholders even after this DSL extension. Verified this pass (`02-llm.md` §7, exhaustive
+git-history audit across both repos, all branches — not assumption): their semantic contract
+(`LLM-017`/`AI-013`) is Layer-02-owned and complete, but "replay" specifically means parsing a stored
+signature back into an outbound Responses-API request, which requires a real Responses/Codex provider
+adapter that has never existed in this repository's history under any name or signature model. Filling
+either scenario today would require the runner/mock to simulate Responses-provider wire encoding — the
+exact thin-runner violation this rule exists to prevent. They stay deferred to Phase 5, non-blocking
+for Layer 02, regardless of how Rust's own review of this diff concludes.
+
+**Specific questions Rust must answer** (do not treat Rust's earlier, pre-diff encounter with
+`LLM-F010` — landing at the identical blocker independently, §18 in `02-llm.md` — as answering these;
+that was corroboration that a gap existed, not a review of this specific resolution):
+
+1. Can `agent-scenario.schema.json`'s new `$defs` (`usage`, `cost`, `diagnostic`, `diagnosticError`,
+   `deferredHandle`, `assistantMessageDetail`) and the new `expect_assistant_details` construct be
+   consumed naturally from typed Rust — i.e., does a straightforward `serde` deserialization plus a
+   normalization function analogous to Python's `_assistant_detail` cover it, or does something about
+   the shape (nullable-vs-absent handling, `additionalProperties: false`, the `oneOf`-with-null
+   pattern used for `diagnostics`/`deferred`) require awkward Rust-side reconstruction?
+2. Can Rust's own real public `AssistantMessage`/`Usage`/`Cost`/content-block-equivalent objects be
+   normalized *directly* into this shape, the way Python's `_normalize_*` functions do — reading real
+   struct fields, no synthesis — or does Rust's own type shape (if it differs from Python's field-for-
+   field mirror) force an awkward translation layer?
+3. Would a Rust conformance adapter need to simulate any Agent/XFORM/provider behavior to satisfy this
+   schema, or does it stay strictly within "deserialize, construct real inputs, invoke real APIs,
+   normalize real outputs, compare"?
+4. Are the null/absence semantics (every optional field required-but-nullable, never
+   required-and-omittable) sufficiently defined for Rust's own `Option<T>` conventions, or is there an
+   ambiguity that would let Python and Rust legitimately disagree about what "absent" means for some
+   field?
+5. Does any field name, shape, or convention in the diff imply Python-only behavior (a Python class
+   name, a dataclass-specific pattern, anything that wouldn't translate to a language-neutral
+   description of the vocabulary)?
+6. `assistantMessageDetail`'s `required`/`properties` list deliberately omits `AssistantMessage.timestamp`
+   (real vocabulary, but a Unix-millisecond value with no meaningful content to pin in a canonical
+   scenario — noted in the Python-side review, not silently dropped). Does Rust's own conformance
+   design agree this is fine to leave unobservable through this specific construct, or does Rust have
+   a reason to want it exposed?
+
+Rust's answers, plus a plain APPROVED/REJECTED (or "approved with the following change needed") on the
+diff itself, is what closes `LLM-F010`'s implementation-owner review. This package does not substitute
+for Rust actually reading the diff.
 
 ## 7. Reviewer-rule requirement (unchanged, for when it becomes relevant)
 
