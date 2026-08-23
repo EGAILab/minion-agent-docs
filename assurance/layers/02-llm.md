@@ -1,27 +1,29 @@
 # LLM Seam — Fidelity Assurance & Certification
 
 **Layer ID:** `02`  
-**Status:** `IN_AUDIT`  
+**Status:** `CERTIFIED`  
 **Audit date:** 2026-08-23 (§1-6 and §8-14 complete: Pi source read directly, requirement
 traceability, module and existing-test audits, and the full §8-14 review all done; 4 PI_PARITY_DEFECT
 findings (LLM-F003..F006) resolved in the prior pass; one more hardening fix (LLM-F007, centralizing
 the never-raises guarantee against a misbehaving adapter) made and verified during this pass's own
 adversarial review — see §8 and §15 for why this is PARITY_NEUTRAL_HARDENING, not a Pi-parity defect:
-Pi's own central dispatcher does not defend against this either. `LLM-F002` partially resolved —
-`AI-013` added to the parity manifest for Responses-family replay signatures, with a precise Pi
-source distinct from `XFORM-###`'s; the other 3 uncovered subsections deliberately left unresolved
-pending Phase 5. Rust handoff package prepared (`02-llm-rust-handoff.md`). `LLM-F010` design/
-implementation pass since complete: observability matrix, `agent-scenario.schema.json`/
-`agent_runner.py`/`adapters/mock.py` extended, `public-llm-vocabulary-schema.yaml` filled and
-passing — implemented and verified, not yet marked resolved pending shared-contract review.
-Rust's own independent Layer 02 pass has separately landed (§18) — see §17)  
+Pi's own central dispatcher does not defend against this either. `LLM-F002` resolved for current-layer
+scope — `AI-013` added to the parity manifest for Responses-family replay signatures, with a precise
+Pi source distinct from `XFORM-###`'s; the other 3 uncovered subsections explicitly deferred to Phase
+5, non-blocking. `LLM-F010` completed its full review lifecycle this pass: implementation, an initial
+Python shared-contract self-review that incorrectly approved a defective schema, a Rust
+implementation-owner rejection that caught 4 real language-neutral contract defects the Python review
+missed, a Python-side fix and re-verification, and a fresh Rust implementation-owner approval of the
+corrected contract (`37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`) — now `RESOLVED`. Rust's own
+independent Layer 02 pass landed, was formally reviewed against the corrected contract, and merged
+through PR #3 (§18, §19). No active `PI_PARITY_DEFECT`, `PI_BEHAVIOR_UNCERTAIN`, or
+`CONTRACT_ASSURANCE_DEFECT` remains for current-layer scope — see §17's final freeze-gate audit.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
-**Python status:** `IMPLEMENTED`  
-**Rust status:** `IMPLEMENTED / MERGED / READY FOR FINAL CERTIFICATION` — typed vocabulary,
-strict three-part model identity, adapter/service boundary, central settled `AssistantStream`,
-scripted real-trait adapter, Rust tests, and a thin partial agent-family conformance adapter are
-merged through PR #3 at `05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19. Final
-Layer 02 certification remains assigned to the shared assurance owner.
+**Python status:** `CERTIFIED`  
+**Rust status:** `CERTIFIED / MERGED` — typed vocabulary, strict three-part model identity,
+adapter/service boundary, central settled `AssistantStream`, scripted real-trait adapter, Rust tests,
+and a thin partial agent-family conformance adapter are merged through PR #3 at
+`05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19.
 
 ---
 
@@ -598,7 +600,7 @@ packages) — just flagging the inconsistency for whoever next has reason to tou
 | LLM-F007 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED (reclassified from an initial, incorrect `PI_PARITY_DEFECT` — see §8) | `service.py._settled()`'s `async for chunk in source:` loop had no `try`/`except`. An adapter that raises a Python exception mid-iteration instead of encoding its failure in-band (verified adversarially with a throwaway repro: a `ConnectionError` after a `StreamStart` chunk) propagated straight through `LlmService.stream()`'s iteration, uncaught. **Not a Pi-parity gap:** Pi's own central dispatcher (`compat.ts::stream()`) has no `try`/`catch` around `provider.stream(...)` either — confirmed by direct source read — so nothing centralizes this guarantee in Pi; each of Pi's built-in adapters separately implements the discipline itself. The master's "programming/invariant failures remain programming failures" carve-out plausibly already covered the pre-fix behavior. No existing test constructed this shape before this pass. | Fixed as a disclosed hardening choice, not a parity restoration: the loop now wraps in `try`/`except Exception`, converting the exception into an in-band `StreamError` terminal via a small shared `_error_terminal()` helper, preserving the accumulated partial exactly like the pre-existing premature-EOF path. `asyncio.CancelledError` (a `BaseException`, not `Exception`) is untouched — explicit cancellation still propagates and unwinds normally. New permanent regression test `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`. Full suite + `ruff` clean. Worth reconsidering whether a future pass wants this centralized, or prefers matching Pi's per-adapter-only discipline exactly — recorded as an open judgment call, not a closed decision. |
 | LLM-F008 | LOW | Original classification (at discovery): `CONTRACT_ASSURANCE_DEFECT`. **Confirmed on re-check: naming-only, not a contract incompleteness or ambiguity — the shared contract itself is complete and unambiguous, only the Python class name drifted from it.** **Layer-02 certification impact: NON-BLOCKING — not an active contract-assurance defect.** | `spec/llm.md` names the tool-call content block `ToolCall` (matching the frozen master's vocabulary sketch), but Python implements it as `ToolCallBlock` — inconsistent with `TextBlock`/`ThinkingBlock`/`ImageBlock`, which both the spec and Python name with a `Block` suffix. A naming-only drift, not a field/behavior gap: checked `spec/llm.md` field-by-field against the full post-remediation vocabulary and found no other discrepancy — the spec was already complete before this pass (it was written from the frozen master directly, not from Python's implementation state, so it never lagged; Python's implementation was what caught up). | **OPEN, LOW, non-blocking.** Not fixed — `spec/llm.md` is a shared-contract file outside this pass's authority to edit, and renaming the Python class touches every construction site across several packages. Flagged for whoever next has reason to touch either side. Not counted against Layer 02's "no unresolved contract-assurance defect" gate item — see the active/deferred summary immediately after this table. |
 | LLM-F009 | LOW | `PARITY_NEUTRAL_HARDENING`. **Not a `CONTRACT_ASSURANCE_DEFECT`** — no shared contract is incomplete or ambiguous here; the vocabulary carries everything it needs to, this is a missing observability hook. **Layer-02 certification impact: NON-BLOCKING.** | No LLM-layer hook exists for observing a real adapter's actual request/response traffic. `MockAdapter.requests`/`.pulled` provide this for tests, but neither is part of the `Adapter` protocol — a real (non-mock) adapter has no standardized way to expose what it sent/received for debugging or telemetry. | **OPEN, LOW, `TEL-###`/telemetry territory, explicitly non-blocking.** This is `TEL-###` (telemetry) territory per the requirement-ID convention, not something to build in this layer's own pass. Recorded for whoever picks up the telemetry layer; does not block this layer's certification. |
-| LLM-F010 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — **REJECTED by Rust's formal implementation-owner review of commit `5d65a39`; defect confirmed real and fixed this pass; STILL OPEN pending Rust's fresh re-review.** **Layer-02 certification impact: ACTIVE — BLOCKING.** This is the one currently-active `CONTRACT_ASSURANCE_DEFECT` for Layer 02; see the active/deferred summary immediately after this table. | Attempting to fill `public-llm-vocabulary-schema.yaml` (`LLM-F001`) found the `agent`-family conformance DSL/runner could not observe most of this pass's new vocabulary — full root cause in §7's observability matrix (built before any fix, per field). Confirmed two latent pre-existing gaps along the way, neither new damage: `scriptedResponse.usage` was declared in the schema but never read by `_script()`; `_block()`'s `thinking`-type branch never existed, so scripting one silently produced a `TextBlock` instead. | **My own shared-contract review of `5d65a39` (this pass) concluded APPROVED / no defect found — that conclusion was wrong, and the gap in how I reached it is recorded honestly rather than glossed over.** I built a field-by-field mapping and ran one adversarial absence test at the top level of `AssistantMessage`, but did not construct the nested-optional edge cases — a `diagnostic`/`deferredHandle` object whose *own* optional sub-fields (`error`/`details`; `expires_at`/`poll_after_ms`) are absent while the object itself is present. I also treated `assistantMessageDetail`'s omission of `timestamp` as "reviewed and accepted" without registering that `additionalProperties: false` makes that omission an active, unconditional rejection of a legitimate frozen field, not a mere non-assertion of it. **Rust's own formal implementation-owner review of the same commit (§18) caught both, reproduced them directly (validating the unmodified canonical scenario, then independently constructing each edge case and observing exactly one schema-validation error per case), and returned `REJECTED — CONTRACT_ASSURANCE_DEFECT`; PR #3 held.** Four concrete defects, all independently re-verified against the schema text in this pass before accepting the rejection: (1) `assistantMessageDetail` forbids `timestamp` via `additionalProperties: false` while never declaring it; (2) `diagnostic.error`/`diagnostic.details` are non-nullable, but the runner legitimately emits `null` for both when absent; (3) `deferredHandle.expires_at`/`poll_after_ms` are non-nullable `integer`, but the runner legitimately emits `null` for both when absent; (4) `diagnostic.timestamp`/`deferredHandle.expires_at` are typed `integer`, narrower than the frozen vocabulary's `number`. **Fixed this pass:** `assistantMessageDetail` now requires and declares `timestamp: number` (`agent_runner.py::_assistant_detail` emits `message.timestamp`; `role` stays intentionally omitted, now with an explicit documented justification — this projection only ever normalizes `AssistantMessage`, so role is a constant the definition's own name already encodes); `diagnostic.error`/`.details` and `deferredHandle.expires_at`/`.poll_after_ms` now accept `null`; the two timestamp-shaped `integer` fields are now `number`. **Re-verified, not just re-asserted:** independently constructed and validated the exact three edge-case documents Rust used (assistant detail with `timestamp` present; required-fields-only `deferredHandle` with both optionals `null`; `diagnostic` with both optionals `null`; plus a fractional-timestamp diagnostic) — all four now validate with zero errors. `public-llm-vocabulary-schema.yaml` updated with the now-required `timestamp` values (empirically confirmed via the mock adapter's `len(self.requests)` counter: `1` for the first turn, `2` for the second) and re-run: passes. Full suite re-run fresh: 715 passed/47 xfailed (unchanged), `ruff` clean, `mypy` clean on touched files, schema-validation + agent-conformance suites: 133 passed/41 xfailed. **This is a corrected shared-contract diff, not a second self-approval — it goes back to Rust for a fresh formal implementation-owner review before `LLM-F010` can be marked resolved or the contract treated as canonical.** Fix pushed to `main` at `37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`. `LLM-F010` remains open. |
+| LLM-F010 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` — **RESOLVED.** Full review lifecycle completed this pass: initial Python implementation → an initial Python shared-contract self-review that incorrectly approved a defective schema → a first Rust implementation-owner review that correctly `REJECTED` it → the defect confirmed real, root-caused, and fixed → a fresh Rust implementation-owner review that `APPROVED` the corrected contract. **Layer-02 certification impact: NONE — no longer active.** See the active/deferred summary immediately after this table. | Attempting to fill `public-llm-vocabulary-schema.yaml` (`LLM-F001`) found the `agent`-family conformance DSL/runner could not observe most of this pass's new vocabulary — full root cause in §7's observability matrix (built before any fix, per field). Confirmed two latent pre-existing gaps along the way, neither new damage: `scriptedResponse.usage` was declared in the schema but never read by `_script()`; `_block()`'s `thinking`-type branch never existed, so scripting one silently produced a `TextBlock` instead. | **Preserved in full — this history is itself assurance evidence, not noise to erase.** (1) **Initial Python implementation:** complete — observability matrix built first, `agent-scenario.schema.json`/`agent_runner.py`/`adapters/mock.py` extended, `public-llm-vocabulary-schema.yaml` filled and passing, at commit `5d65a39`. (2) **Initial Python shared-contract self-review:** incorrectly concluded APPROVED / no defect found. The review built a field-by-field mapping and ran one adversarial absence test at the top level of `AssistantMessage`, but did not construct the nested-optional edge cases — a `diagnostic`/`deferredHandle` object whose *own* optional sub-fields (`error`/`details`; `expires_at`/`poll_after_ms`) are absent while the object itself is present — and treated `assistantMessageDetail`'s omission of `timestamp` as "reviewed and accepted" without registering that `additionalProperties: false` makes that omission an active, unconditional rejection of a legitimate frozen field, not a mere non-assertion of it. (3) **First Rust implementation-owner review of `5d65a39`: `REJECTED — CONTRACT_ASSURANCE_DEFECT`** (§18), reproducing four concrete, independently-verified defects Python's own review had missed: `assistantMessageDetail` forbade the frozen `timestamp` field via `additionalProperties: false`; `diagnostic.error`/`.details` were non-nullable though the runner legitimately emits `null` for both when absent; `deferredHandle.expires_at`/`.poll_after_ms` had the same non-nullable defect; and both timestamp-shaped fields were narrowed to `integer` where the frozen vocabulary specifies `number`. Rust's review was the more rigorous of the two and its verdict was accepted as correct, not defended against. (4) **Shared contract corrected:** `assistantMessageDetail` now requires and declares `timestamp: number` (`role` stays intentionally omitted, now with an explicit documented justification); `diagnostic.error`/`.details` and `deferredHandle.expires_at`/`.poll_after_ms` now accept `null`; the two timestamp-shaped `integer` fields are now `number`. Re-verified by independently constructing the exact edge-case documents Rust used (assistant detail with `timestamp` present; required-fields-only `deferredHandle` with both optionals `null`; `diagnostic` with both optionals `null`; a fractional-timestamp diagnostic) — all four now validate with zero errors. Full suite re-run fresh: 715 passed/47 xfailed, `ruff` clean, `mypy` clean, schema-validation + agent-conformance: 133 passed/41 xfailed. Pushed to `main` at `37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`. (5) **Fresh Rust implementation-owner review of `37ce4bb`: `APPROVED`** (§19). Rust independently re-ran the exact probes that rejected `5d65a39` — the corrected canonical scenario validates, a fractional assistant timestamp validates as the normative numeric type, diagnostics/deferred-handles with the previously-forbidden `null` optionals validate, and strictness remains effective (`additionalProperties: false` still rejects an unknown assistant field; a wrong-typed nested `usage.cost.input` is still rejected). Rust confirmed language-neutrality (the corrected surface maps naturally to typed Rust, `Option<T>` needs only a thin explicit-null projection, no Python-specific reconstruction) and thin-runner feasibility. No new contract defect, no Rust implementation defect. Rust then merged `origin/main` (`37ce4bb`) into `audit/llm-rust-assurance` as `2ba62c56147ff69fcb48171ada86a424d59efc41`, re-ran its full gate suite fresh (all PASS, §19), and PR #3 merged to `main` at `05acd1a96963a7a08c573e460027a980261e8b5c`. **This cross-language review cycle is positive certification evidence: independent implementation-owner review caught 4 real defects a same-language self-review missed, and the corrected contract was verified from both sides before being trusted.** `LLM-F010` is `RESOLVED`. |
 
 ### Active vs. deferred status (certification-gate view)
 
@@ -612,13 +614,13 @@ independently re-derive which findings currently count.
 
 ```text
 ACTIVE CURRENT-LAYER DEFECTS
-(these, and only these, count against Layer 02's certification gate)
+(these, and only these, would count against Layer 02's certification gate)
 
 CONTRACT_ASSURANCE_DEFECT:
-    LLM-F010
-        shared schema corrected in 37ce4bbc051fa35885873c04dbe3b51e3c99cb2b
-        remaining gate: fresh Rust implementation-owner approval
-        status: OPEN
+    none
+    (LLM-F010 RESOLVED -- shared schema corrected in 37ce4bbc051fa35885873c04dbe3b51e3c99cb2b,
+    Rust implementation-owner review APPROVED the correction, PR #3 merged at
+    05acd1a96963a7a08c573e460027a980261e8b5c)
 
 PI_PARITY_DEFECT:
     none
@@ -665,11 +667,13 @@ same-model-unsigned-thinking-not-replayed)
     owner: AGENT-### layer
 ```
 
-This is a bookkeeping distinction only; it does not change any finding's historical classification, does
-not resolve `LLM-F002`/`LLM-F008`/`LLM-F009` numerically, and does not touch `LLM-F010`'s open status.
-It exists so the certification gate (§16) and certification result (§17) read consistently: `LLM-F010`
-is the sole active `CONTRACT_ASSURANCE_DEFECT`, and the gate item can read `[x]` the moment (and only
-the moment) Rust approves the corrected contract.
+This is a bookkeeping distinction only; it does not change any finding's historical classification, and
+it does not resolve `LLM-F002`/`LLM-F008`/`LLM-F009` numerically -- they remain open/deferred exactly as
+described above, owned by Phase 5, editorial cleanup, and the telemetry layer respectively. `LLM-F010`
+is no longer listed as an active defect: Rust's fresh implementation-owner review approved the
+corrected contract (§19), so it is now `RESOLVED` in §15 rather than deferred. With `LLM-F010` closed,
+the active-defect list above is empty across all three tracked categories, satisfying §16's certification
+gate.
 
 ---
 
@@ -680,9 +684,9 @@ Design alignment                         [x]  all 20 distinct LLM-### requiremen
 Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012 remain open, none severe; LLM-017 verified DEFERRED TO PHASE 5 (not a parity gap, §7); LLM-F007 is hardening beyond Pi, not a parity fix
 Normative spec                           [x]  spec/llm.md re-audited field-by-field against the full vocabulary — no drift found (LLM-F008 is naming-only)
 Parity manifest                          [~]  AI-001..012 vocabulary/stream contract, AI-013 Responses replay (new); LLM-F002 partially resolved — 3 subsections still uncovered, deliberately (no real behavior to describe yet)
-Canonical conformance                    [~]  LLM-018 real+passing; LLM-F010 schema fixed after Rust's rejection of `5d65a39` (4 defects, all confirmed and repaired this pass), re-verified incl. Rust's own edge cases; open pending Rust's fresh re-review, not yet RESOLVED
+Canonical conformance                    [x]  LLM-018 real+passing; LLM-F010 schema fixed after Rust's rejection of `5d65a39`, re-verified incl. Rust's own edge cases, then Rust's fresh implementation-owner review APPROVED the corrected contract (§19) — RESOLVED
 Python tests where implemented           [x]  8 files audited (§6), all KEEP, one STRENGTHEN applied (LLM-F007's regression test)
-Rust tests where implemented             [x]  §18 (Rust's own record) — 118 tests incl. 17 LLM, cargo fmt/clippy/doc/xtask all pass
+Rust tests where implemented             [x]  §18/§19 (Rust's own record) — 118 tests incl. 17 LLM, cargo fmt/clippy/doc/xtask all pass, re-confirmed fresh post-merge
 Property/invariant tests                 [ ]  none exist for this layer; not flagged as a gap this pass (no property space obviously needing one was found — the vocabulary is data-shape, not algorithmic)
 Concurrency tests where applicable       [~]  not directly applicable — this layer has no shared mutable state accessed concurrently beyond LlmService's dict, addressed under reliability (§10)
 Fault-injection tests where applicable   [x]  LLM-F007's adversarial raising-adapter test (a hardening probe, not a parity check) is exactly this; premature-EOF/empty-stream/double-terminal already covered pre-pass
@@ -695,13 +699,13 @@ Documentation                            [x]  §13-14 — spec/llm.md re-checked
 All findings classified                  [x]  LLM-F001..F010 classified
 No unresolved Pi uncertainty             [x]  none raised this pass — every ambiguity resolved by reading Pi source directly
 No unresolved parity defect              [x]  LLM-F003..F006 all resolved (LLM-F006 with a disclosed, documented compromise); LLM-F007 reclassified PARITY_NEUTRAL_HARDENING, not a parity defect
-No unresolved contract-assurance defect  [ ]  ACTIVE: LLM-F010 only -- Rust-rejected `5d65a39` for 4 real schema defects, all fixed and re-verified this pass (see the active/deferred summary after §15's findings table), still open pending Rust's fresh re-review. NOT counted here (resolved for current-layer scope / never an active contract defect / non-blocking): LLM-F001, LLM-F002, LLM-F008. Flips to [x] once Rust approves the corrected contract.
+No unresolved contract-assurance defect  [x]  ACTIVE: none (see the active/deferred summary after §15's findings table). LLM-F010 RESOLVED — Rust's fresh implementation-owner review APPROVED the corrected contract (`37ce4bb`), PR #3 merged (`05acd1a`). NOT counted as active, unchanged from before (resolved for current-layer scope / never an active contract defect / non-blocking): LLM-F001, LLM-F002, LLM-F008.
 Deferred risks recorded                  [x]  LLM-020, LLM-021 N/A pending Phase 5; LLM-F006's default flagged for removal then; LLM-F007's design choice (centralize vs. per-adapter) flagged for Rust-cross-check reconsideration; LLM-F009 open for the telemetry layer
 ```
 
 ## 17. Certification result
 
-**Result:** `IN_AUDIT`
+**Result:** `CERTIFIED`
 
 Steps 0-2 are complete with real grounding: pinned Pi source (`ref-repos/pi/packages/ai/src/`) was
 read directly, not inferred from the frozen master's paraphrase — one master-paraphrase discrepancy
@@ -831,34 +835,90 @@ verdict is accepted as correct, not defended against. All four defects are now f
 independently constructing the exact edge-case documents Rust used (full detail in the `LLM-F010`
 findings row, §15) — each now validates with zero errors, and the full Python gate suite is clean.
 
+**Fresh Rust implementation-owner review, approval, and merge (this pass, §19):** the corrected
+contract (`37ce4bb`) went back to Rust, not treated as self-approved a second time. Rust independently
+re-ran the exact probes that had rejected `5d65a39` — the corrected canonical scenario validates, a
+fractional assistant timestamp validates as the normative numeric type, diagnostics/deferred-handles
+with the previously-forbidden `null` optionals now validate, and strictness remains effective
+(`additionalProperties: false` still rejects an unknown assistant field; a wrong-typed nested
+`usage.cost.input` is still rejected). Rust confirmed language-neutrality and thin-runner feasibility,
+and found no new contract defect and no Rust implementation defect. Rust's implementation-owner verdict:
+`LLM-F010` **`APPROVED`**. Rust then merged `origin/main` (`37ce4bb`) into `audit/llm-rust-assurance` as
+`2ba62c56147ff69fcb48171ada86a424d59efc41`, re-ran its full gate suite fresh (`cargo fmt`/`clippy`/
+`test`/`llm_conformance`/`doc`/`xtask conformance verify`/`xtask coverage verify`, all PASS, §19), and
+PR #3 merged to `main` at `05acd1a96963a7a08c573e460027a980261e8b5c`. Rust reports no remaining Layer 02
+implementation-owner blocker. **This full cycle — a same-language self-review that missed real defects,
+an independent cross-language review that caught them, a fix, and a fresh independent approval — is
+itself positive certification evidence for how this project's shared-contract review process is
+supposed to work, not noise to be summarized away.**
+
+**Rust's `public-llm-vocabulary-schema` disposition (§19), confirmed consistent with the adopted
+thin-runner policy:** the corrected schema/vocabulary is fully consumable by Rust and Layer-02's fields
+are directly verified through Rust's typed serde/service/stream tests. The canonical scenario's full
+two-turn *end-to-end execution* is not currently runnable in Rust, because its `followup`/`await_idle`
+steps are `AGENT-###` orchestration semantics that no real Rust Agent implementation exists to drive
+yet — and the Rust conformance adapter correctly does not simulate Agent orchestration, XFORM, Responses
+replay, or provider semantics to manufacture that execution early. This is exactly the same category of
+deferral as the two Phase-5 replay scenarios and the `XFORM-###`/`AGENT-###`-owned placeholders below:
+Layer 02's own semantic contract is complete and cross-language-verified; a *different* layer's
+not-yet-built implementation is what the remaining execution path depends on. No process/contract
+contradiction was found — the certification rules do not require literal two-turn Rust Agent execution
+before a Rust Agent exists; they require Layer 02's own vocabulary/contract to be sound and verified,
+which it is. Non-blocking.
+
 **Follow-up dependencies:**
 
-1. **`LLM-F010`'s schema defect is fixed and re-verified (this pass) but the contract is not
-   resolved.** This is a corrected diff following a real rejection, not a second self-approval — send
-   it back through the shared-contract reviewer process for Rust's fresh implementation-owner
-   re-review before treating it as canonical. Do not merge or mark resolved on the strength of this
-   pass's own re-verification alone.
+1. ~~`LLM-F010`'s schema defect is fixed and re-verified but the contract is not resolved~~ — **done.**
+   Rust's fresh implementation-owner review `APPROVED` the corrected contract (§19); PR #3 merged.
+   `LLM-F010` is `RESOLVED`.
 2. **Verified this pass (§7 dedicated investigation): the two remaining category-A placeholders
    (`same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed`) are
-   deferred to Phase 5 by confirmed necessity, not by open question.** Once `LLM-F010` is formally
-   approved (so the DSL to express them exists), fill them once — and only once — the Phase-5
-   Responses-family adapter exists to honestly drive them; do not fill them earlier by having the
-   runner simulate replay. `cross-model-signatures-stripped`'s ownership is settled (category B,
-   `XFORM-###`, §7) — no further joint decision needed there.
-3. `LLM-F002` is partially resolved (`AI-013` added). The remaining three subsections (API/provider
-   split, model/request options, authentication) stay unresolved until Phase 5 gives each a real
-   adapter/scenario to cite — do not add aspirational rows for them before then.
-4. ~~Independent Rust implementation and cross-check~~ — **done, see §18.** Rust independently
+   deferred to Phase 5 by confirmed necessity, not by open question.** The DSL to express them now
+   exists (`LLM-F010` resolved); fill them once — and only once — the Phase-5 Responses-family adapter
+   exists to honestly drive them; do not fill them earlier by having the runner simulate replay.
+   `cross-model-signatures-stripped`'s ownership is settled (category B, `XFORM-###`, §7) — no
+   further joint decision needed there.
+3. `LLM-F002` is resolved for current-layer scope (`AI-013` added). The remaining three subsections
+   (API/provider split, model/request options, authentication) stay unresolved until Phase 5 gives
+   each a real adapter/scenario to cite — do not add aspirational rows for them before then.
+4. ~~Independent Rust implementation and cross-check~~ — **done, see §18/§19.** Rust independently
    confirmed `LLM-F006` is Python-specific (Rust's own `api` is required, non-defaulted) and
    independently arrived at the same `LLM-F007` `PARITY_NEUTRAL_HARDENING` classification. Rust's
-   existing `tests/llm_conformance.rs` consumes 5 shared scenarios; once this pass's schema diff is
-   reviewed and adopted, it should grow to include the now-real `public-llm-vocabulary-schema` too —
-   Rust's own follow-up, not Python's to make.
+   `tests/llm_conformance.rs` consumes 5 shared scenarios; the full `public-llm-vocabulary-schema`
+   remains verified through Rust's own typed unit/service/stream tests rather than the shared
+   conformance runner, pending the real Rust Agent path (§19) — Rust's own follow-up, not Python's
+   to make.
 5. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
    call site that relied on it, this time with real API values to assign, not a placeholder sweep.
 6. Optionally resolve `LLM-F008` (rename either side for naming consistency) and `LLM-F009` (an
    adapter observability hook) whenever something else already has reason to touch that code —
    neither is worth a dedicated pass on its own.
+
+### Final freeze-gate audit
+
+```text
+Applicable Pi source audited?                          YES — ref-repos/pi/packages/ai/src/ read directly (§2-3), not inferred from paraphrase
+Parity manifest current for Layer-02 scope?             YES — AI-001..013 cover every real, non-aspirational current-layer requirement (LLM-F002's remaining 3 subsections deliberately excluded, see below)
+Language-neutral spec current?                          YES — spec/llm.md re-audited field-by-field against the full post-remediation vocabulary (LLM-F008 is naming-only, non-blocking)
+Canonical current-layer evidence adequate?               YES — public-llm-vocabulary-schema.yaml filled, passing, cross-language reviewed and approved; 2 replay scenarios confirmed Phase-5-owned, not a Layer-02 gap
+Python implementation satisfies Layer-02 contract?       YES — 8 modules deep-audited (§5), all findings resolved or explicitly deferred with owner/trigger
+Rust implementation satisfies Layer-02 contract?         YES — §18/§19, merged PR #3, all Rust gates PASS, implementation-owner review APPROVED
+LLM-F010 formally resolved?                              YES — full lifecycle in §15's findings row and §19
+Rust implementation-owner approval obtained?             YES — §19, corrected commit 37ce4bbc051fa35885873c04dbe3b51e3c99cb2b
+Rust Layer-02 implementation merged?                     YES — PR #3, merge SHA 05acd1a96963a7a08c573e460027a980261e8b5c
+Active PI_PARITY_DEFECT?                                 NONE
+Active PI_BEHAVIOR_UNCERTAIN?                             NONE
+Active CONTRACT_ASSURANCE_DEFECT?                         NONE
+Deferred findings all have explicit owner/trigger?        YES — LLM-F002 (Phase 5 real providers / real provider evidence exists), LLM-F008 (whoever next touches spec/llm.md or the Python class), LLM-F009 (telemetry layer), 2 replay scenarios (Phase 5 Responses adapter), 10 XFORM placeholders (XFORM layer), 29 Agent placeholders (Agent layer)
+Any conformance runner simulating missing semantics?      NO — verified in both languages: Python's runner reads real object state only (adversarial absence tests, §7); Rust's conformance adapter does not simulate Agent orchestration/XFORM/Responses replay/provider semantics (§19)
+```
+
+**Freeze rule satisfied:** no unresolved current-layer parity defect, no unresolved current-layer Pi
+uncertainty, no unresolved current-layer contract-assurance defect. Every deferred item above is
+explicitly later-layer or later-phase work with a named owner and trigger, not an active current-layer
+defect — the distinction §15's "Active vs. deferred status" section exists to keep explicit.
+
+**Layer 02 — LLM: `CERTIFIED`.**
 
 ---
 
