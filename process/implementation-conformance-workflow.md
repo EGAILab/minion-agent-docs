@@ -234,6 +234,80 @@ action:
 
 Do not infer Pi behavior from generic best practice.
 
+### 4.6 Contract stability and implementation quality
+
+Contract stability is important, but it is not an objective that overrides implementation quality.
+
+A frozen or currently stable contract MUST NOT force an implementation into an unnecessarily
+fragile, duplicated, contorted, or semantically artificial design when new implementation evidence
+shows that the contract itself is incomplete or incorrect.
+
+Use this rule:
+
+```text
+A better implementation is discovered
+    ↓
+Would it preserve the existing observable contract?
+    ├─ YES
+    │   -> use the better implementation
+    │   -> no shared-contract change is required
+    │
+    └─ NO
+        ↓
+      Why does the observable behavior need to change?
+        ├─ the existing contract is incomplete, contradictory,
+        │  or prevents a coherent implementation
+        │
+        │   -> CONTRACT_ASSURANCE_DEFECT
+        │   -> reopen the affected shared contract deliberately
+        │   -> update spec/conformance/traceability as required
+        │   -> review all reached implementations
+        │
+        └─ the alternative is merely preferable, cleaner,
+           or potentially more effective
+            -> preserve the current compatible baseline
+            -> record the alternative for post-parity hardening
+               or intentional-divergence review
+```
+
+Do not optimize for contract stability at the expense of architecture.
+
+Warning signs that SHOULD trigger a contract-quality review include:
+
+```text
+runner or adapter code must simulate library semantics
+the same normative rule must be reimplemented in multiple layers
+special cases exist primarily to preserve an underspecified contract
+errors must be swallowed, distorted, or hidden to maintain compatibility
+state/queue/flag machinery exists only to reproduce an accidental ambiguity
+the implementation must bypass the abstraction that nominally owns the behavior
+two conforming implementations are forced to make observably different choices
+because the shared contract does not define a required semantic boundary
+```
+
+These signs do not automatically authorize a contract change. They require an explicit review of
+whether the problem is implementation-local or a `CONTRACT_ASSURANCE_DEFECT`.
+
+Conversely, a contract MUST NOT be reopened merely because another implementation would be cleaner,
+more idiomatic, or easier to build.
+
+The governing principle is:
+
+> **Make the contract deliberately hard to change, but never preserve it merely because it is
+> already stable when implementation evidence shows that it is wrong or materially incomplete.**
+
+Certification does not require zero architectural alternatives. It requires confidence that:
+
+```text
+the shared contract is sufficiently specified
+the implementation satisfies it without semantic workarounds
+the implementation is structurally sound for its language
+known contract limitations have explicit dispositions
+```
+
+A layer MUST NOT be certified if its apparent conformance depends on architectural workarounds that
+mask a known `CONTRACT_ASSURANCE_DEFECT`.
+
 ---
 
 ## 5. Per-phase development workflow
@@ -1072,15 +1146,16 @@ A production-hardening cleanup must never create accidental semantic divergence.
 11. **Assurance does not redefine semantic authority.**
 12. **All assurance findings receive an explicit classification/disposition.**
 13. **Contract-assurance defects must be repaired before certification and are not deferred risk debt.**
-14. **Parity-neutral hardening should normally be fixed in the current phase.**
-15. **Parity-constrained risk is documented and deferred unless divergence is formally approved.**
-16. **Pi behavior uncertainty blocks semantic decision-making until source audit resolves it.**
-17. **A phase freezes only when its applicable contract, implementation, and assurance gates are satisfied.**
-18. **A language not yet at a layer may remain `NOT_IMPLEMENTED`; another implementation may still certify against the shared contract.**
-19. **Implementation-only changes may not silently change observable behavior.**
-20. **Documentation accuracy is part of assurance.**
-21. **Model-backed evals measure effectiveness, not Pi semantic correctness.**
-22. **Later Pi revisions are handled through explicit drift audits.**
+14. **Contract stability must not force inferior architecture when implementation evidence exposes a materially incomplete or incorrect contract.**
+15. **Parity-neutral hardening should normally be fixed in the current phase.**
+16. **Parity-constrained risk is documented and deferred unless divergence is formally approved.**
+17. **Pi behavior uncertainty blocks semantic decision-making until source audit resolves it.**
+18. **A phase freezes only when its applicable contract, implementation, and assurance gates are satisfied.**
+19. **A language not yet at a layer may remain `NOT_IMPLEMENTED`; another implementation may still certify against the shared contract.**
+20. **Implementation-only changes may not silently change observable behavior.**
+21. **Documentation accuracy is part of assurance.**
+22. **Model-backed evals measure effectiveness, not Pi semantic correctness.**
+23. **Later Pi revisions are handled through explicit drift audits.**
 
 ---
 

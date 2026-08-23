@@ -99,6 +99,18 @@ This classification does not allow assurance to invent semantics. If the missing
 contract concerns Pi-derived behavior whose correct Pi behavior is uncertain, classify it
 `PI_BEHAVIOR_UNCERTAIN` and source-audit Pi first.
 
+### Contract-quality check
+
+During implementation and assurance, explicitly ask:
+
+> Does the current contract force semantic workarounds or materially inferior architecture?
+
+If yes, evaluate whether the evidence exposes a `CONTRACT_ASSURANCE_DEFECT` before treating contract
+stability as a constraint. Contract stability is not, by itself, a reason to preserve a contract
+that implementation evidence shows is wrong or materially incomplete.
+
+Do not reopen the contract merely because another implementation is cleaner or more idiomatic.
+
 ## 5. Implementation disposition
 
 Each audited module receives one evidence-based disposition:
