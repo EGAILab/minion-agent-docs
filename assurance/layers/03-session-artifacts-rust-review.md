@@ -10,7 +10,36 @@
 
 **Pinned Pi:** `b7bb00b936dbe21b8e160b3e89efdec361846699`
 
-## Decision
+## Current disposition after corrected-candidate re-review
+
+**Corrected `minion-agent` candidate:** `cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`
+
+**Corrected assurance record:** `4c482c3`
+
+```text
+fresh Rust implementation-owner review
+    APPROVED
+
+language neutrality
+    CONFIRMED
+
+thin-runner feasibility
+    CONFIRMED
+
+new contract defect
+    NONE
+
+Rust Session implementation
+    EXPLICITLY DEFERRED BY PLAN
+
+Layer 03
+    ELIGIBLE FOR FINAL CERTIFICATION BY THE SHARED ASSURANCE OWNER
+```
+
+The corrected candidate was reviewed fresh. The initial rejection below is retained as assurance
+history; it is not the current verdict.
+
+## Initial decision on `3d6ffa4`
 
 ```text
 shared-contract review
@@ -269,3 +298,109 @@ Session code.
 The shared/Python owner should narrowly repair the four defects above, rerun schema and Python
 evidence, publish a corrected candidate SHA, and request a fresh Rust implementation-owner review.
 The prior rejection does not become approval merely because the candidate is amended.
+
+## Fresh review of corrected candidate `cda6b50`
+
+The Python/shared-contract process independently reproduced all four rejected defects, corrected
+them in `cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`, and returned the result for a fresh Rust review.
+Rust did not rely on the remediation report as proof.
+
+### Re-tested rejection cases
+
+The same Draft 2020-12 probes used for rejection now produce:
+
+```text
+user + assistant-only stop_reason             INVALID (correct)
+assistant + tool-result-only fields           INVALID (correct)
+
+text without text                             INVALID (correct)
+thinking without thinking                     INVALID (correct)
+image without data/reference                  INVALID (correct)
+image with data and reference                 INVALID (correct)
+cross-variant content-block fields            INVALID (correct)
+
+complete assistantDetail                      VALID
+assistantDetail with unknown field            INVALID
+complete toolResultDetail                     VALID
+
+fractional assistant timestamp                VALID
+fractional tool-result timestamp              VALID
+valid user/assistant/tool-result append        VALID
+valid plugin event with user-message payload  VALID
+```
+
+Positive probes also confirmed that all four closed content variants map naturally to typed Rust
+values: text, thinking, inline/reference image, and tool call.
+
+### Field completeness and discrimination
+
+`assistantDetail` now requires and observes the complete frozen Session-relevant assistant shape,
+including genuinely scriptable non-default `provider`, `model`, `timestamp`, and `error_message`.
+`toolResultDetail` now requires and observes `tool_call_id` and `timestamp`. The repaired
+`rich-assistant-message-round-trip.yaml` uses non-default values, proving round-trip preservation
+rather than merely observing runner constants. Absence remains distinct from zero, false, an empty
+collection, and an empty string.
+
+`step.append` now applies language-neutral role restrictions. Fields shared by real message types
+remain shared (`timestamp` for all core message roles and `usage` for assistant/tool-result), while
+role-exclusive fields are rejected elsewhere. Plugin event names remain open and carry the documented
+user-message payload shape.
+
+`contentBlock` is now a closed `oneOf` discriminated by `type`. The image variant enforces exactly one
+of inline data or immutable reference. A thin Rust runner can deserialize this directly into tagged
+typed values; it need not invent variant selection or discard incompatible fields.
+
+### Runner boundary
+
+The corrected runner deserializes canonical values, constructs real typed Session/LLM values, invokes
+the real Session encode/append/derive/header/artifact paths, and normalizes real reconstructed values.
+It does not implement Session derivation, Agent lifecycle, XFORM, or expected-value fabrication.
+
+### Fresh verification
+
+```text
+adversarial schema probes
+    PASS
+
+schema validation + Session conformance, --no-cov
+    PASS (one expected Layer-04 xfail)
+
+full Python suite
+    PASS
+    724 passed, 42 xfailed, 0 failed
+    100.00% configured line coverage
+
+ruff check .
+    PASS
+
+mypy tests/conformance/session_runner.py src/minion_agent/session/derive.py
+    PASS
+```
+
+The sandbox emitted a cache-only warning because it could not write `.pytest_cache`. Test execution
+and coverage completed successfully; the warning does not affect semantic evidence.
+
+## Final Rust implementation-owner verdict
+
+```text
+reviewed corrected shared-contract SHA
+    cda6b5042e678974a43b8dc0fc6ce1c8ade73d88
+
+Layer-03 shared-contract review
+    APPROVED
+
+new CONTRACT_ASSURANCE_DEFECT
+    NONE
+
+new PI_PARITY_DEFECT
+    NONE
+
+PI_BEHAVIOR_UNCERTAIN
+    NONE
+
+Rust Session implementation obligation
+    EXPLICITLY DEFERRED BY PLAN
+
+handoff to shared/Python assurance owner
+    READY
+```

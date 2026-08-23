@@ -2,6 +2,18 @@
 
 **Layer ID:** `03`  
 **Status:** `IN_AUDIT`  
+**Fresh Rust implementation-owner re-review (2026-08-24):** `APPROVED` for corrected candidate
+`minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. Rust independently reran the original
+rejection probes plus positive typed-shape cases: complete assistant/tool-result fields validate,
+unknown fields remain rejected, role-incompatible appends are rejected, all four closed content
+variants validate, invalid/cross-variant blocks are rejected, and fractional timestamps remain valid
+language-neutral numbers. The corrected runner remains thin. Focused schema/Session conformance,
+the full Python suite at 100% configured coverage, `ruff`, and focused `mypy` all pass. No new
+`CONTRACT_ASSURANCE_DEFECT`, `PI_PARITY_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` was found. Rust Session
+remains `EXPLICITLY DEFERRED BY PLAN`, non-blocking. Layer 03 is now **eligible for final
+certification by the shared assurance owner**. Full evidence, including the preserved initial
+rejection, is in `03-session-artifacts-rust-review.md`.
+
 **Rust implementation-owner review (2026-08-23):** `REJECTED — CONTRACT_ASSURANCE_DEFECT`, reviewing
 `minion-agent@3d6ffa4` / `minion-agent-docs@c273df1`. The formal review is recorded in
 `03-session-artifacts-rust-review.md`. It independently approved the `SES-F002` mixed Session/Agent
