@@ -3,8 +3,9 @@
 **Layer ID:** `02`  
 **Status:** `IN_AUDIT`  
 **Audit date:** 2026-08-23 (Steps 0-2 complete: Pi source read directly, requirement traceability and
-Python module deep audit done; §6 existing-test audit and §8-14 review not yet started; 4 new
-PI_PARITY_DEFECT findings raised, none remediated yet — see §17)  
+Python module deep audit done; all 4 PI_PARITY_DEFECT findings (LLM-F003..F006) remediated and
+verified this pass — 3 fully, 1 (LLM-F006) with a disclosed compromise; §6 existing-test audit and
+§8-14 review not yet started — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
 **Rust status:** unassessed this pass — Python drives audit/remediation first, per the adopted
@@ -213,38 +214,36 @@ Read in full: `ref-repos/pi/packages/ai/src/types.ts` (857 lines, pinned commit 
 
 | ID | Requirement | Source | Canonical scenario / test | Status |
 |---|---|---|---|---|
-| LLM-001 | `TextBlock{text, text_signature?}` | Master §4 Vocabulary; Pi `types.ts::TextContent` | none | **GAP** — `content.py.TextBlock` has no `text_signature` field at all (`LLM-F004`) |
-| LLM-002 | `ThinkingBlock{thinking, thinking_signature?, redacted=false}` | Master §4; Pi `TextContent`/`ThinkingContent` | none | **GAP** — `content.py.ThinkingBlock` has neither `thinking_signature` nor `redacted` (`LLM-F004`) |
+| LLM-001 | `TextBlock{text, text_signature?}` | Master §4 Vocabulary; Pi `types.ts::TextContent` | `tests/llm/test_content.py`, `tests/session/test_derive.py::test_replay_signature_fields_round_trip` | COVERED — `text_signature: str \| None = None` added, encode/decode round-trips it (`LLM-F004`) |
+| LLM-002 | `ThinkingBlock{thinking, thinking_signature?, redacted=false}` | Master §4; Pi `TextContent`/`ThinkingContent` | `tests/llm/test_content.py`, `tests/session/test_derive.py::test_replay_signature_fields_round_trip` | COVERED — `thinking_signature`/`redacted` added, round-trips (`LLM-F004`) |
 | LLM-003 | `ImageBlock{mime_type, data\|reference}`, content-addressed/immutable, intentional divergence from Pi's inline-base64-only `ImageContent` | Master §4 (explicit divergence); Pi `ImageContent` | none canonical; `content.py.ImageBlock.__post_init__` enforces exactly-one-of | COVERED (by construction) — implemented correctly, matches the documented intentional divergence |
-| LLM-004 | `ToolCall{id, name, arguments, thought_signature?, namespace?}` | Master §4; Pi `types.ts::ToolCall` | none | **GAP** — `content.py.ToolCallBlock` has neither `thought_signature` nor `namespace` (`LLM-F004`) |
-| LLM-005 | `UserMessage{role=user, content: string\|[TextBlock\|ImageBlock], timestamp}` | Master §4; Pi `UserMessage` | none | **GAP/PARTIAL** — `messages.py.UserMessage.content` is always `tuple[ContentBlock,...]`, no bare-string shorthand path confirmed; not fully verified whether a higher layer normalizes a string into content before construction |
-| LLM-006 | `AssistantMessage` full 15-field shape (`api, provider, model, response_model?, response_id?, diagnostics?, usage, stop_reason, deferred?, error_message?, raw_stop_reason?, end_turn?, timestamp`) | Master §4; Pi `types.ts::AssistantMessage` (matches master exactly) | none | **GAP — SEVERE** — `messages.py.AssistantMessage` has only 7 of 15 fields (`content, stop_reason, usage, model, provider, timestamp, error_message`); missing `api, response_model, response_id, diagnostics, deferred, raw_stop_reason, end_turn` (`LLM-F003`) |
-| LLM-007 | `ToolResultMessage{role, tool_call_id, tool_name, content, details?, usage?, added_tool_names?, is_error, timestamp}` | Master §4; Pi `types.ts::ToolResultMessage` | none | **GAP** — `messages.py.ToolResultMessage` has only `tool_call_id, content, timestamp, is_error`; missing `tool_name, details, usage, added_tool_names` (`LLM-F005`) |
-| LLM-008 | `DeferredHandle{provider, model_id, api, id, expires_at?, poll_after_ms?, data?}` | Master §4; Pi `types.ts::DeferredHandle`; manifest `AI-009` | none | **GAP** — no such type exists anywhere in `minion_agent/llm/` (`LLM-F005`) |
-| LLM-009 | `AssistantMessageDiagnostic{type, timestamp, error?, details?}` + `DiagnosticError{message, name?, stack?, code?}` | Master §4; Pi `diagnostics.ts`; manifest `AI-010` | none | **GAP** — neither type exists anywhere in `minion_agent/llm/` (`LLM-F005`) |
-| LLM-010 | `LlmContext{system_prompt?, messages, tools?}` | Master §4; Pi `types.ts::Context`; manifest `AI-011` | none | **GAP/PARTIAL** — `service.py.Request` bundles `model, system (required, not optional), messages, max_output_tokens, tools` — a different shape serving a different purpose (a resolved request, not the provider-neutral context type); no standalone `LlmContext` exists |
-| LLM-011 | Model identity is the triple `provider + api + model_id` | Master §4; confirmed no Pi source contradiction | none | **GAP** — `service.py.ModelId` is only `(provider, model)`, no `api` field; the identity triple is architecturally unrepresentable in current core types (`LLM-F006`) |
-| LLM-012 | `ProviderRequestOptions`/`StreamOptions`/`SimpleStreamOptions` schema exists, every Pi-observable option for an implemented API has a schema-mapped or explicitly-deferred path | Master §4; Pi `types.ts` (confirmed field-for-field match at the spec level, §3) | none | **GAP** — no option schema exists anywhere in `minion_agent/llm/`; `service.py.Request` has only `max_output_tokens`. Appropriately low-urgency: no real (non-mock) API is implemented yet (Phase 5, deferred) |
-| LLM-013 | `StopReason = pending\|stop\|length\|tool_use\|error\|aborted\|deferred` | Master §4; Pi `types.ts::StopReason` (exact match) | `public-llm-vocabulary-schema` (placeholder, unfilled) | **GAP** — `messages.py.StopReason` enum is missing `DEFERRED`; only 6 of 7 values (`LLM-F005`) |
-| LLM-014 | `Usage{input, output, cache_read, cache_write, cache_write_1h?, reasoning?, total_tokens, cost:{input,output,cache_read,cache_write,total}}` | Master §4; Pi `types.ts::Usage` (exact match) | `public-llm-vocabulary-schema` (placeholder, unfilled) | **GAP — SEVERE** — `messages.py.Usage` has no `cost` sub-object at all, no `cache_write_1h`, and computes `.total` as a property rather than storing `total_tokens` (`LLM-F005`) |
+| LLM-004 | `ToolCall{id, name, arguments, thought_signature?, namespace?}` | Master §4; Pi `types.ts::ToolCall` | `tests/llm/test_content.py`, `tests/session/test_derive.py::test_replay_signature_fields_round_trip` | COVERED — `thought_signature`/`namespace` added, round-trips (`LLM-F004`) |
+| LLM-005 | `UserMessage{role=user, content: string\|[TextBlock\|ImageBlock], timestamp}` | Master §4; Pi `UserMessage` | none | **GAP/PARTIAL** — unchanged this pass; `messages.py.UserMessage.content` is always `tuple[ContentBlock,...]`, no bare-string shorthand path confirmed |
+| LLM-006 | `AssistantMessage` full 15-field shape (`api, provider, model, response_model?, response_id?, diagnostics?, usage, stop_reason, deferred?, error_message?, raw_stop_reason?, end_turn?, timestamp`) | Master §4; Pi `types.ts::AssistantMessage` (matches master exactly) | `tests/llm/test_messages.py` (4 new tests), `tests/session/test_derive.py::test_assistant_message_response_identity_and_diagnostics_round_trip` | COVERED — all 15 fields now present; `api` defaults to `"mock"` (disclosed, see LLM-F006) but `service.py`/`mock.py` populate it from `request.model.api` where a real value exists rather than relying on the default (`LLM-F003`) |
+| LLM-007 | `ToolResultMessage{role, tool_call_id, tool_name, content, details?, usage?, added_tool_names?, is_error, timestamp}` | Master §4; Pi `types.ts::ToolResultMessage` | `tests/llm/test_messages.py`, `tests/session/test_derive.py::test_tool_result_message_optional_fields_round_trip`, `tests/tools/test_result.py` | COVERED — all fields added; `tools/result.py::to_message()` now threads `details`/`added_tool_names` through from `ToolResult` (previously silently dropped since the vocabulary field didn't exist); `tool_name`/`usage` have no source yet — `ToolResult` doesn't carry a tool name or execution-usage figure, and threading one through the tool-execution pipeline is `TOOL-###` territory, not this layer's (`LLM-F005`) |
+| LLM-008 | `DeferredHandle{provider, model_id, api, id, expires_at?, poll_after_ms?, data?}` | Master §4; Pi `types.ts::DeferredHandle`; manifest `AI-009` | `tests/llm/test_messages.py::test_deferred_handle_carries_provider_identity` | COVERED — type added to `messages.py`, exported, round-trips via `_encode_deferred`/`_decode_deferred` (`LLM-F005`) |
+| LLM-009 | `AssistantMessageDiagnostic{type, timestamp, error?, details?}` + `DiagnosticError{message, name?, stack?, code?}` | Master §4; Pi `diagnostics.ts`; manifest `AI-010` | `tests/llm/test_messages.py::test_assistant_message_diagnostic_carries_a_structured_error` | COVERED — both types added, round-trip via `_encode_diagnostic`/`_decode_diagnostic` (`LLM-F005`) |
+| LLM-010 | `LlmContext{system_prompt?, messages, tools?}` | Master §4; Pi `types.ts::Context`; manifest `AI-011` | none | **GAP/PARTIAL** — unchanged this pass; `service.py.Request` bundles a different shape (a resolved request, not the provider-neutral context type); no standalone `LlmContext` exists |
+| LLM-011 | Model identity is the triple `provider + api + model_id` | Master §4; confirmed no Pi source contradiction | `tests/llm/test_service.py::test_model_id_defaults_api_to_mock`, `test_registering_an_adapter_carries_its_declared_api` | COVERED — `ModelId.api: str = "mock"` added. **Disclosed compromise, not full Pi fidelity:** Pi's `api` is required (no default); making it required in Python broke 133 tests across `agent/`/`agent_loop/`/`conformance/` (positional 2-arg `ModelId(provider, model)` calls throughout those layers' own test suites, outside this audit's scope to touch broadly). Defaulted to `"mock"` instead — correct for every current caller (the sole registered adapter), and the `Adapter` protocol/`LlmService.register()` now thread a real `api` value through when an adapter declares one. The default becomes actively wrong once a second API exists (Phase 5) and must be removed then (`LLM-F006`) |
+| LLM-012 | `ProviderRequestOptions`/`StreamOptions`/`SimpleStreamOptions` schema exists, every Pi-observable option for an implemented API has a schema-mapped or explicitly-deferred path | Master §4; Pi `types.ts` (confirmed field-for-field match at the spec level, §3) | none | **GAP** — unchanged this pass; no option schema exists anywhere in `minion_agent/llm/`. Appropriately low-urgency: no real (non-mock) API is implemented yet (Phase 5, deferred) |
+| LLM-013 | `StopReason = pending\|stop\|length\|tool_use\|error\|aborted\|deferred` | Master §4; Pi `types.ts::StopReason` (exact match) | `tests/llm/test_messages.py::test_stop_reason_includes_deferred` | COVERED — `DEFERRED` added, all 7 values present (`LLM-F005`) |
+| LLM-014 | `Usage{input, output, cache_read, cache_write, cache_write_1h?, reasoning?, total_tokens, cost:{input,output,cache_read,cache_write,total}}` | Master §4; Pi `types.ts::Usage` (exact match) | `tests/llm/test_messages.py` (2 new tests), `tests/session/test_derive.py::test_usage_cost_and_total_tokens_round_trip` | COVERED — `Cost` dataclass added, `cost`/`cache_write_1h`/`total_tokens` all present and round-trip; the pre-existing computed `.total` property is unchanged (kept for the existing tests/call sites that use it as a convenience sum, distinct from the new stored `total_tokens`) (`LLM-F005`) |
 | LLM-015 | Stream chunk/event vocabulary (`start`, `text_start/delta/end`, `thinking_start/delta/end`, `tool_call_start/delta/end`, `done`, `error`), every chunk carries the current partial message | Master §4; Pi `types.ts::AssistantMessageEvent` (see §3 for the `toolcall_start` vs `tool_call_start` master-paraphrase discrepancy) | `premature-eof-synthesizes-error-terminal`, `public-stream-fuses-after-first-terminal` (both real, passing) | COVERED — `stream.py`'s 12 chunk dataclasses all carry `partial`; structurally matches |
 | LLM-016 | Image content identity: content-addressed, immutable, model-visible-byte-preserving | Master §4 (folds into LLM-003) | — | Folded into LLM-003 |
-| LLM-017 | Responses-family replay signatures: content-owned opaque-string replay model, same-model-signed retains, same-model-unsigned-empty removes, cross-model loses signature | Master §4 "Responses-family replay signatures" | `same-model-thinking-signature-replayed`, `cross-model-signatures-stripped` (both placeholders, unfilled) | **GAP** — unimplementable until LLM-001/002/004's signature fields exist (`LLM-F004`); zero real canonical evidence |
+| LLM-017 | Responses-family replay signatures: content-owned opaque-string replay model, same-model-signed retains, same-model-unsigned-empty removes, cross-model loses signature | Master §4 "Responses-family replay signatures" | `same-model-thinking-signature-replayed`, `cross-model-signatures-stripped` (both still placeholders, unfilled) | **GAP, but unblocked** — the signature *fields* now exist (LLM-001/002/004, `LLM-F004` resolved), so the vocabulary is representable, but the *decision logic* (same-model retains, cross-model strips) is target-model-transformation behavior — `XFORM-###` territory, spec'd at `spec/target-model-transformation.md`, not yet audited or implemented. Filling these two scenarios meaningfully still requires that layer's work, not just this one's |
 | LLM-018 | The never-raises contract: ordinary exceptions before a stream is invoked, in-band terminal errors after; public stream is `non-terminal* -> exactly one terminal -> EOF`, fused (no draining past the first terminal); premature raw EOF normalizes to an in-band error carrying the accumulated partial | Master §4 "The never-raises contract"; Pi `StreamFunction` doc comment (exact match); manifest `AI-012` | `premature-eof-synthesizes-error-terminal`, `public-stream-fuses-after-first-terminal`, `represented-provider-error-rides-stream`, `premature-eof-preserves-partial-message`, `eager-invalid-model-fails-before-stream` (all real, passing) | COVERED — verified in `service.py._settled()` and `errors.py`; the eager/lazy boundary and fuse-after-terminal behavior are both correctly implemented and both have genuine, executing, passing canonical evidence |
-| LLM-019 | The API/provider split as an architectural seam (wire protocol vs. endpoint/auth/model) | Master §4 "API and provider split" | none | **GAP** — same root cause as LLM-011: no `api` field exists on `ModelId`/`Request`, so the split isn't representable yet (`LLM-F006`) |
+| LLM-019 | The API/provider split as an architectural seam (wire protocol vs. endpoint/auth/model) | Master §4 "API and provider split" | `tests/llm/test_service.py::test_registering_an_adapter_carries_its_declared_api` | COVERED — same fix as LLM-011; `api` is now a real, distinct field from `provider`, defaulted per the same disclosed compromise (`LLM-F006`) |
 | LLM-020 | Every Pi-observable model/request option used by an implemented API has an equivalent config/plugin-registration path (omission is a parity decision, not an accident) | Master §4 "Model and request options" | n/a | **N/A pending Phase 5** — no real API is implemented yet, so there is nothing to omit-or-map; revisit once Phase 5 starts |
 | LLM-021 | Authentication seam: credential source/login/store composition; external refresh state not independently mutated; Minion-owned credentials may be refreshed/persisted atomically; no implicit fallback chains | Master §4 "Authentication"; Pi `auth/types.ts::CredentialStore` (rules match, see §3) | n/a | **N/A pending Phase 5** — appropriately unimplemented; only matters once a real (non-mock) adapter exists |
 
-**Summary: 21 requirements drafted (LLM-016 folded into LLM-003, so 20 distinct).** 3 COVERED
-(LLM-003, LLM-015, LLM-018), 2 appropriately N/A-pending-Phase-5 (LLM-020, LLM-021), 15 GAP — of
-which 4 (LLM-006, LLM-008, LLM-009, LLM-014) are severe (entire vocabulary types or most of a type's
-fields simply do not exist in the implementation). The never-raises contract (LLM-018, `AI-012`) —
-arguably this layer's single highest-stakes behavioral guarantee — is solidly implemented and has
-real passing canonical evidence. The rest of the vocabulary (LLM-001/002/004/006/007/008/009/011/
-012/013/014/017/019) ranges from partially to almost entirely unimplemented, confirmed by direct
-reads of `content.py`/`messages.py`/`service.py`, not inferred from the parity manifest's `(rewrite)`/
-`'target: ...'` markers alone (those markers turned out to still be literally true — the rewrite
-target was recorded but not yet done).
+**Summary: 21 requirements drafted (LLM-016 folded into LLM-003, so 20 distinct).** After this
+remediation pass: **14 COVERED** (LLM-001/002/003/004/006/007/008/009/011/013/014/015/018/019),
+**2 N/A pending Phase 5** (LLM-020, LLM-021), **3 open GAP** (LLM-005, LLM-010, LLM-012 — all
+lower-severity, none blocking on a missing type), **1 GAP unblocked but requiring a different layer's
+work** (LLM-017, needs `XFORM-###`'s transformation logic once that layer is audited). Zero severe
+gaps remain. The never-raises contract (LLM-018) was already solid; the rest of the vocabulary went
+from "partially to almost entirely unimplemented" to fully present, with one disclosed compromise
+(`ModelId.api`'s default, `LLM-F006`) recorded rather than silently accepted.
 
 ---
 
@@ -255,10 +254,10 @@ the master's prose in isolation.
 
 | File/module | Responsibility | Decision | Evidence |
 |---|---|---|---|
-| `content.py` | `TextBlock`/`ThinkingBlock`/`ImageBlock`/`ToolCallBlock` content vocabulary | MODIFY — `ImageBlock` is correct and complete (LLM-003); the other three are missing every replay-signature field the spec/Pi both require | LLM-001, LLM-002, LLM-003, LLM-004 |
-| `messages.py` | `StopReason`, `Usage`, `UserMessage`, `AssistantMessage`, `ToolResultMessage` | MODIFY — `StopReason` missing one value; `Usage` missing `cost` entirely; `AssistantMessage`/`ToolResultMessage` missing most of their Pi-required fields | LLM-005, LLM-006, LLM-007, LLM-013, LLM-014 |
+| `content.py` | `TextBlock`/`ThinkingBlock`/`ImageBlock`/`ToolCallBlock` content vocabulary | MODIFIED (this pass) — added `text_signature`/`thinking_signature`+`redacted`/`thought_signature`+`namespace`; `ImageBlock` was already correct and complete (LLM-003) | LLM-001, LLM-002, LLM-003, LLM-004 |
+| `messages.py` | `StopReason`, `Cost`, `Usage`, `UserMessage`, `AssistantMessage`, `ToolResultMessage`, `DeferredHandle`, `AssistantMessageDiagnostic`, `DiagnosticError` | MODIFIED (this pass) — added `StopReason.DEFERRED`; new `Cost` type and `Usage.cost`/`cache_write_1h`/`total_tokens`; `AssistantMessage` extended from 7 to all 15 Pi fields; `ToolResultMessage` extended with `tool_name`/`details`/`usage`/`added_tool_names`; new `DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` types. `LLM-005`/`LLM-010`-adjacent gaps (`UserMessage` string-content shorthand, standalone `LlmContext`) left open, out of this pass's scope | LLM-006, LLM-007, LLM-008, LLM-009, LLM-013, LLM-014 |
 | `errors.py` | `LlmError`/`UnknownModelError`/`AdapterProtocolError`, eager/lazy boundary | RETAIN — correctly matches the "raises before a stream, never after" split; docstring states the design-spec section explicitly | LLM-018 |
-| `service.py` | `ModelId`, `Request`, `Adapter` protocol, `LlmService`, `_settled()` (the never-raises wrapper) | MODIFY for `ModelId`/`Request` (LLM-011/012/019 gaps); RETAIN for `LlmService.stream()`/`_settled()`, which correctly implements the never-raises contract's premature-EOF-normalization and fuse-after-first-terminal rules — verified against real Pi `StreamFunction` semantics, not just the master's prose | LLM-011, LLM-012, LLM-018, LLM-019 |
+| `service.py` | `ModelId`, `Request`, `Adapter` protocol, `LlmService`, `_settled()` (the never-raises wrapper) | MODIFIED (this pass) for `ModelId`/`Adapter`/`register()` — added `api` (defaulted, `LLM-F006`) and threaded it from adapter to model identity to `AssistantMessage`; RETAIN for `LlmService.stream()`/`_settled()`, which already correctly implements the never-raises contract's premature-EOF-normalization and fuse-after-first-terminal rules; `Request`'s option-schema gap (LLM-012) left open, appropriately deferred to Phase 5 | LLM-011, LLM-012, LLM-018, LLM-019 |
 | `stream.py` | 12 stream-chunk dataclasses, `collect()` helper | RETAIN — every chunk carries `partial`; `collect()`'s own raise is a defensive-only path for a genuinely broken adapter (the real premature-EOF normalization happens one layer up in `service.py._settled()`, confirmed by reading both together, not assumed) | LLM-015, LLM-018 |
 | `tools.py` | `ToolSchema` (model-facing tool definition) | RETAIN, minor note — no `constrained_sampling` field (Pi's `Tool.constrainedSampling`); likely appropriately deferred ("where implemented" per `spec/tools.md`) and arguably `TOOL-###` territory more than `LLM-###` despite living in this package for the stated layering reason (model-facing, no tool-registry import) | out of this layer's primary scope, noted only |
 | `plugin.py` | `llm_plugin`/`mock_adapter_plugin` runtime-plugin wiring | RETAIN — correctly mounts through the runtime service seam (RT-004..008); no discrepancy found | — |
@@ -270,6 +269,17 @@ conformance work already built (Phases 2-4), and never extended to the full Pi-p
 manifest's own `AI-001..012` rows already commit to. The never-raises contract — the part of this
 layer that *was* fully built out — is correspondingly solid. This is a coherent, explainable state
 (a real implementation gap, confirmed empirically), not a sign of scattered carelessness.
+
+**One cross-package fix, outside `minion_agent/llm/` but caused by this pass's changes:**
+`minion_agent/tools/result.py::ToolResult.to_message()` was silently dropping `details`/
+`added_tool_names` — not a bug in the old code exactly, since `ToolResultMessage` had nowhere to put
+them before this pass — but now that `LLM-F005` gives the vocabulary type those fields,
+`to_message()` was updated to actually thread them through. `tool_name`/`usage` remain unpopulated
+there (no source exists yet in `ToolResult` or its callers; threading one through the tool-execution
+pipeline is `TOOL-###` territory). Verified via new tests in `tests/tools/test_result.py`; the
+existing `test_details_do_not_reach_the_model` test's intent (details must never appear in `content`,
+the readable text) is preserved and unaffected — the fix only changes whether the message *object*
+carries the metadata, not what the model reads.
 
 ---
 
@@ -300,21 +310,21 @@ Not started.
 |---|---|---|---|---|
 | LLM-F001 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | Survey complete (63 scenarios in `conformance/agent/`, 21 real/passing, 42 unfilled `TO_BE_...` placeholders). The never-raises contract (LLM-018) has genuine, real, passing canonical evidence commingled in `conformance/agent/` — acceptable, no dedicated family needed for that requirement, mirroring Runtime's non-1:1 precedent. But vocabulary/replay-signature evidence is essentially placeholder-only: `public-llm-vocabulary-schema`, `null-content-normalizes-empty`, `same-model-thinking-signature-replayed`, `cross-model-signatures-stripped` all exist as files but are unfilled `TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR` scaffolding, not executing evidence. | No dedicated `conformance/llm/` family is needed — `conformance/agent/` is the right home, matching how the seam is actually exercised (end-to-end via the agent loop and mock adapter, no standalone LLM-only runner exists or is needed). Remaining work is filling the 4 named placeholder scenarios once the vocabulary gaps (`LLM-F003`..`F006`) are closed enough to make them meaningful — filling them before the fields exist would just re-encode the same gap as an expected-failure scenario. |
 | LLM-F002 | MEDIUM | `CONTRACT_ASSURANCE_DEFECT` | `/pi-parity-manifest.yaml` has zero `AI-###` rows for four of frozen master §4's LLM-owned subsections: Responses-family replay signatures, the API/provider split, model/request options, and authentication. Only vocabulary and the never-raises contract (`AI-001..012`) have parity-manifest coverage. | Pi source exists for Responses-family replay signatures (implied by the vocabulary fields, not independently traced this pass) and authentication (`auth/types.ts`, confirmed §3); model/request options and API/provider split are architectural framing rather than a single Pi symbol. Add manifest rows once the vocabulary gaps below are closed enough that a row would describe real, not aspirational, behavior. |
-| LLM-F003 | HIGH | `PI_PARITY_DEFECT` | `AssistantMessage` — the vocabulary type carrying Pi-visible response identity/state for provider replay — has only 7 of the 15 fields Pi's `types.ts::AssistantMessage` and the frozen master both require (confirmed field-for-field match between Pi and master in §3, so this is not a spec ambiguity): missing `api, response_model, response_id, diagnostics, deferred, raw_stop_reason, end_turn`. A message currently cannot record which API served it, carry diagnostics, represent a deferred/async response, or preserve the model's raw stop reason. | Extend `messages.py.AssistantMessage` with the 7 missing fields (LLM-006). Blocks: deferred-execution support, diagnostic reporting, and any provider that needs `api`/`response_model`/`response_id` for replay (i.e., most of Phase 5). Not urgent for the mock-only present, but real work, not deferred risk debt per this project's taxonomy rule (`CONTRACT_ASSURANCE_DEFECT`/`PI_PARITY_DEFECT` must be repaired before certification, not risk-registered). |
-| LLM-F004 | HIGH | `PI_PARITY_DEFECT` | None of the three replay-signature fields exist anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` are all absent from `content.py`. This makes the entire "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable — there is nowhere to put the data even if the logic existed. Confirmed the two related canonical scenarios (`same-model-thinking-signature-replayed`, `cross-model-signatures-stripped`) are both unfilled placeholders, consistent with there being nothing yet to test. | Add the three signature fields to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004) before any Responses-family replay logic or its conformance evidence can be built. This is upstream of `LLM-F001`'s remaining placeholder-filling work for those two scenarios. |
-| LLM-F005 | MEDIUM | `PI_PARITY_DEFECT` | Grouped vocabulary gaps, each confirmed against Pi source: (1) `Usage.cost` sub-object (`input/output/cache_read/cache_write/total`) does not exist at all in `messages.py.Usage`, and `cache_write_1h` is also missing; (2) `StopReason` enum is missing `DEFERRED` (6 of 7 Pi-required values); (3) `ToolResultMessage` is missing `tool_name, details, usage, added_tool_names` (4 of 8 Pi-required fields); (4) `DeferredHandle` and `AssistantMessageDiagnostic`/`DiagnosticError` do not exist as types anywhere in `minion_agent/llm/`. | Extend `messages.py` with the missing `Usage` fields and `StopReason.DEFERRED`; extend `ToolResultMessage`; add `DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` dataclasses (LLM-007, LLM-008, LLM-009, LLM-013, LLM-014). Cost accounting in particular blocks any real usage/billing telemetry. |
-| LLM-F006 | MEDIUM | `PI_PARITY_DEFECT` | Model identity is architecturally a `(provider, model)` pair (`service.py.ModelId`), not the `provider + api + model_id` triple the master states is "the identity used by target-model compatibility checks." There is no `api` field anywhere in `ModelId` or `Request` — the gap isn't that the field is unpopulated, it's that the type has no place to put it. This also means the API/provider architectural split (LLM-019) isn't representable: nothing distinguishes "which wire protocol" from "which model," since only one of the two axes (`model`) exists in the core type. | Add an `api` field to `ModelId` (and thread it through `Request`, `AssistantMessage` once `LLM-F003` is fixed, and adapter registration in `service.py.LlmService.register()`). This is foundational — every real (non-mock) provider adapter in Phase 5 needs it, so it should land before or alongside the first real adapter, not after. |
+| LLM-F003 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | `AssistantMessage` — the vocabulary type carrying Pi-visible response identity/state for provider replay — had only 7 of the 15 fields Pi's `types.ts::AssistantMessage` and the frozen master both require (confirmed field-for-field match between Pi and master in §3, so this was not a spec ambiguity): missing `api, response_model, response_id, diagnostics, deferred, raw_stop_reason, end_turn`. | Fixed: all 7 fields added to `messages.py.AssistantMessage` (LLM-006). `api` defaults to `"mock"` (see `LLM-F006`'s disclosed compromise) but `service.py._empty_partial()` and `adapters/mock.py::build()` explicitly pass `api=request.model.api` rather than relying on the default. `session/derive.py` extended to round-trip all 7 fields, including new `_encode_diagnostic`/`_decode_diagnostic`/`_encode_deferred`/`_decode_deferred` helpers. 4 new unit tests plus a round-trip test. Full suite + `ruff` clean. |
+| LLM-F004 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | None of the three replay-signature fields existed anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` were all absent from `content.py`. This made the "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable. | Fixed: all three fields/pairs added to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004), all optional/defaulted (fully backward-compatible — every construction site in the codebase uses keyword args). `session/derive.py`'s `_encode_block`/`_decode_block` extended to round-trip them. 6 new unit tests plus a round-trip test. **Does not by itself close `LLM-F001`'s two replay-signature placeholder scenarios** — filling those meaningfully needs the same-model/cross-model *decision logic*, which is `XFORM-###` territory (see LLM-017's updated §4 row), not yet audited. |
+| LLM-F005 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED | Grouped vocabulary gaps, each confirmed against Pi source: (1) `Usage.cost` sub-object did not exist at all, `cache_write_1h` also missing; (2) `StopReason` enum was missing `DEFERRED`; (3) `ToolResultMessage` was missing `tool_name, details, usage, added_tool_names`; (4) `DeferredHandle` and `AssistantMessageDiagnostic`/`DiagnosticError` did not exist as types anywhere in `minion_agent/llm/`. | Fixed: new `Cost` dataclass and `Usage.cost`/`cache_write_1h`/`total_tokens` added (the pre-existing computed `.total` property kept unchanged, distinct from the new stored `total_tokens`); `StopReason.DEFERRED` added; `ToolResultMessage` extended with all 4 missing fields; `DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` added and exported. **Side effect, verified not just assumed:** `tools/result.py::ToolResult.to_message()` was silently dropping `details`/`added_tool_names` — it had nowhere to put them before this pass — now threads them through; `tool_name`/`usage` remain unpopulated (no source in `ToolResult`/its callers; threading one through the tool-execution pipeline is `TOOL-###` territory). All encode/decode round-trips extended. Full suite + `ruff` clean. |
+| LLM-F006 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED, with a disclosed compromise | Model identity was architecturally a `(provider, model)` pair (`service.py.ModelId`), not the `provider + api + model_id` triple the master requires. No `api` field existed anywhere in `ModelId`, `Request`, or the `Adapter` protocol. | `api: str` added to `ModelId` and the `Adapter` protocol; `LlmService.register()` threads it from adapter to model identity. **Not full Pi fidelity — disclosed, not silent:** Pi's `api` is required (no default). Making it required in Python broke 133 tests across `agent/`/`agent_loop/`/`conformance/` — positional 2-arg `ModelId(provider, model)` calls throughout those layers' own test suites, well outside this audit's scope to touch broadly in an LLM-layer pass. Reverted to `api: str = "mock"`, correct for every current caller (the sole registered adapter today). 3 fake `Adapter` test doubles inside `llm`/`agent_loop` test files (the only ones actually reached by `register()`) updated with a real `api` attribute. The default becomes actively wrong once a second API exists (Phase 5) and must be removed then — noted directly in the field's own docstring, not just here. |
 
 ---
 
 ## 16. Certification gate
 
 ```text
-Design alignment                         [ ]  not yet traced
-Pi parity                                [ ]  not yet audited — Pi-derived layer, unlike Runtime
-Normative spec                           [~]  spec/llm.md exists, not yet audited for completeness
-Parity manifest                          [ ]  AI-001..012 cover vocabulary/stream contract; LLM-F002 — 4 subsections uncovered
-Canonical conformance                    [ ]  LLM-018 real+passing; rest of vocabulary is placeholder-only (LLM-F001)
+Design alignment                         [x]  all 20 distinct LLM-### requirements traced to frozen §4
+Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012/017 remain open, none severe
+Normative spec                           [~]  spec/llm.md exists, not yet re-audited for completeness against the now-larger vocabulary
+Parity manifest                          [ ]  AI-001..012 cover vocabulary/stream contract; LLM-F002 — 4 subsections still uncovered
+Canonical conformance                    [ ]  LLM-018 real+passing; vocabulary placeholders in LLM-F001 not yet filled (fields now exist, but filling wasn't in this pass's scope)
 Python tests where implemented           [ ]  not audited (§6 not started)
 Rust tests where implemented             [ ]  not audited
 Property/invariant tests                 [ ]  not audited
@@ -328,9 +338,9 @@ Public API review                        [ ]  not started
 Documentation                            [ ]  not started
 All findings classified                  [x]  LLM-F001..F006 classified
 No unresolved Pi uncertainty             [x]  none raised this pass — every ambiguity resolved by reading Pi source directly
-No unresolved parity defect              [ ]  LLM-F003, F004, F005, F006 open (HIGH x2, MEDIUM x2)
-No unresolved contract-assurance defect  [ ]  LLM-F001, LLM-F002 open
-Deferred risks recorded                  [x]  LLM-020, LLM-021 explicitly N/A pending Phase 5
+No unresolved parity defect              [x]  LLM-F003, F004, F005, F006 all resolved (LLM-F006 with a disclosed, documented compromise)
+No unresolved contract-assurance defect  [ ]  LLM-F001, LLM-F002 still open
+Deferred risks recorded                  [x]  LLM-020, LLM-021 explicitly N/A pending Phase 5; LLM-F006's default explicitly flagged to remove once Phase 5 adds a second API
 ```
 
 ## 17. Certification result
@@ -341,30 +351,39 @@ Steps 0-2 are complete with real grounding: pinned Pi source (`ref-repos/pi/pack
 read directly, not inferred from the frozen master's paraphrase — one master-paraphrase discrepancy
 was found in passing (`toolcall_start` vs `tool_call_start`, §3) and flagged for the design owner
 rather than silently corrected. All 20 distinct `LLM-###` requirements are drafted (§4) and all 8
-Python modules are deep-audited (§5). The result: this layer's single highest-stakes guarantee, the
-never-raises contract (LLM-018), is solidly implemented with genuine passing canonical evidence. The
-rest of the vocabulary is substantially incomplete — `AssistantMessage` has 7 of 15 required fields,
-`Usage` has no cost accounting at all, `DeferredHandle`/`AssistantMessageDiagnostic` don't exist,
-model identity can't represent the required `provider+api+model_id` triple, and every replay-
-signature field is absent. Four new `PI_PARITY_DEFECT` findings record this (`LLM-F003`..`F006`,
-2 HIGH + 2 MEDIUM) — confirmed against real Pi source and the master's own vocabulary section, which
-agree with each other exactly, so this is a genuine implementation gap, not a spec ambiguity.
+Python modules are deep-audited (§5).
 
-This is not remediation work done yet — per the same sequencing Runtime followed (survey and
-traceability first, fix second, as its own deliberate pass), none of `LLM-F003`..`F006` were fixed
-this pass. §6 (existing-test audit) and §8-14 remain entirely unstarted.
+**Remediation is also complete for this pass** (following the same survey-then-fix sequencing
+Runtime used): all four `PI_PARITY_DEFECT` findings (`LLM-F003`..`F006`) are resolved.
+`AssistantMessage` now carries all 15 Pi fields; the three replay-signature fields exist across the
+content-block vocabulary; `Usage.cost`/`StopReason.DEFERRED`/`ToolResultMessage`'s remaining
+fields/`DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` all exist; `ModelId`/`Adapter`
+carry a real `api` field. One deliberate, disclosed compromise: `LLM-F006`'s `api` field is defaulted
+rather than required, because making it required broke 133 tests across `agent/`/`agent_loop/`/
+`conformance/` — outside this audit's scope to sweep through in an LLM-layer pass. The default is
+correct for every current caller and is explicitly flagged (in the field's own docstring and here)
+to be removed once Phase 5 adds a second API. Every fix is covered by new unit tests and, where
+applicable, round-trip tests; the full Python suite and `ruff` are clean throughout.
+
+**Not done this pass, deliberately:** filling `LLM-F001`'s 4 placeholder canonical scenarios (the
+vocabulary fields now exist, but two of the four need `XFORM-###`'s transformation logic, not just
+this layer's vocabulary — see LLM-017); resolving `LLM-F002` (parity-manifest rows); §6 (existing-test
+audit); §8-14. None of these were blocked by anything found this pass — they're simply the next
+slices of work, kept separate the same way Runtime's audit and remediation passes stayed distinct
+from each other.
 
 **Follow-up dependencies:**
 
-1. Remediate `LLM-F004` first (replay-signature fields) — it's the smallest, most isolated fix and
-   unblocks `LLM-F001`'s remaining placeholder scenarios.
-2. Remediate `LLM-F003` (`AssistantMessage`), `LLM-F005` (`Usage.cost`/`StopReason`/
-   `ToolResultMessage`/`DeferredHandle`/`Diagnostics`), and `LLM-F006` (model identity triple) —
-   likely one pass each, mirroring how Runtime's RT-F0xx fixes were sized.
-3. Fill the 4 placeholder canonical scenarios once their underlying vocabulary exists, closing
+1. Fill the `public-llm-vocabulary-schema` and (if still relevant once surveyed) other
+   vocabulary-only placeholder scenarios now that the fields backing them exist, closing part of
    `LLM-F001`.
-4. Resolve `LLM-F002` (parity-manifest rows) once the vocabulary work above makes the rows describe
-   real behavior rather than aspiration.
-5. Deep-audit `minion_agent/llm/`'s existing tests (§6).
-6. Complete §8-14 review.
-7. Independent Rust cross-check, once Python's evidence is stable — same sequence Runtime followed.
+2. `same-model-thinking-signature-replayed`/`cross-model-signatures-stripped` need `XFORM-###`'s
+   transformation logic before they can be meaningfully filled — track as a cross-layer dependency,
+   not a re-open of `LLM-F004`.
+3. Resolve `LLM-F002` (parity-manifest rows) now that the vocabulary work makes rows for Responses
+   replay signatures and authentication describable in terms of real, not aspirational, behavior.
+4. Deep-audit `minion_agent/llm/`'s existing tests (§6).
+5. Complete §8-14 review.
+6. Independent Rust cross-check, once Python's evidence is stable — same sequence Runtime followed.
+7. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
+   call site that relied on it, this time with real API values to assign, not a placeholder sweep.
