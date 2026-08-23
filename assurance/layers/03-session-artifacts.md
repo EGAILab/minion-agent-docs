@@ -1,26 +1,36 @@
 # Session + Artifacts — Fidelity Assurance & Certification
 
 **Layer ID:** `03`  
-**Status:** `CERTIFIED`  
-**Audit date:** 2026-08-23 (four passes: §1-7 completed first, against the frozen master design
-§5/§6/§8, `spec/session.md`, `pi-parity-manifest.yaml`'s `MINION-002`/`MINION-003` rows, the pinned Pi
-session source (`ref-repos/pi/packages/agent/src/harness/session/`), all 8 Python session modules, and
-all 15 `conformance/session/*.yaml` scenarios. §8-14 completed second, surfacing `RISK-001`
-(in-memory-only session storage, confirmed intentional per the design's own Phase-9 commitment,
-recorded in `risk-register.md`). `SES-F001` remediated and resolved third: 6 placeholder scenarios
-filled, 2 missing-named scenarios authored, 1 (`request-reconstruction-after-target-transform`)
-verified genuinely `DEFERRED TO LAYER 04`. `SES-F002` resolved fourth via a dedicated Pi re-audit
-(`packages/agent/src/types.ts:428-443`'s `AgentEvent` union, confirmed structurally separate from
-Pi's persisted session storage) and a full Session/Agent ownership matrix: Outcome A, no Layer-03
-defect — the real mismatch lives entirely in `agent_loop/driver.py` (Layer 08), already tracked under
-`AG-001`/`AG-004`. `SES-F003` resolved the same pass once that boundary was settled: `spec/session.md`
-now states the by-value event-identity rule and the Session/Agent/XFORM boundary explicitly. No
-`session/*.py` or `agent_loop/*.py` code was changed to reach `SES-F002`'s resolution — it was a scope
-correction, not an implementation fix. All three findings resolved; certification follows.)  
+**Status:** `IN_AUDIT`  
+**Governance correction (2026-08-23, recorded transparently, not erased):** this record briefly
+carried `Status: CERTIFIED` after a fourth pass resolved `SES-F001`/`SES-F002`/`SES-F003`. That
+conclusion was **premature**: `SES-F001` and `SES-F003` changed shared-contract files
+(`conformance/schema/session-scenario.schema.json`, `conformance/session/*.yaml`,
+`pi-parity-manifest.yaml`, `spec/session.md`) without the required affected-implementation-owner
+review — the same shared-contract reviewer rule Layer 02's `LLM-F010` cycle enforced
+(`process/implementation-conformance-workflow.md` §15/§4.6). The governance omission was caught before
+freeze, not after — this is treated as positive assurance evidence, not a discarded result. **None of
+the underlying Python/shared-semantic work is being reopened or distrusted; the missing piece is
+exclusively the cross-language review gate.** Status returned to `IN_AUDIT`. Remaining gate: **formal
+affected Rust implementation-owner review of the finalized Layer-03 shared contract**
+(`assurance/layers/03-session-artifacts-rust-handoff.md`, prepared and pushed this pass, reviewing
+`minion-agent@3d6ffa4` + `minion-agent-docs@92579ee`). Python's own semantic-owner review of that same
+diff is `APPROVED`, not self-extended to a cross-language approval (§17 has the full review).  
+**Audit date:** 2026-08-23 (five passes: §1-7 first, §8-14 second (surfacing `RISK-001`), `SES-F001`
+remediated third, `SES-F002`/`SES-F003` resolved fourth via a dedicated Pi re-audit
+(`packages/agent/src/types.ts:428-443`) and Session/Agent ownership matrix (Outcome A — the real
+run/turn mismatch lives in `agent_loop/driver.py`, Layer 08, already tracked under `AG-001`/`AG-004`;
+no `session/*.py` code changed), and this fifth pass corrected the certification governance itself:
+identified that `SES-F001`/`SES-F003`'s shared-contract changes lacked Rust implementation-owner
+review, performed a fresh Python semantic-owner review specifically hunting for `LLM-F010`-class
+defects (two items flagged for Rust's independent judgment, not self-cleared — see the handoff
+package), confirmed Rust has no `session` module yet (`minion-agent-rust/crates/minion-agent/src/`
+contains only `runtime`/`llm`), and prepared/pushed the formal Rust review package. Certification is
+held pending that review's return.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
-**Python status:** `IMPLEMENTED`  
-**Rust status:** `NOT_IMPLEMENTED` (Phase 2 per `MINION-002`/`MINION-003`; no `session/` module exists
-in `minion-agent-rust` yet)
+**Python status:** `IMPLEMENTED` — semantic-owner review `APPROVED`, cross-language review `PENDING`  
+**Rust status:** `NOT_IMPLEMENTED` (confirmed this pass by direct inspection, not assumed; `MINION-002`/
+`MINION-003` both say `Phase 2`; no `session` module exists anywhere under `minion-agent-rust/`)
 
 ---
 
@@ -667,7 +677,8 @@ Normative spec                           [x]  spec/session.md updated this pass 
 Parity manifest                          [x]  MINION-002/003 both present, both dispositioned, both cite real test evidence; AG-001/AG-004 confirmed to already carry the correct Pi run/turn vocabulary and disposition
 Canonical conformance                    [x]  SES-F001 RESOLVED — all Layer-03-owned scenarios filled/authored; 0 remaining true Layer-03 placeholders (fresh recount, §7); the sole remaining placeholder is Layer-04-owned, non-blocking
 Python tests where implemented           [x]  172 test functions across 11 files read in full; 16 real session conformance scenarios, all passing fresh; session_runner.py re-audited for Agent simulation this pass -- none found
-Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), consistent with the manifest
+Rust tests where implemented             [x]  N/A — Rust session/ not implemented (Phase 2), confirmed by direct inspection this pass (no session module under minion-agent-rust/), consistent with the manifest
+Rust implementation-owner review         [ ]  PENDING — review package prepared and pushed this pass (03-session-artifacts-rust-handoff.md), reviewing minion-agent@3d6ffa4 + minion-agent-docs@92579ee; not yet returned
 Property/invariant tests                 [x]  test_properties.py — 7 Hypothesis tests already exist
 Concurrency tests where applicable       [x]  §9/§10 reviewed — no concurrent-mutation surface exists in this layer (synchronous, in-memory, no locking needed); not applicable rather than missing
 Fault-injection tests where applicable   [x]  §8 failure model reviewed — every failure path (JSON-safety, event-name, missing-artifact, decode) is deterministic and already covered by §6's test read
@@ -688,21 +699,37 @@ Deferred risks recorded                  [x]  RISK-001 (in-memory-only persisten
 
 ## 17. Certification result
 
-**Result:** `CERTIFIED`
+**Result:** `IN_AUDIT`
 
-§1-14 are complete with real grounding, across four passes. First pass: the frozen design §5/§6/§8
+**Governance correction, recorded transparently (this pass):** §1-14 previously reached `Status:
+CERTIFIED` after a fourth pass. That conclusion is corrected here, not erased: `SES-F001` and
+`SES-F003` changed shared-contract files (`conformance/schema/session-scenario.schema.json`,
+`conformance/session/*.yaml`, `pi-parity-manifest.yaml`, `spec/session.md`) without the required
+affected-implementation-owner review — the same shared-contract reviewer rule that governed Layer 02's
+`LLM-F010` cycle (`process/implementation-conformance-workflow.md` §15, §4.6). Python's own semantic
+audit currently *supports* certification; it does not by itself *constitute* it for a shared
+cross-language layer. This pass performed a formal Python semantic-owner review of the finalized diff
+(below), confirmed Rust has not implemented `session` (`minion-agent-rust/crates/minion-agent/src/`
+contains only `runtime`/`llm`), and prepared and pushed a formal Rust implementation-owner review
+package: `assurance/layers/03-session-artifacts-rust-handoff.md`, reviewing `minion-agent@3d6ffa4` +
+`minion-agent-docs@92579ee`. **Remaining gate: that review's return.** None of `SES-F001`/`SES-F002`/
+`SES-F003`'s underlying conclusions are being reopened or distrusted — they are the candidate finalized
+contract Rust now reviews independently.
+
+§1-14 are complete with real grounding, across five passes. First pass: the frozen design §5/§6/§8
 was read directly, `spec/session.md` was checked against it, `MINION-002`/`MINION-003` were traced to
 their manifest rows, pinned Pi session source was read to confirm the storage-architecture divergence
 is intentional and scoped correctly, all 8 Python modules were read and inventoried, and all 15
 canonical session scenarios were read and classified real-vs-placeholder. Second pass: all 11 test
 files were read in full (172 test functions, all `KEEP`), the two design-named scenarios with no
 canonical file were confirmed genuinely missing rather than assumed, and §8-14's category reviews were
-completed, surfacing `RISK-001`. Third pass: `SES-F001` was remediated and resolved. Fourth pass (this
-update): `SES-F002` was re-scoped and resolved via a dedicated Pi re-audit and Session/Agent ownership
-matrix, and `SES-F003` was resolved once that boundary was settled.
+completed, surfacing `RISK-001`. Third pass: `SES-F001` was remediated and resolved. Fourth pass:
+`SES-F002` was re-scoped and resolved via a dedicated Pi re-audit and Session/Agent ownership matrix,
+and `SES-F003` was resolved once that boundary was settled. Fifth pass (this update): the certification
+governance itself was corrected — see above.
 
-All three findings are now resolved, all were `CONTRACT_ASSURANCE_DEFECT`, none were `PI_PARITY_DEFECT`
-or `PI_BEHAVIOR_UNCERTAIN`:
+All three findings' Python-side dispositions stand, pending cross-language review. All were originally
+`CONTRACT_ASSURANCE_DEFECT`, none were `PI_PARITY_DEFECT` or `PI_BEHAVIOR_UNCERTAIN`:
 
 - **`SES-F001`** (MEDIUM) — **RESOLVED** (prior pass). 6 placeholder scenarios filled, 2 missing-named
   scenarios authored, 1 (`request-reconstruction-after-target-transform`) verified genuinely `DEFERRED
@@ -740,42 +767,67 @@ every reset/compaction/fork rule is implemented exactly as design §5 specifies.
 borne out by evidence**, per the charter's own instruction that a starting hypothesis is not a
 substitute for audit evidence.
 
-**Not started this pass, by design:** any implementation of Layer 08 (Agent loop), Layer 04 (XFORM),
-or Rust for this layer (Phase 2, not yet due). `agent_loop/driver.py` and `session/events.py` were
-read but not modified — `SES-F002`'s resolution is a documentation/scope correction, not a code
-change. `AG-001`/`AG-004`'s own remediation (renaming `driver.py`'s event emission, and deciding
-whether the underlying control-flow behavior itself is Pi-correct) is explicitly left for Layer 08's
-own future pass.
+**Python semantic-owner review (this pass, performed before packaging for Rust):** re-read the
+finalized diff specifically hunting for the classes of defect `LLM-F010` taught this project to look
+for — nested-optional null-handling, `additionalProperties: false` omitting a legitimately-variable
+frozen field, integer-narrowing of a language-neutral number, Python-object-shape leakage. Found zero
+hard defects of that shape, but two items were flagged for Rust's *independent* judgment rather than
+self-cleared: (1) `assistantDetail` excludes `provider`/`model`/`timestamp`/`error_message` because the
+Session-family runner fixes them for every message regardless of role — structurally the same shape as
+`LLM-F010`'s rejected `timestamp` omission, distinguished only by the claim that nothing real is being
+suppressed here, a claim not taken on faith; (2) `step.append`'s schema does not conditionally restrict
+fields by `role` (e.g. `stop_reason` is schema-legal on a `user` append even though the runner ignores
+it there) — a completeness gap, not an observed correctness defect. Full detail, and the complete
+review package (Pi evidence, ownership matrix, 17-scenario inventory, runner-thinness confirmation, all
+13 required review questions), is in `assurance/layers/03-session-artifacts-rust-handoff.md`.
+
+**Not started this pass, by design:** any implementation of Layer 08 (Agent loop), Layer 04 (XFORM), or
+Rust. Rust's actual current state was inspected, not assumed:
+`minion-agent-rust/crates/minion-agent/src/` contains only `runtime`/`llm` — no `session` module
+exists. `agent_loop/driver.py` and `session/events.py` were read but not modified this pass either —
+`SES-F002`'s resolution remains a documentation/scope correction, not a code change. `AG-001`/`AG-004`'s
+own remediation is explicitly left for Layer 08's own future pass.
 
 **Final freeze-gate audit:**
 
 ```text
-SES-F001 RESOLVED?                                       YES
-SES-F002 current-layer resolved?                         YES (Outcome A -- no Layer-03 defect existed)
-SES-F002 future Agent portion explicitly deferred?        YES -- AG-001/AG-004, phase 3, adopted
-SES-F003 RESOLVED?                                        YES
-request-reconstruction-after-target-transform explicitly
-Layer-04 deferred?                                        YES
-All Layer-03-owned canonical cases executable?            YES -- 0 remaining true Layer-03 placeholders
-All future-layer cases have explicit owner?               YES -- Layer 04 (XFORM), Layer 08 (AG-001/AG-004)
-Active PI_PARITY_DEFECT?                                  NONE
-Active PI_BEHAVIOR_UNCERTAIN?                             NONE
-Active CONTRACT_ASSURANCE_DEFECT?                         NONE
-Runner simulating Agent/XFORM semantics?                  NO -- session_runner.py re-audited this pass, confirmed thin
-Parity manifest current?                                  YES
-spec/session.md current?                                  YES -- updated this pass
+Pinned Pi audited?                                        YES -- types.ts:428-443, session.ts/types.ts, spec/agent.md, driver.py docstring
+Parity manifest current?                                  YES -- MINION-002/003, AG-001/AG-004 all present and dispositioned
+spec/session.md complete for current Session scope?       YES -- by-value identity rule + Session/Agent/XFORM boundary stated
+Canonical Session schema language-neutral?                YES, with 2 items flagged for Rust's independent check (see review package SS2) -- not self-cleared
+Python Session runner thin?                                YES -- re-audited in full this pass, no Agent/XFORM simulation found
+Rust implementation-owner review?                         PENDING -- package prepared and pushed this pass
+Rust implementation obligation for Layer 03?               Not yet determined -- depends on the review's own answer to whether Rust must have an existing implementation to review meaningfully; Rust currently NOT_IMPLEMENTED (confirmed)
+All current Layer-03 placeholders resolved?                YES -- 0 remaining true Layer-03 placeholders (fresh recount)
+Layer-04 deferred case explicitly owned?                   YES -- request-reconstruction-after-target-transform, owner Layer 04/XFORM
+Agent lifecycle ownership explicit?                        YES -- AG-001/AG-004, phase 3, disposition adopted
+Active PI_PARITY_DEFECT?                                   NONE
+Active PI_BEHAVIOR_UNCERTAIN?                               NONE
+Active CONTRACT_ASSURANCE_DEFECT?                           NONE (all three findings resolved at the Python/semantic-owner level; the open item is a review gate, not an unresolved defect)
+Any conformance runner simulating Agent/XFORM semantics?    NO -- confirmed by full re-read this pass
 ```
 
-**Layer 03 — Session + Artifacts: `CERTIFIED`.**
+**Layer 03 — Session + Artifacts: `IN_AUDIT`.**
 
-**Follow-up dependencies (none block this certification):**
+**Exact remaining blocker:** formal Rust implementation-owner review of the finalized Layer-03 shared
+contract (`minion-agent@3d6ffa4` + `minion-agent-docs@92579ee`), per
+`assurance/layers/03-session-artifacts-rust-handoff.md`. Owner: whoever performs Rust's implementation-
+owner review, following the same parallel-session pattern that returned Layer 02's `LLM-F010` verdict.
 
-1. ~~Resolve `SES-F001`~~ — done.
-2. ~~Resolve `SES-F002`~~ — done, by ownership correction. `AG-001`/`AG-004`'s own executable
-   remediation remains Layer 08's future work, not a Layer-03 obligation.
-3. ~~Resolve `SES-F003`~~ — done.
+**Follow-up dependencies:**
+
+1. `SES-F001`/`SES-F002`/`SES-F003` — Python-side conclusions stand; not reopened. Nothing further
+   required of Python unless Rust's review finds a genuine `CONTRACT_ASSURANCE_DEFECT`.
+2. **Rust implementation-owner review must return** one of `APPROVED` / `REJECTED —
+   CONTRACT_ASSURANCE_DEFECT` / `REJECTED — RUST IMPLEMENTATION DEFECT` / `PI_BEHAVIOR_UNCERTAIN`,
+   per the handoff package's §9. If rejected with a contract defect, follow the `LLM-F010`
+   remediation pattern exactly: reproduce the defect independently, verify against Pi, repair
+   narrowly, add regression evidence, rerun Python gates, push a corrected candidate SHA, and require
+   a *fresh* Rust re-review — do not treat the first review as approval after a fix.
+3. If Rust approves, determine the actual Rust Layer-03 implementation obligation from current
+   repository truth and the adopted build/assurance plan (not assumed) before deciding whether
+   certification requires a green Rust implementation or may proceed with implementation explicitly
+   deferred by plan.
 4. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
    recorded and cited.
-5. `spec/session.md`'s change should still receive the broader shared-contract review `LLM-F010`-style
-   changes received, even though it does not block this certification (documentation-only, no new
-   testable behavior).
+5. Do not start Layer 04, Layer 08, or any Rust implementation work in the meantime.
