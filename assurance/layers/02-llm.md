@@ -241,7 +241,7 @@ Read in full: `ref-repos/pi/packages/ai/src/types.ts` (857 lines, pinned commit 
 | LLM-014 | `Usage{input, output, cache_read, cache_write, cache_write_1h?, reasoning?, total_tokens, cost:{input,output,cache_read,cache_write,total}}` | Master §4; Pi `types.ts::Usage` (exact match) | `tests/llm/test_messages.py` (2 new tests), `tests/session/test_derive.py::test_usage_cost_and_total_tokens_round_trip` | COVERED — `Cost` dataclass added, `cost`/`cache_write_1h`/`total_tokens` all present and round-trip; the pre-existing computed `.total` property is unchanged (kept for the existing tests/call sites that use it as a convenience sum, distinct from the new stored `total_tokens`) (`LLM-F005`) |
 | LLM-015 | Stream chunk/event vocabulary (`start`, `text_start/delta/end`, `thinking_start/delta/end`, `tool_call_start/delta/end`, `done`, `error`), every chunk carries the current partial message | Master §4; Pi `types.ts::AssistantMessageEvent` (see §3 for the `toolcall_start` vs `tool_call_start` master-paraphrase discrepancy) | `premature-eof-synthesizes-error-terminal`, `public-stream-fuses-after-first-terminal` (both real, passing) | COVERED — `stream.py`'s 12 chunk dataclasses all carry `partial`; structurally matches |
 | LLM-016 | Image content identity: content-addressed, immutable, model-visible-byte-preserving | Master §4 (folds into LLM-003) | — | Folded into LLM-003 |
-| LLM-017 | Responses-family replay signatures: content-owned opaque-string replay model, same-model-signed retains, same-model-unsigned-empty removes, cross-model loses signature | Master §4 "Responses-family replay signatures"; Pi `api/openai-responses-shared.ts` (792 lines — the actual wire-format signature encode/decode: `JSON.parse(block.thinkingSignature)` as a `ResponseReasoningItem`, `encodeTextSignatureV1`); manifest `AI-013` (new, this pass) | `same-model-thinking-signature-replayed`, `cross-model-signatures-stripped` (both still placeholders, unfilled) | **GAP, but unblocked and more precisely scoped than previously recorded.** The signature *fields* now exist (LLM-001/002/004, `LLM-F004` resolved). `AI-013` gives this requirement its own precise Pi source, distinct from target-model-transformation's `transform-messages.ts` — `openai-responses-shared.ts` implements the Responses-API-specific *wire-format encode/decode* mechanism (this layer's own concern), separate from `XFORM-###`'s general cross-model *survives-or-not* filtering rules (`spec/target-model-transformation.md` rules 5-12, which independently also govern thinking/text/tool-call signature survival). **Not yet resolved: which of the two existing placeholder scenarios exercises which mechanism.** Both are still empty `TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR` scaffolding — their eventual assertions, not just their names, will decide whether `same-model-thinking-signature-replayed`/`cross-model-signatures-stripped` are `LLM-###`'s own evidence (wire-format replay), `XFORM-###`'s (survival filtering), or need one scenario per layer. Recorded as a joint decision for whoever fills them, not resolved unilaterally here — see `LLM-F002` |
+| LLM-017 | Responses-family replay signatures: content-owned opaque-string replay model, same-model-signed retains, same-model-unsigned-empty removes, cross-model loses signature | Master §4 "Responses-family replay signatures"; Pi `api/openai-responses-shared.ts` (792 lines — the actual wire-format signature encode/decode: `JSON.parse(block.thinkingSignature)` as a `ResponseReasoningItem`, `encodeTextSignatureV1`); manifest `AI-013` | `same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed` (Layer-02-owned contract; executable evidence deferred to Phase 5, verified below), `cross-model-signatures-stripped` (resolved to `XFORM-###`, see §7's category B) | **Semantic contract COVERED; executable realization DEFERRED TO PHASE 5, non-blocking.** Three-axis disposition, verified against repository truth this pass (§7 has the full investigation): semantic-contract owner = `LLM-017`/`AI-013`/Layer 02 (vocabulary fields `thinking_signature`/`redacted` exist and are tested, `LLM-F004`); prerequisite XFORM step = `spec/target-model-transformation.md` rules 5-7 (same-model retention, a filtering decision distinct from replay encoding); executable-realization owner = the Phase-5 Responses-family provider adapter, which has never existed in this repository's history under any name or signature model (`ProviderContinuation` → generic `ThinkingBlock.signature` → the current frozen `thinking_signature` was a design-document-only evolution, confirmed by exhaustive `git log --all -S`/`--name-only` search across both repos, all branches). No spec/manifest/scenario change indicated or made. |
 | LLM-018 | The never-raises contract: ordinary exceptions before a stream is invoked, in-band terminal errors after; public stream is `non-terminal* -> exactly one terminal -> EOF`, fused (no draining past the first terminal); premature raw EOF normalizes to an in-band error carrying the accumulated partial | Master §4 "The never-raises contract"; Pi `StreamFunction` doc comment (exact match); manifest `AI-012` | `premature-eof-synthesizes-error-terminal`, `public-stream-fuses-after-first-terminal`, `represented-provider-error-rides-stream`, `premature-eof-preserves-partial-message`, `eager-invalid-model-fails-before-stream` (all real, passing) | COVERED — verified in `service.py._settled()` and `errors.py`; the eager/lazy boundary and fuse-after-terminal behavior are both correctly implemented and both have genuine, executing, passing canonical evidence |
 | LLM-019 | The API/provider split as an architectural seam (wire protocol vs. endpoint/auth/model) | Master §4 "API and provider split" | `tests/llm/test_service.py::test_registering_an_adapter_carries_its_declared_api` | COVERED — same fix as LLM-011; `api` is now a real, distinct field from `provider`, defaulted per the same disclosed compromise (`LLM-F006`) |
 | LLM-020 | Every Pi-observable model/request option used by an implemented API has an equivalent config/plugin-registration path (omission is a parity decision, not an accident) | Master §4 "Model and request options" | n/a | **N/A pending Phase 5** — no real API is implemented yet, so there is nothing to omit-or-map; revisit once Phase 5 starts |
@@ -249,14 +249,15 @@ Read in full: `ref-repos/pi/packages/ai/src/types.ts` (857 lines, pinned commit 
 
 **Summary: 21 requirements drafted (LLM-016 folded into LLM-003, so 20 distinct).** After this
 remediation pass: **14 COVERED** (LLM-001/002/003/004/006/007/008/009/011/013/014/015/018/019),
-**2 N/A pending Phase 5** (LLM-020, LLM-021), **3 open GAP** (LLM-005, LLM-010, LLM-012 — all
-lower-severity, none blocking on a missing type), **1 GAP unblocked and now more precisely scoped**
-(LLM-017 — has its own Pi source and manifest row, `AI-013`, as of this pass; which of its two
-placeholder scenarios belongs to this layer vs. `XFORM-###` is a joint decision not yet made, not a
-block on either layer's own work). Zero severe
-gaps remain. The never-raises contract (LLM-018) was already solid; the rest of the vocabulary went
-from "partially to almost entirely unimplemented" to fully present, with one disclosed compromise
-(`ModelId.api`'s default, `LLM-F006`) recorded rather than silently accepted.
+**3 semantic-contract-COVERED but executable-realization DEFERRED TO PHASE 5** (LLM-017 — verified
+this pass, see §7, not an open question; LLM-020, LLM-021), **3 open GAP** (LLM-005, LLM-010,
+LLM-012 — all lower-severity, none blocking on a missing type). Zero severe gaps remain, zero
+unresolved GAPs misattributed to a missing implementation that is actually a missing Phase-5
+provider. The never-raises contract (LLM-018) was already solid; the rest of the vocabulary went
+from "partially to almost entirely unimplemented" to fully present, with two disclosed, verified
+compromises/deferrals recorded rather than silently accepted or silently forced closed:
+`ModelId.api`'s default (`LLM-F006`) and the two replay-signature scenarios' Phase-5 dependency
+(`LLM-017`, this pass's dedicated verification).
 
 ---
 
@@ -387,13 +388,14 @@ exercises, using the same reasoning already established for the three replay-sig
 survival/stripping is `XFORM-###`'s rules 5-12 in `spec/target-model-transformation.md`) and applying
 it consistently to the rest.
 
-**A — Layer-02-owned (3 total, only category filled this pass):**
+**A — Layer-02-owned semantic contract (3 total; 1 Layer-02-executable and filled this pass, 2
+deferred to Phase 5 by verified necessity, not oversight — see the dedicated verification below):**
 
 | Scenario | Reasoning |
 |---|---|
-| `public-llm-vocabulary-schema` | The layer's own vocabulary-shape evidence. **Filled this pass** — see below. |
-| `same-model-thinking-signature-replayed` | Same-model Responses-wire-format replay retaining a signature — `AI-013`'s own mechanism (`openai-responses-shared.ts`), not a cross-model survival decision. **Not filled this pass** — needs the actual replay algorithm (Phase 5/`AI-013` implementation), which is separate work from the DSL/runner extension this pass delivered. |
-| `same-model-unsigned-thinking-not-replayed` | Same reasoning — same-model, wire-format concern. **Not filled this pass**, same blocker. |
+| `public-llm-vocabulary-schema` | The layer's own vocabulary-shape evidence — fully executable at Layer 02 (mock adapter, real agent loop). **Filled this pass.** |
+| `same-model-thinking-signature-replayed` | Semantic contract is Layer-02-owned (`LLM-017`/`AI-013`); **executable realization is Phase-5-owned.** Verified via a dedicated pass (see below): frozen master §4 attributes the actual replay operation explicitly to "the compatible adapter," no Responses/Codex adapter has ever existed in this repository's history (exhaustive `git log --all -S` search across both repos, all branches — the concept existed only as design-document prose, `ProviderContinuation` → generic `ThinkingBlock.signature` → the current frozen `thinking_signature`, never implemented in code at any stage), and today's mock adapter does no wire-level encoding at all. Filling this scenario today would require the runner/mock to simulate Responses-provider request construction — a thin-runner violation. **Deferred to Phase 5, non-blocking for Layer 02 certification; not an unresolved Layer-02 implementation gap.** |
+| `same-model-unsigned-thinking-not-replayed` | Same verified disposition as above — the "no replay item is emitted" half of the same adapter-owned mechanism (master §4: "contributes no replay item at Responses encoding"). **Deferred to Phase 5, non-blocking.** |
 
 **B — `XFORM-###`-owned (10):** `cross-model-redacted-thinking-omitted` (rule 10), `cross-model-signatures-stripped` (rules 8/11/12 — this resolves the previously-open joint question: "stripped" is the survival decision, not the replay mechanism), `cross-model-thinking-converts-to-text` (rule 8), `nonvision-tool-image-placeholder` (rule 3, already cited as `AI-020`'s own test evidence in the manifest), `nonvision-user-image-placeholder` (rule 2, same), `null-content-normalizes-empty` (rule 1), `orphan-tool-result-synthesized` (rule 14), `tool-call-id-normalization` (rule 13), `aborted-assistant-excluded-from-replay` (rule 15), `errored-assistant-excluded-from-replay` (rule 15). None touched this pass.
 
@@ -401,8 +403,52 @@ it consistently to the rest.
 
 **D — other:** none found; every placeholder maps cleanly to A, B, or C.
 
-3 + 10 + 29 = 42, matching the pre-pass placeholder count exactly. Only the one category-A scenario
-ready without further Pi-behavior work (`public-llm-vocabulary-schema`) was filled.
+3 + 10 + 29 = 42, matching the pre-pass placeholder count exactly. Of the 3 LLM-owned scenarios: 1 has
+Layer-02-executable evidence and is now filled; 2 require Phase-5 provider realization and are
+explicitly deferred, their Layer-02 vocabulary/contract prerequisites already complete.
+
+**Dedicated verification (this pass): are the two deferred scenarios open because Layer 02 is
+incomplete, or because Phase 5 doesn't exist yet?** Confirmed the latter — **Outcome A** of the
+question posed. Three findings, each independently checked against repository truth, not assumed:
+
+1. **Contract ownership, verified against frozen master §4 "Responses-family replay signatures"**
+   (not inferred from scenario names): "A retained same-model signed thinking block is *replayed by
+   the compatible adapter*"; "The adapter does not synthesize a provider reasoning item from visible
+   thinking text alone"; "A same-model unsigned thinking block contributes no replay item *at
+   Responses encoding*." All three clauses name the adapter as the acting component. Layer 02 owns
+   the vocabulary the adapter operates on (`ThinkingBlock.thinking_signature`/`redacted`, confirmed
+   present and tested, `LLM-F004`) and the spec statement of the rule; it does not itself perform the
+   replay.
+2. **No Responses/Codex adapter has ever existed in code, at any point, verified by exhaustive
+   history search, not recollection.** `git log --all --oneline --name-only -- '*codex*' '*responses*'
+   '*openai*'` in `minion-agent` returns nothing — no file matching any of those patterns has ever
+   existed in this repository's history, on any of its 4 branches. `git log --all -S'encrypted_content'`
+   (the actual Codex wire field) returns zero commits, ever. `git log --all -S'thinking_signature'`
+   shows the field first appearing in `033952e` (conformance/manifest scaffolding) with real
+   implementation only in this session's own commits (`f0ef141`, `c858ff5`, `5d65a39`) — no earlier
+   implementation, superseded or otherwise. `git log --all -S'ProviderContinuation'` in `minion-agent`
+   returns nothing; in `minion-agent-docs` it returns only `docs:`-prefixed commits editing the Phase
+   5 amendment proposal's own prose (`b3410d3`, `276d987`, `8955009`, culminating in `e53f7e1 docs:
+   replace ProviderContinuation with ThinkingBlock.signature, per pi's real implementation`) — a
+   design-document-only evolution (`ProviderContinuation` → generic `ThinkingBlock.signature` → the
+   current frozen `thinking_signature`), never accompanied by code at any stage. There is no stranded
+   or superseded implementation to realign — there was never an implementation.
+3. **Current Python cannot execute either scenario honestly, verified by tracing the actual path.**
+   `minion_agent/llm/adapters/` contains only `mock.py`; it performs no wire-level encoding of any
+   kind (it passes real Python objects through, per its own `MockAdapter`/`ScriptedResponse` design —
+   confirmed in `LLM-F010`'s own work this session). "Replay" specifically means: on a later request
+   to the same model, does the adapter correctly parse a stored `thinking_signature` back into that
+   request's outbound reasoning item? That requires a component that constructs real Responses-wire
+   requests, which does not exist. Making the mock adapter fake this would mean the runner deciding
+   "the signature was replayed" without any real encode/decode path performing that operation — the
+   exact thin-runner violation the shared-contract rule forbids.
+
+**Outcome A confirmed, not chosen for convenience.** Layer 02's own vocabulary/contract obligations
+for `LLM-017` are complete (`LLM-F004`, `AI-013`). The remaining gap is Phase 5's real-provider
+encoder/decoder, which does not yet exist under the current frozen design — consistent with Phase 5
+itself being explicitly deferred pending assurance reaching that layer, not a Layer-02 defect. No
+`spec/llm.md`, `spec/target-model-transformation.md`, `pi-parity-manifest.yaml`, or scenario-content
+change is indicated; none was made.
 
 ---
 
@@ -543,10 +589,10 @@ packages) — just flagging the inconsistency for whoever next has reason to tou
 
 | ID | Severity | Classification | Description | Disposition / action |
 |---|---|---|---|---|
-| LLM-F001 | LOW | `CONTRACT_ASSURANCE_DEFECT` — Layer-02-owned portion RESOLVED | Survey complete (63 scenarios in `conformance/agent/`, 21 real/passing, 42 unfilled placeholders pre-pass). The never-raises contract (LLM-018) already had genuine, passing canonical evidence commingled in `conformance/agent/` — no dedicated `conformance/llm/` family needed. All 42 pre-pass placeholders reclassified by ownership (see §7's full A/B/C table): 3 Layer-02-owned, 10 `XFORM-###`-owned, 29 `AGENT-###`-owned, 0 unowned. | **Category A resolved: `public-llm-vocabulary-schema` filled** using the new `expect_assistant_details` DSL (`LLM-F010`), driven through the real agent loop and mock adapter — two turns, one scripting every optional field the reference adapter can carry (proving presence), one scripting none of them (proving the real object reports absence as `null`, not a runner-side fabrication). Passes; schema-validates; full suite/`ruff`/`mypy` clean. **Category A still open: the two same-model replay-signature scenarios** — the DSL can now express them, but filling them needs the actual Responses-family replay algorithm (`AI-013`, unimplemented — Phase 5 work, a different blocker than `LLM-F010`). **Categories B/C explicitly deferred to their owning layers**, not forced into Layer 02 to close this finding numerically. |
+| LLM-F001 | LOW | `CONTRACT_ASSURANCE_DEFECT` — Layer-02-owned portion RESOLVED | Survey complete (63 scenarios in `conformance/agent/`, 21 real/passing, 42 unfilled placeholders pre-pass). The never-raises contract (LLM-018) already had genuine, passing canonical evidence commingled in `conformance/agent/` — no dedicated `conformance/llm/` family needed. All 42 pre-pass placeholders reclassified by ownership (see §7's full A/B/C table): 3 Layer-02-owned, 10 `XFORM-###`-owned, 29 `AGENT-###`-owned, 0 unowned. | **Category A resolved: `public-llm-vocabulary-schema` filled** using the new `expect_assistant_details` DSL (`LLM-F010`), driven through the real agent loop and mock adapter — two turns, one scripting every optional field the reference adapter can carry (proving presence), one scripting none of them (proving the real object reports absence as `null`, not a runner-side fabrication). Passes; schema-validates; full suite/`ruff`/`mypy` clean. **The two same-model replay-signature scenarios: verified DEFERRED TO PHASE 5, not a Layer-02 gap.** A dedicated verification pass (§7) confirmed Outcome A: the semantic contract (`LLM-017`/`AI-013`) is Layer-02-owned and complete, but the executable replay operation is explicitly attributed to "the compatible adapter" by frozen master §4, and no Responses/Codex adapter has ever existed in this repository's history (exhaustive `git log --all` search, both repos, all branches) — there is nothing to realign, only Phase-5 work that hasn't started. The DSL can express these scenarios once a real adapter exists; today, filling them would require the mock/runner to simulate provider wire-encoding, a thin-runner violation. **Non-blocking for Layer 02 certification.** **Categories B/C explicitly deferred to their owning layers**, not forced into Layer 02 to close this finding numerically. |
 | LLM-F002 | LOW | `CONTRACT_ASSURANCE_DEFECT` — PARTIALLY RESOLVED | `/pi-parity-manifest.yaml` had zero `AI-###` rows for four of frozen master §4's LLM-owned subsections: Responses-family replay signatures, the API/provider split, model/request options, and authentication. Only vocabulary and the never-raises contract (`AI-001..012`) had parity-manifest coverage. | **`AI-013` added** for Responses-family replay signatures — real, precise Pi source found (`api/openai-responses-shared.ts`), and the two existing placeholder scenarios (`same-model-thinking-signature-replayed`, `cross-model-signatures-stripped`) already name exactly this requirement (see LLM-017's updated row). **The other three deliberately not added.** Checked whether a real (not aspirational) row could be written for each: API/provider split has a real Pi symbol (`compat.ts::stream`/`registerApiProvider`) but zero existing conformance scenarios to cite as `tests:` (the manifest's own convention names real, even if placeholder, scenario files — inventing new ones now would mean authoring Phase-5-scoped conformance content ahead of any adapter to test it against); model/request options and authentication are in the same position. Adding rows for these three now would violate this finding's own resolution criterion ("describe real, not aspirational, behavior") in the opposite direction it was originally violated (an uncovered requirement vs. a manifest row with nothing real behind it). Revisit once Phase 5 gives each a real adapter/scenario to cite. |
 | LLM-F003 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | `AssistantMessage` — the vocabulary type carrying Pi-visible response identity/state for provider replay — had only 7 of the 15 fields Pi's `types.ts::AssistantMessage` and the frozen master both require (confirmed field-for-field match between Pi and master in §3, so this was not a spec ambiguity): missing `api, response_model, response_id, diagnostics, deferred, raw_stop_reason, end_turn`. | Fixed: all 7 fields added to `messages.py.AssistantMessage` (LLM-006). `api` defaults to `"mock"` (see `LLM-F006`'s disclosed compromise) but `service.py._empty_partial()` and `adapters/mock.py::build()` explicitly pass `api=request.model.api` rather than relying on the default. `session/derive.py` extended to round-trip all 7 fields, including new `_encode_diagnostic`/`_decode_diagnostic`/`_encode_deferred`/`_decode_deferred` helpers. 4 new unit tests plus a round-trip test. Full suite + `ruff` clean. |
-| LLM-F004 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | None of the three replay-signature fields existed anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` were all absent from `content.py`. This made the "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable. | Fixed: all three fields/pairs added to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004), all optional/defaulted (fully backward-compatible — every construction site in the codebase uses keyword args). `session/derive.py`'s `_encode_block`/`_decode_block` extended to round-trip them. 6 new unit tests plus a round-trip test. **Does not by itself close `LLM-F001`'s two replay-signature placeholder scenarios** — filling those meaningfully needs the actual replay implementation (`AI-013`, added this pass — see `LLM-F002`) and/or `XFORM-###`'s survival-filtering rules; which scenario needs which is not yet resolved (see LLM-017's updated §4 row). |
+| LLM-F004 | HIGH | `PI_PARITY_DEFECT` — RESOLVED | None of the three replay-signature fields existed anywhere in the content-block vocabulary: `TextBlock.text_signature`, `ThinkingBlock.thinking_signature`/`redacted`, `ToolCallBlock.thought_signature`/`namespace` were all absent from `content.py`. This made the "Responses-family replay signatures" contract (LLM-017) structurally unrepresentable. | Fixed: all three fields/pairs added to `content.py`'s dataclasses (LLM-001, LLM-002, LLM-004), all optional/defaulted (fully backward-compatible — every construction site in the codebase uses keyword args). `session/derive.py`'s `_encode_block`/`_decode_block` extended to round-trip them. 6 new unit tests plus a round-trip test. **Does not by itself close `LLM-F001`'s two replay-signature placeholder scenarios** — verified (see §7's dedicated investigation) that filling those needs the actual Phase-5 Responses-family adapter, which has never existed in this repository's history; `cross-model-signatures-stripped` separately resolved to `XFORM-###`'s survival-filtering rules (see LLM-017's updated §4 row). Deferred to Phase 5, non-blocking. |
 | LLM-F005 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED | Grouped vocabulary gaps, each confirmed against Pi source: (1) `Usage.cost` sub-object did not exist at all, `cache_write_1h` also missing; (2) `StopReason` enum was missing `DEFERRED`; (3) `ToolResultMessage` was missing `tool_name, details, usage, added_tool_names`; (4) `DeferredHandle` and `AssistantMessageDiagnostic`/`DiagnosticError` did not exist as types anywhere in `minion_agent/llm/`. | Fixed: new `Cost` dataclass and `Usage.cost`/`cache_write_1h`/`total_tokens` added (the pre-existing computed `.total` property kept unchanged, distinct from the new stored `total_tokens`); `StopReason.DEFERRED` added; `ToolResultMessage` extended with all 4 missing fields; `DeferredHandle`/`AssistantMessageDiagnostic`/`DiagnosticError` added and exported. **Side effect, verified not just assumed:** `tools/result.py::ToolResult.to_message()` was silently dropping `details`/`added_tool_names` — it had nowhere to put them before this pass — now threads them through; `tool_name`/`usage` remain unpopulated (no source in `ToolResult`/its callers; threading one through the tool-execution pipeline is `TOOL-###` territory). All encode/decode round-trips extended. Full suite + `ruff` clean. |
 | LLM-F006 | MEDIUM | `PI_PARITY_DEFECT` — RESOLVED, with a disclosed compromise | Model identity was architecturally a `(provider, model)` pair (`service.py.ModelId`), not the `provider + api + model_id` triple the master requires. No `api` field existed anywhere in `ModelId`, `Request`, or the `Adapter` protocol. | `api: str` added to `ModelId` and the `Adapter` protocol; `LlmService.register()` threads it from adapter to model identity. **Not full Pi fidelity — disclosed, not silent:** Pi's `api` is required (no default). Making it required in Python broke 133 tests across `agent/`/`agent_loop/`/`conformance/` — positional 2-arg `ModelId(provider, model)` calls throughout those layers' own test suites, well outside this audit's scope to touch broadly in an LLM-layer pass. Reverted to `api: str = "mock"`, correct for every current caller (the sole registered adapter today). 3 fake `Adapter` test doubles inside `llm`/`agent_loop` test files (the only ones actually reached by `register()`) updated with a real `api` attribute. The default becomes actively wrong once a second API exists (Phase 5) and must be removed then — noted directly in the field's own docstring, not just here. |
 | LLM-F007 | MEDIUM | `PARITY_NEUTRAL_HARDENING` — RESOLVED (reclassified from an initial, incorrect `PI_PARITY_DEFECT` — see §8) | `service.py._settled()`'s `async for chunk in source:` loop had no `try`/`except`. An adapter that raises a Python exception mid-iteration instead of encoding its failure in-band (verified adversarially with a throwaway repro: a `ConnectionError` after a `StreamStart` chunk) propagated straight through `LlmService.stream()`'s iteration, uncaught. **Not a Pi-parity gap:** Pi's own central dispatcher (`compat.ts::stream()`) has no `try`/`catch` around `provider.stream(...)` either — confirmed by direct source read — so nothing centralizes this guarantee in Pi; each of Pi's built-in adapters separately implements the discipline itself. The master's "programming/invariant failures remain programming failures" carve-out plausibly already covered the pre-fix behavior. No existing test constructed this shape before this pass. | Fixed as a disclosed hardening choice, not a parity restoration: the loop now wraps in `try`/`except Exception`, converting the exception into an in-band `StreamError` terminal via a small shared `_error_terminal()` helper, preserving the accumulated partial exactly like the pre-existing premature-EOF path. `asyncio.CancelledError` (a `BaseException`, not `Exception`) is untouched — explicit cancellation still propagates and unwinds normally. New permanent regression test `test_an_adapter_that_raises_mid_iteration_still_settles_in_band`. Full suite + `ruff` clean. Worth reconsidering whether a future pass wants this centralized, or prefers matching Pi's per-adapter-only discipline exactly — recorded as an open judgment call, not a closed decision. |
@@ -560,7 +606,7 @@ packages) — just flagging the inconsistency for whoever next has reason to tou
 
 ```text
 Design alignment                         [x]  all 20 distinct LLM-### requirements traced to frozen §4
-Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012/017 remain open, none severe; LLM-F007 is hardening beyond Pi, not a parity fix
+Pi parity                                [~]  vocabulary/stream-contract fields now Pi-parity-complete (LLM-F003..F006 resolved); LLM-005/010/012 remain open, none severe; LLM-017 verified DEFERRED TO PHASE 5 (not a parity gap, §7); LLM-F007 is hardening beyond Pi, not a parity fix
 Normative spec                           [x]  spec/llm.md re-audited field-by-field against the full vocabulary — no drift found (LLM-F008 is naming-only)
 Parity manifest                          [~]  AI-001..012 vocabulary/stream contract, AI-013 Responses replay (new); LLM-F002 partially resolved — 3 subsections still uncovered, deliberately (no real behavior to describe yet)
 Canonical conformance                    [~]  LLM-018 real+passing; LLM-F010 implemented+verified (Python), public-llm-vocabulary-schema filled; open pending shared-contract review, not yet RESOLVED
@@ -578,7 +624,7 @@ Documentation                            [x]  §13-14 — spec/llm.md re-checked
 All findings classified                  [x]  LLM-F001..F010 classified
 No unresolved Pi uncertainty             [x]  none raised this pass — every ambiguity resolved by reading Pi source directly
 No unresolved parity defect              [x]  LLM-F003..F006 all resolved (LLM-F006 with a disclosed, documented compromise); LLM-F007 reclassified PARITY_NEUTRAL_HARDENING, not a parity defect
-No unresolved contract-assurance defect  [ ]  LLM-F001 Layer-02 portion resolved (2 A-category scenarios remain, blocked on Phase-5 replay logic, not on DSL); LLM-F010 implemented+verified but open pending shared-contract review; LLM-F002 partially resolved; LLM-F008 open (LOW/naming-only)
+No unresolved contract-assurance defect  [ ]  LLM-F001 Layer-02 portion resolved (2 A-category scenarios verified DEFERRED TO PHASE 5, non-blocking — not a Layer-02 gap); LLM-F010 implemented+verified but open pending shared-contract review; LLM-F002 partially resolved; LLM-F008 open (LOW/naming-only)
 Deferred risks recorded                  [x]  LLM-020, LLM-021 N/A pending Phase 5; LLM-F006's default flagged for removal then; LLM-F007's design choice (centralize vs. per-adapter) flagged for Rust-cross-check reconsideration; LLM-F009 open for the telemetry layer
 ```
 
@@ -655,6 +701,30 @@ pre-pass placeholders is in §7. **Not marked `RESOLVED`** — the shared-contra
 to this `conformance/**`/`schema/**` change, and that review hasn't happened yet. Full Python suite,
 `ruff`, and `mypy` (on every touched file) clean throughout.
 
+**Dedicated verification pass (this pass): are the two remaining `same-model-*` replay scenarios a
+Layer-02 implementation defect, or a Phase-5 dependency?** Answered from repository truth, not
+assumption or convenience — full investigation in §7. **Outcome A, confirmed:** Layer 02's own
+vocabulary/contract obligations are complete (`thinking_signature`/`redacted` exist and are tested,
+`LLM-F004`); the executable replay operation is explicitly attributed to "the compatible adapter" by
+frozen master §4, not to any Layer-02-owned mechanism; and exhaustive git-history search across both
+repositories and all branches confirms no Responses/Codex provider adapter has ever existed in code
+at any point — the `ProviderContinuation` → generic `ThinkingBlock.signature` → current frozen
+`thinking_signature` evolution was design-document prose only (`minion-agent-docs` commits
+`b3410d3`/`276d987`/`8955009`/`e53f7e1`), never accompanied by an implementation to strand or
+realign. The two scenarios are reclassified from "open Layer-02 work" to `DEFERRED TO PHASE 5,
+non-blocking for Layer 02 certification` (§4's `LLM-017` row, §7's category-A table, `LLM-F001`'s
+disposition, and the requirement-traceability summary all updated accordingly). No
+`spec/llm.md`/`spec/target-model-transformation.md`/`pi-parity-manifest.yaml`/scenario-content change
+was indicated or made — the artifacts are correct as written; only their assurance-record disposition
+was wrong.
+
+**These two scenarios were the only reason this layer's evidence looked Phase-5-dependent beyond
+the already-acknowledged `LLM-020`/`LLM-021`/`LLM-F002` deferrals — confirming that, Layer 02's
+remaining path to certification no longer includes any load-bearing dependency on Phase 5 starting
+early.** The actual remaining blockers are entirely shared-contract-review and Rust-integration
+work (`LLM-F010`'s review, Rust's branch merge — both below), not implementation gaps in either
+language.
+
 **Rust's independent Layer 02 pass has since landed (§18, `audit/llm-rust-assurance` branch)** —
 typed vocabulary, strict required three-part model identity (confirming `LLM-F006`'s Python default
 was a Python-specific compromise, not a necessary one), independently-adopted centralized
@@ -681,11 +751,13 @@ landing first, per instruction.
    process before treating it as canonical — Rust's own Layer 02 pass (§18) independently hit the
    same blocker and its existing `tests/llm_conformance.rs` is corroborating evidence the DSL style
    is Rust-consumable, but that isn't the review itself.
-2. Once `LLM-F010` is formally approved, fill the two remaining category-A placeholders
-   (`same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed`) — blocked
-   now on the Responses-family replay algorithm itself (`AI-013`, Phase 5), not on the DSL. Decide,
-   jointly with whoever owns `XFORM-###`, whether `cross-model-signatures-stripped` (reclassified
-   category B this pass, §7) needs its own Layer-02-adjacent scenario or is fully `XFORM-###`'s.
+2. **Verified this pass (§7 dedicated investigation): the two remaining category-A placeholders
+   (`same-model-thinking-signature-replayed`, `same-model-unsigned-thinking-not-replayed`) are
+   deferred to Phase 5 by confirmed necessity, not by open question.** Once `LLM-F010` is formally
+   approved (so the DSL to express them exists), fill them once — and only once — the Phase-5
+   Responses-family adapter exists to honestly drive them; do not fill them earlier by having the
+   runner simulate replay. `cross-model-signatures-stripped`'s ownership is settled (category B,
+   `XFORM-###`, §7) — no further joint decision needed there.
 3. `LLM-F002` is partially resolved (`AI-013` added). The remaining three subsections (API/provider
    split, model/request options, authentication) stay unresolved until Phase 5 gives each a real
    adapter/scenario to cite — do not add aspirational rows for them before then.
