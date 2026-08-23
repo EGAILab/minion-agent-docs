@@ -2,6 +2,19 @@
 
 **Layer ID:** `03`  
 **Status:** `CERTIFIED`  
+**Rust implementation completion (2026-08-24):** `IMPLEMENTED` on branch
+`feat/rust-layer-03-session-artifacts` at `31ed6698a1e4a9f5d3134d2c2b1788f920ceb330`, consuming the
+certified contract at `minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. The typed Rust
+`session` module supplies value-keyed open event names, atomic append/sequence allocation, complete
+Layer-02 message persistence, surface projection, immutable fork ancestry, reset and compaction,
+SHA-256 artifacts, and request-header reconstruction. The thin Rust adapter enumerates all 17
+canonical Session files and executes 16 through the real typed implementation; only
+`request-reconstruction-after-target-transform.yaml` remains explicitly deferred to Layer 04, with
+no Agent or XFORM simulation. Implementation review found and remediated future-boundary fork
+leakage and a compaction linearization race before acceptance. Final Rust evidence: 7 focused
+Session tests; the canonical test executes all 16 applicable scenarios; full workspace total 126
+tests; `cargo fmt --check`, strict all-target/all-feature Clippy, rustdoc warnings-as-errors, and
+`xtask conformance verify` all pass. No shared-contract change was required.
 **Fresh Rust implementation-owner re-review (2026-08-24):** `APPROVED` for corrected candidate
 `minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. Rust independently reran the original
 rejection probes plus positive typed-shape cases: complete assistant/tool-result fields validate,
@@ -67,8 +80,8 @@ of Rust's own re-test cases reproduced, full suite/coverage/`ruff`/`mypy` re-run
 accepting it, and certified the layer.)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED` — semantic-owner review `APPROVED`, cross-language review `APPROVED`  
-**Rust status:** `NOT_IMPLEMENTED` (confirmed this pass by direct inspection, not assumed; `MINION-002`/
-`MINION-003` both say `Phase 2`; no `session` module exists anywhere under `minion-agent-rust/`)
+**Rust status:** `IMPLEMENTED` — `minion-agent-rust/crates/minion-agent/src/session/mod.rs`, with
+implementation-specific tests and the shared canonical Session runner at commit `31ed669`.
 
 ---
 
@@ -207,21 +220,21 @@ frozen-design text, not inference from Pi source or from best practice.
 
 | ID | Requirement | Source | Python implementation | Rust implementation | Executable evidence | Status |
 |---|---|---|---|---|---|---|
-| `SES-001` | Append-only, sequence-numbered, JSON-validated at append; a rejected append leaves no trace | design §5, `spec/session.md`, `MINION-002` | `log.py::SessionLog.append`/`_check_json_safe` | not implemented (Phase 2) | `test_log.py` (10 tests, incl. non-JSON-safe rejection at every nesting shape) | `PASS` |
-| `SES-002` | Model-visible means logged: request history reconstructable from committed state | design §5, `MINION-002` | `derive.py::derive_messages` + `request_header.py` | not implemented | `test_derive.py`, `conformance/session/*` (`SES-F001` resolved) | `PASS` |
-| `SES-003` | Two-tier event vocabulary: surface (`user/message`/`assistant/message`/`tool/result`) vs log-only; open namespace, name is the identity | design §5, `spec/session.md` | `events.py::EventKind`/`CORE_SURFACE_KINDS`/`is_surface`/`validate_event_name` | not implemented | `test_events.py`, `plugin-defined-event-kind.yaml`, `plugin-event-stays-log-only-by-default.yaml` | `PASS` |
+| `SES-001` | Append-only, sequence-numbered, JSON-validated at append; a rejected append leaves no trace | design §5, `spec/session.md`, `MINION-002` | `log.py::SessionLog.append`/`_check_json_safe` | `session::Session::append`/`append_raw` | Python tests + Rust `tests/session.rs` | `PASS` |
+| `SES-002` | Model-visible means logged: request history reconstructable from committed state | design §5, `MINION-002` | `derive.py::derive_messages` + `request_header.py` | `session::Session::derive_messages`/`reconstruct_header` | Python tests + Rust canonical Session runner | `PASS` |
+| `SES-003` | Two-tier event vocabulary: surface (`user/message`/`assistant/message`/`tool/result`) vs log-only; open namespace, name is the identity | design §5, `spec/session.md` | `events.py::EventKind`/`CORE_SURFACE_KINDS`/`is_surface`/`validate_event_name` | `session::EventKind` + `Session` surface set | shared canonical plugin-event scenarios in Python and Rust | `PASS` |
 | `SES-004` | Log-only lifecycle/fidelity/operations kinds are fully and correctly enumerated | design §5 (explicit list) | `events.py::EventKind` (partial — see `SES-F002`) | not implemented | none dedicated | `GAP — SES-F002` |
-| `SES-005` | Append pipeline: validate → atomic seq allocation → committed publication | `spec/session.md`, design §5 (implicit in log.py) | `log.py::append` | not implemented | `test_log.py::test_sequence_numbers_start_at_one_and_increase` + rejection tests | `PASS` |
-| `SES-006` | `fork(source, at)`: references not copies, boundary fixed at fork time, later writes on either side stay private | design §5 table, `spec/session.md`, `MINION-002` | `operations.py::fork`, `derive.py::_derive`'s ancestry walk | not implemented | `test_fork.py` (11 tests), `fork-ancestry-derivation.yaml`, `fork-local-compaction.yaml` | `PASS` |
-| `SES-007` | `reset()`: identity preserved, excludes all surface at-or-before, history stays readable | design §5 table, `spec/session.md` | `operations.py::reset`, `derive.py::effective_surface`/`_derive` | not implemented | `test_reset.py` (6 tests), `reset-excludes-prior-surface.yaml` | `PASS` |
-| `SES-008` | Compaction: supersedes an effective range with summary + retained-tail provenance; no double-inclusion under repeated/overlapping/nested/fork-local compaction | design §5 table, `operations.py` docstring, `spec/session.md` | `operations.py::compact`, `derive.py::_derive`'s compaction branch | not implemented | `test_compaction.py` (8 tests), `compact-now-then-derive.yaml`, `compaction-repeated-and-nested.yaml`, `overlapping-compaction.yaml`, `fork-local-compaction.yaml` | `PASS` |
-| `SES-009` | Content-addressed request header: components stored by hash, composition logged as references, dispatch and reconstruction use the same canonical join | design §5, `spec/session.md` | `request_header.py::assemble_system`/`record_header`/`reconstruct_header`/`reconstruct_tools` | not implemented | `test_request_header.py` (7 tests), `test_request_header_tools.py` (5 tests), `request-reconstruction-with-artifacts.yaml`, `request-header-component-reuse.yaml` (`SES-F001` resolved) | `PASS` |
-| `SES-010` | Artifacts holding model-visible content are never deleted; no removal API exists | design §5, `artifacts.py` docstring, `MINION-003` | `artifacts.py::ArtifactStore` (no delete method) | not implemented | `test_artifacts.py` (7 tests, incl. `test_the_store_has_no_delete`) | `PASS` |
-| `SES-011` | Event name is the identity, compared by value — not by enum/object identity | design §5 "two consequences" | `events.py` (`EventName = str`; `is_surface` compares `event.kind in surface`) | not implemented | `event-name-identity-is-by-value.yaml`, `test_plugin_events.py::test_a_raw_string_kind_is_the_same_event_as_its_constant` | `PASS` |
-| `SES-012` | An open logging namespace is not an open surface: declaring/appending a plugin event name does not by itself admit it to model history | design §5 | `log.py`/`events.py` (`surface_kinds` parameter, defaults to `CORE_SURFACE_KINDS`) | not implemented | `plugin-event-stays-log-only-by-default.yaml`, `test_plugin_events.py` (multiple) | `PASS` |
+| `SES-005` | Append pipeline: validate → atomic seq allocation → committed publication | `spec/session.md`, design §5 (implicit in log.py) | `log.py::append` | `session::Session::append` under one event mutex | Python tests + Rust concurrent append test | `PASS` |
+| `SES-006` | `fork(source, at)`: references not copies, boundary fixed at fork time, later writes on either side stay private | design §5 table, `spec/session.md`, `MINION-002` | `operations.py::fork`, `derive.py::_derive`'s ancestry walk | `session::Session::fork`/`derive_until` | Python tests + Rust focused/canonical fork tests | `PASS` |
+| `SES-007` | `reset()`: identity preserved, excludes all surface at-or-before, history stays readable | design §5 table, `spec/session.md` | `operations.py::reset`, `derive.py::effective_surface`/`_derive` | `session::Session::reset`/`derive_until` | shared reset scenario in Python and Rust | `PASS` |
+| `SES-008` | Compaction: supersedes an effective range with summary + retained-tail provenance; no double-inclusion under repeated/overlapping/nested/fork-local compaction | design §5 table, `operations.py` docstring, `spec/session.md` | `operations.py::compact`, `derive.py::_derive`'s compaction branch | `session::Session::compact`/`derive_until` | shared compaction scenarios in Python and Rust | `PASS` |
+| `SES-009` | Content-addressed request header: components stored by hash, composition logged as references, dispatch and reconstruction use the same canonical join | design §5, `spec/session.md` | `request_header.py::assemble_system`/`record_header`/`reconstruct_header`/`reconstruct_tools` | `session::record_header`/`reconstruct_header`/`assemble_system` | shared request-header scenarios in Python and Rust | `PASS` |
+| `SES-010` | Artifacts holding model-visible content are never deleted; no removal API exists | design §5, `artifacts.py` docstring, `MINION-003` | `artifacts.py::ArtifactStore` (no delete method) | `session::ArtifactStore` (no removal API) | Python tests + Rust focused/canonical artifact tests | `PASS` |
+| `SES-011` | Event name is the identity, compared by value — not by enum/object identity | design §5 "two consequences" | `events.py` (`EventName = str`; `is_surface` compares `event.kind in surface`) | `session::EventKind` value equality/hash | shared identity scenario + Rust focused test | `PASS` |
+| `SES-012` | An open logging namespace is not an open surface: declaring/appending a plugin event name does not by itself admit it to model history | design §5 | `log.py`/`events.py` (`surface_kinds` parameter, defaults to `CORE_SURFACE_KINDS`) | `session::Session` explicit surface set | shared plugin-event scenarios in Python and Rust | `PASS` |
 | `SES-013` | Session/log projection approximates Pi's `AgentMessage -> Message` conversion; target-model transformation is a distinct, later stage | design §5 "Relationship to Pi's message projection" | `derive.py` (scope boundary only) | N/A | `request-reconstruction-after-target-transform.yaml` — verified genuinely `DEFERRED TO LAYER 04` (`SES-F001`'s investigation, §7), not filled | `DOCUMENTED` |
 | `SES-014` | Session log-only naming must track Pi's Run/Turn vocabulary; observable `turn` MUST NOT mean a multi-request run | design §6 (explicit prohibition), cross-referenced by §5 | `events.py::EventKind.TURN_START`/`TURN_END`/`STEP_START`/`STEP_END`; emitted by `agent_loop/driver.py` | not implemented | none dedicated; driver.py inspection contradicts the rule — see `SES-F002` | `GAP — SES-F002` |
-| `SES-015` | `MINION-003`: content-addressed artifacts are a permitted storage divergence only when model-visible bytes stay equivalent to what was dispatched | `MINION-003`, design §5 | `request_header.py` + `artifacts.py` | not implemented | `request-reconstruction-with-artifacts.yaml`, `request-header-component-reuse.yaml` (`SES-F001` resolved) | `PASS` |
+| `SES-015` | `MINION-003`: content-addressed artifacts are a permitted storage divergence only when model-visible bytes stay equivalent to what was dispatched | `MINION-003`, design §5 | `request_header.py` + `artifacts.py` | `session::ArtifactStore` + canonical header composition/reconstruction | shared artifact/header scenarios in Python and Rust | `PASS` |
 
 15 distinct `SES-###` requirements drafted. After `SES-F001`'s remediation: 12 `PASS`, 1 `DOCUMENTED`
 (boundary statement, not independently testable — its own evidence column now also names the verified,
@@ -912,7 +925,7 @@ spec/session.md complete for current Session scope?       YES -- by-value identi
 Canonical Session schema language-neutral?                YES -- 4 real defects found by Rust, fixed in cda6b50, fresh Rust review APPROVED, independently re-verified this pass
 Python Session runner thin?                                YES -- re-audited in full by both Python and Rust; no Agent/XFORM simulation found
 Rust implementation-owner review?                         APPROVED on cda6b50, after REJECTED on 3d6ffa4 (4 defects, fixed) -- both verdicts independently re-verified before being trusted
-Rust implementation obligation for Layer 03?               EXPLICITLY DEFERRED BY PLAN, non-blocking -- confirmed independently by both Python's reading of the workflow docs and Rust's own review
+Rust implementation obligation for Layer 03?               COMPLETED after certification under the approved deferred plan -- typed implementation plus 16 applicable canonical scenarios at `31ed669`
 All current Layer-03 placeholders resolved?                YES -- 0 remaining true Layer-03 placeholders; Rust independently confirmed the 17-scenario family placement
 Layer-04 deferred case explicitly owned?                   YES -- request-reconstruction-after-target-transform, owner Layer 04/XFORM, confirmed by Rust
 Agent lifecycle ownership explicit?                        YES -- AG-001/AG-004, phase 3, disposition adopted
@@ -928,10 +941,10 @@ Any conformance runner simulating Agent/XFORM semantics?    NO -- confirmed inde
 
 1. `SES-F001`/`SES-F002`/`SES-F003` — all `RESOLVED`, all cross-language approved. Nothing further
    required.
-2. Rust Session implementation remains `EXPLICITLY DEFERRED BY PLAN` (Phase 2) — not required for
-   this certification, per the adopted separate-status workflow, confirmed by both Python's and
-   Rust's own independent readings. When Rust does implement Session, it consumes this same certified
-   shared contract and completes its own implementation-specific assurance evidence at that time.
+2. Rust Session implementation was `EXPLICITLY DEFERRED BY PLAN` at certification and is now
+   complete at `31ed669`, consuming the same certified contract. Its 16 applicable canonical
+   scenarios and implementation-specific evidence are green; the Layer-04 target-transform case
+   remains correctly deferred.
 3. `RISK-001` needs no action from this layer — it is Phase 9's commitment to fulfill, already
    recorded and cited.
 4. `AG-001`/`AG-004`'s own remediation (the real run/turn naming/behavior fix in `agent_loop/
