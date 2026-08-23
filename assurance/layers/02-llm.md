@@ -17,11 +17,11 @@ passing — implemented and verified, not yet marked resolved pending shared-con
 Rust's own independent Layer 02 pass has separately landed (§18) — see §17)  
 **Auditor:** Claude (Python-driven, per adopted workflow)  
 **Python status:** `IMPLEMENTED`  
-**Rust status:** `IMPLEMENTED / READY FOR CROSS-LANGUAGE CERTIFICATION` — typed vocabulary,
+**Rust status:** `IMPLEMENTED / MERGED / READY FOR FINAL CERTIFICATION` — typed vocabulary,
 strict three-part model identity, adapter/service boundary, central settled `AssistantStream`,
 scripted real-trait adapter, Rust tests, and a thin partial agent-family conformance adapter are
-implemented on `audit/llm-rust-assurance`; see §18. Overall Layer 02 remains `IN_AUDIT` while the
-shared `LLM-F001`/`LLM-F010` vocabulary-conformance blocker is open.
+merged through PR #3 at `05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19. Final
+Layer 02 certification remains assigned to the shared assurance owner.
 
 ---
 
@@ -868,8 +868,8 @@ findings row, §15) — each now validates with zero errors, and the full Python
 
 **Branch:** `audit/llm-rust-assurance`
 
-**Result:** `RUST READY`; overall layer remains `IN_AUDIT` because `LLM-F001`/`LLM-F010` is shared
-canonical-contract work, not a missing Rust runtime behavior.
+**Result:** `RUST READY`; subsequently integrated and merged after the corrected LLM-F010 contract
+was approved — see §19.
 
 ### Implementation evidence
 
@@ -914,15 +914,15 @@ canonical-contract work, not a missing Rust runtime behavior.
 - `LLM-F007`: Rust independently adopts central typed operational-error settlement as
   `PARITY_NEUTRAL_HARDENING`. The raw adapter reports expected failures as `AdapterStreamError`;
   `AssistantStream` settles them. Panics are not caught or converted.
-- `LLM-F001`: **shared-contract concern, applicable to Rust.** Rust executes the five already-filled
-  Layer-02 stream-boundary scenarios. The full vocabulary placeholder remains honestly blocked by
-  `LLM-F010`; Rust does not invent a private scenario schema or claim weak evidence as canonical.
+- `LLM-F001`: **shared-contract concern, applicable to Rust.** Rust executes the five filled
+  Layer-02 stream-boundary scenarios. The full vocabulary schema is consumable, while its canonical
+  two-turn execution remains deferred to the real Agent path; Rust does not simulate Agent semantics.
 - `LLM-F002`: **shared-contract concern, applicable but not Rust-owned.** `AI-013` is consumed. The
   remaining parity rows stay deferred until implemented provider behavior has real evidence.
 - `LLM-F008`: Rust uses the normative `ToolCall` name, so no Rust-local naming drift.
 - `LLM-F009`: no production-provider traffic hook is introduced; remains deferred to telemetry.
-- `LLM-F010`: remains the exact overall certification blocker. Rust's typed serde tests provide
-  implementation evidence but do not substitute for the missing shared vocabulary DSL/projection.
+- `LLM-F010`: resolved from the Rust implementation-owner perspective by the fresh approval of
+  corrected shared commit `37ce4bbc051fa35885873c04dbe3b51e3c99cb2b` — see §19.
 
 ### §8-14 Rust review
 
@@ -942,9 +942,8 @@ canonical-contract work, not a missing Rust runtime behavior.
 
 ### Shared-contract changes
 
-`NONE`. Rust consumed the committed specification, parity manifest, and canonical scenarios as-is.
-The existing `LLM-F010` governance path remains the correct place for the later shared DSL/schema
-expansion.
+`NONE` authored by Rust. Rust consumed the committed specification, parity manifest, and corrected
+canonical schema/scenarios as finalized by shared commit `37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`.
 
 ### Rust verification gates
 
@@ -1011,3 +1010,69 @@ No Rust semantic or runner change is justified. Once the shared schema admits th
 null distinctions, a thin Rust adapter can deserialize fixture values into real typed objects and
 normalize `Option<T>` back to explicit null. Agent-loop ordering, XFORM, Responses replay, and
 provider encoding remain outside this adapter and outside this pass.
+
+---
+
+## 19. Fresh Rust re-review, finalized integration, and merge
+
+**Reviewed shared-contract SHA:** `37ce4bbc051fa35885873c04dbe3b51e3c99cb2b`
+
+**LLM-F010 Rust implementation-owner verdict:** `APPROVED`
+
+**Rust PR:** `#3`
+
+**Rust merge SHA:** `05acd1a96963a7a08c573e460027a980261e8b5c`
+
+Rust independently re-ran the exact probes that rejected `5d65a39`. The unchanged corrected
+canonical scenario validates. A fractional assistant timestamp validates as the normative numeric
+type; diagnostics with `error: null` and `details: null` validate; and a required-fields-only
+deferred handle normalized with `expires_at: null` and `poll_after_ms: null` validates. Strictness
+remains effective: an unknown assistant-detail property is rejected by `additionalProperties:false`,
+and a string supplied for nested `usage.cost.input` is rejected as the wrong structural type.
+
+The complete corrected surface maps naturally to Rust's typed `AssistantMessage`, content blocks,
+`Usage`/`Cost`, `DeferredHandle`, `AssistantMessageDiagnostic`, `DiagnosticError`, and `StopReason`.
+Rust `Option<T>` values require only a thin explicit-null projection for canonical comparison; no
+semantic reconstruction or Python-specific object behavior is required. No new contract defect or
+Rust implementation defect was found.
+
+`public-llm-vocabulary-schema.yaml` is fully consumable as canonical data, and its Layer-02 fields
+are directly verified through Rust's typed serde/service/stream tests. The scenario's complete
+two-turn execution remains deferred until the real Rust Agent path exists: its `followup` and
+`await_idle` operations are Agent semantics, and the Rust conformance adapter must not simulate
+them. This is an explicit future-layer execution dependency, not a Layer-02 vocabulary defect.
+
+After approval, `origin/main` (including `37ce4bb`) was merged cleanly into
+`audit/llm-rust-assurance` as `2ba62c56147ff69fcb48171ada86a424d59efc41`. Fresh post-integration
+verification produced:
+
+```text
+cargo fmt --check
+    PASS
+
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+
+cargo test --workspace --all-features
+    PASS — 118 tests, 0 failed (17 LLM tests)
+
+cargo test -p minion-agent --test llm_conformance -- --nocapture
+    PASS — 2 tests, exercising 5 shared Layer-02 stream scenarios
+
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+    PASS
+
+cargo run -p xtask -- conformance verify
+    PASS
+
+cargo run -p xtask -- coverage verify
+    PASS (repository command completed successfully; no detailed per-file report emitted)
+```
+
+The final Rust implementation retains strict required `provider + api + model_id`, a typed raw
+adapter error path, central `AssistantStream` settlement, premature-EOF partial preservation,
+first-terminal fusion, and the panic/programming-failure boundary. Phase 5 replay, XFORM, Agent,
+and provider encoding remain unimplemented and were not simulated by tests or runners.
+
+Rust Layer 02 has no remaining implementation-owner blocker. This evidence is returned to the
+shared assurance owner for the project's final Layer 02 certification decision.
