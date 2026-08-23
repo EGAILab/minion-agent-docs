@@ -561,6 +561,12 @@ Rust cross-check. None of these were blocked by anything found this pass — the
 slices of work, kept separate the same way Runtime's audit and remediation passes stayed distinct
 from each other.
 
+The Rust handoff package — the shared contract, Python status summary, the `LLM-F001`/`LLM-F002`
+carry-forward, the `LLM-F006`/`LLM-F007` independent-decision probes, and the from-scratch
+implementation scope (Rust has no `llm` module at all yet — confirmed via `lib.rs`) — is
+`assurance/layers/02-llm-rust-handoff.md`. Python continues `LLM-F001`/`LLM-F002` in parallel with
+Rust's work, not blocked on the handoff landing first.
+
 **Follow-up dependencies:**
 
 1. Fill the `public-llm-vocabulary-schema` and (if still relevant once surveyed) other
@@ -571,10 +577,8 @@ from each other.
    not a re-open of `LLM-F004`.
 3. Resolve `LLM-F002` (parity-manifest rows) now that the vocabulary work makes rows for Responses
    replay signatures and authentication describable in terms of real, not aspirational, behavior.
-4. Independent Rust cross-check, once this file is reviewed — same sequence Runtime followed. Worth
-   deciding, not just checking: should Rust's own stream wrapper centralize the same
-   `LLM-F007`-style guard, or is per-adapter discipline (matching Pi's actual mechanism) preferred
-   there? This is a cross-language design question, not a parity gap to close silently either way.
+4. Independent Rust implementation and cross-check, per `02-llm-rust-handoff.md` — Rust decides
+   `LLM-F006`/`LLM-F007` independently rather than inheriting Python's compromises.
 5. When Phase 5 adds a second API: remove `ModelId.api`'s default (`LLM-F006`) and update every
    call site that relied on it, this time with real API values to assign, not a placeholder sweep.
 6. Optionally resolve `LLM-F008` (rename either side for naming consistency) and `LLM-F009` (an
