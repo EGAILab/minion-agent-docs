@@ -194,5 +194,7 @@ mapping retention, ToolCall and ToolResult rewrite decisions, and orphan synthes
 real typed transformer. Session semantics were unchanged.
 
 No provider algorithm, provider-wire replay, or Layer-05 work was added. Rust reports
-`XFORM-R005` remediated and post-merge green; the Layer-04 post-certification delta remains open
-until the shared assurance owner performs manifest pending-marker cleanup and final shared closure.
+`XFORM-R005` remediated and post-merge green; **shared closure completed** —
+`assurance/layers/04-target-model-transformation.md` §22 records the manifest pending-marker
+cleanup (`AI-023`), the formal closure of `XFORM-R005`/`R006`/`R007`, and the restored three-part
+`CERTIFIED` status (shared/Python/Rust), preserving the original certification date.
