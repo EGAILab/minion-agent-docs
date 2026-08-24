@@ -1,30 +1,38 @@
 # Target-Model Message Transformation (XFORM) — Fidelity Assurance & Certification
 
 **Layer ID:** `04`
-**Status:** `IN_AUDIT` — twice independently Rust-reviewed and twice **`REJECTED —
-PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs `0f3d419`;
-second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`). The second
-rejection traced its root cause upstream to already-certified Layer 02/03 Python implementations
-diverging from their own already-correct contracts, reopening `LLM-F012` (Layer 02) and `SES-F009`
-(Layer 03) narrowly (§0.6) — those layers' own status is `historically CERTIFIED,
-POST-CERTIFICATION DELTA AUDIT OPEN`, not reopened from scratch. A corrected candidate, fixing the
-upstream layers plus the remaining `XFORM-R001`/`XFORM-R002`, awaits fresh Rust re-review. Not
-`CERTIFIED`: certification requires an `APPROVED` shared-contract verdict and, if Rust
-implementation is required at that point, a green Rust implementation and gates too (§17).
-**Audit date:** 2026-08-24 (three passes: first — Pi source read directly and in full,
-shared-contract gaps found and repaired, Python implementation and tests written, canonical evidence
-authored, Session's Layer-04 deferment activated, Python gates green, sent for review; second —
-independently reproduced all four first-rejection findings before accepting them, repaired each
-narrowly, re-verified Python gates fresh, sent a corrected candidate for re-review; third — the
-second rejection's `XFORM-R001`/`XFORM-R002` findings independently reproduced, root cause traced
-to Layer 02/03 (§0.6), those two layers' own Python implementations repaired (`LLM-F012`/
-`SES-F009`), `XFORM-R001` closed completely and `XFORM-R002` repaired at the schema/runner level,
-Python gates re-verified fresh a third time.)
+**Status:** `Layer 04 shared contract: CERTIFIED. Python Layer 04: CERTIFIED. Rust Layer 04:
+NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND.` Twice independently Rust-reviewed and twice
+**`REJECTED — PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs
+`0f3d419`; second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`),
+then **`APPROVED`** on the third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`,
+reviewing `minion-agent@4ed360d` against final handoff `minion-agent-docs@39f1f13`) — see §19 for
+the full certification record. The second rejection traced its root cause upstream to
+already-certified Layer 02/03 Python implementations diverging from their own already-correct
+contracts, reopening `LLM-F012` (Layer 02) and `SES-F009` (Layer 03) narrowly (§0.6); both are now
+`CLOSED` and both layers restored to `CERTIFIED` (`assurance/layers/02-llm.md`,
+`assurance/layers/03-session-artifacts.md`). Rust has not yet implemented Layer 04 — this is
+explicitly process-conforming (§17, §19), not a gap: Python may lead Rust by approximately one
+layer (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3), and Rust currently sits at
+Layer 03.
+**Audit date:** 2026-08-24 (three audit/remediation passes plus a fourth, dependency-ordered
+cross-language review: first — Pi source read directly and in full, shared-contract gaps found and
+repaired, Python implementation and tests written, canonical evidence authored, Session's Layer-04
+deferment activated, Python gates green, sent for review; second — independently reproduced all
+four first-rejection findings before accepting them, repaired each narrowly, re-verified Python
+gates fresh, sent a corrected candidate for re-review; third — the second rejection's
+`XFORM-R001`/`XFORM-R002` findings independently reproduced, root cause traced to Layer 02/03
+(§0.6), those two layers' own Python implementations repaired (`LLM-F012`/`SES-F009`),
+`XFORM-R001` closed completely and `XFORM-R002` repaired at the schema/runner level, Python gates
+re-verified fresh a third time; fourth — dependency-ordered Rust implementation-owner review of all
+three layers together, `APPROVED` (§19).)
 **Auditor:** Claude (Python-driven, per adopted workflow)
-**Python status:** `IMPLEMENTED` — semantic-owner review complete; cross-language review verdict on
-the corrected candidate `PENDING`
-**Rust status:** `NOT STARTED` — no Rust code was touched in any pass, per the adopted
-review-before-remediation workflow (contract review must return `APPROVED` first)
+**Python status:** `CERTIFIED` — real `transform_messages()` seam implemented, 13/13 canonical
+scenarios green, Session→XFORM integration green, shared contract independently Rust-approved (§19)
+**Rust status:** `NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND` — no Rust Layer-04 code has been
+written; this is an explicit, adjudicated Rust scheduling verdict (§17, §19), not an open gap. Rust
+must implement Layer 04 before advancing to Layer 05 or before Python advances far enough to exceed
+the process-approved lag.
 
 ---
 
@@ -755,10 +763,10 @@ into their count:**
 
 | ID | Category | Finding | Disposition after second pass | Disposition after third pass |
 |---|---|---|---|---|
-| `XFORM-R001` | `PI_PARITY_DEFECT` | Valid string-valued `UserMessage.content` corrupted by the non-vision image-downgrade path | `PARTIALLY RESOLVED` (§0.1) — runtime branch fixed, but the public `UserMessage.content` type itself still excluded the string shape, so the second Rust review correctly rejected this as still open | `RESOLVED` (complete — §0.9, root cause fixed upstream at `LLM-F012`, §0.7) |
-| `XFORM-R002` | `CONTRACT_ASSURANCE_DEFECT` | Canonical XFORM schema incomplete/insufficiently strict (string content, rich fields, empty identity, empty `expect`) | `PARTIALLY RESOLVED` (§0.2) — the listed gaps were fixed, but a `usage`-requiredness gap not in the original finding list was found by the second review's own independent probing and remained open | `RESOLVED` (§0.9 — `usage`/`Cost` requiredness added, runner fabrication removed) |
-| `XFORM-R003` | `CONTRACT_ASSURANCE_DEFECT` | `AI-013` cited Question-A XFORM evidence as Question-B provider-wire replay evidence | `RESOLVED` (§0.3) — confirmed `APPROVED` by the second review, not reopened | `RESOLVED` (unchanged) |
-| `XFORM-R004` | `CONTRACT_ASSURANCE_DEFECT` | Assurance history recorded three first-pass findings when four were actually repaired | `PARTIALLY RESOLVED` (§0.4) — the finding-count history was corrected, but stale `12`-count current-state statements elsewhere in this document were not, and the second review caught the remaining inconsistency | `RESOLVED` (§0's table headers and §8/§10/§18 all now consistently say 13) |
+| `XFORM-R001` | `PI_PARITY_DEFECT` | Valid string-valued `UserMessage.content` corrupted by the non-vision image-downgrade path | `PARTIALLY RESOLVED` (§0.1) — runtime branch fixed, but the public `UserMessage.content` type itself still excluded the string shape, so the second Rust review correctly rejected this as still open | `RESOLVED` (complete — §0.9, root cause fixed upstream at `LLM-F012`, §0.7); **Rust-approved, §19** |
+| `XFORM-R002` | `CONTRACT_ASSURANCE_DEFECT` | Canonical XFORM schema incomplete/insufficiently strict (string content, rich fields, empty identity, empty `expect`) | `PARTIALLY RESOLVED` (§0.2) — the listed gaps were fixed, but a `usage`-requiredness gap not in the original finding list was found by the second review's own independent probing and remained open | `RESOLVED` (§0.9 — `usage`/`Cost` requiredness added, runner fabrication removed); **Rust-approved, §19** |
+| `XFORM-R003` | `CONTRACT_ASSURANCE_DEFECT` | `AI-013` cited Question-A XFORM evidence as Question-B provider-wire replay evidence | `RESOLVED` (§0.3) — confirmed `APPROVED` by the second review, not reopened | `RESOLVED` (unchanged); **Rust re-confirmed `APPROVED — unchanged`, §19** |
+| `XFORM-R004` | `CONTRACT_ASSURANCE_DEFECT` | Assurance history recorded three first-pass findings when four were actually repaired | `PARTIALLY RESOLVED` (§0.4) — the finding-count history was corrected, but stale `12`-count current-state statements elsewhere in this document were not, and the second review caught the remaining inconsistency | `RESOLVED` (§0's table headers and §8/§10/§18 all now consistently say 13); **Rust-approved, §19** |
 
 **Third-pass findings (independent Rust implementation-owner review of the second candidate,
 `04-target-model-transformation-rust-r001-r004-rereview.md`) — the root-cause reclassification
@@ -767,8 +775,8 @@ itself, recorded here at the layer where it was discovered even though its fix l
 
 | ID | Category | Finding | Owning layer | Disposition |
 |---|---|---|---|---|
-| `LLM-F012` | `PI_PARITY_DEFECT` | `UserMessage`/`AssistantMessage`/`ToolResultMessage.content` were typed `tuple[ContentBlock, ...]` uniformly, excluding the frozen role-specific unions (`spec/llm.md`) — most visibly, `UserMessage.content` excluded its own `string` alternative | Layer 02 | `RESOLVED`, Python/shared side (§0.7); Rust delta review pending; full record `assurance/layers/02-llm.md` §0 |
-| `SES-F009` | `CONTRACT_ASSURANCE_DEFECT` + Python implementation defect | `session/derive.py::encode_message`/`decode_message` computed `content` uniformly before role dispatch, unable to preserve a real string-valued `UserMessage.content` through persistence | Layer 03 | `RESOLVED`, Python/shared side (§0.8); Rust delta review pending; full record `assurance/layers/03-session-artifacts.md` §0 |
+| `LLM-F012` | `PI_PARITY_DEFECT` | `UserMessage`/`AssistantMessage`/`ToolResultMessage.content` were typed `tuple[ContentBlock, ...]` uniformly, excluding the frozen role-specific unions (`spec/llm.md`) — most visibly, `UserMessage.content` excluded its own `string` alternative | Layer 02 | `RESOLVED` — Python/shared (§0.7) and Rust (confirmed already-conforming, no code change required); Layer 02 delta audit `CLOSED`, `CERTIFIED`; full record `assurance/layers/02-llm.md` §0b |
+| `SES-F009` | `CONTRACT_ASSURANCE_DEFECT` + Python implementation defect | `session/derive.py::encode_message`/`decode_message` computed `content` uniformly before role dispatch, unable to preserve a real string-valued `UserMessage.content` through persistence | Layer 03 | `RESOLVED` — Python/shared (§0.8) and Rust (Session already-conforming; conformance adapter remediated evidence-only in PR #6); Layer 03 delta audit `CLOSED`, `CERTIFIED`; full record `assurance/layers/03-session-artifacts.md` §0b |
 
 **Other categories, all passes:**
 
@@ -838,19 +846,29 @@ mypy src/minion_agent tests/typing/valid_message_construction.py (permanent stat
 
 ## 17. Rust applicability and review status
 
-**Rust implementation:** determination pending the shared-contract review itself. This document
-does not presume the answer — the fresh Rust implementation-owner review (handoff package:
-`04-target-model-transformation-rust-handoff.md`) must state explicitly whether Rust implementation
-is `REQUIRED NOW` or `EXPLICITLY DEFERRED BY PLAN`, with normative process/design evidence, matching
-the same discipline Layers 01-03 established. No Rust code was written, modified, or even scaffolded
-this pass.
+**Rust implementation timing — adjudicated (2026-08-24):** the dependency-ordered Rust
+implementation-owner review (`02-04-dependency-ordered-rust-review.md`) determined:
 
-**What the handoff asks Rust to verify independently** (not to trust from this document): the Pi
-source mapping (all 15 rules against the pinned commit), the shared-contract repair (§4), the
-`XFORM-###` requirement table (§5), the manifest corrections (§7), the new schema/runner's language
-neutrality and thinness (§8, §11), idiomatic-typed-Rust feasibility for `TargetModel`/
-`NormalizeToolCallId`/`transform_messages`, and whether a typed Rust implementation can satisfy every
-rule without `serde_json::Value`-typed shortcuts.
+```text
+RUST LAYER-04 IMPLEMENTATION TIMING
+    NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND
+```
+
+per `process/implementation-conformance-workflow.md` §§5.9, 7, 7.3, 8, and 9: a phase does not
+require a later not-yet-implemented language layer merely for the current implementation to
+certify; Python may lead Rust by approximately half to one phase; shared/Python certification while
+Rust is behind is valid; Rust records its own implementation status separately. Current state is
+Python at Layer 04, Rust at Layer 03 — a one-layer lag, explicitly process-conforming, not an
+exception invented for this layer. No Rust Layer-04 code was written, modified, or scaffolded in
+any pass. See §19 for the full certification record and the resulting trigger condition for Rust
+Layer-04 implementation.
+
+**What Rust verified independently** (not trusted from this document): the Pi source mapping (all
+15 rules against the pinned commit), the shared-contract repair (§4), the `XFORM-###` requirement
+table (§5), the manifest corrections (§7), the new schema/runner's language neutrality and
+thinness (§8, §11), idiomatic-typed-Rust feasibility for `TargetModel`/`NormalizeToolCallId`/
+`transform_messages`, and that a typed Rust implementation can satisfy every rule without
+`serde_json::Value`-typed shortcuts — see `02-04-dependency-ordered-rust-review.md` Gate 3.
 
 ---
 
@@ -867,12 +885,125 @@ Provider replay simulated anywhere?                      NO (§6, §11)
 Python implementation uses one real transform seam?       YES (§10)
 Python runner thin?                                       YES (§11)
 Python tests/gates green?                                  YES, fresh (§16)
-Shared contract independently Rust-reviewed?                NOT YET
-Rust implementation requirement explicitly determined?       NOT YET
+Shared contract independently Rust-reviewed?                YES — APPROVED (§19)
+Rust implementation requirement explicitly determined?       YES — NOT_IMPLEMENTED, VALIDLY ONE
+                                                               LAYER BEHIND (§17, §19)
 Active PI_PARITY_DEFECT / PI_BEHAVIOR_UNCERTAIN /
   CONTRACT_ASSURANCE_DEFECT?                                 NONE (§15)
 ```
 
-Layer 04 is **not yet eligible for `CERTIFIED`** — the two unmet gates are both the same one thing:
-independent Rust implementation-owner review has not yet happened. Everything within Python/shared
-control is green. Layer 05 is not started.
+All gates green. See §19 for the final certification record. Layer 05 is not started.
+
+---
+
+## 19. Final certification (2026-08-24)
+
+**Dependency-ordered Rust implementation-owner review:** `02-04-dependency-ordered-rust-review.md`,
+reviewing implementation candidate `minion-agent@4ed360dd35550af9bd898d33e7ae3957bce0d2d8` against
+final handoff `minion-agent-docs@39f1f1336888221e524d44e5bb349878f81c81dd`, pinned Pi
+`b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged). Full verdict:
+
+```text
+LLM-F012                          APPROVED
+LAYER 02 DELTA CONTRACT           APPROVED
+SES-F009                          APPROVED
+LAYER 03 DELTA CONTRACT           APPROVED
+XFORM-R001                        APPROVED
+XFORM-R002                        APPROVED
+XFORM-R003                        APPROVED — unchanged
+XFORM-R004                        APPROVED
+LAYER 04 XFORM SHARED CONTRACT    APPROVED
+```
+
+No new `PI_PARITY_DEFECT`, `PI_BEHAVIOR_UNCERTAIN`, or `CONTRACT_ASSURANCE_DEFECT` was found. Full
+detail per gate is in the review document; not duplicated here beyond what this freeze gate needs.
+
+**Rust evidence PR merged.** `EGAILab/minion-agent#6` (`test(rust): consume SES-F009 session
+evidence`), scope-verified before merge (only `crates/minion-agent/tests/session.rs` and
+`tests/session_conformance.rs` changed — evidence/conformance-adapter only, no Session/LLM/XFORM
+semantic Rust code touched), merged as `54928e250347341d73b919fa523be50d338c5c8c`. Fresh gates run
+directly against merged `main` (not reused from the PR branch's own report):
+
+```text
+cargo fmt --check                                       PASS
+cargo clippy --workspace --all-targets --all-features
+  -- -D warnings                                        PASS
+cargo test --workspace --all-features                   129 passed, 0 failed
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace
+  --no-deps                                              PASS
+cargo run -p xtask -- conformance verify                 PASS
+Session discovered                                       20
+Rust Layer-03 executed                                    19
+Layer-04 deferred                                          1 (request-reconstruction-after-target-
+                                                             transform.yaml — Rust XFORM not
+                                                             implemented; not a Layer-03 failure)
+```
+
+**Layer-02 and Layer-03 final delta closures**, performed only after this Rust approval, in the
+mandatory order (Layer 02 before Layer 03, both before this certification): see
+`assurance/layers/02-llm.md` §"Final Layer-02 delta closure" (docs `4e9249e`) and
+`assurance/layers/03-session-artifacts.md` §"Final Layer-03 delta closure" (docs `e087ce8`). Both
+`LLM-F012` and `SES-F009` are `RESOLVED`; both layers' post-certification delta audits are `CLOSED`;
+both layers are restored to `CERTIFIED`, preserving their original certification dates and full
+delta history.
+
+**Layer-04 final freeze gate:**
+
+```text
+Pinned Pi XFORM behavior audited?         YES (§3)
+Parity manifest complete?                 YES (§7)
+XFORM spec complete?                      YES (§4)
+13 canonical XFORM scenarios complete?    YES (§8)
+13/13 Python XFORM green?                 YES (§16)
+Session->XFORM integration green?         YES (§9)
+Python real XFORM seam implemented?       YES — transform_messages() (§10)
+Runner thin?                              YES (§11)
+Provider-wire replay kept out of Layer 04? YES — no Responses/Codex adapter exists; nothing
+                                            simulated (§6, §11)
+AI-013 Phase-5 obligation preserved?      YES — AI-013 continues to own Phase-5 Responses
+                                            provider-wire replay; the 13-scenario inventory
+                                            statement does not erase that obligation
+XFORM-R001 resolved?                      YES
+XFORM-R002 resolved?                      YES
+XFORM-R003 resolved?                      YES
+XFORM-R004 resolved?                      YES
+Active PI_PARITY_DEFECT?                  NONE
+Active PI_BEHAVIOR_UNCERTAIN?             NONE
+Active CONTRACT_ASSURANCE_DEFECT?         NONE
+Rust Layer-04 status explicitly recorded? NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND
+Rust lag process-conforming?              YES — process/implementation-conformance-workflow.md
+                                            §§5.9, 7, 7.3, 8, 9; Python=4, Rust=3, one-layer lag
+```
+
+All applicable answers green.
+
+```text
+Layer 04 shared contract
+    CERTIFIED
+
+Python Layer 04
+    CERTIFIED
+
+Rust Layer 04
+    NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND
+```
+
+**Why Rust's absence does not block this certification:** the normative process basis, already
+independently confirmed by Rust itself as part of this review, is
+`process/implementation-conformance-workflow.md` §5.9 (a phase does not require a later
+not-yet-implemented language layer merely for the current implementation to certify), §7 (Python
+may lead Rust by approximately half to one phase), §7.3 (shared/Python certification while Rust is
+behind is valid), §8 (Rust records its own implementation status separately), and §9 (future Rust
+conformance must still use the same real semantic seams). No special Layer-04 exception was
+invented — this is the same rule Layers 01–03 already established.
+
+**Rust Layer-04 trigger, recorded explicitly:** Rust Layer 04 MUST be implemented before either (1)
+Rust advances to Layer 05, or (2) Python advances far enough that Rust would exceed the permitted
+approximately-one-layer lag. Current state is Python = 4, Rust = 3. Starting Python Layer 05 next
+would produce Python = 5, Rust = 3, exceeding the intended cadence. **Layer 05 MUST NOT start next
+while Rust remains at Layer 03.** The next implementation action after this closure is Rust
+implementing Layer 04 — not Python advancing to Layer 05.
+
+**Never to be shortened to:** "Python + Rust Layer 04 certified" — that would be false. The
+three-part status above (`shared contract` / `Python` / `Rust`) must be preserved distinctly in any
+future reference to this certification.
