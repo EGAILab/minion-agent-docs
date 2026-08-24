@@ -11,7 +11,7 @@ self-certify a shared cross-language layer.
 **Reviewed commits (candidate):**
 
 ```text
-minion-agent        <PUSH_PENDING>   src/minion_agent/llm/transform_messages.py (new),
+minion-agent        84c6ba2   src/minion_agent/llm/transform_messages.py (new),
                                       tests/llm/test_transform_messages.py (new),
                                       tests/conformance/transform_runner.py (new),
                                       tests/conformance/test_transform_conformance.py (new),
@@ -29,7 +29,7 @@ minion-agent        <PUSH_PENDING>   src/minion_agent/llm/transform_messages.py 
                                       filled (previously the sole SES-013 deferred placeholder),
                                       pi-parity-manifest.yaml (AI-020..026 rule text + python:
                                       pointers corrected)
-minion-agent-docs   <PUSH_PENDING>   spec/target-model-transformation.md (rewritten -- see §2),
+minion-agent-docs   7416645   spec/target-model-transformation.md (rewritten -- see §2),
                                       assurance/layers/04-target-model-transformation.md (new,
                                       IN_AUDIT), this handoff
 ```
