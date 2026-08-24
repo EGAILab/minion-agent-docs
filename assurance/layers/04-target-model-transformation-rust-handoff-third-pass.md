@@ -30,6 +30,10 @@ minion-agent-docs   f610e8b   assurance/layers/04-target-model-transformation.md
                                this handoff
 ```
 
+`f610e8b` is the semantic assurance candidate. `d73e46d` packaged the three dependency-ordered Rust
+handoffs. A later docs-only pre-review correction fixes the current Session-family inventory below;
+Rust must review the final `origin/master` SHA reported with the handoff launch.
+
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
 **Do not modify Rust in response to this package without first recording a verdict.** Rust
@@ -128,8 +132,11 @@ Phase-5 production-wiring boundary      unchanged
 ```text
 XFORM canonical: 13 (string-user-content-survives-transformation.yaml is the +1 vs. the first
   candidate's 12; not changed again this pass)
-Session canonical: 19 total, 19 current-layer executable, 0 deferred, 0 placeholders
-  (string-user-message-round-trip.yaml is the new +1 for SES-F009)
+Session canonical: 20 total, 20 executable through the reached Layer-04 stack, 0 deferred,
+  0 placeholders
+  - 19 Layer-03-owned (the prior 18 plus string-user-message-round-trip.yaml for SES-F009)
+  - 1 Layer-04-owned Session composition scenario
+    (request-reconstruction-after-target-transform.yaml)
 ```
 
 ## 7. Explicitly out of scope for this package

@@ -329,10 +329,12 @@ rather than observing the real derived value.
 
 **Verification:** full fresh Python gates (818 passed, 29 xfailed, 100% coverage; `ruff`/`mypy`
 clean), including the new canonical scenario and both new unit tests, plus re-confirmation that all
-18 pre-existing current-layer Session scenarios and `request-reconstruction-after-target-transform`
-remain green — full detail in `assurance/layers/04-target-model-transformation.md` §0.8/§16, not
-duplicated here. Fresh Session canonical inventory after this pass: 19 discovered, 19 current-layer
-executable (18 plus the new `string-user-message-round-trip.yaml`), 0 deferred, 0 placeholders.
+18 pre-existing Layer-03-owned Session scenarios and the existing Layer-04-owned
+`request-reconstruction-after-target-transform` remain green — full detail in
+`assurance/layers/04-target-model-transformation.md` §0.8/§16, not duplicated here. Fresh Session
+canonical inventory after this pass: **20 discovered and executable**: 19 Layer-03-owned scenarios
+(the prior 18 plus `string-user-message-round-trip.yaml`) and one Layer-04-owned Session composition
+scenario (`request-reconstruction-after-target-transform.yaml`), with 0 deferred and 0 placeholders.
 
 **Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
 candidate; Layer 03 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is

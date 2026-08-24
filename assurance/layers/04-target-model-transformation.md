@@ -633,9 +633,13 @@ target: the image downgraded to its placeholder, the unresolved call given a syn
 directly demonstrating design §5's stated distinction: "Session source truth stays stable; target-
 specific transformed request is ephemeral," never persisted back into the log. Confirmed passing.
 
-**Fresh canonical inventory** (Session family, re-run after activation): 19 discovered, 19 current-
-layer executable, 0 deferred, 0 placeholders (`grep`-verified: no `TO_BE_FILLED`/`TO_BE_BOUND`/
-`TO_BE_PINNED` marker remains anywhere in `conformance/session/*.yaml`).
+**Fresh canonical inventory** (Session family, re-run after SES-F009): **20 discovered and
+executable** — 19 Layer-03-owned scenarios (the prior 18 plus
+`string-user-message-round-trip.yaml`) and one Layer-04-owned Session composition scenario
+(`request-reconstruction-after-target-transform.yaml`), with 0 deferred and 0 placeholders
+(`grep`-verified: no `TO_BE_FILLED`/`TO_BE_BOUND`/`TO_BE_PINNED` marker remains anywhere in
+`conformance/session/*.yaml`). Ownership and canonical directory family are counted separately:
+the Layer-04 composition case remains one of the 20 Session-family YAML files.
 
 ---
 

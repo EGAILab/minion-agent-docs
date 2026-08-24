@@ -26,6 +26,11 @@ minion-agent        4ed360d   src/minion_agent/llm/content.py, src/minion_agent/
 minion-agent-docs   f610e8b   assurance/layers/02-llm.md (§0b, this finding), this handoff
 ```
 
+`f610e8b` is the semantic assurance candidate. `d73e46d` packaged the three dependency-ordered Rust
+handoffs. A later docs-only pre-review correction recounts the Session-family inventory without
+changing Layer-02 semantics; Rust must consume the final `origin/master` SHA reported with the
+handoff launch, not stop at either earlier packaging SHA.
+
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
 **Do not modify Rust in response to this package without first recording a verdict.**

@@ -25,6 +25,10 @@ minion-agent-docs   f610e8b   assurance/layers/03-session-artifacts.md (§0b, th
                                handoff
 ```
 
+`f610e8b` is the semantic assurance candidate. `d73e46d` packaged the three dependency-ordered Rust
+handoffs. A later docs-only pre-review correction fixes the current Session-family inventory below;
+Rust must consume the final `origin/master` SHA reported with the handoff launch.
+
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged — `MINION-002`
 already marks Session persistence as Minion-owned architecture, not Pi-derived).
 
@@ -67,6 +71,25 @@ carries across the reference correctly).
 Two new focused unit tests in `tests/session/test_derive.py` pin the encode/decode behavior
 directly: `test_string_valued_user_message_round_trips_as_a_string`,
 `test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip`.
+
+Fresh current inventory (filesystem-enumerated, not inferred from prior prose):
+
+```text
+Layer-03-owned Session scenarios
+    19 (the prior 18 plus string-user-message-round-trip.yaml)
+
+Layer-04-owned Session integration
+    1 (request-reconstruction-after-target-transform.yaml)
+
+Session-family canonical total
+    20
+
+currently executable through the reached Layer-04 stack
+    20
+
+deferred / placeholders
+    0 / 0
+```
 
 ---
 
