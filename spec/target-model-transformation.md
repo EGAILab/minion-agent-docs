@@ -83,13 +83,31 @@ Rules:
     the algorithm.** `transform_messages` accepts an optional target-API-supplied
     `normalize_tool_call_id(id, target, source_assistant) -> id` callback; it has no built-in
     normalization algorithm of its own. When supplied, it is invoked only cross-model (never
-    same-model), for every tool call in transcript order; whatever id it returns is recorded in a
-    map for that call's lifetime, and the matching later `tool_result.tool_call_id` (looked up by
-    the *original* id) is rewritten to the normalized id in the same single forward pass. An id with
-    no recorded mapping, or a same-model call, is never rewritten. Owning the *decision of whether
-    and how* to normalize a specific target API's ids is Phase-5/provider territory (`AI-023`); this
-    module owns only the generic orchestration -- building the map and applying it consistently --
-    which is fully testable today with any real, even trivial, supplied callback.
+    same-model), for every tool call in transcript order. The `ToolCall` rewrite and the later
+    `ToolResult` rewrite are governed by two **different, asymmetric conditions** (`XFORM-R005`),
+    which must be reproduced exactly, not "cleaned up" into one consistent rule:
+
+    - **`ToolCall` rewrite:** if the callback's returned id differs from the original id
+      (`returned != original`, including when `returned` is the empty string), the original id is
+      recorded in the map (`original -> returned`, even when `returned` is `""`) and the
+      `ToolCall.id` in the transformed output is rewritten to `returned` unconditionally.
+    - **Matching `ToolResultMessage` rewrite:** the later result is looked up by its *original*
+      `tool_call_id` in the map. The result is rewritten **only when the mapped value is truthy
+      (non-empty) and differs from the result's current id** -- an empty-string mapped value is
+      falsy and does **not** trigger a rewrite, so the result keeps its original id unchanged.
+
+    This asymmetry reproduces pinned Pi's own JavaScript truthy check on the result side
+    (`if (normalizedId && normalizedId !== msg.toolCallId)`) against an unconditional assignment on
+    the call side -- it is a deliberate quirk of the reference behavior, not a simplification target.
+    Its observable consequence: when a callback returns `""`, the transformed `ToolCall.id` becomes
+    `""` while the matching real `ToolResult` is left at its original id, so the two no longer
+    match -- the transformed call is left unresolved and orphan synthesis (rule 14) synthesizes an
+    error result for the empty id, alongside the real, now-unmatched result. An id with no recorded
+    mapping, or a same-model call, is never rewritten on either side. Owning the *decision of whether
+    and how* to normalize a specific target API's ids -- including whether it can ever legitimately
+    return an empty string -- is Phase-5/provider territory (`AI-023`); this module owns only the
+    generic orchestration -- building the map and applying both rewrite conditions exactly as
+    specified above -- which is fully testable today with any real, even trivial, supplied callback.
 14. **Orphan tool-result synthesis.** A tool call left unresolved when a later `user` or `assistant`
     message interrupts, or when history ends with it still unresolved, gets a synthesized
     `ToolResultMessage`: `content` a single text block reading `No result provided`, `is_error:

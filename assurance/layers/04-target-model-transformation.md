@@ -1,38 +1,37 @@
 # Target-Model Message Transformation (XFORM) — Fidelity Assurance & Certification
 
 **Layer ID:** `04`
-**Status:** `Layer 04 shared contract: CERTIFIED. Python Layer 04: CERTIFIED. Rust Layer 04:
-CERTIFIED.` Rust implementation merged as `minion-agent@439651e`; see §20 and
-`04-target-model-transformation-rust-implementation.md`. Twice independently Rust-reviewed and twice
-**`REJECTED — PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs
-`0f3d419`; second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`),
-then **`APPROVED`** on the third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`,
-reviewing `minion-agent@4ed360d` against final handoff `minion-agent-docs@39f1f13`) — see §19 for
-the full certification record. The second rejection traced its root cause upstream to
-already-certified Layer 02/03 Python implementations diverging from their own already-correct
-contracts, reopening `LLM-F012` (Layer 02) and `SES-F009` (Layer 03) narrowly (§0.6); both are now
-`CLOSED` and both layers restored to `CERTIFIED` (`assurance/layers/02-llm.md`,
-`assurance/layers/03-session-artifacts.md`). Rust has not yet implemented Layer 04 — this is
-explicitly process-conforming (§17, §19), not a gap: Python may lead Rust by approximately one
-layer (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3), and Rust currently sits at
-Layer 03.
-**Audit date:** 2026-08-24 (three audit/remediation passes plus a fourth, dependency-ordered
-cross-language review: first — Pi source read directly and in full, shared-contract gaps found and
-repaired, Python implementation and tests written, canonical evidence authored, Session's Layer-04
-deferment activated, Python gates green, sent for review; second — independently reproduced all
-four first-rejection findings before accepting them, repaired each narrowly, re-verified Python
-gates fresh, sent a corrected candidate for re-review; third — the second rejection's
-`XFORM-R001`/`XFORM-R002` findings independently reproduced, root cause traced to Layer 02/03
-(§0.6), those two layers' own Python implementations repaired (`LLM-F012`/`SES-F009`),
-`XFORM-R001` closed completely and `XFORM-R002` repaired at the schema/runner level, Python gates
-re-verified fresh a third time; fourth — dependency-ordered Rust implementation-owner review of all
-three layers together, `APPROVED` (§19).)
+**Status:** `Layer 04 HISTORICALLY CERTIFIED — POST-CERTIFICATION DELTA AUDIT OPEN` (2026-08-24,
+scope limited to `XFORM-R005`/`XFORM-R006`/`XFORM-R007`, see §21). **Layer 05 is `NOT STARTED —
+NO-GO`** while this delta remains open. The historical certification sequence, preserved in full,
+not flattened: twice independently Rust-reviewed and twice **`REJECTED — PI_PARITY_DEFECT`** (first:
+`04-target-model-transformation-rust-review.md`, docs `0f3d419`; second:
+`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`), then **`APPROVED`** on
+a third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`, reviewing
+`minion-agent@4ed360d` against final handoff `minion-agent-docs@39f1f13`) — see §19. The second
+rejection traced its root cause upstream to already-certified Layer 02/03 Python implementations,
+reopening `LLM-F012` (Layer 02) and `SES-F009` (Layer 03) narrowly (§0.6); both were `CLOSED` and
+both layers restored to `CERTIFIED`. **Historical state before PR #7 (now superseded, kept only as
+chronology):** at the point of §19's certification, Rust had not yet implemented Layer 04 and sat at
+Layer 03 — an explicitly process-conforming one-layer lag at that time (§17). Rust then implemented
+Layer 04 and merged it as `minion-agent@439651e` (`EGAILab/minion-agent#7`, §20), reaching Layer 04
+itself. A subsequent pre-Layer-05 review (§21) then reopened this layer narrowly for
+`XFORM-R005`/`R006`/`R007` before Layer 05 could begin.
+**Audit date:** 2026-08-24 (four audit/remediation/review passes recorded in §0/§19/§20, plus a
+fifth, pre-Layer-05 delta pass, §21: independently reproduced `XFORM-R005` against pinned Pi and the
+real Python seam, repaired `spec/target-model-transformation.md` rule 13 and the Python
+matching-result rewrite condition, added canonical evidence, corrected this document's own stale
+current-state text (`XFORM-R006`), and corrected `pi-parity-manifest.yaml`'s `AI-020`..`AI-026`
+Rust traceability (`XFORM-R007`).)
 **Auditor:** Claude (Python-driven, per adopted workflow)
-**Python status:** `CERTIFIED` — real `transform_messages()` seam implemented, 13/13 canonical
-scenarios green, Session→XFORM integration green, shared contract independently Rust-approved (§19)
-**Rust status:** `CERTIFIED` — the typed Rust implementation, 13/13 XFORM canonical evidence, and
-20/20 Session-family evidence merged through `EGAILab/minion-agent#7`; fresh post-merge gates are
-recorded in §20. Sections 17 and 19 preserve the earlier, historically valid one-layer-behind state.
+**Python status:** historically `CERTIFIED` (§19) — **affected by `XFORM-R005`**, Python/shared
+remediation this pass (§21); real `transform_messages()` seam, 14/14 canonical scenarios green after
+remediation, Session→XFORM integration green
+**Rust status:** historically `CERTIFIED` (§20, `EGAILab/minion-agent#7`, merge
+`439651eb7a5f4ecbee49c573696aa94dee62ed02`) — **affected by `XFORM-R005`**; Rust semantic
+remediation is `PENDING`, not performed in this pass (Python/shared owner must repair and the shared
+contract must be re-approved before Rust remediates, per the adopted review-before-remediation
+workflow). Sections 17, 19, and 20 preserve the full historical certification chronology unchanged.
 
 ---
 
@@ -1047,3 +1046,155 @@ Rust Layer 04               CERTIFIED
 Active parity/uncertainty/assurance defects    NONE
 Layer 05                    NOT STARTED
 ```
+
+**This was the accurate state at the point this section was written.** A subsequent pre-Layer-05
+review (§21) found `XFORM-R005`/`R006`/`R007` and reopened Layer 04 narrowly. This section's content
+is preserved unchanged as history, not rewritten — see §21 for the current operational status.
+
+---
+
+## 21. Pre-Layer-05 post-certification delta audit — `XFORM-R005`/`R006`/`R007` (2026-08-24)
+
+**Starting state, recorded before any change this pass:**
+
+```text
+minion-agent          439651eb7a5f4ecbee49c573696aa94dee62ed02
+minion-agent-docs      6a4ecae1d957509b3ec5e3c4210433c4d5a8d411
+pinned Pi              b7bb00b936dbe21b8e160b3e89efdec361846699
+```
+
+**Trigger:** a pre-Layer-05 review found three findings before Layer 05 could begin. Per the
+governance guardrail (`process/implementation-conformance-workflow.md` §4.6), this reopens Layer 04
+narrowly: the historical `CERTIFIED` event (§19/§20) is unchanged and unerased; the operational
+status becomes `HISTORICALLY CERTIFIED, POST-CERTIFICATION DELTA AUDIT OPEN`; Layer 05 is
+`NOT STARTED — NO-GO` until this delta closes.
+
+### `XFORM-R005` — reproduced directly against pinned Pi and the real Python seam before any fix
+
+Read `packages/ai/src/api/transform-messages.ts` directly (lines 84-90, 136-142 at the pinned
+commit). Confirmed: the `ToolCall` rewrite (`if (normalizedId !== toolCall.id)`) is unconditional —
+a callback returning `""` still records the mapping and rewrites `ToolCall.id` to `""`. The later
+`ToolResultMessage` rewrite (`if (normalizedId && normalizedId !== msg.toolCallId)`) additionally
+requires the mapped value be truthy — a mapped `""` is falsy in JavaScript and does **not** rewrite
+the real result, which keeps its original id. The two representations of the same call then no
+longer match: the transformed call (id `""`) is left unresolved, and the second-pass orphan
+synthesis (`insertSyntheticToolResults`) synthesizes an `is_error: true` result for the empty id,
+alongside the real, now-unmatched result at its original id.
+
+Reproduced the identical current Python defect directly against the real `transform_messages()`
+(before any fix, via a throwaway REPL probe, not assumed): a cross-model assistant with
+`ToolCallBlock(id="old", ...)`, a real `ToolResultMessage(tool_call_id="old", ...)`, and a
+normalizer returning `""` produced exactly **2** output messages — `ToolCall.id` became `""`
+(correct), but the real `ToolResultMessage.tool_call_id` was *also* rewritten to `""` (incorrect —
+Python's `if normalized_id is not None and normalized_id != message.tool_call_id:` treats `""` as
+truthy, since `"" is not None`), and no orphan was synthesized (the "" call appeared resolved by the
+incorrectly-rewritten real result). This is the exact PI_PARITY_DEFECT the review predicted.
+
+**Classification:** `PI_PARITY_DEFECT` (Python's observable transcript differed from pinned Pi) **+**
+`CONTRACT_ASSURANCE_DEFECT` (`spec/target-model-transformation.md` rule 13 described the matching
+result rewrite without ever stating Pi's truthy-vs-unconditional asymmetry, so a conforming
+implementation could not have been written from the spec alone). Not classified as
+`PARITY_NEUTRAL_HARDENING` — the resulting transcript differs observably (2 messages vs. Pi's 3).
+The normalizer was not constrained to reject empty strings — that would change the accepted
+input/policy surface instead of reproducing Pi.
+
+### `XFORM-R006` — this document's own stale current-state text
+
+The header (as of `6a4ecae`) stated `Rust Layer 04: CERTIFIED` in its first line while a few
+sentences later stating `Rust has not yet implemented Layer 04 ... Rust currently sits at Layer
+03` — both true at different points in this document's own history (the latter predates PR #7,
+§20), but presented together as if both were simultaneously current. **`CONTRACT_ASSURANCE_DEFECT`**
+— an assurance-document self-consistency gap, not a code defect. Fixed this pass: the header now
+states the single current three-part status unambiguously and reframes the one-layer-behind period
+explicitly as "historical state before PR #7," per §20's own chronology.
+
+### `XFORM-R007` — stale `pi-parity-manifest.yaml` Rust traceability
+
+`AI-020`..`AI-026`'s `rust:` fields all still read the pre-implementation placeholder `Phase 2
+target-model transform`, even though Rust Layer 04 has been implemented and merged
+(`EGAILab/minion-agent#7`, `439651e`) since `04-target-model-transformation-rust-implementation.md`
+was written. **`CONTRACT_ASSURANCE_DEFECT`** — stale evidence pointers, not a semantic gap.
+Additionally, `AI-026`'s `rule:` wording ("the defensive check lives inside `transform_messages()`
+itself") is Python-specific and no longer a valid cross-language description: Rust's certified
+implementation intentionally uses a two-stage architecture
+(`transform_compat.rs::transform_legacy_messages` — a feature-gated dynamic/legacy compatibility
+boundary — delegating to the ordinary typed `transform_messages()`), not the same single-function
+placement Python uses. Fixed this pass in `pi-parity-manifest.yaml`: all seven rows' `rust:` fields
+now cite real merged implementation paths and real test names (PR #7 @ `439651e`); `AI-026`'s
+`rule:` was rewritten to a language-neutral statement of the semantic rule alone, with each
+implementation's actual placement moved into its own `python:`/`rust:` field. Does not imply Rust's
+typed `Message` accepts null — confirmed directly: it does not; the untyped-JSON decode happens
+before construction, in `transform_compat.rs`.
+
+### Delta finding table
+
+| ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `XFORM-R005` | `04` | High — an injected-callback edge case produces an observably different transcript than pinned Pi (2 messages vs. 3, and a rewritten-vs-preserved real result id) | Pre-Layer-05 review; independently reproduced against `ref-repos/pi` `transform-messages.ts` (lines 84-90, 136-142) and the real `transform_messages()` before any fix | YES — both the Pi source and the Python defect were independently reproduced directly, not taken from the review's framing | `PI_PARITY_DEFECT` + `CONTRACT_ASSURANCE_DEFECT` | `RESOLVED` (Python/shared); Rust semantic remediation `PENDING`, not performed this pass | YES — `spec/target-model-transformation.md` rule 13 rewritten to state the two asymmetric rewrite conditions explicitly, naming the reproduced Pi truthy-check quirk | YES — `transform_messages.py`'s `ToolResultMessage` matching-rewrite condition changed from `is not None` to a truthy check (`if normalized_id and normalized_id != message.tool_call_id:`); the `ToolCall` rewrite side was already correct, unchanged | NOT modified this pass — Rust's own `transform.rs::transform_content` has the same defect (confirmed by direct source read, unconditional `if let Some(normalized) = id_map.get(...)`), left for a dedicated Rust delta pass after shared-contract re-approval, per the review-before-remediation workflow | `conformance/agent/tool-call-id-normalization-empty-string.yaml` (new); `test_normalizer_returning_empty_string_rewrites_the_call_but_not_the_matching_result`, `test_an_unrelated_tool_result_is_unchanged_when_the_normalizer_returns_empty_string`, `test_normalizer_returning_the_same_id_has_no_mapping_effect`, `test_same_model_never_invokes_the_normalize_callback` | Reopens Layer 04 for this one normalization-rewrite question; `AI-023`'s manifest row updated to include it |
+| `XFORM-R006` | `04` | Low — assurance-document self-consistency, not a code defect | Pre-Layer-05 review, direct re-read of this document's own header | YES — the contradiction was directly visible in the header text itself | `CONTRACT_ASSURANCE_DEFECT` | `RESOLVED` | NO | NO | NO | N/A (documentation-only) | Header corrected this pass; no code/spec/canonical change |
+| `XFORM-R007` | `04` (manifest traceability) | Low — stale evidence pointers, not a semantic gap | Pre-Layer-05 review, direct re-read of `pi-parity-manifest.yaml` `AI-020`..`AI-026` against the real merged Rust source tree | YES — the real Rust file/function/test names were read directly from `minion-agent-rust/crates/minion-agent/src/llm/transform.rs`/`transform_compat.rs` and their test files, not assumed | `CONTRACT_ASSURANCE_DEFECT` | `RESOLVED` | NO | NO | NO — evidence-pointer-only manifest edit | N/A (evidence-pointer and wording only) | Manifest corrected this pass; no code/spec/canonical change beyond `AI-023`'s `XFORM-R005` traceability addition |
+
+**Explicitly avoided, per instruction:** did not classify `XFORM-R005` as `PARITY_NEUTRAL_HARDENING`;
+did not constrain the normalizer to reject empty strings; did not generalize the two rewrite
+conditions into one consistent rule; did not modify any Rust code or Rust tests this pass; did not
+rewrite `XFORM-R001`..`R004`'s already-closed history; did not begin any Layer-05 implementation
+work; did not imply Rust's typed `Message` accepts null while correcting `AI-026`'s wording.
+
+### Fresh canonical inventory (filesystem-enumerated, not inferred from prose)
+
+```text
+XFORM canonical (Python/shared, current):     14 discovered / 14 executed / 14 green / 0 deferred
+  (13 prior + tool-call-id-normalization-empty-string.yaml)
+XFORM canonical (Rust, current, unremediated): 13 discovered / 13 executed / 13 green -- unchanged;
+  Rust has not yet consumed the new scenario, pending its own delta remediation pass
+Session canonical (regression, both):         20 discovered / 20 executed / 20 green / 0 deferred
+  request-reconstruction-after-target-transform.yaml: PASS
+```
+
+### Fresh Python/shared gates (this pass, not reused)
+
+```text
+full pytest (coverage enabled): 824 passed, 29 xfailed, 0 failed, 100.00% coverage
+  -- +6 vs. the prior 818, precisely accounted (git-diff-verified, not estimated): 4 new named unit
+     tests in tests/llm/test_transform_messages.py
+     (test_normalizer_returning_the_same_id_has_no_mapping_effect,
+     test_normalizer_returning_empty_string_rewrites_the_call_but_not_the_matching_result,
+     test_an_unrelated_tool_result_is_unchanged_when_the_normalizer_returns_empty_string,
+     test_same_model_never_invokes_the_normalize_callback) plus 2 new parametrized cases from the
+     one new canonical scenario, one each in
+     tests/conformance/test_schema_validation.py::test_scenario_validates and
+     tests/conformance/test_transform_conformance.py::test_transform_scenario (confirmed via
+     `pytest --collect-only -k "empty_string or empty-string"`: exactly 6 collected items across
+     both files). Every pre-existing test unchanged and still green.
+ruff check .: All checks passed
+mypy (configured scope, src/minion_agent): Success, no issues found in 57 source files
+mypy src/minion_agent tests/typing/valid_message_construction.py (LLM-F012 permanent evidence,
+  unaffected by this pass, re-run for regression only): Success, no issues found in 58 source files
+schema validation: 138 passed (was 137; +1 for the new scenario)
+```
+
+No runner special-cases the empty-string behavior anywhere: `transform_runner.py` invokes the real
+`normalize_tool_call_ids` mapping through the real `transform_messages()` call exactly as it did
+before this pass; the empty-string case is exercised, not simulated.
+
+### Contract-quality self-check
+
+Does the repaired rule now exactly explain why `ToolCall.id` becomes `""`, the matching real
+`ToolResult` remains at its original id, and an orphan `""` result is synthesized? **YES** — spec
+rule 13's rewritten paragraph states the ToolCall-side unconditional rewrite, the ToolResult-side
+truthy gate, and the resulting orphan-synthesis consequence explicitly, in that causal order, naming
+`XFORM-R005` directly so a future reader cannot mistake the asymmetry for an oversight to "clean up."
+
+### Not yet done as of this section
+
+Rust semantic remediation for `XFORM-R005` (`transform.rs::transform_content`'s matching-result
+rewrite still unconditional on any mapping, not gated on truthiness — confirmed present, not fixed,
+per the explicit constraint against modifying Rust before shared-contract re-approval) and the
+independent Rust implementation-owner review of this delta package are both **`PENDING`**. Layer 04
+remains `POST-CERTIFICATION DELTA AUDIT OPEN` and Layer 05 remains `NOT STARTED — NO-GO` until:
+(1) Rust independently reproduces the pinned-Pi empty-string case and records a
+`XFORM-R005 SHARED CONTRACT: APPROVED` verdict on this package; (2) Rust performs its own narrow
+semantic remediation and independent implementation review; (3) post-merge Rust gates are green;
+(4) this delta audit is formally closed and Layer 04 restored to `CERTIFIED` (shared/Python/Rust,
+three-part). See the companion Rust delta handoff package,
+`04-target-model-transformation-rust-handoff-r005-r007.md`, for the narrow review request.

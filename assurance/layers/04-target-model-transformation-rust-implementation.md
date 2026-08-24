@@ -122,3 +122,32 @@ Layer 04 Python              CERTIFIED
 Layer 04 Rust                CERTIFIED
 Layer 05                     NOT STARTED
 ```
+
+## Post-certification delta note (2026-08-24, added after this document's original certification)
+
+**This document's certification evidence above is preserved exactly as it was at the time of PR
+#7 — it was accurate then and is not rewritten.** A subsequent pre-Layer-05 review found
+`XFORM-R005` (`PI_PARITY_DEFECT` + `CONTRACT_ASSURANCE_DEFECT`): pinned Pi's tool-call-ID
+normalization has two different, asymmetric rewrite conditions for the `ToolCall` versus the
+matching `ToolResultMessage` (spec/target-model-transformation.md rule 13, corrected). Direct
+inspection of this implementation's own `transform.rs::transform_content` (the exact source this
+document certified, unchanged since) confirms the same defect class Python had: the matching
+`ToolResultMessage` rewrite is unconditional on any recorded mapping
+(`if let Some(normalized) = id_map.get(&result.tool_call_id) { ... }`), not gated on the mapped
+value's truthiness — a callback returning `""` will incorrectly rewrite the real result to `""`
+instead of leaving it at its original id.
+
+```text
+XFORM-R005 (this implementation)   CONFIRMED PRESENT, NOT YET FIXED
+Rust semantic remediation           PENDING -- not performed in the Python/shared delta pass
+                                     that discovered this (per the adopted review-before-
+                                     remediation workflow: Rust code is not modified until the
+                                     shared contract is re-approved)
+Full delta record                   assurance/layers/04-target-model-transformation.md SS21
+Narrow Rust review package          04-target-model-transformation-rust-handoff-r005-r007.md
+```
+
+This document's own `13/13`/`145 passed` counts above describe this implementation's state at PR
+#7 and remain historically accurate; they are not the current post-delta count for either language
+(Python/shared is now at 14 canonical XFORM scenarios after its own `XFORM-R005` fix, §21 of the
+layer document; Rust remains at its original 13 until its own delta remediation lands).
