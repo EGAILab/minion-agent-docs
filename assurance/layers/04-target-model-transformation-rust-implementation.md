@@ -151,3 +151,48 @@ This document's own `13/13`/`145 passed` counts above describe this implementati
 #7 and remain historically accurate; they are not the current post-delta count for either language
 (Python/shared is now at 14 canonical XFORM scenarios after its own `XFORM-R005` fix, §21 of the
 layer document; Rust remains at its original 13 until its own delta remediation lands).
+
+## XFORM-R005 Rust remediation (2026-08-24)
+
+The pending state immediately above is preserved as the pre-remediation snapshot. Rust independently
+reviewed the shared package at `minion-agent@8a398235187850f88f3942617d9e62a845cd7290` /
+`minion-agent-docs@f2fb2d544cf2e847d197f294a2394eb937714705` against pinned Pi
+`b7bb00b936dbe21b8e160b3e89efdec361846699` and recorded:
+
+```text
+XFORM-R005 SHARED CONTRACT    APPROVED
+XFORM-R006                    CONFIRMED
+XFORM-R007                    CONFIRMED
+```
+
+The pinned Pi function was executed directly with a normalizer returning `""`. It rewrote the
+`ToolCall.id` to `""`, retained the real result at its original ID, and synthesized an empty-ID
+orphan. A direct Rust test first failed with two messages instead of three, proving the existing
+unconditional real-result rewrite reproduced the defect. The narrow fix retains the empty mapping
+and ToolCall rewrite while requiring a non-empty, changed mapped value before rewriting a real
+ToolResult.
+
+```text
+Rust delta PR                 EGAILab/minion-agent#8
+Implementation head          b9b5b4cb4a6c9fba3965439c2cf26152e6a9c334
+Merge / post-merge main      feed2fba2f5a02013f1ededcfa432db1c0e1d997
+Independent review           RUST LAYER 04 DELTA — XFORM-R005 APPROVED
+
+XFORM canonical              14 discovered / 14 executed / 14 passed / 0 deferred
+Session canonical            20 discovered / 20 executed / 20 passed / 0 deferred
+
+cargo fmt --check                                            PASS
+cargo clippy --workspace --all-targets --all-features
+  -- -D warnings                                             PASS
+cargo test --workspace --all-features                        146 passed / 0 failed
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps   PASS
+cargo run -p xtask -- conformance verify                     PASS
+```
+
+The canonical adapter changed only its inventory assertion from 13 to 14. Callback invocation,
+mapping retention, ToolCall and ToolResult rewrite decisions, and orphan synthesis remain in the
+real typed transformer. Session semantics were unchanged.
+
+No provider algorithm, provider-wire replay, or Layer-05 work was added. Rust reports
+`XFORM-R005` remediated and post-merge green; the Layer-04 post-certification delta remains open
+until the shared assurance owner performs manifest pending-marker cleanup and final shared closure.
