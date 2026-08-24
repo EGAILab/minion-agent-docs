@@ -15,14 +15,16 @@ corrected documents are self-consistent from its own side too.
 **Reviewed commits (delta candidate):**
 
 ```text
-minion-agent        <PYTHON_CANDIDATE_SHA>   spec/target-model-transformation.md (rule 13 rewrite),
+minion-agent        8a398235187850f88f3942617d9e62a845cd7290   spec/target-model-transformation.md
+                     lives in minion-agent-docs (see below); this SHA covers
                      src/minion_agent/llm/transform_messages.py (matching-result rewrite condition),
                      tests/llm/test_transform_messages.py (+4 tests),
                      conformance/agent/tool-call-id-normalization-empty-string.yaml (new),
                      pi-parity-manifest.yaml (AI-020..AI-026 rust: pointers, AI-023 rule text,
                      AI-026 rule text)
-minion-agent-docs   <DOCS_CANDIDATE_SHA>      assurance/layers/04-target-model-transformation.md
-                     (header rewrite + §21), assurance/layers/
+minion-agent-docs   871f2d05f32213ccb7e38cbd580c906c2b7ca76e   spec/target-model-transformation.md
+                     (rule 13 rewrite), assurance/layers/04-target-model-transformation.md (header
+                     rewrite + §21), assurance/layers/
                      04-target-model-transformation-rust-implementation.md (delta note appended,
                      original evidence unchanged), this handoff
 ```
