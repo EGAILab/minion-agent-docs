@@ -11,12 +11,13 @@ ToolCall{id,name,arguments,thought_signature?,namespace?}
 UserMessage{role=user,content:string|[TextBlock|ImageBlock],timestamp}
 
 AssistantMessage{
-  role=assistant,content,api,provider,model,response_model?,response_id?,diagnostics?,
-  usage,stop_reason,deferred?,error_message?,raw_stop_reason?,end_turn?,timestamp
+  role=assistant,content:[TextBlock|ThinkingBlock|ToolCall],api,provider,model,response_model?,
+  response_id?,diagnostics?,usage,stop_reason,deferred?,error_message?,raw_stop_reason?,end_turn?,
+  timestamp
 }
 
 ToolResultMessage{
-  role=tool_result,tool_call_id,tool_name,content,details?,usage?,
+  role=tool_result,tool_call_id,tool_name,content:[TextBlock|ImageBlock],details?,usage?,
   added_tool_names?,is_error,timestamp
 }
 

@@ -1,7 +1,10 @@
 # LLM Seam — Fidelity Assurance & Certification
 
 **Layer ID:** `02`  
-**Status:** `CERTIFIED`  
+**Status:** historically `CERTIFIED` (2026-08-23) — **POST-CERTIFICATION DELTA AUDIT OPEN**
+(2026-08-24, operational status `IN_DELTA_AUDIT`; scope limited to `LLM-F011`, see §0). The
+2026-08-23 certification event itself is not erased or retracted — only `ToolResultMessage.tool_name`
+requiredness is reopened.  
 **Audit date:** 2026-08-23 (§1-6 and §8-14 complete: Pi source read directly, requirement
 traceability, module and existing-test audits, and the full §8-14 review all done; 4 PI_PARITY_DEFECT
 findings (LLM-F003..F006) resolved in the prior pass; one more hardening fix (LLM-F007, centralizing
@@ -24,6 +27,40 @@ through PR #3 (§18, §19). No active `PI_PARITY_DEFECT`, `PI_BEHAVIOR_UNCERTAIN
 adapter/service boundary, central settled `AssistantStream`, scripted real-trait adapter, Rust tests,
 and a thin partial agent-family conformance adapter are merged through PR #3 at
 `05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19.
+
+---
+
+## 0. Post-certification delta audit (2026-08-24)
+
+**Trigger:** Rust's independent Layer-03 implementation (PR #4, merge
+`2519fc1565ff40ffeb8aa047bc2d3f0aa8bef512`) surfaced new cross-language evidence that its own
+previously-correct `ToolResultMessage.tool_name: String` had to be weakened to `Option<String>` to
+consume a Python-authored canonical scenario that scripted `tool_name: null` — a regression Rust's
+own implementation-owner review would otherwise not have introduced. Per the governance guardrail
+added this pass (`process/implementation-conformance-workflow.md` §4.6), this triggers a
+post-certification delta audit of the owning earlier layer (Layer 02, since `tool_name`
+requiredness is vocabulary, not Session-owned) before the finding may be classified as merely local
+Rust hardening. **This is evidence for the two-language architecture, not a process failure**:
+neither implementation is the semantic authority, and Rust's independent construction caught a real
+Python/shared-contract defect Python's own self-review had missed.
+
+**Scope discipline:** this audit reopens only `LLM-F011`'s exact semantics. It does not restart
+Layer 02, does not erase the 2026-08-23 certification event, and does not start Layer 04 (XFORM).
+
+### Delta finding
+
+| ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `LLM-F011` | `02` (vocabulary requiredness); population from the executed call is `TOOL-###` territory; persistence is `03` | High — retroactive parity defect against an already-frozen, already-correct spec | Rust `llm/vocabulary.rs` diff (`cda6b50`→`31ed669`): `tool_name: String` → `Option<String>`, a regression forced by a Python-authored canonical scenario; pinned Pi `packages/ai/src/types.ts:449` `ToolResultMessage.toolName: string` (no `?`, confirmed required); `spec/llm.md` already had no `?` on `tool_name` before this pass | YES — independently re-read Pi source directly and diffed Rust's real merged commit, not taken from the user's framing or Rust's self-report | `PI_PARITY_DEFECT` (Python's `tool_name: str \| None = None` diverged from an already-correct, already-certified spec) **+** `CONTRACT_ASSURANCE_DEFECT` (the shared schema allowed `tool_name: ["string","null"]` and the canonical round-trip scenario scripted `null`, together manufacturing the bad evidence that forced Rust's regression) | Python/shared remediation `COMPLETE`; cross-language approval `PENDING RUST RE-REVIEW` | YES — `session-scenario.schema.json` (`toolResultDetail.tool_name` now `"string"`, `step.append` requires `tool_name` when `role: tool_result`); `rich-assistant-message-round-trip.yaml` (both tool_result appends now supply a real `tool_name`); `pi-parity-manifest.yaml` `AI-006` row updated | YES — `messages.py::ToolResultMessage.tool_name` now required; `tools/result.py::ToolResult.tool_name` required + `text_result()` signature threaded; `tools/execute.py`'s 5 construction sites now pass `call.name`; `session/derive.py` encode/decode no longer treat it as optional; `tests/conformance/session_runner.py` reads it as schema-required; ~21 test call sites across 8 test files updated to supply real tool names | **NOT modified this pass** (explicitly deferred) — expected future Rust fix: revert `llm/vocabulary.rs::ToolResultMessage.tool_name` from `Option<String>` back to `String`, undoing PR #4's forced regression, once Rust approves this corrected contract | `rich-assistant-message-round-trip.yaml` (both scripted tool_result appends now carry distinct real `tool_name` values); `tests/session/test_derive.py::test_tool_result_message_round_trips` | Reopens Layer 02 for this one vocabulary requirement only; blocks Layer 03's own delta certification (Session persists this field) until Layer 02's delta certifies; blocks fresh Rust review of both layers until Python/shared gates are green (confirmed this pass: 750 passed/42 xfailed/100% coverage, `ruff`/`mypy` clean) |
+
+**Explicitly avoided, per instruction:** did not make `tool_name` optional, did not substitute an
+empty string, did not invent a fake tool name in the runner. The real construction path
+(`call.name` from the model's own `ToolCallBlock`, already available at every production call site)
+was traced and used instead.
+
+**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
+candidate; Layer 02 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is
+independently re-verified, mirroring the `LLM-F010` review discipline this layer already established.
 
 ---
 

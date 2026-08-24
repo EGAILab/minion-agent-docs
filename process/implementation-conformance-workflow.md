@@ -308,6 +308,44 @@ known contract limitations have explicit dispositions
 A layer MUST NOT be certified if its apparent conformance depends on architectural workarounds that
 mask a known `CONTRACT_ASSURANCE_DEFECT`.
 
+**Post-certification delta audit trigger (added 2026-08-24, `LLM-F011`/`SES-F004`..`SES-F008`
+precedent).** Certification is not a one-time seal that later evidence cannot reopen. If a
+later-language implementation — built independently against an already-certified layer's contract —
+discovers any of the following, it MUST trigger a post-certification delta audit of the owning
+earlier layer before the finding may be classified as merely local hardening in the later
+implementation:
+
+```text
+a shared-contract ambiguity the certified layer's own audit did not resolve
+a cross-language mismatch against the certified layer's stated contract
+a violation of the certified layer's contract by the certified implementation itself
+a workaround the later implementation had to adopt only to satisfy conformance
+   against the certified layer's contract as currently written
+```
+
+A post-certification delta audit:
+
+```text
+does NOT restart the owning layer's audit from scratch
+does NOT erase or retract the historical certification event or its date
+DOES reopen only the specific finding's affected semantics
+DOES record the layer's status as "historically CERTIFIED, POST-CERTIFICATION
+   DELTA AUDIT OPEN" (operational status IN_DELTA_AUDIT) until the delta finding
+   is independently reproduced, classified, remediated, and re-certified through
+   the same cross-language review discipline the original certification used
+```
+
+Each delta finding gets its own finding ID under its owning layer (never combined into one
+umbrella finding) and MUST be independently reproduced against current pinned Pi, the current
+shared contract, and the current implementation before being accepted — never mechanically
+accepted from the reporting implementation's own framing, per §3's semantic-authority rule.
+
+This is the same governance gap `LLM-F011`/`SES-F004`..`SES-F008` exposed in practice: Rust's PR #4
+found real Layer-02/Layer-03 contract defects, but nothing in the workflow up to that point required
+those findings to reopen the owning layers' certifications automatically. The fix is this trigger
+rule, not a weaker independence model — **neither implementation is the semantic authority, which is
+exactly why evidence from either one can and should reopen a certified layer when it is real.**
+
 ---
 
 ## 5. Per-phase development workflow
