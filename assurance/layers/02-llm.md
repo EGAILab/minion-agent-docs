@@ -1,10 +1,13 @@
 # LLM Seam — Fidelity Assurance & Certification
 
 **Layer ID:** `02`  
-**Status:** `CERTIFIED` (2026-08-23; original certification event, unchanged) — **post-certification
-delta remediation `CLOSED`** (2026-08-24: `LLM-F011` discovered via Rust's independent Layer-03
-implementation, delta-audited, remediated in Python/shared and Rust, re-certified — see §0 for the
-full sequence, preserved in full, not flattened).  
+**Status:** historically `CERTIFIED` (2026-08-23; original certification event, unchanged) —
+**POST-CERTIFICATION DELTA AUDIT OPEN** (2026-08-24, operational status `IN_DELTA_AUDIT`; scope
+limited to `LLM-F012`, see §0). `LLM-F011`'s own post-certification delta remediation reached
+`CLOSED` on 2026-08-24 (discovered via Rust's independent Layer-03 implementation, delta-audited,
+remediated in Python/shared and Rust, re-certified) before `LLM-F012` reopened this one further,
+narrower vocabulary-typing question — see §0 for the full sequence of both cycles, preserved in
+full, not flattened.  
 **Audit date:** 2026-08-23 (§1-6 and §8-14 complete: Pi source read directly, requirement
 traceability, module and existing-test audits, and the full §8-14 review all done; 4 PI_PARITY_DEFECT
 findings (LLM-F003..F006) resolved in the prior pass; one more hardening fix (LLM-F007, centralizing
@@ -120,6 +123,54 @@ status restored to **`CERTIFIED`**, preserving the original 2026-08-23 certifica
 intermediate step of this sequence (discovery → delta audit → Python/shared remediation → Rust
 delta-contract approval → consolidated Rust implementation remediation → this closure) rather than
 presenting the corrected state as though it were always so.
+
+---
+
+## 0b. Second post-certification delta audit — `LLM-F012` (2026-08-24)
+
+**Trigger:** an independent Rust implementation-owner review of Layer 04 (target-model
+transformation), reviewing a Python/shared candidate that consumed this layer's certified
+vocabulary, found that `UserMessage(content="hello", timestamp=1)` — a construction the frozen
+contract (`spec/llm.md`: `UserMessage.content: string | [TextBlock|ImageBlock]`) and pinned Pi
+(`types.ts::UserMessage.content: string | (TextContent|ImageContent)[]`) both already required to
+be valid — failed static type-checking against `messages.py`'s actual declared type,
+`content: tuple[ContentBlock, ...]`. Independently reproduced directly (`mypy` against a minimal
+repro) before accepting, not taken from the Layer-04 review's own report. `AssistantMessage.content`
+and `ToolResultMessage.content` were found to share the same defect in the other direction — both
+were typed against the fully generic `ContentBlock` union rather than their own frozen
+role-specific unions, meaning role-invalid constructions (`AssistantMessage` + `ImageBlock`,
+`UserMessage` + `ThinkingBlock`, etc.) were not statically rejected either, even though `SES-F005`
+had already established these combinations are invalid at the schema level.
+
+Per the governance guardrail (`process/implementation-conformance-workflow.md` §4.6), this reopens
+Layer 02 narrowly: the contract itself (`spec/llm.md`) was already correct — this is a Python
+implementation defect against an already-correct, already-certified spec, the same shape as
+`LLM-F011`'s own finding.
+
+**Scope discipline:** reopens only `LLM-F012`'s exact semantics (the three message types' `content`
+field typing and `text_of()`'s handling of string content). Does not restart Layer 02, does not
+erase the 2026-08-23 certification event or `LLM-F011`'s own closure, and does not start Layer 05.
+
+### Delta finding
+
+| ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `LLM-F012` | `02` | High — the certified public vocabulary's own construction API rejected a value its own frozen contract requires to be valid | Layer-04 Rust re-review (`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`); pinned Pi `types.ts::UserMessage.content`; `spec/llm.md`'s own already-correct `string \| [...]` shape | YES — independently reproduced via direct `mypy` probe against the real `messages.py`, not taken from the Layer-04 review's framing | `PI_PARITY_DEFECT` — `spec/llm.md` and pinned Pi were already correct; only `messages.py`'s declared types had silently diverged | `RESOLVED` (Python/shared); Rust delta review `PENDING` | NO — no `spec/llm.md` change required; the contract was already correct | YES — `content.py` gained `UserContentBlock`/`AssistantContentBlock`/`ToolResultContentBlock` role-specific aliases; `messages.py`'s three message types retyped to their own frozen union (`UserMessage.content: str \| tuple[UserContentBlock, ...]`, etc.); `text_of()` handles string content directly; nine consumer call sites across `session/derive.py`, `llm/transform_messages.py`, `llm/adapters/mock.py`, `tools/result.py` retyped to their real role-specific shape | NOT modified — Layer 02's own certified Rust vocabulary was not audited for this defect this pass; Rust's fresh delta review will confirm independently whether its own typed vocabulary already avoided this class of error | `tests/typing/valid_message_construction.py` (permanent static-type evidence, run via `mypy src/minion_agent tests/typing/valid_message_construction.py` — not part of the default scoped `mypy` gate); `test_text_of_a_string_valued_user_message_is_the_string_itself` | Reopens Layer 02 for this one vocabulary-typing question; Layer 03's own `SES-F009` (Session persistence of the same field) and Layer 04's `XFORM-R001` both depended on this fix landing first |
+
+**Explicitly avoided, per instruction:** did not weaken the typed modern public vocabulary to
+accept invalid states more broadly than necessary; did not add new runtime validation to
+compensate for the type gap (role/content legality remains a schema-level concern, `SES-F005`,
+consistent with the project's rule against adding runtime checks solely to mimic static typing);
+did not fold this into `LLM-F011`'s already-closed finding or its count.
+
+**Verification:** full fresh Python gates (818 passed, 29 xfailed, 100% coverage; `ruff`/`mypy`
+clean; explicit `mypy src/minion_agent tests/typing/valid_message_construction.py` clean; 5
+independent negative static probes for role-invalid constructions all correctly rejected) — full
+detail in `assurance/layers/04-target-model-transformation.md` §0.7/§0.9/§16, not duplicated here.
+
+**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
+candidate; Layer 02 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is
+independently re-verified.
 
 ---
 

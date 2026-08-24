@@ -1,11 +1,14 @@
 # Session + Artifacts — Fidelity Assurance & Certification
 
 **Layer ID:** `03`  
-**Status:** `CERTIFIED` (2026-08-24; original certification event, unchanged) — **post-certification
-delta remediation `CLOSED`** (2026-08-24: `SES-F004`..`SES-F008` discovered via Rust's independent
-Layer-03 implementation, delta-audited, remediated in Python/shared and Rust — including a Rust
-rejection and narrow second remediation for `SES-F007` — re-certified. Full sequence preserved in
-§0, not flattened).  
+**Status:** historically `CERTIFIED` (2026-08-24; original certification event, unchanged) —
+**POST-CERTIFICATION DELTA AUDIT OPEN** (2026-08-24, operational status `IN_DELTA_AUDIT`; scope
+limited to `SES-F009`, see §0b). `SES-F004`..`SES-F008`'s own post-certification delta remediation
+reached `CLOSED` on 2026-08-24 (discovered via Rust's independent Layer-03 implementation,
+delta-audited, remediated in Python/shared and Rust — including a Rust rejection and narrow second
+remediation for `SES-F007` — re-certified) before `SES-F009` reopened this one further, narrower
+question about `UserMessage.content` persistence. Full sequence of both cycles preserved in §0/§0b,
+not flattened.  
 **Rust implementation completion (2026-08-24):** `IMPLEMENTED` on branch
 `feat/rust-layer-03-session-artifacts` at `31ed6698a1e4a9f5d3134d2c2b1788f920ceb330`, consuming the
 certified contract at `minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. The typed Rust
@@ -285,6 +288,55 @@ semantic field changed, so per the workflow's own rule (`process/implementation-
 workflow.md` §4.6) a fresh Rust implementation-owner review is not required solely for a pointer
 update to the exact implementation that just produced the approved evidence. Manifest re-validated:
 52 rows (unchanged count), valid YAML, no duplicate ids.
+
+---
+
+## 0b. Second post-certification delta audit — `SES-F009` (2026-08-24)
+
+**Trigger:** the same Layer-04 Rust re-review that surfaced `LLM-F012` (§0b of
+`assurance/layers/02-llm.md`) also found that Session persistence could not safely round-trip a
+valid `UserMessage` whose `content` is a bare string, once `LLM-F012`'s fix made that a real,
+statically-valid construction: `session/derive.py::encode_message()` computed
+`[_encode_block(block) for block in message.content]` before dispatching on role, which would
+iterate a string character-by-character exactly like `XFORM-R001`'s original defect. Independently
+reproduced directly (constructing `UserMessage(content="hello", timestamp=1)` and calling
+`encode_message()` before any fix) rather than assumed from the Layer-04 review's report.
+
+Per the governance guardrail (`process/implementation-conformance-workflow.md` §4.6), this reopens
+Layer 03 narrowly: `spec/session.md` says nothing that contradicts a string-valued `UserMessage`
+passing through Session unchanged (Session's own obligation is "store validly," not "reshape into a
+canonical form"), so this is classified as a genuine Python implementation gap exposed by new
+cross-layer evidence, not a defect in Session's own frozen contract — though the schema's DSL
+*did* need an additive extension (no prior mechanism could even script a string-valued append), so
+a `CONTRACT_ASSURANCE_DEFECT` component is also recorded for that evidence gap.
+
+**Scope discipline:** reopens only `SES-F009`'s exact semantics (`encode_message`/`decode_message`'s
+handling of `UserMessage.content`, and the canonical DSL/schema extension needed to observe it).
+Does not restart Layer 03, does not erase the 2026-08-24 certification event or
+`SES-F004`..`SES-F008`'s own closure, and does not start Layer 05.
+
+### Delta finding
+
+| ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `SES-F009` | `03` | Medium — a valid Layer-02 message could not be safely persisted, but only reachable once `LLM-F012` made the construction itself statically valid | Layer-04 Rust re-review (`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`); direct reproduction against `session/derive.py` | YES — independently reproduced by calling the real `encode_message()` on a real string-valued `UserMessage` before any fix | `CONTRACT_ASSURANCE_DEFECT` (the canonical DSL had no way to script or observe a string-valued append at all) **+** Python implementation defect (`encode_message`/`decode_message` assumed block-array content uniformly) | `RESOLVED` (Python/shared); Rust delta review `PENDING` | YES — `conformance/schema/session-scenario.schema.json`: `step.append.content` gained a `user`-only string alternative (role-conditional `allOf`, matching the existing content-type-restriction pattern); new `expect_user_details` observation, since `expect_messages`' role/text projection cannot distinguish a string from a single-`TextBlock` array | YES — `session/derive.py::encode_message`/`decode_message` no longer compute `content` uniformly before role dispatch; the `user` branch preserves a string as a string; `session_runner.py` gained `_user_content()`/`_user_detail()` | NOT modified — Rust's own certified Session implementation was not audited for this defect this pass; its fresh delta review will confirm independently | `conformance/session/string-user-message-round-trip.yaml` (scripts a string message, a single-`TextBlock`-array message, and a post-fork string message; `expect_user_details` observes the real derived representation of each); `test_string_valued_user_message_round_trips_as_a_string`, `test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip` | Reopens Layer 03 for this one persistence question; depended on `LLM-F012` landing first (Session persists Layer-02 vocabulary, it does not own its typing); Layer 04's `XFORM-R001` depended on this fix too, transitively |
+
+**Explicitly avoided, per instruction:** did not normalize a scripted string into a one-block
+array anywhere (Session's own obligation is to preserve, not reshape); did not conflate the
+existing `text` DSL shorthand (which still means "one `TextBlock`," unchanged) with the new string
+alternative; did not make the Session runner infer the expected representation from the input
+rather than observing the real derived value.
+
+**Verification:** full fresh Python gates (818 passed, 29 xfailed, 100% coverage; `ruff`/`mypy`
+clean), including the new canonical scenario and both new unit tests, plus re-confirmation that all
+18 pre-existing current-layer Session scenarios and `request-reconstruction-after-target-transform`
+remain green — full detail in `assurance/layers/04-target-model-transformation.md` §0.8/§16, not
+duplicated here. Fresh Session canonical inventory after this pass: 19 discovered, 19 current-layer
+executable (18 plus the new `string-user-message-round-trip.yaml`), 0 deferred, 0 placeholders.
+
+**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
+candidate; Layer 03 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is
+independently re-verified.
 
 ---
 

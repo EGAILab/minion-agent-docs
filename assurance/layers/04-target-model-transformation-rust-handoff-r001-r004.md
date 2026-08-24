@@ -40,6 +40,19 @@ minion-agent-docs   6f18962   spec/target-model-transformation.md (rule 2 string
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
+**Status update (2026-08-24): Rust already performed this review.** Recorded in full in
+`04-target-model-transformation-rust-r001-r004-rereview.md`. Result: `LAYER 04 XFORM SHARED
+CONTRACT — REJECTED — PI_PARITY_DEFECT`. `XFORM-R003` was confirmed `APPROVED` (unchanged);
+`XFORM-R001`/`XFORM-R002`/`XFORM-R004` remained open, with the review tracing `XFORM-R001`'s root
+cause further upstream to already-certified Layer 02/03 Python implementations
+(`LLM-F012`/`SES-F009`, see `assurance/layers/02-llm.md` §0b and `assurance/layers/
+03-session-artifacts.md` §0b). All findings independently reproduced and repaired; the fresh,
+dependency-ordered re-review requests are `02-llm-delta-rust-handoff-llm-f012.md` (review first),
+`03-session-artifacts-delta-rust-handoff-ses-f009.md` (second), and
+`04-target-model-transformation-rust-handoff-third-pass.md` (third, this layer's own remaining
+`XFORM-R001`-complete/`XFORM-R002`/`XFORM-R004` fixes plus a regression check). This document
+remains the record of the first re-review request and its full scope — not rewritten.
+
 **Do not modify Rust in response to this package without first recording a verdict.** Rust
 implementation timing (`REQUIRED NOW` vs. `EXPLICITLY DEFERRED BY PLAN`) is still not adjudicated by
 this package — that determination remains for the reviewer to make only after a shared-contract

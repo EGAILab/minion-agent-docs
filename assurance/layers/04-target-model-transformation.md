@@ -1,25 +1,34 @@
 # Target-Model Message Transformation (XFORM) — Fidelity Assurance & Certification
 
 **Layer ID:** `04`
-**Status:** `IN_AUDIT` — first Python/shared candidate (`84c6ba2`/`a4eef91`) was independently
-Rust-reviewed and **`REJECTED — PI_PARITY_DEFECT`** (`04-target-model-transformation-rust-review.md`,
-docs `0f3d419`); narrowly remediated this pass (§0); a corrected candidate awaits fresh Rust
-re-review. Not `CERTIFIED`: certification requires an `APPROVED` shared-contract verdict and, if
-Rust implementation is required at that point, a green Rust implementation and gates too (§17).
-**Audit date:** 2026-08-24 (two passes: first pass — Pi source read directly and in full,
+**Status:** `IN_AUDIT` — twice independently Rust-reviewed and twice **`REJECTED —
+PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs `0f3d419`;
+second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`). The second
+rejection traced its root cause upstream to already-certified Layer 02/03 Python implementations
+diverging from their own already-correct contracts, reopening `LLM-F012` (Layer 02) and `SES-F009`
+(Layer 03) narrowly (§0.6) — those layers' own status is `historically CERTIFIED,
+POST-CERTIFICATION DELTA AUDIT OPEN`, not reopened from scratch. A corrected candidate, fixing the
+upstream layers plus the remaining `XFORM-R001`/`XFORM-R002`, awaits fresh Rust re-review. Not
+`CERTIFIED`: certification requires an `APPROVED` shared-contract verdict and, if Rust
+implementation is required at that point, a green Rust implementation and gates too (§17).
+**Audit date:** 2026-08-24 (three passes: first — Pi source read directly and in full,
 shared-contract gaps found and repaired, Python implementation and tests written, canonical evidence
-authored, Session's Layer-04 deferment activated, Python gates green, sent for review; second pass —
-independently reproduced all four rejection findings before accepting them, repaired each narrowly,
-re-verified Python gates fresh, sent a corrected candidate for re-review.)
+authored, Session's Layer-04 deferment activated, Python gates green, sent for review; second —
+independently reproduced all four first-rejection findings before accepting them, repaired each
+narrowly, re-verified Python gates fresh, sent a corrected candidate for re-review; third — the
+second rejection's `XFORM-R001`/`XFORM-R002` findings independently reproduced, root cause traced
+to Layer 02/03 (§0.6), those two layers' own Python implementations repaired (`LLM-F012`/
+`SES-F009`), `XFORM-R001` closed completely and `XFORM-R002` repaired at the schema/runner level,
+Python gates re-verified fresh a third time.)
 **Auditor:** Claude (Python-driven, per adopted workflow)
 **Python status:** `IMPLEMENTED` — semantic-owner review complete; cross-language review verdict on
 the corrected candidate `PENDING`
-**Rust status:** `NOT STARTED` — no Rust code was touched in either pass, per the adopted
+**Rust status:** `NOT STARTED` — no Rust code was touched in any pass, per the adopted
 review-before-remediation workflow (contract review must return `APPROVED` first)
 
 ---
 
-## 0. Rust rejection and narrow remediation (2026-08-24, second pass)
+## 0. Rust rejection and narrow remediation (2026-08-24, second and third passes)
 
 **Formal verdict on the first candidate** (`minion-agent@84c6ba2` / `minion-agent-docs@a4eef91`,
 `04-target-model-transformation-rust-review.md`):
@@ -153,6 +162,140 @@ the real `transform_messages()` seam directly (not the schema): `"hello"` + non-
 since it is not an array of image blocks); string content transformed identically under a
 vision-capable and a non-vision target. All passed — see §0.1 and the 9 new unit tests.
 
+### §0.6 — Second Rust rejection: root cause reclassified upstream
+
+The candidate above (`minion-agent@42ef135` / `minion-agent-docs@d8ebcbe`) was sent for re-review
+and again returned `REJECTED — PI_PARITY_DEFECT`
+(`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`). Reproduced
+independently before accepting: `XFORM-R001`'s *runtime* transform behavior was confirmed correct
+(the string-preservation branch worked for every probed input), but a direct static probe —
+`UserMessage(content="hello", timestamp=1)` against the then-current `messages.py` — reported
+`Argument "content" has incompatible type "str"; expected "tuple[...]"`. The certified public
+Python vocabulary itself, not just the transform function, still excluded the frozen `string |
+[TextBlock|ImageBlock]` shape `spec/llm.md` already specifies. `XFORM-R002` was also confirmed
+still open: `AssistantMessage` without `usage` validated against the schema, and
+`transform_runner.py::_usage(None)` silently manufactured a default `Usage()` — semantic
+fabrication the schema's completeness alone did not prevent, since nothing required the field in
+the first place. `XFORM-R003` was confirmed `APPROVED` (unchanged, not reopened). `XFORM-R004` was
+confirmed still open (the stale `12`-count inconsistencies §0.4 introduces below).
+
+**This is not confined to Layer 04.** `UserMessage.content`'s type is Layer-02 vocabulary
+(`minion_agent/llm/messages.py`), and `session/derive.py::encode_message()` — Layer-03, certified —
+iterates `message.content` before role dispatch, so it could not safely persist a real string-typed
+`UserMessage` either. Per the post-certification delta audit guardrail
+(`process/implementation-conformance-workflow.md` §4.6: a later-language implementation's
+discovery of a certified-implementation violation must trigger a delta audit of the owning
+layer), this reopens Layer 02 and Layer 03 narrowly — not because their *contracts* were wrong
+(`spec/llm.md` already specified the string shape correctly) but because their Python
+*implementations* had silently diverged from an already-correct, already-certified contract,
+exactly the same shape of defect `LLM-F011`'s `tool_name` finding was. New findings:
+`LLM-F012` (Layer 02, `PI_PARITY_DEFECT`) and `SES-F009` (Layer 03,
+`CONTRACT_ASSURANCE_DEFECT` + Python implementation defect). Both layers' status:
+`historically CERTIFIED, POST-CERTIFICATION DELTA AUDIT OPEN` (`IN_DELTA_AUDIT`) — full detail in
+`assurance/layers/02-llm.md` §0 (continued) and `assurance/layers/03-session-artifacts.md` §0
+(continued). Neither layer's original certification date or `LLM-F011`/`SES-F004`..`F008` closure
+history is erased.
+
+### §0.7 — `LLM-F012` fix (Layer 02)
+
+`minion_agent/llm/content.py` gained role-specific content-block aliases:
+`UserContentBlock = TextBlock | ImageBlock`, `AssistantContentBlock = TextBlock | ThinkingBlock |
+ToolCallBlock`, `ToolResultContentBlock = TextBlock | ImageBlock` — the generic `ContentBlock`
+alias is retained only for internal generic helpers (encode/decode, normalization), never for a
+message type's own field. `minion_agent/llm/messages.py`:
+`UserMessage.content: str | tuple[UserContentBlock, ...]`,
+`AssistantMessage.content: tuple[AssistantContentBlock, ...]`,
+`ToolResultMessage.content: tuple[ToolResultContentBlock, ...]`; `text_of()` returns a
+string-valued `content` directly instead of attempting to iterate it as blocks. Every consumer
+`mypy` (full-source run, not test-scoped) flagged was fixed at its own real role-specific type —
+`session/derive.py`, `llm/transform_messages.py`, `llm/adapters/mock.py::ScriptedResponse`,
+`tools/result.py::ToolResult` — nine call sites across four files, none papered over with a cast to
+the generic `ContentBlock` (the two `typing.cast` uses that do exist, in `derive.py`'s
+`decode_message`, narrow `_decode_block`'s generic return to the role already known from `raw["role"]`
+at that call site, consistent with the project's rule against adding new runtime validation solely
+to mimic static typing — role/content legality remains a schema-level concern, `SES-F005`).
+
+Permanent static-type evidence: `tests/typing/valid_message_construction.py` (new, never imported
+or executed by pytest — mypy checking it *is* the test) proves seven positive constructions
+type-check, including the three specifically named in the second rejection:
+`UserMessage(content="hello", ...)`, `UserMessage(content=(TextBlock(...),), ...)`,
+`UserMessage(content=(ImageBlock(...),), ...)`, plus the analogous `AssistantMessage`/
+`ToolResultMessage` cases. Run explicitly: `mypy src/minion_agent
+tests/typing/valid_message_construction.py` (a single file argument fails with
+`import-untyped` errors, since mypy then treats the installed `minion_agent` package as
+third-party; including `src/minion_agent` in the same invocation resolves it as first-party). Five
+negative probes (role-invalid combinations — user+`ThinkingBlock`, user+`ToolCall`, assistant+
+`ImageBlock`, tool_result+`ThinkingBlock`, tool_result+`ToolCall`) were also run directly and all
+five correctly rejected with the exact incompatible-type error naming the frozen union — confirmed,
+not assumed, and not committed as a permanent fixture (a file that must fail to type-check cannot
+itself be part of a passing gate).
+
+`LLM-F012` — **`RESOLVED`**, Python/shared side; Rust delta review pending.
+
+### §0.8 — `SES-F009` fix (Layer 03)
+
+`session/derive.py::encode_message`/`decode_message` no longer compute `content` once, uniformly,
+before role dispatch. `encode_message`'s `user` branch: a `str`-valued `content` encodes as itself
+(already JSON-safe); otherwise the existing block-array encoding runs unchanged. `decode_message`'s
+`user` branch: a JSON string decodes to a Python string directly; a JSON array decodes through the
+existing `_decode_block` path. Assistant and tool-result branches are unchanged (their content has
+no string variant). The `text` scenario-DSL shorthand was deliberately left alone — it still means
+"one `TextBlock`," not "a string," because conflating the two would itself reintroduce the
+representation-conflation this finding is about.
+
+`conformance/schema/session-scenario.schema.json`'s `step.append.content` gained a `user`-only
+(and plugin-role, which builds as a user message) string alternative, via the same
+role-conditional `allOf`/`if`/`then` pattern already governing content-type-enum restriction —
+`assistant`/`tool_result` remain array-only, matching their vocabulary's own lack of a string
+variant. New `expect_user_details` observation (mirroring the existing `expect_assistant_details`/
+`expect_tool_result_details` pattern) exposes the real derived `UserMessage.content` representation
+directly, since `expect_messages`' role/text projection cannot distinguish a string from a
+single-`TextBlock` array — both produce identical visible text. `session_runner.py` gained
+`_user_content()` (decode: string stays string) and `_user_detail()` (encode-for-comparison: same
+rule), wired into the result dict as `user_details`.
+
+New canonical scenario `conformance/session/string-user-message-round-trip.yaml`: scripts a string
+message, a single-`TextBlock`-array message, and — after a real `fork` — another string message;
+`expect_user_details` proves all three retain their real scripted representation through actual
+Session persistence and derivation, including across a fork boundary. Two new focused unit tests in
+`tests/session/test_derive.py` (`test_string_valued_user_message_round_trips_as_a_string`,
+`test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip`) pin the
+encode/decode behavior directly, independent of the canonical scenario.
+
+`SES-F009` — **`RESOLVED`**, Python/shared side; Rust delta review pending.
+
+### §0.9 — `XFORM-R001` (complete) and `XFORM-R002` fixes (Layer 04, this pass)
+
+With `LLM-F012` fixed, `XFORM-R001` closes at the layer it was always ultimately about: the
+production seam no longer relies on Python's runtime laxity to accept a value its own declared
+public type forbids. No change was needed in `transform_messages.py`'s own logic (the runtime
+branch from the first remediation was already correct); `transform_runner.py`'s decoder helpers
+were simplified since `str | tuple[...] | None` is now the real, statically-valid input shape
+rather than a value smuggled past an incomplete type.
+
+`XFORM-R002`: `agent-transform-scenario.schema.json`'s `usage` $def and `cost` $def each gained a
+`required` list matching every non-optional `Usage`/`Cost` member (`spec/llm.md`: only
+`cache_write_1h` and `reasoning` carry `?`); both assistant `required` lists (input and output
+message shapes) gained `usage`. `transform_runner.py::_usage()` now reads every field directly
+(`raw["input"]`, not `raw.get("input", 0)`) — a schema-valid scenario always supplies a complete
+object, so there is nothing left to default or fabricate; `ToolResultMessage.usage` remains
+genuinely optional at its own call site (`None` when the key is absent), and is exercised through
+the same now-strict `_usage()` when present, so an incomplete-but-present tool-result usage is
+still correctly rejected by the schema before the runner ever sees it. All 13 XFORM canonical
+scenarios' `transform.messages` assistant entries were updated with a complete, deliberately-zeroed
+`usage` object where none was scripted before — evidence completeness, not a behavior change (none
+of these scenarios' own assertions depend on usage values).
+
+`XFORM-R001` — **`RESOLVED`** (complete, upstream root cause fixed). `XFORM-R002` — **`RESOLVED`**.
+Both Rust delta review pending.
+
+### §0.10 — Fresh adversarial probe matrix (this pass)
+
+The full 13-case matrix from §0.5 was re-run unchanged (all still correct) plus the new
+`usage`-requiredness matrix — 13 cases, all producing the required accept/reject outcome (§25's
+own matrix; full results recorded in §16's fresh gate output and independently reproduced again
+before push, not reused from the schema-authoring step).
+
 ---
 
 ## 1. Scope
@@ -227,10 +370,11 @@ built for but not yet wired into (§5).
   injected-callback architecture (§4's rule 13 finding).
 - **`/pi-parity-manifest.yaml`:** `AI-020` through `AI-026`, all `phase: 2`, `disposition: adopted`
   — audited and corrected this pass (§7).
-- **Canonical conformance:** `conformance/agent/*.yaml`, 12 XFORM scenarios (a second schema,
+- **Canonical conformance:** `conformance/agent/*.yaml`, 13 XFORM scenarios (a second schema,
   `agent-transform-scenario.schema.json`, for the same `agent` family/directory — not a fourth
   canonical family, see §8) plus `conformance/session/request-reconstruction-after-target-transform.yaml`
-  (Layer-03's own deferred `SES-013` scenario, activated this pass, §9).
+  (Layer-03's own deferred `SES-013` scenario, activated this pass, §9) and
+  `conformance/session/string-user-message-round-trip.yaml` (`SES-F009`, §9).
 - **Requirement-ID convention:** `process/requirement-id-convention.md`, prefix `XFORM-###` (newly
   populated this pass, §5).
 
@@ -499,12 +643,16 @@ layer executable, 0 deferred, 0 placeholders (`grep`-verified: no `TO_BE_FILLED`
 
 | File | Responsibility | Decision | Evidence |
 |---|---|---|---|
-| `minion_agent/llm/transform_messages.py` | `TargetModel`, `NormalizeToolCallId`, `transform_messages()` — the single canonical transform seam | NEW | `XFORM-001`..`012`, all 38 tests in `tests/llm/test_transform_messages.py` |
-| `tests/conformance/transform_runner.py` | Thin XFORM scenario runner | NEW | drives all 12 `conformance/agent/*.yaml` transform scenarios |
-| `tests/conformance/test_transform_conformance.py` | Parametrized executor over `transform`-keyed `conformance/agent/*.yaml` files | NEW | 12/12 passing |
+| `minion_agent/llm/content.py` | `UserContentBlock`/`AssistantContentBlock`/`ToolResultContentBlock` role-specific aliases | MODIFIED (`LLM-F012`) — the generic `ContentBlock` alias is retained for internal generic helpers only | static type evidence, §0 |
+| `minion_agent/llm/messages.py` | `UserMessage`/`AssistantMessage`/`ToolResultMessage.content` typed to their frozen role-specific unions; `text_of()` handles string content | MODIFIED (`LLM-F012`) | `tests/typing/valid_message_construction.py`, `test_text_of_a_string_valued_user_message_is_the_string_itself` |
+| `minion_agent/session/derive.py` | `encode_message`/`decode_message` preserve `UserMessage.content`'s string-or-array representation exactly | MODIFIED (`SES-F009`) | `test_string_valued_user_message_round_trips_as_a_string`, `test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip`, `string-user-message-round-trip.yaml` |
+| `minion_agent/llm/transform_messages.py` | `TargetModel`, `NormalizeToolCallId`, `transform_messages()` — the single canonical transform seam | NEW (first pass), narrowed content types this pass | `XFORM-001`..`012`, `XFORM-R001`, all 46 tests in `tests/llm/test_transform_messages.py` |
+| `tests/conformance/transform_runner.py` | Thin XFORM scenario runner | NEW (first pass); `_usage()` no longer fabricates (`XFORM-R002`) this pass | drives all 13 `conformance/agent/*.yaml` transform scenarios |
+| `tests/conformance/test_transform_conformance.py` | Parametrized executor over `transform`-keyed `conformance/agent/*.yaml` files | NEW | 13/13 passing |
 | `tests/conformance/test_agent_conformance.py` | Full agent-loop scenario executor | MODIFIED — scenario glob now excludes `transform`-keyed files | unaffected full-loop scenarios still 100% passing |
-| `tests/conformance/session_runner.py` | Session scenario executor | MODIFIED (additive) — optional `transform_target` step composes the real Session and XFORM seams | activates `SES-013` |
-| `tests/llm/test_transform_messages.py` | Full behavior-matrix unit tests | NEW | 38 tests, see §5 |
+| `tests/conformance/session_runner.py` | Session scenario executor | MODIFIED (additive) — optional `transform_target` step composes the real Session and XFORM seams (`SES-013`); `_user_content()`/`_user_detail()` preserve string representation (`SES-F009`) | activates `SES-013`; new `user_details` observable |
+| `tests/llm/test_transform_messages.py` | Full behavior-matrix unit tests | NEW (first pass), +8 tests this pass (`XFORM-R001` string-content matrix) | 46 tests, see §5 |
+| `tests/typing/valid_message_construction.py` | Permanent static-type evidence for the frozen role-specific content unions | NEW this pass (`LLM-F012`) | `mypy src/minion_agent tests/typing/valid_message_construction.py` — see §16 |
 
 **No existing partial/duplicate transformation logic was found anywhere in the codebase before this
 pass** (`grep`-searched `src/`/`tests/` for `transform_messages`, `image omitted`, `No result
@@ -601,14 +749,24 @@ correctly counted here after the `XFORM-R004` bookkeeping fix (§0.4):**
 `04-target-model-transformation-rust-review.md`) — kept distinct from the four above, not merged
 into their count:**
 
-| ID | Category | Finding | Disposition |
-|---|---|---|
-| `XFORM-R001` | `PI_PARITY_DEFECT` | Valid string-valued `UserMessage.content` corrupted by the non-vision image-downgrade path | `RESOLVED` (§0.1) |
-| `XFORM-R002` | `CONTRACT_ASSURANCE_DEFECT` | Canonical XFORM schema incomplete/insufficiently strict (string content, rich fields, empty identity, empty `expect`) | `RESOLVED` (§0.2) |
-| `XFORM-R003` | `CONTRACT_ASSURANCE_DEFECT` | `AI-013` cited Question-A XFORM evidence as Question-B provider-wire replay evidence | `RESOLVED` (§0.3) |
-| `XFORM-R004` | `CONTRACT_ASSURANCE_DEFECT` | Assurance history recorded three first-pass findings when four were actually repaired | `RESOLVED` (§0.4) |
+| ID | Category | Finding | Disposition after second pass | Disposition after third pass |
+|---|---|---|---|---|
+| `XFORM-R001` | `PI_PARITY_DEFECT` | Valid string-valued `UserMessage.content` corrupted by the non-vision image-downgrade path | `PARTIALLY RESOLVED` (§0.1) — runtime branch fixed, but the public `UserMessage.content` type itself still excluded the string shape, so the second Rust review correctly rejected this as still open | `RESOLVED` (complete — §0.9, root cause fixed upstream at `LLM-F012`, §0.7) |
+| `XFORM-R002` | `CONTRACT_ASSURANCE_DEFECT` | Canonical XFORM schema incomplete/insufficiently strict (string content, rich fields, empty identity, empty `expect`) | `PARTIALLY RESOLVED` (§0.2) — the listed gaps were fixed, but a `usage`-requiredness gap not in the original finding list was found by the second review's own independent probing and remained open | `RESOLVED` (§0.9 — `usage`/`Cost` requiredness added, runner fabrication removed) |
+| `XFORM-R003` | `CONTRACT_ASSURANCE_DEFECT` | `AI-013` cited Question-A XFORM evidence as Question-B provider-wire replay evidence | `RESOLVED` (§0.3) — confirmed `APPROVED` by the second review, not reopened | `RESOLVED` (unchanged) |
+| `XFORM-R004` | `CONTRACT_ASSURANCE_DEFECT` | Assurance history recorded three first-pass findings when four were actually repaired | `PARTIALLY RESOLVED` (§0.4) — the finding-count history was corrected, but stale `12`-count current-state statements elsewhere in this document were not, and the second review caught the remaining inconsistency | `RESOLVED` (§0's table headers and §8/§10/§18 all now consistently say 13) |
 
-**Other categories, both passes:**
+**Third-pass findings (independent Rust implementation-owner review of the second candidate,
+`04-target-model-transformation-rust-r001-r004-rereview.md`) — the root-cause reclassification
+itself, recorded here at the layer where it was discovered even though its fix landed in Layer
+02/03's own assurance records:**
+
+| ID | Category | Finding | Owning layer | Disposition |
+|---|---|---|---|---|
+| `LLM-F012` | `PI_PARITY_DEFECT` | `UserMessage`/`AssistantMessage`/`ToolResultMessage.content` were typed `tuple[ContentBlock, ...]` uniformly, excluding the frozen role-specific unions (`spec/llm.md`) — most visibly, `UserMessage.content` excluded its own `string` alternative | Layer 02 | `RESOLVED`, Python/shared side (§0.7); Rust delta review pending; full record `assurance/layers/02-llm.md` §0 |
+| `SES-F009` | `CONTRACT_ASSURANCE_DEFECT` + Python implementation defect | `session/derive.py::encode_message`/`decode_message` computed `content` uniformly before role dispatch, unable to preserve a real string-valued `UserMessage.content` through persistence | Layer 03 | `RESOLVED`, Python/shared side (§0.8); Rust delta review pending; full record `assurance/layers/03-session-artifacts.md` §0 |
+
+**Other categories, all passes:**
 
 | Category | Finding |
 |---|---|
@@ -633,16 +791,43 @@ closed with a real test
 suppression — no `pragma: no cover` was added, though two exist elsewhere in the codebase as
 established precedent.
 
-**Second pass, fresh (this pass, after the `XFORM-R001`..`R004` remediation — not reused from the
-first pass):**
+**Second pass (after the first `XFORM-R001`..`R004` remediation, superseded by the third pass
+below — kept for the historical record, not reused as current-state evidence):**
 
 ```text
 full pytest (coverage enabled): 813 passed, 29 xfailed, 0 failed, 100.00% coverage
-  -- +9 tests vs. the first pass: tests/llm/test_transform_messages.py (7 new XFORM-R001 tests,
-     see §0.1) and 2 net-new canonical scenarios in the count difference (13 XFORM scenarios now
-     vs. 12, see §8); every pre-existing Layer 01/02/03 test unchanged and still green
+  -- +9 tests vs. the first pass: 7 new tests/llm/test_transform_messages.py tests (XFORM-R001's
+     first, incomplete fix -- the runtime branch only, see §0.1) plus +1 net-new canonical
+     scenario (string-user-content-survives-transformation.yaml: 13 XFORM scenarios now vs. 12).
+     (This "+9" arithmetic itself was corrected here from an earlier draft that miscounted it as
+     "2 net-new canonical scenarios" -- exactly one was added, not two; the second Rust re-review,
+     `XFORM-R004`, correctly flagged this and the stale 12-counts below as still unresolved at
+     that point.)
 ruff check .: All checks passed
 mypy (configured scope, src/minion_agent): Success, no issues found in 57 source files
+```
+
+**Third pass, fresh (this pass, after `LLM-F012`/`SES-F009`/`XFORM-R001`(complete)/`XFORM-R002`
+remediation — not reused from either prior pass):**
+
+```text
+full pytest (coverage enabled): 818 passed, 29 xfailed, 0 failed, 100.00% coverage
+  -- +5 tests vs. the second pass's 813, precisely accounted (git-diff-verified, not estimated):
+     3 new named unit tests -- test_text_of_a_string_valued_user_message_is_the_string_itself
+     (tests/llm/test_messages.py), test_string_valued_user_message_round_trips_as_a_string,
+     test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip (both
+     tests/session/test_derive.py) -- plus 2 new parametrized cases from the one new canonical
+     scenario conformance/session/string-user-message-round-trip.yaml, one each in
+     tests/conformance/test_schema_validation.py::test_scenario_validates
+     and tests/conformance/test_session_conformance.py::test_session_scenario (confirmed via
+     `pytest --collect-only -k string-user-message-round-trip`: exactly 2 collected items).
+     tests/typing/valid_message_construction.py is mypy-only evidence, not a pytest test, and
+     contributes 0 to this count. Every pre-existing Layer 01/02/03 test unchanged and still green.
+ruff check .: All checks passed
+mypy (configured scope, src/minion_agent): Success, no issues found in 57 source files
+mypy src/minion_agent tests/typing/valid_message_construction.py (permanent static-type evidence
+  for LLM-F012, run explicitly -- not part of the default scoped mypy gate above): Success, no
+  issues found in 58 source files
 ```
 
 ---
@@ -670,9 +855,9 @@ rule without `serde_json::Value`-typed shortcuts.
 ```text
 Pi pinned transform source fully audited?              YES (§3)
 AI-020..026 reconciled?                                 YES (§7)
-XFORM-### requirement table complete?                    YES, 12/12 PASS (§5)
+XFORM-### requirement table complete?                    YES, 13/13 PASS (12 original + XFORM-R001, §5)
 Language-neutral spec complete?                          YES (§4)
-Canonical scenario ownership complete?                   YES, 12/12 filled, 0 misclassified (§8)
+Canonical scenario ownership complete?                   YES, 13/13 filled, 0 misclassified (§8)
 Session Layer-04 deferment activated and green?           YES (§9)
 Provider replay simulated anywhere?                      NO (§6, §11)
 Python implementation uses one real transform seam?       YES (§10)
