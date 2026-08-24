@@ -6,15 +6,26 @@ CERTIFIED.` The `XFORM-R005`/`XFORM-R006`/`XFORM-R007` post-certification delta 
 **`CLOSED`** (§22) — Rust's own narrow remediation merged as `minion-agent@feed2fba` via
 `EGAILab/minion-agent#8`, independently reviewed and `APPROVED`. This closure does **not** replace
 the original certification date or event; it is recorded as a closed delta on top of it, per the
-established governance guardrail. **Layer 05 is now `ELIGIBLE`** (not started — see §22's own
-explicit statement that eligibility is not the same as starting). The full historical chronology,
-preserved in full, not flattened: twice independently Rust-reviewed and twice
-**`REJECTED — PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs
-`0f3d419`; second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`),
-then **`APPROVED`** on a third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`)
-— see §19; Rust then implemented Layer 04 (`EGAILab/minion-agent#7`, §20); a pre-Layer-05 review
-then found `XFORM-R005`/`R006`/`R007` (§21); Rust's own narrow remediation (`EGAILab/minion-agent#8`)
-closed the delta (§22).
+established governance guardrail. **Terminology correction (`LAY-F001`, 2026-08-25):** every
+"Layer 05" reference below that means the next thing after this layer is a historical naming
+artifact, not current terminology — `process/implementation-conformance-workflow.md` §6 (normative,
+dependency-aware assurance-layer order) places **Real Providers at assurance Layer 11**; the
+frozen master's own "Phase 5" build-plan numbering is a separate, coarser scheme (its Phase 2 alone
+spans what assurance certified as three separate layers: 02/03/04). The current next assurance
+layer after this one is **Layer 05 — Tool model + registry**, not Real Providers. See
+`process/implementation-conformance-workflow.md` §6's own terminology-convention note and
+`assurance/layers/04-lay-f001-terminology-reconciliation.md` for the full correction record. Real
+Providers (master Phase 5 / assurance Layer 11) is **not yet eligible** — five more assurance
+layers (06–10) sit between this one and it per §6's dependency order. The full historical
+chronology below is preserved in full, not flattened, and every subsequent "Layer 05" occurrence in
+this document means Real Providers as historically understood at the time it was written: twice
+independently Rust-reviewed and twice **`REJECTED — PI_PARITY_DEFECT`** (first:
+`04-target-model-transformation-rust-review.md`, docs `0f3d419`; second:
+`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`), then **`APPROVED`**
+on a third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`) — see §19; Rust
+then implemented Layer 04 (`EGAILab/minion-agent#7`, §20); a pre-Layer-05 review (historically
+named; means Real Providers) then found `XFORM-R005`/`R006`/`R007` (§21); Rust's own narrow
+remediation (`EGAILab/minion-agent#8`) closed the delta (§22).
 **Audit date:** 2026-08-24 (five audit/remediation/review passes recorded in §0/§19/§20/§21, plus a
 sixth, closure pass, §22: verified PR #8's merged evidence directly, replaced the stale
 Rust-remediation-pending manifest marker on `AI-023` with PR #8's real evidence, confirmed
@@ -992,12 +1003,16 @@ behind is valid), §8 (Rust records its own implementation status separately), a
 conformance must still use the same real semantic seams). No special Layer-04 exception was
 invented — this is the same rule Layers 01–03 already established.
 
-**Rust Layer-04 trigger, recorded explicitly:** Rust Layer 04 MUST be implemented before either (1)
-Rust advances to Layer 05, or (2) Python advances far enough that Rust would exceed the permitted
-approximately-one-layer lag. Current state is Python = 4, Rust = 3. Starting Python Layer 05 next
-would produce Python = 5, Rust = 3, exceeding the intended cadence. **Layer 05 MUST NOT start next
-while Rust remains at Layer 03.** The next implementation action after this closure is Rust
-implementing Layer 04 — not Python advancing to Layer 05.
+**Rust Layer-04 trigger, recorded explicitly (historical — see `LAY-F001`):** at the time this was
+written, "Layer 05" was used loosely to mean "whatever comes next," which this document's own
+narrative treated as Real Providers. Under the corrected terminology (`process/implementation-
+conformance-workflow.md` §6), the actual next assurance layer after Layer 04 is Layer 05 — Tool
+model + registry, not Real Providers (master Phase 5 / assurance Layer 11); five more assurance
+layers (06–10) separate this layer from Real Providers regardless of Rust's own implementation
+pace. The trigger this passage actually meant to state was: Rust Layer 04 MUST be implemented
+before either (1) Rust advances to the next assurance layer, or (2) Python advances far enough that
+Rust would exceed the permitted approximately-one-layer lag. That trigger was satisfied: Rust
+implemented Layer 04 via `EGAILab/minion-agent#7` (§20) before either condition was tested.
 
 **Historical reporting guardrail at this certification point:** "Python + Rust Layer 04 certified"
 would have been false while Rust remained one layer behind. Section 20 records the later Rust
@@ -1033,7 +1048,8 @@ ID normalizer receives the original source assistant. The canonical adapters onl
 real Session/XFORM APIs, and normalize observations.
 
 No provider implementation, provider-wire signature replay, or concrete provider ID-normalization
-algorithm was added. `AI-013` remains a Layer-05 provider-wire obligation.
+algorithm was added. `AI-013` remains a Real Providers (master Phase 5 / assurance Layer 11)
+provider-wire obligation — historically written as "Layer 05," corrected by `LAY-F001`.
 
 ```text
 Layer 04 shared contract    CERTIFIED
@@ -1046,10 +1062,22 @@ Layer 05                    NOT STARTED
 **This was the accurate state at the point this section was written.** A subsequent pre-Layer-05
 review (§21) found `XFORM-R005`/`R006`/`R007` and reopened Layer 04 narrowly. This section's content
 is preserved unchanged as history, not rewritten — see §21 for the current operational status.
+**Terminology note (`LAY-F001`, 2026-08-25):** "Layer 05" throughout this section and §21 means
+Real Providers (master Phase 5 / assurance Layer 11 under `process/implementation-conformance-
+workflow.md` §6's numbering, corrected after this content was written) — not the current Layer 05
+(Tool model + registry). The wording is left as historically written rather than rewritten.
 
 ---
 
 ## 21. Pre-Layer-05 post-certification delta audit — `XFORM-R005`/`R006`/`R007` (2026-08-24)
+
+**Historical naming, corrected by `LAY-F001` (2026-08-25):** "Pre-Layer-05" in this section's title
+and body means "before Real Providers" as historically understood on 2026-08-24 — under
+`process/implementation-conformance-workflow.md` §6's corrected numbering, Real Providers is
+assurance Layer 11 (master Phase 5), and the assurance layer actually next after Layer 04 is Layer
+05, Tool model + registry. This section's title and every "Layer 05" occurrence below are preserved
+as originally written, not renamed, per this project's own convention of not rewriting historical
+record; read every occurrence below as "Real Providers."
 
 **Starting state, recorded before any change this pass:**
 
@@ -1228,9 +1256,9 @@ crates/minion-agent/tests/xform_conformance.rs   +1/-1
   inventory assertion 13 -> 14 only; no scenario-specific branch added.
 ```
 
-Confirmed: orphan-synthesis algorithm (`synthesize_orphans`/`flush_orphans`) unchanged; no provider
-algorithm or Layer-05 code introduced; no shared spec, canonical YAML, Python, or manifest file
-touched by the Rust PR. This is an evidence check for closure, consistent with §2 of the handoff
+Confirmed: orphan-synthesis algorithm (`synthesize_orphans`/`flush_orphans`) unchanged; no Real
+Providers (master Phase 5 / assurance Layer 11) code introduced; no shared spec, canonical YAML,
+Python, or manifest file touched by the Rust PR. This is an evidence check for closure, consistent with §2 of the handoff
 package that requested it — not a repeated implementation review.
 
 ### Independent Rust verdict, as recorded by Rust
@@ -1339,8 +1367,9 @@ and the second/third audit-pass narrative (§0.9/§0.10/§16). `14` is current o
 established at `LLM-F002`/`XFORM-R003` remains: Question A (message-level XFORM survival/stripping)
 is Layer-04-owned and complete, proven by the 14 canonical scenarios plus direct unit tests; Question
 B (Responses-family provider-wire replay — whether a retained signature is correctly re-encoded into
-a real wire request) remains an explicit, unfilled Layer-05 obligation. `14/14 XFORM canonical` is
-Question-A evidence only and must never be read as provider-wire coverage.
+a real wire request) remains an explicit, unfilled Real Providers (master Phase 5 / assurance Layer
+11) obligation. `14/14 XFORM canonical` is Question-A evidence only and must never be read as
+provider-wire coverage.
 
 ### Final freeze gate
 
@@ -1382,17 +1411,37 @@ Python Layer 04             CERTIFIED
 Rust Layer 04                CERTIFIED
 ```
 
-### Layer 05 eligibility
+### Next-layer eligibility (corrected by `LAY-F001`, 2026-08-25)
+
+**Originally written as "Layer 05 eligibility"** — at the time this section was written, "Layer 05"
+was used to mean Real Providers. That was a terminology error: under
+`process/implementation-conformance-workflow.md` §6's normative, dependency-aware assurance-layer
+order, Real Providers is **assurance Layer 11** (the frozen master's own "Phase 5" build-plan
+numbering is a separate scheme). Corrected:
 
 ```text
-Layer 05 started      NO
-Layer 05 eligible     YES
+Layer 05 — Tool model + registry
+    ELIGIBLE TO START (this layer's own prerequisite, Layer 04, is CERTIFIED)
+
+Real Providers
+    master Phase 5
+    assurance Layer 11
+    NOT YET ELIGIBLE under §6 dependency order — five more assurance layers
+    (06 Tool execution pipeline, 07 Agent public state + inbox/queues,
+    08 Agent run/turn state machine, 09 Cancellation across Agent/LLM/tools,
+    10 Provider abstraction + mock adapter) remain uncertified between
+    this layer and Real Providers
 ```
 
-The prior `NOT STARTED — NO-GO` is lifted as of this closure. Layer 05 implementation work itself is
-explicitly not begun in this pass — this section only records eligibility.
+The prior `NOT STARTED — NO-GO` (§21's trigger paragraph) was correctly lifted by this closure with
+respect to *this layer's own* downstream eligibility — Layer 04 being `CERTIFIED` is what actually
+unblocks the next assurance layer. It does not mean Real Providers became eligible; that layer's own
+five intervening prerequisites are untouched by this closure. Layer 05 (Tool model + registry)
+implementation work itself is explicitly not begun in this pass — this section only records
+eligibility.
 
-### New frozen checkpoint (Layer-05 starting baseline)
+### New frozen checkpoint (post-Layer-04 baseline — see `LAY-F001` below for why this is not called
+"Layer-05 starting baseline")
 
 ```text
 minion-agent           7e003b6e6a86902d6286ca21cae319ba9fa04dbb
@@ -1400,5 +1449,6 @@ minion-agent-docs      224be1556ccc759f16261a6012679c9ce02d23d1
 ```
 
 Not `439651e`/`8a39823`/`feed2fba` — these are the exact SHAs produced by this closure's own two
-commits (manifest cleanup, then this document's own closure). These are the Layer-05 starting
-baseline.
+commits (manifest cleanup, then this document's own closure). These are the starting baseline for
+the next assurance layer, Layer 05 — Tool model + registry (originally, and incorrectly, labeled
+"Layer-05 starting baseline" here, back when "Layer 05" meant Real Providers).

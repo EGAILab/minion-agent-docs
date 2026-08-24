@@ -2,9 +2,10 @@
 
 **Prepared:** 2026-08-24
 **Prepared by:** Claude (Python/shared-contract owner, per the adopted workflow)
-**Why this exists:** a pre-Layer-05 review found three findings after Rust's own Layer-04
-implementation (`EGAILab/minion-agent#7`, `439651e`) had already been certified
-(`04-target-model-transformation-rust-implementation.md`). Full delta record:
+**Why this exists:** a pre-Real-Providers review (historically named "pre-Layer-05"; corrected by
+`LAY-F001` — Real Providers is master Phase 5 / assurance Layer 11, not Layer 05) found three
+findings after Rust's own Layer-04 implementation (`EGAILab/minion-agent#7`, `439651e`) had already
+been certified (`04-target-model-transformation-rust-implementation.md`). Full delta record:
 `assurance/layers/04-target-model-transformation.md` §21.
 
 **Rust's primary semantic responsibility in this package is `XFORM-R005`.** `XFORM-R006`/`R007` are
@@ -147,7 +148,8 @@ No verdict beyond confirmation is required for this item; it does not gate `XFOR
 
 - `XFORM-R001`..`R004`'s own already-closed history — not reopened.
 - `LLM-F012`/`SES-F009` — closed, not reopened.
-- Layer 05 — not started, blocked on this delta's closure.
+- Real Providers (master Phase 5 / assurance Layer 11) — not started, blocked on this delta's
+  closure.
 - Rust semantic remediation itself — this package requests only the shared-contract verdict on
   `XFORM-R005`. Remediation begins only after `APPROVED` is recorded, per the adopted
   review-before-remediation workflow (§25/§26 of the originating instruction).
@@ -165,4 +167,5 @@ truthiness, mirroring the Python fix — exact Rust syntax/structure is implemen
 Rust test evidence for the empty-string case, fresh full Rust gates against merged `main`, and its
 own independent implementation review before merge — all Rust-owned steps outside this package's
 scope. Only after Rust's delta is merged and green does Layer 04's post-certification delta audit
-close and Layer 04 return to a three-part `CERTIFIED` (shared/Python/Rust), unblocking Layer 05.
+close and Layer 04 return to a three-part `CERTIFIED` (shared/Python/Rust), unblocking Real
+Providers (assurance Layer 11).

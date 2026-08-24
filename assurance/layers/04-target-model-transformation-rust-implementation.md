@@ -108,7 +108,8 @@ cargo run -p xtask -- conformance verify                     PASS
 
 No real provider, Responses wire replay, provider request encoding, or concrete provider-specific
 ID normalizer was implemented. `AI-013` remains unresolved at the provider-wire level and owned by
-Layer 05.
+Real Providers (master Phase 5 / assurance Layer 11 — historically written as "Layer 05" here; see
+`LAY-F001`).
 
 ```text
 PI_PARITY_DEFECT             none
@@ -126,7 +127,9 @@ Layer 05                     NOT STARTED
 ## Post-certification delta note (2026-08-24, added after this document's original certification)
 
 **This document's certification evidence above is preserved exactly as it was at the time of PR
-#7 — it was accurate then and is not rewritten.** A subsequent pre-Layer-05 review found
+#7 — it was accurate then and is not rewritten.** A subsequent pre-Real-Providers review
+(historically named "pre-Layer-05"; see `LAY-F001` — Real Providers is master Phase 5 / assurance
+Layer 11, not Layer 05) found
 `XFORM-R005` (`PI_PARITY_DEFECT` + `CONTRACT_ASSURANCE_DEFECT`): pinned Pi's tool-call-ID
 normalization has two different, asymmetric rewrite conditions for the `ToolCall` versus the
 matching `ToolResultMessage` (spec/target-model-transformation.md rule 13, corrected). Direct
@@ -193,7 +196,8 @@ The canonical adapter changed only its inventory assertion from 13 to 14. Callba
 mapping retention, ToolCall and ToolResult rewrite decisions, and orphan synthesis remain in the
 real typed transformer. Session semantics were unchanged.
 
-No provider algorithm, provider-wire replay, or Layer-05 work was added. Rust reports
+No provider algorithm, provider-wire replay, or Real Providers (assurance Layer 11) work was added.
+Rust reports
 `XFORM-R005` remediated and post-merge green; **shared closure completed** —
 `assurance/layers/04-target-model-transformation.md` §22 records the manifest pending-marker
 cleanup (`AI-023`), the formal closure of `XFORM-R005`/`R006`/`R007`, and the restored three-part
