@@ -18,15 +18,15 @@ OPEN (IN_DELTA_AUDIT)` — not "never certified."
 **Reviewed commits (delta candidate):**
 
 ```text
-minion-agent        <PUSH_PENDING>   LLM-F011 remediation: messages.py, tools/result.py,
-                                      tools/execute.py, session/derive.py,
-                                      tests/conformance/session_runner.py,
-                                      conformance/schema/session-scenario.schema.json,
-                                      conformance/session/rich-assistant-message-round-trip.yaml,
-                                      pi-parity-manifest.yaml (AI-006), ~21 test call sites across
-                                      8 test files
-minion-agent-docs   <PUSH_PENDING>   assurance/layers/02-llm.md (§0), spec/llm.md (content-union
-                                      annotations, no requiredness change), this handoff
+minion-agent        f88c79d   LLM-F011 remediation (bundled with SES-F004..F008): messages.py,
+                               tools/result.py, tools/execute.py, session/derive.py,
+                               tests/conformance/session_runner.py,
+                               conformance/schema/session-scenario.schema.json,
+                               conformance/session/rich-assistant-message-round-trip.yaml,
+                               pi-parity-manifest.yaml (AI-006), ~21 test call sites across
+                               8 test files
+minion-agent-docs   27bde67   assurance/layers/02-llm.md (§0), spec/llm.md (content-union
+                               annotations, no requiredness change), this handoff
 ```
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).

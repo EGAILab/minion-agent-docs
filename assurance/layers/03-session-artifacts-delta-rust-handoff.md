@@ -22,17 +22,18 @@ but does not own.
 **Reviewed commits (delta candidate):**
 
 ```text
-minion-agent        <PUSH_PENDING>   SES-F004..F008 remediation: events.py, operations.py,
-                                      session/__init__.py, tests/session/test_concurrency.py (new),
-                                      tests/conformance/session_runner.py,
-                                      tests/conformance/test_schema_validation.py,
-                                      conformance/schema/session-scenario.schema.json,
-                                      conformance/session/session-owned-event-identity.yaml (new),
-                                      conformance/session/fork-future-boundary-rejected.yaml (new)
-minion-agent-docs   <PUSH_PENDING>   assurance/layers/03-session-artifacts.md (§0), spec/session.md
-                                      (compaction spelling, fork boundary rule, atomicity
-                                      clarification), process/implementation-conformance-workflow.md
-                                      (§4.6 delta-audit guardrail), this handoff
+minion-agent        f88c79d   SES-F004..F008 remediation (bundled with LLM-F011): events.py,
+                               operations.py, session/__init__.py,
+                               tests/session/test_concurrency.py (new),
+                               tests/conformance/session_runner.py,
+                               tests/conformance/test_schema_validation.py,
+                               conformance/schema/session-scenario.schema.json,
+                               conformance/session/session-owned-event-identity.yaml (new),
+                               conformance/session/fork-future-boundary-rejected.yaml (new)
+minion-agent-docs   27bde67   assurance/layers/03-session-artifacts.md (§0), spec/session.md
+                               (compaction spelling, fork boundary rule, atomicity
+                               clarification), process/implementation-conformance-workflow.md
+                               (§4.6 delta-audit guardrail), this handoff
 ```
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
