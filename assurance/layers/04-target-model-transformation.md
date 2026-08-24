@@ -1395,9 +1395,10 @@ explicitly not begun in this pass — this section only records eligibility.
 ### New frozen checkpoint (Layer-05 starting baseline)
 
 ```text
-minion-agent           <recorded once the manifest-cleanup commit lands>
-minion-agent-docs      <recorded once this closure commit lands>
+minion-agent           7e003b6e6a86902d6286ca21cae319ba9fa04dbb
+minion-agent-docs      224be1556ccc759f16261a6012679c9ce02d23d1
 ```
 
-Not `439651e`/`8a39823`/`feed2fba` — the exact SHAs produced by this closure's own commits, recorded
-in the final report accompanying this pass.
+Not `439651e`/`8a39823`/`feed2fba` — these are the exact SHAs produced by this closure's own two
+commits (manifest cleanup, then this document's own closure). These are the Layer-05 starting
+baseline.
