@@ -2,7 +2,8 @@
 
 **Layer ID:** `04`
 **Status:** `Layer 04 shared contract: CERTIFIED. Python Layer 04: CERTIFIED. Rust Layer 04:
-NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND.` Twice independently Rust-reviewed and twice
+CERTIFIED.` Rust implementation merged as `minion-agent@439651e`; see §20 and
+`04-target-model-transformation-rust-implementation.md`. Twice independently Rust-reviewed and twice
 **`REJECTED — PI_PARITY_DEFECT`** (first: `04-target-model-transformation-rust-review.md`, docs
 `0f3d419`; second: `04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`),
 then **`APPROVED`** on the third, dependency-ordered review (`02-04-dependency-ordered-rust-review.md`,
@@ -29,10 +30,9 @@ three layers together, `APPROVED` (§19).)
 **Auditor:** Claude (Python-driven, per adopted workflow)
 **Python status:** `CERTIFIED` — real `transform_messages()` seam implemented, 13/13 canonical
 scenarios green, Session→XFORM integration green, shared contract independently Rust-approved (§19)
-**Rust status:** `NOT_IMPLEMENTED — VALIDLY ONE LAYER BEHIND` — no Rust Layer-04 code has been
-written; this is an explicit, adjudicated Rust scheduling verdict (§17, §19), not an open gap. Rust
-must implement Layer 04 before advancing to Layer 05 or before Python advances far enough to exceed
-the process-approved lag.
+**Rust status:** `CERTIFIED` — the typed Rust implementation, 13/13 XFORM canonical evidence, and
+20/20 Session-family evidence merged through `EGAILab/minion-agent#7`; fresh post-merge gates are
+recorded in §20. Sections 17 and 19 preserve the earlier, historically valid one-layer-behind state.
 
 ---
 
@@ -1004,6 +1004,46 @@ would produce Python = 5, Rust = 3, exceeding the intended cadence. **Layer 05 M
 while Rust remains at Layer 03.** The next implementation action after this closure is Rust
 implementing Layer 04 — not Python advancing to Layer 05.
 
-**Never to be shortened to:** "Python + Rust Layer 04 certified" — that would be false. The
-three-part status above (`shared contract` / `Python` / `Rust`) must be preserved distinctly in any
-future reference to this certification.
+**Historical reporting guardrail at this certification point:** "Python + Rust Layer 04 certified"
+would have been false while Rust remained one layer behind. Section 20 records the later Rust
+implementation closure that supersedes that implementation-status snapshot without rewriting it.
+
+---
+
+## 20. Rust Layer-04 implementation closure (2026-08-24)
+
+The one-layer-behind state recorded in §§17 and 19 was valid at that certification point and is
+preserved as history. It is now superseded by the independently reviewed Rust implementation in
+`EGAILab/minion-agent#7`, merged as `439651eb7a5f4ecbee49c573696aa94dee62ed02`.
+
+```text
+Rust implementation head                         3514784da40500316c019b5eeab7edb1488c80cf
+Rust merge / post-merge main                     439651eb7a5f4ecbee49c573696aa94dee62ed02
+Independent implementation review               APPROVED
+XFORM canonical                                  13 discovered / 13 passed / 0 deferred
+Session canonical                                20 discovered / 20 passed / 0 deferred
+cargo fmt --check                                PASS
+cargo clippy --workspace --all-targets
+  --all-features -- -D warnings                  PASS
+cargo test --workspace --all-features            145 passed / 0 failed
+RUSTDOCFLAGS="-D warnings" cargo doc
+  --workspace --no-deps                         PASS
+cargo run -p xtask -- conformance verify         PASS
+```
+
+The implementation reuses the certified Layer-02 message vocabulary and exposes one typed
+provider-neutral seam. The legacy-null decoder is library-owned but available only behind the
+non-default `conformance` feature; it cannot become the normal runtime representation. The injected
+ID normalizer receives the original source assistant. The canonical adapters only parse, invoke
+real Session/XFORM APIs, and normalize observations.
+
+No provider implementation, provider-wire signature replay, or concrete provider ID-normalization
+algorithm was added. `AI-013` remains a Layer-05 provider-wire obligation.
+
+```text
+Layer 04 shared contract    CERTIFIED
+Python Layer 04             CERTIFIED
+Rust Layer 04               CERTIFIED
+Active parity/uncertainty/assurance defects    NONE
+Layer 05                    NOT STARTED
+```
