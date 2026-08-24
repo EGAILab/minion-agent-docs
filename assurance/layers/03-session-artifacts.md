@@ -1,14 +1,14 @@
 # Session + Artifacts — Fidelity Assurance & Certification
 
 **Layer ID:** `03`  
-**Status:** historically `CERTIFIED` (2026-08-24; original certification event, unchanged) —
-**POST-CERTIFICATION DELTA AUDIT OPEN** (2026-08-24, operational status `IN_DELTA_AUDIT`; scope
-limited to `SES-F009`, see §0b). `SES-F004`..`SES-F008`'s own post-certification delta remediation
-reached `CLOSED` on 2026-08-24 (discovered via Rust's independent Layer-03 implementation,
-delta-audited, remediated in Python/shared and Rust — including a Rust rejection and narrow second
-remediation for `SES-F007` — re-certified) before `SES-F009` reopened this one further, narrower
-question about `UserMessage.content` persistence. Full sequence of both cycles preserved in §0/§0b,
-not flattened.  
+**Status:** `CERTIFIED` (original certification event 2026-08-24, unchanged). Two
+post-certification delta audits have opened and closed since, both preserved in full below, not
+flattened: `SES-F004`..`SES-F008` (`CLOSED` 2026-08-24 — discovered via Rust's independent Layer-03
+implementation, delta-audited, remediated in Python/shared and Rust, including a Rust rejection and
+narrow second remediation for `SES-F007`, re-certified; see §0) and `SES-F009` (`CLOSED` 2026-08-24
+— discovered via Rust's independent Layer-04 review, a narrower question about
+`UserMessage.content` persistence, remediated in Python/shared; Rust's own certified Session
+implementation already conformed, no Rust semantic change required; see §0b).  
 **Rust implementation completion (2026-08-24):** `IMPLEMENTED` on branch
 `feat/rust-layer-03-session-artifacts` at `31ed6698a1e4a9f5d3134d2c2b1788f920ceb330`, consuming the
 certified contract at `minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. The typed Rust
@@ -319,7 +319,7 @@ Does not restart Layer 03, does not erase the 2026-08-24 certification event or
 
 | ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `SES-F009` | `03` | Medium — a valid Layer-02 message could not be safely persisted, but only reachable once `LLM-F012` made the construction itself statically valid | Layer-04 Rust re-review (`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`); direct reproduction against `session/derive.py` | YES — independently reproduced by calling the real `encode_message()` on a real string-valued `UserMessage` before any fix | `CONTRACT_ASSURANCE_DEFECT` (the canonical DSL had no way to script or observe a string-valued append at all) **+** Python implementation defect (`encode_message`/`decode_message` assumed block-array content uniformly) | `RESOLVED` (Python/shared); Rust delta review `PENDING` | YES — `conformance/schema/session-scenario.schema.json`: `step.append.content` gained a `user`-only string alternative (role-conditional `allOf`, matching the existing content-type-restriction pattern); new `expect_user_details` observation, since `expect_messages`' role/text projection cannot distinguish a string from a single-`TextBlock` array | YES — `session/derive.py::encode_message`/`decode_message` no longer compute `content` uniformly before role dispatch; the `user` branch preserves a string as a string; `session_runner.py` gained `_user_content()`/`_user_detail()` | NOT modified — Rust's own certified Session implementation was not audited for this defect this pass; its fresh delta review will confirm independently | `conformance/session/string-user-message-round-trip.yaml` (scripts a string message, a single-`TextBlock`-array message, and a post-fork string message; `expect_user_details` observes the real derived representation of each); `test_string_valued_user_message_round_trips_as_a_string`, `test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip` | Reopens Layer 03 for this one persistence question; depended on `LLM-F012` landing first (Session persists Layer-02 vocabulary, it does not own its typing); Layer 04's `XFORM-R001` depended on this fix too, transitively |
+| `SES-F009` | `03` | Medium — a valid Layer-02 message could not be safely persisted, but only reachable once `LLM-F012` made the construction itself statically valid | Layer-04 Rust re-review (`04-target-model-transformation-rust-r001-r004-rereview.md`, docs `c64880d`); direct reproduction against `session/derive.py` | YES — independently reproduced by calling the real `encode_message()` on a real string-valued `UserMessage` before any fix | `CONTRACT_ASSURANCE_DEFECT` (the canonical DSL had no way to script or observe a string-valued append at all) **+** Python implementation defect (`encode_message`/`decode_message` assumed block-array content uniformly) | `RESOLVED` (Python/shared and Rust — Rust's independent review confirmed its own certified Session implementation already conformed, no Rust semantic change required; Rust's canonical adapter needed an evidence-only update, merged separately, see closure below) | YES — `conformance/schema/session-scenario.schema.json`: `step.append.content` gained a `user`-only string alternative (role-conditional `allOf`, matching the existing content-type-restriction pattern); new `expect_user_details` observation, since `expect_messages`' role/text projection cannot distinguish a string from a single-`TextBlock` array | YES — `session/derive.py::encode_message`/`decode_message` no longer compute `content` uniformly before role dispatch; the `user` branch preserves a string as a string; `session_runner.py` gained `_user_content()`/`_user_detail()` | NOT modified — Rust's own certified Session implementation was not audited for this defect this pass; its fresh delta review will confirm independently | `conformance/session/string-user-message-round-trip.yaml` (scripts a string message, a single-`TextBlock`-array message, and a post-fork string message; `expect_user_details` observes the real derived representation of each); `test_string_valued_user_message_round_trips_as_a_string`, `test_string_and_single_text_block_user_messages_remain_distinct_after_round_trip` | Reopens Layer 03 for this one persistence question; depended on `LLM-F012` landing first (Session persists Layer-02 vocabulary, it does not own its typing); Layer 04's `XFORM-R001` depended on this fix too, transitively |
 
 **Explicitly avoided, per instruction:** did not normalize a scripted string into a one-block
 array anywhere (Session's own obligation is to preserve, not reshape); did not conflate the
@@ -336,9 +336,86 @@ canonical inventory after this pass: **20 discovered and executable**: 19 Layer-
 (the prior 18 plus `string-user-message-round-trip.yaml`) and one Layer-04-owned Session composition
 scenario (`request-reconstruction-after-target-transform.yaml`), with 0 deferred and 0 placeholders.
 
-**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
-candidate; Layer 03 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is
-independently re-verified.
+**Rust implementation-owner review:** completed 2026-08-24 as part of the dependency-ordered
+Layers 02–04 review (`02-04-dependency-ordered-rust-review.md`, reviewing candidate
+`minion-agent@4ed360d` against final handoff `minion-agent-docs@39f1f13`, gated behind `LLM-F012`'s
+own `APPROVED` verdict per dependency order). Verdict: `SES-F009 APPROVED`, `LAYER 03 DELTA
+CONTRACT APPROVED`. Rust confirmed independently that its own real Session already serializes and
+deserializes the typed `Message` value such that `UserContent::Text("hello")` and a one-`TextBlock`
+array remain distinct through append, derive, and fork ancestry — no Rust Session semantic change
+required. Rust's canonical conformance *adapter* was stale (expected 19 files, could not construct
+a string from `append.content`, did not consume `expect_user_details`) — an evidence/conformance
+gap, not a Session semantic gap; remediated in `EGAILab/minion-agent#6`, merged as
+`54928e250347341d73b919fa523be50d338c5c8c`. See §Final Layer-03 delta closure below.
+
+### Final Layer-03 delta closure — `SES-F009` (2026-08-24)
+
+**Rust review evidence.** `02-04-dependency-ordered-rust-review.md` Gate 2, verified directly
+against the merged PR #6 diff, not taken from Rust's own report: `crates/minion-agent/tests/session.rs`
+gained `string_and_block_user_content_remain_distinct_through_fork_derivation`, constructing a real
+`UserContent::Text("hello")` and a real `UserContent::Blocks([TextBlock("hello")])`, appending both
+to a parent session, forking, appending a further string message to the child, and asserting
+`derive_messages()` returns the exact typed values at every step — a direct comparison of actual
+typed values, not visible text. `tests/session_conformance.rs`'s adapter now recognizes a real
+`content: "hello"` string field and constructs `UserContent::Text(...)` through the real typed
+Session API (no string→block or block→string conversion, no representation inferred from scenario
+input — confirmed by reading the diff directly); `normalize_user_fields` only adds a default field
+value for schema-comparison purposes on the already-real derived value. Inventory assertions moved
+from `files.len() == 19` / `executed == 18` to `files.len() == 20` / `executed == 19`, with
+`request-reconstruction-after-target-transform.yaml` named explicitly as the one scenario deferred
+because Rust XFORM does not exist yet — not a Layer-03 failure.
+
+Fresh post-merge verification (this pass, run directly against merged `main` at
+`54928e250347341d73b919fa523be50d338c5c8c`, not reused from the PR branch's own report):
+
+```text
+cargo fmt --check                                       PASS
+cargo clippy --workspace --all-targets --all-features
+  -- -D warnings                                        PASS
+cargo test --workspace --all-features                   129 passed, 0 failed
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace
+  --no-deps                                              PASS
+cargo run -p xtask -- conformance verify                 PASS
+```
+
+**Final Layer-03 freeze gate:**
+
+```text
+SES-F009 contract complete?             YES
+Python persistence conforming?          YES — encode_message/decode_message no longer compute
+                                         content uniformly before role dispatch; string stays
+                                         string, block array stays block array
+Rust persistence conforming?            YES — already conformed pre-existing, confirmed
+                                         independently by Rust, no semantic code change
+Python representation-sensitive
+evidence?                               YES — string-user-message-round-trip.yaml's
+                                         expect_user_details observes the real derived
+                                         representation, not visible-text equivalence
+Rust representation-sensitive evidence? YES — string_and_block_user_content_remain_distinct_
+                                         through_fork_derivation compares real typed UserContent
+                                         values directly
+Fork behavior proven?                   YES — both Python (fork boundary in the canonical
+                                         scenario) and Rust (direct fork test) exercise the real
+                                         fork()/derivation path
+Runner thinness preserved?              YES — Rust's adapter change confirmed evidence-only: no
+                                         string<->block conversion, no representation inference
+Layer-03-owned canonical total          19 (prior 18 plus string-user-message-round-trip.yaml)
+Python Layer-03-applicable green?       YES — 20/20 Session-family scenarios executable and green
+                                         through the reached Python Layer-04 stack
+Rust Layer-03-applicable green?         YES — 19/19 executed; the 20th
+                                         (request-reconstruction-after-target-transform.yaml)
+                                         correctly deferred, not a failure
+Active PI_PARITY_DEFECT?                NONE
+Active PI_BEHAVIOR_UNCERTAIN?           NONE
+Active CONTRACT_ASSURANCE_DEFECT?       NONE
+```
+
+All green. `SES-F009` — **`RESOLVED`**. Post-certification delta audit — **`CLOSED`**. Layer 03
+status restored to **`CERTIFIED`**, preserving the original 2026-08-24 certification date and the
+full sequence of both delta cycles (`SES-F004`..`SES-F008`'s full sequence including the `SES-F007`
+rejection, then `SES-F009`'s: discovery via Layer-04 Rust review → delta audit → Python/shared
+remediation → dependency-ordered Rust implementation-owner review → this closure) rather than
+presenting the corrected state as though it were always so.
 
 ---
 
