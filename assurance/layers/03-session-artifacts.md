@@ -102,24 +102,99 @@ audit of the owning layer before being classified as merely local hardening.
 03, does not erase the 2026-08-24 certification event, and does not start Layer 04 (XFORM). No Rust
 code was touched this pass.
 
+**Fresh Rust delta review received (2026-08-24, `02-03-delta-rust-review.md`, reviewing
+`minion-agent@f88c79d` / `minion-agent-docs@6f23c96`):**
+
+```text
+LAYER 02 DELTA CONTRACT
+    APPROVED  (LLM-F011)
+
+LAYER 03 DELTA CONTRACT
+    REJECTED — CONTRACT_ASSURANCE_DEFECT
+    blocking finding: SES-F007 only
+```
+
+`SES-F004`, `SES-F005`, `SES-F006`, and `SES-F008` were each independently `APPROVED` — their rows
+below are unchanged by this rejection and are not reopened. **The rejected candidate is preserved as
+positive assurance evidence, not erased**: Rust's independent review caught that the prior remediation
+clarified append atomicity but left compaction's snapshot-plus-commit linearization genuinely
+unspecified, admitting two conforming-looking implementations to make different observable choices
+under concurrent mutation. This is exactly the review discipline the workflow requires working as
+intended.
+
 ### Delta findings
 
 | ID | Layer owner | Severity | Evidence source | Reproduced? | Classification | Current disposition | Shared-contract change? | Python change? | Rust change? | Canonical evidence? | Certification impact |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `SES-F004` (compaction event identity) | `03` | Medium — normative string identity ambiguity | Rust `session/mod.rs::COMPACTION = "session/compaction"`; Python `events.py::EventKind.COMPACTION` was `"compaction"` (bare, unnamespaced); `spec/session.md`'s own owned-kinds list also used the bare spelling | YES — `grep` confirmed exactly one Python literal-string occurrence before the fix; Rust source read directly | `CONTRACT_ASSURANCE_DEFECT` — Session event identities are normative strings compared by value (`spec/session.md`'s own by-value rule); the two spellings cannot be treated as aliases | RESOLVED (Python/shared) | YES — `spec/session.md`'s owned-kinds list corrected to `session/compaction`; new `expect_event_kinds` schema/runner mechanism added so compact()-writes/derive()-reads using the same possibly-wrong internal spelling can no longer cancel out undetected; new `session-owned-event-identity.yaml` scenario | YES — `events.py::EventKind.COMPACTION` value changed to `"session/compaction"` (namespaced consistently with `session/forked`/`session/reset`) | NOT modified — Rust was already correct; no change expected on re-review | `session-owned-event-identity.yaml` (asserts the real committed `event_kinds` sequence via `expect_event_kinds`, not a runner-derived expectation) | Reopens Layer 03 for this one constant |
+| `SES-F004` (compaction event identity) | `03` | Medium — normative string identity ambiguity | Rust `session/mod.rs::COMPACTION = "session/compaction"`; Python `events.py::EventKind.COMPACTION` was `"compaction"` (bare, unnamespaced); `spec/session.md`'s own owned-kinds list also used the bare spelling | YES — `grep` confirmed exactly one Python literal-string occurrence before the fix; Rust source read directly | `CONTRACT_ASSURANCE_DEFECT` — Session event identities are normative strings compared by value (`spec/session.md`'s own by-value rule); the two spellings cannot be treated as aliases | **APPROVED** (`02-03-delta-rust-review.md`), history correction applied — see below | YES — `spec/session.md`'s owned-kinds list corrected to `session/compaction`; new `expect_event_kinds` schema/runner mechanism added so compact()-writes/derive()-reads using the same possibly-wrong internal spelling can no longer cancel out undetected; new `session-owned-event-identity.yaml` scenario | YES — `events.py::EventKind.COMPACTION` value changed to `"session/compaction"` (namespaced consistently with `session/forked`/`session/reset`) | NOT modified — Rust was already correct; no change expected on re-review | `session-owned-event-identity.yaml` (asserts the real committed `event_kinds` sequence via `expect_event_kinds`, not a runner-derived expectation) | Reopens Layer 03 for this one constant |
 | `SES-F005` (role-specific content-block validity) | `03` (Session DSL/schema correctness); base per-role unions are `02`-owned vocabulary | Medium — language-neutrality defect in the shared schema | Adversarial schema-validation reproduction: pre-fix schema accepted `user+ThinkingBlock`, `user+ToolCall`, `assistant+ImageBlock`, `tool_result+ThinkingBlock`, `tool_result+ToolCall`; pinned Pi `packages/ai/src/types.ts:421-467` frozen per-role unions (`UserMessage: TextContent\|ImageContent`; `AssistantMessage: TextContent\|ThinkingContent\|ToolCall`; `ToolResultMessage: TextContent\|ImageContent`) | YES — reproduced every listed illegal combination against the live schema before fixing it | `CONTRACT_ASSURANCE_DEFECT` | RESOLVED | YES — `session-scenario.schema.json`'s `step.append` gained a role-discriminated `allOf`/`if`/`then` content-type restriction; `spec/llm.md`'s `AssistantMessage`/`ToolResultMessage` content unions made explicit inline (matching `UserMessage`'s existing style) | NO code change — Python's real message objects already only construct valid combinations; this was a DSL/schema gap letting scenario authors script impossible states, not a runtime defect | NOT modified — Rust's typed enums are expected to already prevent invalid combinations by construction; to be confirmed on re-review, not assumed | `test_schema_validation.py::test_session_role_invalid_content_combinations_are_rejected` / `..._accepted` (10 parametrized cases) | Reopens Layer 03 for schema-level enforcement only |
 | `SES-F006` (fork boundary beyond committed tip) | `03` | High — real data leak across a fork boundary, empirically confirmed | Rust `session/mod.rs::fork()`'s explicit `InvalidForkBoundary` check; empirical adversarial reproduction on pre-fix Python: `parent tip=0; child=fork(parent,"child",at=1); parent.append(seq=1); derive(child)` leaked the post-fork parent write into the child | YES, empirically — the leak was reproduced first, before any fix was written, exactly as specified | `CONTRACT_ASSURANCE_DEFECT` (the boundary rule was missing from `spec/session.md`) resolving to a genuine Python implementation defect once the language-neutral rule (`0 <= boundary <= source's committed tip`) was derived from the existing contract, not merely adopted because Rust chose it | RESOLVED | YES — `spec/session.md`'s fork paragraph now states the boundary rule explicitly; new `expect_error` schema/runner wiring (the schema already declared `expect_error` since `SES-F001` but the runner never implemented it — a second latent "declared but never read" gap, same class as earlier findings); new `fork-future-boundary-rejected.yaml` scenario | YES — `operations.py::fork()` now rejects `boundary > tip`, raising the new `InvalidForkBoundaryError`; exported from `session/__init__.py` | NOT modified — Rust already enforces this; no change expected on re-review | `fork-future-boundary-rejected.yaml`; runner "must call the real Session fork API, capture the real structured failure, normalize only the language-neutral error category" — confirmed: the runner never pre-checks the boundary itself, it calls `fork()` and catches the real exception | Reopens Layer 03 for fork-boundary semantics |
 | `SES-F007` (atomic append/compaction linearization) | `03` | Low — wording ambiguity only, no implementation defect found | Rust `session/mod.rs::compact()` holds one `parking_lot::Mutex` across its read+write, required under Rust's OS-thread concurrency model; Python's `SessionLog` carries no lock at all | YES — 3 new adversarial `asyncio.gather` interleaving tests (`tests/session/test_concurrency.py`) confirm Python's actual behavior (unique/gapless/commit-ordered sequence numbers; no torn or duplicated compaction event) is already correct under Python's real supported execution model | `CONTRACT_ASSURANCE_DEFECT` — "atomic" (`spec/session.md`) was ambiguous between "logically indivisible" and "thread-safe under any execution model"; resolved as the former. **Not** a Python implementation defect: the contract wording, not the code, was underspecified | RESOLVED | YES — `spec/session.md`'s atomicity paragraph extended to state that logical indivisibility does not by itself mandate a specific thread-safety mechanism, and that an execution model with no concurrent-caller hazard (Python's single-threaded cooperative asyncio scheduler, no `await` mid-append/mid-compact) satisfies the rule without extra synchronization, while an execution model that does admit concurrent callers (Rust's OS threads) must still produce the same observable result by whatever mechanism its language provides | NO code change — `SessionLog` was already correct; only new regression tests added | NOT modified — Rust's existing mutex-based design remains conformant under the clarified rule; no change expected | `tests/session/test_concurrency.py` (3 tests) — deliberately a language-level test, not canonical YAML, per explicit instruction that "canonical YAML does not need to become a thread scheduler" | Reopens Layer 03 only for the spec-wording clarification; no implementation defect found on either side |
 | `SES-F008` (event-name validator parity) | `03`/Minion Session architecture | Low — Rust-only defect, no shared-contract change | Rust `session/mod.rs::EventKind::new()` validates every `/`-segment identically, permitting `-` in the first segment; Python/schema's existing pattern excludes `-` from the first segment only | YES — `plugin-name/foo` tested against the schema pattern directly and confirmed rejected, proving the canonical/Python rule is already unambiguous | Rust implementation defect, **not** a new semantic contract defect — the schema/spec were already unambiguous before this pass | RESOLVED for Python/contract (no change required); Rust fix deferred | NO — no schema or spec change; the rule was already correct | NO — the regex was deliberately left untouched, per explicit instruction not to broaden or narrow it without first confirming the existing rule (confirmed: already correct) | NOT modified this pass (explicitly deferred) — expected future Rust fix: align `EventKind::new()`'s first-segment validation with the canonical regex (exclude `-` from the first segment only, permit it in later segments) | `test_schema_validation.py::test_session_event_name_pattern_matches_the_canonical_rule` (9 parametrized cases: `plugin/foo`, `plugin/foo-bar`, `plugin/foo_bar`, `plugin2/foo` valid; `Plugin/foo`, `plugin-name/foo`, `plugin//foo`, `/foo`, `plugin/` invalid) pins the exact rule so a future implementation can be checked against it, not against prose | Reopens Layer 03 only to record canonical regression evidence; Layer-03 delta certification does not need to wait on Rust's own future fix since no Python/contract change was required |
 
+### `SES-F007` lifecycle (preserved in full — the rejection is positive assurance evidence, not erased)
+
+The table row above records this pass's **first** remediation attempt and its `RESOLVED` self-
+assessment at the time. The full lifecycle, none of it discarded:
+
+1. **Initial post-Rust delta audit** (this section, first pass): identified the atomicity wording
+   ambiguity between "logically indivisible" and "thread-safe under any execution model," resolved
+   it as the former, and extended `spec/session.md`'s append paragraph accordingly.
+2. **First shared remediation**: clarified append atomicity fully, but did not separately specify
+   compaction's snapshot-plus-commit linearization — an omission the append clarification's own
+   scope did not cover.
+3. **Fresh Rust implementation-owner review** (`02-03-delta-rust-review.md`, reviewing
+   `minion-agent@f88c79d` / `minion-agent-docs@6f23c96`): correctly **`REJECTED —
+   CONTRACT_ASSURANCE_DEFECT`**. Rust's own probe: `compact` reads the effective-surface/provenance
+   snapshot, a concurrent `append` commits, and `compact` then commits a compaction marker derived
+   from the now-stale snapshot — the interleaved event has a sequence before the marker but is
+   absent from the provenance the marker records. The append paragraph alone did not rule this out.
+4. **Second, narrow remediation** (this pass): `spec/session.md` gained a dedicated
+   compaction-linearization paragraph, immediately following the compaction-mechanics sentence,
+   requiring the effective-surface/provenance snapshot and the compaction-event commit to form one
+   linearizable operation relative to append/reset/other-compaction whenever an implementation
+   admits concurrent Session mutation — explicitly not a universal thread-safety mandate, scoped
+   identically to the append paragraph's own qualification. Re-inspected the real Python mutation
+   path (`operations.py::compact`, `derive.py::effective_surface`, `log.py::SessionLog.append`)
+   directly rather than assuming Python is safe by reputation: `compact()` is fully synchronous with
+   zero `await` points between its snapshot read and its marker append, and `effective_surface()` is
+   a pure function with no `await` either — under Python's single-threaded cooperative-asyncio
+   execution model, a coroutine can only be preempted at an `await` point, so no other coroutine can
+   run "between" the snapshot and the commit. **Python implementation defect: NO — the clarified
+   rule is satisfied by construction**, not by new code. A new adversarial test,
+   `test_compaction_provenance_matches_exactly_what_committed_before_its_own_marker`
+   (`tests/session/test_concurrency.py`), interleaves many concurrent appenders and compactors via
+   `asyncio.gather` and asserts every compaction's recorded `superseded_through` matches exactly what
+   the log held immediately before that compaction's own sequence — the specific invariant Rust's
+   rejection named as unpinned by the prior two tests (which proved sequencing/no-tearing, not
+   provenance accuracy). This is deliberately a language-level Python test, not a new canonical YAML
+   scenario: expressing a forced concurrent interleaving in the canonical DSL would require the
+   runner to implement thread/task scheduling itself, which the methodology's own §9 rule (echoed in
+   the original delta audit's Finding-E disposition) forbids canonical scenarios from doing.
+5. **Fresh Rust re-review**: pending — handoff package is
+   `03-session-artifacts-delta-rust-handoff-ses-f007.md`.
+
 **`LLM-F011` dependency:** `SES-F004`..`SES-F008`'s delta certification is gated behind `LLM-F011`'s
 own delta certification (Layer 02) landing first, per the certification-order rule this pass
-establishes — `ToolResultMessage.tool_name` is vocabulary Session persists but does not own.
+establishes — `ToolResultMessage.tool_name` is vocabulary Session persists but does not own. Layer
+02's delta contract is itself `APPROVED` (`02-03-delta-rust-review.md`) but not yet finally
+re-certified: the adopted workflow for this delta pass holds consolidated Rust implementation
+remediation (including Layer 02's own `tool_name: Option<String> -> String` fix) until Layer 03's
+shared contract is also `APPROVED`, so no Rust implementation work has started for either layer yet.
 
-**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
-candidate covering all five findings; Layer 03 remains `IN_DELTA_AUDIT` until that review returns
+**Not yet done as of this section:** fresh Rust implementation-owner review of the narrowly
+corrected `SES-F007` candidate; Layer 03 remains `IN_DELTA_AUDIT` until that review returns
 `APPROVED` and is independently re-verified, mirroring this layer's own `SES-F001`→Rust-review
-discipline.
+discipline. `SES-F004`/`SES-F005`/`SES-F006`/`SES-F008` do not need re-review — they are already
+`APPROVED` and were not substantively reopened this pass.
+
+**Follow-up recorded, not performed this pass (certification bookkeeping only):** Rust's review
+noted `pi-parity-manifest.yaml`'s Rust-evidence fields are stale now that a real Layer-03
+implementation exists and should eventually name concrete paths (`llm/vocabulary.rs`,
+`session/mod.rs`) plus the delta-remediation state. This is evidence maintenance, not a semantic
+defect, and is deliberately deferred to final delta closure once the consolidated Rust remediation
+PR and its merge SHA are known — updating it now would require a second update anyway once that PR
+lands, and mixing it into `SES-F007`'s narrow remediation would broaden this pass beyond its scope.
 
 ---
 

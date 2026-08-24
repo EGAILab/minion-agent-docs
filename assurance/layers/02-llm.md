@@ -58,9 +58,20 @@ empty string, did not invent a fake tool name in the runner. The real constructi
 (`call.name` from the model's own `ToolCallBlock`, already available at every production call site)
 was traced and used instead.
 
-**Not yet done as of this section:** fresh Rust implementation-owner review of the corrected
-candidate; Layer 02 remains `IN_DELTA_AUDIT` until that review returns `APPROVED` and is
-independently re-verified, mirroring the `LLM-F010` review discipline this layer already established.
+**Fresh Rust delta review received (2026-08-24, `02-03-delta-rust-review.md`, reviewing
+`minion-agent@f88c79d` / `minion-agent-docs@6f23c96`):** `LAYER 02 DELTA CONTRACT — APPROVED`. Rust
+independently confirmed the pinned Pi source, the required-everywhere production path
+(`ToolCall.name -> execute_call -> ToolResult.tool_name -> to_message -> ToolResultMessage.tool_name`),
+and that the conformance runner reads `spec["tool_name"]` directly with no fallback or fabricated
+constant. Rust noted its own `Option<String>` is a local implementation defect to correct once
+consolidated remediation begins — that finding does not weaken this `APPROVED` verdict.
+
+**Not yet finally certified.** Layer 03's shared delta contract was rejected in the same review
+(`SES-F007` only — see `assurance/layers/03-session-artifacts.md` §0) and the adopted workflow for
+this delta pass holds consolidated Rust implementation remediation, including Layer 02's own
+`ToolResultMessage.tool_name: Option<String> -> String` fix, until Layer 03's contract is also
+`APPROVED`. Layer 02 therefore remains `IN_DELTA_AUDIT` — the shared-contract verdict is settled,
+but no Rust implementation change has started for either layer.
 
 ---
 

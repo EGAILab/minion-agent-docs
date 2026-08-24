@@ -46,5 +46,17 @@ future boundary rather than accept and silently leak it. Reset appends a reset m
 session. Compaction supersedes an effective range with a summary plus retained-tail provenance and
 must avoid double inclusion under repeated/overlapping/nested/fork-local cases.
 
+In an execution model that admits concurrent Session mutation, a compaction's effective-surface and
+retained-provenance snapshot plus its compaction-event commit form one linearizable operation
+relative to append, reset, and other compaction operations. No append, reset, or compaction may
+commit between a compaction's snapshot and its marker in that operation's observable serialization
+order: events committed before that linearization point participate in the snapshot's derivation as
+normal, and events committed after it do not alter the recorded compaction provenance. This does not
+require every Session implementation to expose thread-safe simultaneous mutation -- an implementation
+whose execution model serializes Session mutation for this operation (for example, a single-threaded
+cooperative scheduler where compact's snapshot read and marker append never yield to another caller in
+between) satisfies the requirement by construction, matching the append paragraph's own scoping above.
+The requirement applies whenever concurrent mutation is admitted by that implementation.
+
 Dispatch and reconstruction use the same canonical composition. Content-addressed artifacts are a
 Minion storage divergence permitted only when model-visible bytes are equivalent.

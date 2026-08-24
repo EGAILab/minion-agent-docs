@@ -38,6 +38,16 @@ minion-agent-docs   27bde67   assurance/layers/03-session-artifacts.md (§0), sp
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
+**Status update (2026-08-24): Rust already performed this review.** Recorded in full in
+`02-03-delta-rust-review.md`. Result: `LAYER 02 DELTA CONTRACT — APPROVED`;
+`LAYER 03 DELTA CONTRACT — REJECTED — CONTRACT_ASSURANCE_DEFECT`, blocking on `SES-F007` alone.
+`SES-F004`, `SES-F005`, `SES-F006`, `SES-F008` were each independently `APPROVED` — see their
+sections below, **not reopened by this update** except for one historical-accuracy correction to
+`SES-F004`'s framing (Rust's own request, §"History correction" under `SES-F004` below).
+`SES-F007`'s narrow re-remediation and the fresh, narrower re-review request for it are in
+`03-session-artifacts-delta-rust-handoff-ses-f007.md`. This document otherwise remains the record
+of what Rust already reviewed and approved.
+
 **Do not modify Rust in response to this package without first recording a verdict per finding.**
 Rust's own review-before-remediation workflow applies per finding: `APPROVED` /
 `REJECTED — CONTRACT_ASSURANCE_DEFECT` / `REJECTED — PI_PARITY_DEFECT` / `PI_BEHAVIOR_UNCERTAIN`.
@@ -58,6 +68,16 @@ the namespaced `"session/compaction"`, matching Rust's own constant and the sibl
 `expect_event_kinds` canonical mechanism (schema + runner + `session-owned-event-identity.yaml`)
 added so this class of defect (compact()-writes and derive()-reads sharing the same wrong internal
 spelling, cancelling out undetected) cannot recur silently.
+
+**History correction (per Rust's `APPROVED` verdict, `02-03-delta-rust-review.md`):** the bare
+`"compaction"` this constant previously held was **not** implementation drift, and no claim in this
+package's or `events.py`'s own commentary should describe it as a value "no normative source
+pinned." At Layer 03's original certification (`minion-agent-docs@ed1b18e`), `spec/session.md`'s
+owned-kinds list explicitly read `(session/forked, session/reset, compaction)` — the bare spelling
+*was* the certified normative contract at that time. This delta audit's new cross-language evidence
+deliberately superseded that prior, genuine contract choice with the namespaced `session/*`
+spelling; it did not discover that the old value had always been unpinned. `events.py`'s docstring
+has been corrected to state this accurately.
 
 **Rust's required verdict:**
 1. Language-neutral? Is `"session/compaction"` the correct canonical value independent of which
