@@ -36,6 +36,13 @@ minion-agent-docs   7416645   spec/target-model-transformation.md (rewritten -- 
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged since Layers 01-03).
 
+**Status update (2026-08-24): Rust already performed this review.** Recorded in full in
+`04-target-model-transformation-rust-review.md`. Result:
+`LAYER 04 XFORM SHARED CONTRACT — REJECTED — PI_PARITY_DEFECT`, with four findings
+(`XFORM-R001`..`R004`). All four were independently reproduced and narrowly repaired; the fresh,
+narrower re-review request is in `04-target-model-transformation-rust-handoff-r001-r004.md`. This
+document remains the record of the original review request and its full scope — not rewritten.
+
 **Do not modify Rust in response to this package without first recording a verdict.** Formal
 verdict required: `APPROVED` / `REJECTED — CONTRACT_ASSURANCE_DEFECT` / `REJECTED —
 PI_PARITY_DEFECT` / `PI_BEHAVIOR_UNCERTAIN`. Only after `APPROVED` should Rust implementation begin

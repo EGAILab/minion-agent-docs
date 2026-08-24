@@ -27,7 +27,12 @@ Rules:
    content list before anything else runs, on every role uniformly.
 2. **Unsupported user image.** If, and only if, the target model's capability excludes image input,
    every image block in a `user` message's content becomes the literal text
-   `(image omitted: model does not support images)`.
+   `(image omitted: model does not support images)`. **`UserMessage.content` is `string |
+   [TextBlock|ImageBlock]` (`spec/llm.md`) -- both are first-class, not one legacy and one modern
+   shape.** A string-valued `content` carries no image blocks by construction and is untouched by
+   this rule regardless of target capability: this rule, and rule 4's placeholder mechanics, apply
+   only to the array-content case. An implementation MUST NOT treat a string as an iterable of
+   blocks (`XFORM-R001`: a defect that once corrupted a string into a tuple of its own characters).
 3. **Unsupported tool-result image.** Under the same capability gate, every image block in a
    `tool_result` message's content becomes the distinct literal text
    `(tool image omitted: model does not support images)`. `assistant` content never carries image
@@ -101,9 +106,13 @@ Rules:
     `tool_use`, or `deferred` -- is excluded entirely from what a later model request replays. Its
     own tool calls are discarded with it, per rule 14's own note.
 
-**Invariants a conforming implementation MUST satisfy**, independent of the rules above: source
-messages are never mutated (every transformed message is a new value); output is deterministic for
-identical input, apart from a synthesized result's wall-clock timestamp; every output message
+**Invariants a conforming implementation MUST satisfy**, independent of the rules above: a source
+message's *value* is never mutated by transformation -- calling `transform_messages` must not alter
+what a caller still holding the original `messages` argument observes. This is a value-immutability
+guarantee, not an object-identity one: whether an implementation returns the identical reference for
+a message transformation left unchanged, or always allocates a fresh equal value, is not itself
+cross-language observable and is not normative either way. Also required: output is deterministic
+for identical input, apart from a synthesized result's wall-clock timestamp; every output message
 satisfies the Layer-02 vocabulary exactly (no null content, no role-invalid content block, no
 missing required field); a non-image-capable target's output never contains an image block; a
 cross-model target's output never carries a `text_signature` or (non-empty-string-sourced)
