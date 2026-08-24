@@ -21,7 +21,7 @@ review already approved.
 **Reviewed commits (corrected candidate):**
 
 ```text
-minion-agent        <PUSH_PENDING>   src/minion_agent/llm/transform_messages.py (R001 fix),
+minion-agent        42ef135   src/minion_agent/llm/transform_messages.py (R001 fix),
                                       tests/llm/test_transform_messages.py (+9 R001 tests),
                                       conformance/schema/agent-transform-scenario.schema.json
                                       (R002 rewrite), tests/conformance/transform_runner.py
@@ -31,7 +31,7 @@ minion-agent        <PUSH_PENDING>   src/minion_agent/llm/transform_messages.py 
                                       (rich-field defaults added, evidence-only), new
                                       conformance/agent/string-user-content-survives-
                                       transformation.yaml, pi-parity-manifest.yaml (AI-013, R003)
-minion-agent-docs   <PUSH_PENDING>   spec/target-model-transformation.md (rule 2 string/array
+minion-agent-docs   6f18962   spec/target-model-transformation.md (rule 2 string/array
                                       clarification, invariants wording fix — see §0.1),
                                       assurance/layers/04-target-model-transformation.md
                                       (§0 rejection/remediation record, §15 four-finding history
