@@ -1,9 +1,11 @@
 # Session + Artifacts — Fidelity Assurance & Certification
 
 **Layer ID:** `03`  
-**Status:** historically `CERTIFIED` (2026-08-24) — **POST-CERTIFICATION DELTA AUDIT OPEN**
-(2026-08-24, operational status `IN_DELTA_AUDIT`; scope limited to `SES-F004`..`SES-F008`, see §0).
-The 2026-08-24 certification event itself is not erased or retracted.  
+**Status:** `CERTIFIED` (2026-08-24; original certification event, unchanged) — **post-certification
+delta remediation `CLOSED`** (2026-08-24: `SES-F004`..`SES-F008` discovered via Rust's independent
+Layer-03 implementation, delta-audited, remediated in Python/shared and Rust — including a Rust
+rejection and narrow second remediation for `SES-F007` — re-certified. Full sequence preserved in
+§0, not flattened).  
 **Rust implementation completion (2026-08-24):** `IMPLEMENTED` on branch
 `feat/rust-layer-03-session-artifacts` at `31ed6698a1e4a9f5d3134d2c2b1788f920ceb330`, consuming the
 certified contract at `minion-agent@cda6b5042e678974a43b8dc0fc6ce1c8ade73d88`. The typed Rust
@@ -84,6 +86,8 @@ accepting it, and certified the layer.)
 **Python status:** `IMPLEMENTED` — semantic-owner review `APPROVED`, cross-language review `APPROVED`  
 **Rust status:** `IMPLEMENTED` — `minion-agent-rust/crates/minion-agent/src/session/mod.rs`, with
 implementation-specific tests and the shared canonical Session runner at commit `31ed669`.
+**Post-certification delta remediation** (`SES-F004`/`F006`/`F007`/`F008`) merged through PR #5 at
+`7e45cd124762d1d7ba57e0fd0eca0a08adcb6922`; see §0.
 
 ---
 
@@ -171,30 +175,116 @@ assessment at the time. The full lifecycle, none of it discarded:
    scenario: expressing a forced concurrent interleaving in the canonical DSL would require the
    runner to implement thread/task scheduling itself, which the methodology's own §9 rule (echoed in
    the original delta audit's Finding-E disposition) forbids canonical scenarios from doing.
-5. **Fresh Rust re-review**: pending — handoff package is
-   `03-session-artifacts-delta-rust-handoff-ses-f007.md`.
+5. **Fresh Rust re-review** (`03-session-artifacts-delta-rust-review-ses-f007.md`, reviewing
+   `minion-agent@c5f6bb1` / `minion-agent-docs@5a37584`): **`SES-F007 — APPROVED`**,
+   **`LAYER 03 DELTA CONTRACT — APPROVED`**. Rust independently re-traced the same Python call graph
+   (confirming no `await`/yield/callback/re-entry point exists between `compact()`'s snapshot and
+   marker append) and confirmed its own `Session::compact()` already holds one mutex guard across
+   reset-floor/surface/provenance calculation and the marker append — no Rust semantic change
+   required for `SES-F007` itself, only a focused regression test during consolidated remediation.
+   `SES-F004`'s history correction was separately `APPROVED`.
 
-**`LLM-F011` dependency:** `SES-F004`..`SES-F008`'s delta certification is gated behind `LLM-F011`'s
-own delta certification (Layer 02) landing first, per the certification-order rule this pass
-establishes — `ToolResultMessage.tool_name` is vocabulary Session persists but does not own. Layer
-02's delta contract is itself `APPROVED` (`02-03-delta-rust-review.md`) but not yet finally
-re-certified: the adopted workflow for this delta pass holds consolidated Rust implementation
-remediation (including Layer 02's own `tool_name: Option<String> -> String` fix) until Layer 03's
-shared contract is also `APPROVED`, so no Rust implementation work has started for either layer yet.
+**`LLM-F011` dependency, resolved:** both shared delta contracts (`LAYER 02` and `LAYER 03`) were
+`APPROVED` before any Rust implementation change began, satisfying the certification-order rule this
+pass established.
 
-**Not yet done as of this section:** fresh Rust implementation-owner review of the narrowly
-corrected `SES-F007` candidate; Layer 03 remains `IN_DELTA_AUDIT` until that review returns
-`APPROVED` and is independently re-verified, mirroring this layer's own `SES-F001`→Rust-review
-discipline. `SES-F004`/`SES-F005`/`SES-F006`/`SES-F008` do not need re-review — they are already
-`APPROVED` and were not substantively reopened this pass.
+### Consolidated Rust implementation remediation and final closure (2026-08-24)
 
-**Follow-up recorded, not performed this pass (certification bookkeeping only):** Rust's review
-noted `pi-parity-manifest.yaml`'s Rust-evidence fields are stale now that a real Layer-03
-implementation exists and should eventually name concrete paths (`llm/vocabulary.rs`,
-`session/mod.rs`) plus the delta-remediation state. This is evidence maintenance, not a semantic
-defect, and is deliberately deferred to final delta closure once the consolidated Rust remediation
-PR and its merge SHA are known — updating it now would require a second update anyway once that PR
-lands, and mixing it into `SES-F007`'s narrow remediation would broaden this pass beyond its scope.
+**Rust implementation remediation merged.** PR #5 (`fix/rust-layer02-03-delta-remediation`),
+remediation head `408bd1f9e1147711ef0d16381937da035ece580c`, merged as
+`7e45cd124762d1d7ba57e0fd0eca0a08adcb6922`. Verified directly against the merged diff (not taken
+from Rust's own report — `02-03-delta-rust-remediation-evidence.md` corroborates):
+
+- `SES-F004`: `session/mod.rs`'s `COMPACTION` constant unchanged (Rust was already correct);
+  canonical evidence (`expect_event_kinds`) now consumed by Rust's own conformance adapter, reading
+  real committed `event.kind` values.
+- `SES-F005`: no Rust change — typed role-specific content enums already conformed.
+- `SES-F006`: no Rust production change — `session_conformance.rs`'s adapter now maps
+  `Session::fork`'s real `InvalidForkBoundary` error to the canonical `expect_error` shape instead of
+  `.unwrap()`-panicking, confirming the runner calls the real API and never prevalidates.
+  `Session::fork` itself already enforced the boundary correctly.
+- `SES-F007`: no production change — confirmed by diff (`session/mod.rs` untouched by this PR
+  outside `EventKind::new()`). A genuine 8-OS-thread adversarial regression test,
+  `concurrent_compaction_marker_provenance_matches_its_serialized_snapshot`
+  (`tests/session.rs`), was added: real `std::thread::spawn` + `Barrier`-synchronized concurrent
+  `append`/`reset`/`compact` calls, asserting every compaction marker's `superseded_through` matches
+  exactly what was committed before it under real OS-thread concurrency — materially stronger
+  evidence than Python's cooperative-scheduling proof, since Rust's execution model genuinely admits
+  concurrent mutation.
+- `SES-F008`: `EventKind::new()` fixed to exclude `-` from the namespace (first) segment only,
+  matching the canonical regex exactly — confirmed via the merged diff and Rust's own new
+  parametrized valid/invalid test cases in `tests/session.rs`.
+- `LLM-F011` (Layer 02, bundled in the same PR): `vocabulary.rs::ToolResultMessage.tool_name`
+  reverted `Option<String> -> String`, confirmed in the merged diff.
+
+Fresh gates on merged `main` at `7e45cd1` (not reused from the PR branch):
+`cargo fmt --check` PASS, strict all-target/all-feature Clippy PASS, `cargo test --workspace
+--all-features` **128 passed, 0 failed**, rustdoc warnings-as-errors PASS, `xtask conformance
+verify` PASS. Session canonical: **19 discovered, 18 executed, 1 deferred**
+(`request-reconstruction-after-target-transform.yaml`) — independently re-confirmed by fresh
+enumeration of `conformance/session/*.yaml` this pass (`grep`-verified, not reused from Rust's count):
+19 files, exactly one `TO_BE_FILLED`/`TO_BE_BOUND`/`TO_BE_PINNED` placeholder, the same file.
+
+**Final Layer-03 freeze gate:**
+
+```text
+Pinned Pi obligations for Session-owned Pi-derived
+behavior audited?                        N/A — Session is Minion-owned architecture
+                                          (MINION-002/MINION-003); §3's Pi audit already
+                                          confirmed this and is unchanged
+Minion-specific Session divergence/spec
+complete?                                YES
+Parity manifest current?                 YES — MINION-002's rust: field updated this pass to the
+                                          merged session/mod.rs path plus both PR SHAs (evidence-
+                                          pointer update only, no semantic/disposition/phase change)
+Session spec complete?                   YES — spec/session.md now states compaction identity,
+                                          fork-boundary rule, and compaction-linearization
+                                          explicitly, closing every SES-F004..F008 gap
+Session schema language-neutral?         YES — role-content restriction (SES-F005) and required
+                                          tool_name (LLM-F011) are schema-level, not Python-specific
+Python implementation conforming?        YES — 751 passed/42 xfailed/100% coverage, ruff/mypy clean
+                                          (rerun fresh this pass; unchanged from c5f6bb1 since no
+                                          further Python/shared executable file changed)
+Rust implementation conforming?          YES — 128 passed/0 failed on merged main at 7e45cd1
+Python runner thin?                      YES — re-confirmed: no Agent/XFORM simulation, no fork
+                                          pre-check, no fabricated tool_name, no compaction logic,
+                                          no scheduling in session_runner.py
+Rust runner thin?                        YES — confirmed via the merged session_conformance.rs
+                                          diff: calls real fork()/compact()/append(), maps real
+                                          typed errors, reads real committed event kinds
+Session scenarios: total / executable /
+deferred                                 19 / 18 / 1
+Only deferred scenario owned by Layer 04? YES — request-reconstruction-after-target-transform.yaml
+Agent semantics leaked into Session?     NO
+XFORM semantics leaked into Session?     NO
+SES-F004 resolved?                       YES
+SES-F005 resolved?                       YES
+SES-F006 resolved?                       YES
+SES-F007 resolved?                       YES
+SES-F008 resolved?                       YES
+Active PI_PARITY_DEFECT?                 NONE
+Active PI_BEHAVIOR_UNCERTAIN?            NONE
+Active CONTRACT_ASSURANCE_DEFECT?        NONE
+```
+
+All green. `SES-F004`..`SES-F008` — **`RESOLVED`**. Post-certification delta audit — **`CLOSED`**.
+Layer 03 status restored to **`CERTIFIED`**, preserving the original 2026-08-24 certification date
+and the full sequence: historical certification → independent Rust Layer-03 implementation →
+post-certification defects discovered → delta audit opened → shared remediation → **Rust rejection
+of `SES-F007`** → narrow second remediation → fresh Rust approval → consolidated Rust implementation
+remediation → this closure. The `SES-F007` rejection is retained in full above as positive assurance
+evidence — the two-language review process caught a real gap, corrected it, and the corrected
+contract was independently re-verified before certification, exactly as intended.
+
+**`pi-parity-manifest.yaml` evidence-pointer update (this pass, evidence-only):** `AI-006`
+(`ToolResultMessage`) and `MINION-002` (session log architecture) `rust:` fields updated from
+placeholder phase tags (`"Phase 2 llm messages (new)"`, `"Phase 2 session"`) to the actual merged
+implementation/test paths and both relevant PR SHAs. No `pi:` source, `rule:`, `disposition:`,
+`phase:`, or `tests:` field was changed on either row — semantic-owner review of this update: no
+semantic field changed, so per the workflow's own rule (`process/implementation-conformance-
+workflow.md` §4.6) a fresh Rust implementation-owner review is not required solely for a pointer
+update to the exact implementation that just produced the approved evidence. Manifest re-validated:
+52 rows (unchanged count), valid YAML, no duplicate ids.
 
 ---
 

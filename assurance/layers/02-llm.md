@@ -1,10 +1,10 @@
 # LLM Seam — Fidelity Assurance & Certification
 
 **Layer ID:** `02`  
-**Status:** historically `CERTIFIED` (2026-08-23) — **POST-CERTIFICATION DELTA AUDIT OPEN**
-(2026-08-24, operational status `IN_DELTA_AUDIT`; scope limited to `LLM-F011`, see §0). The
-2026-08-23 certification event itself is not erased or retracted — only `ToolResultMessage.tool_name`
-requiredness is reopened.  
+**Status:** `CERTIFIED` (2026-08-23; original certification event, unchanged) — **post-certification
+delta remediation `CLOSED`** (2026-08-24: `LLM-F011` discovered via Rust's independent Layer-03
+implementation, delta-audited, remediated in Python/shared and Rust, re-certified — see §0 for the
+full sequence, preserved in full, not flattened).  
 **Audit date:** 2026-08-23 (§1-6 and §8-14 complete: Pi source read directly, requirement
 traceability, module and existing-test audits, and the full §8-14 review all done; 4 PI_PARITY_DEFECT
 findings (LLM-F003..F006) resolved in the prior pass; one more hardening fix (LLM-F007, centralizing
@@ -26,7 +26,9 @@ through PR #3 (§18, §19). No active `PI_PARITY_DEFECT`, `PI_BEHAVIOR_UNCERTAIN
 **Rust status:** `CERTIFIED / MERGED` — typed vocabulary, strict three-part model identity,
 adapter/service boundary, central settled `AssistantStream`, scripted real-trait adapter, Rust tests,
 and a thin partial agent-family conformance adapter are merged through PR #3 at
-`05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19.
+`05acd1a96963a7a08c573e460027a980261e8b5c`; see §18 and §19. **Post-certification delta
+remediation** (`LLM-F011`, `tool_name` required) merged through PR #5 at
+`7e45cd124762d1d7ba57e0fd0eca0a08adcb6922`; see §0.
 
 ---
 
@@ -66,12 +68,58 @@ and that the conformance runner reads `spec["tool_name"]` directly with no fallb
 constant. Rust noted its own `Option<String>` is a local implementation defect to correct once
 consolidated remediation begins — that finding does not weaken this `APPROVED` verdict.
 
-**Not yet finally certified.** Layer 03's shared delta contract was rejected in the same review
-(`SES-F007` only — see `assurance/layers/03-session-artifacts.md` §0) and the adopted workflow for
-this delta pass holds consolidated Rust implementation remediation, including Layer 02's own
-`ToolResultMessage.tool_name: Option<String> -> String` fix, until Layer 03's contract is also
-`APPROVED`. Layer 02 therefore remains `IN_DELTA_AUDIT` — the shared-contract verdict is settled,
-but no Rust implementation change has started for either layer.
+**Interim state (superseded below):** Layer 03's shared delta contract was rejected in the same
+review (`SES-F007` only), so consolidated Rust implementation remediation — including Layer 02's own
+`tool_name: Option<String> -> String` fix — waited until Layer 03's contract was also `APPROVED`.
+That happened via a narrow second remediation (`03-session-artifacts-delta-rust-handoff-ses-f007.md`,
+`03-session-artifacts-delta-rust-review-ses-f007.md`): `SES-F007 — APPROVED`,
+`LAYER 03 DELTA CONTRACT — APPROVED` (2026-08-24, `02-03-delta-rust-review.md` superseded by the
+`SES-F007`-focused re-review). Both shared delta contracts were `APPROVED` before any Rust
+implementation change began.
+
+### Final Layer-02 delta closure (2026-08-24)
+
+**Rust implementation remediation merged.** PR #5
+(`fix/rust-layer02-03-delta-remediation`), remediation head `408bd1f9e1147711ef0d16381937da035ece580c`,
+merged as `7e45cd124762d1d7ba57e0fd0eca0a08adcb6922`. Verified directly against the merged diff, not
+taken from Rust's own report: `llm/vocabulary.rs::ToolResultMessage.tool_name` reverted from
+`Option<String>` to `String` (the `#[serde(skip_serializing_if...)]` attribute and `Some(...)`
+wrapping removed); `tests/llm_vocabulary.rs` gained
+`tool_result_requires_and_round_trips_the_real_tool_name`, asserting both that a real non-default
+name (`"weather_lookup"`) round-trips and that a payload missing `tool_name` fails to deserialize.
+Full Rust evidence recorded in `02-03-delta-rust-remediation-evidence.md`: fresh gates on merged
+`main` at `7e45cd1` — `cargo fmt --check` PASS, strict all-target/all-feature Clippy PASS, `cargo
+test --workspace --all-features` 128 passed/0 failed, rustdoc warnings-as-errors PASS, `xtask
+conformance verify` PASS.
+
+**Final Layer-02 freeze gate:**
+
+```text
+Pinned Pi requirement confirmed?        YES — packages/ai/src/types.ts::ToolResultMessage.toolName:
+                                         string (no `?`), re-read directly this pass at the unchanged
+                                         pinned commit b7bb00b936dbe21b8e160b3e89efdec361846699
+Shared LLM contract matches Pi?         YES — spec/llm.md's tool_name already had no `?`
+Python matches shared contract?         YES — messages.py::ToolResultMessage.tool_name: str (required)
+Rust matches shared contract?           YES — vocabulary.rs::ToolResultMessage.tool_name: String
+                                         (required), confirmed in the merged 7e45cd1 diff directly
+Real production tool name preserved?    YES — call.name threads through execute_call -> ToolResult
+                                         -> to_message -> ToolResultMessage in Python; Rust's
+                                         conformance adapter reads spec["tool_name"] with .unwrap()
+                                         (no fallback) and its new test proves a real name round-trips
+Canonical round-trip evidence sufficient? YES — rich-assistant-message-round-trip.yaml (Python),
+                                         tool_result_requires_and_round_trips_the_real_tool_name (Rust)
+Runner fabricates tool_name?            NO — grep-confirmed no ""/placeholder construction remains
+                                         in Python src; Rust's adapter has no fallback either
+Active PI_PARITY_DEFECT?                NONE
+Active PI_BEHAVIOR_UNCERTAIN?           NONE
+Active CONTRACT_ASSURANCE_DEFECT?       NONE
+```
+
+All green. `LLM-F011` — **`RESOLVED`**. Post-certification delta audit — **`CLOSED`**. Layer 02
+status restored to **`CERTIFIED`**, preserving the original 2026-08-23 certification date and every
+intermediate step of this sequence (discovery → delta audit → Python/shared remediation → Rust
+delta-contract approval → consolidated Rust implementation remediation → this closure) rather than
+presenting the corrected state as though it were always so.
 
 ---
 
