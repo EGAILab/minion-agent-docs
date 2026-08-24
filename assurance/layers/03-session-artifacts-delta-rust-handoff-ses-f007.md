@@ -22,15 +22,16 @@ zero.** It asks Rust to verify one narrow addition against one specific rejectio
 **Reviewed commits (second `SES-F007` candidate):**
 
 ```text
-minion-agent        <PUSH_PENDING>   spec/session.md (compaction-linearization paragraph),
-                                      tests/session/test_concurrency.py (new provenance test),
-                                      minion_agent/session/events.py (SES-F004 docstring
-                                      history-accuracy correction, no behavior change)
-minion-agent-docs   <PUSH_PENDING>   assurance/layers/02-llm.md, 03-session-artifacts.md (§0
-                                      updated: review result recorded, SES-F007 lifecycle,
-                                      SES-F004 history correction), this handoff,
-                                      03-session-artifacts-delta-rust-handoff.md (status note +
-                                      SES-F004 history correction)
+minion-agent        c5f6bb1   spec/session.md is in minion-agent-docs; this SHA carries
+                               tests/session/test_concurrency.py (new provenance test) and
+                               minion_agent/session/events.py (SES-F004 docstring
+                               history-accuracy correction, no behavior change)
+minion-agent-docs   7066138   spec/session.md (compaction-linearization paragraph),
+                               assurance/layers/02-llm.md, 03-session-artifacts.md (§0
+                               updated: review result recorded, SES-F007 lifecycle,
+                               SES-F004 history correction), this handoff,
+                               03-session-artifacts-delta-rust-handoff.md (status note +
+                               SES-F004 history correction)
 ```
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged — concurrency
