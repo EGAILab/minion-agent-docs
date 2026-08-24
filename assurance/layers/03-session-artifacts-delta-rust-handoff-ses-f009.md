@@ -13,6 +13,18 @@ computed `content` uniformly (as a block array) before dispatching on role. Full
 (`LLM-F012` must be `APPROVED` first — Session persists Layer-02 vocabulary, it does not own its
 typing) and **before** Layer 04's `R001`/`R002` re-review.
 
+**Reviewed commits (delta candidate):**
+
+```text
+minion-agent        4ed360d   src/minion_agent/session/derive.py, conformance/schema/
+                               session-scenario.schema.json, tests/conformance/session_runner.py,
+                               conformance/session/string-user-message-round-trip.yaml (new),
+                               tests/session/test_derive.py -- same push as LLM-F012 (§1 of the
+                               02-llm-delta-rust-handoff-llm-f012.md package)
+minion-agent-docs   f610e8b   assurance/layers/03-session-artifacts.md (§0b, this finding), this
+                               handoff
+```
+
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged — `MINION-002`
 already marks Session persistence as Minion-owned architecture, not Pi-derived).
 

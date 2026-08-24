@@ -13,10 +13,18 @@ Full finding detail: `assurance/layers/02-llm.md` §0b (`LLM-F012`).
 landing correctly) and Layer 04's `transform_messages()` operates on it directly (`XFORM-R001`'s
 complete fix depended on this too).
 
-**Reviewed commits (delta candidate):** see the consolidated candidate SHAs recorded in the final
-report accompanying this handoff round (this pass bundles `LLM-F012`, `SES-F009`, and Layer 04's
-`XFORM-R001`/`XFORM-R002` fixes in one Python/shared push, since they were discovered and fixed
-together — but each retains its own finding ID and independent verdict requirement below).
+**Reviewed commits (delta candidate):**
+
+```text
+minion-agent        4ed360d   src/minion_agent/llm/content.py, src/minion_agent/llm/messages.py,
+                               tests/typing/valid_message_construction.py (new), plus nine
+                               consumer call sites and their tests -- this single push also
+                               carries SES-F009 and Layer 04's XFORM-R001(complete)/XFORM-R002
+                               fixes, discovered and fixed together, but each retains its own
+                               finding ID and independent verdict requirement (see the separate
+                               SES-F009 and Layer-04 third-pass handoff packages)
+minion-agent-docs   f610e8b   assurance/layers/02-llm.md (§0b, this finding), this handoff
+```
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 

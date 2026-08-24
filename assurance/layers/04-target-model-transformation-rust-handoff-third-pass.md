@@ -18,6 +18,18 @@ open (stale scenario-count arithmetic). **Review this package last**, after
 are both `APPROVED` — `XFORM-R001`'s complete fix and this package's own regression confirmations
 both depend on the upstream layers' fixes landing first.
 
+**Reviewed commits (delta candidate):**
+
+```text
+minion-agent        4ed360d   conformance/schema/agent-transform-scenario.schema.json (usage/cost
+                               requiredness), tests/conformance/transform_runner.py (fabrication
+                               removed), 13 conformance/agent/*.yaml scenarios (complete usage
+                               objects added), pi-parity-manifest.yaml (AI-004) -- same push as
+                               LLM-F012/SES-F009
+minion-agent-docs   f610e8b   assurance/layers/04-target-model-transformation.md (§0.6-§0.10),
+                               this handoff
+```
+
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
 **Do not modify Rust in response to this package without first recording a verdict.** Rust
