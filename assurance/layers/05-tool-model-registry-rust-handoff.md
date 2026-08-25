@@ -11,7 +11,7 @@ implementation-owner review of the Python/shared candidate before any Rust imple
 **Reviewed commits (delta candidate):**
 
 ```text
-minion-agent        <PYTHON_CANDIDATE_SHA>   src/minion_agent/llm/tools.py (ConstrainedSampling
+minion-agent        d9054fe799f5209a2887f2b22d1dc482ec72826c   src/minion_agent/llm/tools.py (ConstrainedSampling
                      types, ToolSchema.constrained_sampling), src/minion_agent/tools/definition.py
                      (label/prepare_arguments/constrained_sampling fields, mode default fix,
                      parameters type widened), src/minion_agent/tools/registry.py (register_tool
@@ -25,7 +25,7 @@ minion-agent        <PYTHON_CANDIDATE_SHA>   src/minion_agent/llm/tools.py (Cons
                      tests/typing/valid_tool_construction.py (new), pi-parity-manifest.yaml
                      (TOOL-008 corrected, TOOL-009..TOOL-014 added), 17 existing test call sites
                      updated for the new required `label` field
-minion-agent-docs   <DOCS_CANDIDATE_SHA>      spec/tools.md (Layer 05/06 split, full Layer-05
+minion-agent-docs   7728d5520dd6bd869d795e76cfe84ece6563c2ea      spec/tools.md (Layer 05/06 split, full Layer-05
                      section added), assurance/layers/05-tool-model-registry.md (this pass's full
                      audit record), this handoff, pi-parity-manifest.yaml changes recorded above
                      live in the minion-agent repo, not here
