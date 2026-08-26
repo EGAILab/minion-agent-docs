@@ -241,19 +241,25 @@ attempt to touch them. But `tools/post-execute` remains a public Runtime event, 
 also register a raw listener directly against it, returning (or short-circuiting with) a whole
 `ToolResult` -- the constrained helper alone cannot prevent that (`L06-R003`; an earlier revision
 believed it could, which was itself the defect: the helper is a convenience, not enforcement). The
-actual authoritative boundary is the production dispatcher itself: after the waterfall runs
-(regardless of how many listeners were registered, or through which API), `tool_call_id`,
-`tool_name`, and `added_tool_names` are unconditionally restored from the pre-hook result --
-whatever any listener returned or attempted for those three fields is discarded, every time. Each
-listener's override (or a raw listener's own returned value, for the fields it's still allowed to
-change) is merged into the accumulated result field-by-field before the next listener runs (omitted
-fields keep their prior value; no deep merge -- removing a key requires supplying the whole
-replacement value, matching pinned Pi's merge exactly), so listener 2 always sees exactly what
-listener 1 produced. If any listener throws, the waterfall unwinds and the **entire** prior result
--- success or failure, with whatever `usage`/`details`/`terminate` it carried -- is discarded and
-replaced with a plain error result; later listeners never run. This is a replacement, not a merge
-(`TOOL-017`), and holds identically for one listener or many, and for a helper-registered or raw
-listener alike.
+actual authoritative boundary is the production dispatcher itself, and it holds at **every**
+listener-to-listener handoff, not only once the whole waterfall finishes: `tool_call_id`,
+`tool_name`, and `added_tool_names` are restored from the pre-hook result before each next listener
+runs, so no listener -- first, last, or in between, helper-registered or raw -- ever observes a
+predecessor's unauthorized replacement of those three fields, even transiently (`L06-R003`, closed
+a second time; a still-earlier revision restored them only once, after the entire waterfall
+completed, which protected the final result but let an intermediate listener read -- and act on,
+e.g. by copying into its own `details` override -- a forged value a prior listener had delegated).
+Each listener's override (or a raw listener's own returned value, for the fields it's still allowed
+to change) is merged into the accumulated result field-by-field before the next listener runs
+(omitted fields keep their prior value; no deep merge -- removing a key requires supplying the
+whole replacement value, matching pinned Pi's merge exactly), so listener 2 always sees exactly what
+listener 1 produced, **with `tool_call_id`/`tool_name`/`added_tool_names` already normalized back to
+their protected values** regardless of what listener 1 attempted. If any listener throws, the
+waterfall unwinds and the **entire** prior result -- success or failure, with whatever
+`usage`/`details`/`terminate` it carried -- is discarded and replaced with a plain error result;
+later listeners never run. This is a replacement, not a merge (`TOOL-017`), and holds identically
+for one listener or many, for a helper-registered or raw listener alike, and regardless of
+registration order.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
 plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's

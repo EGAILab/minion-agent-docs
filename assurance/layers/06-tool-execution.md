@@ -9,19 +9,25 @@ the tool model/registry, this document owns execution).
 remediation (§13) → repaired candidate independently **RE-REVIEWED**
 (`assurance/layers/06-tool-execution-rust-rereview.md`) and **REJECTED again on three of six**
 (`L06-R001`, `L06-R003`, `L06-R006` re-opened; `L06-R002`, `L06-R004`, `L06-R005` confirmed
-resolved) → narrow remediation, this pass (§14) → repaired candidate **READY FOR FINAL RUST
-CLOSURE REVIEW**. §§1–12 preserve the original audit; §§3–8 have inline corrections where the
-first candidate's own technical claims were factually wrong (validation-exemption, signal-defer
-wording, hook disposition) — read the corrected text as current, §13 as the record of the first
-remediation round, and §14 as the record of the second, narrower one.
+resolved) → narrow remediation (§14) → repaired candidate independently **RE-REVIEWED A THIRD
+TIME** (`assurance/layers/06-tool-execution-rust-final-closure.md`) and **REJECTED PARTIALLY
+AGAIN** (`L06-R001` confirmed resolved; `L06-R003`/`L06-R006` re-opened on a narrower defect:
+final-only restoration left intermediate listeners able to observe a forged replacement) → final
+narrow remediation, this pass (§15) → repaired candidate **READY FOR FINAL RUST CLOSURE REVIEW**.
+§§1–12 preserve the original audit; §§3–8 have inline corrections where the first candidate's own
+technical claims were factually wrong (validation-exemption, signal-defer wording, hook
+disposition) — read the corrected text as current, §13 as the record of the first remediation
+round, §14 as the record of the second, and §15 as the record of the third and (pending final
+Rust closure review) last.
 **Audit date:** 2026-08-26 (original); remediation 2026-08-26; second narrow remediation
-2026-08-26.
+2026-08-26; third narrow remediation 2026-08-26.
 **Auditor:** Claude (Python-driven, per adopted workflow).
-**Python status:** `CERTIFIED` (post second remediation) — real `ToolRegistry`/`Context`/effect/
+**Python status:** `CERTIFIED` (post third remediation) — real `ToolRegistry`/`Context`/effect/
 event integration, 10/10 Layer-06-owned canonical scenarios green (corrected count, `L06-R004`),
-full Pi audit re-verified, all six original Rust-review findings resolved (§13), and the three
-findings the independent re-review reopened (§14) resolved at their actual authoritative
-boundary.
+full Pi audit re-verified, all six original Rust-review findings resolved (§13), the three findings
+the first re-review reopened resolved at their actual authoritative boundary (§14), and the
+narrower per-listener-observation gap the final-closure review found in that boundary itself now
+closed (§15).
 **Rust status:** `NOT_IMPLEMENTED` — Rust has no tool-execution seam yet; currently sits at Layer
 05 (certified cross-language, including a real Rust implementation, `minion-agent@8b5b004`). One
 layer lag, process-conforming (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3).
@@ -767,3 +773,155 @@ Layer 07                       NOT STARTED
 
 See the rewritten `06-tool-execution-rust-handoff.md` for the narrow final-closure-review request
 and the exact delta since the `06-tool-execution-rust-rereview.md` candidate.
+
+---
+
+## 15. Independent Rust final-closure review: the per-listener observation gap, and its remediation (this pass, 2026-08-26)
+
+The §14 candidate was submitted for a fresh, independent Rust **final closure** review
+(`assurance/layers/06-tool-execution-rust-final-closure.md`, code candidate
+`minion-agent@4185fa6c8e7baf311f1bc4652c9f90e240bff070`, docs candidate
+`minion-agent-docs@5be4e0a2717f07f8e3f7324d1191fc788c40ceee`). §14's own R003 fix -- restoring
+`tool_call_id`/`tool_name`/`added_tool_names` once, after the entire `tools/post-execute` waterfall
+completed -- was itself found insufficient:
+
+```text
+Layer-06 shared contract    REJECTED (partial -- 4 of 6 confirmed resolved)
+L06-R001   RESOLVED
+L06-R002   RESOLVED (confirmed, not reopened)
+L06-R003   PI_PARITY_DEFECT           downstream listeners observe forbidden protected-field
+                                       replacements between hook applications
+L06-R004   RESOLVED (confirmed, not reopened)
+L06-R005   RESOLVED (confirmed, not reopened)
+L06-R006   CONTRACT_ASSURANCE_DEFECT  N-listener accumulated-result rule contradicts protected-
+                                       field authority until enforced at each waterfall step
+```
+
+### 15.1 The exact gap §14's fix left open
+
+§14's fix restored the three protected fields correctly in the **final** output of `_finalize`,
+which is genuinely sufficient to stop the final `ToolResult` from ever carrying a forged identity.
+But `EventBus.waterfall`'s `next(replacement)` mechanism passes `replacement` straight to the next
+listener, unmodified, before `_finalize` ever sees it. A listener earlier in the chain could
+therefore delegate a `replacement` carrying a forged `tool_call_id`/`tool_name`/`added_tool_names`,
+and the very next listener in the chain -- reading the `ToolResult` it was handed as its own
+input -- observed the forgery directly, even though it would have been silently overwritten by the
+time the whole waterfall returned. The re-review's own reproduction: a raw listener delegates
+`tool_call_id="evil-id"`, `tool_name="evil-name"`, `added_tool_names=("evil",)`; a second,
+helper-registered listener reads those (still-forged, not-yet-restored) values off the `ToolResult`
+it receives and copies them into its own (Pi-allowed) `details` override -- making the forgery
+observable in the final result after all, through a field the fix never touched. Final-only
+restoration is therefore not an authoritative per-listener boundary; it only ever protected the
+last mile.
+
+### 15.2 Repair: per-step normalization at the `next`-delegation boundary
+
+The chosen fix stays inside the existing, generic `EventBus` rather than inventing a
+Layer-06-specific dispatcher: `EventBus.waterfall` (`src/minion_agent/runtime/events.py`) gained one
+new, optional keyword parameter, `normalize_step: Callable[[tuple], tuple] | None = None`. When
+supplied, it runs on whatever a listener passes to `next(...)` **before** the next listener ever
+receives it. Every other event's dispatch is byte-for-byte unchanged, since the parameter defaults
+to `None` and nothing else in the codebase passes it -- this is additive, not a redesign, per the
+governing instruction's own explicit preference (§6/§7: "a broad EventBus redesign is not
+required... do not end up with helper listeners dispatched one way, raw EventBus listeners
+dispatched another way").
+
+`_finalize` (`src/minion_agent/tools/execute.py`) now passes a `normalize_step` closure that
+captures the pre-hook `tool_call_id`/`tool_name`/`added_tool_names` (the same protected baseline as
+before) and restores them onto whatever `ToolResult` is about to become the next listener's input,
+leaving every Pi-allowed field (`content`, `details`, `is_error`, `usage`, `terminate`) exactly as
+the delegating listener produced it. The end-of-waterfall restoration in `_finalize` is **retained**
+unchanged, since a listener that short-circuits instead of calling `next` has no downstream listener
+for `normalize_step` to protect, and that value still needs to be corrected before it becomes the
+whole waterfall's own return value.
+
+```text
+Enforcement point                          Protects against
+--------------------------------------------------------------------------------------------------
+normalize_step (new, at every next()       A listener observing a PRIOR listener's forged
+  delegation)                              replacement -- the exact gap this pass closes.
+end-of-waterfall restoration (§13/§14,     The final ToolResult carrying a forged value when the
+  retained unchanged)                      LAST active listener short-circuits instead of
+                                            delegating (no downstream listener exists to protect).
+ToolResult frozen dataclass (pre-existing, In-place mutation of any field, by any listener,
+  unrelated to this pass)                  regardless of registration path.
+```
+
+All three enforcement points are required together; none is redundant with either other one, and
+none was removed to add another.
+
+### 15.3 New regression tests
+
+Three tests added to `tests/tools/test_post_execute.py`, all against the real public seam:
+
+```text
+test_a_downstream_listener_cannot_observe_a_predecessors_forged_identity
+    the exact reproduction from the final-closure review: a raw listener delegates a forged
+    tool_call_id/tool_name/added_tool_names; a helper-registered listener after it reads the
+    CURRENT values and copies them into details. Asserts the helper observed the ORIGINAL
+    values, not the forgery -- confirmed to fail against the pre-fix candidate (reproduced
+    directly: reverting only execute.py/events.py and re-running this test alone fails with
+    the forged values, `evil-id`/`evil-name`/`('evil',)`, exactly as the review reported) and
+    to pass after the fix.
+
+test_per_step_normalization_preserves_legitimate_accumulated_overrides
+    three chained listeners with no attack at all: the fix must not reset or discard
+    legitimately accumulated Pi-allowed fields (content, terminate) it was never meant to
+    touch. Each listener sees exactly what the previous one produced; the final result
+    reflects all three.
+
+test_reversed_mixed_registration_order_shares_the_same_authority
+    the inverse registration order of the existing L06-R003 mixed-path test (helper, then
+    raw attacker, then a further helper observer) -- proves neither registration path gets
+    special downstream-observation authority regardless of which one runs first.
+```
+
+### 15.4 Re-checked contract-quality questions (post-remediation)
+
+```text
+Can a listener observe a predecessor's forged tool_call_id/tool_name/added_tool_names?     NO
+  (was YES before this pass -- the exact defect the final-closure review reproduced)
+Does per-step normalization discard legitimate accumulated content/details/usage/terminate
+  overrides from earlier listeners?                                                        NO
+Is the fix additive to the generic EventBus, or a Layer-06-specific dispatcher?             ADDITIVE
+  (`normalize_step`, optional, unused by every event except tools/post-execute)
+Do two independently conforming implementations differ on what listener B sees after
+  listener A attempts a protected-field replacement?                                       NO
+  (shared rule: protected fields are restored before the NEXT listener runs, not only in
+  the final output -- Rust may implement this with a typed AfterToolCallOverride carrying
+  no slot for the protected fields at all, achieving the same observable rule without
+  copying Python's snapshot/normalize technique)
+Is the constraint uniform regardless of registration path and registration order?          YES
+  (verified: raw->helper, helper->raw->helper)
+Does the end-of-waterfall restoration remain necessary?                                    YES
+  (protects a short-circuiting last listener, which normalize_step cannot reach)
+Is ToolResult's frozen-dataclass in-place-mutation guarantee still intact and unweakened?   YES
+Is TOOL-022 still absent from every current API/normative surface?                         YES
+  (unchanged this pass -- not reopened)
+```
+
+### 15.5 Regression
+
+Full pytest: 917 passed, 19 xfailed, 0 failed, 100.00% coverage (was 914; +3 net, the three new
+`L06-R003` per-step tests; no test removed). `ruff check .`: all checks passed. `mypy` (src +
+typing fixtures): success, 59 files (unchanged file count -- no new module added). Schema
+validation: 165 (unchanged). Manifest: 65/65 unique rows (unchanged count; `TOOL-005`'s `rule:`
+text and Python evidence pointer extended in place to describe the third closure and cite
+`EventBus.waterfall`'s `normalize_step`; no rows added or removed). Layer-06 canonical: 10/10/10/0
+(unchanged -- confirmed by direct re-run of exactly the ten named scenarios, not merely trusted).
+Layer-05 `ToolRegistry` canonical 9/9 + 7/7 harness-validation (unchanged, Layer 05 untouched).
+Runtime/Session/XFORM regression: 26/20/14 (unchanged, confirmed by direct re-run of each suite).
+
+### 15.6 New candidate
+
+```text
+L06-R001 .. L06-R006          RESOLVED
+Layer-06 shared contract      READY FOR FINAL RUST CLOSURE REVIEW
+Python Layer 06                CERTIFIED
+Rust Layer 06                  NOT_IMPLEMENTED
+Rust modified                  NO
+Layer 07                       NOT STARTED
+```
+
+See the rewritten `06-tool-execution-rust-handoff.md` for the final closure-review request and the
+exact delta since the `06-tool-execution-rust-final-closure.md` candidate.
