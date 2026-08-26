@@ -4,12 +4,17 @@
 assurance order). Master designation for this layer's own content: **Phase 4 — Tools** (the
 master does not split registry from execution; assurance does, per §6 items 5/6 — Layer 05 owns
 the tool model/registry, this document owns execution).
-**Status:** `CERTIFIED` (Python/shared candidate, this pass).
-**Audit date:** 2026-08-26.
+**Status:** `IN_AUDIT` → first candidate self-certified 2026-08-26 (§§1–12 below) → independently
+**REJECTED** (`L06-R001`..`L06-R006`, `assurance/layers/06-tool-execution-rust-review.md`) →
+remediation, this pass (§13) → repaired candidate **READY FOR FRESH RUST RE-REVIEW**. §§1–12
+preserve the original audit; §§3–8 have inline corrections where the first candidate's own
+technical claims were factually wrong (validation-exemption, signal-defer wording, hook
+disposition) — read the corrected text as current, and §13 as the record of what changed and why.
+**Audit date:** 2026-08-26 (original); remediation 2026-08-26.
 **Auditor:** Claude (Python-driven, per adopted workflow).
-**Python status:** `CERTIFIED` — real `ToolRegistry`/`Context`/effect/event integration, all
-Layer-06-owned canonical scenarios green, full Pi audit complete, one genuine `PI_PARITY_DEFECT`
-found and repaired during this pass (see §9).
+**Python status:** `CERTIFIED` (post-remediation) — real `ToolRegistry`/`Context`/effect/event
+integration, 10/10 Layer-06-owned canonical scenarios green (corrected count, `L06-R004`), full Pi
+audit re-verified, all six Rust-review findings resolved (see §13).
 **Rust status:** `NOT_IMPLEMENTED` — Rust has no tool-execution seam yet; currently sits at Layer
 05 (certified cross-language, including a real Rust implementation, `minion-agent@8b5b004`). One
 layer lag, process-conforming (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3).
@@ -109,31 +114,48 @@ returns the original object unchanged when `preparedArguments === toolCall.argum
 copy in, matching the same nonmutation guarantee via a different mechanism (verified directly:
 `test_prepare_arguments_does_not_mutate_the_original_call`).
 
-Validation: pinned Pi's `validateToolArguments` (`packages/ai/src/utils/validation.ts`) performs
-TypeBox-specific coercion (`structuredClone`, `normalizeOptionalNulls`, `Value.Convert`, a
-fallback JSON-Schema coercion path for non-TypeBox schemas) — this exact algorithm is
-**not** reproduced in Python. Layer 05 already established "Layer 05 is not a JSON Schema
-validator"; this pass extends that decision explicitly to Layer 06: a pydantic-model-backed
-`ToolDefinition.parameters` gets real Python validation (`model_validate`); a raw JSON-Schema
-`dict` gets none. This is a disclosed, intentional Python-only limitation, not a silently-skipped
-contract — recorded here rather than discovered by a future reviewer reading only the code.
+Validation: pinned Pi's `validateToolArguments` (`packages/ai/src/utils/validation.ts`) validates
+every `Tool.parameters: TSchema`, with no exemption for a raw-object-schema representation, via
+TypeBox-specific coercion (`structuredClone`, `normalizeOptionalNulls`, `Value.Convert`, a fallback
+JSON-Schema coercion path for non-TypeBox schemas). **Corrected (`L06-R001`):** the first
+candidate incorrectly exempted a raw JSON-Schema `dict` from validation entirely -- a genuine
+`PI_PARITY_DEFECT`, not an acceptable Layer-05-scoped limitation, since Layer 05's own "Layer 05
+is not a JSON Schema validator" position was never meant to license Layer 06 skipping validation
+altogether. A pydantic-model-backed `ToolDefinition.parameters` gets real pydantic validation; a
+raw, object-valued JSON-Schema `dict` is now validated for real too, via the general `jsonschema`
+library against the exact schema Layer 05 approved. TypeBox's exact coercion/conversion algorithm
+remains unreproduced byte-for-byte -- that narrower divergence (validate vs. clone-and-coerce
+identically) is disclosed and intentional; skipping validation outright was not.
 
 Capability shape: pinned Pi's `execute(toolCallId, params, signal?, onUpdate?)`. Python's
 `execute(tool_call_id, arguments)` (+ `update` when the tool declares a third parameter) now
 passes the pipeline's own real call id, closing half of the `TOOL-F003` gap Layer 05 disclosed.
-`signal` remains unrealized: no `AbortSignal`-equivalent type exists anywhere in this codebase
-yet, in either language — confirmed by direct search, unchanged from the Layer-05-era finding.
-This is assurance Layer 09's obligation, not Layer 06's.
+`signal` remains behaviorally unrealized in Layer 06. **Corrected (`L06-R005`):** the first
+candidate claimed "no `AbortSignal`-equivalent type exists anywhere in this codebase yet, in
+either language" -- false for Rust. Certified Rust Layer 05 already reserves a structural signal
+seam (`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
+`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`) without exercising cancellation
+behavior. The accurate asymmetry: Python has no signal abstraction yet; Rust already has one,
+unused. The defer itself was, and remains, correctly accepted -- only its stated basis was wrong.
+Assurance Layer 09 owns cancellation propagation and can add it without changing any non-cancelled
+rule this document states, and without requiring Rust to discard its existing seam.
 
 ---
 
 ## 5. Hooks
 
-Minion's `tools/pre-execute` (waterfall, terminal `Proceed(validated_arguments)`) and
-`tools/post-execute` (waterfall over the result) realize pinned Pi's single optional
-`beforeToolCall`/`afterToolCall` callbacks as composable listener chains — an intentional,
-already-established Minion architectural generalization (Pi has exactly one hook slot per
-extension point; Minion allows N, each cooperatively delegating via `next()`).
+Minion's `tools/pre-execute` and `tools/post-execute` realize pinned Pi's single optional
+`beforeToolCall`/`afterToolCall` callbacks. **Corrected (`L06-R006`):** the first candidate
+described the N-listener extension inconsistently across this document (`PARITY_NEUTRAL_HARDENING`),
+`spec/tools.md` (a bare "deliberate Minion addition/generalization" with no explicit disposition
+keyword), and the manifest (`TOOL-004`/`TOOL-005` left at plain `adopted`, with no separate
+requirement for chaining/replacement). The single-listener case is directly Pi-compatible (same
+input, same allowed replacement surface, same failure semantics as Pi's own callback). Supporting
+**N** ordered listeners per stage, composed as a deterministic registration-order fold, is an
+**intentional Minion architectural extension** pinned Pi does not itself define -- classified
+consistently as such now everywhere (spec, this document, `TOOL-004`/`TOOL-005`), not as
+parity-neutral hardening: with more than one listener, execution is observably different from
+what a single Pi callback could express.
 
 Pinned Pi's `prepareToolCall` wraps `prepareArguments` + `validateToolArguments` +
 `beforeToolCall` in **one** try/catch (confirmed by direct source inspection: a single `try`
@@ -152,9 +174,18 @@ opt-in-only architectural augmentation that does not change default (unused) obs
 After-hook merge (`finalizeExecutedToolCall`): `content ?? result.content`, `details ?? ...`,
 `usage ?? ...`, `terminate ?? ...`, `isError ?? isError` — nullish-coalescing field-by-field,
 never a deep merge. `addedToolNames` is **not** in `AfterToolCallResult`'s field list at all; the
-after-hook structurally cannot touch it. If the after-hook throws, Pi's catch block replaces the
-entire result with a bare `createErrorToolResult(...)` — no `usage`/`details`/`terminate` survive.
-Python's new after-hook try/except (added this pass — see §9) matches exactly.
+after-hook structurally cannot touch it, and neither can `tool_call_id`/`tool_name`. If the
+after-hook throws, Pi's catch block replaces the entire result with a bare
+`createErrorToolResult(...)` — no `usage`/`details`/`terminate` survive. **Corrected (`L06-R003`):**
+the first candidate let a `tools/post-execute` listener return/replace the entire `ToolResult`
+directly through the raw waterfall, which could observably rewrite `tool_call_id`/`tool_name`/
+`added_tool_names` -- fields Pi's own type gives a hook no way to touch at all. The only sanctioned
+registration path is now `register_after_tool_call_hook`: a hook returns an `AfterToolCallOverride`
+(exactly Pi's five fields) or `None`, and the framework performs the merge -- a hook cannot return
+a full `ToolResult` through this path even if it tried, since the type has no slot for the
+excluded fields. With N listeners (`L06-R006`), each sees the result exactly as merged by every
+earlier listener, and a mid-chain exception replaces the accumulated result the same way a single
+listener's exception would (see §13).
 
 ---
 
@@ -214,45 +245,60 @@ differing by failure path) was found.
 
 ## 8. Canonical evidence
 
-Nine scenarios were `TO_BE_FILLED` placeholders directly owned by this layer; one
+**Ten** scenarios were `TO_BE_FILLED` placeholders directly owned by this layer; one
 (`pending-tool-calls-state`) was reclassified as Layer-07+ (`AgentState.pendingToolCalls` is an
 Agent-level state-surface concern pinned Pi's own type places outside `AgentTool`/
-`AgentToolResult`/the execution functions entirely — not reopened by this pass). All nine
-Layer-06-owned scenarios are now green, executed through the real production seam
-(`ToolRegistry`, `Context`, the real `execute_call`/`execute_batch`/`execute_length_stop_batch`,
-the real event bus):
+`AgentToolResult`/the execution functions entirely — not reopened by this pass). An earlier
+revision of this document said "nine" despite the list immediately below it already containing
+ten names — a genuine arithmetic inconsistency (`L06-R004`), corrected here and everywhere else
+in this candidate's own surfaces (spec, freeze gate, handoff, manifest notes); historical review
+artifacts that correctly described an earlier, nine-scenario candidate are left untouched as
+history, not rewritten. All ten Layer-06-owned scenarios are green, executed through the real
+production seam (`ToolRegistry`, `Context`, the real
+`execute_call`/`execute_batch`/`execute_length_stop_batch`, the real event bus):
 
 ```text
-after-hook-failure-replaces-result-with-tool-error
-before-hook-failure-becomes-tool-error
-execute-failure-becomes-tool-error
-late-tool-update-ignored
-length-stop-executes-no-tools
-parallel-tool-completion-vs-message-order
-prepare-arguments-failure-becomes-tool-error
-schema-validation-failure-becomes-tool-error
-tool-batch-parallel
-tool-batch-sequential-contagion
+1. after-hook-failure-replaces-result-with-tool-error
+2. before-hook-failure-becomes-tool-error
+3. execute-failure-becomes-tool-error
+4. late-tool-update-ignored
+5. length-stop-executes-no-tools
+6. parallel-tool-completion-vs-message-order
+7. prepare-arguments-failure-becomes-tool-error
+8. schema-validation-failure-becomes-tool-error
+9. tool-batch-parallel
+10. tool-batch-sequential-contagion
+
+discovered: 10 | executed: 10 | passed: 10 | deferred: 0
 ```
 
-`schema-validation-failure-becomes-tool-error` needed a genuine, validated parameter schema
-(Layer 05's own empty-object raw-dict default performs no validation) — the runner's `_stub()`
-now supports `parameters: {requires: [...]}`, dynamically building a real pydantic model, an
-acceptable "scripted `ToolDefinition`" mock seam (§37 of the kickoff instruction), not a
-simulation of execution semantics. `late-tool-update-ignored` needed a deterministic way to fire
-an update strictly after the tool settles — the runner schedules a single cooperative
-scheduler-yield task (`asyncio.sleep(0)` then `update()`), drained via `asyncio.gather` after the
-scenario's own steps finish, so the assertion is never a race. Neither addition computes any
-tool-execution semantic itself; both remain thin, declarative fixture construction.
+`projected-execution-ends-follow-completion-order` is a separate, pre-existing Agent
+log/projection scenario, not one of these ten (confirmed by the second Rust review; not
+Layer-06-owned and not counted here).
 
-`expect_messages` gained a `text_contains` alternative to exact `text` for one case
-(`schema-validation-failure-becomes-tool-error`): pydantic's own `ValidationError` formatting is
-host-library-specific, not a stable cross-language contract, unlike the length-stop message
-(which is pinned Pi's own literal string and is asserted exactly).
+`schema-validation-failure-becomes-tool-error` now uses a plain, object-valued JSON Schema
+mapping -- the actual Layer-05 shared `ToolDefinition.parameters` representation -- rather than
+the Python-specific `parameters: {requires: [...]}` shorthand an earlier revision used to
+dynamically build a Pydantic model (`L06-R001`; that shorthand exercised a Python-only validation
+path, not the approved cross-language schema boundary, and was removed from the runner and
+schema entirely). `late-tool-update-ignored` needed a deterministic way to fire an update strictly
+after the tool settles — the runner schedules a single cooperative scheduler-yield task
+(`asyncio.sleep(0)` then `update()`), drained via `asyncio.gather` after the scenario's own steps
+finish, so the assertion is never a race. Neither addition computes any tool-execution semantic
+itself; both remain thin, declarative fixture construction.
+
+`expect_messages` retains a `text_contains` alternative to exact `text` for one case
+(`schema-validation-failure-becomes-tool-error`): the `jsonschema` library's own validation-error
+message is host-library-specific, not a stable cross-language contract (neither pydantic's nor
+Pi's own TypeBox-derived wording) -- only the Minion-authored `"invalid arguments: "` prefix is
+asserted there. This is unlike the length-stop message (pinned Pi's own literal string) and the
+generic failure-stage messages (`L06-R002`, now the raised error's bare message with no Python
+exception-class prefix), both of which are asserted exactly.
 
 Regression, unchanged: Runtime canonical 26, Session canonical 20, XFORM canonical 14, Layer-05
-`ToolRegistry` canonical 9 (+ 7 harness-validation tests) — all still green, confirmed by full
-suite run, not assumed.
+`ToolRegistry` canonical 9 (+ 7 harness-validation tests) — Layer 05's own scenario count is
+genuinely 9 and is unaffected by this Layer-06 count correction; all still green, confirmed by
+full suite run, not assumed.
 
 Runner thinness confirmed: it constructs real `ToolDefinition`s and dispatches them through the
 real `ToolRegistry`/`execute_batch`/`execute_call`; it does not choose scheduling, call
@@ -262,7 +308,7 @@ implement the length-stop rule itself (that dispatch lives in production `driver
 
 ---
 
-## 9. Findings
+## 9. Findings (first-pass self-audit; see §13 for the six Rust-review findings and their repair)
 
 **One genuine `PI_PARITY_DEFECT`, found and repaired within this pass** (never carried forward as
 an open finding): the pre-existing, uncertified Python pipeline ran the after-hook
@@ -285,11 +331,14 @@ itself, matching pinned Pi's separate `finalizeExecutedToolCall` try/catch exact
 exception now replaces the entire prior result with a plain error result, discarding whatever
 `usage`/`details`/`terminate` it carried, matching §5's merge rule precisely.
 
-No other `PI_PARITY_DEFECT`, `CONTRACT_ASSURANCE_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` remains
-active. One `PARITY_NEUTRAL_HARDENING`: `tools/pre-execute`'s argument-replacement capability and
-the waterfall-based N-listener hook architecture, both pre-existing and unmodified, remain
-disclosed intentional divergences from Pi's single-callback hook shape (§5) — they do not change
-default observable behavior for any scenario that does not specifically exercise them.
+No other `PI_PARITY_DEFECT`, `CONTRACT_ASSURANCE_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` remained
+active in this first-pass self-audit. **Superseded by `L06-R006` (§13):** this section originally
+classified the N-listener hook architecture as `PARITY_NEUTRAL_HARDENING`; the independent Rust
+review found that classification inconsistent with spec/manifest and, more importantly, incorrect
+in substance -- N-listener composition is observably different from what a single Pi callback
+expresses, so it is an **intentional Minion architectural extension**, not parity-neutral
+hardening. `tools/pre-execute`'s argument-replacement capability remains correctly classified as
+a disclosed intentional divergence, unaffected by this correction.
 
 ---
 
@@ -337,8 +386,10 @@ Per-call pipeline stages pinned?                       YES (§3-5)
 Batch mode/contagion/ordering pinned?                  YES (§6)
 Length-stop rule pinned and implemented?               YES (§6)
 Canonical evidence: real registry/executor/events?     YES (§8) -- no simulated semantics
-9/9 Layer-06-owned canonical scenarios green?          YES (§8)
-Layer-05 ToolRegistry regression checked?              YES (§8) -- 9/9 + 7/7 unchanged
+10/10 Layer-06-owned canonical scenarios green?        YES (§8)
+Layer-05 ToolRegistry regression checked?              YES (§8) -- 9/9 + 7/7 unchanged (Layer 05's
+                                                          own count, not affected by the Layer-06
+                                                          count correction)
 Runtime/Session/XFORM regression checked?              YES (§8) -- 26/20/14 unchanged
 Full Python gates green?                               YES (§12) -- 903 passed/19 xfailed/100%
 Contract-quality review all green?                     YES (§10)
@@ -376,3 +427,193 @@ construction.py tests/typing/valid_tool_construction.py`.
 Layer 07 (the Agent run loop proper — `prompt()`/`continue()` lifecycle, steering/follow-up,
 turn-continuation decisions) is **not started**. Real Providers (assurance Layer 11) and
 cancellation (assurance Layer 09) remain untouched and unstarted.
+
+---
+
+## 13. Independent Rust review rejection and remediation (this pass, 2026-08-26)
+
+The §§1–12 candidate above was submitted for independent Rust review
+(`assurance/layers/06-tool-execution-rust-review.md`, candidate `minion-agent@ee563ff`,
+`minion-agent-docs@e96c154`). That review returned:
+
+```text
+Layer-06 shared contract    REJECTED
+L06-R001   PI_PARITY_DEFECT           raw object-valued schemas bypass validation
+L06-R002   PI_PARITY_DEFECT           canonical error content includes Python exception class names
+L06-R003   CONTRACT_ASSURANCE_DEFECT  after-hook field contract and production seam conflict
+L06-R004   CONTRACT_ASSURANCE_DEFECT  canonical inventory is arithmetically inconsistent
+L06-R005   CONTRACT_ASSURANCE_DEFECT  signal-defer evidence is factually stale
+L06-R006   CONTRACT_ASSURANCE_DEFECT  Minion hook augmentation classification is inconsistent
+```
+
+This section records the repair of all six. `L06-R003` and `L06-R006` were resolved together
+(the review itself said to), since both concern the same production seam.
+
+### 13.1 Finding disposition
+
+```text
+Finding    Root cause                                Repair                              Evidence
+L06-R001   validateToolArguments in pinned Pi         _validate() now validates raw       execute.py
+           validates every Tool.parameters: TSchema,  object-valued schemas for real,     (_validate,
+           with no exemption -- the first candidate   via the general jsonschema          ArgumentValid
+           exempted a raw JSON-Schema dict from        library, against the exact         ationError);
+           validation entirely, and the canonical      Layer-05-approved schema.          schema-
+           schema-validation scenario used a           Canonical fixture rewritten to      validation-
+           Python-specific parameters: {requires:      a plain JSON Schema mapping,        failure-
+           [...]} shorthand that dynamically built     removing the requires shorthand     becomes-tool-
+           a Pydantic model instead of exercising      from the runner and schema          error.yaml; 4
+           the approved cross-language boundary.        entirely. jsonschema moved from     new unit
+                                                        a dev-only to a real production      tests
+                                                        dependency (pyproject.toml).
+L06-R002   Every generic exception-handling branch     f"{type(error).__name__}: {error}"  execute.py (3
+           in execute_call formatted                   replaced with the bare error         sites); 4
+           f"{type(error).__name__}: {error}",          message (str(error)) at all three    canonical
+           unconditionally prefixing the Python         sites: prepare/before-hook           scenarios'
+           runtime class name -- pinned Pi's own        failure, execute() failure, after-    expect_
+           error conversion uses error.message only     hook failure. Three existing unit    messages
+           (a JS Error("boom").message is "boom",       tests strengthened from substring     corrected; 3
+           not "Error: boom"). The pydantic-            containment to exact equality, so      unit tests
+           validation-failure path ("invalid            they actually prove the prefix is     strengthened
+           arguments: {error}") was already correct     gone rather than merely tolerating    to exact
+           and untouched.                               it.                                   equality
+L06-R003   tools/post-execute was a waterfall over      New AfterToolCallOverride type        decisions.py;
+           the entire, frozen ToolResult -- a listener  (decisions.py) carries exactly        execute.py
+           could return/replace the whole result,       Pi's five AfterToolCallResult         (_merge_
+           observably rewriting tool_call_id,           fields, with no slot for identity/    override,
+           tool_name, or added_tool_names, none of      added_tool_names. New                 register_
+           which pinned Pi's AfterToolCallResult         register_after_tool_call_hook() is    after_tool_
+           type allows a hook to touch at all.           the only sanctioned registration      call_hook);
+                                                          path: a hook returns an override      test_post_
+                                                          (or None), the framework merges       execute.py
+                                                          it field-by-field before the next      (rewritten);
+                                                          hook runs. All test/runner call        agent_
+                                                          sites (test_post_execute.py,           runner.py
+                                                          agent_runner.py's after-hook           (post branch
+                                                          listener) migrated to the new          rewritten)
+                                                          helper; the smoking-gun test
+                                                          (test_a_listener_may_own_the_
+                                                          result_outright) was replaced with
+                                                          one proving the old capability is
+                                                          gone.
+L06-R004   The candidate changed exactly ten Layer-06   Every current-candidate surface        spec/tools.md
+           placeholder fixtures and the assurance        (this document §8, its freeze gate,   (no stale
+           inventory listed ten names, but the           the Rust handoff, this section)       count
+           assurance prose, freeze gate, handoff, and    now says ten/10, with the actual       existed
+           reported result said nine/9 -- a genuine      ten-item list re-numbered 1-10.        there);
+           arithmetic inconsistency, not a real           Historical review artifacts           06-tool-
+           scenario-count regression.                     (05-*, and this document's own        execution.md
+                                                           §8/§11 prose) are corrected in        §8/§11;
+                                                           place since they described the        06-tool-
+                                                           CURRENT candidate incorrectly, not     execution-
+                                                           a genuinely superseded earlier one.    rust-
+                                                                                                  handoff.md
+L06-R005   The first candidate's spec/manifest/           Replaced with the accurate            spec/tools.md
+           handoff prose claimed "no AbortSignal-         asymmetry: Python has no signal        (2 sites);
+           equivalent type exists in either language" --  abstraction yet; certified Rust        TOOL-018;
+           false for Rust. Certified Rust Layer 05        Layer 05 already reserves one          06-tool-
+           already contains ToolExecutionSignal and       structurally, unused. The defer        execution.md
+           ToolExecutionRequest.signal in                  itself (behavioral, not               §4
+           tools/definition.rs.                            architectural) was already
+                                                            correctly accepted and remains
+                                                            accepted -- only the stated basis
+                                                            was corrected. No Rust file was
+                                                            read differently than before; no
+                                                            Rust file was changed.
+L06-R006   Pi defines one callback per hook stage;         Classified consistently everywhere    spec/tools.md
+           Minion's N-listener waterfalls, argument        now: single-listener is directly      §5; 06-tool-
+           replacement in pre-hooks, and whole-result      Pi-compatible baseline; N-listener     execution.md
+           transformation in post-hooks are observable     composition is an intentional          §5; TOOL-004/
+           plugin-composition semantics the first          Minion architectural extension,        TOOL-005
+           candidate classified inconsistently:            not parity-neutral hardening.          rule text
+           PARITY_NEUTRAL_HARDENING in this document,      TOOL-004 (before-hook) and
+           "deliberate Minion addition" with no             TOOL-005 (after-hook) each now
+           disposition keyword in spec/tools.md, and        state both the Pi baseline and the
+           TOOL-004/TOOL-005 left at plain adopted          Minion extension, with the extension
+           with no separate requirement for                explicitly attributed to Minion, not
+           chaining/replacement.                            to pinned Pi. Resolved together with
+                                                             L06-R003's post-hook type boundary,
+                                                             as the review itself directed.
+```
+
+### 13.2 Hook composition, fully specified (`L06-R006`)
+
+```text
+Zero listeners     No transformation. Directly Pi-compatible (matches Pi's own optional-callback
+                    absence).
+One listener        Same stage, same input, same allowed replacement surface, same failure
+                    semantics as Pi's corresponding callback. Directly Pi-compatible.
+N listeners          Intentional Minion architectural extension. Deterministic, registration-order
+                    fold -- Runtime's own EventBus listener-registration order (the same ordering
+                    primitive `tools/pre-execute`/`tools/post-execute` already used before this
+                    pass), not an unordered set/dict. Rust can reproduce the same ordering by
+                    preserving whatever registration-order primitive its own Runtime equivalent
+                    exposes.
+
+Before-hook waterfall:  listener 1 receives current validated arguments; may delegate (optionally
+                        replacing arguments via Proceed) or return a decision (Block/Proceed)
+                        directly, short-circuiting later listeners. A raised exception unwinds
+                        the whole waterfall -- later before-hooks skipped, execute skipped, after
+                        hooks never run -- converted to an error result via the L06-R002 message
+                        rule.
+
+After-hook waterfall:   listener 1 receives the current (post-execute) ToolResult; may return an
+                        AfterToolCallOverride (or None); the framework merges it before listener 2
+                        runs, so listener 2 sees exactly what listener 1 produced. A raised
+                        exception stops later after-hooks and replaces the ENTIRE accumulated
+                        result with a plain error result (L06-R002 message rule) -- earlier
+                        successful overrides are discarded, not preserved, matching Pi's own
+                        single-callback failure semantics extended to N listeners.
+```
+
+### 13.3 Re-checked contract-quality questions (post-remediation)
+
+```text
+Does the production executor validate every shared JsonSchemaObject?    YES (§13.1, L06-R001)
+Does any cross-language canonical scenario depend on a Pydantic class?  NO -- the requires
+                                                                          shorthand was removed
+Does any runtime ToolResult contain Python exception class prefixes?    NO (§13.1, L06-R002;
+                                                                          proven by exact-equality
+                                                                          unit tests, not substring
+                                                                          containment)
+Can after hooks rewrite source identity?                                 NO -- AfterToolCallOverride
+                                                                          has no slot for it
+Can after hooks rewrite added_tool_names if Pi forbids it?                NO -- same reason
+Is the multi-listener waterfall deterministic and documented?            YES (§13.2)
+Is the multi-listener behavior classified consistently?                  YES -- intentional Minion
+                                                                          architectural extension,
+                                                                          everywhere
+Does zero/one-listener behavior remain Pi-compatible?                    YES
+Does signal documentation correctly describe both Python and Rust?       YES (§13.1, L06-R005)
+Can Layer 09 add cancellation without changing non-cancelled rules?      YES -- no non-cancelled
+                                                                          rule in this document
+                                                                          changed shape
+Does every current inventory count match actual discovery?               YES -- 10/10/10/0
+Can Rust implement the repaired contract without reading Python?         YES
+```
+
+### 13.4 Regression
+
+Full pytest: 909 passed, 19 xfailed, 100.00% coverage (was 903; +6 net: 4 new R001 raw-schema
+tests, 1 new R003 "hook returns None" test, 1 new R003 "after-hook raises" test, minus the one
+removed R003 smoking-gun test that proved forbidden behavior). `ruff check .`: all checks passed.
+`mypy` (src + typing fixtures): success, 59 files (required adding `types-jsonschema` as a dev
+dependency once `jsonschema` became a real production import). Schema validation: 165 (unchanged
+-- `L06-R001`'s fix lives in the runner and production code, not the JSON-schema-validation
+gate itself). Manifest: 65/65 unique rows (unchanged count; six rows' `rule:` text corrected
+in place, no rows added or removed). Layer-06 canonical: 10/10/10/0 (corrected count, `L06-R004`).
+Layer-05 `ToolRegistry` canonical 9/9 + 7/7 harness-validation (unchanged, Layer 05 untouched).
+Runtime/Session/XFORM regression: 26/20/14 (unchanged).
+
+### 13.5 New candidate
+
+```text
+L06-R001 .. L06-R006          RESOLVED
+Layer-06 shared contract      READY FOR FRESH RUST RE-REVIEW
+Python Layer 06               CERTIFIED (post-remediation)
+Rust Layer 06                  NOT_IMPLEMENTED
+Rust modified                  NO
+Layer 07                       NOT STARTED
+```
+
+See the rewritten `06-tool-execution-rust-handoff.md` for the re-review request and the exact
+delta since `e96c154ac760ff4e1f06bcec4c14be588e470a18`.

@@ -193,44 +193,81 @@ after -- reordering these is a `PI_PARITY_DEFECT`, not a stylistic choice. It re
 of the arguments so an in-place-mutating shim cannot corrupt the source `ToolCall.arguments`
 (nonmutation discipline, matching XFORM's own rule).
 
-Validation coerces the prepared arguments against the tool's schema. A pydantic-model-backed
-`ToolDefinition.parameters` gets real validation; a raw JSON-Schema `dict` (`TOOL-F010`) gets none
--- arguments pass through unchanged. This is a disclosed, intentional Python-only limitation:
-pinned Pi always validates via TypeBox regardless of representation, but Layer 05 deliberately
-declined to make Layer 06 into a general JSON Schema validator, and this pipeline does not
-retroactively become one.
+Validation checks the prepared arguments against the tool's schema, with no exemption for either
+representation (`L06-R001`; an earlier revision skipped validation entirely for a raw JSON-Schema
+`dict`, a genuine `PI_PARITY_DEFECT` -- pinned Pi's `validateToolArguments` validates every
+`Tool.parameters: TSchema`). A pydantic-model-backed `ToolDefinition.parameters` gets real pydantic
+validation (including its default-filling); a raw, object-valued JSON-Schema `dict` (`TOOL-F010`)
+is validated for real too, via the general `jsonschema` library against the exact schema Layer 05
+approved. Neither path reproduces pinned Pi's TypeBox-specific coercion/conversion algorithm
+(`packages/ai/src/utils/validation.ts`) byte-for-byte -- that remains a disclosed, intentional
+divergence: the shared contract is "arguments conform to the supplied JSON Schema," not "TypeBox's
+exact clone/convert/coerce pipeline," and Layer 05 deliberately declined to make Layer 06 into a
+general JSON-Schema-dialect-feature-complete validator. A raw-schema tool's arguments pass through
+unchanged when they already validate (no JSON-Schema-only defaults are filled in, unlike pydantic's
+own default-filling for its models).
 
-The before-hook and after-hook are Minion's own `tools/pre-execute` (waterfall, terminal
-`Proceed(validated_arguments)`) and `tools/post-execute` (waterfall over the result) events --
-pinned Pi's single optional `beforeToolCall`/`afterToolCall` callbacks realized as composable
-listener chains, a deliberate Minion architectural generalization. Pi's own `prepareToolCall` wraps
-`prepareArguments` + `validateToolArguments` + `beforeToolCall` in **one** try/catch: a before-hook
-listener that throws (rather than returning a structured block) collapses to the same generic
-error result as a prepare/validation failure, not a distinct failure class. `tools/pre-execute` may
-additionally replace the arguments a listener sees (`Proceed(arguments=...)`, e.g. for sandboxing)
--- an intentional Minion addition pinned Pi's `BeforeToolCallResult` has no equivalent for, since
-Pi's hook can only block or pass through unchanged.
+The before-hook and after-hook are Minion's own `tools/pre-execute` and `tools/post-execute`
+waterfall events. Pinned Pi defines exactly **one** callback per stage
+(`beforeToolCall`/`afterToolCall`); the single-callback case is directly Pi-compatible (same input,
+same allowed replacement surface, same failure semantics as Pi's own callback). Minion additionally
+supports **N** ordered listeners per stage, composed as a deterministic, registration-order fold --
+this is an **intentional Minion architectural extension** pinned Pi does not itself define, not a
+"parity-neutral" implementation detail: with more than one listener, execution is observably
+different from what a single Pi callback could express, and the disposition is named accordingly
+(`L06-R006`; an earlier revision described this inconsistently across the spec, assurance record,
+and manifest, sometimes as hardening, sometimes as bare Pi adoption).
+
+Before-hook waterfall: listeners run in registration order; each sees the current validated
+arguments (or a prior listener's `Proceed(arguments=...)` replacement) and either delegates
+(`next()`, optionally narrowing the arguments) or returns a decision (`Block`/`Proceed`) directly,
+short-circuiting the remaining listeners. Pi's own `prepareToolCall` wraps `prepareArguments` +
+`validateToolArguments` + `beforeToolCall` in **one** try/catch: a before-hook listener that throws
+(rather than returning a structured block) collapses to the same generic error result as a
+prepare/validation failure, not a distinct failure class -- true for both the single- and
+multi-listener case, since a raised exception unwinds the whole waterfall regardless of how many
+listeners were registered. `tools/pre-execute` may additionally replace the arguments a listener
+sees (`Proceed(arguments=...)`, e.g. for sandboxing) -- an intentional Minion addition pinned Pi's
+`BeforeToolCallResult` has no equivalent for, since Pi's hook can only block or pass through
+unchanged; this addition applies identically whether one listener or several are registered.
+
+After-hook waterfall: listeners run in registration order via `register_after_tool_call_hook`, the
+only sanctioned way to extend `tools/post-execute` (`L06-R003`). Each listener receives the
+current, already-merged `ToolResult` (read-only) and may return an `AfterToolCallOverride` (or
+`None`/nothing for no change) -- **never** the whole result. `AfterToolCallOverride` carries
+exactly Pi's five `AfterToolCallResult` fields (`content`/`details`/`is_error`/`usage`/`terminate`)
+and structurally has no slot for `tool_call_id`, `tool_name`, or `added_tool_names`: hooks cannot
+replace execution identity or `added_tool_names` by construction, not merely by convention (an
+earlier, uncertified revision let a listener return/replace the entire `ToolResult`, which could
+observably rewrite those fields -- a genuine `CONTRACT_ASSURANCE_DEFECT`, repaired this pass).
+Each listener's override is merged into the accumulated result field-by-field before the next
+listener runs (omitted fields keep their prior value; no deep merge -- removing a key requires
+supplying the whole replacement value, matching pinned Pi's merge exactly), so listener 2 always
+sees exactly what listener 1 produced. If any listener throws, the waterfall unwinds and the
+**entire** prior result -- success or failure, with whatever `usage`/`details`/`terminate` it
+carried -- is discarded and replaced with a plain error result; later listeners never run. This is
+a replacement, not a merge (`TOOL-017`), and holds identically for one listener or many.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
 plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's
-`(toolCallId, params, signal?, onUpdate?)` capability shape except for `signal`: no
-`AbortSignal`-equivalent type exists anywhere in this codebase yet, in either language, so
-cancellation propagation remains assurance Layer 09's obligation, not Layer 06's. A thrown/rejected
-`execute()` becomes a normal error outcome -- **not** an immediate one -- so it still flows through
-the after-hook exactly like success would.
+`(toolCallId, params, signal?, onUpdate?)` capability shape except for `signal`. Cross-language
+signal state is asymmetric, not uniformly absent (`L06-R005`; an earlier revision incorrectly
+claimed "no equivalent type exists in either language"): Python has no `AbortSignal`-equivalent
+abstraction yet, but certified Rust Layer 05 already reserves one structurally
+(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
+`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`) without exercising cancellation
+behavior. The accepted defer is behavioral, not architectural: Layer 06 certifies **non-cancelled**
+tool-execution semantics only; assurance Layer 09 owns cancellation propagation, abort timing,
+sibling effects, and cancellation result semantics, and can add that behavior later without
+changing any non-cancelled stage/ordering/result/event rule this document states, and without
+requiring Rust to discard or redesign its existing signal-bearing capability seam. A
+thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
+still flows through the after-hook exactly like success would.
 
 Live updates: `update(partial)` is silently ignored once `execute()`'s own call has settled
 (succeeded or failed) -- pinned Pi's `AgentToolUpdateCallback`: "Calls made after the tool promise
 settles are ignored." A tool that stashes its `update` callback and invokes it later produces no
 observable effect.
-
-The after-hook may replace `content`/`details`/`usage`/`terminate`/`is_error` field-by-field
-(omitted fields keep their prior value; no deep merge -- removing a key requires supplying the
-whole replacement value, matching pinned Pi's `AfterToolCallResult` exactly). `added_tool_names` is
-**not** one of the overridable fields; the after-hook cannot add, remove, or replace it. If the
-after-hook itself throws, the **entire** prior result -- success or failure, with whatever
-`usage`/`details`/`terminate` it carried -- is discarded and replaced with a plain error result;
-this is a replacement, not a merge (`TOOL-017`).
 
 ### Batch execution
 
@@ -275,8 +312,10 @@ Layer-06 event or result.
 
 ### Explicitly not certified by Layer 06
 
-Cancellation/abort propagation through `execute`/hooks (assurance Layer 09 -- no `AbortSignal`
-type exists yet), provider-specific constrained-sampling enforcement (Real Providers, assurance
-Layer 11), and everything the master's own agent run loop owns: `prompt()`/`continue()` lifecycle,
-steering/follow-up message injection, `shouldStopAfterTurn`/`prepareNextTurn`, and whether a
-`terminate=true` batch or any other condition actually suppresses/continues the next model turn.
+Cancellation/abort propagation through `execute`/hooks (assurance Layer 09 -- Python has no
+`AbortSignal`-equivalent type yet; certified Rust Layer 05 already reserves one structurally
+without exercising cancellation behavior, `L06-R005`), provider-specific constrained-sampling
+enforcement (Real Providers, assurance Layer 11), and everything the master's own agent run loop
+owns: `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
+`shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
+condition actually suppresses/continues the next model turn.
