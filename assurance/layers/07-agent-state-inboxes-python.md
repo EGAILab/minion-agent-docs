@@ -409,3 +409,287 @@ Layer 08                     NOT STARTED
 Independent Rust review of this Layer-07 shared contract (`spec/agent.md`'s new Layer-07 section,
 `pi-parity-manifest.yaml`'s `AG-011`/`AG-012`/`AG-013`) against Rust's own architecture, before any
 Rust implementation begins. Do not implement Rust in response to this document.
+
+---
+
+# PASS 2.5 — remediation after independent Rust rejection (2026-08-26)
+
+## Rust review commit
+
+`bb6bd276a2093904d0fbe424bafd45d2b6c08443`
+(`assurance/layers/07-agent-state-inboxes-rust-review.md`, merged via fast-forward).
+
+## Rejection summary
+
+```text
+L07-R001  PI_PARITY_DEFECT           mutable per-instance systemPrompt/model/thinkingLevel omitted
+L07-R002  PI_PARITY_DEFECT           steer/followUp narrowed AgentMessage -> UserMessage
+L07-R003  PI_PARITY_DEFECT           fresh-instance replacement is not Pi's in-place reset()
+L07-R004  CONTRACT_ASSURANCE_DEFECT  zero language-neutral canonical scenarios
+L07-R005  CONTRACT_ASSURANCE_DEFECT  incomplete AgentState field disposition coverage
+```
+
+All five were independently re-audited against pinned Pi directly (`agent.ts` re-read in full a
+second time), not accepted from the review's own description.
+
+## L07-R001 — mutable per-instance state
+
+Confirmed directly: `createMutableAgentState`'s `systemPrompt`/`model`/`thinkingLevel` are plain,
+directly assignable properties (not getter/setter pairs), defaulting from `initialState?.x ?? ...`;
+`Agent.state` returns this same live object, so assignment through it is immediately observable and
+affects every subsequent run.
+
+**Implementation:** `AgentInstance` gained `system_prompt: str`, `model: ModelId`,
+`thinking_level: ThinkingLevel` (new `ThinkingLevel` enum, pinned Pi's seven values verbatim, in
+`identity.py`) -- plain mutable instance attributes, initialized from `definition.system`/`.model`/
+`ThinkingLevel.OFF`, freely reassignable per instance afterward. `AgentDefinition` remains frozen
+and shared, per the review's own preferred architecture; Minion did not make it mutable to imitate
+Pi.
+
+**Deliberate scope boundary, disclosed, not hidden:** the existing, uncertified `AgentLoop`/
+`driver.py` (`_run_step`) still reads `instance.definition.model`/`.definition.system` directly for
+an actual request -- it was **not** rewired to read `instance.model`/`.system_prompt`. Rewiring
+those three read sites is Layer-08 run/turn implementation, explicitly out of this narrow pass's
+ownership boundary. The review's own words license this: "Layer 07 must define current per-instance
+state and its mutation surface; Layer 08 may own when run snapshots are consumed." The state and its
+mutation surface now exist, are per-instance-isolated, and are ready for Layer 08 to consume without
+any further Layer-07 redesign, once Layer 08 itself is undertaken.
+
+**Status: RESOLVED** (state ownership/mutation surface); consumption wiring correctly and
+explicitly deferred to Layer 08, not silently skipped.
+
+## L07-R002 — `AgentMessage` domain
+
+Confirmed directly: `AgentMessage = Message | CustomAgentMessages[keyof CustomAgentMessages]`, and
+`CustomAgentMessages` is an empty interface in pinned Pi itself (apps extend it via TypeScript
+declaration merging; nothing in pinned Pi populates it). The actual, complete domain is therefore
+exactly `Message` -- the already-certified Layer-02 vocabulary.
+
+**Implementation:** `Inbox.send`/`steer`/`followup`/`inject`, `InputEnvelope.message`, and the new
+`AgentInstance.steer`/`.follow_up`/`.inject` wrappers are all typed `Message`, not `UserMessage`.
+This cascaded into two purely type-level (zero behavior change) fixes to keep `mypy` clean:
+`decisions.Enter.messages` and `driver.py::AgentLoop._pre_step`'s parameter both widened from
+`tuple[UserMessage, ...]` to `tuple[Message, ...]` -- confirmed zero behavioral change via the full,
+unmodified `tests/agent_loop/` suite (62 tests) staying green.
+
+**Tests added** prove a `UserMessage`, an `AssistantMessage`, and a `ToolResultMessage` are each
+individually accepted by `steer`/`followup`, and that a claim returns all three, mixed, in FIFO
+order (`test_steer_accepts_an_assistant_message`, `test_followup_accepts_an_assistant_message`,
+`test_steer_accepts_a_tool_result_message`, `test_claim_returns_mixed_message_variants_in_fifo_
+order`) -- not merely re-proven with `UserMessage` alone.
+
+**Status: RESOLVED.**
+
+## L07-R003 — in-place reset
+
+Confirmed directly (full re-read of `Agent.reset()`): in-place, idle-only (`this.activeRun` check),
+exact rejection text, clears `messages`/`isStreaming`/`streamingMessage`/`pendingToolCalls`/
+`errorMessage`/both queues, retains everything else including object identity.
+
+**Implementation:** `AgentInstance.reset()` (new `AgentActiveError`), genuinely in-place -- the same
+`Inbox`/`SessionLog`/scope objects survive (`test_reset_is_in_place_not_a_fresh_instance`); config
+(`system_prompt`/`model`/`thinking_level`), `on_status_change`, and `definition` all retained
+(`test_reset_retains_identity_configuration_and_tool_relationship`); exact rejection text and
+no-partial-mutation-on-rejection both proven
+(`test_reset_while_running_is_rejected_atomically`); runtime state and both queues cleared
+(`test_reset_clears_runtime_state_and_both_queues`).
+
+**One sub-piece explicitly classified, not silently dropped:** clearing `messages`. Checked
+directly: `SessionLog` (`session/log.py`) has exactly four public members --
+`__len__`/`events`/`append`/`surface` -- no truncate/clear operation exists, by design (an
+already-certified Layer-03 append-only property). Teaching `derive_messages` to respect a "reset
+boundary" marker mid-log would itself be a new Layer-03 projection semantic. Per the governing
+instruction's own explicit escape valve ("If implementing full mutable message replacement would
+require altering certified Layer-03 semantics: STOP, classify the dependency explicitly"), this is
+recorded as a classified cross-layer dependency, not implemented unilaterally, and not silently
+omitted either -- `reset()` clears every other Pi-cleared field it can safely reach.
+
+**Status: SUBSTANTIALLY RESOLVED** -- every observable difference the review's own rejection turned
+on (identity, references, listeners, active-rejection, retained configuration) is closed; the one
+remaining sub-piece is a disclosed, classified, cross-layer dependency on a Layer-03 primitive this
+pass has no mandate to add.
+
+## L07-R004 — language-neutral canonical evidence
+
+The prior zero-canonical decision is withdrawn. A fourth `conformance/agent/` scenario shape was
+added (`agent_inbox`/`expect`, `agent-inbox-scenario.schema.json`), discriminated the same way the
+existing `transform`/`tool_registry` shapes already are -- still one canonical family
+(`conformance/agent`), not a fourth. `tests/conformance/agent_inbox_runner.py` +
+`test_agent_inbox_conformance.py` execute it against the real `Inbox` primitive directly: no
+provider, no tool, no run-loop timing.
+
+```text
+agent-inbox-queue-mode-fifo.yaml
+    steering: enqueue A, B; claim one-at-a-time -> [A]; enqueue C; claim all -> [B, C];
+    claim all again on the now-empty queue -> [] (proves both QueueMode values, an empty claim,
+    and enqueue-after-claim, in one scenario)
+
+agent-inbox-queue-independence-and-clearing.yaml
+    steering: A, C; follow-up: B; hasQueuedMessages before any clear -> true; clear steering;
+    hasQueuedMessages after -> true (follow-up survives); claim follow-up -> [B];
+    hasQueuedMessages after draining follow-up -> false
+```
+
+Both were run against the real production `Inbox`, not a runner-computed expectation; the runner
+performs no FIFO logic, no claim-policy branching, and no wake bookkeeping of its own -- confirmed
+by direct code reading of `agent_inbox_runner.py` (43 lines, one dispatch per action type, each a
+direct method call).
+
+**Status: RESOLVED.**
+
+## L07-R005 — complete public-state disposition
+
+Every pinned Pi `AgentState` field now has an explicit, non-contradictory disposition (manifest
+`AG-014`/`AG-015`, plus the corrected `AG-011`/`AG-013`; see the authority-map table this pass added
+to `spec/agent.md`). No field is left with "non-blocking gap"/"architectural difference"/"later
+maybe" language -- every disposition is exactly `adopted`, `deferred parity`, or `intentional
+divergence`, per the governing instruction's own closed list.
+
+`messages`/`tools` public projection semantics, previously "authority identified, semantics
+unspecified" per the review, are now specified precisely (see spec's new "Messages and tools"
+section): `messages` is a fresh `derive_messages` projection every read (new
+`AgentInstance.messages` property, `test_messages_projects_the_session_log`); `tools` is the
+existing, certified `ToolRegistry.visible_from(scope)` query, not a new store. `is_streaming`'s
+disposition (`AgentStatus`, `adopted`, not "architectural adaptation") and `wake_requested`'s
+disposition (intentional Minion extension, kept separate from every adopted rule) are both now
+explicit, matching the review's own specific requests.
+
+**Status: RESOLVED.**
+
+## Manifest delta
+
+```text
+AG-011  corrected: UserMessage narrowing removed (Message adopted), Agent-level steer/follow_up/
+        inject wrappers added, canonical evidence cited
+AG-012  corrected: canonical evidence cited (rule text itself was already accurate)
+AG-013  corrected: reset conflation removed (moved to its own row, AG-016); Agent-level
+        clear/has_queued_messages wrappers added; canonical evidence cited
+AG-014  NEW: mutable per-instance current configuration (L07-R001)
+AG-015  NEW: complete AgentState field disposition -- messages/tools projections, runtime-field
+        vocabulary, status/wake dispositions (L07-R005)
+AG-016  NEW: in-place reset (L07-R003)
+```
+
+Total: 72 rows (was 69), 72 unique IDs, confirmed by direct parse. `AG-001`..`AG-010` untouched.
+
+## RED → GREEN (this pass)
+
+```text
+test_current_config_defaults_from_the_definition                         RED -> GREEN
+test_mutating_one_instances_config_does_not_affect_a_sibling_or_the_definition   RED -> GREEN
+test_runtime_fields_start_at_pis_own_initial_values                       RED -> GREEN
+test_messages_projects_the_session_log                                   RED -> GREEN
+test_reset_clears_runtime_state_and_both_queues                          RED -> GREEN
+test_reset_retains_identity_configuration_and_tool_relationship          RED -> GREEN
+test_reset_is_in_place_not_a_fresh_instance                              RED -> GREEN
+test_reset_while_running_is_rejected_atomically                          RED -> GREEN
+test_steer_and_follow_up_delegate_to_the_inbox_at_the_agent_surface      RED -> GREEN
+test_inject_delegates_to_the_inbox_without_waking                        RED -> GREEN
+test_agent_level_queue_clearing_delegates_to_the_inbox                   RED -> GREEN
+agent-inbox-queue-mode-fifo (canonical)                                  RED -> GREEN
+agent-inbox-queue-independence-and-clearing (canonical)                  RED -> GREEN
+```
+
+RED confirmed directly for the `AgentInstance`-level additions: `ImportError: cannot import name
+'AgentActiveError'` before it existed; subsequent `AttributeError`s for `system_prompt`/`model`/
+`thinking_level`/`streaming_message`/`pending_tool_calls`/`error_message`/`messages`/`reset`/
+`steer`/`follow_up`/`inject`/`has_queued_messages`/`clear_*` before each was added. The broadened
+`AgentMessage` domain (`L07-R002`) had no *runtime* RED (Python does not enforce type hints), since
+nothing ever rejected a non-`UserMessage` value at the object level -- its defect was in the
+*declared* type contract and the disposition narrative, both corrected; the new tests prove the
+now-official contract, not a runtime behavior change.
+
+## Contract-quality check
+
+```text
+Can L08 mutate is_streaming/streaming_message/pending_tool_calls/error_message
+  without changing their type or location?                                YES
+Can L08 consume current system_prompt/model/thinking_level
+  without redesigning AgentInstance?                                       YES (fields already
+                                                                             exist; only driver.py's
+                                                                             own read sites would
+                                                                             need updating, a
+                                                                             mechanical change, not
+                                                                             a redesign)
+Can L08 poll steering/follow-up with exact Pi timing through
+  certified primitives?                                                    YES (unchanged --
+                                                                             AgentLoop already
+                                                                             consumes inbox.claim/
+                                                                             pending unmodified)
+Can reset remain correct once L08 exists?                                  YES -- reset does not
+                                                                             touch anything L08 will
+                                                                             own, and L08's own
+                                                                             active-run check
+                                                                             (status) is the same
+                                                                             primitive reset already
+                                                                             uses
+Duplicate state authority?                                                  NO
+Contract quality                                                            PASS
+```
+
+## Runner audit (agent_inbox)
+
+```text
+owns queue storage        NO
+implements FIFO            NO
+implements QueueMode        NO
+performs clear itself       NO
+computes hasQueued itself   NO
+resets state itself         NO -- not applicable (agent_inbox scenarios don't touch reset)
+stores Agent state itself   NO
+simulates L08                NO
+thin                          YES
+```
+
+## Quality gates (final, this pass)
+
+```text
+full pytest (coverage enabled):     950 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 930 at the start of this pass)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   169 passed (was 166; +3: new schema file validity + 2 new
+                                      scenario validations)
+manifest parse + unique-ID audit:    72 / 72 unique (was 69; +3: AG-014/015/016)
+Runtime canonical:                   26 passed (unchanged)
+Session canonical:                   20/20 passed (unchanged)
+XFORM canonical:                     14/14 passed (unchanged)
+Layer-05 canonical + integrity:      9 + 7 = 16 passed (unchanged)
+Layer-06 canonical:                   11/11/11/0 (unchanged)
+Layer-07 canonical (new):             2 discovered / 2 executed / 2 passed / 0 deferred
+tests/agent_loop/ (Layer-8-ish,
+  unmodified logic, type-only touch): 62 passed (unchanged -- proves the AgentMessage widening
+                                      caused zero behavioral change)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none
+CONTRACT_ASSURANCE_DEFECT     none active -- one explicitly classified cross-layer dependency
+                               remains open (Layer-03 primitive needed for full reset parity;
+                               documented in AG-016 and spec/agent.md's Reset section, not hidden)
+PI_BEHAVIOR_UNCERTAIN         none
+PARITY_CONSTRAINED_RISK       none blocking
+```
+
+## Verdict (supersedes this document's own PASS-1 verdict above)
+
+```text
+L07-R001    RESOLVED
+L07-R002    RESOLVED
+L07-R003    RESOLVED (substantially -- one classified, disclosed cross-layer dependency remains)
+L07-R004    RESOLVED
+L07-R005    RESOLVED
+
+Shared Layer-07 contract    READY FOR REPEAT INDEPENDENT RUST REVIEW
+Python Layer 07              RE-CERTIFIED
+Rust Layer 07                 BLOCKED / PENDING REVIEW
+Layer 07 cross-language       NOT CLOSED
+Layer 08                       NOT STARTED
+```
+
+## Next action
+
+Repeat independent Rust Layer-07 contract review of this corrected candidate. Do not implement
+Rust until that review explicitly approves the contract for Rust implementation.
