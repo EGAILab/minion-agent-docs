@@ -693,3 +693,237 @@ Layer 08                       NOT STARTED
 
 Repeat independent Rust Layer-07 contract review of this corrected candidate. Do not implement
 Rust until that review explicitly approves the contract for Rust implementation.
+
+# PASS 3 — remediation after second independent Rust rejection (2026-08-27)
+
+Between PASS 2.5 above and this pass, a verification-only increment (`minion-agent-docs@32bf5a9`)
+added two small spec clarifications and re-confirmed PASS 2.5's own remediation against pinned Pi
+directly; it changed no Python file and is not repeated here. This section addresses the *next*
+independent Rust review, which ran against that verified PASS 2.5 candidate and found four new
+findings PASS 2.5 had not closed.
+
+## Rust review commit
+
+`e25006668a59109d4dd03829c04e37d52f434107`
+(`.worktrees/l07-rereview-docs/assurance/layers/07-agent-state-inboxes-rust-rereview.md`).
+
+## Rejection summary
+
+```text
+L07-R003  PI_PARITY_DEFECT           reset leaves messages visible despite an already-certified
+                                      Session reset marker PASS 2.5 did not find; tools sub-finding:
+                                      no Agent-level tools accessor actually existed
+L07-R004  CONTRACT_ASSURANCE_DEFECT  action schema's minProperties:1 permits ambiguous
+                                      multi-operation actions; claimed clear-all canonical evidence
+                                      was absent
+L07-R005  CONTRACT_ASSURANCE_DEFECT  AG-015 bundled four different dispositions under one
+                                      `disposition:` value; wake-on-reset left unspecified
+L07-R006  CONTRACT_ASSURANCE_DEFECT  spec's isStreaming write-point sentence incorrectly claimed
+                                      no other code path ever assigns it (initialization and reset
+                                      both do)
+```
+
+All four were independently re-verified against pinned Pi source and the actual current repository
+state directly, not accepted from the review's own description.
+
+## L07-R003 — reset must clear messages; tools accessor
+
+**Reset/messages, re-audited:** the review's own Layer-03 analysis was checked directly against
+`session/operations.py` and `session/derive.py`. It is correct: `session.reset(log)` already exists,
+already certified, and already appends a `session/reset` marker event that `derive.py`'s
+`_latest_of`/`effective_surface`/`_derive` already treat as an exclusive floor. PASS 2.5's own
+conclusion that no such primitive existed was wrong -- it read `SessionLog`'s own four public
+members (`__len__`/`events`/`append`/`surface`) and stopped there, without checking
+`session/operations.py`, a separate module in the same package that provides operations *as log
+events* rather than as `SessionLog` methods (see that module's own docstring: "none of these can be
+a method that edits history").
+
+**Implementation:** `AgentInstance.reset()` now calls `reset_session_log(self.log)` (imported as
+`from ..session import reset as reset_session_log`) after clearing runtime state and both queues.
+`AgentInstance.messages` reads `()` immediately after, while `len(instance.log)` grows (full history
+retained underneath, per `session.reset`'s own contract) --
+`test_reset_clears_messages_via_the_session_reset_marker`,
+`test_reset_preserves_full_history_for_audit_after_clearing_the_projection`. RED proven directly:
+reverting the one-line `reset_session_log(self.log)` call reproduced the failure
+(`assert instance.messages == ()` failed with the message still present) before restoring it.
+
+**Wake-on-reset, specified normatively (not previously stated at all):** `reset()` does not clear
+`Inbox.wake_requested`. This was already true of the code (delegating to `clear_all()`, which never
+touches wake), but nothing said so as a deliberate contract; `test_reset_does_not_clear_a_pending_
+wake_signal` now pins it, and both `spec/agent.md`'s "Reset" section and manifest `AG-016` state it
+explicitly.
+
+**Tools sub-finding:** confirmed directly -- `AgentInstance` had no `tools` attribute or property at
+all before this pass; the prior "adopted" disposition rested on `ToolRegistry.visible_from(scope)`
+existing *somewhere*, not on any Agent-level accessor actually calling it. `AgentInstance.tools`
+(new property) closes this: `self._ctx.tools.visible_from(self.scope.key)`, resolved the same way
+`AgentLoopFactory.for_instance` already resolves `ctx.tools` when composing a driver --
+`test_tools_projects_the_tool_registry_visible_from_this_instances_scope`,
+`test_tools_reflects_registrations_made_after_construction`.
+
+**Status: RESOLVED** (reset/messages fully; tools accessor added).
+
+## L07-R004 — schema ambiguity; missing clear-all evidence
+
+**Schema, re-audited directly:** confirmed the bug by constructing a two-operation action
+(`{"steer": {...}, "follow_up": {...}}`) against the unmodified schema and observing zero validation
+errors -- the RED state. `$defs.action` had `minProperties: 1` but nothing preventing more than one
+of the six operation keys from co-occurring.
+
+**Implementation:** added an `oneOf` over `required: ["steer"]` / `["follow_up"]` / `["inject"]` /
+`["claim"]` / `["clear"]` / `["has_queued_messages"]` to `$defs.action`. A document naming two
+operation keys now matches more than one branch (rejected by `oneOf`'s exclusivity); a document
+naming zero matches none (also rejected). The review's own required action went further than bare
+exclusivity: "`observe` constrained to claim/pending operations" -- the four enqueue/clear branches
+additionally carry `"not": {"required": ["observe"]}`, so an action combining e.g. `steer` with
+`observe` also matches zero branches (an enqueue/clear operation has no pinned-Pi return value to
+observe in the first place, per the field's own pre-existing docstring -- that rule is now
+schema-enforced, not merely documented). Re-ran the original two-operation probe: now 1 error.
+Confirmed both existing canonical scenarios still validate unchanged, and added permanent regression
+coverage to `test_schema_validation.py`: `test_agent_inbox_action_rejects_ambiguous_or_empty_
+operations` (three parametrized negative fixtures) / `test_agent_inbox_action_accepts_exactly_
+one_operation` (positive counterpart) for exclusivity, and `test_agent_inbox_action_rejects_
+observe_on_enqueue_or_clear_operations` (four parametrized negative fixtures) / `test_agent_inbox_
+action_accepts_observe_on_claim_or_pending_operations` (two positive fixtures) for the `observe`
+constraint.
+
+**Clear-all canonical evidence:** confirmed directly that `agent-inbox-queue-independence-and-
+clearing.yaml` never actually exercised `clear: {queue: all}` despite `AG-013`'s own citation
+claiming it did. Extended the same file (not a new one, since it is already the clearing-focused
+scenario) with a second round: repopulate both queues, `clear: {queue: all}`, confirm
+`has_queued_messages` is now false. The runner's existing `clear`/`all` branch
+(`agent_inbox_runner.py`) required no changes -- it already called `inbox.clear_all()` correctly; only
+the fixture had never invoked that branch.
+
+**Status: RESOLVED.**
+
+## L07-R005 — AG-015 disposition split; wake-on-reset
+
+**Re-audited directly:** the review's complaint was structural, not about any individual sub-fact --
+AG-015's single `disposition: adopted` value covered `messages` (an intentional divergence:
+projection vs. live reference), `tools` (an intentional divergence: no wholesale-replace setter,
+plus the missing accessor above), `streamingMessage`/`pendingToolCalls`/`errorMessage` (deferred
+parity: initial values only, transitions deferred to Layer 08), and `wake_requested`/`take_wake` (not
+Pi parity at all -- a Minion-only extension) -- four genuinely different dispositions bundled under
+one field.
+
+**Manifest split:** AG-015 now covers `isStreaming` only (`disposition: adopted`, unchanged
+correctness, just narrowed scope). Three new rows: `AG-017` (`messages`/`tools` projections,
+`disposition: intentional divergence`), `AG-018` (runtime-field vocabulary/initial values,
+`disposition: deferred parity`), `AG-019` (wake signal, `disposition: intentional divergence`, the
+closest available taxonomy value for "no Pi rule exists to be parity with"). `AG-016` gained the
+wake-on-reset normative statement (see L07-R003 above).
+
+**Status: RESOLVED.**
+
+## L07-R006 — isStreaming write-point sentence
+
+**Re-audited directly against `agent.ts`:** the review is correct. `createMutableAgentState`'s own
+initial value for `isStreaming` is `false` (construction), and `Agent.reset()` sets it back to
+`false` when idle (already documented at AG-016) -- both are code paths that assign `isStreaming`,
+contradicting the prior sentence "No other code path in pinned Pi ever assigns `isStreaming`."
+
+**Fix:** `spec/agent.md`'s "Public processing status" section now scopes that sentence to the
+active-run lifecycle specifically ("Pi's own two *active-run-lifecycle* `isStreaming` transition
+points..."), followed by a new paragraph naming the two non-run-lifecycle assignment points
+(construction, reset) and noting both are already Layer-07-owned, not Layer-08 territory.
+
+**Status: RESOLVED.**
+
+## Manifest delta
+
+```text
+AG-015  narrowed: isStreaming only (disposition unchanged: adopted)
+AG-017  NEW: messages/tools public projections, split out of the old AG-015 (L07-R005)
+AG-018  NEW: runtime-field vocabulary/initial values, split out of the old AG-015 (L07-R005)
+AG-019  NEW: wake signal, split out of the old AG-015 (L07-R005)
+AG-016  corrected: messages-clearing resolved (was classified as an open dependency), wake-on-reset
+        specified normatively, tests/python citations updated
+AG-013  unchanged text, now factually true: its clear-all canonical citation is backed by an actual
+        clear-all step in agent-inbox-queue-independence-and-clearing.yaml
+```
+
+Total: 75 rows (was 72), 75 unique IDs, confirmed by direct parse. `AG-001`..`AG-010` untouched.
+
+## RED → GREEN (this pass)
+
+```text
+test_reset_clears_messages_via_the_session_reset_marker                  RED -> GREEN
+test_reset_preserves_full_history_for_audit_after_clearing_the_projection  (positive, no prior RED
+                                                                             needed -- new behavior)
+test_reset_does_not_clear_a_pending_wake_signal                          GREEN already (pins existing
+                                                                             behavior normatively)
+test_messages_reflects_events_actually_appended_to_the_log               GREEN already (new positive
+                                                                             coverage, not a defect)
+test_tools_projects_the_tool_registry_visible_from_this_instances_scope   RED -> GREEN
+test_tools_reflects_registrations_made_after_construction                RED -> GREEN
+test_agent_inbox_action_rejects_ambiguous_or_empty_operations (x3)       RED -> GREEN
+test_agent_inbox_action_accepts_exactly_one_operation                     GREEN already (positive
+                                                                             counterpart)
+test_agent_inbox_action_rejects_observe_on_enqueue_or_clear_operations (x4)  RED -> GREEN
+test_agent_inbox_action_accepts_observe_on_claim_or_pending_operations (x2)  GREEN already (positive
+                                                                             counterpart)
+```
+
+RED confirmed directly for the two genuine defects this pass fixes: (1) the schema ambiguity --
+constructing a two-operation action against the unmodified schema and observing zero errors before
+the `oneOf` fix; (2) reset/messages -- reverting the one-line `reset_session_log(self.log)` call and
+re-running `test_reset_clears_messages_via_the_session_reset_marker` reproduced the exact failure
+(`instance.messages` still contained the message) before restoring the fix. The `tools` property and
+the manifest/spec corrections are additive surface (nothing previously claimed a runtime contract a
+test could regress against), so they have no meaningful prior RED beyond "the accessor did not
+exist, so calling it raised `AttributeError`" -- reported as such rather than manufacturing a
+different kind of failure.
+
+## Quality gates (final, this pass)
+
+```text
+full pytest (coverage enabled):     966 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 950 at the start of this pass)
+ruff check .:                        All checks passed
+ruff format --check (touched files only): clean (7 pre-existing, unrelated files elsewhere in the
+                                     tree would be reformatted; none touched by this pass, left as
+                                     found per the surgical-changes discipline)
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   179 passed (was 169; +10: 3 negative + 1 positive fixture for
+                                      operation exclusivity, 4 negative + 2 positive fixtures for the
+                                      `observe` constraint)
+manifest parse + unique-ID audit:    75 / 75 unique (was 72; +3: AG-017/018/019)
+Layer-07 canonical (unchanged count, extended content): 2 discovered / 2 executed / 2 passed / 0
+                                      deferred -- agent-inbox-queue-independence-and-clearing.yaml
+                                      now exercises 6 actions more than before (clear-all round)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none
+CONTRACT_ASSURANCE_DEFECT     none
+PI_BEHAVIOR_UNCERTAIN         none
+PARITY_CONSTRAINED_RISK       none blocking
+```
+
+No classified cross-layer dependency remains open: the one PASS 2.5 left open (message-clearing on
+reset) is now fully resolved via the already-certified `session.reset()` mechanism, not superseded
+by a new one.
+
+## Verdict (supersedes this document's own PASS-2.5 verdict above)
+
+```text
+L07-R003    RESOLVED (fully -- messages-clearing closed; tools accessor added; wake-on-reset
+             specified normatively)
+L07-R004    RESOLVED (schema ambiguity closed; clear-all canonical evidence added)
+L07-R005    RESOLVED (AG-015 split into four coherent, non-contradictory dispositions)
+L07-R006    RESOLVED (isStreaming write-point sentence corrected)
+
+Shared Layer-07 contract    READY FOR REPEAT INDEPENDENT RUST REVIEW
+Python Layer 07              RE-CERTIFIED
+Rust Layer 07                 BLOCKED / PENDING REVIEW
+Layer 07 cross-language       NOT CLOSED
+Layer 08                       NOT STARTED
+```
+
+## Next action
+
+Repeat independent Rust Layer-07 contract review of this corrected candidate. Do not implement Rust
+Layer 07 and do not start Layer 08 in this same pass.

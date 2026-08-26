@@ -5,7 +5,7 @@ This document spans two assurance layers over one master-phase surface (pinned P
 inbox/queues** (below) and **Layer 08 — the run/turn state machine** (the rest of this document,
 not yet certified as its own layer). The split exists because Layer 07's primitives must be stable
 enough for Layer 08 to consume without redesign, and because "agent state and queues behave like
-Pi" is too coarse a requirement to test independently (`AG-011`..`AG-016`; `AG-001`..`AG-010`
+Pi" is too coarse a requirement to test independently (`AG-011`..`AG-019`; `AG-001`..`AG-010`
 remain Layer-08/09-owned, unimplemented, and untouched by the Layer-07 pass that added this
 section).
 
@@ -99,14 +99,22 @@ initial state exactly. Their *transitions* remain deferred to Layer 08: populati
 requires step/turn timing this layer does not implement, and no fake transition is manufactured to
 close this layer early.
 
-Pi's own two `isStreaming` transition points, recorded here as a reference for whoever implements
-Layer 08 (not implemented by this layer): a call to `prompt()`/`continue()` sets it `true` before
-anything else happens (`runWithLifecycle`), and `finishRun()` -- reached from a `finally` block, so
-it runs whether the run succeeded, threw, or was aborted -- unconditionally sets it back to `false`
-as its very first statement. No other code path in pinned Pi ever assigns `isStreaming`. Layer 08
-must reproduce both write points exactly (entry: unconditional; exit: unconditional-via-`finally`,
-never skipped by an error) using the `AgentStatus` vocabulary and `AgentInstance.set_status`
-primitive this layer already provides; it does not need a different mechanism.
+Pi's own two *active-run-lifecycle* `isStreaming` transition points, recorded here as a reference
+for whoever implements Layer 08 (not implemented by this layer): a call to `prompt()`/`continue()`
+sets it `true` before anything else happens (`runWithLifecycle`), and `finishRun()` -- reached from
+a `finally` block, so it runs whether the run succeeded, threw, or was aborted -- unconditionally
+sets it back to `false` as its very first statement. Layer 08 must reproduce both write points
+exactly (entry: unconditional; exit: unconditional-via-`finally`, never skipped by an error) using
+the `AgentStatus` vocabulary and `AgentInstance.set_status` primitive this layer already provides;
+it does not need a different mechanism.
+
+Two other, non-run-lifecycle code paths also assign `isStreaming` in pinned Pi, and Layer 07 (not
+Layer 08) already owns both: construction (`createMutableAgentState`'s own initial value is
+`false`, matched here by a live instance starting `AgentStatus.IDLE`) and `reset()` (which sets it
+back to `false` unconditionally when idle, matched here by `AgentInstance.reset()` -- see "Reset"
+below). A second independent Rust review correctly caught an earlier draft of this section
+overclaiming "no other code path ever assigns `isStreaming`," which was true only of the
+active-run lifecycle specifically, not of pinned Pi's `AgentState` as a whole.
 
 ### Messages and tools: public projections, not duplicate stores
 
@@ -124,10 +132,14 @@ controlled append path, which Layer 03 does not permit.
 
 Pinned Pi's `state.tools` getter/setter follows the same live-read/copy-on-assign pattern. Minion
 does not build a parallel tools store to mirror it: the certified `ToolRegistry` already answers
-"what tools are visible from this scope" directly, and that is the Agent's public tools projection.
-Wholesale replacement the way `state.tools = [...]` performs it is not reproduced; visibility
-changes happen through the already-certified `ToolRegistry` register/withdraw API instead, an
-already-settled Layer-05 divergence this layer does not revisit.
+"what tools are visible from this scope" directly, and `AgentInstance.tools` is a concrete,
+Agent-level accessor for exactly that query -- a fresh `ToolRegistry.visible_from(self.scope.key)`
+projection on every read, mirroring `messages` above (a second independent Rust review caught an
+earlier draft claiming this projection was the Agent's public tools surface without any such
+accessor actually existing on `AgentInstance` itself). Wholesale replacement the way
+`state.tools = [...]` performs it is still not reproduced; visibility changes happen through the
+already-certified `ToolRegistry` register/withdraw API instead, an already-settled Layer-05
+divergence this layer does not revisit.
 
 ### Steering and follow-up inboxes
 
@@ -203,13 +215,23 @@ identity. It mutates the existing object; it never constructs a replacement.
 
 Minion's `AgentInstance.reset()` reproduces this in place: the same `Inbox`/`SessionLog`/scope
 objects survive reset, only their content changes, and the exact rejection text/atomicity are
-preserved. One sub-piece is deliberately **not** reproduced, and is disclosed rather than silently
-dropped: clearing `messages`. Pi's own transcript is a plain in-memory array with no separate
-persisted log; Minion's `SessionLog` (Layer 03, already certified) is append-only by design, with no
-truncate/clear primitive, and teaching its projection to respect a "reset boundary" would itself be
-a Layer-03 semantic change -- outside this layer's mandate to make unilaterally. `reset()` therefore
-clears every Pi-cleared field it can safely reach (runtime state, both queues) and leaves the
-message-clearing decision as an explicit, tracked cross-layer dependency, not an unexamined gap.
+preserved, including clearing `messages`. An earlier pass concluded `SessionLog`'s append-only
+design (no truncate/clear primitive) made `messages`-clearing an unresolvable Layer-03 dependency
+and left it unreproduced; a second independent Rust review correctly rejected that conclusion by
+pointing at an already-certified mechanism that pass had overlooked:
+`session/operations.py::reset(log)` appends a `session/reset` marker event rather than truncating
+anything, and `derive_messages` already treats the latest such marker as an exclusive floor. Calling
+this existing, certified Layer-03 operation from `AgentInstance.reset()` clears the projection
+exactly as Pi does, without adding any new primitive to `SessionLog` and without altering Layer 03's
+own certified semantics at all -- the full event history remains intact underneath for audit, only
+the model-facing projection changes.
+
+Reset's relationship to the wake signal is specified normatively, not left implicit: a pending
+`Inbox.wake_requested`, if any, is **not** cleared by `reset()`. Wake and queued content are
+orthogonal concerns (see "Clearing" above), and pinned Pi has no wake concept to constrain this
+choice either way; a wake that arrived before a caller reset an idle instance still describes a
+real, unconsumed signal, so it is preserved rather than silently discarded as an incidental
+consequence of delegating to `clear_all()`.
 
 ---
 
