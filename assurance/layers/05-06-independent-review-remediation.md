@@ -949,3 +949,167 @@ Layer 07                         NOT STARTED
 further broad shared/canonical contract review is required unless PASS 3's own implementation work
 uncovers genuinely new semantic evidence -- this narrow correction closed the one gap PASS 2 found;
 it does not reopen anything PASS 2 already approved.
+
+---
+
+# PASS 3 visibility sync / final cross-language closure (2026-08-26)
+
+Rust completed PASS 3 remediation (`assurance/layers/05-06-pass3-rust-remediation.md`) and reports
+Layer 06 `CROSS-LANGUAGE CERTIFIED / CLOSED`. This section is the shared/Python owner's own
+independent verification of that claim -- not a re-implementation pass, and not a re-trust of
+Rust's own artifact by itself.
+
+```text
+Rust final code SHA   2fe813c6c42923e2abdf08b354e0eac8c32a5fcd
+Rust final docs SHA   7329fd05313200e48423688074a34704c4ef3b27
+```
+
+## What was independently verified (source and live runs, not the artifact's prose alone)
+
+- Read `minion-agent-rust/crates/minion-agent/src/tools/execution.rs` in full (734 lines, current
+  state). Confirmed directly: `preflight_one` runs sequentially, in a plain source-order `for`
+  loop, for every call in a batch (both the sequential and parallel branches); only calls that
+  reach `PreflightOutcome::Prepared` are pushed into a `FuturesUnordered` that runs concurrently,
+  and only after that entire preflight loop has finished. `AfterToolCallOverride`'s fields are
+  flat `Option<T>` (no nested `Option<Option<T>>`); `waterfall_normalized`'s per-step callback
+  (`normalize_successful_after_result`) restores an omitted/nullish field to its prior accumulated
+  value at every listener handoff, for both the typed helper and a raw whole-result listener
+  alike, and separately restores `tool_call_id`/`tool_name`/`added_tool_names` from the pre-hook
+  snapshot at every handoff and again on the final result -- the same two-enforcement-point shape
+  Python's own `normalize_step` fix uses, independently arrived at. `immediate_error()` is the one
+  function every generated-error path (unknown tool, prepare, validation, before-hook block/raise,
+  execute failure, after-hook failure, length-stop) funnels through, and it unconditionally sets
+  `details` to a present, empty JSON object. A successful result's `details` comes from
+  `(result.details != Value::Null).then_some(result.details)` -- preserved verbatim, never
+  defaulted to `{}` by the pipeline (confirmed this does NOT reintroduce `CA-L06-007`: a real test,
+  read directly, proves a tool-supplied `{"source": "rust-tool"}` survives unchanged while all six
+  sibling generated errors in the same batch get `{}`). `execute_and_finalize_prepared` captures
+  `original_arguments` from the source `call.arguments` before preparation, separately from the
+  `arguments` used for the actual `execute()` request, and the update callback closes over the
+  original value -- confirmed by a live test where `execute()` receives
+  `{"raw": 1, "prepared": true}` while the update event carries exactly `{"raw": 1}`.
+- Ran `cargo test --workspace --all-features` myself: 0 failures across every test binary,
+  including 20 passing `tool_execution.rs` tests and both `tool_execution_conformance.rs` tests.
+  Ran the conformance test with `--nocapture` and independently observed the dynamic discovery
+  print exactly the same 11 scenario names Python's own inventory has (discovered from the shared
+  manifest's own `TOOL-001..006/019/023` test-evidence citations, not a fixed name list -- the
+  exact defect PASS 2 found in the prior adapter). Ran `cargo fmt --all -- --check`, `cargo clippy
+  --workspace --all-targets --all-features -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc
+  --workspace --no-deps`, and `cargo run -p xtask -- conformance verify` myself; all clean.
+- Diffed `pi-parity-manifest.yaml`'s PASS-3 commit (`2fe813c`) directly: it touches only the
+  `rust:` evidence-pointer line on four rows (`TOOL-005`, `TOOL-023`, `TOOL-019`, `TOOL-021`) --
+  no `rule:`, `pi:`, `surface:`, `tests:`, or `disposition:` field changed on any row. **Shared
+  semantics did not change during Rust PASS 3.**
+
+## Finding disposition, independently confirmed
+
+```text
+IR-L06-001   RESOLVED  -- same rule Python implements: sequential preflight, concurrent execute
+             after the barrier. No new Rust-specific semantic.
+IR-L06-002   RESOLVED  -- extra clear state removed from the typed override; raw-listener clear
+             attempts normalized away at every listener boundary, same as Python. Protected
+             fields (tool_call_id/tool_name/added_tool_names) still restored at every boundary.
+IR-L06-003   RESOLVED / ALREADY CONFORMANT -- unchanged, still exact.
+IR-L06-004   RESOLVED  -- every generated-error path funnels through one helper that always sets
+             details={}; execute failures reach the after-hook already carrying it.
+             CA-L06-007 remains resolved: successful details stay tool-supplied, never defaulted.
+IR-L06-005   RESOLVED  -- original arguments captured from the source ToolCall before
+             preparation; the canonical adapter does not reconstruct anything, it only observes
+             the real ToolExecutionUpdate event.
+```
+
+## Rust adapter audit
+
+```text
+current L06 scenarios discovered    11 (dynamic, from shared manifest evidence citations)
+preflight simulated                 NO
+scheduling simulated                NO
+details synthesized                 NO
+update args reconstructed           NO
+error text rewritten                NO
+runner thin                         YES
+```
+
+## Re-verification against the final merged tree
+
+```text
+full pytest (coverage enabled):     923 passed, 19 xfailed, 0 failed, 100.00% coverage (unchanged
+                                     from PASS 2.5 -- manifest evidence-pointer-only changes do not
+                                     affect Python behavior)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   166 passed (unchanged)
+manifest parse + unique-ID audit:    66 / 66 unique (unchanged)
+Runtime canonical:                   26 passed (unchanged)
+Session canonical:                   20/20 passed (unchanged)
+XFORM canonical:                     14/14 passed (unchanged)
+Layer-05 canonical + integrity:      9 + 7 = 16 passed (unchanged)
+Layer-06 canonical:                   11/11/11/0 (unchanged)
+```
+
+Python's certification is unaffected by Rust's internal implementation changes; nothing above
+required a Python code change, and none was made.
+
+## Cross-language semantic comparison (observable contract, not internal structure)
+
+```text
+parallel preflight (sequential source order)     SAME
+parallel execution (concurrent after barrier)    SAME
+end events (completion order) / messages (source order)   SAME
+unknown-tool text ("Tool <name> not found")      SAME
+generated-error details ({})                     SAME
+successful details (tool-supplied, unsynthesized)   SAME CONTRACT (Rust's own internal
+                                                  representation for an undeclared success differs
+                                                  from Python's -- null/absent vs. Python's `{}`
+                                                  dataclass default -- but neither pipeline
+                                                  synthesizes a value, which is the actual shared
+                                                  rule; no canonical fixture asserts either
+                                                  representation, by design, since PASS 2.5)
+after-hook omitted/nullish preserves              SAME
+after-hook concrete field replaces                SAME
+after-hook failure replaces entire result          SAME
+update payload (id + name + original args + partial)   SAME
+late update ignored                               SAME
+length stop (zero pipeline work)                  SAME
+terminate (Layer-06 fold only, no turn semantics)  SAME (unchanged this pass, not independently
+                                                    re-verified in Rust source this round --
+                                                    already certified prior to the IR-L06-* round
+                                                    and untouched by any of its six findings)
+namespace (not used for lookup)                    SAME (unchanged, untouched)
+usage (not folded into LLM accounting)             SAME (unchanged, untouched)
+```
+
+## Assurance visibility
+
+```text
+shared remediation artifact updated       YES (this section)
+current-state docs updated                YES -- assurance/layers/06-tool-execution.md's own
+                                           status header (Rust status / Layer 06 cross-language)
+                                           was stale (still said NOT_IMPLEMENTED) and is now
+                                           corrected; its historical §§1-15 were left untouched
+historical reports rewritten              NO -- 06-tool-execution-rust-review.md,
+                                           -rust-rereview.md, -rust-final-closure.md,
+                                           -rust-approval.md, -rust-implementation.md,
+                                           05-06-pass2-independent-rust-review.md, and
+                                           05-06-pass3-rust-remediation.md are all untouched
+```
+
+## Final verdict
+
+```text
+Layer 05                        CROSS-LANGUAGE CERTIFIED / CLOSED (unaffected, unchanged)
+Python Layer 06                 CERTIFIED
+Rust Layer 06                   CERTIFIED
+Layer 06                        CROSS-LANGUAGE CERTIFIED / CLOSED
+
+active Layer-06 PI_PARITY_DEFECT             0
+active Layer-06 CONTRACT_ASSURANCE_DEFECT    0
+active Layer-06 PI_BEHAVIOR_UNCERTAIN        0
+
+Layer 07                        ELIGIBLE / NOT STARTED
+```
+
+## Next action
+
+None required for Layer 06. Layer 07 may begin as a separate, explicitly-requested pass; it was
+not started here.

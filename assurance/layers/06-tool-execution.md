@@ -13,25 +13,35 @@ resolved) → narrow remediation (§14) → repaired candidate independently **R
 TIME** (`assurance/layers/06-tool-execution-rust-final-closure.md`) and **REJECTED PARTIALLY
 AGAIN** (`L06-R001` confirmed resolved; `L06-R003`/`L06-R006` re-opened on a narrower defect:
 final-only restoration left intermediate listeners able to observe a forged replacement) → final
-narrow remediation, this pass (§15) → repaired candidate **READY FOR FINAL RUST CLOSURE REVIEW**.
-§§1–12 preserve the original audit; §§3–8 have inline corrections where the first candidate's own
-technical claims were factually wrong (validation-exemption, signal-defer wording, hook
-disposition) — read the corrected text as current, §13 as the record of the first remediation
-round, §14 as the record of the second, and §15 as the record of the third and (pending final
-Rust closure review) last.
-**Audit date:** 2026-08-26 (original); remediation 2026-08-26; second narrow remediation
-2026-08-26; third narrow remediation 2026-08-26.
+narrow remediation (§15), repaired candidate independently **APPROVED FOR RUST IMPLEMENTATION**
+(`06-tool-execution-rust-approval.md`) → Rust implemented and independently **CERTIFIED**
+(`06-tool-execution-rust-implementation.md`) → a later independent review found six further,
+newly-discovered cross-language findings (`IR-L06-001`..`005`, `IR-L05/06-006`) against that
+certified candidate, repaired across a shared/Python pass, a narrow follow-up, an independent Rust
+re-review, a second narrow shared correction, and Rust remediation
+(`assurance/layers/05-06-independent-review-remediation.md` PASS 1/1B, `05-06-pass2-independent-
+rust-review.md`, PASS 2.5 in the same remediation document, `05-06-pass3-rust-remediation.md`) →
+**CROSS-LANGUAGE CERTIFIED / CLOSED**. §§1–12 preserve the original audit; §§3–8 have inline
+corrections where the first candidate's own technical claims were factually wrong
+(validation-exemption, signal-defer wording, hook disposition) — read the corrected text as
+current. §§13–15 record the first three Rust-review rounds against the original candidate; the
+`IR-L06-*`/`CA-L06-007` round that followed Rust's implementation is NOT recorded in this
+document's own numbered sections -- see the three artifacts named above for that full history,
+which is more current than anything in §§1–15 on the specific points those findings touched
+(parallel-preflight timing, update-event payload, generated-error `details`, after-hook nullish
+semantics, and the since-corrected signal/`tool_call_id` documentation).
+**Audit date:** 2026-08-26 (original through third narrow remediation); independent-review
+remediation and Rust closure 2026-08-26 (same day, later passes).
 **Auditor:** Claude (Python-driven, per adopted workflow).
-**Python status:** `CERTIFIED` (post third remediation) — real `ToolRegistry`/`Context`/effect/
-event integration, 10/10 Layer-06-owned canonical scenarios green (corrected count, `L06-R004`),
-full Pi audit re-verified, all six original Rust-review findings resolved (§13), the three findings
-the first re-review reopened resolved at their actual authoritative boundary (§14), and the
-narrower per-listener-observation gap the final-closure review found in that boundary itself now
-closed (§15).
-**Rust status:** `NOT_IMPLEMENTED` — Rust has no tool-execution seam yet; currently sits at Layer
-05 (certified cross-language, including a real Rust implementation, `minion-agent@8b5b004`). One
-layer lag, process-conforming (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3).
-**Rust modified: NO.**
+**Python status:** `CERTIFIED` — see `05-06-independent-review-remediation.md` for the
+independent-review-era corrections (sequential preflight barrier, update payload, generated-error
+`details`) layered on top of the state §§13–15 describe.
+**Rust status:** `CERTIFIED` — implemented after §15's approval
+(`06-tool-execution-rust-implementation.md`), then remediated for `IR-L06-001`, `IR-L06-002`,
+`IR-L06-004`, and `IR-L06-005` (`05-06-pass3-rust-remediation.md`); `IR-L06-003` and
+`IR-L05/06-006` were confirmed already conformant/correct without a Rust code change.
+**Layer 06 cross-language:** `CERTIFIED / CLOSED`.
+**Rust modified: YES (see `05-06-pass3-rust-remediation.md` for the exact commits).**
 
 ---
 
