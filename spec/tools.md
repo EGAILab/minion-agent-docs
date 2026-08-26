@@ -21,9 +21,12 @@ property, no scoping).
 Tool
     name                    string
     description             string
-    parameters              JSON Schema object
+    parameters              object-valued JSON Schema, REQUIRED -- missing/null are not
+                             aliases for "no parameters" (`L05-R005`); a no-argument tool
+                             supplies the explicit empty schema {type: object, properties: {}}
     constrained_sampling?   absent | false | json_schema{strict: prefer|require}
-                             | grammar{variants: open-string-keyed map}
+                             | grammar{variants: closed to openai_lark/openai_regex,
+                             each independently optional, `L05-R001`}
 
 AgentTool extends Tool
     label                   string, REQUIRED (not optional -- `TOOL-F001`)
@@ -43,15 +46,29 @@ pinned Pi's own `GrammarFormat` union defines — `openai_lark` and `openai_rege
 2-value domain, not an open string-keyed map (`L05-R001`; an earlier draft of this spec falsely
 attributed an open map to Pi, matching `packages/ai/src/types.ts`'s `GrammarFormat` and
 `GrammarVariants = Partial<Record<GrammarFormat, string>>` at the pinned commit exactly). Both
-formats may be set simultaneously; each is independently optional. On the wire, an unset format
-is omitted entirely (mirroring Pi's own `Partial<Record<...>>` object-literal semantics — an
-unset key is genuinely absent, not present with a null value), never emitted as an explicit
-`null`. Provider-specific enforcement/fallback for constrained sampling is Real Providers
-(assurance Layer 11) territory; Layer 05 owns only preserving the metadata end to end, unmodified,
-into the model-facing schema.
+formats may be set simultaneously; each is independently optional, including both being unset at
+once (`variants: {}`) -- Pi's own `Partial<Record<...>>` type statically permits this, so Layer 05
+accepts it too; Pi's own rejection of a grammar config with no variant selected happens at provider
+request-construction time (`packages/ai/src/api/constrained-sampling.ts::
+resolveGrammarConstrainedSampling`), which is Real Providers (assurance Layer 11) territory, not a
+Layer-05 rule. On the wire, an unset format is omitted entirely (mirroring Pi's own
+`Partial<Record<...>>` object-literal semantics — an unset key is genuinely absent, not present
+with a null value), never emitted as an explicit `null`. `constrained_sampling` itself has exactly
+four states -- absent, `false`, `json_schema` config, `grammar` config -- and explicit `null` is not
+a fifth alias for absent (`L05-R006`): the canonical absent state omits the field entirely; a
+scenario, request, or stored value carrying an explicit `null` for this field is malformed, not a
+synonym. (The model-facing *projected* JSON's own `null`-for-absence convention, matching this
+project's established optional-field pattern, is the output side and is unaffected by this rule.)
+Provider-specific enforcement/fallback for constrained sampling is Real Providers (assurance
+Layer 11) territory; Layer 05 owns only preserving the metadata end to end, unmodified, into the
+model-facing schema.
 
-A tool with no parameter schema still publishes an empty-object schema (`{type: object, properties:
-{}}`), never nothing — a model told a tool has no schema has no defined way to call it.
+`parameters` is required and contains an object-valued JSON Schema representation. A tool with no
+parameters uses the explicit empty-object schema (`{type: object, properties: {}}`) -- the tool
+author supplies this directly; missing and `null` are not semantic aliases for it (`L05-R005`,
+previously conflated at the canonical-fixture layer, and previously left unenforced at the public
+`ToolDefinition` boundary itself). A model told a tool has no schema has no defined way to call it,
+so nothing publishes as "no schema."
 
 The model-facing schema's own host-language representation (a validated schema-authoring class vs.
 a raw JSON Schema value) is implementation policy, not a semantic rule — the *observable projected
@@ -91,6 +108,20 @@ unmodified by this registry: nearest scope first, then ancestors outward,
 untagged (global) registrations last. This order is normative and
 observable -- it becomes the tools list in provider request context
 (`TOOL-F008`) -- not incidental container iteration order.
+
+A disposed/inactive requesting scope is never a valid observation point
+(`TOOL-015`, `L05-R002`, previously untraced): `visible_from`/`resolve`/`schemas`
+given a disposed scope return no visible tools at all, regardless of ancestor or
+untagged/global registrations that would otherwise be eligible from a live scope
+at the same tree position. A live descendant is unaffected by an unrelated
+disposed scope elsewhere in the tree (a disposed sibling or disposed child) and
+still observes its own eligible ancestor/global registrations normally. This
+reuses the already-certified `Scope.disposed` property at the query boundary,
+unmodified Layer 01 -- `ScopedRegistry`'s own key-chain-only visibility
+algorithm has no liveness concept and is not changed by this rule. The query
+methods accept a bare `ScopeKey` (no liveness information, preserves the prior
+key-chain-only behavior) or a live `Scope` object; passing the `Scope` itself is
+what allows this rule to engage.
 
 Same-name composition: a nearer visible registration shadows a farther one.
 This is a keyed-registry composition rule specific to tools, deliberately

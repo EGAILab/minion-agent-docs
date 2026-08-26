@@ -1,126 +1,131 @@
-# Layer 05 (Tool Model + Registry) — Rust Implementation-Owner Re-Review Package
+# Layer 05 (Tool Model + Registry) — Rust Implementation-Owner Re-Review Package (Round 2)
 
 **Prepared:** 2026-08-26
 **Prepared by:** Claude (Python/shared-contract owner, per the adopted workflow)
-**Why this exists:** the original Layer-05 candidate (`minion-agent@d9054fe`,
-`minion-agent-docs@7728d55`) was independently reviewed by Rust and **REJECTED** — see
-`05-tool-model-registry-rust-review.md`, reviewed at `minion-agent-docs@fc741e0e4ba162303b89732dc5704744468bb1e5`,
-one `PI_PARITY_DEFECT` (`L05-R001`) and four `CONTRACT_ASSURANCE_DEFECT`s (`L05-R002`..`L05-R005`).
-This package requests a **fresh, independent** Rust review of the repaired candidate. Python
-self-certifying after repair does not constitute Rust approval; do not treat this package as
-already accepted.
+**Why this exists:** the first-remediation candidate (`minion-agent@816fc9f`,
+`minion-agent-docs@ddfe715`) was independently re-reviewed by Rust and **REJECTED again** — see
+`05-tool-model-registry-rust-rereview.md` (`61d42dc`, `7e288a6`): `L05-R001`, `L05-R002`,
+`L05-R004`, `L05-R005` remained open, and a new `L05-R006` was found. `L05-R003` was confirmed
+**RESOLVED** and was not reopened. This package requests a **second fresh, independent** Rust
+review of the newly repaired candidate. Python self-certifying after repair does not constitute
+Rust approval.
 
 **Do not modify Rust in response to this package without first recording a verdict.**
 
 ---
 
-## 1. What changed since the rejected candidate (`fc741e0e4ba162303b89732dc5704744468bb1e5`)
+## 1. What changed since the second-rejected candidate (`7e288a62280969251153e080f28305ebad48fadc`)
 
-This is a **narrow remediation pass** responding to exactly the five findings below. It does not
-start Layer 06, does not touch Rust, and does not redesign the tools subsystem beyond what each
-finding required.
+This is a **narrow contract-consistency / evidence-integrity repair** responding to exactly the
+five findings below. It does not start Layer 06, does not touch Rust, does not reopen Layer 01,
+and does not redesign the tools subsystem. `L05-R003` was not touched (no code, spec, or manifest
+text describing it changed).
 
 ```text
-Finding    Repair (full detail: 05-tool-model-registry.md §19)
-L05-R001   GrammarConstrainedSampling rewritten from an open dict[str,str] to two independently-
-           optional named fields (openai_lark, openai_regex), matching pinned Pi's closed
-           GrammarFormat = "openai_lark" | "openai_regex" union. as_json() omits unset keys.
-           Canonical schema/scenarios closed to the same 2-key domain.
-L05-R002   ToolRegistry.visible_from/resolve/schemas widened to accept ScopeKey | Scope | None;
-           given a live Scope, a disposed scope now returns empty rather than falling back to
-           ancestor/global visibility -- reusing the already-certified Scope.disposed property.
-           ScopedRegistry/ScopeTree (Layer 01) unmodified.
-L05-R003   Empirically confirmed (Python REPL probe + new canonical scenario) that a scoped
-           registration survives its owning plugin's unmount and is withdrawn only by scope
-           disposal/explicit withdrawal -- Model 2 (scope-owned-after-registration), matching this
-           review's own description of Rust's FiberInitContext::effect routing. Adopted as
-           normative; spec/tools.md and the TOOL-014 manifest row corrected from an inaccurate
-           either/or framing. No Runtime/registry code changed -- this was a documentation defect,
-           not a behavioral one.
-L05-R004   The conformance runner's _ScopeTable now raises on an unresolved scope_parent or query
-           scope name instead of silently treating it as "no parent"/"untagged" -- input
-           validation at the runner boundary, not registry-semantics simulation.
-L05-R005   Canonical parameters shorthand (missing/null meaning "empty object") removed; scenarios
-           must write parameters explicitly, including the empty-object case. Docs tightened to
-           "object-valued JSON Schema," not "arbitrary JSON Schema." Python's own
-           ToolDefinition.parameters keeps None as a host-language-only convenience, unaffected.
+Finding    Repair (full detail: 05-tool-model-registry.md §20)
+L05-R001   Fixed the two remaining stale surfaces (Tool-summary prose in spec/tools.md, TOOL-008's
+           manifest rule) that still described grammar variants as an open string-keyed map, and
+           closed the schema/Python empty-variants mismatch: removed minProperties: 1 from the
+           canonical schema's grammar variants sub-schema (both the input and output positions).
+           Pi's GrammarVariants = Partial<Record<GrammarFormat, string>> statically permits {};
+           Pi's own rejection of an empty grammar selection happens at provider request-
+           construction time (packages/ai/src/api/constrained-sampling.ts::
+           resolveGrammarConstrainedSampling), Real Providers/Layer 11 territory, not Layer 05.
+L05-R002   Added the disposed-scope observation rule to spec/tools.md's Registry section as an
+           explicit normative statement (previously stated only in this project's own assurance
+           history, never in the spec a from-scratch implementer would read). New requirement
+           TOOL-015 traces it; TOOL-010 amended with a forward pointer. No Runtime/registry code
+           changed -- existing behavior and evidence were already correct.
+L05-R004   The conformance runner now validates every declarative reference (scope_parent, query
+           scope, step plugin ids, dispose_scope scope, plus self-parent/cycle detection in the
+           parent graph) in a dedicated pass BEFORE any Context/plugin/scope object is
+           constructed, replacing the previous approach where an unresolved scope_parent's
+           ValueError was raised inside a plugin's apply() during reconciliation and silently
+           swallowed as a fiber failure. 7 new harness-validation tests reproduce the review's
+           exact failure mode directly and confirm it is now a clean, immediate rejection.
+L05-R005   ToolDefinition.parameters is now `type[BaseModel] | dict[str, Any]` (None removed from
+           the type), with a new __post_init__ that rejects None and non-object-shaped dicts at
+           construction (not only via typing, since a dynamically-typed caller can bypass mypy).
+           All ~24 non-negative-test callsites across src/tests updated to pass the explicit empty
+           schema. 2 new negative unit tests. New manifest row TOOL-016 traces the base Tool
+           interface fields, which no prior row covered.
+L05-R006   Removed canonical toolInput's constrainedSamplingInput { "type": "null" } branch, so an
+           explicit null is rejected as fixture input (the absent state must omit the key). Split
+           a separate constrainedSamplingOutput schema definition for the expected-output position,
+           which correctly keeps accepting null there -- that is a different, pre-existing, and
+           unaffected convention (ToolSchema.as_json()'s own established null-for-absence rule),
+           not the same finding as canonical-input null.
 ```
 
 **Reviewed commits (delta candidate):**
 
 ```text
-minion-agent        (uncommitted at package time; see commit recorded in the covering commit
-                     message) src/minion_agent/llm/tools.py (GrammarConstrainedSampling
-                     restructured), src/minion_agent/tools/registry.py (Scope-aware query
-                     methods), src/minion_agent/tools/execute.py, src/minion_agent/tools/batch.py
-                     (type widening pass-through), src/minion_agent/agent_loop/driver.py (2 call
-                     sites updated to pass Scope instead of ScopeKey), tests/conformance/
-                     tool_registry_runner.py (_ScopeTable rejects unresolved references, grammar
-                     construction updated), tests/llm/test_tool_schema.py (updated + 2 new tests),
-                     tests/typing/valid_tool_construction.py (updated for new constructor shape),
-                     conformance/schema/tool-registry-scenario.schema.json (closed grammar domain,
-                     required parameters), conformance/agent/tool-registry-*.yaml (7 existing
-                     scenarios updated, 1 new scenario added: tool-registry-scoped-registration-
-                     survives-plugin-unmount), pi-parity-manifest.yaml (TOOL-014 row corrected)
-minion-agent-docs   (uncommitted at package time) spec/tools.md (grammar-domain and registration-
-                     lifecycle prose corrected), assurance/layers/05-tool-model-registry.md
-                     (§19 remediation history appended, header status updated), this handoff
-                     (rewritten for re-review)
+minion-agent        (uncommitted at package time; see the covering commit) src/minion_agent/tools/
+                     definition.py (parameters required, __post_init__ validation),
+                     src/minion_agent/tools/execute.py (dead None-branch removed),
+                     tests/conformance/tool_registry_runner.py (_validate_references()),
+                     tests/conformance/test_tool_registry_runner_validation.py (new, 7 tests),
+                     tests/conformance/test_schema_validation.py (15 new domain-boundary tests),
+                     tests/tools/test_definition.py (2 new negative tests, 1 test updated),
+                     ~24 test/typing callsites updated for required parameters,
+                     conformance/schema/tool-registry-scenario.schema.json (minProperties removed,
+                     constrainedSamplingInput/-Output split, null rejected on the input side),
+                     pi-parity-manifest.yaml (TOOL-008 corrected, TOOL-010 cross-referenced,
+                     TOOL-015 and TOOL-016 added)
+minion-agent-docs   (uncommitted at package time) spec/tools.md (grammar/parameters/constrained-
+                     sampling/disposed-scope prose corrected), assurance/layers/
+                     05-tool-model-registry.md (§20 second-remediation history appended, header
+                     updated), this handoff (rewritten for the second re-review)
 ```
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
 ---
 
-## 2. Scope (unchanged from the original package)
+## 2. Scope (unchanged)
 
-**In scope:** the tool definition field contract, `ctx.tools` registry authority, scoped
-visibility/ordering, same-name shadowing across scopes, same-scope duplicate-name resolution,
-registration lifecycle (effect-owned; ownership-precise, not either/or, per `L05-R003`), and
-model-facing schema projection.
-
-**Explicitly out of scope:** identical to the original package §1 — `prepare_arguments`/`execute`
-invocation, `AgentToolResult` handling, batch execution semantics, provider-specific enforcement,
-built-in tools, approval/sandbox policy, and cancellation propagation all remain Layer 06/09/11/13
-territory, untouched by this pass.
+Identical to the round-1 package §2. `L05-R003`'s resolved lifetime matrix (scope-owned-after-
+registration) is unchanged and not part of this round's requested review scope, though a reviewer
+confirming the round is welcome to re-affirm it did not regress.
 
 ---
 
 ## 3. Rust's required independent verdict, per question
 
-Re-verify all eight questions from the original package (§3 there) against the repaired candidate
-directly — do not assume a prior verdict on an earlier revision still holds. In addition:
+Re-verify all questions from the original and round-1 packages against this candidate directly.
+In addition, for this round specifically:
 
-1. **`L05-R001`:** re-read `packages/ai/src/types.ts` `GrammarFormat`/`GrammarVariants` directly at
-   the pinned commit. Confirm the closed 2-value domain and the `Partial<Record<...>>`
-   omit-unset-key semantics this package now claims.
-2. **`L05-R002`:** confirm independently that a disposed-scope query correctly observes nothing at
-   Layer 05, and that this reuses `Scope.disposed` rather than duplicating disposal tracking.
-3. **`L05-R003`:** confirm whether Rust's own (not-yet-implemented) registry design, when built,
-   will exhibit the same scope-owned-after-registration lifetime this package claims matches
-   `FiberInitContext::effect`'s routing — or whether Rust's own architecture in fact differs from
-   what this review's own write-up described. This package's Model-2 adoption rests on that
-   description; if it was imprecise, say so now rather than after Rust implementation begins.
-4. **`L05-R004`:** confirm the runner's reference-validation is genuinely input-validation, not a
-   parallel scope-lookup algorithm.
-5. **`L05-R005`:** confirm `TSchema`'s object-shaped-in-practice claim directly against TypeBox
-   usage in pinned Pi, and confirm no legitimate Pi tool construction path relies on a bare
-   boolean-shorthand JSON Schema for `parameters`.
+1. **`L05-R001`:** confirm `packages/ai/src/api/constrained-sampling.ts::resolveGrammarConstrainedSampling`
+   (lines ~230–263) is genuinely provider-request-construction logic, not something that should be
+   read as a `Tool`-model-level constraint. If it should be pulled into Layer 05 after all, say so
+   with a specific reason (e.g., evidence that some other Pi call site constructs/validates a
+   `Tool` value itself, not just a provider request, and rejects empty variants there).
+2. **`L05-R002`:** confirm the new spec/tools.md paragraph and TOOL-015 are sufficient for an
+   implementer with no access to this project's assurance history to derive the exact rule.
+3. **`L05-R004`:** attempt to reproduce a malformed-reference scenario against the repaired runner
+   and confirm it fails cleanly and immediately, not via an incidental downstream error.
+4. **`L05-R005`:** confirm no remaining code path constructs a `ToolDefinition` with `None`/missing
+   `parameters` that bypasses `__post_init__` (e.g., via `object.__new__` or similar), and confirm
+   the "object-valued, not arbitrary JSON Schema" boundary is stated consistently in spec, schema,
+   manifest, and code.
+5. **`L05-R006`:** confirm the input/output split is correct and that no canonical fixture still
+   writes an input-side explicit null anywhere.
 
 ---
 
 ## 4. Fresh Python evidence to reproduce, not merely trust
 
 ```text
-full pytest (coverage enabled):     849 passed, 29 xfailed, 0 failed, 100.00% coverage
+full pytest (coverage enabled):     873 passed, 29 xfailed, 0 failed, 100.00% coverage
 ruff check .:                        All checks passed
 mypy (configured scope):             Success, no issues found in 57 source files
 mypy + typing fixtures:              Success, no issues found in 59 source files
-schema validation:                   148 passed
-tool-registry canonical:             9 discovered / 9 executed / 9 passed / 0 deferred
+schema validation:                   163 passed (148 + 15 new domain-boundary probes)
+tool-registry canonical:             9 discovered / 9 executed / 9 passed / 0 deferred (unchanged)
+tool-registry harness validation:    7 discovered / 7 executed / 7 passed (new, R004)
 Runtime canonical (regression):      26 passed (unchanged)
-Session canonical (regression):      20/20 passed (unchanged, certified count preserved)
-XFORM canonical (regression):        14/14 passed (unchanged, certified count preserved)
+Session canonical (regression):      20/20 passed (unchanged)
+XFORM canonical (regression):        14/14 passed (unchanged)
 ```
 
 Reproduce via (from `minion-agent-python/`): `uv run pytest`, `uv run ruff check .`,
@@ -129,24 +134,26 @@ construction.py tests/typing/valid_tool_construction.py`.
 
 ---
 
-## 5. Canonical evidence design (updated)
+## 5. Canonical evidence design (delta)
 
-`conformance/schema/tool-registry-scenario.schema.json` now requires `parameters` explicitly on
-every tool entry (no missing/null shorthand) and closes the grammar `variants` object to exactly
-`openai_lark`/`openai_regex`. 9 scenario files (8 original, revised where a finding required it,
-plus 1 new: `tool-registry-scoped-registration-survives-plugin-unmount`). Every field remains
-language-neutral — confirm directly by reading the files, not from this summary. Note the runner's
-one structural property relevant to `L05-R003`'s evidence: `queries` are all evaluated after every
-`steps` entry has run, never interleaved — a scenario proving an intermediate lifecycle state
-(e.g., "still visible after unmount, before disposal") must stop its `steps` at that point rather
-than including a later disposal step.
+The 9 tool-registry scenario files are unchanged in count and behavior from round 1. What changed
+is the *schema* validating them (`conformance/schema/tool-registry-scenario.schema.json`): grammar
+`variants` no longer requires `minProperties: 1` at either the input or output position, and the
+input position (`constrainedSamplingInput`) no longer accepts `{"type": "null"}` as a valid
+alternative (the output position, `constrainedSamplingOutput`, correctly still does — these are
+now two distinct schema definitions, not one shared `$ref`). New non-canonical harness tests
+(`tests/conformance/test_tool_registry_runner_validation.py`) exercise the runner's own reference
+validation directly with hand-built documents, deliberately not as canonical product-semantic
+scenarios, per this project's own distinction between harness/schema integrity and registry
+semantics.
 
 ---
 
 ## 6. Explicitly out of scope for this package
 
-Identical to the original package §6 — `TOOL-001`..`TOOL-007`, Layer 06/09/11, and `LAY-F001` are
-not reopened or part of this review.
+Identical to the round-1 package §6, plus: `L05-R003` and everything in
+`05-tool-model-registry-rust-rereview.md` §4 (the resolved lifetime matrix) — not reopened, not
+part of this review.
 
 ## 7. Expected outcome
 
@@ -156,7 +163,7 @@ LAYER 05 SHARED CONTRACT
 ```
 
 or a precise rejection naming exactly which field, rule, or boundary is not language-neutral or not
-Pi-compatible — using fresh finding IDs if new issues are found, not reusing `L05-R001`..`L05-R005`
-for anything other than confirming those exact five are now resolved. If approved, Rust's own
+Pi-compatible — using fresh finding IDs if new issues are found, not reusing `L05-R001`..`L05-R006`
+for anything other than confirming those exact six are now resolved. If approved, Rust's own
 implementation-timing adjudication follows, per the same review-before-remediation workflow used at
 every prior layer this session.
