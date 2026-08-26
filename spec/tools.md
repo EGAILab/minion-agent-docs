@@ -68,7 +68,13 @@ parameters uses the explicit empty-object schema (`{type: object, properties: {}
 author supplies this directly; missing and `null` are not semantic aliases for it (`L05-R005`,
 previously conflated at the canonical-fixture layer, and previously left unenforced at the public
 `ToolDefinition` boundary itself). A model told a tool has no schema has no defined way to call it,
-so nothing publishes as "no schema."
+so nothing publishes as "no schema." "Object-valued" describes the JSON *representation* of the
+schema itself (the value is a mapping/object, not the JSON-Schema-spec boolean shorthand) -- it does
+not require the schema to *describe an object instance* by containing a top-level `type: object`
+keyword. Pinned Pi's `Tool<TParameters extends TSchema>` is generic over TypeBox's whole `TSchema`
+domain, not narrowed to `TObject`: a non-object-instance schema (`{type: string}`) and a top-level
+combinator (`{oneOf: [...]}`) are equally valid tool parameter schemas (`L05-R005` round 2 --
+conflating these two meanings of "object-valued" was the exact bug the first repair introduced).
 
 The model-facing schema's own host-language representation (a validated schema-authoring class vs.
 a raw JSON Schema value) is implementation policy, not a semantic rule — the *observable projected

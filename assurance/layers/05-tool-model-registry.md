@@ -7,19 +7,24 @@ Layer 11; see `LAY-F001`). Master designation for this layer's own content: **Ph
 **Status:** `IN_AUDIT` → first candidate self-certified 2026-08-25, independently **REJECTED**
 (`L05-R001`..`L05-R005`, §19) → first remediation → independently **REJECTED again**
 (`L05-R001`, `L05-R002`, `L05-R004`, `L05-R005` remained open, new `L05-R006` found; `L05-R003`
-confirmed **RESOLVED**, §20) → second remediation, this pass → repaired candidate
-**READY FOR FRESH RUST RE-REVIEW**. This document preserves that full history rather than being
-rewritten as though earlier candidates never existed; §§1–18 are the original, now-superseded
-self-certification record; §19 is the first remediation, also now superseded on the five points
-§20 revisits — read both as history, not current verdict. §20 is the current state.
-**Audit date:** 2026-08-25 (original); first remediation 2026-08-26; second remediation 2026-08-26.
+confirmed **RESOLVED**, §20) → second remediation → independently **REJECTED a third time, on
+`L05-R005` alone** (`L05-R001`, `L05-R002`, `L05-R003`, `L05-R004`, `L05-R006` all confirmed
+**RESOLVED**; §21) → third (final) remediation, this pass → repaired candidate
+**READY FOR FINAL RUST CLOSURE REVIEW**. This document preserves that full history rather than
+being rewritten as though earlier candidates never existed; §§1–18 are the original,
+now-superseded self-certification record; §19 is the first remediation, superseded on five points
+by §20; §20 is the second remediation, superseded on one point (`L05-R005` only) by §21 — read all
+three as history, not current verdict. §21 is the current state.
+**Audit date:** 2026-08-25 (original); first remediation 2026-08-26; second remediation 2026-08-26;
+third (R005-only) remediation 2026-08-26.
 **Auditor:** Claude (Python-driven, per adopted workflow).
-**Python status:** `CERTIFIED` (post-second-remediation, this pass) — real `ToolRegistry`/`Context`/
-scope/effect integration, 9/9 canonical scenarios green (unchanged from the first remediation --
-this round is a contract-consistency/evidence-integrity repair, not a new behavioral scenario),
-163 schema-validation cases (148 + 15 new domain-boundary probes this round), full Pi audit
-re-verified, all six Rust-review findings resolved (`L05-R001`, `L05-R002`, `L05-R004`, `L05-R005`,
-`L05-R006` repaired this round; `L05-R003` unchanged, still resolved).
+**Python status:** `CERTIFIED` (post-third-remediation, this pass) — real `ToolRegistry`/`Context`/
+scope/effect integration, 9/9 canonical scenarios green (unchanged since the first remediation --
+every round since has been contract-consistency/evidence-integrity repair, no new behavioral
+scenario needed), 165 schema-validation cases (163 + 2 new regression probes this round), full Pi
+audit re-verified, all six Rust-review findings resolved (`L05-R005` repaired this round via a
+single-field fix; `L05-R001`, `L05-R002`, `L05-R003`, `L05-R004`, `L05-R006` unchanged, still
+resolved).
 **Rust status:** `NOT_IMPLEMENTED` — Rust has no `tools/` module at the frozen baseline; currently
 sits at Layer 04 (certified). One-layer lag, process-conforming
 (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3). **Rust modified: NO.**
@@ -986,3 +991,107 @@ Layer 06                     NOT STARTED
 
 See the rewritten `05-tool-model-registry-rust-handoff.md` for the re-review request and the exact
 delta since `7e288a62280969251153e080f28305ebad48fadc`.
+
+---
+
+## 21. Third (final) Rust review rejection and remediation — `L05-R005` only (this pass, 2026-08-26)
+
+The §20 repair above was submitted for a third independent Rust re-review (candidate
+`minion-agent@f945c59`, `minion-agent-docs@8714e28`). That review, recorded verbatim in
+`05-tool-model-registry-rust-final-rereview.md`, confirmed `L05-R001`, `L05-R002`, `L05-R003`,
+`L05-R004`, and `L05-R006` **RESOLVED** and returned exactly one finding:
+
+```text
+Layer-05 shared contract    REJECTED
+remaining blocker           L05-R005 only
+```
+
+### 21.1 Root cause — two different meanings of "object-valued"
+
+The shared/canonical contract's phrase "object-valued JSON Schema representation" means: *the
+schema's own JSON representation is a mapping/object value* (as opposed to, say, a bare string or
+the JSON-Schema-spec boolean shorthand `true`/`false`). The second remediation's Python repair
+(§20.4) instead implemented: *the schema must describe an object **instance**, by containing a
+top-level `"type": "object"` keyword* -- a materially narrower, different rule. Pinned Pi's
+`Tool<TParameters extends TSchema>` (`packages/ai/src/types.ts`) is generic over TypeBox's whole
+`TSchema` domain, not narrowed to `TObject`, so a non-object-instance schema (`{"type": "string"}`)
+and a top-level combinator (`{"oneOf": [...]}`) are both valid tool parameter schemas that pinned
+Pi accepts and the canonical schema already correctly admitted -- only the Python public
+constructor rejected them, contradicting the shared contract it was supposed to implement.
+
+### 21.2 Repair
+
+`ToolDefinition.__post_init__` (`minion-agent-python/src/minion_agent/tools/definition.py`) no
+longer checks `self.parameters.get("type") == "object"`; it now accepts any `dict` (any mapping)
+in addition to a `pydantic.BaseModel` subclass, rejecting only non-mapping values (missing, `None`,
+booleans, arrays, strings, numbers). No other file's *semantic* domain changed -- the canonical
+schema, `spec/tools.md`'s core rule, and TOOL-016's rule were already correct; only the Python
+implementation was wrong. `spec/tools.md` and `TOOL-016` each gained a short clarifying sentence to
+preempt the same confusion recurring (§21.3).
+
+```text
+File                                Change
+definition.py                       __post_init__ narrowed to "is a mapping", not "is an
+                                     object-instance schema"; parameters field docstring
+                                     clarified
+spec/tools.md                       one clarifying sentence added distinguishing the two
+                                     meanings of "object-valued" (no rule change)
+pi-parity-manifest.yaml (TOOL-016)  rule text corrected (it previously asserted the same false
+                                     "TypeBox's TSchema is always object-shaped" claim that
+                                     misled the second remediation); test list updated
+test_definition.py                  1 test's invalid-case removed ({"properties": {}} is valid
+                                     -- any mapping is), 1 new parametrized negative test (5
+                                     non-mapping values), 1 new parametrized positive test (4
+                                     object-valued cases: object-instance, non-object-instance,
+                                     top-level combinator, arbitrary-member preservation)
+test_schema_validation.py           2 new positive canonical-schema-domain cases confirming the
+                                     canonical schema already admitted both regression cases
+                                     (no canonical schema change was needed)
+valid_tool_construction.py          2 new positive typing-fixture constructions
+```
+
+### 21.3 Why this is not a canonical/spec regression
+
+Per §13/§21.1: the canonical schema's `toolInput.parameters: {"type": "object"}` constrains the
+JSON *value* at that position to be a mapping -- it was never a check of a nested `"type"` keyword,
+so it already, correctly, validated both `{"type": "string"}` and `{"oneOf": [...]}` as valid
+`parameters` values with zero changes required. This is confirmed directly by the two new schema
+tests in §21.2, added purely as regression evidence, not as a schema repair.
+
+### 21.4 Focused probes (real public constructor)
+
+```text
+{"type": "object", "properties": {}}                    ACCEPT
+{"type": "string"}                                        ACCEPT
+{"oneOf": [{"type": "string"}, {"type": "number"}]}       ACCEPT
+{"$comment": "x", "custom-extension": {"x": 1}}           ACCEPT, preserved unchanged
+missing                                                    REJECT (TypeError)
+None                                                       REJECT (TypeError)
+True / False                                               REJECT (TypeError)
+[]                                                          REJECT (TypeError)
+"schema"                                                    REJECT (TypeError)
+42                                                          REJECT (TypeError)
+```
+
+### 21.5 Regression
+
+Full pytest: 883 passed, 29 xfailed, 100.00% coverage (was 873; +10 new tests, no removals besides
+the one now-incorrect invalid-case). `ruff check .`: all checks passed. `mypy` (src + typing
+fixtures): success, 59 files. Schema validation: 165 (was 163; +2). Tool-registry canonical: 9/9/9/0
+(unchanged). Tool-registry harness validation: 7/7 (unchanged). Runtime/Session/XFORM regression:
+26/20/14 (all unchanged). `L05-R001`, `L05-R002`, `L05-R003`, `L05-R004`, `L05-R006`: no code, spec,
+or manifest text describing any of them changed this round.
+
+### 21.6 New candidate
+
+```text
+L05-R005                    RESOLVED
+Layer-05 shared contract    READY FOR FINAL RUST CLOSURE REVIEW
+Python Layer 05             CERTIFIED (post-third-remediation)
+Rust Layer 05                NOT_IMPLEMENTED
+Rust modified                NO
+Layer 06                     NOT STARTED
+```
+
+See the rewritten `05-tool-model-registry-rust-handoff.md` for the narrow final closure-review
+request and the exact delta since `8714e28299e656f054bfc172c316a85052fe9e3e`.
