@@ -1095,3 +1095,45 @@ Layer 06                     NOT STARTED
 
 See the rewritten `05-tool-model-registry-rust-handoff.md` for the narrow final closure-review
 request and the exact delta since `8714e28299e656f054bfc172c316a85052fe9e3e`.
+
+## 22. Rust Layer-05 implementation and certification
+
+The approved shared contract was implemented independently in Rust from
+`minion-agent@89865c05933f4e6081da4ef776e34464a8c5a523`. The implementation candidate is
+`minion-agent@5d4420823b88b9e8c8596fff333f961f55a1582f`.
+
+Rust reuses the certified Runtime `ScopeTree`, `ScopedRegistry`, `EffectStore`, and coordinated
+Context path. Runtime owns one ToolRegistry and injects that same registry into coordinated
+contexts. The tools layer does not cache scope ancestry, liveness, or winners and does not create a
+second lifecycle system.
+
+The Rust model preserves the approved object-valued parameters boundary, the four constrained-
+sampling states, the closed grammar-key domain, required label and execute capability, optional
+prepare capability, and absent/sequential/parallel execution-mode metadata. Capabilities are owned
+and future-capable but are not invoked by Layer-05 behavior.
+
+Fresh results:
+
+```text
+Layer-05 canonical        9 discovered / 9 executed / 9 passed / 0 deferred
+Rust tests                169 passed / 0 failed
+cargo fmt                 PASS
+strict cargo clippy       PASS
+warning-free rustdoc      PASS
+xtask conformance         PASS
+schema validation         165 passed
+manifest rows             60 / 60 unique
+```
+
+TOOL-008 through TOOL-016 received evidence-only Rust implementation/test pointers. Their approved
+semantic rules and dispositions did not change. Full Rust evidence is recorded in
+`05-tool-model-registry-rust-implementation.md`.
+
+```text
+Layer-05 shared contract    APPROVED
+Python Layer 05             CERTIFIED
+Rust Layer 05               CERTIFIED
+Layer 05 cross-language     CERTIFIED / CLOSED
+Rust reached layer          05
+Layer 06                    ELIGIBLE, NOT STARTED
+```
