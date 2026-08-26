@@ -38,11 +38,17 @@ AgentTool extends Tool
                              (`TOOL-F004`), never itself contributes contagion exclusivity
 ```
 
-`constrained_sampling`'s `variants` map is keyed by an open grammar-format string (pinned Pi's own
-known values are provider-specific, e.g. `"openai_lark"`/`"openai_regex"`) — never a closed enum,
-matching this project's `api`/`provider` rule. Provider-specific enforcement/fallback for
-constrained sampling is Real Providers (assurance Layer 11) territory; Layer 05 owns only
-preserving the metadata end to end, unmodified, into the model-facing schema.
+`constrained_sampling`'s grammar variants are exactly the two independently-optional formats
+pinned Pi's own `GrammarFormat` union defines — `openai_lark` and `openai_regex` — a closed
+2-value domain, not an open string-keyed map (`L05-R001`; an earlier draft of this spec falsely
+attributed an open map to Pi, matching `packages/ai/src/types.ts`'s `GrammarFormat` and
+`GrammarVariants = Partial<Record<GrammarFormat, string>>` at the pinned commit exactly). Both
+formats may be set simultaneously; each is independently optional. On the wire, an unset format
+is omitted entirely (mirroring Pi's own `Partial<Record<...>>` object-literal semantics — an
+unset key is genuinely absent, not present with a null value), never emitted as an explicit
+`null`. Provider-specific enforcement/fallback for constrained sampling is Real Providers
+(assurance Layer 11) territory; Layer 05 owns only preserving the metadata end to end, unmodified,
+into the model-facing schema.
 
 A tool with no parameter schema still publishes an empty-object schema (`{type: object, properties:
 {}}`), never nothing — a model told a tool has no schema has no defined way to call it.
@@ -61,8 +67,24 @@ schemas from ctx.tools, not from any duplicated storage.
 
 Registration is a reversible effect: tool visibility and lifecycle both follow
 the registering context exactly as any other effect does (design spec
-section 3). Unloading the owning plugin, or disposing the scope registration
-went through, withdraws the tool.
+section 3), which means ownership -- not "plugin or scope, whichever comes
+first" -- decides what withdraws a registration (`L05-R003`, previously
+underspecified as an either/or). An *unscoped* registration (made directly
+against a plugin's own context) is fiber-owned: unloading the registering
+plugin withdraws it. A *scoped* registration (made through `ctx.scope(key)`)
+is owned by that scope from the moment of registration onward: only that
+scope's own disposal, or an explicit withdrawal of the registration's own
+handle, withdraws it -- unloading the plugin that happened to perform the
+registration does not, even if that plugin is the scope's sole occupant.
+This is not a Layer-05 policy choice; it is certified Runtime effect-ownership
+behavior (`Context.effect()` routes to the nearest enclosing scope's own
+disposables whenever one is present, never to the fiber's, independent of
+which plugin is currently executing), which this registry inherits
+unmodified. A tool definition's `execute`/`prepare_arguments` callbacks may
+therefore still be reachable after their originating plugin has unmounted, for
+as long as the owning scope remains active; tool authors must not close over
+state whose own lifetime is tied to the originating plugin's mount (rather
+than to the scope), since nothing withdraws the registration on that account.
 
 Visibility follows the certified Runtime's own scope rules (section 3),
 unmodified by this registry: nearest scope first, then ancestors outward,
