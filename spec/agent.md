@@ -99,6 +99,15 @@ initial state exactly. Their *transitions* remain deferred to Layer 08: populati
 requires step/turn timing this layer does not implement, and no fake transition is manufactured to
 close this layer early.
 
+Pi's own two `isStreaming` transition points, recorded here as a reference for whoever implements
+Layer 08 (not implemented by this layer): a call to `prompt()`/`continue()` sets it `true` before
+anything else happens (`runWithLifecycle`), and `finishRun()` -- reached from a `finally` block, so
+it runs whether the run succeeded, threw, or was aborted -- unconditionally sets it back to `false`
+as its very first statement. No other code path in pinned Pi ever assigns `isStreaming`. Layer 08
+must reproduce both write points exactly (entry: unconditional; exit: unconditional-via-`finally`,
+never skipped by an error) using the `AgentStatus` vocabulary and `AgentInstance.set_status`
+primitive this layer already provides; it does not need a different mechanism.
+
 ### Messages and tools: public projections, not duplicate stores
 
 Session (Layer 03, certified) remains the sole authority for conversation history, and the
@@ -141,6 +150,15 @@ complete domain is exactly `Message` (`UserMessage | AssistantMessage | ToolResu
 already-certified Layer-02 vocabulary) -- adopted verbatim, not narrowed to any one role. Enqueuing
 never normalizes, rejects, reorders, or otherwise interprets the message; it is stored exactly as
 given, tagged with an opaque, JSON-safe provenance value the runtime never inspects.
+
+This same `AgentMessage` domain is the one accepted boundary-wide, not a coincidence specific to
+the two queues: pinned Pi's `Agent.prompt(message: AgentMessage | AgentMessage[])` (its typed
+overload, distinct from the convenience `prompt(text: string)` overload) accepts it too. The
+queues, `prompt()`'s typed overload, and the certified Layer-02 `Message` union are the same one
+type, not three coincidentally-compatible ones; Layer 07 does not invent a fourth, broader
+"Agent-level message" type above `Message` for this. Conversion to the wire-level LLM request
+(`convertToLlm`, folding `AgentMessage[]` down to provider-ready `Message[]`) is unrelated,
+already-certified Layer-02/Layer-04 territory this layer does not touch or duplicate.
 
 ### Claim (drain) semantics
 
