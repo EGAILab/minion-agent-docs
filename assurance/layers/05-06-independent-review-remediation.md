@@ -497,5 +497,268 @@ IR-L06-005  Rust's own `ToolExecutionUpdate` payload, aligned with the Option-A 
             independently)
 ```
 
+**This "Next action" was held before PASS 2 began.** See PASS 1B below.
+
+---
+
+# PASS 1B — Shared/canonical closure (2026-08-26)
+
+**Why PASS 2 was held:** the PASS 1 report above declared `CONTRACT_ASSURANCE_DEFECT: 0` on the
+shared/Python side while two of its own sections explicitly said the opposite: `IR-L06-001`'s
+"known gap" note said outright that "a language-neutral YAML canonical scenario was not added,"
+and `IR-L06-005`'s payload decision had no canonical evidence at all -- only Python unit tests.
+Both are newly discovered, newly corrected shared cross-language rules; leaving either without
+executable, language-neutral evidence reproduces the exact failure mode that let the original
+defects through certification unnoticed in the first place: Python green, Rust green, the existing
+ten canonical scenarios green, while both implementations disagreed with Pi. A third gap was found
+independently during this pass, not flagged by PASS 1 at all: `definition.py`'s own `ToolFn`
+docstring still carried the stale "no `AbortSignal`-equivalent type exists... in either language"
+claim PASS 1's `IR-L05/06-006` section claimed to have already fully swept -- PASS 1's grep had
+been scoped to `spec/`/`assurance/layers/` only and never searched
+`minion-agent-python/src/` at all.
+
+## BLOCKER A closed — IR-L06-001 canonicalized
+
+The conformance schema (`conformance/schema/agent-scenario.schema.json`) gained one new
+observation, `expect_tool_trace`: an ordered list of `[stage, tool_call_id]` entries
+(`start`/`before`/`execute`/`end`), populated by four small, unconditional, always-installed
+listeners in `tests/conformance/agent_runner.py` -- two trivial `EMIT`-mode listeners on
+`tools/execution-start`/`tools/execution-end`, one waterfall listener on `tools/pre-execute`
+(registered `prepend=True` so it always wraps the entire before-hook chain, recording its marker
+only *after* `next_()` settles -- so it fires exactly once a call's before-hook stage has fully
+resolved, whatever the scenario's own listeners decided, without ever deciding anything itself),
+and one line inside the tool-stub's own `execute()` body recording the moment it starts running.
+None of these four listeners choose scheduling, reorder anything, or decide any outcome -- they
+only append to a list as production emits real events.
+
+No timing/sleep primitive was needed, per the governing instruction's own suggested shape: the new
+scenario `parallel-preflight-settles-sequentially-before-execute.yaml` gives call `t2` a
+before-hook that unconditionally blocks it (the existing `block`/`only_tool` listener primitive,
+unchanged) while `t1` is an ordinary tool that reaches `execute()`. Pinned Pi's own semantics
+require `t2`'s immediate outcome to settle -- and its `tool_execution_end` to fire -- strictly
+before `t1` is allowed to reach `execute()`, regardless of source order:
+
+```text
+expect_tool_trace:
+  [start, t1]
+  [before, t1]
+  [start, t2]
+  [before, t2]
+  [end, t2]
+  [execute, t1]
+  [end, t1]
+```
+
+**RED confirmed:** the pre-fix `execute.py`/`batch.py` (temporarily restored via
+`git checkout 5683fd9 -- ...`, then reverted back to the corrected HEAD) produced `execute(t1)`
+immediately after `before(t1)` -- **before** `start(t2)`/`before(t2)`/`end(t2)` ever ran -- because
+wrapping each call's entire pipeline in one `asyncio.gather` let `t1`'s whole synchronous pipeline
+(nothing in it ever awaits a real suspension point) run to completion in a single scheduler step
+before `t2`'s task was ever given a turn. **GREEN confirmed** against the corrected implementation,
+producing exactly the trace above. Both runs are the actual pytest output, not asserted from
+memory.
+
+The pre-existing `tool-batch-parallel` canonical scenario (unchanged) remains the evidence that
+phase 2 (execute/finalize once every call has survived preflight) stays genuinely concurrent --
+the fix did not accidentally serialize execution while fixing preflight. `pi-parity-manifest.yaml`'s
+`TOOL-023` row now cites both scenarios together, as the governing instruction asked, "stronger
+than one complicated timing scenario."
+
+Runner-thinness, explicitly re-confirmed: the runner does not compute the barrier, does not decide
+which call executes when, and does not reorder or synthesize any trace entry -- every entry is a
+direct, unmodified record of a real production event or the tool stub's own body executing.
+
+**Verdict:** `IR-L06-001` shared canonical **RESOLVED**. (Python and shared contract were already
+`RESOLVED` from PASS 1; only the shared-canonical half was open.)
+
+## BLOCKER B closed — IR-L06-005 canonically protected
+
+`conformance/schema/agent-scenario.schema.json`'s `expect_updates` item shape changed from a bare
+`[tool_call_id, partial]` pair (which could not express `tool_name`/`arguments` at all) to an
+object: `{tool_call_id, tool_name, arguments, partial}`. The existing `late-tool-update-ignored`
+scenario (its only consumer) was extended rather than duplicated, per the governing instruction's
+own preference: its `chatty` tool now declares `prepare_arguments: {set: {prepared: true}}`, and
+the provider script's tool call carries `{raw: 1}`. `prepared` only exists after preparation, so
+asserting
+
+```yaml
+expect_updates:
+  - tool_call_id: t1
+    tool_name: chatty
+    arguments: { raw: 1 }
+    partial: live
+```
+
+proves the update event reports the call's ORIGINAL arguments (no `prepared` key), not the
+prepared/merged value `execute()` itself receives -- both halves of the contract (execution uses
+prepared args; the event payload uses original args) are proven by one small, clear fixture,
+exactly as the governing instruction's §11 preferred.
+
+**Verdict:** `IR-L06-005` shared canonical **RESOLVED**.
+
+## BLOCKER C closed — IR-L05/06-006 re-verified against actual source, and found genuinely stale
+
+Independently re-read, not re-grepped-narrowly: `minion-agent-python/src/minion_agent/tools/
+definition.py`'s `ToolFn` type alias docstring, in full, at candidate `f73057e`. It said, verbatim:
+
+```text
+The `signal` (cancellation) parameter remains unrealized -- no `AbortSignal`-equivalent type
+exists anywhere in this codebase yet, in either language; that gap is assurance Layer 09's, not
+Layer 06's, to close.
+```
+
+This is the exact stale claim PASS 1's `IR-L05/06-006` section claimed was "already fully
+corrected... before this pass began" -- a genuine miss, caused by scoping that pass's search to
+`spec/`/`assurance/layers/` and never searching `minion-agent-python/src/` itself. **Corrected**
+to the accurate asymmetry (Python has no `AbortSignal`-equivalent abstraction at all yet; certified
+Rust Layer 05 already reserves `ToolExecutionSignal`/`ToolExecutionRequest.signal` structurally,
+unexercised; Layer 06 certifies non-cancelled semantics; Layer 09 owns cancellation).
+
+A second, related staleness was found and fixed while re-checking as instructed:
+`pi-parity-manifest.yaml`'s `TOOL-009` row still said, present-tense, "today's Python dispatch
+realizes only a (params)/(params, on_update) subset, no tool_call_id or cancellation signal
+parameter" -- true when Layer 05 certified, false since Layer 06 closed the `tool_call_id` half.
+Rephrased historically, per the governing instruction's own preferred pattern: "Layer 05 initially
+represented only a subset; Layer 06 subsequently closed tool_call_id wiring; signal behavior
+remains deferred, asymmetrically."
+
+A third occurrence was found in `spec/tools.md`'s own Layer-05 tool-definition table (`` today's
+dispatch realizes only a (params)/(params, on_update) subset ``) and corrected the same way.
+
+An exhaustive re-search (not a narrow one) across `minion-agent-python/src/`, `pi-parity-
+manifest.yaml`, and `minion-agent-docs/spec/` for `` today's ``, "does not receive", "no
+tool_call_id", "realizes only... subset", and the `AbortSignal` phrase found no further
+occurrences outside corrective/historical quoting (the manifest's own `TOOL-018` row, this
+artifact's own PASS 1 section, and the historical `06-tool-execution-rust-review.md` artifact,
+correctly preserved as history).
+
+**Verdict:** `IR-L05/06-006` **RESOLVED** -- for real this time, with the miss disclosed rather
+than silently corrected. `05-tool-model-registry.md` itself remains untouched, correctly, since it
+is a dated historical certification report, not a current-state document.
+
+## Canonical inventory (updated)
+
+```text
+Layer-06 canonical (dynamically discovered, not hard-coded):
+    discovered  11  (was 10; +1: parallel-preflight-settles-sequentially-before-execute)
+    executed    11
+    passed      11
+    deferred     0
+
+schema validation:  166 passed (was 165; +1, the new scenario file)
+```
+
+`an-unknown-tool-does-not-serialize-a-batch` (pre-existing, not part of the "10/11 owned"
+placeholder-derived inventory) was extended with `expect_messages` asserting the exact unknown-tool
+text and `details: {}` on all three of its tool results -- closing `IR-L06-003`'s and
+`IR-L06-004`'s remaining "canonical, not just Python-unit" gaps without adding a new fixture.
+
+## Runner audit (after extension)
+
+```text
+Does the runner perform the preflight barrier?         NO
+Does the runner decide which tool executes?            NO
+Does the runner synthesize end ordering?                NO
+Does the runner rewrite tool update args/name?          NO
+Does the runner synthesize details={}?                  NO
+Does the runner rewrite unknown-tool error text?        NO
+```
+
+Confirmed by direct code reading: the four trace-recording listeners and the `details`/`arguments`
+projections added to `agent_runner.py` only ever read a real production object's own field
+(`m.details`, the real `ToolResult.to_message()`'s text, the real `TOOLS_UPDATE` emission's own
+arguments) or append to a list the instant a real event fires. No new logic decides an outcome,
+reorders anything, or fabricates a value the production seam did not itself produce.
+
+## Re-run gates (after PASS 1B changes)
+
+```text
+full pytest (coverage enabled):     922 passed, 19 xfailed, 0 failed, 100.00% coverage
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   166 passed (was 165)
+manifest parse + unique-ID audit:    66 / 66 unique (unchanged count from PASS 1; TOOL-005/009/
+                                      017/019/021/023 rule text extended in place, no rows added
+                                      or removed this pass)
+Runtime canonical (regression):      26 passed (unchanged)
+Session canonical (regression):      20/20 passed (unchanged)
+XFORM canonical (regression):        14/14 passed (unchanged)
+Layer-05 ToolRegistry canonical:      9 passed (unchanged) + 7 harness-validation tests (unchanged)
+Layer-06 canonical:                   11 discovered / 11 executed / 11 passed / 0 deferred
+```
+
+## Finding status after PASS 1B
+
+```text
+IR-L06-001
+    shared contract   RESOLVED
+    shared canonical  RESOLVED
+    Python            RESOLVED
+    Rust              OPEN
+
+IR-L06-002
+    Python            conformant (already, unchanged)
+    shared rule       RESOLVED (manifest states the exact nullish rule precisely enough for a
+                       conforming Rust type; no canonical fixture was added specifically for this
+                       finding, since it was not raised as a PASS-1B blocker and Python's own
+                       structural conformance is proof enough on this side)
+    Rust              OPEN
+
+IR-L06-003
+    shared canonical  RESOLVED
+    Python            RESOLVED
+    Rust              TO VERIFY (not independently re-verified from Rust source this pass)
+
+IR-L06-004
+    shared canonical  RESOLVED
+    Python            RESOLVED
+    Rust              OPEN
+
+IR-L06-005
+    disposition       Pi payload ADOPTED (Option A)
+    shared canonical  RESOLVED
+    Python            RESOLVED
+    Rust              OPEN
+
+IR-L05/06-006
+    current normative/source documentation   RESOLVED (three occurrences found and fixed this
+                                              pass; PASS 1's own claim of completeness was wrong,
+                                              disclosed here rather than silently patched over)
+```
+
+## Active shared/Python findings (after PASS 1B)
+
+```text
+PI_PARITY_DEFECT                 0
+CONTRACT_ASSURANCE_DEFECT        0
+PI_BEHAVIOR_UNCERTAIN            0
+PARITY_CONSTRAINED_RISK          0
+```
+
+Three Rust-side findings (`IR-L06-001`, `IR-L06-002`, `IR-L06-004`'s Rust halves) and one
+unverified claim (`IR-L06-003`'s Rust text) remain open; none of them block declaring the
+shared/Python side ready, per the governing instruction's own explicit rule that Rust findings
+"remain separately open and do not prevent declaring READY FOR INDEPENDENT RUST REVIEW."
+
+## Verdict (supersedes PASS 1's own, for the shared/Python side only)
+
+```text
+Python Layer 06                CERTIFIED
+Shared Layer-06 contract       READY FOR INDEPENDENT RUST REVIEW
+Rust Layer 06                  NOT RE-CERTIFIED / IN_REMEDIATION
+Rust modified                  NO
+Layer 07                       NOT STARTED
+```
+
+## Next action
+
+**PASS 2**: an independent Rust review of this now-canonically-complete shared contract
+(`spec/tools.md` + `pi-parity-manifest.yaml` + the corrected/added canonical scenarios) against
+Rust's existing Layer-06 implementation. The judgment list under PASS 1's own "Next action" above
+still applies unchanged; PASS 2 now also has `parallel-preflight-settles-sequentially-before-
+execute` and the extended `late-tool-update-ignored`/`an-unknown-tool-does-not-serialize-a-batch`
+scenarios available to run against Rust directly, rather than only Python-side unit-test evidence
+to trust. Do not implement Rust in response to this document.
+
 Do **not** implement Rust in response to this document. **PASS 3** (Rust remediation) follows only
 after PASS 2 records its verdict.

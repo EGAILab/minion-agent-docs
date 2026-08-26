@@ -33,9 +33,12 @@ AgentTool extends Tool
     prepare_arguments?      (args) -> args -- field/signature only; when/whether it
                              runs is Layer 06 (`TOOL-F002`)
     execute                 (tool_call_id, params, signal?, on_update?) -> result --
-                             target capability shape; today's dispatch realizes only
-                             a (params)/(params, on_update) subset, closing that gap
-                             is Layer 06/Layer 09 (cancellation) territory (`TOOL-F003`)
+                             target capability shape (`TOOL-F003`); Layer 06 has since
+                             closed the tool_call_id/on_update half (`TOOL-017`,
+                             `TOOL-018`) -- only the cancellation-signal half remains
+                             open, asymmetrically (Python has no AbortSignal-equivalent
+                             abstraction yet; certified Rust Layer 05 already reserves
+                             one structurally, unexercised), Layer 09 territory
     execution_mode?          parallel | sequential -- per-tool override; absent means
                              "no per-tool preference," defers to the run-level default
                              (`TOOL-F004`), never itself contributes contagion exclusivity
