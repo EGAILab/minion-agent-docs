@@ -187,6 +187,12 @@ genuine Pi-parity defect, not an acceptable hardening (`TOOL-017`).
 `resolve` uses the certified Layer-05 `ToolRegistry.resolve(name, scope)` (Minion architecture);
 pinned Pi resolves by a linear `Array.find` over `AgentState.tools` instead, since Pi has no
 registry at all -- the *lookup outcome* (found/absent) is the shared contract, not the mechanism.
+An absent tool's model-visible text is pinned Pi's own exact string, not a host-specific rewording
+(`IR-L06-003`, `PI_PARITY_DEFECT`): `` `Tool ${toolCall.name} not found` ``
+(`packages/agent/src/agent-loop.ts::prepareToolCall`) -- for a call naming `foo`, the text is
+exactly `Tool foo not found`. A prior revision used different wording entirely, asserted only by
+substring containment, which never caught the divergence; the corrected text is asserted by exact
+equality.
 
 `prepare_arguments` (pinned Pi's `AgentTool.prepareArguments`) always runs before validation, never
 after -- reordering these is a `PI_PARITY_DEFECT`, not a stylistic choice. It receives a fresh copy
@@ -280,7 +286,14 @@ still flows through the after-hook exactly like success would.
 Live updates: `update(partial)` is silently ignored once `execute()`'s own call has settled
 (succeeded or failed) -- pinned Pi's `AgentToolUpdateCallback`: "Calls made after the tool promise
 settles are ignored." A tool that stashes its `update` callback and invokes it later produces no
-observable effect.
+observable effect. The update event's payload adopts pinned Pi's own `tool_execution_update`
+`AgentEvent` fields verbatim (`IR-L06-005`; a prior revision carried only the call id and the
+partial value, exposing strictly less than Pi's own live event stream for no stated architectural
+reason): `tool_call_id`, `tool_name`, `arguments`, and the partial value. `arguments` is the
+**original**, pre-`prepare_arguments`/validation arguments -- pinned Pi's own
+`PreparedToolCall.toolCall.arguments`, confirmed by direct source inspection to be the untouched
+call `prepareToolCall` was given, not the `prepareArguments`-shimmed value or the validated one
+`execute()` actually runs with.
 
 ### Batch execution
 
@@ -294,12 +307,42 @@ that one exclusive call, and not DSH-style partial grouping around it. An unreso
 never exclusive (it never runs, so it has no exclusivity to spread); one typo cannot serialize an
 otherwise parallel batch.
 
-Two orders are normative and different, matching pinned Pi's own `ToolExecutionMode` docstring
-verbatim: `tool_execution_end` fires in actual **completion** order; the final `ToolResultMessage`
-sequence preserves **source** `ToolCall` order regardless of completion order. Both are true
-simultaneously in a parallel batch -- neither is sorted from the other after the fact. Per-call
-failure is isolated: one call erroring does not prevent, cancel, or delay its siblings in the same
-batch (parallel or sequential).
+**Parallel mode has two phases, not one** (`IR-L06-001`, `CONTRACT_ASSURANCE_DEFECT` +
+`PI_PARITY_DEFECT` -- found by independent review against a candidate both languages had already
+certified): resolve/`prepare_arguments`/validate/before-hook ("preflight") for **every** call runs
+strictly **sequentially**, in source order -- `tool_execution_start` for call 2 never fires before
+call 1's own preflight has fully settled -- and only once **every** call in the batch has survived
+preflight does `execute()`/the after-hook begin, **concurrently**, for the calls that survived it.
+"Parallel" therefore does not mean "every call's complete pipeline begins concurrently"; the
+concurrency boundary sits after the before-hook, not before resolution. For two calls A and B:
+
+```text
+tool_execution_start(A)
+preflight(A)  -- resolve, prepare_arguments, validate, before-hook
+tool_execution_start(B)
+preflight(B)
+-- barrier: every call has now survived (or immediately failed) preflight --
+execute(A) / execute(B)  -- concurrent from here
+```
+
+An immediate outcome (unknown tool, a prepare/validate/before-hook exception, or an explicit
+before-hook block) finalizes -- and emits `tool_execution_end` -- right there in the sequential
+phase, before the barrier; it does not enter the concurrent phase, and does not block, delay, or
+serialize behind it any later call's own preflight. A prior candidate wrapped each call's entire
+pipeline (resolve through after-hook) in one concurrency primitive (Python's `asyncio.gather`,
+matching pinned Pi's own `Promise.all` structurally but applied one stage too early) -- which
+preflights every call concurrently too, observably different from pinned Pi whenever a before-hook
+(or, in principle, `prepare_arguments`/validation) is slow, asynchronous, or order-sensitive across
+calls. Both Python and Rust implementations agreed with each other under that candidate, and both
+disagreed with Pi -- the reason prior cross-language certification is evidence of implementation
+agreement, never semantic authority on its own.
+
+Two further orders are normative and different, matching pinned Pi's own `ToolExecutionMode`
+docstring verbatim, and apply to the concurrent phase described above: `tool_execution_end` fires
+in actual **completion** order; the final `ToolResultMessage` sequence preserves **source**
+`ToolCall` order regardless of completion order. Both are true simultaneously in a parallel batch
+-- neither is sorted from the other after the fact. Per-call failure is isolated: one call erroring
+does not prevent, cancel, or delay its siblings in the same batch (parallel or sequential).
 
 If the originating assistant message's stop reason is `length` (the output was cut off by the
 token limit, so every tool call it carries may itself have truncated arguments), **no** tool call
@@ -321,7 +364,17 @@ already-certified Layer-02 rule). `added_tool_names`, `details`, and `namespace`
 result declaring `added_tool_names` reports what it *registered itself*, through the real
 `ToolRegistry`, in the same call -- the field is evidence, not an instruction the pipeline acts on;
 `namespace`, if present on a `ToolCall`, is not consulted for resolution and is not echoed into any
-Layer-06 event or result.
+Layer-06 event or result. `details` passes through **without collapsing the empty-but-present
+state** (`IR-L06-004`, `PI_PARITY_DEFECT`): pinned Pi's `AgentToolResult.details: T` is **required**,
+not optional, and `createToolResultMessage` copies it verbatim with no conditional logic at all --
+`createErrorToolResult` sets it to `{}` (an empty object, not absent), and that `{}` survives
+unchanged into `ToolResultMessage.details` for every unknown-tool/prepare/validate/before-hook/
+after-hook error result. A prior revision's projection wrote the equivalent of "empty dict becomes
+absent," which observably diverged from Pi for every error result and every tool that never sets
+its own `details`. `added_tool_names` is the opposite case and is unaffected: Pi's own
+`createToolResultMessage` conditionally *omits* that key entirely when the array is empty
+(`addedToolNames?.length ? {...} : {}`), which Minion's "empty tuple becomes absent" already
+matches.
 
 ### Explicitly not certified by Layer 06
 
