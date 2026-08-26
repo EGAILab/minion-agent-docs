@@ -369,13 +369,27 @@ result declaring `added_tool_names` reports what it *registered itself*, through
 `namespace`, if present on a `ToolCall`, is not consulted for resolution and is not echoed into any
 Layer-06 event or result. `details` passes through **without collapsing the empty-but-present
 state** (`IR-L06-004`, `PI_PARITY_DEFECT`): pinned Pi's `AgentToolResult.details: T` is **required**,
-not optional, and `createToolResultMessage` copies it verbatim with no conditional logic at all --
-`createErrorToolResult` sets it to `{}` (an empty object, not absent), and that `{}` survives
-unchanged into `ToolResultMessage.details` for every unknown-tool/prepare/validate/before-hook/
-after-hook error result. A prior revision's projection wrote the equivalent of "empty dict becomes
-absent," which observably diverged from Pi for every error result and every tool that never sets
-its own `details`. `added_tool_names` is the opposite case and is unaffected: Pi's own
-`createToolResultMessage` conditionally *omits* that key entirely when the array is empty
+not optional, and `createToolResultMessage` copies it verbatim with no conditional logic at all.
+This rule has two distinct halves, and only the first synthesizes a value at all (`CA-L06-007`,
+`CONTRACT_ASSURANCE_DEFECT` -- a prior revision of this document conflated them, implying Layer 06
+itself derives `{}` for an undeclared *successful* result, which nothing in Pi's execution
+pipeline does):
+
+- **Generated errors** (unknown tool, prepare/validate/before-hook failure, after-hook failure,
+  length-stop): these are Layer 06's own synthesized `ToolResult`s, built through pinned Pi's
+  `createErrorToolResult`, which sets `details: {}` (an empty object, not absent) unconditionally.
+  That `{}` survives, unchanged, all the way into `ToolResultMessage.details` for every one of
+  these outcomes -- a prior revision's projection instead wrote the equivalent of "empty dict
+  becomes absent," which observably diverged from Pi for every such result.
+- **Successful results**: `details` is whatever the tool itself returned in its own
+  `AgentToolResult` -- preserved verbatim, never synthesized, never defaulted by the execution
+  pipeline. A tool that returns no `details` of its own is not a case pinned Pi's own execution
+  code assigns any particular value to; a host implementation's own result type may still default
+  the field to something (an empty mapping, say) for its own internal convenience, but that is a
+  host API choice, not a shared, Pi-derived rule, and canonical evidence must not assert it as one.
+
+`added_tool_names` is the opposite case from `details` and is unaffected by either half above: Pi's
+own `createToolResultMessage` conditionally *omits* that key entirely when the array is empty
 (`addedToolNames?.length ? {...} : {}`), which Minion's "empty tuple becomes absent" already
 matches.
 

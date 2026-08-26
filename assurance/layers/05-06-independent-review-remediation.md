@@ -762,3 +762,190 @@ to trust. Do not implement Rust in response to this document.
 
 Do **not** implement Rust in response to this document. **PASS 3** (Rust remediation) follows only
 after PASS 2 records its verdict.
+
+---
+
+# PASS 2.5 — `CA-L06-007` narrow correction (2026-08-26)
+
+## PASS-2 rejection reason
+
+The independent Rust review of PASS 1B's corrected contract
+(`assurance/layers/05-06-pass2-independent-rust-review.md`, commit
+`88e479fc4a987d486ee12b18609243f868828fa7`) confirmed `IR-L06-003`/`IR-L05/06-006` resolved and the
+`parallel-preflight-settles-sequentially-before-execute`/`late-tool-update-ignored` canonical
+evidence sound and language-neutral, but found one new blocking defect in the shared evidence
+itself, not in either implementation:
+
+```text
+CA-L06-007  CONTRACT_ASSURANCE_DEFECT
+
+an-unknown-tool-does-not-serialize-a-batch's PASS-1B revision asserted details: {} on ALL THREE
+of its tool results -- the generated unknown-tool error (correct) AND its two ordinary
+successful results (unjustified: their fixtures declare only result.text, and neither Pi nor the
+canonical schema supplies a details value for an undeclared successful outcome). A runner
+satisfying that assertion would have had to invent a host default and pass it off as shared
+semantics -- exactly the kind of accidental, unexamined divergence this whole assurance process
+exists to catch.
+```
+
+`Layer-06 shared contract: REJECTED`; `Python Layer 06: CERTIFIED` (unaffected); `Rust Layer 06:
+IN_REMEDIATION`; `Layer 06 cross-language: NOT CLOSED`.
+
+## Pi source evidence (re-confirmed)
+
+Re-read directly, not re-trusted from PASS 1's own prior citation:
+
+- `packages/agent/src/types.ts::AgentToolResult<T>` -- `details: T` is **required**, generic over
+  the tool's own detail type. Nothing in the interface or its surrounding code assigns a default.
+- `packages/agent/src/agent-loop.ts::createErrorToolResult` -- the ONE place Pi's own execution
+  code supplies `details: {}`, unconditionally, for a Layer-06-synthesized error result.
+- `packages/agent/src/agent-loop.ts::createToolResultMessage` -- copies `finalized.result.details`
+  verbatim, with no conditional logic, for every outcome, error or success alike.
+
+Confirmed exactly: **generated-error `details` is always `{}`; a successful result's `details` is
+whatever the tool itself returned; Pi never synthesizes a `{}` for an undeclared successful
+result.** The old incorrect assumption -- present in PASS 1B's own canonical fixture and in
+`spec/tools.md`/`TOOL-021`'s prose -- was that "empty-but-present, never absent" applied uniformly
+to every tool result regardless of outcome, when it in fact only describes Layer 06's own
+error-generation helper.
+
+## Spec repair
+
+`spec/tools.md`'s `details` paragraph (batch-execution section) rewritten to state the two halves
+explicitly and separately: generated errors always get pinned Pi's `{}` via
+`createErrorToolResult`; successful results preserve exactly what the tool returned, with Layer 06
+never synthesizing or defaulting a value for one that declares none. The prior wording's "every
+tool that never sets details" phrase -- the exact source of the conflation -- was removed.
+
+## TOOL-021 repair
+
+`pi-parity-manifest.yaml`'s `TOOL-021` row rewritten the same way: the two halves stated
+separately, the erroneous canonical-evidence claim ("asserts `details: {}` on all three of its
+tool results... proving the empty-but-present state survives identically for both error and
+success paths") corrected to describe the actual, narrower, correct evidence. A new test citation,
+`test_generated_error_details_and_tool_supplied_details_are_distinct`, added.
+
+## Canonical repair
+
+`conformance/agent/an-unknown-tool-does-not-serialize-a-batch.yaml`: the `details: {}` assertions
+removed from the `slow` and `quick` successful results' `expect_messages` entries (their keys
+omitted entirely, not replaced with `details: null` or any other value); the generated error's
+`details: {}` assertion retained unchanged. The scenario's own description updated to record why,
+attributing the correction to the independent PASS-2 review by its finding ID.
+
+No schema or runner change was needed for this repair: `test_agent_conformance.py`'s
+`expect_messages` matcher already treated an omitted `details` key in a fixture's expectation as
+"not part of this assertion" (`if "details" in expected: ...`, with no `else` branch), never as an
+implicit `{}` or `null` expectation -- confirmed by direct code reading before deciding no change
+was required, per the governing instruction's own explicit preference for verifying this rather
+than assuming it.
+
+## Runner audit
+
+```text
+runner supplies successful details={}          NO
+runner synthesizes generated error {}           NO -- production (createErrorToolResult's Python
+                                                 equivalent, text_result's ToolResult default)
+                                                 supplies it; the runner only reads
+                                                 ToolResultMessage.details off the real message
+production generates error {}                   YES (confirmed: text_result's ToolResult.details
+                                                 default is {}, unchanged from PASS 1B)
+runner thin                                     YES
+```
+
+All four PASS-1B/PASS-2 runner-thinness guarantees re-confirmed unchanged: no preflight barrier,
+no unknown-tool text rewriting, no update-payload rewriting, no synthesized ordering.
+
+## Python result behavior
+
+No production code changed this pass. `ToolResult.to_message()`'s PASS-1B fix (`details=
+self.details`, a straight pass-through, no collapsing) is retained exactly as is -- correct for
+both halves of the rule, since it neither collapses a generated error's `{}` nor invents a value
+for a successful result that has none. `ToolResult.details`'s own dataclass default (`{}`) also
+remains unchanged: it is a Python API convenience for constructing a `ToolResult` without
+mentioning `details` at all, not a claim about what pinned Pi requires for a successful outcome --
+this distinction is now stated explicitly in `spec/tools.md`/`TOOL-021` rather than left implicit.
+
+A new focused regression, `test_generated_error_details_and_tool_supplied_details_are_distinct`
+(`tests/tools/test_execute.py`), proves both halves through the real `execute_call` pipeline in
+one test: an unknown-tool call (generated error) carries `{}`; a tool that explicitly returns
+`ToolResult(..., details={"source": "tool"})` carries that value unchanged. No parity test was
+added asserting Python's own host-level `{}` default for an otherwise-unspecified successful
+result, per the governing instruction's explicit instruction not to.
+
+## Quality gates
+
+```text
+full pytest (coverage enabled):     923 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 922; +1, the new CA-L06-007 regression test)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   166 passed (unchanged -- no schema file touched this pass)
+manifest parse + unique-ID audit:    66 / 66 unique (unchanged row count; TOOL-021 rule text
+                                      corrected in place, no rows added or removed)
+Runtime canonical (regression):      26 passed (unchanged)
+Session canonical (regression):      20/20 passed (unchanged)
+XFORM canonical (regression):        14/14 passed (unchanged)
+Layer-05 ToolRegistry canonical:      9 passed (unchanged) + 7 harness-validation tests (unchanged)
+Layer-06 canonical:                   11 discovered / 11 executed / 11 passed / 0 deferred
+                                      (unchanged count from PASS 1B -- no scenario added or
+                                      removed, one existing scenario's assertions corrected)
+```
+
+`parallel-preflight-settles-sequentially-before-execute`, `late-tool-update-ignored`, and
+`an-unknown-tool-does-not-serialize-a-batch` were each individually re-run and confirmed passing
+after this pass's changes, not merely included in the aggregate count above.
+
+## `CA-L06-007` closure
+
+```text
+spec: error details={} only for generated errors                YES
+spec: successful details are tool-supplied                      YES
+TOOL-021: same distinction                                      YES
+canonical: generated error asserts {}                            YES
+canonical: undeclared successful details are not asserted        YES
+runner: no host default injected as shared semantics             YES (confirmed: none was)
+Python: generated error {} preserved                              YES
+schema/canonical: language-neutral                                YES (no schema change was
+                                                                   needed; existing omitted-key
+                                                                   semantics already correct)
+
+CA-L06-007                                                        RESOLVED
+```
+
+## Rust findings carried forward, unchanged
+
+```text
+IR-L06-001   OPEN   missing sequential preflight barrier
+IR-L06-002   OPEN   extra after-hook clear states (Option<Option<T>>)
+IR-L06-003   RESOLVED / ALREADY CONFORMANT
+IR-L06-004   OPEN   generated error details absent rather than {}
+IR-L06-005   OPEN   update payload missing original args
+```
+
+None of these were touched, fixed, or reclassified from the shared side this pass.
+
+## Verdict
+
+```text
+Layer 05                        CERTIFIED / CLOSED (unaffected)
+Python Layer 06                 CERTIFIED
+Shared Layer-06 contract        APPROVED FOR RUST REMEDIATION
+CA-L06-007                       RESOLVED
+
+active shared PI_PARITY_DEFECT           0
+active shared CONTRACT_ASSURANCE_DEFECT  0
+active shared PI_BEHAVIOR_UNCERTAIN      0
+
+Rust Layer 06                    IN_REMEDIATION
+Layer 06 cross-language          NOT CLOSED
+Layer 07                         NOT STARTED
+```
+
+## Next action
+
+**PASS 3**: Rust Layer-06 remediation against this now-fully-approved shared contract, addressing
+`IR-L06-001`, `IR-L06-002`, `IR-L06-004`, and `IR-L06-005` (all still open, all Rust-only). No
+further broad shared/canonical contract review is required unless PASS 3's own implementation work
+uncovers genuinely new semantic evidence -- this narrow correction closed the one gap PASS 2 found;
+it does not reopen anything PASS 2 already approved.
