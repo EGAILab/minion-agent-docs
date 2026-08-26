@@ -141,6 +141,13 @@ accessor actually existing on `AgentInstance` itself). Wholesale replacement the
 already-certified `ToolRegistry` register/withdraw API instead, an already-settled Layer-05
 divergence this layer does not revisit.
 
+`AgentInstance.tools` is total: a valid, freshly constructed instance always answers this query,
+even when no `tools` service has been mounted in its context at all. It returns `()` in that case
+rather than raising -- pinned Pi's own `AgentState.tools` starts as an observable empty array
+unconditionally, and a third independent Rust review correctly caught an earlier draft treating
+"no tool source has been wired up yet" the same as an outright resolution failure, which no other
+`AgentState` field does either.
+
 ### Steering and follow-up inboxes
 
 Pinned Pi keeps exactly two per-instance queues -- a steering queue and a follow-up queue -- each

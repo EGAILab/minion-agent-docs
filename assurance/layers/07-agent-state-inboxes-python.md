@@ -927,3 +927,156 @@ Layer 08                       NOT STARTED
 
 Repeat independent Rust Layer-07 contract review of this corrected candidate. Do not implement Rust
 Layer 07 and do not start Layer 08 in this same pass.
+
+# PASS 4 — remediation after third independent Rust rejection (2026-08-27)
+
+A third independent Rust review ran against the PASS-3 candidate and found two new, narrow
+findings PASS 3 had not closed, both in surface PASS 3 itself had just repaired -- adversarial
+probes the prior fixes did not anticipate. PASS 3's own four findings (L07-R003/004/005/006) were
+independently re-confirmed RESOLVED by this review and are not reopened.
+
+## Rust review commit
+
+`437bb7a6fe9f4843169d2f226fbd18004959b1ac`
+(`.worktrees/l07-pass3-review-docs/assurance/layers/07-agent-state-inboxes-rust-rereview-2.md`).
+
+## Rejection summary
+
+```text
+L07-R004  CONTRACT_ASSURANCE_DEFECT  a oneOf branch keyed only on its own `required` key (plus, for
+                                      four branches, a `not: {required: [observe]}`) did not forbid
+                                      a SECOND, different operation key riding along -- e.g.
+                                      {steer, claim, observe} matched the `claim` branch alone (that
+                                      branch places no restriction on any other key) and validated
+L07-R007  PI_PARITY_DEFECT /          `AgentInstance.tools` raised `ServiceNotFoundError` on a
+          CONTRACT_ASSURANCE_DEFECT  valid, freshly constructed instance whose context had no
+                                      `tools` service mounted, instead of pinned Pi's own
+                                      unconditional empty-array default
+```
+
+Both were independently re-verified by direct construction (the exact probes below) before any fix,
+not accepted from the review's own description.
+
+## L07-R004 — schema still permits a second operation key
+
+**Re-audited directly:** reproduced all three of the review's own probes
+(`{steer, claim, observe}`, `{follow_up, claim, observe}`, `{clear, has_queued_messages, observe}`)
+against the PASS-3 schema and confirmed zero errors on each -- RED. The root cause is exactly as
+diagnosed: `oneOf` branches for `claim`/`has_queued_messages` carried no `not` clause at all (only
+the four enqueue/clear branches did, and only against `observe`), so any action containing `claim`
+or `has_queued_messages` plus an unrelated second operation key matched that one branch alone and
+was accepted.
+
+**Implementation:** every one of the six `oneOf` branches now carries a `not: {anyOf: [...]}`
+listing every OTHER operation key by name (the four enqueue/clear branches also list `observe` in
+that same `not` list, folding the PASS-3 `observe` restriction into the same mechanism rather than
+a separate clause). A second operation key of any kind now disqualifies every branch, not just a
+same-shaped one. Verified against the full pairwise matrix of all six operation keys (15 pairs, with
+and without `observe`) plus the three exact review probes -- every combination of two or more
+operation keys is now rejected; every single-operation action (with `observe` on `claim`/
+`has_queued_messages` only) still validates; the two existing canonical scenarios validate
+unchanged. Added `test_agent_inbox_action_rejects_a_second_operation_alongside_claim_or_pending`
+(four parametrized fixtures, including the review's own three probes verbatim) to
+`test_schema_validation.py`.
+
+**Status: RESOLVED.**
+
+## L07-R007 — tools must be a total projection
+
+**Re-audited directly:** constructed a valid `AgentInstance` against a bare `Context()` (no `tools`
+service provided at all -- a legitimate, unexceptional starting state, not misuse) and confirmed
+`.tools` raised `ServiceNotFoundError` -- RED. The defect is a category error in the PASS-3
+implementation: it treated "no tool source has been wired up yet" as equivalent to "a required
+service is missing," when pinned Pi's own `AgentState.tools` starts as an observable empty array
+unconditionally -- no other `AgentState` field on `AgentInstance` behaves this way (`messages`
+returns `()` on an empty log; it does not raise if `SessionLog` were somehow absent).
+
+**Implementation:** `AgentInstance.tools` now checks `ctx.registry.has("tools")` first and returns
+`()` when absent, before resolving and querying the registry. This mirrors an idiom already
+established in this exact codebase for "optional service, empty/`None` default when absent" --
+`AgentLoopFactory._telemetry()` (`agent_loop/__init__.py`) does precisely this for the telemetry
+service -- rather than inventing a new resolution pattern. Added
+`test_tools_is_empty_when_no_tools_service_is_mounted` (the defect's direct regression test) and
+`test_reset_does_not_disturb_the_tools_relationship` (the review's own requested reset-retention
+evidence: once a registry is mounted and a tool registered, `reset()` does not detach the instance
+from it).
+
+**Status: RESOLVED.**
+
+## Nonblocking traceability fix
+
+The review also flagged AG-013's own cross-reference for wake's disposition as stale: it still
+pointed at AG-014 (mutable per-instance configuration), left over from before the AG-015 split that
+created AG-019 (wake's actual disposition owner). Corrected to point at AG-019, with a note
+explaining why the old reference existed and why it was stale.
+
+## Manifest delta
+
+```text
+AG-013  corrected: stale AG-014 cross-reference for wake's disposition replaced with AG-019
+AG-017  corrected: tools totality documented (L07-R007), two new tests cited
+```
+
+Total: 75 rows (unchanged), 75 unique IDs, confirmed by direct parse. No new rows this pass --
+both fixes correct existing rows' own text/citations rather than introducing new surface.
+
+## RED → GREEN (this pass)
+
+```text
+{steer, claim, observe} / {follow_up, claim, observe} /
+  {clear, has_queued_messages, observe} (schema probes)     RED -> GREEN
+test_agent_inbox_action_rejects_a_second_operation_
+  alongside_claim_or_pending (x4)                           RED -> GREEN
+AgentInstance(ctx=Context()).tools                          RED -> GREEN
+test_tools_is_empty_when_no_tools_service_is_mounted        RED -> GREEN
+test_reset_does_not_disturb_the_tools_relationship          GREEN already (positive coverage of
+                                                              existing, unaffected behavior once a
+                                                              registry is mounted)
+```
+
+Both genuine defects were reproduced directly before fixing, not assumed: the three schema probes
+were run against the unmodified schema and observed to validate with zero errors; the bare-`Context`
+tools read was run against the unmodified `AgentInstance.tools` and observed to raise
+`ServiceNotFoundError`. Both were then reverted a second time after the fix (schema: re-ran the same
+probes against the unmodified file; tools: reverted the `has("tools")` guard) to confirm the
+regression tests actually catch the defect, not merely coincide with a passing state.
+
+## Quality gates (final, this pass)
+
+```text
+full pytest (coverage enabled):     972 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 966 at the start of this pass)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   183 passed (was 179; +4: the second-operation-alongside-
+                                      claim/pending regression fixtures)
+manifest parse + unique-ID audit:    75 / 75 unique (unchanged -- text/citation corrections only)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none
+CONTRACT_ASSURANCE_DEFECT     none
+PI_BEHAVIOR_UNCERTAIN         none
+PARITY_CONSTRAINED_RISK       none blocking
+```
+
+## Verdict (supersedes this document's own PASS-3 verdict above)
+
+```text
+L07-R004    RESOLVED (schema now enforces full mutual exclusion across all six operation keys,
+             independently of observe)
+L07-R007    RESOLVED (tools is now a total projection: empty, not an error, when unmounted)
+
+Shared Layer-07 contract    READY FOR REPEAT INDEPENDENT RUST REVIEW
+Python Layer 07              RE-CERTIFIED
+Rust Layer 07                 BLOCKED / PENDING REVIEW
+Layer 07 cross-language       NOT CLOSED
+Layer 08                       NOT STARTED
+```
+
+## Next action
+
+Repeat independent Rust Layer-07 contract review of this corrected candidate. Do not implement Rust
+Layer 07 and do not start Layer 08 in this same pass.
