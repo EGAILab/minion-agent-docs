@@ -44,9 +44,13 @@ expose their semantic message without Rust debug/type wrappers.
 
 `AfterToolCallOverride` structurally contains only Pi-authorized fields: content, details,
 is_error, usage, and terminate. It has no representation for tool_call_id, tool_name, or
-added_tool_names, so protected authority holds at every listener boundary without reproducing
-Python's snapshot/restore mechanism. Zero/one/N listener composition is deterministic;
-N-listener composition remains the intentional Minion architectural extension.
+added_tool_names. The public raw Runtime waterfall remains available, while production uses the
+additive `EventBus::waterfall_normalized` seam to restore all three protected fields before every
+subsequent listener and again on the terminal result. Zero/one/N listener composition is
+deterministic; N-listener composition remains the intentional Minion architectural extension.
+Listener-originated waterfall failures are converted into the affected call's semantic error
+result, while unrelated calls continue and genuine EventBus infrastructure failures remain
+batch-level errors.
 
 Batch execution deliberately emits starts in source order, emits ends from each completing
 future, and restores final messages to source-index slots. The deterministic test proves source
@@ -68,7 +72,7 @@ resolution, preparation, validation, hook, or execution work. Signal plumbing is
 Focused Rust evidence:
 
 ```text
-tool_execution                     13 passed
+tool_execution                     16 passed
 Layer-06 canonical                 10 discovered / 10 executed / 10 passed / 0 deferred
 ```
 
@@ -90,7 +94,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
     PASS
 
 cargo test --workspace --all-features
-    PASS — 183 tests/doc-tests, 0 failed
+    PASS — 186 tests/doc-tests, 0 failed
 
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
     PASS
@@ -132,6 +136,7 @@ PI_BEHAVIOR_UNCERTAIN        none
 
 PARITY_NEUTRAL_HARDENING
     typed AfterToolCallOverride
+    opt-in normalized Runtime waterfall
     indexed source-order result slots
     jsonschema crate validation seam
     atomic late-update acceptance guard
