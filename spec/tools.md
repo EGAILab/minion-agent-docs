@@ -159,29 +159,176 @@ recorded as their own audit obligations, not implemented or certified by this se
 
 ---
 
-## Layer 06 — Tool execution pipeline (`NOT CERTIFIED BY LAYER 05`)
+## Layer 06 — Tool execution pipeline
 
-**This section describes pre-existing repository code and its intended Pi-parity rules. Its
-correctness against pinned Pi is an independent Layer-06 audit obligation** (`process/
-implementation-conformance-workflow.md` §6, item 6) — code existing and passing today's tests is
-not certification evidence for this layer; those tests may still encode a superseded contract.
+Owns how already-produced `ToolCall`s execute through the Layer-05 `ToolDefinition`/`ToolRegistry`
+surface, mirroring pinned Pi's `prepareToolCall` + `executePreparedToolCall` +
+`finalizeExecutedToolCall` (`packages/agent/src/agent-loop.ts`). Explicitly does **not** own: the
+full Agent run loop, `prompt()`/`continue()` lifecycle, steering/follow-up messages, or whether the
+Agent performs another model turn after a batch (`process/implementation-conformance-workflow.md`
+§6, item 6; a later Agent-loop layer's territory even where the same pinned Pi function also
+contains that logic).
 
-Pipeline:
+### Per-call pipeline
 
 ```text
-prepare_arguments -> schema validation -> before hook -> execute -> after hook -> finalized result
+resolve -> prepare_arguments -> validate -> before-hook -> execute (+ live updates) -> after-hook
 ```
 
-Every thrown/rejected value crossing this Pi-compatible extension boundary becomes an error tool
-result. After-hook failure replaces the prior result.
+`tool_execution_start`/`tool_execution_end` (`tools/execution-start`/`tools/execution-end`) bracket
+every call unconditionally, regardless of outcome. An outcome decided before `execute()` runs --
+unknown tool, a `prepare_arguments`/validation/before-hook exception, or an explicit before-hook
+block -- is **immediate**: `execute()` and the after-hook (`tools/post-execute`) are never invoked
+for it. Pinned Pi's `finalizeExecutedToolCall` (the after-hook) is only ever invoked for an outcome
+that actually reached `execute()`, success or failure alike -- an earlier, uncertified revision of
+this pipeline ran the after-hook uniformly on every outcome, including immediate ones; that is a
+genuine Pi-parity defect, not an acceptable hardening (`TOOL-017`).
 
-If assistant stop reason is `length`, execute no tool calls; every call becomes an error result.
+`resolve` uses the certified Layer-05 `ToolRegistry.resolve(name, scope)` (Minion architecture);
+pinned Pi resolves by a linear `Array.find` over `AgentState.tools` instead, since Pi has no
+registry at all -- the *lookup outcome* (found/absent) is the shared contract, not the mechanism.
 
-Sequential contagion: global sequential or any sequential tool => whole batch sequential; otherwise
-parallel is allowed.
+`prepare_arguments` (pinned Pi's `AgentTool.prepareArguments`) always runs before validation, never
+after -- reordering these is a `PI_PARITY_DEFECT`, not a stylistic choice. It receives a fresh copy
+of the arguments so an in-place-mutating shim cannot corrupt the source `ToolCall.arguments`
+(nonmutation discipline, matching XFORM's own rule).
 
-Parallel execution-end events follow completion order; conversational tool-result messages preserve
-source call order. Late updates after settlement are ignored.
+Validation checks the prepared arguments against the tool's schema, with no exemption for either
+representation (`L06-R001`; an earlier revision skipped validation entirely for a raw JSON-Schema
+`dict`, a genuine `PI_PARITY_DEFECT` -- pinned Pi's `validateToolArguments` validates every
+`Tool.parameters: TSchema`). A pydantic-model-backed `ToolDefinition.parameters` gets real pydantic
+validation (including its default-filling); a raw, object-valued JSON-Schema `dict` (`TOOL-F010`)
+is validated for real too, via the general `jsonschema` library against the exact schema Layer 05
+approved. Neither path reproduces pinned Pi's TypeBox-specific coercion/conversion algorithm
+(`packages/ai/src/utils/validation.ts`) byte-for-byte -- that remains a disclosed, intentional
+divergence: the shared contract is "arguments conform to the supplied JSON Schema," not "TypeBox's
+exact clone/convert/coerce pipeline," and Layer 05 deliberately declined to make Layer 06 into a
+general JSON-Schema-dialect-feature-complete validator. A raw-schema tool's arguments pass through
+unchanged when they already validate (no JSON-Schema-only defaults are filled in, unlike pydantic's
+own default-filling for its models).
 
-Batch `terminate=true` only when every finalized result terminates. It suppresses only tool-driven
-automatic continuation; normal prepare/stop/steering/follow-up remains eligible.
+The before-hook and after-hook are Minion's own `tools/pre-execute` and `tools/post-execute`
+waterfall events. Pinned Pi defines exactly **one** callback per stage
+(`beforeToolCall`/`afterToolCall`); the single-callback case is directly Pi-compatible (same input,
+same allowed replacement surface, same failure semantics as Pi's own callback). Minion additionally
+supports **N** ordered listeners per stage, composed as a deterministic, registration-order fold --
+this is an **intentional Minion architectural extension** pinned Pi does not itself define, not a
+"parity-neutral" implementation detail: with more than one listener, execution is observably
+different from what a single Pi callback could express, and the disposition is named accordingly
+(`L06-R006`; an earlier revision described this inconsistently across the spec, assurance record,
+and manifest, sometimes as hardening, sometimes as bare Pi adoption).
+
+Before-hook waterfall: listeners run in registration order; each sees the current validated
+arguments (or a prior listener's `Proceed(arguments=...)` replacement) and either delegates
+(`next()`, optionally narrowing the arguments) or returns a decision (`Block`/`Proceed`) directly,
+short-circuiting the remaining listeners. Pi's own `prepareToolCall` wraps `prepareArguments` +
+`validateToolArguments` + `beforeToolCall` in **one** try/catch: a before-hook listener that throws
+(rather than returning a structured block) collapses to the same generic error result as a
+prepare/validation failure, not a distinct failure class -- true for both the single- and
+multi-listener case, since a raised exception unwinds the whole waterfall regardless of how many
+listeners were registered. `tools/pre-execute` may additionally replace the arguments a listener
+sees (`Proceed(arguments=...)`, e.g. for sandboxing) -- an intentional Minion addition pinned Pi's
+`BeforeToolCallResult` has no equivalent for, since Pi's hook can only block or pass through
+unchanged; this addition applies identically whether one listener or several are registered.
+
+After-hook waterfall: listeners run in registration order. The recommended registration path,
+`register_after_tool_call_hook`, gives each listener the current, already-merged `ToolResult`
+(read-only) and expects an `AfterToolCallOverride` (or `None`/nothing for no change) in return --
+**never** the whole result. `AfterToolCallOverride` carries exactly Pi's five `AfterToolCallResult`
+fields (`content`/`details`/`is_error`/`usage`/`terminate`) and structurally has no slot for
+`tool_call_id`, `tool_name`, or `added_tool_names`, so a hook written against this API cannot even
+attempt to touch them. But `tools/post-execute` remains a public Runtime event, and a caller may
+also register a raw listener directly against it, returning (or short-circuiting with) a whole
+`ToolResult` -- the constrained helper alone cannot prevent that (`L06-R003`; an earlier revision
+believed it could, which was itself the defect: the helper is a convenience, not enforcement). The
+actual authoritative boundary is the production dispatcher itself, and it holds at **every**
+listener-to-listener handoff, not only once the whole waterfall finishes: `tool_call_id`,
+`tool_name`, and `added_tool_names` are restored from the pre-hook result before each next listener
+runs, so no listener -- first, last, or in between, helper-registered or raw -- ever observes a
+predecessor's unauthorized replacement of those three fields, even transiently (`L06-R003`, closed
+a second time; a still-earlier revision restored them only once, after the entire waterfall
+completed, which protected the final result but let an intermediate listener read -- and act on,
+e.g. by copying into its own `details` override -- a forged value a prior listener had delegated).
+Each listener's override (or a raw listener's own returned value, for the fields it's still allowed
+to change) is merged into the accumulated result field-by-field before the next listener runs
+(omitted fields keep their prior value; no deep merge -- removing a key requires supplying the
+whole replacement value, matching pinned Pi's merge exactly), so listener 2 always sees exactly what
+listener 1 produced, **with `tool_call_id`/`tool_name`/`added_tool_names` already normalized back to
+their protected values** regardless of what listener 1 attempted. If any listener throws, the
+waterfall unwinds and the **entire** prior result -- success or failure, with whatever
+`usage`/`details`/`terminate` it carried -- is discarded and replaced with a plain error result;
+later listeners never run. This is a replacement, not a merge (`TOOL-017`), and holds identically
+for one listener or many, for a helper-registered or raw listener alike, and regardless of
+registration order.
+
+`execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
+plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's
+`(toolCallId, params, signal?, onUpdate?)` capability shape except for `signal`. Cross-language
+signal state is asymmetric, not uniformly absent (`L06-R005`; an earlier revision incorrectly
+claimed "no equivalent type exists in either language"): Python has no `AbortSignal`-equivalent
+abstraction yet, but certified Rust Layer 05 already reserves one structurally
+(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
+`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`) without exercising cancellation
+behavior. The accepted defer is behavioral, not architectural: Layer 06 certifies **non-cancelled**
+tool-execution semantics only; assurance Layer 09 owns cancellation propagation, abort timing,
+sibling effects, and cancellation result semantics, and can add that behavior later without
+changing any non-cancelled stage/ordering/result/event rule this document states, and without
+requiring Rust to discard or redesign its existing signal-bearing capability seam. A
+thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
+still flows through the after-hook exactly like success would.
+
+Live updates: `update(partial)` is silently ignored once `execute()`'s own call has settled
+(succeeded or failed) -- pinned Pi's `AgentToolUpdateCallback`: "Calls made after the tool promise
+settles are ignored." A tool that stashes its `update` callback and invokes it later produces no
+observable effect.
+
+### Batch execution
+
+Effective mode is decided by the batch, not stored on `ToolDefinition` (Layer 05 intentionally
+leaves a tool's own `execution_mode: None` to mean "no per-tool preference," never "parallel" --
+resolving that fallback is execution's job). The run-level default is `parallel`, matching pinned
+Pi's `AgentLoopConfig.toolExecution?` ("Default: parallel"). Contagion: the run-level default being
+`sequential`, **or** any tool call in the batch resolving to a tool whose own `execution_mode` is
+`sequential`, forces the **entire** batch to run one call at a time in source order -- not merely
+that one exclusive call, and not DSH-style partial grouping around it. An unresolvable name is
+never exclusive (it never runs, so it has no exclusivity to spread); one typo cannot serialize an
+otherwise parallel batch.
+
+Two orders are normative and different, matching pinned Pi's own `ToolExecutionMode` docstring
+verbatim: `tool_execution_end` fires in actual **completion** order; the final `ToolResultMessage`
+sequence preserves **source** `ToolCall` order regardless of completion order. Both are true
+simultaneously in a parallel batch -- neither is sorted from the other after the fact. Per-call
+failure is isolated: one call erroring does not prevent, cancel, or delay its siblings in the same
+batch (parallel or sequential).
+
+If the originating assistant message's stop reason is `length` (the output was cut off by the
+token limit, so every tool call it carries may itself have truncated arguments), **no** tool call
+in the batch is resolved, prepared, validated, or executed -- not even an unknown-tool lookup runs.
+Each becomes the identical error result, in source order, `tool_execution_start`/`tool_execution_end`
+still firing for each; `terminate` is unconditionally `False` for this batch (pinned Pi's
+`failToolCallsFromTruncatedMessage` never folds these results through the terminate rule at all).
+
+Batch `terminate=true` only when every finalized result in a non-empty batch sets `terminate` --
+an empty batch never terminates (vacuous agreement is not consent). What `terminate=true` does
+(suppressing only tool-driven automatic continuation, never normal prepare/stop/steering/follow-up)
+is a later Agent-loop layer's obligation, not certified here; Layer 06 only produces and preserves
+the flag.
+
+`usage` on a tool result (pinned Pi's `AgentToolResult.usage?`) is preserved end to end into
+`ToolResultMessage.usage` and is never folded into main LLM context token accounting (the
+already-certified Layer-02 rule). `added_tool_names`, `details`, and `namespace` (pinned Pi's
+`ToolCall.namespace?`) are pass-through metadata Layer 06 neither interprets nor requires: a tool
+result declaring `added_tool_names` reports what it *registered itself*, through the real
+`ToolRegistry`, in the same call -- the field is evidence, not an instruction the pipeline acts on;
+`namespace`, if present on a `ToolCall`, is not consulted for resolution and is not echoed into any
+Layer-06 event or result.
+
+### Explicitly not certified by Layer 06
+
+Cancellation/abort propagation through `execute`/hooks (assurance Layer 09 -- Python has no
+`AbortSignal`-equivalent type yet; certified Rust Layer 05 already reserves one structurally
+without exercising cancellation behavior, `L06-R005`), provider-specific constrained-sampling
+enforcement (Real Providers, assurance Layer 11), and everything the master's own agent run loop
+owns: `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
+`shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
+condition actually suppresses/continues the next model turn.
