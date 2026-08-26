@@ -1,0 +1,411 @@
+# Layer 07 — Agent Public State + Inbox/Queues — Shared/Python Certification
+
+**Pass date:** 2026-08-26
+**Scope:** shared contract (`spec/agent.md`, `pi-parity-manifest.yaml`, canonical-scope decision)
+and Python implementation only. **No Rust file was read for editing purposes and none was
+modified.** Layer 08 (run/turn state machine) and Layer 09 (cancellation) were not implemented,
+touched, or certified.
+
+## Starting state
+
+```text
+minion-agent       2fe813c6c42923e2abdf08b354e0eac8c32a5fcd
+minion-agent-docs  9e777797da132170cf314fa66ca67652aea09ab8
+pinned Pi          b7bb00b936dbe21b8e160b3e89efdec361846699
+Layers 01-06        CROSS-LANGUAGE CERTIFIED / CLOSED
+```
+
+The unrelated Phase-5 working-tree change was left untouched, unstaged, and uncommitted throughout.
+
+**Important scope-defining discovery, made before any design decision:** `minion-agent-python/src/
+minion_agent/agent/` and `agent_loop/` already exist, are already substantial (identity, inbox,
+instance, registry, plugin, decisions, events, projection, and a full turn/step driver), and are
+already extensively tested (77 existing tests across `tests/agent/` alone before this pass, plus
+property-based tests in `tests/agent/test_properties.py`, plus `tests/agent_loop/`). This code
+predates the Layer-07/08 split the same way Layer 06's execution code predated its own split from
+Layer 05 -- it is functional and already exercised by Layer 06's own canonical test runner, but had
+not yet been through Pi-audit/manifest/spec certification as its own layer. This pass's job was
+therefore primarily **audit and formal certification of what already exists**, plus filling the one
+concrete gap the audit found, not building a queue/state layer from scratch.
+
+---
+
+## Pinned Pi symbol audit
+
+Read directly at pinned Pi (local `ref-repos/pi` checkout, confirmed at the exact pinned commit):
+`packages/agent/src/agent.ts` (full file, 592 lines) and `packages/agent/src/types.ts` (`AgentState`,
+`QueueMode`, `AgentContext`, lines 1-420).
+
+```text
+Pi symbol                                  Pi file        Layer owner   Minion disposition
+Agent (class)                              agent.ts       L07 (state/   Split: state+queues here;
+                                                           queues) +     prompt/continue/run
+                                                           L08 (run)     orchestration is
+                                                                         AgentLoop/driver.py (L08,
+                                                                         untouched this pass)
+AgentState.isStreaming                     types.ts       L07 vocab,    AgentStatus.IDLE/RUNNING
+                                                           L08 timing    (initial value certified;
+                                                                         transitions L08-owned)
+AgentState.streamingMessage                types.ts       L07 vocab,    NOT YET IMPLEMENTED --
+                                                           L08 timing    documented only (spec),
+                                                                         no code stub added
+AgentState.pendingToolCalls                types.ts       L07 vocab,    NOT YET IMPLEMENTED --
+                                                           L08 timing    documented only
+AgentState.errorMessage                    types.ts       L07 vocab,    NOT YET IMPLEMENTED --
+                                                           L08 timing    documented only
+AgentState.messages                        types.ts       L03           Projection only
+                                                           (certified)   (`derive_messages`); Agent
+                                                                         never stores messages
+AgentState.tools                           types.ts       L05           ToolRegistry via scope;
+                                                           (certified)   Agent never stores tools
+AgentState.systemPrompt / model /          types.ts       L07-adjacent  AgentDefinition (frozen,
+  thinkingLevel                                           (mutable in   shared across instances) --
+                                                           Pi; static    per-instance mutability
+                                                           in Minion)    not implemented; noted as
+                                                                         a known, deferred gap
+                                                                         below, not fixed this pass
+PendingMessageQueue (class)                agent.ts       L07           Inbox (2 targets, 3
+                                                                         aliases)
+Agent.steer                                agent.ts       L07           Inbox.steer -> NEXT_STEP,
+                                                                         wakes
+Agent.followUp                             agent.ts       L07           Inbox.followup -> NEXT_TURN,
+                                                                         wakes
+(no Pi equivalent)                         --             L07           Inbox.inject -> NEXT_STEP,
+                                                                         silent (intentional Minion
+                                                                         extension)
+QueueMode ("all" | "one-at-a-time")        types.ts       L07           ClaimPolicy.ALL /
+                                                                         ONE_AT_A_TIME (exact match)
+PendingMessageQueue.drain                  agent.ts       L07           Inbox.claim(target, policy)
+Agent.clearSteeringQueue                   agent.ts       L07           Inbox.clear(NEXT_STEP) --
+                                                                         NEW this pass
+Agent.clearFollowUpQueue                   agent.ts       L07           Inbox.clear(NEXT_TURN) --
+                                                                         NEW this pass
+Agent.clearAllQueues                       agent.ts       L07           Inbox.clear_all() -- NEW
+                                                                         this pass
+Agent.hasQueuedMessages                    agent.ts       L07           Inbox.has_pending() -- NEW
+                                                                         this pass
+Agent.reset                                agent.ts       L07 (queue    NOT reproduced in place --
+                                                           half) + L03  intentional divergence, see
+                                                           (transcript  "Reset" below
+                                                           half, frozen)
+Agent.prompt / Agent.continue              agent.ts       L08           AgentLoop.run_until_idle
+                                                                         (existing, untouched)
+Agent.abort / this.signal                  agent.ts       L09           Not implemented
+                                                                         (`AgentLoop.cancel()`
+                                                                         exists as a structural stub
+                                                                         only; untouched this pass)
+Agent.subscribe / listeners                agent.ts       L08           EventBus (Runtime, already
+                                                                         certified) realizes this
+                                                                         architecturally
+config.getSteeringMessages                 types.ts       L08 (calls   AgentLoop._claim_step_input
+                                                           the L07      (existing, untouched)
+                                                           primitive)
+config.getFollowUpMessages                 types.ts       L08           AgentLoop._run_turn's
+                                                                         NEXT_TURN claim (existing,
+                                                                         untouched)
+```
+
+---
+
+## Layer boundary
+
+**Layer 07 owns:** the Agent processing-status vocabulary and its initial value; steering/follow-up
+queue storage, independence, ordering, provenance; the claim primitive for both policies; queue
+clearing and pending-input observation.
+
+**Layer 08 defers:** the run/turn/step state machine; exactly when the claim primitive is invoked
+for either queue; `prompt()`/`continue()` caller-rejection rules while active; `shouldStopAfterTurn`/
+`prepareNextTurn` orchestration; steering-vs-follow-up priority during a run; the actual wiring of
+`streamingMessage`/`pendingToolCalls`/`errorMessage`, since their transitions require step/turn
+timing this pass does not implement or certify.
+
+**Layer 09 defers:** abort/cancellation propagation into an active run and its providers/tools/hooks.
+
+**Boundary coherent:** YES. The existing `AgentLoop`/driver.py (already written, already exercised
+by Layer 06's own canonical tests, not re-certified or modified by this pass) already consumes
+exactly the Layer-07 primitives above (`inbox.pending`, `inbox.claim`) without needing any change
+to introduce Layer-07's new operations (`clear`/`clear_all`/`has_pending`) -- proof by construction
+that Layer 08 can consume Layer-07's primitives without redesign, since Layer 08's own existing code
+already does, unmodified.
+
+---
+
+## Public state contract
+
+**Initial state:** a live `AgentInstance` starts `AgentStatus.IDLE` (`test_an_instance_starts_idle`,
+pre-existing). `Inbox` starts with both targets empty and no wake pending
+(`test_has_pending_is_false_for_an_empty_inbox`, new this pass).
+
+**Observable fields (Layer-07 scope):** `AgentInstance.status` (`AgentStatus.IDLE | RUNNING`);
+`Inbox.pending(target)`, `Inbox.has_pending()`, `Inbox.wake_requested`.
+
+**Mutation rules:** `AgentInstance.set_status()` is a no-op for a same-value assignment (a
+transition signal must signal transitions, not assignments -- `test_setting_the_same_status_twice_
+reports_once`, pre-existing). `Inbox.send`/`clear`/`clear_all` mutate only their own target(s); a
+claim removes exactly what it returns, nothing else.
+
+**Session overlap:** none. `AgentInstance` holds a `SessionLog` reference, not a message list;
+`derive_messages(log)` is the only message projection, and it is Layer-03's own certified function,
+unchanged and uncalled by anything this pass added.
+
+**Pi parity:** PASS for everything Layer 07 owns. One known, disclosed gap outside this pass's
+fix scope: Pi's `AgentState.systemPrompt`/`model`/`thinkingLevel` are mutable per-instance fields
+(a caller can reassign them between runs); Minion's `AgentDefinition` is a frozen dataclass shared
+across instances with no per-instance override. This is a genuine divergence, not yet reproduced --
+recorded here as a known gap rather than silently accepted or hastily redesigned, since fixing it
+correctly would mean deciding whether `AgentDefinition` gains a mutable per-instance layer or a
+separate override mechanism, a design question this narrow pass should not rush.
+
+---
+
+## Steering contract
+
+**Input type:** `UserMessage` (Minion's own narrowing of Pi's broader `AgentMessage` union --
+classified as an intentional, low-risk divergence: steering conceptually represents asynchronous
+*user* input arriving mid-run, and nothing in Pi's own agent-loop consumption ever requires a
+non-user role to be steerable).
+**Enqueue:** `Inbox.steer(message, origin=None)` -> appends to the `NEXT_STEP` target, requests a
+wake, returns a unique `InputEnvelope`.
+**Ordering:** FIFO, proven both by direct tests and property-based tests across arbitrary
+interleavings with follow-up/inject.
+**Poll/drain:** `Inbox.claim(NEXT_STEP, policy)` -- policy-exact reproduction of Pi's `QueueMode`
+(see Claim contract above).
+**Snapshot semantics:** a claim is atomic with respect to the caller: it returns a fixed set of
+already-queued envelopes and mutates the queue in the same call; anything enqueued *after* a claim
+call returns is not part of that claim's result, matching Pi's own synchronous, single-threaded
+`drain()`. Distinguishing this from "one poll always empties everything currently there" would
+require an interleaving that adds new input *during* a single claim call, which is not possible in
+Minion's synchronous `claim()` any more than in Pi's synchronous `drain()` -- both mutate and return
+in one uninterruptible step, so no scenario can observe a difference. This was verified directly
+against Pi's source (`drain()`'s body has no `await`/yield point), not assumed from Python's own
+concurrency model.
+**Idle behavior (Layer-07 scope):** enqueueing while idle is unconditionally accepted; nothing
+about `Inbox.steer` depends on `AgentInstance.status`.
+**Active behavior (Layer-07 scope):** identical -- `Inbox` has no awareness of run state at all;
+whether an active run *sees* newly steered input before its next step boundary is Layer-08 timing,
+out of scope here.
+**Pi parity:** PASS.
+
+---
+
+## Follow-up contract
+
+**Input type:** `UserMessage` (same narrowing and rationale as steering).
+**Enqueue:** `Inbox.followup(message, origin=None)` -> appends to the `NEXT_TURN` target, requests
+a wake, returns a unique `InputEnvelope`.
+**Ordering:** FIFO, proven the same way as steering.
+**Poll/drain:** `Inbox.claim(NEXT_TURN, policy)` -- same policy-exact primitive as steering, applied
+to the other target.
+**Snapshot semantics:** identical reasoning to steering, above.
+**Pi parity:** PASS.
+
+---
+
+## Queue relationship
+
+**Separate storage:** YES -- two independent lists behind one `dict[InboxTarget, list[...]]`,
+proven never to leak into each other under arbitrary claim/enqueue interleavings
+(`test_the_two_queues_never_leak_into_each_other`, property-based, pre-existing).
+**Cross-queue global order:** NOT APPLICABLE -- pinned Pi itself keeps two independent arrays with
+no shared ordering; Minion's two targets are equally independent. Provenance is per-envelope, not
+a global sequence, precisely because a batch claim can merge several origins into one turn/step
+(design spec section 6) -- a single global order would not let that distinction survive a
+claim-all.
+**Cross-queue priority owned by:** L08 (which target is claimed first, and when, during a run is
+entirely `AgentLoop`'s decision, already implemented, not re-certified here).
+**Future Layer-08 compatibility:** PASS -- confirmed by construction: `AgentLoop._run_turn`/
+`_claim_step_input` already call exactly `inbox.claim(target, policy)` and `inbox.pending(target)`,
+the same primitives this pass certifies, unmodified. No duplicated queue authority exists anywhere
+in the codebase (`Inbox` is the single owner; nothing else stores queue state).
+
+---
+
+## Manifest
+
+```text
+New rows:    AG-011, AG-012, AG-013 (continuing the existing AG- prefix; AG-001..AG-010 already
+             reserved this master-phase-3 surface for Layer-08/09 concerns and were NOT touched)
+Pi pointers: packages/agent/src/agent.ts::PendingMessageQueue/Agent.steer/Agent.followUp/
+             Agent.clearSteeringQueue/clearFollowUpQueue/clearAllQueues/hasQueuedMessages,
+             packages/agent/src/types.ts::QueueMode
+Canonical evidence: none added this pass (see "Canonical scope decision" below) -- Python
+             language tests are the evidence for all three new rows
+Python evidence: src/minion_agent/agent/inbox.py, src/minion_agent/agent/envelope.py
+Rust status: PENDING -- Layer 07 not yet implemented in Rust (stated plainly on all three rows,
+             not left blank and not described as conformant)
+unclassified rows: none
+```
+
+Total manifest size: 69 rows (was 66), 69 unique IDs, confirmed by direct parse.
+
+---
+
+## Canonical scope decision (why no new `conformance/agent/*.yaml` was added)
+
+The existing canonical family (`conformance/agent/*.yaml`) is built entirely around a full
+provider-script/tool-stub/turn-driven scenario (per `test_agent_conformance.py`'s own schema) --
+there is no schema primitive for observing `Inbox` state directly, only for observing the
+*consequences* of a full run. Writing a new scenario that exercises `steer`/`followup`/`inject`
+through that schema and asserts anything about *when* those messages entered the transcript would
+inherently also be observing -- and implicitly certifying -- `AgentLoop`'s own polling timing,
+which is Layer 08's job and explicitly out of scope for this pass (`IMPORTANT: No Layer-07
+canonical scenario should pretend to run that state machine unless the scenario is strictly testing
+a queue primitive` -- the governing instruction's own words). No such schema-level primitive exists
+yet that isolates the queue behavior from run timing.
+
+The pure queue mechanics Layer 07 actually owns (ordering, independence, claim policy, clearing) do
+not need a provider or a run to observe at all -- they are plain, synchronous data-structure
+behavior, already thoroughly proven by both direct and property-based Python tests (77 tests across
+`tests/agent/`, 21 in `test_inbox.py` alone, including hypothesis-driven arbitrary-interleaving
+proofs). Per the governing instruction's own escape valve ("If this is not independently observable
+until Layer 08, document the primitive now but defer orchestration coverage" / "Do not force this
+scenario if no Layer-07-level observable seam exists"), this pass documents the primitive precisely
+(spec + manifest, above) and treats the Python test suite as the authoritative Layer-07 evidence,
+rather than inventing new canonical-schema machinery (e.g. an `expect_inbox_pending` observation)
+whose only current consumer would be this one layer, with no second (Rust) implementation yet to
+benefit from a language-neutral fixture. This is disclosed explicitly, not a silent gap: cross-
+language canonical coverage for the queue primitives is a reasonable fast-follow once Rust
+implements its own Layer 07, exactly the same reasoning applied to the earlier IR-L06-001 finding's
+own deferred canonical scenario before Python's fix existed to prove it meaningful.
+
+---
+
+## Python implementation
+
+**Agent state owner:** `AgentInstance` (`identity.py` + `instance.py`) -- unchanged this pass,
+already correct.
+**Steering queue:** `Inbox` (`inbox.py`), target `InboxTarget.NEXT_STEP` -- unchanged.
+**Follow-up queue:** `Inbox`, target `InboxTarget.NEXT_TURN` -- unchanged.
+**Drain/poll primitive:** `Inbox.claim(target, policy)` -- unchanged.
+**Reset/clear:** `Inbox.clear(target)`, `Inbox.clear_all()`, `Inbox.has_pending()` -- **new this
+pass** (did not exist before; genuine `CONTRACT_ASSURANCE_DEFECT`, resolved).
+**Layer-08 logic implemented:** NO -- `AgentLoop`/`driver.py` was read for context and boundary
+verification only; zero lines changed.
+**Layer-09 logic implemented:** NO -- `AgentLoop.cancel()`'s existing structural stub was read,
+not touched.
+
+---
+
+## RED → GREEN evidence
+
+```text
+test_has_pending_is_false_for_an_empty_inbox                          RED -> GREEN
+test_has_pending_is_true_with_only_a_next_turn_item                    RED -> GREEN
+test_has_pending_is_true_with_only_a_next_step_item                    RED -> GREEN
+test_clearing_one_target_leaves_the_other_untouched                    RED -> GREEN
+test_clearing_an_empty_target_is_a_harmless_no_op                      RED -> GREEN
+test_clear_all_empties_both_queues                                     RED -> GREEN
+test_clearing_does_not_affect_the_wake_signal                          RED -> GREEN
+```
+
+RED confirmed directly: all seven failed with `AttributeError: 'Inbox' object has no attribute
+'clear_all'` (or `'clear'`/`'has_pending'`) before `Inbox.clear`/`clear_all`/`has_pending` were
+added; all seven pass after.
+
+---
+
+## Contract-quality check
+
+**Can Layer 08 reproduce Pi's steering polling without Layer-07 redesign?** YES -- it already does,
+unmodified, via `inbox.claim(NEXT_STEP, policy)`/`inbox.pending(NEXT_STEP)`.
+**Can Layer 08 reproduce Pi's follow-up polling without Layer-07 redesign?** YES -- same primitive,
+`NEXT_TURN` target, already in use.
+**Duplicated queue authority?** NO -- `Inbox` is the sole owner; `AgentLoop` never maintains its own
+queue state.
+**Runner workaround required?** NO -- not applicable, since no new canonical runner code was
+written this pass.
+**Contract quality:** PASS.
+
+---
+
+## Runner audit
+
+Not applicable in the canonical-YAML sense (no new scenario was added -- see "Canonical scope
+decision"). For the Python test suite itself: no test constructs its own queue, reimplements FIFO,
+or simulates `Inbox`/`AgentInstance` state -- every assertion reads the real `Inbox`/`AgentStatus`
+objects directly.
+
+```text
+owns queue storage        NO
+implements FIFO            NO
+drains queue itself        NO
+simulates state             NO
+implements Layer-08 timing  NO
+thin                        YES
+```
+
+---
+
+## Quality gates
+
+```text
+full pytest (coverage enabled):     930 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 923; +7, the new Inbox clear/has_pending tests)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   166 passed (unchanged -- no schema file touched)
+manifest parse + unique-ID audit:    69 / 69 unique (was 66; +3: AG-011, AG-012, AG-013)
+Runtime canonical:                   26 passed (unchanged)
+Session canonical:                   20/20 passed (unchanged)
+XFORM canonical:                     14/14 passed (unchanged)
+Layer-05 canonical + integrity:      9 + 7 = 16 passed (unchanged)
+Layer-06 canonical:                   11/11/11/0 (unchanged)
+Layer-07 (new):                       no new canonical scenario (see decision above); 21 Inbox
+                                      tests (14 pre-existing + 7 new), 77 total tests/agent/
+                                      (unchanged except the 7 additions)
+```
+
+---
+
+## Regression
+
+```text
+Layers 01-06    PASS -- every regression count above is identical to the pre-Layer-07 baseline
+new regressions  none
+```
+
+---
+
+## Active findings
+
+```text
+PI_PARITY_DEFECT              none
+CONTRACT_ASSURANCE_DEFECT     none active -- the one found (missing clear/has_pending operations)
+                               was resolved this pass
+PI_BEHAVIOR_UNCERTAIN         none -- every Pi symbol audited above was read directly from source,
+                               not inferred
+PARITY_CONSTRAINED_RISK       none blocking; one disclosed, non-blocking known gap: Pi's mutable
+                               per-instance systemPrompt/model/thinkingLevel has no Minion
+                               equivalent yet (AgentDefinition is frozen and shared) -- recorded,
+                               not fixed, since correcting it is a separate design decision this
+                               narrow pass should not rush
+```
+
+---
+
+## Assurance
+
+**Artifact:** this document.
+**Status:** Python Layer 07 `CERTIFIED` for everything within this pass's ownership boundary
+(steering/follow-up queue storage, claim policy, clearing, processing-status vocabulary). The
+public-state fields requiring run/turn transitions (`streaming_message`/`pending_tool_calls`/
+`error_message`) and the mutable-per-instance-config gap remain explicitly open, tracked above, not
+silently certified.
+
+---
+
+## Verdict
+
+```text
+Shared Layer-07 contract    READY FOR INDEPENDENT RUST REVIEW
+Python Layer 07              CERTIFIED
+Rust Layer 07                NOT IMPLEMENTED / PENDING REVIEW
+Layer 07 cross-language      NOT CLOSED
+Layer 08                     NOT STARTED
+```
+
+## Next action
+
+Independent Rust review of this Layer-07 shared contract (`spec/agent.md`'s new Layer-07 section,
+`pi-parity-manifest.yaml`'s `AG-011`/`AG-012`/`AG-013`) against Rust's own architecture, before any
+Rust implementation begins. Do not implement Rust in response to this document.
