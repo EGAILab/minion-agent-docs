@@ -1,10 +1,14 @@
 # Layer 05 Tool Model + Registry — Independent Rust Re-Review
 
-**Review date:** 2026-08-26  
-**Repaired implementation candidate:** `minion-agent@816fc9f57fd8aded7af264ad2361b4194b594089`  
-**Repaired documentation candidate:** `minion-agent-docs@ddfe715bedfc1cc1dd7c5c8996b9bf0de842ee37`  
-**Original rejection:** `minion-agent-docs@fc741e0e4ba162303b89732dc5704744468bb1e5`  
-**Pinned Pi:** `b7bb00b936dbe21b8e160b3e89efdec361846699`  
+**Review date:** 2026-08-26
+
+**Repaired implementation candidate:** `minion-agent@816fc9f57fd8aded7af264ad2361b4194b594089`
+
+**Repaired documentation candidate:** `minion-agent-docs@ddfe715bedfc1cc1dd7c5c8996b9bf0de842ee37`
+
+**Original rejection:** `minion-agent-docs@fc741e0e4ba162303b89732dc5704744468bb1e5`
+
+**Pinned Pi:** `b7bb00b936dbe21b8e160b3e89efdec361846699`
 **Verdict:** **REJECTED** — `L05-R001`, `L05-R002`, `L05-R004`, and `L05-R005`
 remain open; new `L05-R006` was found. `L05-R003` is resolved.
 
@@ -42,9 +46,12 @@ and result conversion.
 
 ### L05-R001 — grammar contract remains internally contradictory
 
-**Taxonomy:** `PI_PARITY_DEFECT` + `CONTRACT_ASSURANCE_DEFECT`  
-**Affected requirement:** `TOOL-008`  
-**Affected spec:** `spec/tools.md`, Tool summary and constrained-sampling prose  
+**Taxonomy:** `PI_PARITY_DEFECT` + `CONTRACT_ASSURANCE_DEFECT`
+
+**Affected requirement:** `TOOL-008`
+
+**Affected spec:** `spec/tools.md`, Tool summary and constrained-sampling prose
+
 **Affected evidence:** `pi-parity-manifest.yaml`, canonical grammar schema
 
 Several repaired surfaces correctly close keys to `openai_lark` and `openai_regex`: the detailed
@@ -63,9 +70,12 @@ Python Layer-05 certification remains affected.
 
 ### L05-R002 — disposed-scope behavior works but is absent from the normative contract
 
-**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`  
-**Affected requirements:** `TOOL-010` and the missing disposed-observation trace  
-**Affected spec:** `spec/tools.md`, Registry  
+**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`
+
+**Affected requirements:** `TOOL-010` and the missing disposed-observation trace
+
+**Affected spec:** `spec/tools.md`, Registry
+
 **Affected evidence:** `tool-registry-scope-disposal-withdraws.yaml`
 
 The repaired fixture expects no tools from a disposed `Scope`, Python's real `ToolRegistry` checks
@@ -86,7 +96,8 @@ semantics. Layer 01 remains closed.
 
 ### L05-R004 — parent validation is not effective at the runner boundary
 
-**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`  
+**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`
+
 **Affected evidence:** `tool-registry-scope-disposal-withdraws.yaml`, `_ScopeTable`
 
 The fixture now creates `root_scope` and correctly proves live ancestor/sibling survival plus empty
@@ -101,8 +112,10 @@ not registry simulation.
 
 ### L05-R005 — required parameter boundary still conflicts with the public definition
 
-**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`  
-**Affected contract:** `spec/tools.md`, Tool definition/empty schema  
+**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`
+
+**Affected contract:** `spec/tools.md`, Tool definition/empty schema
+
 **Affected implementation evidence:** `ToolDefinition.parameters`
 
 Canonical repair is correct: `parameters` is required, null is rejected, every fixture writes the
@@ -122,8 +135,10 @@ schemas may remain out of scope.
 
 ### L05-R006 — canonical input invents a null constrained-sampling alias
 
-**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`  
-**Affected requirement:** `TOOL-008`  
+**Taxonomy:** `CONTRACT_ASSURANCE_DEFECT`
+
+**Affected requirement:** `TOOL-008`
+
 **Affected schema/runner:** `constrainedSamplingInput`, `_constrained_sampling`
 
 The shared model lists exactly absent, false, JSON-schema config, and grammar config. Canonical
