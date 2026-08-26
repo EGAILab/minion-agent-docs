@@ -231,22 +231,29 @@ sees (`Proceed(arguments=...)`, e.g. for sandboxing) -- an intentional Minion ad
 `BeforeToolCallResult` has no equivalent for, since Pi's hook can only block or pass through
 unchanged; this addition applies identically whether one listener or several are registered.
 
-After-hook waterfall: listeners run in registration order via `register_after_tool_call_hook`, the
-only sanctioned way to extend `tools/post-execute` (`L06-R003`). Each listener receives the
-current, already-merged `ToolResult` (read-only) and may return an `AfterToolCallOverride` (or
-`None`/nothing for no change) -- **never** the whole result. `AfterToolCallOverride` carries
-exactly Pi's five `AfterToolCallResult` fields (`content`/`details`/`is_error`/`usage`/`terminate`)
-and structurally has no slot for `tool_call_id`, `tool_name`, or `added_tool_names`: hooks cannot
-replace execution identity or `added_tool_names` by construction, not merely by convention (an
-earlier, uncertified revision let a listener return/replace the entire `ToolResult`, which could
-observably rewrite those fields -- a genuine `CONTRACT_ASSURANCE_DEFECT`, repaired this pass).
-Each listener's override is merged into the accumulated result field-by-field before the next
-listener runs (omitted fields keep their prior value; no deep merge -- removing a key requires
-supplying the whole replacement value, matching pinned Pi's merge exactly), so listener 2 always
-sees exactly what listener 1 produced. If any listener throws, the waterfall unwinds and the
-**entire** prior result -- success or failure, with whatever `usage`/`details`/`terminate` it
-carried -- is discarded and replaced with a plain error result; later listeners never run. This is
-a replacement, not a merge (`TOOL-017`), and holds identically for one listener or many.
+After-hook waterfall: listeners run in registration order. The recommended registration path,
+`register_after_tool_call_hook`, gives each listener the current, already-merged `ToolResult`
+(read-only) and expects an `AfterToolCallOverride` (or `None`/nothing for no change) in return --
+**never** the whole result. `AfterToolCallOverride` carries exactly Pi's five `AfterToolCallResult`
+fields (`content`/`details`/`is_error`/`usage`/`terminate`) and structurally has no slot for
+`tool_call_id`, `tool_name`, or `added_tool_names`, so a hook written against this API cannot even
+attempt to touch them. But `tools/post-execute` remains a public Runtime event, and a caller may
+also register a raw listener directly against it, returning (or short-circuiting with) a whole
+`ToolResult` -- the constrained helper alone cannot prevent that (`L06-R003`; an earlier revision
+believed it could, which was itself the defect: the helper is a convenience, not enforcement). The
+actual authoritative boundary is the production dispatcher itself: after the waterfall runs
+(regardless of how many listeners were registered, or through which API), `tool_call_id`,
+`tool_name`, and `added_tool_names` are unconditionally restored from the pre-hook result --
+whatever any listener returned or attempted for those three fields is discarded, every time. Each
+listener's override (or a raw listener's own returned value, for the fields it's still allowed to
+change) is merged into the accumulated result field-by-field before the next listener runs (omitted
+fields keep their prior value; no deep merge -- removing a key requires supplying the whole
+replacement value, matching pinned Pi's merge exactly), so listener 2 always sees exactly what
+listener 1 produced. If any listener throws, the waterfall unwinds and the **entire** prior result
+-- success or failure, with whatever `usage`/`details`/`terminate` it carried -- is discarded and
+replaced with a plain error result; later listeners never run. This is a replacement, not a merge
+(`TOOL-017`), and holds identically for one listener or many, and for a helper-registered or raw
+listener alike.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
 plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's

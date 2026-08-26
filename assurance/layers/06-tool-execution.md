@@ -6,15 +6,22 @@ master does not split registry from execution; assurance does, per §6 items 5/6
 the tool model/registry, this document owns execution).
 **Status:** `IN_AUDIT` → first candidate self-certified 2026-08-26 (§§1–12 below) → independently
 **REJECTED** (`L06-R001`..`L06-R006`, `assurance/layers/06-tool-execution-rust-review.md`) →
-remediation, this pass (§13) → repaired candidate **READY FOR FRESH RUST RE-REVIEW**. §§1–12
-preserve the original audit; §§3–8 have inline corrections where the first candidate's own
-technical claims were factually wrong (validation-exemption, signal-defer wording, hook
-disposition) — read the corrected text as current, and §13 as the record of what changed and why.
-**Audit date:** 2026-08-26 (original); remediation 2026-08-26.
+remediation (§13) → repaired candidate independently **RE-REVIEWED**
+(`assurance/layers/06-tool-execution-rust-rereview.md`) and **REJECTED again on three of six**
+(`L06-R001`, `L06-R003`, `L06-R006` re-opened; `L06-R002`, `L06-R004`, `L06-R005` confirmed
+resolved) → narrow remediation, this pass (§14) → repaired candidate **READY FOR FINAL RUST
+CLOSURE REVIEW**. §§1–12 preserve the original audit; §§3–8 have inline corrections where the
+first candidate's own technical claims were factually wrong (validation-exemption, signal-defer
+wording, hook disposition) — read the corrected text as current, §13 as the record of the first
+remediation round, and §14 as the record of the second, narrower one.
+**Audit date:** 2026-08-26 (original); remediation 2026-08-26; second narrow remediation
+2026-08-26.
 **Auditor:** Claude (Python-driven, per adopted workflow).
-**Python status:** `CERTIFIED` (post-remediation) — real `ToolRegistry`/`Context`/effect/event
-integration, 10/10 Layer-06-owned canonical scenarios green (corrected count, `L06-R004`), full Pi
-audit re-verified, all six Rust-review findings resolved (see §13).
+**Python status:** `CERTIFIED` (post second remediation) — real `ToolRegistry`/`Context`/effect/
+event integration, 10/10 Layer-06-owned canonical scenarios green (corrected count, `L06-R004`),
+full Pi audit re-verified, all six original Rust-review findings resolved (§13), and the three
+findings the independent re-review reopened (§14) resolved at their actual authoritative
+boundary.
 **Rust status:** `NOT_IMPLEMENTED` — Rust has no tool-execution seam yet; currently sits at Layer
 05 (certified cross-language, including a real Rust implementation, `minion-agent@8b5b004`). One
 layer lag, process-conforming (`process/implementation-conformance-workflow.md` §§5.9, 7, 7.3).
@@ -617,3 +624,146 @@ Layer 07                       NOT STARTED
 
 See the rewritten `06-tool-execution-rust-handoff.md` for the re-review request and the exact
 delta since `e96c154ac760ff4e1f06bcec4c14be588e470a18`.
+
+---
+
+## 14. Independent Rust re-review: three findings reopened, and their narrow remediation (this pass, 2026-08-26)
+
+The §13 candidate was submitted for a fresh, independent Rust re-review
+(`assurance/layers/06-tool-execution-rust-rereview.md`, candidate
+`minion-agent@ee563ffad65f1c8624536cbf8cc65dc395efe39a` docs delta plus the §13 remediation
+commit). That re-review confirmed `L06-R002`, `L06-R004`, and `L06-R005` genuinely resolved, and
+reopened three:
+
+```text
+Layer-06 shared contract    REJECTED (partial -- 3 of 6 confirmed resolved)
+L06-R001   CONTRACT_ASSURANCE_DEFECT   ToolDefinition.parameters docstring still stale
+L06-R003   PI_PARITY_DEFECT            raw public EventBus registration still bypasses
+                                        after-hook override authority
+L06-R006   CONTRACT_ASSURANCE_DEFECT   register_after_tool_call_hook cites a nonexistent
+                                        requirement (TOOL-022)
+```
+
+This section records the narrow repair of all three. `L06-R002`, `L06-R004`, `L06-R005` were not
+reopened and are not touched by this pass.
+
+### 14.1 Finding disposition
+
+```text
+Finding    Root cause                                  Repair                            Evidence
+L06-R001   The §13 repair fixed _validate()'s runtime   definition.py's module docstring   definition.py
+           behavior (a raw dict is genuinely            and ToolDefinition.parameters      (module
+           validated) but never updated                 field docstring rewritten: Layer   docstring,
+           definition.py's own docstrings, which        05 stores the schema; Layer 06's   parameters
+           still said a raw-dict tool "bypasses         execute.py validates arguments     field
+           Python-side argument validation" / is        against it (pydantic for a model   docstring)
+           "not Python-validated" -- a stale,            class, jsonschema for a raw
+           self-contradicting public-API claim the      dict); construction itself never
+           re-review caught directly against the         validates anything, regardless of
+           actual, already-correct runtime behavior.     representation. No runtime
+                                                          change; no new test needed for a
+                                                          docstring-only fix.
+L06-R003   register_after_tool_call_hook's own           _finalize() (execute.py) now       execute.py
+           constrained AfterToolCallOverride type is     snapshots tool_call_id/            (_finalize);
+           correct, but tools/post-execute remains a     tool_name/added_tool_names from    test_post_
+           public Runtime event -- nothing stops a       the pre-hook result before          execute.py
+           caller from registering a raw listener        dispatching the waterfall, and     (5 new
+           directly via ctx.events.on(TOOLS_POST_        unconditionally restores them      tests)
+           EXECUTE, ...) and returning a whole,          afterward, regardless of which
+           differently-identified ToolResult -- which    registration path produced the
+           the re-review directly proved rewrites        waterfall's output. This moves
+           tool_call_id/tool_name/added_tool_names.       enforcement to the one place
+           Fixing only the helper was insufficient:       every tools/post-execute
+           the constraint has to live at the              dispatch necessarily passes
+           authoritative dispatch boundary, not a         through, making it registration-
+           registration-path-specific helper.             path-independent by
+                                                           construction -- no change to the
+                                                           generic EventBus, no parallel
+                                                           hidden hook system, no removal
+                                                           of the public TOOLS_POST_EXECUTE
+                                                           event.
+L06-R006   register_after_tool_call_hook's docstring      TOOL-022 citation removed and     execute.py
+           cited TOOL-022, which does not exist in the    replaced with TOOL-005 (already   (docstring);
+           65-row manifest -- a dangling requirement      covers N-listener composition     pi-parity-
+           citation. Could not be closed by fixing the    semantics). TOOL-005's own rule    manifest.yaml
+           citation alone (per the re-review's own        text extended to describe the     (TOOL-005,
+           framing): R006 also required R003's            second R003 closure explicitly.   TOOL-003)
+           authoritative-boundary fix, since the           No new manifest row added (the
+           helper's docstring previously overstated its    instruction's own preference:
+           own authority ("only sanctioned way",           repoint to an existing row over
+           "structurally impossible... not merely by       inventing a placeholder).
+           convention") -- both corrected together.
+```
+
+### 14.2 Authoritative after-hook boundary, restated precisely (`L06-R003`)
+
+```text
+Pi-allowed override fields (AfterToolCallResult):   content, details, isError, usage, terminate
+NOT overridable by any hook, any registration path: tool_call_id, tool_name, added_tool_names
+
+Can register_after_tool_call_hook override tool_call_id/tool_name/added_tool_names?         NO
+  (AfterToolCallOverride has no slot for them -- unchanged from §13)
+Can a raw ctx.events.on(TOOLS_POST_EXECUTE, ...) listener override them?                     NO
+  (was YES before this pass -- the exact defect the re-review proved; _finalize's
+  unconditional post-waterfall restoration now closes it regardless of registration path)
+Does the fix require changing the generic EventBus, or hiding TOOLS_POST_EXECUTE?             NO
+Is the constraint uniform across zero/one/N listeners, mixed helper+raw registration?         YES
+  (verified: test_a_raw_event_listener_cannot_replace_execution_identity,
+  test_mixed_raw_and_helper_listeners_share_the_same_authority,
+  test_middle_listener_failure_skips_later_listeners_with_a_raw_listener_present)
+Can a listener still mutate the ToolResult object in place instead of returning a new one?    NO
+  (ToolResult is @dataclass(frozen=True, slots=True) -- structurally impossible independent
+  of this fix; proven directly, not merely assumed:
+  test_in_place_mutation_of_the_result_is_structurally_impossible)
+Are allowed fields (content, details, usage, terminate) still overridable through the raw
+  public path, i.e. is the fix scoped to identity/added_tool_names only, not a lockdown?      YES
+  (verified: test_a_raw_event_listener_may_still_change_allowed_fields)
+Is the omitted-vs-explicit-None override distinction preserved?                              YES
+  (unchanged from the prior round -- AfterToolCallOverride fields default to None meaning
+  "no override"; _merge_override already treats None as "keep current value")
+```
+
+Public API audit (§21 of the governing instruction): the only two ways to register a
+`tools/post-execute` listener are `register_after_tool_call_hook(ctx, hook)` and direct
+`ctx.events.on(TOOLS_POST_EXECUTE, listener)` -- `TOOLS_POST_EXECUTE` is an ordinary exported
+string constant in `minion_agent.tools.events`, and `EventBus.on`/`waterfall` are fully generic,
+non-event-specific APIs with no per-event type enforcement, so no third registration surface
+exists. Because the fix lives in `_finalize` -- the one production call site every
+`tools/post-execute` dispatch passes through regardless of how listeners were registered -- it is
+correct by construction for both current paths and any future one that reuses the same event.
+
+No negative-typing-fixture convention exists in this repository (consistent with the precedent
+set at the `L05-R005` remediation); runtime enforcement at the dispatch boundary, proven by the
+public-seam tests above, is treated as sufficient here too.
+
+### 14.3 Regression
+
+Full pytest: 914 passed, 19 xfailed, 0 failed, 100.00% coverage (was 909; +5 net, the five new
+`L06-R003` public-seam tests in `test_post_execute.py`; no test removed). `ruff check .`: all
+checks passed. `mypy` (src + typing fixtures): success, 59 files (unchanged file count -- no new
+module added). Schema validation: 165 (unchanged -- this pass touches no JSON-schema-validation
+gate). Manifest: 65/65 unique rows (unchanged count; `TOOL-005` and `TOOL-003` rule text corrected
+in place; no rows added or removed, `TOOL-022` never existed as a row and is no longer cited
+anywhere). Layer-06 canonical: 10/10/10/0 (unchanged -- no new canonical scenario needed for a
+documentation-plus-enforcement-boundary fix, per the governing instruction's own guidance).
+Layer-05 `ToolRegistry` canonical 9/9 + 7/7 harness-validation (unchanged, Layer 05 untouched).
+Runtime/Session/XFORM regression: 26/20/14 (unchanged).
+
+### 14.4 New candidate
+
+```text
+L06-R001    RESOLVED
+L06-R002    RESOLVED (confirmed by re-review, not reopened, not touched this pass)
+L06-R003    RESOLVED
+L06-R004    RESOLVED (confirmed by re-review, not reopened, not touched this pass)
+L06-R005    RESOLVED (confirmed by re-review, not reopened, not touched this pass)
+L06-R006    RESOLVED
+Layer-06 shared contract       READY FOR FINAL RUST CLOSURE REVIEW
+Python Layer 06                CERTIFIED
+Rust Layer 06                  NOT_IMPLEMENTED
+Rust modified                  NO
+Layer 07                       NOT STARTED
+```
+
+See the rewritten `06-tool-execution-rust-handoff.md` for the narrow final-closure-review request
+and the exact delta since the `06-tool-execution-rust-rereview.md` candidate.

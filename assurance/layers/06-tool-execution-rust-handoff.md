@@ -1,150 +1,150 @@
-# Layer 06 (Tool Execution Pipeline) — Rust Implementation-Owner Re-Review Package
+# Layer 06 (Tool Execution Pipeline) — Rust Implementation-Owner Final Closure Review Package
 
 **Prepared:** 2026-08-26
 **Prepared by:** Claude (Python/shared-contract owner, per the adopted workflow)
-**Why this exists:** the first Layer-06 candidate (`minion-agent@ee563ff`,
-`minion-agent-docs@e96c154`) was independently reviewed by Rust and **REJECTED** on exactly six
-findings (`assurance/layers/06-tool-execution-rust-review.md`): `L06-R001`, `L06-R002` (both
-`PI_PARITY_DEFECT`), and `L06-R003`..`L06-R006` (`CONTRACT_ASSURANCE_DEFECT`). This package
-requests a **fresh, independent** re-review of the repaired candidate. Python self-certifying
-after repair does not constitute Rust approval.
+**Why this exists:** the repaired candidate from the first remediation round was independently
+re-reviewed by Rust (`assurance/layers/06-tool-execution-rust-rereview.md`). That re-review
+**confirmed** `L06-R002`, `L06-R004`, and `L06-R005` resolved, and **reopened** three:
+`L06-R001` (`CONTRACT_ASSURANCE_DEFECT` — stale `ToolDefinition.parameters` documentation),
+`L06-R003` (`PI_PARITY_DEFECT` — raw public `EventBus` registration still able to bypass
+after-hook override authority), and `L06-R006` (`CONTRACT_ASSURANCE_DEFECT` — dangling `TOOL-022`
+requirement citation). This package requests a **fresh, independent, final** closure review of
+the narrow repair to exactly those three. Python self-certifying after repair does not constitute
+Rust approval.
 
 **Do not modify Rust in response to this package without first recording a verdict.**
 
 ---
 
-## 1. The six repairs since the rejected candidate (`e96c154ac760ff4e1f06bcec4c14be588e470a18`)
+## 1. The three repairs since the re-reviewed candidate
 
 ```text
-L06-R001 (PI_PARITY_DEFECT)
+L06-R001 (CONTRACT_ASSURANCE_DEFECT)
 
 before:
-    Python's _validate() exempted a raw, object-valued JSON-Schema dict from validation
-    entirely; the canonical schema-validation scenario used a Python-specific
-    parameters: {requires: [...]} shorthand that dynamically built a Pydantic model,
-    never exercising the approved cross-language schema boundary.
+    _validate() (execute.py) genuinely validates a raw, object-valued JSON-Schema dict via
+    the jsonschema library -- that runtime fix was already correct and already confirmed by
+    the first re-review. But ToolDefinition.parameters' own docstring (definition.py) still
+    said a raw dict "bypasses Python-side argument validation" / is "not Python-validated" --
+    a stale, self-contradicting public-API claim, caught directly against the already-correct
+    runtime behavior.
 
 after:
-    _validate() validates BOTH representations for real: a pydantic-model-backed tool via
-    pydantic; a raw, object-valued JSON-Schema dict via the general `jsonschema` library
-    against the exact schema Layer 05 approved (now a real production dependency, not
-    dev-only). Pi's TypeBox-specific coercion algorithm remains deliberately unreproduced
-    byte-for-byte -- a disclosed, narrower divergence, not a validation exemption. The
-    canonical scenario now uses a plain JSON Schema mapping.
+    definition.py's module docstring and the ToolDefinition.parameters field docstring both
+    rewritten: Layer 05 only stores the schema: a pydantic model class, or a raw JSON Schema
+    dict. Layer 06's execute.py validates execution arguments against it before execute runs
+    -- via pydantic for a model class, via the general jsonschema library for a raw dict.
+    Construction here (Layer 05) never validates anything itself, regardless of
+    representation. No runtime behavior changed; no new test needed for a documentation-only
+    correction (the runtime-behavior test coverage already exists from the first remediation
+    round and is unchanged).
 
-L06-R002 (PI_PARITY_DEFECT)
+L06-R003 (PI_PARITY_DEFECT)
 
 before:
-    Every generic exception-handling branch formatted f"{type(error).__name__}: {error}",
-    unconditionally prefixing the Python runtime class name (e.g. "RuntimeError: boom").
+    register_after_tool_call_hook's own AfterToolCallOverride type is correctly constrained
+    (no slot for tool_call_id/tool_name/added_tool_names) -- but tools/post-execute remains a
+    public Runtime event, and nothing stops a caller from registering a listener directly via
+    ctx.events.on(TOOLS_POST_EXECUTE, ...) that returns a whole, differently-identified
+    ToolResult. The re-review directly proved this raw path rewrites tool_call_id/tool_name/
+    added_tool_names -- fields pinned Pi's AfterToolCallResult gives a hook no way to touch at
+    all, through either registration path. Fixing only the helper was insufficient: the
+    constraint has to live at the authoritative dispatch boundary, not a registration-path-
+    specific helper.
 
 after:
-    All three sites (prepare/before-hook failure, execute() failure, after-hook failure) use
-    the bare error message (str(error)) with no class-name prefix, matching pinned Pi's own
-    error.message-only convention exactly. Canonical scenario expectations corrected; three
-    unit tests strengthened from substring containment to exact equality, so they actually
-    prove the prefix is gone.
-
-L06-R003 (CONTRACT_ASSURANCE_DEFECT)
-
-before:
-    tools/post-execute was a waterfall over the entire, frozen ToolResult -- a listener could
-    return/replace the whole result, observably rewriting tool_call_id, tool_name, or
-    added_tool_names, none of which pinned Pi's AfterToolCallResult type allows a hook to
-    touch at all.
-
-after:
-    New AfterToolCallOverride type carries exactly Pi's five AfterToolCallResult fields, with
-    no slot for identity/added_tool_names. New register_after_tool_call_hook() is the only
-    sanctioned registration path: a hook returns an override (or None); the framework merges
-    it field-by-field. All test/runner call sites migrated; the smoking-gun test proving the
-    old whole-result-replacement capability was replaced with one proving it is gone.
-
-L06-R004 (CONTRACT_ASSURANCE_DEFECT)
-
-before:
-    The candidate changed exactly ten Layer-06 scenarios, but assurance prose, the freeze
-    gate, and the handoff said nine/9 throughout.
-
-after:
-    Every current-candidate surface now says ten/10, with the list re-numbered 1-10.
-    Historical review artifacts are untouched.
-
-L06-R005 (CONTRACT_ASSURANCE_DEFECT)
-
-before:
-    spec/assurance/manifest claimed "no AbortSignal-equivalent type exists in either
-    language" -- false for Rust, which already reserves ToolExecutionSignal/
-    ToolExecutionRequest.signal in tools/definition.rs.
-
-after:
-    Replaced with the accurate asymmetry: Python has no signal abstraction yet; Rust already
-    reserves one, unused. The defer itself (behavioral, not architectural) remains accepted --
-    only the stated basis was corrected. No Rust file read or modified differently.
+    _finalize() (execute.py) now snapshots tool_call_id/tool_name/added_tool_names from the
+    pre-hook result before dispatching the tools/post-execute waterfall, and unconditionally
+    restores them from that snapshot after the waterfall completes -- regardless of whether
+    any listener (helper-registered or raw-registered) tried to replace them. This is the one
+    production call site every tools/post-execute dispatch necessarily passes through, so the
+    enforcement point is registration-path-independent by construction. No change to the
+    generic EventBus; no parallel hidden hook system; TOOLS_POST_EXECUTE remains a public,
+    exported event. Five new tests added directly against the raw public registration seam
+    (not only the helper): a raw listener cannot replace identity/added_tool_names; a raw
+    listener CAN still change Pi-allowed fields (content, terminate) -- the fix is scoped, not
+    a lockdown; in-place mutation of the frozen ToolResult is proven structurally impossible
+    independent of this fix; a raw listener and a helper-registered listener mixed in the same
+    chain share the same authority; and the existing failure short-circuit holds with a raw
+    listener present.
 
 L06-R006 (CONTRACT_ASSURANCE_DEFECT)
 
 before:
-    The N-listener extension was classified inconsistently: PARITY_NEUTRAL_HARDENING in
-    assurance, an undispositioned "deliberate Minion addition" in spec, plain `adopted` with
-    no separate requirement in the manifest.
+    register_after_tool_call_hook's docstring cited TOOL-022, which does not exist anywhere in
+    the 65-row manifest -- a dangling requirement citation. Per the re-review's own framing,
+    this could not be closed by fixing the citation alone: it also required L06-R003's
+    authoritative-boundary fix, since the helper's docstring previously overstated its own
+    authority ("the only sanctioned way to extend tools/post-execute", "cannot replace
+    execution identity... not merely by convention") -- a claim the raw-registration bypass
+    made false.
 
 after:
-    Classified consistently everywhere as an intentional Minion architectural extension over
-    a directly-Pi-compatible single-listener baseline. TOOL-004/TOOL-005 each now state both
-    the baseline and the extension explicitly. Resolved together with L06-R003, as the review
-    itself directed.
+    The TOOL-022 citation removed and replaced with TOOL-005, which already covers N-listener
+    composition semantics (added in the first remediation round) and was extended this pass to
+    describe the second R003 closure explicitly. No new manifest row added -- an existing
+    citation was corrected, not a placeholder invented, per this pass's own preference for
+    that resolution when an existing requirement already covers the behavior. The helper's
+    docstring itself softened from "the only sanctioned way" to "the recommended way", with an
+    explicit note that its own constraint is a convenience and _finalize's restoration is the
+    actual authoritative boundary -- and the matching prose in spec/tools.md's "After-hook
+    waterfall" paragraph corrected identically, so no surface still claims replacement is
+    prevented "by construction" of the helper alone.
 ```
 
 **Reviewed commits (delta candidate):** see the covering commit messages; committed on top of
-`minion-agent@ee563ffad65f1c8624536cbf8cc65dc395efe39a` and
-`minion-agent-docs@d090b3ca79a66ca74117646210ce643c7264130b` (the merged review artifact).
+`minion-agent-docs@09764e6fc86ee8619a6139202a8eee9440d6aabf` (the merged Rust re-review artifact)
+and the corresponding `minion-agent` candidate.
 
 **Pinned Pi revision:** `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged).
 
 ---
 
-## 2. Scope (unchanged)
+## 2. Scope (unchanged, narrower than the first package)
 
-Identical to the first package's §1. None of the six repairs touch prepare-before-validation
-ordering, execution-mode scheduling, sequential contagion, parallel start/end/result ordering,
-failure isolation, the length-stop rule, late-update suppression, namespace treatment, the
-terminate ownership boundary, or the `pendingToolCalls` Layer-07+ deferral -- the review did not
-reject any of those, and this package does not reopen them.
+Identical to the first package's §2, plus: this package does **not** reopen `L06-R002`,
+`L06-R004`, or `L06-R005` — the re-review already confirmed all three resolved, no code or
+documentation touched by those findings changed in this pass, and no fresh evidence for them is
+included here beyond the regression numbers in §4 (which cover the whole suite, not those
+findings specifically). Do not re-litigate them; a verdict on this package should treat them as
+settled.
 
 ---
 
 ## 3. Rust's required verdict, per repair
 
-1. **`L06-R001`:** confirm `_validate()` genuinely validates a raw, object-valued JSON-Schema
-   `dict` (not merely accepting it unchecked), and that the canonical
-   `schema-validation-failure-becomes-tool-error` scenario's `parameters:` is a plain JSON Schema
-   mapping, not a Pydantic-shaped shorthand. Independently judge whether Rust's own idiomatic
-   validation approach can satisfy "arguments conform to the supplied schema" without needing
-   TypeBox's exact coercion semantics (this package does not presume that answer).
-2. **`L06-R002`:** confirm no canonical expectation or unit-test assertion anywhere in the
-   Layer-06 delta still permits/requires a Python exception-class-name prefix, checking by exact
-   equality, not substring containment.
-3. **`L06-R003`:** confirm `AfterToolCallOverride`/`register_after_tool_call_hook` genuinely make
-   whole-result replacement structurally impossible through the sanctioned API, and that every
-   test/runner call site was migrated (no lingering raw `ctx.events.on(TOOLS_POST_EXECUTE, ...)`
-   registration exercising the old capability anywhere in the delta).
-4. **`L06-R004`:** re-discover the actual Layer-06 scenario count directly from the repository
-   (do not trust this package's own "10") and confirm every current-candidate surface agrees with
-   what you find.
-5. **`L06-R005`:** confirm directly against `minion-agent-rust/crates/minion-agent/src/tools/
-   definition.rs` that `ToolExecutionSignal`/`ToolExecutionRequest.signal` exist as stated, and
-   that the corrected spec/manifest wording accurately describes the asymmetry.
-6. **`L06-R006`:** confirm the single-listener case is genuinely unchanged (still exactly
-   Pi-compatible) and that the N-listener fold's ordering/failure semantics are documented
-   precisely enough for Rust to reproduce independently.
+1. **`L06-R001`:** confirm `definition.py`'s module docstring and the `ToolDefinition.parameters`
+   field docstring no longer state or imply that a raw, object-valued JSON-Schema `dict` bypasses
+   or is exempt from Python-side validation, and that they accurately describe Layer 05 as
+   storage-only and Layer 06 (`execute.py`) as the validator (pydantic for a model class,
+   `jsonschema` for a raw `dict`). Confirm no other public-facing description of `parameters`
+   anywhere in the delta (docstrings, `spec/tools.md`, the manifest) still carries the stale
+   claim.
+2. **`L06-R003`:** confirm directly against `execute.py`'s `_finalize()` that `tool_call_id`,
+   `tool_name`, and `added_tool_names` are restored from the pre-hook result unconditionally,
+   independent of how many `tools/post-execute` listeners ran or which registration API
+   (`register_after_tool_call_hook` or raw `ctx.events.on(TOOLS_POST_EXECUTE, ...)`) produced
+   the waterfall's output. Independently attempt (or verify the delta's own tests attempt) a raw
+   public registration that returns a whole, differently-identified `ToolResult`, and confirm the
+   three protected fields survive unchanged while Pi-allowed fields (`content`, `details`,
+   `is_error`, `usage`, `terminate`) still change freely. Confirm the fix required no change to
+   the generic `EventBus` and introduced no second, hidden hook-registration mechanism.
+3. **`L06-R006`:** confirm no `TOOL-022` citation remains anywhere in the delta, that
+   `register_after_tool_call_hook`'s docstring cites an existing manifest row (`TOOL-005`)
+   accurately covering its behavior, and that no surface (docstring, spec, manifest) still claims
+   whole-result replacement is prevented "by construction" of the helper alone rather than by
+   `_finalize`'s dispatch-boundary enforcement.
+4. **Regression-only confirmation (not re-review) for `L06-R002`, `L06-R004`, `L06-R005`:** spot
+   check that nothing in this narrow delta touched the files/behaviors those findings closed
+   (error-message formatting, canonical scenario count, signal-defer wording) — a confirmation
+   that scope discipline held, not a re-audit of the findings themselves.
 
 ---
 
 ## 4. Fresh Python evidence to reproduce, not merely trust
 
 ```text
-full pytest (coverage enabled):     909 passed, 19 xfailed, 0 failed, 100.00% coverage
+full pytest (coverage enabled):     914 passed, 19 xfailed, 0 failed, 100.00% coverage
 ruff check .:                        All checks passed
 mypy (configured scope):             Success, no issues found in 57 source files
 mypy + typing fixtures:              Success, no issues found in 59 source files
@@ -153,20 +153,34 @@ Layer-05 ToolRegistry canonical:      9 passed (unchanged) + 7 harness-validatio
 Runtime canonical (regression):      26 passed (unchanged)
 Session canonical (regression):      20/20 passed (unchanged)
 XFORM canonical (regression):        14/14 passed (unchanged)
-Layer-06 canonical:                   10 discovered / 10 executed / 10 passed / 0 deferred
-manifest parse + unique-ID audit:    65 / 65 unique
+Layer-06 canonical:                   10 discovered / 10 executed / 10 passed / 0 deferred (unchanged)
+manifest parse + unique-ID audit:    65 / 65 unique (unchanged count; TOOL-005/TOOL-003 rule
+                                      text corrected in place, no rows added or removed)
 ```
 
 Reproduce via (from `minion-agent-python/`): `uv run pytest`, `uv run ruff check .`,
 `uv run mypy src/minion_agent`, `uv run mypy src/minion_agent tests/typing/valid_message_
 construction.py tests/typing/valid_tool_construction.py`.
 
+New tests added this pass, all in `tests/tools/test_post_execute.py`, exercising the raw public
+registration seam directly (not only `register_after_tool_call_hook`):
+
+```text
+test_a_raw_event_listener_cannot_replace_execution_identity
+test_a_raw_event_listener_may_still_change_allowed_fields
+test_in_place_mutation_of_the_result_is_structurally_impossible
+test_mixed_raw_and_helper_listeners_share_the_same_authority
+test_middle_listener_failure_skips_later_listeners_with_a_raw_listener_present
+```
+
 ---
 
 ## 5. Explicitly out of scope for this package
 
-Identical to the first package's §6, plus: none of the previously-approved (non-rejected) Layer-06
-semantics are reopened by this package -- see §2.
+Identical to the first package's §5 (which is itself identical to the original package's §6),
+plus: `L06-R002`, `L06-R004`, and `L06-R005` — already confirmed resolved by the prior re-review,
+not reopened, and not touched by this narrow pass (see §2). Rust Layer 06 implementation and
+Layer 07 remain out of scope regardless of this package's outcome.
 
 ## 6. Expected outcome
 
@@ -176,7 +190,7 @@ LAYER 06 SHARED CONTRACT
 ```
 
 or a precise rejection naming exactly which field, rule, or boundary is not language-neutral or
-not Pi-compatible — using fresh finding IDs if new issues are found, not reusing `L06-R001`..
-`L06-R006` for anything other than confirming those exact six are now resolved. If approved,
-Rust's own implementation-timing adjudication follows, per the same review-before-remediation
-workflow used at every prior layer this session.
+not Pi-compatible — using fresh finding IDs if new issues are found, not reusing `L06-R001`,
+`L06-R003`, or `L06-R006` for anything other than confirming those exact three are now resolved.
+If approved, Rust's own implementation-timing adjudication follows, per the same
+review-before-remediation workflow used at every prior layer this session.
