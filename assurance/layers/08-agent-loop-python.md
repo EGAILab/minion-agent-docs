@@ -769,7 +769,7 @@ Layer 08 cross-language     NOT CLOSED
 Layer 09                     NOT STARTED
 ```
 
-## Next action
+## Next action (superseded -- see PASS 4 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-3 remediation summary, new head SHAs, and L08-R001..R008 disposition;
@@ -778,3 +778,411 @@ mark both Ready for Review once the candidate gate above is satisfied. Update co
 `NEXT_OWNER: Codex`, `NEXT_ACTION: complete independent re-review against the new candidate SHAs;
 the prior rejection (88a6aa6) applies only to the superseded PASS-2 candidate`. Then stop. Do not
 merge PR #13, #3, or review-evidence PR #4. Do not implement Rust. Do not start Layer 09.
+
+# PASS 4 — remediation for the independent Rust re-review rejection (L08-R002, R004, R005, R006, R009)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-3 candidate (code PR #13 @ `d8caf5c1f299063111a5b47fec3df
+45f9f9d50fc`, docs PR #3 @ `580fb279ec8703528632b9861bbc80b13d0f5171`) **REJECTED** it
+(`minion-agent-docs#5` @ `a64b78ad2507b142ca7cda911b8968aa61af6a20`, branch
+`review/08-rust-contract-rereview`). Four findings from the PASS-2 rejection CLOSED: `L08-R001`
+(run snapshot/whole-context replacement), `L08-R003` (streaming partial fidelity, implementation and
+evidence -- though the normative spec contradicting it was itself `L08-R004`), `L08-R007`
+(`prompt(text, images?)`), `L08-R008` (represented error/aborted terminal). Five findings STILL
+OPEN or NEW: `L08-R002` (recovery is projected, not listener-dispatched -- `CONTRACT_ASSURANCE_
+DEFECT`), `L08-R004` (`spec/agent.md` never updated, contradicts manifest/implementation --
+`CONTRACT_ASSURANCE_DEFECT`), `L08-R005` (`max_steps` still truncates the Pi-equivalent path,
+mislabeled parity-neutral -- `PI_PARITY_DEFECT`), `L08-R006` (initial steering still claimed before
+the prompt's own lifecycle, only after `turn_start` -- `PI_PARITY_DEFECT`), `L08-R009` (new: the
+pre-existing local `cancel()` latch has no coherent Layer-08/09 manifest disposition --
+`CONTRACT_ASSURANCE_DEFECT`). This pass treats all five as blocking until independently reproduced
+against pinned Pi and remediated; the four closed findings are re-verified for regression only (not
+re-litigated), per this pass's own explicit instruction not to reopen them unless necessarily
+affected by the PASS-4 work itself (initial-turn admission restructuring, `L08-R006`, necessarily
+touches the same code path `L08-R001`/`L08-R008` depend on, so both were re-verified with focused
+regression tests -- see below).
+
+Prior Rust approval does not exist for this or any later candidate SHA -- the rejection at
+`a64b78a` applies only to the superseded PASS-3 candidate. The rejected review evidence PRs (#4,
+#5) are not modified or overwritten by this pass; they remain the immutable record of what PASS 2
+and PASS 3 actually were and why each was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R002 — recovery must use the same listener-bearing seam as ordinary progress
+
+**Re-review finding:** PASS 3 corrected the visible failure trace (catch-boundary width, no
+synthetic `turn_start`, the `agent_end.messages` override) but still produced it through raw
+`SessionLog.append` calls with no live listener dispatch at all. Pinned Pi's `handleRunFailure`
+delivers its four-event sequence through `processEvents`, the SAME seam ordinary lifecycle events
+use -- a listener can observe and, by throwing, interrupt the recovery sequence itself. Two
+independent Rust implementations could reasonably choose different recovery-listener semantics from
+a written contract that never specified this.
+
+**Pi reproduction:** confirmed directly against source (agent.ts:511-591). `processEvents(event)`
+first reduces `Agent._state` for the event, then awaits every subscribed listener in registration
+order with no catch around the loop -- a throw aborts the remaining listeners for that event and
+propagates out of `processEvents` itself. `handleRunFailure` awaits four such calls sequentially
+(`message_start(failure)`, `message_end(failure)`, `turn_end(failure, [])`,
+`agent_end(messages=[failure])`); a throw at any one aborts the rest and propagates all the way out
+to the caller of `prompt()`/`continue()` (no further catch around `handleRunFailure`'s own call
+site), while `finally { finishRun() }` still settles status.
+
+**Architectural question asked first, per this pass's own explicit instruction:** did Minion have
+ONE production seam corresponding to `processEvents`, where an Agent event both updates state and
+awaits live listeners? Answer: NO. `agent/projection.py::project()` only ever reconstructs pi's
+`AgentEvent` vocabulary OFFLINE, by walking a completed log -- it cannot dispatch or interrupt
+anything live. This is the genuine Layer-08 contract-assurance defect: a missing common Agent
+lifecycle event seam, not a recovery-only gap. Per this pass's own instruction, the fix was to
+introduce the minimal coherent seam used by BOTH normal and recovery lifecycle, not a recovery-only
+special dispatcher.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** new `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode).
+`EventBus.serial`'s existing semantics -- sequential await, no catch around the loop, propagates a
+listener's exception immediately -- already match pinned Pi's raw listener loop exactly; no new
+dispatch primitive was needed. New `AgentLoop._dispatch_agent_event(event)` helper dispatches one
+`agent/projection.py` `AgentEvent` payload through it. New `AgentLoop._admit_messages(messages,
+context, new_messages)` helper centralizes every message-admission point (previously duplicated
+inline in `_run_step`) to log, dispatch (`MessageStart` then `MessageEnd`), and accumulate each
+message the same way -- used by the prompt, steering, tool-result-triggered continuation, and
+follow-up admission points alike. `_run_step` now also dispatches `TurnStart`/`TurnEnd` live, and
+`_execute_run` dispatches `AgentStart` and the ordinary-path `AgentEnd`. `_settle_run_failure`
+(now `async`) dispatches its own four-event sequence through the SAME seam, in the same order, and
+lets a thrown listener propagate uncaught -- proven by four dedicated regressions, one per recovery
+event, each also confirming exactly which log entries the aborted sequence still durably recorded
+(the "reduce" step precedes the dispatch that then throws) and that status still settles via
+`_run_wrapped`'s own `finally`.
+
+**Scope boundary, disclosed rather than silently narrowed:** the assistant reply's OWN streamed
+message lifecycle is NOT dispatched through this seam -- the certified Layer-02/04 `collect()`
+accepts only a synchronous `on_chunk` callback, so a chunk-level listener has nothing to `await`.
+This is an existing, certified-layer constraint this pass does not reopen, and does not affect
+`handleRunFailure` fidelity (the failure's own message lifecycle is synthesized directly in async
+code) or `streaming_message` content fidelity (`L08-R003`, unrelated, unaffected). Documented
+explicitly in `AGENT_LIFECYCLE_EVENT`'s own docstring and in `spec/agent.md`.
+
+**RED evidence:** before this pass, no live dispatch existed at all -- a listener registered on any
+would-be "lifecycle" hook simply never fired during a run; only offline `project()` after the fact
+could reconstruct the trace. The four recovery-interruption tests could not even be expressed
+against the PASS-3 candidate.
+
+**GREEN evidence:** `test_a_run_executor_failure_recovers_through_the_live_lifecycle_event_seam`,
+`test_a_post_turn_callback_failure_recovers_through_the_live_seam`,
+`test_failure_message_start_listener_failure_interrupts_recovery`,
+`test_failure_message_end_listener_failure_interrupts_recovery`,
+`test_failure_turn_end_listener_failure_interrupts_recovery`,
+`test_failure_agent_end_listener_failure_interrupts_recovery`.
+
+**Spec/manifest changes:** `spec/agent.md`'s Layer-08 section rewritten (`L08-R004`, same pass);
+`AG-009` manifest row rewritten.
+
+**Disposition:** resolved. `AG-009`: adopted.
+
+### L08-R004 — `spec/agent.md` never updated to match the actual contract
+
+**Re-review finding:** manifest `AG-004` and the implementation were both correct, but
+`spec/agent.md`'s Layer-08 section still described PASS-2 behavior: `streaming_message` called
+text-only with a false claim that the certified stream exposes only raw deltas; `handleRunFailure`
+described as wrapping only three listener sites with a synthetic matched `turn_start`;
+`prepareNextTurn` described as system_prompt-only. A candidate can pass every test and still fail
+review if the NORMATIVE document a second implementation is meant to trust contradicts what the
+code and manifest actually do.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** `spec/agent.md`'s entire Layer-08 section rewritten as one coherent current
+statement (this file), removing every historical PASS-1/PASS-2/PASS-3 evolutionary narrative from
+the normative text -- that history now lives here, in assurance, exclusively. A full consistency
+pass was run across pinned Pi, `spec/agent.md`, the manifest, canonical conformance, and the Python
+implementation together (not merely the lines the review named): `streaming_message`'s false
+text-only claim removed; `handleRunFailure`'s narrow-boundary/synthetic-turn-start claims removed
+and replaced with the actual live-seam description (`L08-R002`, above); `prepareNextTurn`'s
+system-prompt-only claim removed and replaced with the whole-context description; the stale
+`max_steps` cap description removed entirely (`L08-R005`, below); new sections added for the staged
+initial-turn admission (`L08-R006`, below) and `request_boundary_stop()` (`L08-R009`, below).
+
+**Disposition:** resolved. `AG-004`'s own manifest text needed no semantic change (the re-review
+found it already correct) -- only a note added disclosing what was actually defective (the spec,
+not this row) and confirming the consistency pass. `AG-004`: adopted, unchanged.
+
+### L08-R005 — `max_steps` removed entirely from the Pi-equivalent run seam
+
+**Re-review finding:** PASS 3's repositioning (checking the cap after `prepareNextTurn`/
+`shouldStopAfterTurn`/the steering poll) fixed the INTRA-turn ordering defect PASS 2 introduced, but
+not the CROSS-run observable divergence: with a tool result requiring another turn, the cap still
+returned `agent_end(reason="max_steps")` where pinned Pi would have started the next provider
+request. `AG-020`'s own `disposition: intentional divergence` while its prose claimed no observable
+divergence existed was internally incoherent, and merely adding the row was never governance
+approval for the divergence itself.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Explicit instruction followed:** do not request owner approval for the divergence; the project
+default is Pi fidelity, and no product requirement demonstrated a need to preserve this specific
+observable difference. `max_steps` must not alter the behavior of a Pi-equivalent `prompt()`/
+`continue()` run.
+
+**Remediation:** removed entirely, not deprecated-in-place. `AgentDefinition.max_steps` (the field),
+the `_run_inner` step-counter check, the conformance schema's `config.max_steps` property, and the
+canonical fixture that used to exercise the cap are all deleted -- the field had no coherent
+remaining role once the check was gone, and keeping an inert field/schema property would itself be
+exactly the "dead semantics" this pass was asked not to preserve. No replacement host-level cap was
+introduced: `run_until_idle()` cannot replicate the old per-invocation semantics even if it wanted
+to (no visibility into turns within one already-open `_execute_run`), and no product requirement
+currently demonstrates a genuine need for one. Manifest row `AG-020` was REMOVED (not merely
+relabeled) -- once the mechanism no longer exists, in either pinned Pi or Minion, there is no
+surface left for a manifest row to map; keeping a row for a fully-removed mechanism would itself
+become stale historical narrative mixed into current normative content, which this pass was asked
+to eliminate, not reproduce for a different row.
+
+**RED evidence:** `max-steps-bounds-a-turn.yaml` (the prior canonical fixture) asserted the cap
+fired at 2 turns despite the model requesting a third -- the exact shape pinned Pi does not bound.
+
+**GREEN evidence:** the fixture was rewritten (renamed
+`no-turn-count-cap-on-pi-equivalent-run.yaml`) to prove the OPPOSITE: 21 tool-driven turns (one more
+than the old default cap of 16) all complete normally in one run, with no host-imposed stop.
+Focused regression: `test_a_long_tool_loop_is_not_bounded_by_any_turn_count`. Two Python unit tests
+whose sole premise was the removed cap (`test_max_steps_bounds_a_runaway_tool_loop`,
+`test_continue_cannot_override_max_steps`) were removed as testing a mechanism that no longer
+exists, not converted into weaker assertions.
+
+**Spec/manifest changes:** `spec/agent.md`'s Layer-08 section states the absence of any turn-count
+cap explicitly; `AG-020` removed.
+
+**Disposition:** resolved without escalation -- a parity-neutral default (removal) was available and
+adopted; no owner approval was sought or needed. `AG-020`: removed.
+
+### L08-R006 — initial prompt lifecycle must be complete before the steering claim
+
+**Re-review finding:** PASS 3 only achieved `turn_start -> steering claim`, the WEAKER condition the
+original `L08-R006` finding did not actually require. Pinned Pi's real order additionally requires
+the initial prompt's own COMPLETE message lifecycle (`message_start` then `message_end`) to be
+observable, live, before the steering queue is claimed at all. PASS 3's `_run_inner` appended
+`TURN_START`, immediately called `_claim_step_input()`, and only THEN, inside `_run_step`, logged
+`entering + claimed_steering` together as one combined batch -- a listener present at claim time saw
+`TURN_START` already logged but not the prompt's own lifecycle.
+
+**Pi reproduction:** confirmed directly against source (agent-loop.ts:95-118, 161). `runAgentLoop`
+emits `agent_start`, `turn_start`, then the initial prompt messages' own complete lifecycle, and only
+then calls `runLoop`, whose own first statement is the initial steering poll.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `_run_inner`'s first-turn handling restructured into two explicit, sequential
+admission stages, both using the new `_admit_messages` helper (`L08-R002`, above): (1) a
+`PreStepReason.INITIAL` decision governs the caller's own entering prompt ALONE, admitted (logged,
+dispatched live, accumulated) immediately; (2) only then is `_claim_step_input()` called, and if
+non-empty, a SECOND, independent `PreStepReason.STEERING` decision governs the claimed batch,
+admitted the same way. Both stages' messages still feed the SAME first provider request -- pinned
+Pi never splits them into separate turns, only their own admission/lifecycle timing is staged.
+`_run_step` itself no longer performs message admission at all; every call site (this staged first
+turn, steady-state per-turn admission, and follow-up-triggered continuation admission) now admits
+before calling it, uniformly.
+
+**RED evidence:** `test_the_initial_steering_claim_happens_after_turn_start` (the PASS-3 evidence)
+only asserted `TURN_START in kinds` at claim time -- the weaker condition the re-review named
+exactly. Reproducing the re-review's own suggested trace (`agent_start, turn_start, prompt
+message_start, prompt message_end, steering claim, steering message_start, steering message_end,
+provider request`) against the PASS-3 candidate would have failed at the third element (the
+combined batch had not yet been logged/dispatched at claim time).
+
+**GREEN evidence:** `test_the_initial_prompt_lifecycle_precedes_the_steering_claim` -- a
+listener-driven trace across both `AGENT_LIFECYCLE_EVENT` (proving the prompt's own `message_start`/
+`message_end` fire before the steering-reason claim marker) and the final request (proving both
+messages still land in one combined request, never split into separate turns). The prior, weaker
+`test_the_initial_steering_claim_happens_after_turn_start` and `continue-steering-no-double-drain`
+regression (`test_continue_does_not_double_drain_steering_after_pre_drain`) both still hold
+unchanged. New coverage for the second admission stage's own rejection path:
+`test_a_rejection_during_the_initial_steering_admission_ends_the_turn`.
+
+**Spec/manifest changes:** `spec/agent.md`'s Layer-08 section gained its own "Initial-turn
+admission" section; `AG-002` manifest row rewritten.
+
+**Disposition:** resolved. `AG-002`: adopted.
+
+### L08-R009 — `AgentLoop.cancel()` had no coherent Layer-08/09 disposition
+
+**Re-review finding (new):** `AgentLoop.cancel()` is a public, observable method with real current
+effects (ends the run at the next turn boundary), but no manifest row disposed it, `spec/agent.md`
+never defined its relationship to `AG-007` (Layer-09's own deferred active cancellation), and an
+implementation comment incorrectly pointed to `AG-019` (Layer-07's own unrelated wake signal). Two
+independent Rust implementations could reasonably reach different conclusions about whether Layer 08
+must implement this latch at all, or what it means.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Resolution path, per this pass's own explicit framework:** determined whether this method is part
+of the intended PUBLIC Agent semantic surface or only an internal Minion driver mechanism. It is
+genuinely NOT pinned Pi's own cancellation surface -- pinned Pi''s own name for that concept is
+`Agent.abort()` (a different name), and its real job (active provider/tool/hook signal propagation)
+is something this method has never attempted and still does not; Layer 07's own already-certified
+contract already places that at Layer 09. This is Case B of the re-review's own framework: a
+pre-existing, genuinely Minion-internal mechanism, not the Agent cancellation API, that happens to
+be reachable through the same driver object.
+
+**Remediation:** renamed `AgentLoop.cancel()` to `AgentLoop.request_boundary_stop()`, and the
+internal flag from `_cancelled` to `_boundary_stop_requested`, so neither name implies pi's own
+`abort()` semantics. The observable `agent_end` reason changed from `"cancelled"` to
+`"boundary_stop"` for the same reason. Behavior is otherwise unchanged from PASS 3: checked only
+after the current turn's own post-turn ordering has already run unconditionally, gating only
+whether a further turn is attempted; no provider/stream/tool/hook/transport signal is sent. New
+manifest row `AG-022` disposes it explicitly, with an explicit cross-reference from `AG-007` so the
+two are never conflated.
+
+**GREEN evidence:** `test_boundary_stop_ends_the_turn_at_the_next_boundary`,
+`test_a_boundary_stopped_turn_still_records_its_tool_result`,
+`test_boundary_stop_clears_so_the_next_turn_runs` (renamed from the PASS-3 `test_cancellation.py`
+suite, now `test_boundary_stop.py`, with matching renamed assertions).
+
+**Spec/manifest changes:** `spec/agent.md` gained a `request_boundary_stop()` section, distinct from
+and cross-referenced against "Active abort propagation (explicitly out of scope)"; new manifest row
+`AG-022`; `AG-007` gained a cross-reference to it.
+
+**Disposition:** resolved. `AG-022` (new row): intentional divergence.
+
+## Regression verification for the four closed findings
+
+PASS-4's own restructuring (staged first-turn admission, the new live-dispatch seam, `max_steps`
+removal, the `cancel()` rename) touches central control flow shared with `L08-R001`/`L08-R003`/
+`L08-R007`/`L08-R008`. Each was re-verified, not re-litigated:
+
+- `L08-R001` (full `RunContext` snapshot, whole-context replacement, dynamic `added_tool_names`
+  visibility): all prior PASS-3 evidence re-run unchanged and passing
+  (`test_run_start_snapshot_ignores_a_later_caller_config_change`,
+  `test_prepare_next_turn_can_replace_the_whole_context`,
+  `test_added_tool_names_already_visible_is_not_duplicated`, and siblings) -- the staged admission
+  restructuring changed WHEN messages are admitted, not the snapshot/replacement mechanics
+  themselves, which are untouched.
+- `L08-R003` (`chunk.partial` full streaming fidelity, `message_start -> message_update* ->
+  message_end`): all prior evidence re-run unchanged and passing
+  (`test_streaming_message_carries_the_full_partial_for_text/thinking/tool_calls`,
+  `test_message_start_precedes_message_update_for_a_streamed_reply`) -- this pass's explicit scope
+  boundary (streamed events not on the new live seam) leaves the streaming mechanism itself
+  untouched.
+- `L08-R007` (`prompt(text, images?)`, typed `Message` input unchanged): all prior evidence re-run
+  unchanged and passing; unaffected by admission-timing or failure-seam changes.
+- `L08-R008` (represented error/aborted immediate terminal): `_StepResult.terminal`'s own semantics
+  are unchanged, but its own PASS-3 evidence needed a genuine mechanism update (not merely a
+  re-run): the initial-poll-timing fix this pass made (`L08-R006`) meant queuing steering during the
+  INITIAL pre-step dispatch no longer discriminates anything about R008 specifically (that poll now
+  admits before the turn ever runs, regardless of outcome) -- the tests were rewritten to queue from
+  within a live `AGENT_LIFECYCLE_EVENT` listener watching this turn's own `TurnEnd` instead, which
+  correctly proves the STEADY-STATE poll (not the initial one) never fires
+  (`test_represented_error_skips_prepare_stop_steering_and_follow_up`,
+  `test_represented_aborted_skips_prepare_stop_steering_and_follow_up`, both still green).
+
+No interaction bug surfaced from any of the four re-verifications; the full suite (below) confirms
+this across the whole combined candidate, not merely these targeted checks.
+
+## Full Layer-08 semantic reconstruction
+
+The whole run state machine was independently walked against pinned Pi again after remediation:
+`prompt(Message)`/`prompt([Message...])`/`prompt(text)`/`prompt(text, images)`; plain continuation;
+assistant-last continuation with steering pre-drain, follow-up pre-drain, and neither available;
+first-turn prompt-then-steering ordering; tool-driven/steering-driven/follow-up-driven continuation;
+`prepareNextTurn` (whole context, model, thinking level); dynamically added tools; `terminate`;
+represented `error`; represented `aborted`; an unexpected run-executor failure; failure-listener
+interruption at each of the four recovery events; multiple independent runs; streaming state;
+pending tool calls; `error_message`; `agent_end.messages` across every path above -- for each,
+event order, the exact context/messages sent to the provider, queue consumption, invocation-local
+messages, and mutable-vs-run-local state persistence were checked. No `max_steps`-shaped termination
+exists anywhere in the Pi-equivalent run path any more.
+
+## Canonical and language-specific evidence
+
+Language-neutral canonical evidence added/changed where the runner can express the rule:
+`no-turn-count-cap-on-pi-equivalent-run.yaml` (renamed and rewritten from
+`max-steps-bounds-a-turn.yaml`, proving the opposite of what it used to). The initial-turn admission
+ordering (`L08-R006`) and recovery-listener interruption (`L08-R002`) both remain explicit
+Python-test-only evidence, deliberately: both require live listener dispatch and inbox-claim timing
+the canonical runner does not (and should not) simulate -- teaching the runner to fake production
+listener/queue semantics merely to get YAML coverage was explicitly out of scope for this pass. If
+these listener-driven rules become important enough to express across implementations generally,
+that is future conformance-runner enhancement work, not something folded into this pass.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100%
+ruff check:                          clean
+ruff format --check:                 clean (files touched this pass)
+mypy (configured scope, src only):   clean, 0 errors
+schema validation:                   all passing
+conformance/ (full):                 all passing, including the rewritten max-steps-cap regression
+manifest parse + unique-ID audit:    77 / 77 unique (AG-020 removed, AG-022 added -- net unchanged;
+                                      AG-002/AG-004/AG-009/AG-021 corrected in place; AG-007 gained a
+                                      cross-reference)
+stale normative-text audit:          spec/agent.md's Layer-08 section rewritten as one coherent
+                                      current statement with no historical PASS-1/2/3 narrative mixed
+                                      into normative text; grep across spec/reference/design docs
+                                      found no other current-state contradiction (`.cancel()`/
+                                      `max_steps`/text-only-streaming/three-hand-picked-sites
+                                      references remaining are all in dated historical design
+                                      documents describing what was true when THEY were written, not
+                                      edited -- preserving historical review artifacts per this
+                                      project's own rule)
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_BEHAVIOR_UNCERTAIN         none
+PI_PARITY_DEFECT              none -- L08-R005 (max_steps) and L08-R006 (initial admission order)
+                               both resolved
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R002 (live recovery seam), L08-R004 (spec staleness), and
+                               L08-R009 (cancel disposition) all resolved
+unapproved intentional divergence   none -- AG-020 removed rather than left mislabeled; AG-022's own
+                               divergence (request_boundary_stop) is explicitly disposed, not silent
+Layer-09 implementation       none -- request_boundary_stop() and handleRunFailure both compose
+                               correctly with a future Layer-09 implementation without implementing
+                               any part of it themselves
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from either rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Second rejection/remediation cycle for this layer. Captured for later integration into
+`process/agent-workflow.md` at Layer-08's own closure retrospective, NOT applied to that file now:
+
+1. Pre-handoff consistency check must compare normative spec, manifest, assurance, conformance, and
+   implementation together -- PASS 3 changed four of those five and left `spec/agent.md` stale,
+   which is exactly what caused this rejection cycle (`L08-R004`).
+2. Any Minion-only feature riding on a Pi-equivalent execution path must answer "can this change an
+   observable result relative to pinned Pi?" before being labeled parity-neutral -- `max_steps`
+   answered "yes" and was removed instead of relabeled (`L08-R005`).
+3. A remediation pass must retest the EXACT discriminating observation the review finding names, not
+   a weaker nearby condition that happens to also pass -- PASS 3's own `L08-R006` fix proved
+   "after `turn_start`" when pinned Pi's real requirement was "after the complete prompt lifecycle,"
+   a materially weaker condition that still let the underlying defect through.
+4. Listener-bearing failure/lifecycle semantics require live-dispatch evidence -- projected log
+   equality alone (what PASS 3's own `L08-R002` evidence relied on) is insufficient to prove a
+   listener seam exists or can be interrupted; this pass's own recovery tests all assert on live
+   listener invocation order, never log content alone.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-4 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004/R005/R006/R009 closure status; mark both Ready for Review once the candidate
+gate above is satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a full
+independent Layer-08 contract re-review against the new PASS-4 candidate SHAs; all prior verdicts
+apply only to their exact superseded candidates`. Then stop. Do not merge PR #13, #3, #4, or #5. Do
+not implement Rust. Do not start Layer 09.
