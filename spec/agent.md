@@ -240,40 +240,102 @@ choice either way; a wake that arrived before a caller reset an idle instance st
 real, unconsumed signal, so it is preserved rather than silently discarded as an incidental
 consequence of delegating to `clear_all()`.
 
----
+## Layer 08 — the run/turn state machine (PASS 1, in progress)
 
-A run is one high-level prompt/continue invocation. A turn is one assistant response plus tool
-calls/results caused by it.
+Not yet certified as its own layer. This section records what PASS 1 verified and implemented
+against pinned Pi (`agent-loop.ts`/`agent.ts`/`types.ts`), and, explicitly, what remains open --
+the informal prose this section replaces predates the Layer-07/08 split and was already textually
+correct about run/turn vocabulary; the *implementation* was not, until this pass.
 
-Prompt-run order:
+### Run/turn vocabulary and event boundaries (PASS 1, verified and implemented)
+
+A run is one high-level prompt/continue invocation, bracketed by `agent_start`/`agent_end`. A turn
+is one assistant response plus the tool calls/results it triggers -- never more than one provider
+request -- bracketed by `turn_start`/`turn_end`. Confirmed directly against `runAgentLoop`/`runLoop`
+(agent-loop.ts): `turn_start`/`turn_end` never span more than one provider request in pinned Pi.
+
+An earlier revision of Minion's own driver let one internal helper call another (what is now
+`_run_step`, one provider request) several times inside a single `TURN_START`/`TURN_END` bracket --
+observably incompatible with pi once a turn produced more than one provider request, since Minion's
+own `turn_start`/`turn_end` are what the public projection turns into pi's `turn_start`/`turn_end`
+events. That prior bracket was actually pi's own **run**, not a turn. This pass corrected the
+boundary, not the helper's own name: `_run_once` (renamed from `_run_turn`) now owns
+`AGENT_START`/`AGENT_END`; `_run_step` (kept, since the observable boundary is what matters) owns
+`TURN_START`/`TURN_END` around exactly one provider request. `AGENT_START`/`TURN_START` fire in that
+order, before the messages entering the run/turn are logged -- matching pi's own
+`runAgentLoop`/`runLoop` order exactly, confirmed by reverting the append order and observing the
+canonical scenarios fail before restoring it.
+
+`agent_end.messages` is pi's own invocation-local field, reconstructed by the projection as a
+run-scoped accumulator (every message produced/consumed since the matching `AGENT_START`, reset at
+each one) rather than synthesized from the whole log -- a log holding several runs now projects
+several independently-scoped `AgentStart`/`AgentEnd` brackets. `turn_end{message, toolResults}` is
+likewise reconstructed per turn from that turn's own `MessageStart`/`MessageEnd` pairs, never a
+second, independently-logged copy of the same content. `causes` (which queued input triggered
+processing) is a disclosed Minion enrichment scoped to the run (`AgentStart`/`AgentEnd`), not each
+turn within it -- pinned pi's own bare `turn_start`/`agent_start` carry no fields at all.
+
+After a completed turn, three of the four ordering stages pi documents are implemented and verified:
+`turn_end` fires, then the stop decision is asked (`shouldStopAfterTurn`'s Minion realization,
+`agent/turn-stopping`) before steering is polled for the next turn:
 
 ```text
-agent_start
-turn_start
-initial prompt message lifecycle
-initial steering poll + claimed-message lifecycle
-first provider request
-assistant/tool lifecycle
-turn_end
+turn_end -> shouldStopAfterTurn -> steering poll
 ```
 
-`prompt()` while active is rejected. `continue()` while active or with no transcript is rejected.
-When the last message is assistant, `continue()` drains eligible steering, else follow-up, else
-rejects; if it pre-drained steering, the run suppresses duplicate initial steering polling.
+`prepareNextTurn` -- the fourth stage, between `turn_end` and the stop decision -- is **not
+implemented at all**. Pinned pi's `prepareNextTurn` can replace `context`/`model`/`thinkingLevel`
+for the next provider request only (never persisted back to `AgentState`); Minion's driver has no
+hook at that point that can do this. `AGENT_PRE_STEP`/`AGENT_TURN_STOPPING` are adjacent Minion
+hooks, not a reproduction of `prepareNextTurn`'s specific run-local-override semantics. This is a
+disclosed, tracked gap (manifest `AG-004`), not a silently dropped requirement.
 
-After a normally completed turn:
+### Still open (not attempted this pass)
 
-```text
-turn_end -> prepareNextTurn -> shouldStopAfterTurn -> steering poll
-```
+Recorded here so a later pass does not have to re-derive scope from scratch, and so this section is
+not read as claiming more than PASS 1 actually verified:
 
-Follow-up is polled only when the run would otherwise stop.
+- **`prompt()`/`continue()` caller rules** (manifest `AG-006`): pinned pi rejects `prompt()` while
+  active, rejects `continue()` while active or with no transcript, and `continue()`'s own
+  last-message-is-assistant special case drains steering (else follow-up, else rejects) as a *new*
+  run with the drained batch pre-seeded as that run's own prompt messages. Minion's
+  `run_until_idle()` pump has no equivalent public entry points or caller-rejection surface at all
+  yet -- it only drains whatever is already queued.
+- **`prepareNextTurn`** (above): not implemented.
+- **Mid-run follow-up continuation**: pinned pi polls the follow-up queue *within* an already-running
+  run's outer loop when the inner loop would otherwise exit, continuing the *same* run
+  (`agent_start`/`agent_end` still bracket it). Minion's `run_until_idle()` pump instead starts a
+  *new* `_run_once` (a new `agent_start`/`agent_end` pair) per queued follow-up batch -- closer to
+  pi's `continue()`-with-followup-drain special case repeated automatically than to pi's own
+  mid-run continuation. Not yet reconciled or explicitly dispositioned.
+- **`streamingMessage`/`pendingToolCalls`/`errorMessage` transition timing** (manifest `AG-008`,
+  overlapping already-certified Layer-07 `AG-014`/`AG-015`/`AG-017`/`AG-018` for the
+  vocabulary/initial-value/config-facing subset): `driver.py` does not write to these fields during
+  a run at all yet. Pinned pi's own `processEvents` reducer pushes the transcript incrementally per
+  finalized message, and leaves `errorMessage` unset until the *next* run starts (`finishRun`
+  itself never clears it) -- neither behavior is reproduced yet.
+- **`handleRunFailure`** (manifest `AG-009`): pinned pi's defensive fallback for an uncaught
+  exception outside the normal stream/tool error paths (synthesizes a minimal failure assistant
+  message, emits `message_start`/`message_end`/`turn_end`/`agent_end` manually) has no Minion
+  equivalent.
+- **Active abort propagation** (manifest `AG-007`): explicitly Layer 09's ownership, not Layer 08's
+  -- the certified Layer-07 contract already defers this. Not attempted here, and this section does
+  not treat its absence as a Layer-08 gap.
 
-`agent_end.messages` is invocation-local. Prompt runs include initial prompt + newly produced/consumed
-queue messages; continuation runs exclude pre-existing context.
+Manifest rows `AG-001`..`AG-010` previously carried `disposition: adopted` while several cited only
+still-unfilled placeholder canonical scenarios (`TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR`) as their
+evidence -- a false certification claim predating this pass. `AG-001`/`AG-004` are corrected this
+pass with real evidence for what is actually true and implemented (verified above); `AG-002`,
+`AG-003`, `AG-005`, `AG-006`, `AG-007`, `AG-008`, `AG-009`, `AG-010` still carry that false
+`adopted` disposition and are flagged, not yet corrected -- a known `CONTRACT_ASSURANCE_DEFECT` for
+the next Layer-08 pass to close before any of Layer 08 is certified.
+
+### Other pinned facts (not yet implemented; recorded so they are not re-derived later)
 
 Abort actively signals the running provider/tools/hooks. Idle is reached only after terminal run
-settlement and awaited `agent_end` listeners.
+settlement and awaited `agent_end` listeners -- Layer 09's territory (see "Active abort propagation"
+above), not attempted this pass.
 
 Unexpected high-level transform/queue callback failure produces terminal assistant failure lifecycle,
-then `turn_end`, `agent_end`, then idle, subject to listener-failure behavior.
+then `turn_end`, `agent_end`, then idle, subject to listener-failure behavior -- pinned pi's
+`handleRunFailure` (see above), not attempted this pass.
