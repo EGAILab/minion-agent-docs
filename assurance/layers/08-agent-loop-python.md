@@ -9,9 +9,12 @@ Coordination: `EGAILab/minion-agent#12`, branch `layer/08-python-shared` (both r
 
 ## Starting state
 
-- `minion-agent`: `19ecb88ded6adc89847467a14f459b041735abc5` (Layer 07 cross-language certified,
-  `main`)
-- `minion-agent-docs`: `c1b4a17c52547d625f5bc5869f1ccdfeb5c6ba8d` (`master`)
+- `minion-agent`: `d0911cbd2b1df8332f5422f99d33c5426fe3e3f2` (`main` at the point
+  `layer/08-python-shared` branched -- Layer 07 cross-language certified and its manifest evidence
+  committed; not the `19ecb88...` PASS-4-remediation SHA, which is an ancestor of this, not the
+  branch's own base)
+- `minion-agent-docs`: `881daf5c67f368740b245df872c0da9cf8c29a9a` (`master` at the point
+  `layer/08-python-shared` branched -- includes `process/agent-workflow.md`)
 - pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`
 
 ## Pi audit
