@@ -3,11 +3,16 @@
 This document spans two assurance layers over one master-phase surface (pinned Pi's
 `packages/agent/src/agent.ts` + `agent-loop.ts` + `types.ts`): **Layer 07 — Agent public state and
 inbox/queues** (below) and **Layer 08 — the run/turn state machine** (the rest of this document,
-not yet certified as its own layer). The split exists because Layer 07's primitives must be stable
-enough for Layer 08 to consume without redesign, and because "agent state and queues behave like
-Pi" is too coarse a requirement to test independently (`AG-011`..`AG-019`; `AG-001`..`AG-010`
-remain Layer-08/09-owned, unimplemented, and untouched by the Layer-07 pass that added this
-section).
+self-certified pending independent Rust contract review). The split exists because Layer 07's
+primitives had to be stable enough for Layer 08 to consume without redesign, and because "agent
+state and queues behave like Pi" was too coarse a requirement to test independently
+(`AG-011`..`AG-019`; `AG-001`..`AG-010`/`AG-020`..`AG-022` are Layer-08-owned, specified in that
+section below -- `AG-007` alone remains Layer-09-owned and deferred). The Layer-07 section below
+predates Layer 08's own implementation and still describes some Layer-08 state ownership as future
+work for historical/scope-boundary reasons (which layer owns WHICH field never changed); where it
+does, a forward reference to the Layer 08 section's own current description resolves it -- Layer 07
+itself does not re-certify Layer 08's behavior, and this document's Layer 08 section is the sole
+normative source for that layer's own current state.
 
 ## Layer 07 — Agent public state and inbox/queues
 
@@ -26,7 +31,7 @@ Layer 07 defines:
 - the local invariants those primitives guarantee (order, independence, no invented or duplicated
   input).
 
-Deferred to Layer 08:
+Owned by Layer 08, not Layer 07 (specified in the Layer 08 section below, not here):
 
 - the run/turn/step state machine itself (`agent_start`/`turn_start`/`turn_end`/`agent_end`
   ordering, already described below in this same document, pre-dating the Layer-07/08 split and
@@ -37,7 +42,8 @@ Deferred to Layer 08:
 - `shouldStopAfterTurn`/`prepareNextTurn` orchestration and steering-vs-follow-up priority during a
   run;
 - exactly when/how `is_streaming`/`streaming_message`/`pending_tool_calls`/`error_message`
-  transition during a run (Layer 07 owns their vocabulary and initial values only -- see below).
+  transition during a run (Layer 07 owns their vocabulary and initial values only -- see below; the
+  Layer 08 section's own "Runtime-state transition timing" describes their current transitions).
 
 Deferred to Layer 09: abort/cancellation propagation into an active run, its providers, tools, and
 hooks. Layer 07 does not define or touch any cancellation primitive.
@@ -54,14 +60,15 @@ thinking_level       AgentInstance (mutable)           L07 (caller-driven, no ru
 messages             SessionLog (L03) via projection   L03 append / L07 public view
 tools                ToolRegistry (L05) via projection L05 register/withdraw / L07 public view
 is_streaming         AgentInstance.status              L08 (run/turn lifecycle timing)
-streaming_message    AgentInstance (vocabulary only)   L08 (not yet wired)
-pending_tool_calls   AgentInstance (vocabulary only)   L08 (not yet wired)
-error_message        AgentInstance (vocabulary only)   L08 (not yet wired)
+streaming_message    AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
+pending_tool_calls   AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
+error_message        AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
 ```
 
 This table exists so Layer 08 does not reopen state ownership later: every field above already has
-a home and a type: Layer 08's job is to decide *when* to write to the ones it transitions, using the
-primitives this layer already defines, not to redesign where they live.
+a home and a type; Layer 08's own job was to decide *when* to write to the ones it transitions,
+using the primitives this layer already defines, not to redesign where they live -- the Layer 08
+section below is the normative source for those current write points.
 
 ### Mutable per-instance current configuration
 
@@ -71,9 +78,10 @@ mutates that one Agent's own current value, read by every subsequent run, distin
 default the Agent was constructed with. This is genuinely owned by Layer 07, not deferred to a
 later provider/orchestration layer: pinned Pi mutations are observable and take effect for
 subsequent runs regardless of whether anything has consumed them yet, so the state and its mutation
-surface must exist now, independent of when Layer 08 starts reading it.
+surface exists independent of Layer 08's own timing for reading it (Layer 08 now does, per its own
+"Run-start snapshot" section below).
 
-Minion keeps the existing frozen, shared `AgentDefinition` (definition defaults, `AG-009`) and adds
+Minion keeps the existing frozen, shared `AgentDefinition` (definition defaults, `AG-014`) and adds
 a mutable *current* value per instance: `system_prompt`, `model`, and `thinking_level` (pinned Pi's
 own seven-value `ThinkingLevel` union, adopted verbatim), each initialized from the definition's own
 default and freely reassignable afterward. Mutating one instance's current configuration never
@@ -87,26 +95,25 @@ Pinned Pi's `AgentState.isStreaming: boolean` -- true from the moment a run star
 a boolean. This is `adopted`, not an architectural adaptation that changes the observable semantic:
 it is a lossless, direct representation of the same two-value fact (`running` <-> `true`, `idle` <->
 `false`), and a third status value would give the signal more than one meaning. A live instance
-starts idle. The precise moments a run flips this to running and back are Layer-08 territory
-(transitions are driven by turn/step lifecycle timing this document does not yet certify); Layer 07
-owns the vocabulary and its initial value.
+starts idle. Layer 07 owns the vocabulary and its initial value; the precise moments a run flips
+this to running and back are Layer-08 territory, driven by turn/step lifecycle timing the Layer 08
+section's own "Runtime-state transition timing" now specifies.
 
 Pinned Pi's remaining runtime-state fields -- `streamingMessage` (the current partial assistant
 message), `pendingToolCalls` (tool-call ids currently executing), and `errorMessage` (the most
-recent failed/aborted turn's error) -- have their vocabulary and initial values represented now:
+recent failed/aborted turn's error) -- have their vocabulary and initial values represented here:
 `None`/empty/`None` respectively, matching pinned Pi's own `undefined`/empty-`Set`/`undefined`
-initial state exactly. Their *transitions* remain deferred to Layer 08: populating them meaningfully
-requires step/turn timing this layer does not implement, and no fake transition is manufactured to
-close this layer early.
+initial state exactly. Their *transitions* are Layer 08's own -- see that section's own
+"Runtime-state transition timing" below for the current, normative write points.
 
 Pi's own two *active-run-lifecycle* `isStreaming` transition points, recorded here as a reference
-for whoever implements Layer 08 (not implemented by this layer): a call to `prompt()`/`continue()`
-sets it `true` before anything else happens (`runWithLifecycle`), and `finishRun()` -- reached from
-a `finally` block, so it runs whether the run succeeded, threw, or was aborted -- unconditionally
-sets it back to `false` as its very first statement. Layer 08 must reproduce both write points
-exactly (entry: unconditional; exit: unconditional-via-`finally`, never skipped by an error) using
-the `AgentStatus` vocabulary and `AgentInstance.set_status` primitive this layer already provides;
-it does not need a different mechanism.
+for Layer 08 (which reproduces both exactly, not owned by Layer 07): a call to `prompt()`/
+`continue()` sets it `true` before anything else happens (`runWithLifecycle`), and `finishRun()` --
+reached from a `finally` block, so it runs whether the run succeeded, threw, or was aborted --
+unconditionally sets it back to `false` as its very first statement. Layer 08 reproduces both write
+points exactly (entry: unconditional; exit: unconditional-via-`finally`, never skipped by an error)
+using the `AgentStatus` vocabulary and `AgentInstance.set_status` primitive this layer already
+provides -- no different mechanism was needed.
 
 Two other, non-run-lifecycle code paths also assign `isStreaming` in pinned Pi, and Layer 07 (not
 Layer 08) already owns both: construction (`createMutableAgentState`'s own initial value is
@@ -398,53 +405,62 @@ the way out to the caller of `prompt()`/`continue()`, while `finally { finishRun
 pre-stream failures (an unresolvable model is a caller/config bug, not a run-executor failure, and
 raises immediately, uncaught).
 
-Minion reproduces this exactly via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch
-mode -- sequential await with no catch around the loop, matching pinned Pi's raw listener loop with
-no new primitive needed), the single seam every lifecycle event -- ordinary turn/run progress and
-`handleRunFailure` recovery alike -- passes through via `AgentLoop._dispatch_agent_event`. Every
-admission point uses it (`_admit_messages`, for the prompt, steering, tool-result, and follow-up
-admission cases above), as do `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd`. `_settle_run_failure`
-(pinned Pi's `handleRunFailure`) is `async` and dispatches its own four-event sequence through this
-SAME seam, in the same order, letting a thrown listener propagate uncaught exactly as pinned Pi
-does -- the durable log entry for each event (the "reduce" step) is always appended before that
-event's own dispatch, so an interrupted sequence still durably records everything up to and
-including the event whose listener threw, and nothing after it. `UnknownModelError` remains
-explicitly excluded and re-raised uncaught, matching pinned Pi's own eager boundary.
+Minion reproduces this via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode --
+sequential await with no catch around the loop, matching pinned Pi's raw listener loop with no new
+primitive needed), the single seam every lifecycle event -- ordinary turn/run progress and
+`handleRunFailure` recovery alike -- passes through via `AgentLoop._dispatch_agent_event`, carrying
+the COMPLETE `AgentEvent` union, not a partial one:
 
-One deliberate, disclosed scope boundary: the assistant reply's OWN streamed `message_start`/
-`message_update`/`message_end` lifecycle is NOT dispatched through `AGENT_LIFECYCLE_EVENT`. The
-already-certified Layer-02/04 `collect()` (`llm/stream.py`) accepts only a synchronous `on_chunk`
-callback -- a narrow, intentional design for that layer this section does not reopen -- so a
-chunk-level listener has nothing to `await`. This does not affect `handleRunFailure` fidelity (the
-failure's own message lifecycle is synthesized directly in async code, never stream-bound) and is
-independent of `streaming_message`'s own content fidelity (below); the assistant reply's own
-lifecycle remains observable via the session log and offline `project()`, exactly as before.
+- every admission point (`_admit_messages`, for the prompt, steering, tool-result, and follow-up
+  admission cases above) dispatches its own `MessageStart`/`MessageEnd`;
+- the assistant reply's OWN streamed lifecycle is live too: `_run_step` iterates
+  `self.llm.stream(request)` directly rather than through the certified Layer-02/04 `collect()`
+  convenience wrapper (whose own `on_chunk` callback is synchronous by design and cannot itself
+  `await` a dispatch) -- this does not reopen or modify `collect()` itself, still certified, still
+  used everywhere else; it reproduces `collect()`'s own trivial drain loop at the one call site that
+  needs an async per-chunk dispatch, dispatching `MessageStart`/`MessageUpdate`/`MessageEnd` for
+  every chunk;
+- Layer-06's own `tools/execution-start`/`tools/execution-end` events (synchronous EMIT dispatch, by
+  certified Layer-06 design) are captured in real time -- the moment each one actually fires -- and
+  redelivered through this same seam once a tool batch settles, in the exact order Layer 06 emitted
+  them (every call's own start always precedes any call's own end, per Layer 06's own certified
+  batch structure). This is a disclosed, narrower fidelity than pinned Pi's own live blocking
+  dispatch for this one event pair specifically: a slow Minion listener cannot causally delay a
+  specific tool call's own further progress the way a slow pinned Pi listener could, since
+  Layer-06's EMIT dispatch mode is certified and this section does not reopen it;
+- `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before.
 
-### `request_boundary_stop()`: a Minion-only host latch, not pi's `abort()`
-
-`AgentLoop.request_boundary_stop()` requests that the current run end at its next turn boundary.
-Work already in flight (a running tool, an open provider request) is always allowed to finish -- no
-signal is sent to interrupt it. This is checked only AFTER the current turn's own
-`prepareNextTurn`/`shouldStopAfterTurn`/steering poll have already run unconditionally (never skips
-a turn's own post-turn ordering for a turn that already happened), gating only whether a FURTHER
-turn is attempted; the observable end reason is `"boundary_stop"`.
-
-This is explicitly NOT pinned Pi's own `Agent.abort()` (a different name, and a different job --
-active signal propagation into the running provider/tools/hooks, which this method has never
-attempted). It is a pre-existing, Minion-only, host-local boundary-stop latch, named and disposed
-explicitly as such (never presented as Pi cancellation) so a Rust implementation has an unambiguous
-answer about what, if anything, Layer 08 must implement locally versus what remains deferred.
+`_settle_run_failure` (pinned Pi's `handleRunFailure`) is `async` and dispatches its own four-event
+sequence through this SAME seam, in the same order, letting a thrown listener propagate uncaught
+exactly as pinned Pi does. Reduce, THEN dispatch, per event -- matching pinned Pi's own
+`processEvents` order exactly, for every event, not only the assistant's own streamed one:
+`streaming_message` is set to the message at `message_start` and cleared at `message_end` (pinned
+Pi's own reducer does not distinguish a streamed reply from a plain admitted message); the durable
+transcript entry for a message is appended at `message_end` time, not before `message_start`'s own
+dispatch; `error_message` is set as part of `turn_end`'s own reduce, before that event's own
+dispatch. An interrupted sequence therefore durably records exactly what pinned Pi's own reducer
+would have committed up to and including the event whose listener threw, and nothing after it.
+`AgentLoop._run_wrapped` mirrors pinned Pi's own `runWithLifecycle`/`finishRun` unconditional state
+writes exactly: `streaming_message`/`error_message` reset at entry; `streaming_message`/
+`pending_tool_calls` reset at exit, via `finally`, regardless of success or failure.
+`UnknownModelError` remains explicitly excluded and re-raised uncaught, matching pinned Pi's own
+eager boundary.
 
 ### Active abort propagation (explicitly out of scope)
 
 Pinned Pi's `abort()` actively signals the running provider/tools/hooks. Idle is reached only after
 terminal run settlement and awaited `agent_end` listeners -- Layer 09's territory, per the
-already-certified Layer-07 contract's own deferral. Not attempted by Layer 08 at all: neither
-`handleRunFailure` above nor `request_boundary_stop()` implement any provider, stream, tool, hook,
-or transport abort-signal propagation -- `handleRunFailure` settles an aborted/failed turn correctly
-once it arrives; `request_boundary_stop()` stops the next request without signaling anything already
-in flight. Both are written to compose correctly with a future Layer-09 implementation without
-themselves implementing it.
+already-certified Layer-07 contract's own deferral. Not attempted by Layer 08 at all:
+`handleRunFailure` above settles an aborted/failed turn correctly once it arrives, without itself
+implementing any provider, stream, tool, hook, or transport abort-signal propagation. Layer 08 has
+no local cancel/boundary-stop mechanism of any kind: a prior revision of this section documented one
+(`request_boundary_stop()`, renamed from `cancel()`), but it was removed entirely rather than kept
+and approved -- a public method that could alter a Pi-equivalent run's own observable outcome had no
+owner governance approval for that divergence, and no demonstrated product need justified keeping
+it, the same default this project already applied to `max_steps` (above). If a host-only safety
+mechanism is ever needed, it must sit entirely outside a single Pi-equivalent run's own semantic
+behavior -- limiting a HOST's own repeated scheduling/invocation policy across independent runs,
+never truncating or altering one run's own outcome internally.
 
 ### Runtime-state transition timing
 
@@ -457,7 +473,11 @@ Pi's own `message_start`/`message_update` -> partial, `message_end` -> `None` wr
 FULL content fidelity -- text, thinking, and tool-call construction alike -- set directly from each
 stream chunk's own already-complete `partial` (the certified Layer-02/04 `StreamChunk` carries a
 complete `partial: AssistantMessage` on every variant; no independent reconstruction from raw deltas
-is attempted).
+is attempted). Pinned Pi's own reducer does not distinguish the assistant's own streamed reply from
+any other admitted message: `streaming_message` is set (briefly, non-streamed) to EVERY message at
+its own `message_start` and cleared at its own `message_end`, whether that message is the assistant
+reply, an admitted prompt/steering message, a follow-up, or a tool result -- reproduced uniformly at
+every admission point ("Initial-turn admission" above) and every message emitted by `_run_step`.
 
 `pending_tool_calls`: real per-call tracking (add on start, remove on end) through the
 already-certified Layer-06 `tools/execution-start`/`tools/execution-end` events -- an existing

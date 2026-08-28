@@ -1175,7 +1175,7 @@ Second rejection/remediation cycle for this layer. Captured for later integratio
    listener seam exists or can be interrupted; this pass's own recovery tests all assert on live
    listener invocation order, never log content alone.
 
-## Next action
+## Next action (superseded -- see PASS 5 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-4 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -1186,3 +1186,316 @@ gate above is satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT
 independent Layer-08 contract re-review against the new PASS-4 candidate SHAs; all prior verdicts
 apply only to their exact superseded candidates`. Then stop. Do not merge PR #13, #3, #4, or #5. Do
 not implement Rust. Do not start Layer 09.
+
+# PASS 5 — remediation for the independent Rust re-review rejection (L08-R002, R004, R005, R009, R010)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-4 candidate (code PR #13 @ `0161b0424e1b95fe2cea9590be8
+d6de8260ae69c`, docs PR #3 @ `b27d3cef56938b97f59f6066b24671f75b97963d`) **REJECTED** it
+(`minion-agent-docs#6` @ `65e665f28e29ebe6cf8deb792b206c108d32b1a6`, branch
+`review/08-rust-contract-rereview-pass4`). One finding CLOSED: `L08-R006` (initial prompt lifecycle
+before the steering claim -- the staged-admission fix genuinely closed this). Four findings STILL
+OPEN or NEW: `L08-R002` (the live seam excluded the assistant's own streamed lifecycle and
+Layer-06's own tool-execution events, and reduced state for the WRONG event in several places --
+`PI_PARITY_DEFECT`), `L08-R004` (the normative spec's own Layer-07 section retained stale
+present-tense claims that Layer 08 was unimplemented, contradicting the Layer-08 section later in
+the same document -- `CONTRACT_ASSURANCE_DEFECT`), `L08-R005` (the replacement no-cap canonical
+compared itself against a prior scenario override, not the actual removed implementation default,
+so it did not discriminate against the regression it claimed to guard -- `CONTRACT_ASSURANCE_DEFECT`
+evidence gap, not a production defect), `L08-R009` (`request_boundary_stop()` remained a public
+method that could alter a Pi-equivalent run's own observable outcome with no owner governance
+approval for the divergence -- `PI_PARITY_DEFECT`), and new `L08-R010` (`AG-022`'s own stated rule
+contradicted the actual implementation for a follow-up-driven continuation -- `CONTRACT_ASSURANCE_
+DEFECT`). This pass treats all five as blocking until independently reproduced against pinned Pi
+and remediated; `L08-R006` is re-verified for regression only, not re-litigated, since this pass's
+own restructuring (direct stream iteration, reduce-timing corrections) touches the same code path.
+
+Prior Rust approval does not exist for this or any later candidate SHA -- the rejection at
+`65e665f` applies only to the superseded PASS-4 candidate. The rejected review evidence PRs (#4,
+#5, #6) are not modified or overwritten by this pass; they remain the immutable record of what
+PASS 2, PASS 3, and PASS 4 actually were and why each was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R002 — the live seam was still incomplete and mistimed
+
+**Re-review finding, part 1 (completeness):** the assistant reply's own streamed `message_start`/
+`message_update`/`message_end` were excluded from the live seam on the theory that the certified
+`collect()`'s synchronous `on_chunk` callback made it infeasible. The re-review explicitly rejected
+this: "The synchronous Python `collect(on_chunk=...)` callback is an implementation constraint, not
+a Pi-visible contract limitation... Python can restructure its Layer-08 consumption without
+changing Layer 02/04 semantics." Layer-06's own `tools/execution-start`/`tools/execution-end`
+events were also never delivered to the unified seam at all -- only to their own separate,
+Layer-06-scoped listeners.
+
+**Re-review finding, part 2 (state-reduction timing):** "`_admit_messages` appends one finalized
+Session message before dispatching both `MessageStart` and `MessageEnd`; therefore a start listener
+already sees the message in `AgentInstance.messages`, while Pi adds it only at `message_end`. Minion
+also does not set `streaming_message` for that `MessageStart` before the listener, while Pi does."
+The same defect existed in `_settle_run_failure`, which additionally set `error_message` only AFTER
+`turn_end`'s own listeners had already run, not before.
+
+**Pi reproduction:** confirmed directly against source. Pi's own `AgentEvent` union delivered
+through `Agent.subscribe`/`processEvents` includes `tool_execution_start`/`tool_execution_end`
+alongside the message/turn/agent events. `processEvents`'s own reducer switch applies uniformly to
+every `message_start`/`message_end`, not only the assistant's own streamed one: `streamingMessage =
+event.message` at `message_start`; `streamingMessage = undefined; messages.push(event.message)` at
+`message_end`. The `turn_end` reducer sets `errorMessage` as part of that same reduce, before that
+event's own listeners run.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation, completeness:** `_run_step` no longer calls the certified `collect()` convenience
+wrapper for the assistant's own reply -- it iterates `self.llm.stream(request)` directly, an async
+loop reproducing `collect()`'s own trivial drain logic (including its own `AdapterProtocolError`
+invariant, satisfied by an `assert` rather than a raise once confirmed genuinely unreachable through
+the certified `LlmService._settled()` wrapper every call site actually uses -- see RED/GREEN below),
+with an `await self._dispatch_agent_event(...)` call added per chunk. `collect()` itself is
+untouched, still certified, still used by every other caller (`llm/stream.py`, `llm/service.py`
+tests, `MockAdapter` tests, and Layer 08's own now-restored `on_chunk` coverage -- see below).
+Layer-06's own `tools/execution-start`/`tools/execution-end` EMIT events are captured, in real time,
+into an ordered list by the SAME temporary listener that already tracked `pending_tool_calls`; once
+the tool batch settles, every captured event is redelivered through `AGENT_LIFECYCLE_EVENT`, in the
+exact order Layer 06 emitted it (every call's own `_preflight`/start always precedes any call's own
+execute/end -- `tools/batch.py`'s own certified structure, confirmed by direct audit before relying
+on it). This is a disclosed, narrower fidelity than pinned Pi's own live blocking dispatch for this
+one event pair specifically: captured-then-redelivered means a slow Minion listener cannot causally
+delay a specific tool call's own further progress the way a slow pinned Pi listener could, since
+Layer-06's own EMIT (synchronous, fire-and-forget) dispatch mode is certified and this pass does not
+reopen it -- every event still reaches the unified seam, completely and in order, just not with
+Pi's own full causal-blocking property for this one pair.
+
+**Remediation, reduce timing:** `_admit_messages` now sets `streaming_message = message` and
+dispatches `MessageStart` FIRST, then sets `streaming_message = None`, appends the durable log
+entry, and dispatches `MessageEnd` -- reduce, then dispatch, per event, matching pinned Pi's own
+reducer exactly. `_run_step`'s own assistant-reply handling and tool-result handling do the same.
+`_settle_run_failure` does the same for its own four-event sequence, and now sets `error_message`
+as part of `turn_end`'s own reduce, before that event's dispatch, not after. `AgentLoop._run_wrapped`
+now also mirrors pinned Pi's `runWithLifecycle`/`finishRun` unconditional writes exactly
+(`streaming_message`/`error_message` reset at entry; `streaming_message`/`pending_tool_calls` reset
+at exit via `finally`) rather than leaving some of that state to whatever the last turn happened to
+leave behind.
+
+**RED evidence:** before this pass, `test_a_run_executor_failure_recovers_through_the_live_
+lifecycle_event_seam` and its siblings only ever observed `MessageStart`/`MessageEnd`/`TurnEnd`/
+`AgentEnd` for ADMITTED messages and the failure sequence -- never for the assistant's own reply, at
+all, regardless of how the test was written; there was no live event to observe. Removing driver.py's
+own call to `collect(stream, on_chunk)` also silently dropped the ONLY exerciser of `collect()`'s own
+`on_chunk` parameter in the entire test suite, a certified-layer coverage regression caught by the
+full quality gate, not the Rust review.
+
+**GREEN evidence:** `test_a_run_executor_failure_recovers_through_the_live_lifecycle_event_seam` and
+`test_a_post_turn_callback_failure_recovers_through_the_live_seam` (both updated to expect the
+assistant reply's own `MessageStart`/`MessageEnd` in sequence), `test_a_stream_with_no_start_chunk_
+still_gets_a_message_start` (pinned pi's own `!addedPartial` defensive fallback, now genuinely live),
+`test_turn_end_sets_error_message_even_for_a_non_terminal_reply` (the reduce applies unconditionally,
+not only to a represented-error turn), `test_failure_message_start_listener_failure_interrupts_
+recovery` (corrected: the failure's own `ASSISTANT_MESSAGE` log entry is durably appended at
+`message_end` time, not `message_start` time, so a `message_start`-listener failure now correctly
+shows NO `ASSISTANT_MESSAGE` entry at all, not one that "already happened"), and
+`tests/llm/test_stream.py::test_collect_calls_on_chunk_for_every_chunk_in_order` (certified-layer
+evidence, restoring `on_chunk`'s own coverage independent of any Layer-08 caller).
+
+**Spec/manifest changes:** `spec/agent.md`'s Layer-08 section rewritten again ("The live Agent-event
+seam" section); `AG-009` manifest row rewritten.
+
+**Disposition:** resolved. `AG-009`: adopted.
+
+### L08-R004 — Layer-07's own stale present-tense claims about Layer 08
+
+**Re-review finding:** "The document's opening and Layer-07 authority map also retain present-tense
+claims that Layer 08 is 'not yet certified,' AG-001..010 are 'unimplemented,' and
+`streaming_message`, `pending_tool_calls`, and `error_message` are 'not yet wired.' Those statements
+are not clearly limited to a historical Layer-07 candidate; they conflict with the current Layer-08
+contract later in the same normative document." PASS 4 rewrote the Layer-08 section itself but never
+audited the Layer-07 section above it, which predates Layer 08's own existence and was never updated
+once Layer 08 was implemented.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** every present-tense "not yet implemented"/"not yet wired"/"not yet certified" claim
+about Layer 08 in the Layer-07 section was located and corrected to point forward to the Layer-08
+section's own current description, without rewriting Layer-07's own substantive content (which
+Layer 07 still owns and remains accurate about): the document's own opening paragraph, the authority
+map's own three "not yet wired" table cells, the mutable-configuration section's own forward
+reference, the public-processing-status section's own two paragraphs, and a stale `AG-009` cross-
+reference (Layer 07's own text pointed at Layer 08's `AG-009` for `AgentDefinition`'s shared
+defaults -- the correct row is `AG-014`, confirmed by direct manifest lookup, not assumed).
+
+**Disposition:** resolved. No manifest row directly corresponds to this doc-only defect; `spec/
+agent.md` itself is the artifact.
+
+### L08-R005 — the no-cap canonical was not actually discriminating
+
+**Re-review finding:** "The new `no-turn-count-cap-on-pi-equivalent-run` canonical contains only
+three tool turns. Against the PASS-3 implementation with its default cap of 16 and with no
+scenario-supplied cap, it would pass unchanged. Its description claims it exceeds an 'old default-2'
+fixture, but 2 was an explicit scenario override, not the old implementation default." PASS 4's own
+canonical rewrite compared itself against the PREVIOUS SCENARIO's own scripted `config.max_steps: 2`
+override, not the actual REMOVED implementation default (`AgentDefinition.max_steps == 16`) -- a
+real mistake, not a labeling issue: three turns proves nothing about a 16-turn cap.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (evidence gap only; the production removal itself
+was already correct and re-confirmed by direct source/structural search this pass, matching the
+re-review's own "no remaining production cap found" note).
+
+**Remediation:** the canonical scenario rewritten to script 20 tool-calling turns before its final
+stopping turn -- more than the actual former default (16), not an arbitrary small number, so it
+genuinely would have failed against the pre-removal implementation with no scenario override.
+
+**RED evidence:** the pre-fix scenario (3 tool turns) passing is not meaningful RED/GREEN evidence
+by itself; the re-review's own textual analysis (re-derived independently before trusting it) is
+what establishes the defect.
+
+**GREEN evidence:** `no-turn-count-cap-on-pi-equivalent-run.yaml` (21 provider-script turns, 42
+expected messages), passing against the current implementation;
+`test_a_long_tool_loop_is_not_bounded_by_any_turn_count` (Python-level regression, unchanged from
+PASS 4, already correctly scripted at 20+1 turns there).
+
+**Disposition:** resolved. No manifest row (`AG-020` remains removed, per PASS 4's own reasoning,
+re-confirmed this pass: there is no Pi semantic surface and no Minion mechanism left to map).
+
+### L08-R009 / L08-R010 — `request_boundary_stop()` removed entirely
+
+**Re-review finding:** "`request_boundary_stop()` is public on `AgentLoop`. A tool or external host
+can call it during an ordinary `prompt()`/`continue()` run, after which Minion may return
+`agent_end(reason="boundary_stop")` instead of making the next provider request pinned Pi would
+make. This is an observable extension on the same execution seam, not merely private pump
+bookkeeping... no owner/governance approval for this new observable divergence is recorded." A new,
+second finding (`L08-R010`) additionally caught that the implementation did not even correctly
+enforce `AG-022`'s own stated rule: "The latch is checked only while the inner loop has tool- or
+steering-driven work. If the current turn would otherwise stop, `_run_inner` breaks before checking
+the latch, claims follow-up, and starts another turn in the same run despite the pending
+boundary-stop request." Renaming `cancel()` to `request_boundary_stop()` (PASS 4) correctly
+separated it from Layer-09's own `abort()`, but naming alone was never governance approval for the
+divergence the rename disclosed.
+
+**Classifications:** `PI_PARITY_DEFECT` (`L08-R009`, the unapproved public divergence);
+`CONTRACT_ASSURANCE_DEFECT` (`L08-R010`, the rule/implementation contradiction).
+
+**Resolution:** per this project's own standing default -- Pi fidelity, and no demonstrated product
+need to preserve an observable divergence -- applied consistently with `max_steps`'s own removal
+(`L08-R005`, PASS 4): `request_boundary_stop()` removed entirely, not fixed-and-kept. Removing the
+mechanism closes `L08-R010` too, definitionally -- there is no longer a rule for the implementation
+to contradict. `AgentLoop.request_boundary_stop`, the internal `_boundary_stop_requested` flag, and
+the `_run_inner` check for it are all deleted. Manifest row `AG-022` removed; `AG-007`'s own
+cross-reference to it corrected to note the removal. `tests/agent_loop/test_boundary_stop.py`'s
+boundary-stop-specific tests removed; its one unrelated test (`test_a_blocked_agent_does_not_stall_
+another`, progress isolation between independent instances, never used the latch) moved to a new
+file, `test_progress_isolation.py`, under its own accurate name.
+
+**Disposition:** resolved by removal. `AG-022`: removed. `AG-007`: unqualified deferral to Layer 09
+again, cross-reference note updated.
+
+## Regression verification for the closed finding
+
+`L08-R006` (initial prompt lifecycle before the steering claim): the staged first-turn admission
+itself is unchanged by this pass's own restructuring (direct stream iteration and reduce-timing
+fixes both apply INSIDE `_run_step`'s own body and to `_admit_messages`'s own internals, neither of
+which touch the two-stage admission sequencing `_run_inner` performs before `_run_step` is ever
+called). `test_the_initial_prompt_lifecycle_precedes_the_steering_claim` still passes, extended only
+to also observe the assistant reply's own now-live `MessageStart`/`MessageEnd` arriving AFTER the
+steering claim (expected: they belong to the provider request that follows admission, not to
+admission itself). No interaction bug surfaced.
+
+## Full Layer-08 semantic reconstruction
+
+Re-walked against pinned Pi after remediation, with particular attention to the two mechanisms this
+pass rewrote: streamed-reply dispatch (every content kind -- text, thinking, tool-call -- still
+produces correct `streaming_message` fidelity AND now also live `MessageUpdate` dispatch, checked
+together, not separately) and tool-execution event delivery (captured-then-redelivered ordering
+checked against a multi-call parallel batch, confirming starts precede ends and both preserve their
+own established relative order). `error_message`'s own reduce-timing fix was checked against BOTH
+the represented-error/aborted terminal path and the ordinary end-of-turn path (a normal reply
+carrying an incidental `error_message`, now a dedicated regression). No `max_steps`- or
+`request_boundary_stop()`-shaped termination exists anywhere in the Pi-equivalent run path.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100% -- includes restoring collect()'s own on_chunk coverage,
+                                      lost when driver.py stopped calling it directly, caught by this
+                                      gate itself before being reported as a finding
+ruff check:                          clean
+ruff format --check:                 clean (files touched this pass)
+mypy (configured scope, src only):   clean, 0 errors
+schema validation:                   all passing
+conformance/ (full):                 all passing, including the genuinely-discriminating no-cap
+                                      regression (21 turns, not 3)
+manifest parse + unique-ID audit:    76 / 76 unique (AG-022 removed; AG-009 rewritten; AG-007
+                                      cross-reference corrected)
+stale normative-text audit:          spec/agent.md's Layer-07 section's own present-tense claims
+                                      about Layer 08 corrected; the Layer-08 section's own remaining
+                                      internal contradiction (the assistant-event carve-out) resolved
+                                      by the L08-R002 fix itself, not merely reworded
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_BEHAVIOR_UNCERTAIN         none
+PI_PARITY_DEFECT              none -- L08-R002 (complete live seam, correct reduce timing) and
+                               L08-R009 (unapproved boundary-stop divergence) both resolved
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R004 (Layer-07's own stale claims), L08-R005 (non-
+                               discriminating canonical), and L08-R010 (AG-022 rule contradiction,
+                               closed by removal) all resolved
+unapproved intentional divergence   none -- AG-022 removed rather than left unapproved; no
+                               remaining Layer-08 row claims a divergence without disposing it
+Layer-09 implementation       none -- handleRunFailure composes correctly with a future Layer-09
+                               implementation without implementing any part of it
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Third rejection/remediation cycle for this layer. Captured for later integration into
+`process/agent-workflow.md` at Layer-08's own closure retrospective, NOT applied to that file now:
+
+1. An implementation constraint in a certified LOWER layer (`collect()`'s synchronous `on_chunk`)
+   is not automatically a Pi-visible contract limitation at the layer consuming it -- a caller can
+   often restructure its own consumption (iterate the stream directly) without reopening or
+   modifying the lower layer at all. This distinction should have been checked before PASS 4 cited
+   the constraint as a reason to exclude coverage, not after a second rejection.
+2. When a public method removal (`max_steps`, PASS 4) resolves cleanly without owner escalation,
+   the SAME default applies to a structurally similar case (`request_boundary_stop()`) found later
+   in the SAME layer -- this pass applied that precedent directly rather than re-deriving whether
+   escalation was needed from scratch.
+3. A "regression that proves the opposite of what a removed mechanism used to prove" canonical must
+   be benchmarked against the ACTUAL removed value, not a scenario-local override that happened to
+   be smaller and easy to exceed -- re-verify the specific number a discriminating scenario needs to
+   exceed by checking the removed field's own former default, not by re-using a nearby number from
+   the scenario being replaced.
+4. A stale-normative-text audit must cover the WHOLE document a Rust reviewer treats as one
+   contract, not only the section a given pass directly edited -- PASS 4 rewrote the Layer-08
+   section correctly but never re-read the Layer-07 section above it for claims ABOUT Layer 08.
+5. Removing a certified lower-layer call site (e.g. `collect()`) can silently drop that lower
+   layer's own test coverage for a parameter/branch nothing else exercises -- the full quality gate
+   (100% coverage across ALL certified packages, not just the layer being changed) is what catches
+   this, not the Rust review; treat a coverage gate failure in an unrelated certified package as a
+   direct signal of exactly this kind of accidental exercise loss, not noise to route around.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-5 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004/R005/R009/R010 closure status; mark both Ready for Review once the candidate
+gate above is satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: complete a full independent Layer-08 contract re-review against the new PASS-5
+candidate SHAs; all prior verdicts apply only to their exact superseded candidates`. Then stop. Do
+not merge PR #13, #3, #4, #5, or #6. Do not implement Rust. Do not start Layer 09.
