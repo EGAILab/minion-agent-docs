@@ -421,8 +421,360 @@ Layer 08 cross-language     NOT CLOSED
 Layer 09                     NOT STARTED
 ```
 
-## Next action
+## Next action (superseded -- see PASS 3 below)
 
 Mark PRs #13/#3 Ready for Review (from Draft) at their current heads, update coordination issue #12
 (`STATUS: RUST_CONTRACT_REVIEW`, `NEXT_OWNER: Codex`), and stop. Do not merge the shared/Python
 PRs. Do not implement Rust. Do not start Layer 09.
+
+# PASS 3 — remediation for the independent Rust contract rejection (L08-R001..R008)
+
+## Rejection reference
+
+The independent Rust review of the PASS-2 candidate (code PR #13 @ `45a7e039233e262eabb7821c1aeb
+713024ac3bda`, docs PR #3 @ `fe854a6f583359512cfb538a628ba5e3a6811a47`) **REJECTED** it
+(`minion-agent-docs#4` @ `88a6aa6c1c1994026001c60045d4c55c00331a52`, branch
+`review/08-rust-contract`). Full AG-001..AG-010 review ledger: AG-001/003/005/007 PASS; AG-002 FAIL
+(`L08-R006`); AG-004 FAIL (`L08-R001`, `L08-R004`); AG-006 FAIL (`L08-R007`); AG-008 FAIL
+(`L08-R003`); AG-009 FAIL (`L08-R002`); AG-010 FAIL (`L08-R002`). Eight blocking findings total.
+This pass treats all eight as blocking until independently reproduced against pinned Pi and
+disposed; none of PASS 2's own self-certification claims are trusted without re-verification. Prior
+Rust approval does not exist for this or any later candidate SHA -- the rejection at `88a6aa6`
+applies only to the superseded PASS-2 candidate; a full independent re-review of this PASS-3
+candidate is required before any Layer-08 certification claim stands.
+
+The rejected review evidence PR (#4) is not modified or overwritten by this pass; it remains the
+immutable record of what PASS 2 actually was and why it was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R001 — incomplete run snapshot and truncated `prepareNextTurn`
+
+**Review finding:** PASS 2's `_RunSnapshot` carried only `{system_prompt, model, thinking_level}`,
+and its `RunConfigUpdate` could replace only `system_prompt`. Pinned Pi's own
+`Agent.createContextSnapshot()` snapshots the WHOLE `AgentContext{systemPrompt, messages, tools}`
+at run start, and `AgentLoopTurnUpdate.context: AgentContext` (`prepareNextTurn`'s return value)
+replaces that whole object, never one field.
+
+**Pi reproduction:** confirmed directly against source. `Agent.createContextSnapshot()`
+(agent.ts:437-441): `{systemPrompt: this._state.systemPrompt, messages: this._state.messages.slice(),
+tools: this._state.tools.slice()}` -- a shallow top-level-array copy, not a deep clone.
+`AgentLoopTurnUpdate` (types.ts:138-145): `{context?: AgentContext, model?: Model<any>,
+thinkingLevel?: ThinkingLevel}`. `runLoop`'s own mutation (agent-loop.ts:226-238):
+`currentContext = nextTurnSnapshot.context ?? currentContext` (whole-object swap via `??`, never a
+per-field merge); `model`/`reasoning` independently optional, with the already-certified `AG-014`
+`"off"`-vs-`undefined` special case.
+
+**Classification:** `PI_PARITY_DEFECT` (the truncated snapshot/update was an observable behavior
+gap, not merely an evidence gap).
+
+**Remediation:** new `RunContext{system_prompt, messages: list[Message], tools:
+tuple[ToolDefinition, ...]}` / `RunConfig{model, thinking_level}` (`agent/decisions.py`), replacing
+the old three-field `_RunSnapshot`. `RunConfigUpdate.context: RunContext | None` now replaces the
+whole `RunContext` when set; `model`/`thinking_level` remain independent per-field replacements.
+`_execute_run` snapshots both once at run start from `self.instance.system_prompt`,
+`derive_messages(self.instance.log)`, and `self.tools.visible_from(self.instance.scope)` -- never
+re-read after that point. `_run_step`, `_should_stop`, and `_prepare_next_turn` all take
+`context`/`config` as explicit parameters, matching pinned Pi's own `ShouldStopAfterTurnContext`/
+`PrepareNextTurnContext` shape (`message`, `tool_results`, `context`, `new_messages`) exactly.
+
+**RED evidence:** the PASS-2 candidate's own `RunConfigUpdate` had no `context` field at all --
+`test_prepare_next_turn_can_replace_the_whole_context` could not even be expressed against it.
+
+**GREEN evidence:** `test_run_start_snapshot_ignores_a_later_caller_config_change`,
+`test_run_start_snapshot_ignores_session_changes_from_outside_the_run`,
+`test_prepare_next_turn_can_replace_the_whole_context`,
+`test_prepare_next_turn_can_replace_model_and_thinking_level`,
+`test_prepare_next_turn_context_replacement_does_not_persist_to_the_next_run`,
+`test_should_stop_and_prepare_next_turn_receive_pis_full_context`.
+
+**Spec/manifest changes:** `AG-004` rewritten (see L08-R004 below, same row). `AG-002`'s own
+`python:` field updated to name `_run_inner` accurately.
+
+**Disposition:** resolved. `AG-004`: adopted.
+
+### L08-R002 — narrow, hand-picked failure boundary instead of pinned Pi's real `handleRunFailure`
+
+**Review finding:** PASS 2's `_LoopCallbackFailure` only wrapped three listener dispatch sites
+(`AGENT_PRE_STEP`/`AGENT_TURN_STOPPING`/`AGENT_PREPARE_NEXT_TURN`), narrower than pinned Pi's real
+boundary (`runWithLifecycle` wraps the WHOLE run executor). PASS 2 also inserted a synthetic
+`turn_start` before the failure's `turn_end`/`agent_end`, which pinned Pi never emits, and its
+`agent_end.messages` used the normal run-scoped accumulator rather than pinned Pi's own
+`[failureMessage]`-only fallback.
+
+**Pi reproduction:** confirmed against source. `handleRunFailure`'s bare sequence:
+`message_start(failure)`, `message_end(failure)`, `turn_end(failure, [])` with no preceding
+`turn_start`, `agent_end(messages=[failure])`. Distinct from a represented `error`/`aborted`
+assistant message reaching its OWN turn normally (agent-loop.ts:196-200, uses the run's own
+`newMessages` accumulator) -- two different mechanisms (see `L08-R008` below), not one.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `_execute_run`'s catch boundary widened to `try`/`except Exception` around the
+whole `_run_inner` call, with `UnknownModelError` explicitly excluded (re-raised uncaught -- pinned
+Pi resolves a model eagerly, before a stream is returned, so an unresolvable one is a caller/config
+bug, not a run-executor failure). `_settle_run_failure` no longer appends a synthetic `turn_start`;
+it appends only `ASSISTANT_MESSAGE` + `TURN_END` with an explicit `{"message": ...}` override.
+`_execute_run` threads the returned failure message into `AGENT_END`'s own payload as an explicit
+`{"messages": [...]}` override. `agent/projection.py`'s `project()` was extended to honor both
+overrides directly (`if "message"/"messages" in entry.data: ... else: <normal accumulator>`) rather
+than inventing a synthetic `turn_start` pinned Pi never emits -- fixing the projection, not Pi's own
+event trace, per this pass's own explicit instruction. `_LoopCallbackFailure` is retained only as an
+unused historical marker; nothing raises it.
+
+**RED evidence:** `test_a_pre_step_listener_failure_settles_gracefully`'s own assertion
+(`EventKind.TURN_START not in kinds`) failed once `TURN_START`'s correct L08-R006 placement (before
+the initial claim) meant a pre-step failure legitimately has one already logged -- this was itself
+a test-authoring correction, not a code regression (a `TURN_START` a run's own PRIOR, genuine
+progress already logged is fine and expected; only one `_settle_run_failure` itself invents is the
+defect). `test_failure_agent_end_messages_is_only_the_failure_message` failed against the
+unremediated code (`AGENT_END` never carried a `"messages"` override, so `project()` fell back to
+whatever `run_messages` held).
+
+**GREEN evidence:** `test_a_pre_step_listener_failure_settles_gracefully` (exact-sequence
+assertion), `test_failure_agent_end_messages_is_only_the_failure_message`,
+`test_a_turn_stopping_listener_failure_settles_gracefully`,
+`test_a_prepare_next_turn_listener_failure_settles_gracefully`,
+`test_a_post_turn_callback_failure_settles_gracefully`,
+`test_an_unresolvable_model_still_raises_uncaught`.
+
+**Spec/manifest changes:** `AG-009`, `AG-010` rewritten.
+
+**Disposition:** resolved. `AG-009`, `AG-010`: adopted.
+
+### L08-R003 — `streaming_message`/canonical scenarios lost thinking/tool-call partial content
+
+**Review finding:** `streaming_message` was reconstructed as accumulated text only, when the
+already-certified Layer-02/04 `StreamChunk` carries a complete `partial: AssistantMessage` on every
+variant. Canonical scenarios also encoded `message_update -> message_start` (reversed) for the
+assistant reply's own streaming lifecycle.
+
+**Pi reproduction:** `stream.py`'s own module docstring, confirmed against the certified type:
+"every chunk carries `partial`, the message as assembled so far." `streamAssistantResponse`
+(agent-loop.ts:281-372): `"start"` -> `message_start`; `"text_start"/.../"toolcall_end"` -> ALL map
+to `message_update` carrying the full shallow-copied partial, not a delta string; `"done"/"error"`
+-> `message_end` always, `message_start` only defensively if `!addedPartial`.
+
+**Classification:** `PI_PARITY_DEFECT` (content fidelity) + `CONTRACT_ASSURANCE_DEFECT` (canonical
+ordering).
+
+**Remediation:** `_run_step`'s `log_chunk` closure sets `self.instance.streaming_message =
+chunk.partial` directly from every applicable chunk variant (text/thinking/tool-call
+start/delta/end), with no independent delta-accumulation attempted. New `EventKind.
+ASSISTANT_STREAM_START` log entry (the stream's own `"start"` chunk) opens the reply's
+`MessageStart`; `ASSISTANT_MESSAGE`'s own `MessageStart` is suppressed when that already opened one
+(`stream_open` flag in `project()`), matching pinned Pi's `!addedPartial` fallback exactly. Six
+canonical scenarios corrected in place (`turn-lifecycle`, `causes-preserved-under-claim-all`,
+`premature-eof-synthesizes-error-terminal`, `projected-execution-ends-follow-completion-order`,
+`public-stream-fuses-after-first-terminal`, `tool-round-trip`) -- audited every Layer-08 canonical
+scenario asserting assistant streaming lifecycle, not only the two the review named.
+
+**RED evidence:** the certified `MockAdapter` only emits text deltas, so a test-local-only
+`_RichStreamAdapter` (implementing the same informal `Adapter` protocol, not touching certified
+adapter code) was needed to exercise thinking/tool-call partial fidelity at all -- before this pass
+there was no way to even express that evidence.
+
+**GREEN evidence:** `test_streaming_message_carries_the_full_partial_for_text`,
+`test_streaming_message_carries_the_full_partial_for_thinking`,
+`test_streaming_message_carries_the_full_partial_for_tool_calls`,
+`test_streaming_message_clears_after_the_message_finalizes`,
+`test_message_start_precedes_message_update_for_a_streamed_reply`, plus all seven corrected
+canonical scenarios and the two focused unit tests in `tests/agent/test_projection.py`.
+
+**Spec/manifest changes:** `AG-008` rewritten (the "text-only, intentional divergence" claim
+removed as false).
+
+**Disposition:** resolved. `AG-008`: adopted.
+
+### L08-R004 — AG-004 contradicted the current candidate with stale PASS-1 narrative
+
+**Review finding:** `AG-004`'s rule text still said `prepareNextTurn` was "NOT implemented at all,"
+directly contradicting `AGENT_PREPARE_NEXT_TURN`'s real (if truncated) PASS-2 implementation.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** `AG-004` rewritten as one coherent current rule describing the actual adopted
+behavior after `L08-R001`'s remediation: `turn_end -> prepareNextTurn (whole-context replacement) ->
+shouldStopAfterTurn -> steering poll -> follow-up only if otherwise stopping`, with real,
+non-placeholder evidence citations. The represented-error/aborted carve-out (`AG-021`) is cross-
+referenced, not folded in, since it is a distinct row (`L08-R008`). A repo-wide grep for
+`prepareNextTurn`/`not implemented`/`tracked gap`-flavored stale assertions against the current
+candidate found no other contradictions once `AG-008`/`AG-009` were also corrected under their own
+findings above.
+
+**Disposition:** resolved. `AG-004`: adopted (see `L08-R001` above for the same row's fuller text).
+
+### L08-R005 — `max_steps` risked an unapproved observable Pi divergence
+
+**Review finding:** PASS 2's `max_steps` check ran BEFORE `prepareNextTurn`/`shouldStopAfterTurn`/
+the steering poll for the turn that hit the cap, which would skip pinned Pi's own unconditional
+post-turn ordering for that turn -- an observable divergence from `AG-004` that was never disclosed
+or approved as intentional.
+
+**Pi reproduction:** pinned Layer 08 has no `max_steps`-equivalent stop rule at all; this is
+entirely a Minion host/pump safety extension with no Pi counterpart to diverge from or converge on.
+
+**Classification:** `PARITY_CONSTRAINED_RISK` (an unapproved observable divergence risk, not yet a
+confirmed defect since the review asked for resolution before merge, not after).
+
+**Remediation:** a parity-neutral placement was possible and is what this pass adopts --
+`_run_inner`'s `max_steps` check moved to AFTER `prepareNextTurn`/`shouldStopAfterTurn`/the steering
+poll have already run unconditionally for the turn that reached the cap. It now gates only whether
+a FURTHER turn is attempted, never skips pinned Pi's own post-turn ordering for a turn that already
+happened. No owner escalation was needed since a parity-neutral arrangement existed. New manifest
+row `AG-020` records `max_steps` explicitly as a Minion-only architectural/host extension, disposed
+`intentional divergence` (not `adopted`, since there is no Pi rule to have adopted).
+
+**Disposition:** resolved without escalation. `AG-020` (new row): intentional divergence.
+
+### L08-R006 — initial steering poll claimed before `TURN_START` was logged
+
+**Review finding:** the first turn's steering claim happened before `TURN_START` was appended,
+observably backwards from pinned Pi's own emission order.
+
+**Pi reproduction:** `runAgentLoop` (agent-loop.ts:95-118) emits `agent_start`, `turn_start`, then
+the initial prompt messages' own lifecycle, THEN calls `runLoop`, whose own FIRST statement is the
+initial steering poll -- strictly a post-`turn_start` event, confirmed directly.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `_run_inner` now appends `TURN_START` unconditionally BEFORE the initial claim/
+`_pre_step` dispatch; `_run_step`'s own `open_turn=False` flag for that first turn prevents a
+duplicate append. Continuation's own no-double-drain special case (`skip_initial_steering_poll`)
+preserved unchanged.
+
+**RED/GREEN evidence:** offline projection cannot prove this (inbox claims are not themselves
+projected events) -- discriminating evidence is listener-based: an `AGENT_PRE_STEP` listener
+inspects live `instance.log.events` for `TURN_START` at the moment the initial claim reaches it
+(`test_the_initial_steering_claim_happens_after_turn_start`).
+
+**Spec/manifest changes:** `AG-002` rewritten.
+
+**Disposition:** resolved. `AG-002`: adopted.
+
+### L08-R007 — no `prompt(text, images?)` convenience surface
+
+**Review finding:** pinned Pi's `Agent.prompt()` accepts a plain string (optionally with images) as
+a convenience overload; Minion's `AgentLoop.prompt()` only accepted the typed `Message |
+tuple[Message, ...]` boundary.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `prompt()` gained `images: tuple[ImageBlock, ...] = ()` and a `str` branch that
+normalizes into exactly one `UserMessage` whose content is `(TextBlock(text=message), *images)` --
+text first, then the supplied images, in order, matching pinned Pi's own `[{type:"text",...},
+...images]` construction. The typed boundary is unchanged and unnarrowed; both forms coexist.
+
+**GREEN evidence:** `test_prompt_accepts_a_plain_string`,
+`test_prompt_string_with_one_image_orders_text_then_image`,
+`test_prompt_string_with_multiple_images_preserves_order`,
+`test_prompt_accepts_a_tuple_of_typed_messages_unchanged` (renamed from
+`test_prompt_accepts_a_tuple_of_messages`, whose name the manifest's own `AG-006` row cited stale
+until corrected this pass).
+
+**Spec/manifest changes:** `AG-006` rewritten.
+
+**Disposition:** resolved. `AG-006`: adopted.
+
+### L08-R008 — represented assistant error/aborted ran the full post-turn sequence
+
+**Review finding:** PASS 2 collapsed a represented `error`/`aborted` assistant message into the same
+branch as an ordinary no-more-tool-calls stop, running `prepareNextTurn`/`shouldStopAfterTurn`/the
+steering and follow-up poll regardless of `stop_reason`.
+
+**Pi reproduction:** confirmed directly (agent-loop.ts:196-200), immediately after
+`streamAssistantResponse` returns: `if (stopReason === "error" || stopReason === "aborted")` emits
+that turn's own `turn_end` with empty `toolResults` and returns immediately -- no tool calls
+inspected/executed, none of the four post-turn hooks/queues touched.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** new `_StepResult.terminal` flag, set by `_run_step` when `reply.stop_reason in
+(ERROR, ABORTED)`; `_run_inner` returns immediately on `terminal`, before ever calling
+`_prepare_next_turn`/`_should_stop`/claiming steering or follow-up. Uses the run's own normal
+`new_messages` accumulator for `agent_end.messages` (agent-loop.ts:199's own `newMessages`) --
+distinct from `L08-R002`'s `handleRunFailure` override, an unrelated mechanism for an unexpected
+THROWN exception, never for a normally-produced represented-error message.
+
+**RED evidence:** an initial test draft queued the steering message to prove non-consumption BEFORE
+`run_until_idle()` started, which the run's own unconditional INITIAL poll (`AG-002`, unrelated to
+this finding) claimed regardless of the turn's later outcome -- a test-design flaw, not a code
+defect, corrected by queuing from within an `AGENT_PRE_STEP` listener dispatched AFTER that initial
+poll has already run.
+
+**GREEN evidence:** `test_represented_error_skips_prepare_stop_steering_and_follow_up`,
+`test_represented_aborted_skips_prepare_stop_steering_and_follow_up`,
+`test_represented_error_agent_end_messages_uses_the_normal_accumulator`.
+
+**Spec/manifest changes:** new row `AG-021`.
+
+**Disposition:** resolved. `AG-021` (new row): adopted.
+
+## Full re-audit after remediation
+
+The whole Layer-08 run state machine was reconstructed from pinned Pi and re-verified with no
+interaction bug introduced across all eight fixes together: fresh prompt, `prompt(text/images)`,
+plain continue, assistant-last continue with steering/follow-up pre-drain, tool-driven/steering-
+driven/follow-up-driven next turn, tool `terminate`, assistant `error`/`aborted`, an unexpected
+run-executor failure, `prepareNextTurn` whole-context replacement, multiple independent runs,
+runtime-state transitions, and `agent_end.messages` across every path above -- each checked for
+event order, the exact context/messages sent to the provider, queue consumption, invocation-local
+messages, and mutable-vs-run-local state persistence. No regression surfaced; the full Python test
+suite (1000+ tests), 100% coverage, and full canonical conformance all pass together against the
+single combined candidate (see quality gates below).
+
+## Canonical contract cleanup
+
+19 agent canonical scenarios remain `TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR` placeholders. None is
+cited as evidence by any manifest row above (each row cites real, filled scenarios or focused
+Python tests instead), each placeholder's deferred purpose is unchanged from prior passes, and no
+manifest row depends on an unfilled placeholder for its own disposition.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100% (agent, agent_loop, llm, runtime, session, telemetry,
+                                      tools)
+ruff check:                          clean
+ruff format --check:                 clean (files touched this pass)
+mypy (configured scope, src only):   clean, 0 errors
+schema validation:                   all passing (unchanged from PASS 2's own 185)
+conformance/ (full):                 all passing, including the 7 scenarios corrected this pass
+manifest parse + unique-ID audit:    77 / 77 unique (+2 new rows: AG-020, AG-021; six existing rows
+                                      corrected in place: AG-002, AG-004, AG-006, AG-008, AG-009,
+                                      AG-010)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- all eight L08-R001..R008 findings resolved
+CONTRACT_ASSURANCE_DEFECT     none -- AG-004's stale narrative corrected; no other contradictory
+                               current-state claims found
+PI_BEHAVIOR_UNCERTAIN         none active
+PARITY_CONSTRAINED_RISK       none -- max_steps resolved without an unapproved divergence
+unapproved intentional divergence   none -- AG-020 (max_steps) is disposed explicitly, not silently
+                               preserved
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from the rejected PASS-2 candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-3 remediation summary, new head SHAs, and L08-R001..R008 disposition;
+mark both Ready for Review once the candidate gate above is satisfied. Update coordination issue
+#12 to `STATUS: RUST_CONTRACT_REVIEW`, `CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`,
+`NEXT_OWNER: Codex`, `NEXT_ACTION: complete independent re-review against the new candidate SHAs;
+the prior rejection (88a6aa6) applies only to the superseded PASS-2 candidate`. Then stop. Do not
+merge PR #13, #3, or review-evidence PR #4. Do not implement Rust. Do not start Layer 09.
