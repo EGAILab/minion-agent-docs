@@ -1,9 +1,9 @@
 # Layer 08 — Agent Loop (run/turn state machine) — Python
 
-**Status: IN PROGRESS. PASS 1 (this document) corrects the run/turn event boundary and is NOT a
-full Layer-08 certification.** Several manifest rows (`AG-002`, `AG-003`, `AG-005`, `AG-006`,
-`AG-007`, `AG-008`, `AG-009`, `AG-010`) still carry a false `disposition: adopted` inherited from
-before this pass and remain open, disclosed defects -- see "Active findings" below.
+**Status: PASS 2 complete. Python Layer 08 is substantially implemented and self-certified,
+pending independent Rust contract review before certification is final.** See "PASS 2" below for
+the complete picture; PASS 1's own text (run/turn event boundary only) is preserved unmodified
+beneath it as historical record.
 
 Coordination: `EGAILab/minion-agent#12`, branch `layer/08-python-shared` (both repos).
 
@@ -185,9 +185,244 @@ Layer 08 cross-language     NOT CLOSED
 Layer 09                     NOT STARTED
 ```
 
-## Next action
+## Next action (superseded -- see PASS 2 below)
 
 Continue the Layer-08 Python/shared pass: correct AG-002/003/005-010's dispositions (narrow each to
 what is actually true today, matching the AG-001/AG-004 pattern), then work through the "still open"
 list in `spec/agent.md`, in particular `prompt()`/`continue()` caller rules and
 `streamingMessage`/`pendingToolCalls`/`errorMessage` transition timing, before any Rust handoff.
+
+# PASS 2 — complete Layer-08 semantic surface and manifest repair
+
+## Repair of PASS-1's own coordination/evidence metadata
+
+Corrected before substantive implementation, per the governing instruction's own explicit §0:
+
+- "Starting state" above corrected from the Layer-07 PASS-4-remediation SHA (`19ecb88...`) to the
+  branch's own actual merge-base with each repo's default branch (`d0911cb...`/`881daf5...`,
+  confirmed via `git merge-base`) -- `19ecb88...` is an ancestor of the correct base, not the base
+  itself.
+- PR #13's body corrected to name its companion PR explicitly (`EGAILab/minion-agent-docs#3`).
+- Both PRs converted to Draft (workflow hygiene, not a semantic requirement) until this candidate
+  was genuinely coherent.
+
+## Manifest disposition audit -- not a mechanical `adopted` -> `deferred parity` relabel
+
+The governing instruction was explicit: `disposition` answers "what is Minion's semantic decision
+for this Pi surface," not "is it implemented/tested/certified." Each of `AG-002`/`003`/`005`/`006`/
+`007`/`008`/`009`/`010` was independently audited against pinned Pi and against what this pass
+actually implements, one row at a time -- not batch-relabeled.
+
+Result: seven rows (`AG-002`, `AG-003`, `AG-005`, `AG-006`, `AG-008`, `AG-009`, `AG-010`) are Layer
+08's own target and ARE implemented this pass -- each corrected to `disposition: adopted`, with real
+evidence replacing every citation of a still-unfilled placeholder scenario. One row (`AG-007`,
+active abort propagation) was never Layer 08's target at all -- it is explicitly Layer 09's, per the
+already-certified Layer-07 contract's own deferral and this pass's own governing instruction ("Do
+not implement Layer-09 active cancellation propagation") -- corrected to `disposition: deferred
+parity`, recording the exact later layer (09) and trigger (a future Layer-09 pass). No row was
+relabeled `deferred parity` merely because it was unfinished; every `deferred parity` here reflects
+a genuine "Pi requires this, a later NAMED layer owns it" decision.
+
+Full per-row rationale is in `pi-parity-manifest.yaml` itself (each row's own `rule:` text); summary:
+
+```text
+AG-001  adopted (PASS 1, unchanged)          initial prompt event order
+AG-002  adopted (corrected, real evidence)    initial steering poll + continue()'s no-double-drain
+AG-003  adopted (corrected, real evidence)    continuation invocation output (agent_end.messages)
+AG-004  adopted (PASS 1, unchanged)          turn definition/order
+AG-005  adopted (corrected, real evidence --   follow-up timing (mid-run continuation implemented,
+         genuine implementation gap closed)    not just an evidence gap)
+AG-006  adopted (corrected, real evidence -- prompt()/continue_() caller rules (new entry points)
+         genuine implementation gap closed)
+AG-007  deferred parity (corrected --          active abort propagation: Layer 09's own target,
+         was wrongly `adopted`)                not Layer 08's
+AG-008  adopted (corrected, real evidence --   runtime-state transition timing (narrowed off the
+         genuine implementation gap closed)    already-certified Layer-07 config-facing subset)
+AG-009  adopted (corrected, real evidence --   handleRunFailure
+         genuine implementation gap closed)
+AG-010  adopted (corrected, real evidence --   agent_end message set (run-scoped accumulator,
+         genuine implementation gap closed)    both pre-seeded and empty-seeded paths)
+```
+
+## Python implementation (this pass)
+
+`src/minion_agent/agent_loop/driver.py` restructured substantially:
+
+- **`prompt(message)`/`continue_()`** (new): pinned Pi's `Agent.prompt()`/`Agent.continue()`
+  exactly, including all four distinct "already processing" strings (`prompt()`'s, `continue_()`'s,
+  the internal `_run_wrapped` defensive guard's, and the already-certified Layer-07 `reset()`'s),
+  `continue_()`'s full branch structure (steering-drain with `skip_initial_steering_poll`,
+  follow-up-drain, plain continuation), confirmed directly against `agent.ts:348-407`.
+- **`_RunSnapshot`** (new): `system_prompt`/`model`/`thinking_level` read once at run start
+  (pinned Pi's `createContextSnapshot()`), with an `apply()` method `prepareNextTurn` updates
+  run-locally, never written back to `AgentInstance`.
+- **`_run_wrapped`/`_execute_run`/`_run_inner`** (restructured): status/`error_message` reset at
+  run entry; a genuine outer/inner nested loop matching pinned Pi's `runLoop` exactly -- the outer
+  loop polls follow-up only once the inner loop naturally exhausts, and continues the *same* run
+  when follow-up is found (mid-run continuation, previously missing entirely); `terminate` now
+  affects only `has_more_tool_calls`, never skipping `prepareNextTurn`/`shouldStopAfterTurn`/the
+  steering poll for that turn (a correction to a previously-wrong "hard termination precedes the
+  decision" design, confirmed wrong against pinned Pi source).
+- **`_prepare_next_turn`** (new): `agent/prepare-next-turn` waterfall event, returning
+  `RunConfigUpdate` (new, in `decisions.py`), applied to the run snapshot.
+- **`_settle_run_failure`/`_LoopCallbackFailure`** (new): pinned Pi's `handleRunFailure`, narrowly
+  scoped to `agent/pre-step`/`agent/turn-stopping`/`agent/prepare-next-turn` dispatch failures only
+  -- each of the three dispatch call sites wraps its own `Exception` and re-raises as
+  `_LoopCallbackFailure`, so a genuinely different failure (an unresolvable model, a provider
+  error) is never caught by this fallback and continues to propagate/settle via its own existing,
+  different mechanism.
+- **`_run_step`**: now reads `snapshot.system_prompt`/`.model` instead of
+  `self.instance.definition.system`/`.model` (the disclosed Layer-07 PASS-2.5 scope boundary,
+  closed this pass); writes `streaming_message` (text-only partial content, disclosed
+  simplification -- see below) and `pending_tool_calls` (via temporary `tools/execution-start`/
+  `tools/execution-end` listeners around the batch call, an existing Layer-06 seam, not a new
+  resolution mechanism) for the duration of one provider request/tool batch; sets `error_message`
+  from a truthy `reply.error_message`.
+
+`src/minion_agent/agent/events.py`: added `AGENT_PREPARE_NEXT_TURN` (waterfall); corrected
+`AGENT_TURN_STOPPING`'s own docstring, which previously and incorrectly claimed hard termination
+skipped dispatch entirely.
+
+`src/minion_agent/agent/decisions.py`: added `RunConfigUpdate` (`system_prompt`/`model`/
+`thinking_level`, all-`None` terminal = pass-through).
+
+`tests/conformance/agent_runner.py`: added a `continue: true` step type (thin call-through to
+`loop.continue_()`, same pattern as `await_idle`) and an `"agent_end_messages"` extraction (one
+list of message texts per `AgentEnd`, for asserting run-scoped `agent_end.messages` directly).
+`conformance/schema/agent-scenario.schema.json` extended to match (`continue` step property,
+`expect_agent_end_messages` top-level field).
+
+## Disclosed simplification: `streaming_message` content fidelity
+
+`streaming_message`'s non-`None`/`None` *transition timing* is exact (matches pinned Pi's
+`message_start`/`message_update`/`message_end` write points precisely). Its *content* during that
+window is text-only (accumulated `TextDelta`s); thinking/tool-call partial content is not
+reconstructed. This is a genuine, disclosed simplification, not a silently dropped requirement:
+Minion's certified Layer-02/04 `collect()` exposes only raw stream deltas, never a live partial
+message object for this layer to build a richer reconstruction from, and inventing a full
+incremental content-block reconstructor (matching arbitrary partial tool-call JSON, etc.) would be
+new Layer-02/04-adjacent capability, out of this narrow Layer-08 pass's scope to add. Recorded as
+`intentional divergence` on content fidelity specifically, within `AG-008`'s own disposition text --
+not a `PI_BEHAVIOR_UNCERTAIN` (there is no uncertainty about what pinned Pi does) and not a
+`PI_PARITY_DEFECT` (the observable contract this layer actually certifies -- presence/absence
+timing -- is exact).
+
+## Canonical evidence added this pass
+
+Two new legacy-shape scenarios, both exercising the real `AgentLoop` end to end:
+
+- `two-runs-have-independently-scoped-agent-end-messages.yaml` -- two separate followup+await_idle
+  cycles, proving `agent_end.messages` is independently scoped per run (item 1 of the governing
+  instruction's canonical-evidence list).
+- `continuation-excludes-the-prior-runs-messages.yaml` -- `continue()`'s follow-up-drain sub-case
+  (via the new `continue: true` step), proving the second run's `agent_end.messages` excludes the
+  first run's own messages (item 2's steering/follow-up-drain half; the plain empty-seeded
+  continuation half of item 2 remains Python-test-only --
+  `test_continue_sends_full_history_when_last_message_is_not_assistant` -- since it requires no
+  entering messages at all, which a purely declarative scenario cannot force without a custom
+  turn-stopping listener the runner does not support).
+
+Items 3/4 (mutable config changed between/during runs), 8/9 (`prepareNextTurn`/`shouldStopAfterTurn`
+ordering, terminate's non-skip behavior) require registering a custom Python listener mid-scenario,
+which the declarative YAML runner has no mechanism for -- these remain Python-test-only, already
+covered (`test_prepare_next_turn_can_override_system_prompt_run_locally`,
+`test_a_turn_stopping_listener_failure_settles_gracefully`, and the `terminate` tests in
+`test_terminate.py`/`test_run_entry_points.py`). Item 5 (`error_message` persists/clears) is
+Python-test-only (`test_a_pre_step_listener_failure_settles_gracefully` and friends prove
+persistence through a settled failure; clearing at next-run-start is implicit in every subsequent
+successful `prompt()`/`continue_()` test passing with a clean transcript). Item 6 (no double-drain)
+and item 7 (follow-up consumed only when otherwise stopping) are both language-test-covered
+(`test_continue_does_not_double_drain_steering_after_pre_drain`; mid-run continuation itself, tested
+throughout `test_run_entry_points.py` and `test_provenance.py`). Item 10 (multiple turns, one run
+bracket) was already closed in PASS 1 (`tool-round-trip.yaml`,
+`projected-execution-ends-follow-completion-order.yaml`).
+
+## RED → GREEN (this pass)
+
+- `prompt()`/`continue_()` and all their rejection paths: each new test failed with
+  `AttributeError` (`AgentLoop` had no such method) before implementation, passed after.
+- Mid-run follow-up continuation: `test_one_at_a_time_accumulates_causes_onto_the_same_run` and
+  `origin-survives-one-at-a-time.yaml` both failed against the pre-restructure driver (asserting two
+  separate runs, as PASS 1 left it) before being corrected to assert one run with accumulated
+  causes, matching the new, verified-correct behavior.
+- Terminate no longer skips dispatch:
+  `test_terminate_is_not_overridable_even_though_the_decision_still_fires` and
+  `test_the_event_is_still_dispatched_when_nothing_is_owed` both failed (`asked == []` was the old,
+  now-wrong assertion) against the pre-fix driver before being corrected.
+- `handleRunFailure` narrowness: `test_an_unresolvable_model_still_raises_uncaught` was written
+  against an intentionally-too-broad first implementation (a bare `except Exception` around the
+  whole run body) and failed by observing the model error silently absorbed instead of raised --
+  caught before this pass ever reached a green state, fixed by narrowing to
+  `_LoopCallbackFailure` at the three specific dispatch call sites.
+- `pending_tool_calls`/`streaming_message` coverage: each new branch (temporary listener
+  subscription, partial-text accumulation, defensive-guard path, `_RunSnapshot.apply()`'s
+  model/thinking_level branches) was driven to 100% coverage by dedicated tests, not left as an
+  untested code path.
+
+## Quality gates (fresh, this pass)
+
+```text
+full pytest (coverage enabled):     1003 passed, 19 xfailed, 0 failed, 100.00% coverage
+                                     (was 980 at the start of this pass)
+ruff check .:                        All checks passed
+mypy (configured scope + typing fixtures): Success, no issues found in 59 source files
+schema validation:                   185 passed (was 179 at the start of this pass; +6: two new
+                                      `continue`/`expect_agent_end_messages` scenario validations
+                                      plus their well-formedness checks)
+conformance/ (full):                 all passing
+manifest parse + unique-ID audit:    75 / 75 unique (unchanged -- no new rows, seven existing rows
+                                      corrected in place)
+```
+
+## Contract-quality check (this pass's own additions)
+
+```text
+Does terminate skip prepareNextTurn/shouldStopAfterTurn/steering?         NO (was YES before this
+                                                                             pass -- corrected)
+Does a run-local prepareNextTurn override ever persist to AgentInstance?   NO
+Does mid-run follow-up continue the same run or start a new one?          SAME run (was a new run
+                                                                             before this pass --
+                                                                             corrected)
+Does handleRunFailure catch a model/provider failure it should not?        NO (regression-tested)
+Is error_message cleared at the failing run's own agent_end?               NO -- only at next run
+                                                                             start or reset, matching
+                                                                             pi exactly
+Duplicate state authority (pending_tool_calls vs. Layer-06's own tracking)? NO -- add/remove through
+                                                                             existing tools/execution-
+                                                                             start/end events, not a
+                                                                             second tracking mechanism
+Contract quality (this pass's own scope)                                   PASS
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none
+CONTRACT_ASSURANCE_DEFECT     none -- all ten AG-001..AG-010 rows now carry accurate dispositions
+                               with real evidence (or an explicit, correct deferral for AG-007)
+PI_BEHAVIOR_UNCERTAIN         none active (the two PASS-1 candidates remain dispositioned
+                               non-blocking; no new candidates raised this pass)
+PARITY_CONSTRAINED_RISK       none blocking
+```
+
+One disclosed, intentional simplification remains, not classified as a defect: `streaming_message`
+content fidelity is text-only (see above) -- the observable contract this layer certifies (non-
+`None`/`None` transition timing) is exact; only mid-stream thinking/tool-call content reconstruction
+is not attempted, and would require new Layer-02/04-adjacent capability this narrow pass does not
+add.
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Next action
+
+Mark PRs #13/#3 Ready for Review (from Draft) at their current heads, update coordination issue #12
+(`STATUS: RUST_CONTRACT_REVIEW`, `NEXT_OWNER: Codex`), and stop. Do not merge the shared/Python
+PRs. Do not implement Rust. Do not start Layer 09.
