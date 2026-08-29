@@ -249,10 +249,10 @@ consequence of delegating to `clear_all()`.
 
 ## Layer 08 — the run/turn state machine
 
-Normative, current-state contract (last rewritten PASS 6). This section describes ONE coherent
+Normative, current-state contract (last rewritten PASS 7). This section describes ONE coherent
 Layer-08 semantic contract as it stands today, verified directly against pinned Pi
 (`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
-passes; that history -- including four independent Rust review rejections and their remediation --
+passes; that history -- including five independent Rust review rejections and their remediation --
 lives in `assurance/layers/08-agent-loop-python.md`, not here. A normative section and an assurance
 history section serving different readers with different needs is deliberate: Rust review must be
 able to trust this section alone as the target to implement against, without cross-referencing which
@@ -430,18 +430,27 @@ the COMPLETE `AgentEvent` union, not a partial one:
   contract reopened. A listener failure here genuinely prevents that call's own `execute()` from
   proceeding, and sequential-mode ordering is the real `start A, end A, start B, end B`, not a
   batch-wide capture-and-replay;
-- `ToolExecutionUpdate` reaches the same seam too (previously missing from the union entirely): a
-  tool's own `execute()` calls its `update(partial)` callback SYNCHRONOUSLY, an established
-  SDK-level calling convention (`_wants_update`, `tools/execute.py`) no Layer-06 caller may
-  redesign out from under every existing tool definition -- genuinely different from the
-  `collect()` case above, which had a real live alternative available. Updates are captured via
-  the existing, certified, synchronous `tools/update` EMIT listener and redelivered per call,
-  immediately before that SAME call's own live `ToolExecutionEnd` dispatch: `accepting_updates`
-  (`tools/execute.py`) already guarantees every one of a call's own updates lands before that
-  call's own `execute()` promise settles, so per-call causal order (start, its own updates, end)
-  is exact. Only the interleaving of two DIFFERENT concurrent calls' updates is unreproducible
-  without that same tool-authoring redesign -- a disclosed, genuine SDK constraint, distinct from
-  an implementation convenience with an available fix;
+- `ToolExecutionUpdate` reaches the same seam too (previously missing from the union entirely),
+  genuinely live and correctly interleaved (Layer 08, PASS 7, closing a gap PASS 6's own
+  capture-then-redeliver-per-call approximation left open): a tool's own `execute()` calls its
+  `update(partial)` callback SYNCHRONOUSLY, an established SDK-level calling convention
+  (`_wants_update`, `tools/execute.py`) no Layer-06 caller may redesign out from under every
+  existing tool definition -- but pinned Pi's own `tool_execution_update` dispatch is ITSELF not
+  awaited inline either: its `update` callback fires `emit(...)` and keeps running, collecting the
+  unawaited promise, only joining every one of a call's own pending updates once `execute()` itself
+  settles, before `finalizeExecutedToolCall`/`tool_execution_end` ever runs
+  (`agent-loop.ts:670-711`). `_execute_and_finalize` reproduces this exactly: `update(partial)`
+  schedules the live dispatch via `asyncio.ensure_future` (Python's own "start now, join later"
+  primitive) and returns immediately -- not awaiting it inline -- and `_execute_and_finalize` joins
+  every one of THAT call's own scheduled dispatches (`asyncio.gather`, unwrapped by any
+  try/except) immediately after `execute()` settles, before `_finalize`/`tool_execution_end`. A
+  listener failure here propagates straight out, uncaught, the SAME causal category as a
+  `tool_execution_start`/`tool_execution_end` failure -- `_finalize`/`tool_execution_end` never run
+  for that call at all, matching pinned Pi exactly. Because updates are scheduled rather than
+  captured as inert data, two different concurrent calls' own update dispatches now interleave
+  according to real `asyncio` scheduling, and a call stays marked pending
+  (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still in flight, since
+  `OnExecutionEnd` (which clears it) fires only once they have all resolved;
 - `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
   `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
   `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is

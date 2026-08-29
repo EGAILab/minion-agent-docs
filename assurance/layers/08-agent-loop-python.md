@@ -1805,7 +1805,7 @@ Fourth rejection/remediation cycle for this layer. Captured for later integratio
    this BEFORE writing remediation code, not only when documenting it afterward, to catch a
    between-summary-and-source gap while it is still cheap to fix.
 
-## Next action
+## Next action (superseded -- see PASS 7 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-6 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -1817,3 +1817,267 @@ satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
 re-review against the new PASS-6 candidate SHAs; all prior verdicts apply only to their exact
 superseded candidates`. Then stop. Do not merge PR #13, #3, #4, #5, #6, or #7. Do not implement
 Rust. Do not start Layer 09.
+
+This candidate (code `fc277cc`, docs `d8ca72f`) was independently reviewed and REJECTED (`L08-R002`,
+`L08-R004` remained open -- PASS 6's own `tool_execution_update` fix was still wrong in kind, not
+merely incomplete; review commit `752754a`, evidence docs PR #8). See PASS 7 below for the
+remediation.
+
+# PASS 7 — remediation for the independent Rust re-review rejection (L08-R002, R004)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-6 candidate (code PR #13 @ `fc277cc7e136f244fafc0301ee
+9264bb3c190ba6`, docs PR #3 @ `d8ca72fbd8d3129d6fdacf01a0835d765b33297e`, pinned Pi `b7bb00b936dbe
+21b8e160b3e89efdec361846699`) **REJECTED** it (`minion-agent-docs#8` @ `752754ade96fc9c2c84eaafd61
+e671840373e82e`, evidence docs PR #8). Two findings STILL OPEN, both a third-cycle continuation of
+`L08-R002`/`L08-R004`: `L08-R002` (`PI_PARITY_DEFECT`) -- "`tool_execution_update` events are
+buffered and regrouped at each tool call's completion. Pinned Pi initiates listener delivery at
+callback time and drains those listeners before finalization/end. This changes cross-call
+ordering, visible pending-tool state, and listener-failure behavior" -- and `L08-R004`
+(`CONTRACT_ASSURANCE_DEFECT`) -- "the specification and AG-009 classify that mismatch as adopted
+behavior, while current tests do not discriminate callback timing, cross-call ordering,
+pending-state visibility, or update-listener failure."
+
+Prior Rust approval does not exist for this or any later candidate SHA -- the rejection at
+`752754a` applies only to the superseded PASS-6 candidate. The rejected review evidence PRs (#4,
+#5, #6, #7, #8) are not modified or overwritten by this pass; they remain the immutable record of
+what PASS 2 through PASS 6 actually were and why each was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R002 — `tool_execution_update` was captured-and-replayed, not genuinely live
+
+**Re-review finding:** PASS 6's own fix (a sync `tools/update` EMIT listener capturing
+`(call_id, name, arguments, partial)` tuples, filtered by `call_id` and redelivered inside
+`on_execution_end`, immediately before that call's own `ToolExecutionEnd`) was still, in kind, the
+same class of defect as PASS 5's own rejected `tool_execution_start`/`tool_execution_end` design:
+data captured now, listener dispatch deferred to later. This has three concrete, observable
+consequences pinned Pi does not have: (1) two different concurrent calls' own update events cannot
+genuinely interleave, since neither call's own captured updates are dispatched until THAT call's
+own `on_execution_end` runs; (2) `pending_tool_calls` had already been cleared for the call (`on_
+execution_end`'s own first line, in the PASS-6 candidate) before its own queued updates were
+replayed, so a listener observing an update event saw the call as no longer pending, when pinned
+Pi's own reducer would still show it pending; (3) a failing update listener ran inside `on_
+execution_end`'s own body, which PASS 6 never checked against Layer 06's own finalization
+boundary -- specifically, whether `tools/execution-end`'s own EMIT (Layer 06's certified,
+synchronous side effect) had already fired before an update listener got a chance to object.
+
+**Pi reproduction:** re-audited directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`agent-loop.ts:670-711`, `executePreparedToolCall`), character by character this time, not merely
+re-confirming the payload shape as PASS 6 did. The tool's own `update` callback (line 683) calls
+`emit({type: "tool_execution_update", ...})` (line 687-693) and immediately pushes the RETURNED,
+UNAWAITED promise onto a local `updateEvents` array (line 685) -- listener dispatch begins
+executing AT THAT MOMENT, concurrently with whatever the tool's own `execute()` does next, not
+deferred. Only once `execute()` itself settles -- success (line 698) or failure (line 702) -- does
+Pi `await Promise.all(updateEvents)` (lines 699, 703), which is where a listener's own rejection
+is actually observed and propagates out of `executePreparedToolCall` uncaught; this happens BEFORE
+`finalizeExecutedToolCall`/`tool_execution_end` is ever invoked by the outer caller (confirmed:
+`executePreparedToolCall`'s own return value is what the caller uses to decide whether to proceed
+to finalization at all -- an uncaught rejection here means finalization for this call never
+happens). Nothing in this sequence involves capturing data now and replaying a listener chain
+later; the listener chain runs live, from the very first update, and is merely JOINED (not
+started) at end-of-execute time.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `tools/execute.py::_execute_and_finalize` gained a new additive hook,
+`on_execution_update: OnExecutionUpdate | None`. Its `update(partial)` closure now schedules the
+live dispatch via `asyncio.ensure_future(on_execution_update(call.id, call.name, call.arguments,
+partial))` -- Python's own "start now, join later" primitive, the direct structural analogue of an
+unawaited JS promise -- appending the resulting `Task` to a local `pending_updates` list, and
+returns immediately without awaiting it (matching pinned Pi's own callback exactly: `update()`'s
+caller, the tool itself, is never blocked on a listener). Immediately after `execute()` settles
+(both the success and exception branches, unconditionally, mirroring pinned Pi's own two symmetric
+`await Promise.all(updateEvents)` call sites), `_execute_and_finalize` does
+`await asyncio.gather(*pending_updates)` -- deliberately NOT wrapped in any `try`/`except` that
+would convert a failure into a per-call error result, so a listener's own exception propagates
+straight out, uncaught, before `_finalize`/`tools/execution-end`'s own EMIT ever runs, exactly
+matching the source-confirmed Pi behavior above. `execute_call`/`execute_batch` (`tools/batch.py`)
+thread `on_execution_update` through alongside `on_execution_start`/`on_execution_end` (not
+`execute_length_stop_batch`, which never calls `execute()` and so never has updates to dispatch).
+`driver.py`'s own `on_execution_update` closure dispatches `ToolExecutionUpdate` through
+`AGENT_LIFECYCLE_EVENT` directly; the PASS-6-era capture list, its sync `tools/update` EMIT
+listener, and the per-call filtering that used to live inside `on_execution_end` are removed
+entirely -- `on_execution_end` now only clears `pending_tool_calls` and dispatches
+`ToolExecutionEnd`, nothing else. Because `on_execution_end` fires only once
+`_execute_and_finalize` has already joined every one of that call's own scheduled update
+dispatches, `pending_tool_calls` now stays set for the call's own whole update-dispatch window,
+matching pinned Pi's own reducer timing exactly.
+
+**RED evidence:** before this pass, no test observed `pending_tool_calls` DURING an update
+dispatch (every existing update-related assertion checked payload content only, never live state);
+no test made an update listener fail (the PASS-6 design had no code path that could distinguish
+"listener failure converted to an error result" from "listener failure propagates uncaught," since
+updates were never live-dispatched from inside the tool-execution machinery at all); no test
+demonstrated non-blocking scheduling (a synchronous capture-into-a-list is trivially non-blocking
+for the wrong reason -- it never runs the listener at all until later -- so no test could
+distinguish that from genuine concurrent scheduling).
+
+**GREEN evidence:** at the Layer-06 level (`tests/tools/test_updates.py`):
+`test_on_execution_update_is_awaited_for_every_call_in_order` (every update reaches the hook, in
+order, before `execute_call` returns), `test_a_failing_on_execution_update_listener_propagates_
+uncaught` (the exception surfaces from `execute_call` itself, via `pytest.raises`, and
+`tools/execution-end` never emits for that call), `test_on_execution_update_does_not_block_the_
+tools_own_execute` (`order == ["tool continued", "hook"]` -- the tool's own synchronous
+continuation runs before a slow hook's own `asyncio.sleep(0)` resolves, proving `update()` itself
+never blocks on the hook). At the Layer-08 level (`tests/agent_loop/test_run_entry_points.py`):
+`test_pending_tool_calls_still_shows_the_call_during_its_own_update_dispatch` (`pending_snapshots
+== [frozenset({"t1"})]`, observed live from inside the `AGENT_LIFECYCLE_EVENT` listener) and
+`test_tool_execution_update_listener_failure_is_a_genuine_run_failure` (the run settles via
+recovery with `AGENT_END` reason `"failed"`, and `ToolExecutionEnd` never dispatches for that
+call -- `finalized` stays `False`).
+
+**Spec/manifest changes:** `spec/agent.md`'s `ToolExecutionUpdate` bullet rewritten a second time
+to describe the scheduled-live-dispatch design and cite the exact `agent-loop.ts:670-711` source
+lines; the Layer-08 section's own "last rewritten"/rejection-cycle-count markers updated. `AG-009`
+manifest row gained a new PASS-7 paragraph (history preserved, including PASS 6's own now-corrected
+belief that the cross-call interleaving gap was "source-confirmed-necessary" -- it was not; the
+capture-and-replay MECHANISM was the defect, not an inherent property of the event).
+
+**Disposition:** resolved. `AG-009`: adopted, without qualification -- no remaining Layer-08 event
+in the union is captured-and-replayed rather than genuinely live.
+
+### L08-R004 — spec/AG-009 still classified the mismatch as adopted; tests did not discriminate it
+
+**Re-review finding:** "the specification and AG-009 classify that mismatch as adopted behavior,
+while current tests do not discriminate callback timing, cross-call ordering, pending-state
+visibility, or update-listener failure."
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** closed as a direct consequence of `L08-R002`'s own remediation above: the
+mismatch no longer exists, so there is nothing left to misclassify as adopted, and the five new
+tests listed under GREEN evidence above are exactly the discriminating coverage the finding asked
+for (callback timing, cross-call/non-blocking scheduling, pending-state visibility during an
+update, and update-listener failure, at both the Layer-06 and Layer-08 levels).
+
+**Disposition:** resolved. No manifest row directly corresponds to this doc-only defect; `spec/
+agent.md` itself is the artifact.
+
+## Regression verification for the closed findings
+
+`L08-R005` (no-cap canonical genuinely discriminating): unchanged by this pass -- none of the
+`tool_execution_update` scheduling changes touch turn counting. Re-run and still passing at 21
+provider-script turns / 42 expected messages.
+
+`L08-R006` (initial prompt lifecycle before the steering claim):
+`test_the_initial_prompt_lifecycle_precedes_the_steering_claim` still passes unchanged; this
+pass's own edits live entirely inside `_execute_and_finalize`'s update-scheduling and `_run_step`'s
+tool-hook wiring, neither of which this sequencing depends on.
+
+`L08-R009` / `L08-R010` (`request_boundary_stop()` removed): confirmed still absent -- no
+`request_boundary_stop`, `cancel`, or `_boundary_stop_requested` symbol anywhere in
+`agent_loop/driver.py` or its own test files.
+
+`L08-R002`'s own `tool_execution_start`/`tool_execution_end` genuinely-live fix (PASS 6): unchanged
+and re-verified -- `test_tool_execution_start_listener_failure_prevents_that_calls_own_execution`
+and `test_sequential_tool_batch_delivers_live_start_end_per_call_in_order` both still pass, and
+this pass added no new capture-and-replay code for either event.
+
+## Full Layer-08 semantic reconstruction
+
+Re-walked against pinned Pi after remediation, with particular attention to the one mechanism this
+pass rewrote: `tool_execution_update`'s own scheduling and join timing, checked against three
+distinct properties simultaneously (non-blocking scheduling at callback time, `pending_tool_calls`
+visibility during the dispatch window, and uncaught listener-failure propagation before
+finalization) rather than any one of them in isolation, since the re-review's own finding named
+all three as consequences of the same underlying mechanism defect. `tool_execution_start`/
+`tool_execution_end`'s own genuinely-live dispatch (PASS 6) and every other PASS-6 fix (complete
+`MessageUpdate`/`ToolExecutionEnd` payloads, the no-start fallback ordering, the `_execute_run`
+catch boundary) were re-confirmed unchanged, not re-derived from scratch.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00% -- includes every new asyncio.ensure_future/gather
+                                      branch in tools/execute.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same 7 pre-existing,
+                                      Layer-08-unrelated files noted in PASS 6 remain untouched and
+                                      out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing
+conformance/ (full):                 all passing, including the no-cap regression, unchanged
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 gained a PASS-7 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/agent.md's ToolExecutionUpdate bullet rewritten to
+                                      describe the corrected scheduling design; last-rewritten/
+                                      rejection-cycle markers updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_BEHAVIOR_UNCERTAIN         none
+PI_PARITY_DEFECT              none -- L08-R002 (tool_execution_update now genuinely live,
+                               scheduled at callback time and joined before finalization,
+                               matching pinned Pi's own agent-loop.ts:670-711 exactly)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R004 resolved
+unapproved intentional divergence   none -- no remaining Layer-08 AgentEvent is captured-and-
+                               replayed rather than genuinely live; no disclosed narrower fidelity
+                               remains anywhere in this layer's own event seam
+Layer-09 implementation       none -- handleRunFailure composes correctly with a future Layer-09
+                               implementation without implementing any part of it
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Fifth rejection/remediation cycle for this layer -- the third consecutive cycle blocked on the
+same two finding IDs (`L08-R002`, `L08-R004`), each time for a materially different reason.
+Captured for later integration into `process/agent-workflow.md` at Layer-08's own closure
+retrospective, NOT applied to that file now:
+
+1. "We already audited this specific event against Pi source" is not the same claim as "we audited
+   EVERY property of this event against Pi source." PASS 6's own audit of `agent-loop.ts:670-711`
+   correctly established that Pi's own `tool_execution_update` is fire-and-forget-then-batch-drain
+   in SHAPE, but never checked whether the Python REPRODUCTION actually reproduced the "listener
+   dispatch begins at callback time" property specifically -- it only reproduced "the caller isn't
+   blocked until later," which a pure capture-then-replay-elsewhere design also technically
+   satisfies while getting the causal timing completely wrong. When a finding names multiple
+   distinct observable consequences (here: ordering, state visibility, AND failure behavior), treat
+   each as an independent thing to verify against source, not as three symptoms of one thing already
+   fixed once the shape matches.
+2. A "captured now, dispatched later" pattern is the SAME underlying defect class regardless of
+   WHERE the later dispatch point is chosen (after the whole batch settles, per PASS 5's own
+   rejected design; or per-call, immediately before that call's own end event, per PASS 6's own
+   rejected refinement) -- moving the deferred-dispatch point closer to the "correct" moment narrows
+   the observable gap without closing it. The only fix that actually closes this class of defect is
+   making the dispatch itself happen at the real causal moment, live, not merely narrowing the delay
+   before a deferred replay.
+3. Python's `asyncio.ensure_future`/`asyncio.gather` is the direct structural analogue of an
+   unawaited JS promise pushed onto an array and later joined via `Promise.all` -- this project's
+   own recurring pattern of "an implementation constraint in one language is not automatically a
+   semantic constraint pinned Pi shares" (first identified for `collect()` in PASS 5's own retro)
+   extends cleanly to genuine CONCURRENCY primitives, not just to consumption-pattern restructuring:
+   Python has a real equivalent of "start now, don't block, join later," and reaching for it instead
+   of a synchronous data-capture structure is what actually closes a fire-and-forget-shaped Pi
+   event's own fidelity gap.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-7 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004 closure status; mark both Ready for Review once the candidate gate above is
+satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @
+8875ebc, PASS-6 rejection #8 @ 752754a`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a full
+independent Layer-08 contract re-review against the new PASS-7 candidate SHAs; all prior verdicts
+apply only to their exact superseded candidates`. Then stop. Do not merge PR #13, #3, #4, #5, #6,
+#7, or #8. Do not implement Rust. Do not start Layer 09.
