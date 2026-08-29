@@ -1488,7 +1488,7 @@ Third rejection/remediation cycle for this layer. Captured for later integration
    this, not the Rust review; treat a coverage gate failure in an unrelated certified package as a
    direct signal of exactly this kind of accidental exercise loss, not noise to route around.
 
-## Next action
+## Next action (superseded -- see PASS 6 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-5 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -1499,3 +1499,321 @@ gate above is satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT
 `NEXT_ACTION: complete a full independent Layer-08 contract re-review against the new PASS-5
 candidate SHAs; all prior verdicts apply only to their exact superseded candidates`. Then stop. Do
 not merge PR #13, #3, #4, #5, or #6. Do not implement Rust. Do not start Layer 09.
+
+This candidate (code `c5c9566`, docs `0301f41`) was independently reviewed and REJECTED
+(`L08-R002`, `L08-R004` remained open; review commit `8875ebc`, evidence docs PR #7). See PASS 6
+below for the remediation.
+
+# PASS 6 — remediation for the independent Rust re-review rejection (L08-R002, R004)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-5 candidate (code PR #13 @ `c5c9665c3d3734a9bfbd742b73
+f274ec0ac979832`, docs PR #3 @ `0301f4159ef98c2c58f4bfeb08572c0c91e55238`, pinned Pi `b7bb00b93
+6dbe21b8e160b3e89efdec361846699`) **REJECTED** it (`minion-agent-docs#7` @ `8875ebce5b20b8c67d6d86
+350464fb71107d1204`, evidence docs PR #7). `L08-R005`, `R006`, `R009`, `R010` CLOSED. Two findings
+STILL OPEN: `L08-R002` (`PI_PARITY_DEFECT`) -- tool start/end events replayed after batch execution
+rather than delivered live, changing listener causality and reordering sequential batches from
+`start A, end A, start B, end B` to `start A, start B, end A, end B`; agent-level
+`tool_execution_update` missing entirely; `ToolExecutionEnd`/`MessageUpdate` payloads incomplete;
+the no-start stream fallback reducing state in the wrong order; ordinary `agent_start` and a
+successful `agent_end`'s own listener failures living outside `_execute_run`'s recovery catch --
+and `L08-R004` (`CONTRACT_ASSURANCE_DEFECT`) -- spec and `AG-009` described the knowingly narrower
+tool-event seam as complete and adopted (a disclosed known mismatch is still a `PI_PARITY_DEFECT`
+absent approved intentional divergence -- the same standing rule this project has applied to every
+prior self-granted "intentional divergence" this whole cycle), and the spec's own inventory still
+referenced removed `AG-020`/`AG-022`.
+
+Prior Rust approval does not exist for this or any later candidate SHA -- the rejection at
+`8875ebc` applies only to the superseded PASS-5 candidate. The rejected review evidence PRs (#4,
+#5, #6, #7) are not modified or overwritten by this pass; they remain the immutable record of what
+PASS 2 through PASS 5 actually were and why each was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R002 — the live seam was still incomplete, mistimed, and improperly scoped
+
+**Re-review finding:** PASS 5 subscribed synchronous callbacks to Layer-06's own
+`tools/execution-start`/`tools/execution-end` EMIT events, ran the entire tool batch, disposed the
+callbacks, then dispatched all captured starts followed by all captured ends. This is observably
+different from pinned Pi in four ways: (1) Agent listeners cannot delay or prevent the
+corresponding tool execution -- a throwing listener has no effect on whether that call runs;
+(2) a listener failure surfaces only after the tool batch's own side effects already happened;
+(3) a sequential batch's own `start A, end A, start B, end B` order is reordered to
+`start A, start B, end A, end B`; (4) recovery, when triggered by one of these listeners, begins at
+a different causal point than pinned Pi's own. In addition: `tool_execution_update` never reached
+the seam at all; `ToolExecutionEnd` carried only `tool_call_id`/`is_error`, not `tool_name`/the
+finalized `result`; `MessageUpdate` carried a normalized `kind`/`content_index` pair instead of
+pinned Pi's own raw `assistantMessageEvent`; the no-start stream fallback in `_run_step` cleared
+`streaming_message` and appended the transcript entry BEFORE the fallback `MessageStart`'s own
+dispatch; and `agent_start`'s own dispatch plus the success path's own `agent_end` dispatch both
+lived entirely outside `_execute_run`'s `try`, so a listener failure at either point escaped
+uncaught past `_run_wrapped`'s own `finally` instead of being settled like any other run-executor
+failure.
+
+**Pi reproduction:** confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`, the
+exact pinned revision). `types.ts:428-443` -- the `AgentEvent` union carries
+`tool_execution_start{toolCallId, toolName, args}`, `tool_execution_update{toolCallId, toolName,
+args, partialResult}`, and `tool_execution_end{toolCallId, toolName, result, isError}`, confirming
+the exact payload shape for all three, including `tool_execution_end`'s own `result` field (not
+merely `isError`). `agent-loop.ts:387-388,445-446,500-501` -- `tool_execution_start` is
+`await emit(...)`ed inline, at each call's own real preflight point, in EVERY execution mode
+(sequential, parallel, length-stop); `agent-loop.ts:768-769` -- `tool_execution_end` is likewise
+`await emit(...)`ed inline, at each call's own real completion point -- both genuinely live and
+causally blocking, exactly as the re-review described. `agent-loop.ts:670-711`
+(`executePreparedToolCall`) -- BY CONTRAST, `tool_execution_update` is Pi's OWN fire-and-forget
+case: the tool's own synchronous `update` callback (line 683) pushes `emit(...)`'s returned promise
+onto an `updateEvents` array WITHOUT awaiting it inline, and `Promise.all(updateEvents)` is awaited
+only once, after `execute()` itself settles (line 699) -- BEFORE `finalizeExecutedToolCall` (which
+fires `tool_execution_end`) is ever called. This is a direct, source-confirmed precedent for
+"capture during execute(), drain in one batch immediately before that same call's own end" as
+pinned Pi's OWN chosen semantics for this one event specifically, not a Python-only workaround --
+it narrows what PASS 5's own rationale could only assert as an SDK-level constraint into a
+source-verified structural match. `agent.ts:413,418,426,430` -- `Agent.prompt()`/`continue()` both
+call `runWithLifecycle(async (signal) => { ... (event) => this.processEvents(event) ... })`, with
+the ENTIRE run body -- including `agent_start`'s own dispatch inside `runAgentLoop` -- as the
+wrapped executor. `agent.ts:486-509` (`runWithLifecycle`) -- `try { await executor(...) } catch {
+await handleRunFailure(...) } finally { finishRun() }` wraps that whole executor, confirming
+`agent_start` and an ordinary, successful `agent_end` are exception-boundary-covered exactly like
+every turn in between, not specially excluded.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:**
+
+1. Layer 06's `tools/execute.py`/`tools/batch.py` gained additive, optional
+   `on_execution_start: Callable[[str, str, dict], Awaitable[None]] | None` /
+   `on_execution_end: Callable[[str, str, ToolResult], Awaitable[None]] | None` parameters
+   (`OnExecutionStart`/`OnExecutionEnd`), threaded through `_immediate`, `_preflight`,
+   `_execute_and_finalize`, `execute_call`, `execute_batch`, and `execute_length_stop_batch`,
+   awaited at the EXACT points the existing, still-certified `tools/execution-start`/
+   `tools/execution-end` EMIT events already fire, with the await OUTSIDE any try/except that
+   would swallow its exception -- a listener that raises genuinely prevents that call from
+   proceeding, propagating uncaught, the same as pinned Pi's own inline `await emit(...)`.
+   `None` (every existing caller) preserves Layer 06's own certified behavior exactly; no lower-
+   layer contract reopened, no existing Layer-06 test changed.
+2. `_run_step` now supplies live `on_execution_start`/`on_execution_end` closures to
+   `execute_batch`/`execute_length_stop_batch` that dispatch `ToolExecutionStart`/`ToolExecutionEnd`
+   directly through `AGENT_LIFECYCLE_EVENT`, in real time, replacing PASS 5's own capture-then-
+   redeliver-after-the-batch pattern entirely.
+3. `tool_execution_update`, matching the source-confirmed Pi precedent above: a `tools/update` EMIT
+   listener captures `(call_id, tool_name, arguments, partial_result)` tuples as they fire, in
+   order; `on_execution_end` filters that list by `call_id` and dispatches each of that SAME call's
+   own captured `ToolExecutionUpdate` events, in order, immediately before dispatching that call's
+   own (now-live) `ToolExecutionEnd` -- `accepting_updates` (`tools/execute.py`, unchanged,
+   certified) already guarantees every one of a call's own updates is captured before that call's
+   own `execute()` promise settles, so this ordering is exact, not approximate, for a single call's
+   own start/updates/end sequence. Only the relative interleaving of two DIFFERENT concurrent
+   calls' own updates is unreproducible without redesigning the certified, synchronous `update()`
+   tool-authoring convention itself -- out of this pass's narrow, additive scope, and a disclosed,
+   genuine SDK constraint distinct from PASS 5's own Layer-06-EMIT-timing choice (which had a real
+   live alternative available and simply had not been built).
+4. `agent/projection.py`: `MessageUpdate.event` now holds the raw `AssistantMessageEvent` union
+   (`TextStart | TextDelta | TextEnd | ThinkingStart | ThinkingDelta | ThinkingEnd | ToolCallStart |
+   ToolCallDelta | ToolCallEnd`) instead of `kind`/`content_index`; `ToolExecutionEnd` gained
+   `tool_name: str` and `result: ToolResult`; a new `ToolExecutionUpdate` dataclass
+   (`tool_call_id, tool_name, arguments, partial_result`) was added to the `AgentEvent` union.
+   `_run_step` logs `chunk` itself (the real `StreamChunk` variant) verbatim for live dispatch, plus
+   one extra `"delta"` log field for the three delta-kind chunks only (the one field their own
+   `partial` cannot reconstruct -- a start/end chunk's own fields are already derivable from
+   `partial.content[content_index]`); the offline `project()` rebuilds the same union from those
+   log entries via a new `_assistant_message_event` helper. `ToolExecutionEnd.result` is rebuilt
+   offline via a new `_tool_result_from_message` helper from the `TOOL_RESULT` entry's own
+   `ToolResultMessage` plus one new logged field, `"terminate"` -- the one `ToolResult` field
+   `to_message()` never copies onto the message, by design, since it must never reach the model;
+   every other field round-trips verbatim.
+5. `_run_step`'s no-start fallback now sets `streaming_message = reply` and dispatches
+   `MessageStart` FIRST, then clears `streaming_message`, appends the transcript entry, and
+   dispatches `MessageEnd` -- reduce-then-dispatch, per event, matching the fix already applied to
+   every other admission point in PASS 5.
+6. `_execute_run`: `context`/`config` construction moved before the `try` (pure local assembly, no
+   listener dispatch); `agent_start`'s own append/dispatch and the success path's own `agent_end`
+   append/dispatch both moved INSIDE the `try`, sharing `_run_inner`'s own exception boundary. A
+   listener failure on a successful `agent_end`'s own dispatch now produces a second, `failed`
+   `AGENT_END` right after the first, successful one -- matching pinned Pi exactly:
+   `handleRunFailure` has no awareness of how far the run had already reduced when its own dispatch
+   throws (`agent.ts`'s own `runWithLifecycle` catch does not distinguish where in the executor the
+   exception came from).
+
+**RED evidence:** before this pass, no test exercised `ToolExecutionStart`/`ToolExecutionEnd`'s own
+live/blocking property at all -- every existing tool-execution assertion went through the offline
+`project()` reconstruction, which cannot distinguish live dispatch from capture-and-replay. A
+listener raising on `ToolExecutionStart` did not, before this pass, prevent that tool's own
+`execute()` from running (PASS 5's own capture happened via a temporary EMIT listener with no
+bearing on execution itself). `MessageUpdate`/`ToolExecutionEnd` tests asserting `.kind`/`.is_error`
+alone (not `.event`/`.tool_name`/`.result`) passed against the incomplete payload and would not have
+caught its own incompleteness.
+
+**GREEN evidence:** `test_tool_execution_start_listener_failure_prevents_that_calls_own_execution`
+(the registered tool's own side effect never runs), `test_sequential_tool_batch_delivers_live_
+start_end_per_call_in_order` (`[start:alpha, execute:alpha, end:alpha, start:beta, execute:beta,
+end:beta]`, not PASS 5's own `[start:alpha, start:beta, ...]`), `test_tool_execution_update_
+reaches_the_lifecycle_seam` (a 3-argument tool's own `update("working")` reaches
+`AGENT_LIFECYCLE_EVENT` as `ToolExecutionUpdate` before that call's own `ToolExecutionEnd`),
+`test_tool_execution_end_carries_the_finalized_result` (`tool_name`/`result`/`is_error` all
+present, `result.to_message()` round-trips), `test_a_chunk_projects_to_a_message_update` (updated:
+asserts `isinstance(update.event, TextDelta)` and its own `content_index`/`delta`, not a bare
+`kind` string), the three `test_streaming_message_carries_the_full_partial_for_*` tests (updated to
+`isinstance(u.event, TextStart | TextDelta | TextEnd)` etc.), `test_a_stream_with_no_start_chunk_
+still_gets_a_message_start` (strengthened: asserts `instance.streaming_message is message` observed
+INSIDE the fallback `MessageStart`'s own listener, not merely event-type ordering),
+`test_an_agent_start_listener_failure_settles_gracefully` and `test_a_successful_agent_end_
+listener_failure_settles_gracefully` (the latter asserting the Pi-faithful double-`AGENT_END`
+outcome: `["completed", "failed"]`).
+
+**Spec/manifest changes:** `spec/agent.md`'s "The live Agent-event seam" section rewritten again
+(the tool-event carve-out replaced with the genuinely-fixed description, `tool_execution_update`
+added to the event-union list, the `AgentStart`/successful-`AgentEnd` catch-boundary fix
+described); the Layer-08 opening's own `AG-020`/`AG-022` cross-reference corrected to name the
+actual current rows (`AG-001`..`AG-010`, `AG-021`); the Layer-08 section's own "last rewritten"
+marker updated. `AG-009` manifest row rewritten with a new PASS-6 paragraph (history preserved,
+not overwritten); `AG-001`'s stale `_run_once` python-field reference corrected to `_run_step`
+(that method no longer exists, renamed across earlier passes); `AG-002`'s rust-field prose
+("PASS 4 is the remediated candidate awaiting re-review") corrected to reflect PASS 5/PASS 6's own
+continued conformance on that row.
+
+**Disposition:** resolved. `AG-009`: adopted (genuinely, this time -- no remaining disclosed
+narrower fidelity for `tool_execution_start`/`tool_execution_end`; `tool_execution_update`'s own
+cross-call interleaving limitation is the one remaining, source-confirmed-necessary gap, distinct
+in kind from what PASS 5 disclosed).
+
+### L08-R004 — spec/manifest still described the narrower seam as complete, and cited removed rows
+
+**Re-review finding:** "Spec and AG-009 describe the knowingly narrower tool-event seam as complete
+and adopted... Current spec inventory still references removed AG-020/AG-022."
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** both defects are closed as a direct consequence of `L08-R002`'s own remediation
+above, not independently patched around: the seam is no longer narrower, so the carve-out language
+describing it as such was removed rather than merely reworded, and the `AG-020`/`AG-022`
+cross-reference was corrected to the manifest's own actual current row set.
+
+**Disposition:** resolved. No manifest row directly corresponds to this doc-only defect; `spec/
+agent.md` itself is the artifact.
+
+## Regression verification for the closed findings
+
+`L08-R005` (no-cap canonical genuinely discriminating): `no-turn-count-cap-on-pi-equivalent-run.yaml`
+is unchanged by this pass -- none of the tool-event/message-payload/catch-boundary fixes touch turn
+counting or the canonical's own scripted turn sequence. Re-run and still passing at 21
+provider-script turns / 42 expected messages.
+
+`L08-R006` (initial prompt lifecycle before the steering claim): `_run_inner`'s own two-stage
+admission sequencing is untouched by this pass (every PASS-6 change lives inside `_run_step`'s tool/
+stream handling or `_execute_run`'s catch boundary, neither of which this sequencing depends on).
+`test_the_initial_prompt_lifecycle_precedes_the_steering_claim` still passes unchanged.
+
+`L08-R009` / `L08-R010` (`request_boundary_stop()` removed): confirmed still absent -- no
+`request_boundary_stop`, `cancel`, or `_boundary_stop_requested` symbol anywhere in
+`agent_loop/driver.py` or its own test files; no manifest row reintroduces it.
+
+## Full Layer-08 semantic reconstruction
+
+Re-walked against pinned Pi after remediation, with particular attention to the three mechanisms
+this pass rewrote: tool-execution event delivery (now checked for genuine causal blocking, not
+merely final-trace shape -- a throwing `on_execution_start` listener prevents `execute()` from ever
+being called, confirmed directly, not inferred from ordering alone), the complete `AgentEvent`
+payload union (every `MessageUpdate`/`ToolExecutionEnd`/`ToolExecutionUpdate` field checked against
+pinned Pi's own `types.ts` shape, not just presence), and the `_execute_run` catch boundary (both
+the pre-existing recovery-sequence-internal-failure case, unchanged, and the two NEW cases this
+pass added -- an `agent_start`-time failure and a successful-`agent_end`-time failure -- checked
+together to confirm neither regresses the other). `error_message`/`streaming_message` reduce timing
+from PASS 5 remains correct and unchanged by this pass's own edits. No `max_steps`- or
+`request_boundary_stop()`-shaped termination exists anywhere in the Pi-equivalent run path.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00% -- includes the new Layer-06 additive-hook branches
+                                      (tools/execute.py, tools/batch.py) and every new PASS-6
+                                      driver.py/projection.py branch
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; 7 pre-existing files
+                                      elsewhere in the tree (unrelated to Layer 08, not touched by
+                                      this or any prior Layer-08 pass) show unrelated formatting
+                                      drift, out of this pass's ownership scope, left untouched
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing (tests/conformance/test_schema_validation.py)
+conformance/ (full):                 all passing, including the no-cap regression, unchanged
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 rewritten; AG-001/AG-002 hygiene fixes;
+                                      no new/removed rows)
+stale normative-text audit:          spec/agent.md's tool-event carve-out replaced (not reworded);
+                                      AG-020/AG-022 cross-reference corrected; Layer-08 section's
+                                      own "last rewritten" marker and rejection-cycle count updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_BEHAVIOR_UNCERTAIN         none
+PI_PARITY_DEFECT              none -- L08-R002 (genuinely live tool-execution events, complete
+                               AgentEvent payloads, corrected fallback/catch-boundary ordering) and
+                               L08-R009 both resolved
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R004, L08-R005, and L08-R010 all resolved
+unapproved intentional divergence   none -- the one remaining, source-confirmed narrower fidelity
+                               (tool_execution_update's own cross-call interleaving) matches pinned
+                               Pi's OWN chosen fire-and-forget-then-batch-drain semantics for that
+                               event specifically (agent-loop.ts:670-711), not a Minion-only gap
+Layer-09 implementation       none -- handleRunFailure composes correctly with a future Layer-09
+                               implementation without implementing any part of it
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Fourth rejection/remediation cycle for this layer. Captured for later integration into
+`process/agent-workflow.md` at Layer-08's own closure retrospective, NOT applied to that file now:
+
+1. "Disclosed" is not "approved." This project's own default (first applied to `max_steps`, reused
+   for `request_boundary_stop()`, and now confirmed a third time here) is that a self-granted
+   "intentional divergence" recorded only in this project's own spec/manifest text -- with no real
+   owner governance approval -- does not survive independent review, no matter how clearly it is
+   written down. When a genuine fix is available (as it was here, via an additive Layer-06 hook),
+   build it rather than disclosing the gap.
+2. When PASS 5's own capture-and-replay pattern was rejected for `tool_execution_start`/`_end`, the
+   temptation was to assume the SAME pattern would also be rejected for `tool_execution_update` and
+   therefore under-justify it. Instead, auditing pinned Pi's OWN source for that specific event
+   (`agent-loop.ts:670-711`) found Pi uses a structurally similar fire-and-forget-then-batch-drain
+   pattern there ITSELF -- turning a merely-asserted SDK constraint into a source-verified
+   structural match. Audit the specific event's own real Pi implementation before assuming a
+   rejected pattern generalizes uniformly across every event in the same finding.
+3. A narrow, additive lower-layer delta (new optional hook parameters, `None`-safe for every
+   existing caller) can close a fidelity gap without reopening or renegotiating that layer's own
+   certified contract -- confirmed a second time (Layer 02/04's `collect()` in PASS 5's own retro,
+   Layer 06's `execute_batch`/`execute_call` here) as a reliable escape from "the lower layer is
+   certified, so consuming code must accept its convenience shape as a Pi-visible limit."
+4. Re-verify EVERY assumption in an inherited finding write-up against source directly, even ones
+   that sound authoritative -- this pass's `MessageUpdate.event`/`ToolExecutionEnd.result` types
+   were designed from the re-review's own prose summary first, then independently re-confirmed (and
+   in the `tool_execution_update` case, materially strengthened) against `types.ts`/`agent-loop.ts`
+   directly, per this project's own standing "audit pinned Pi source before deciding" rule -- do
+   this BEFORE writing remediation code, not only when documenting it afterward, to catch a
+   between-summary-and-source gap while it is still cheap to fix.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-6 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004 closure status; mark both Ready for Review once the candidate gate above is
+satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @
+8875ebc`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a full independent Layer-08 contract
+re-review against the new PASS-6 candidate SHAs; all prior verdicts apply only to their exact
+superseded candidates`. Then stop. Do not merge PR #13, #3, #4, #5, #6, or #7. Do not implement
+Rust. Do not start Layer 09.

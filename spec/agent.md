@@ -6,7 +6,7 @@ inbox/queues** (below) and **Layer 08 — the run/turn state machine** (the rest
 self-certified pending independent Rust contract review). The split exists because Layer 07's
 primitives had to be stable enough for Layer 08 to consume without redesign, and because "agent
 state and queues behave like Pi" was too coarse a requirement to test independently
-(`AG-011`..`AG-019`; `AG-001`..`AG-010`/`AG-020`..`AG-022` are Layer-08-owned, specified in that
+(`AG-011`..`AG-019`; `AG-001`..`AG-010` and `AG-021` are Layer-08-owned, specified in that
 section below -- `AG-007` alone remains Layer-09-owned and deferred). The Layer-07 section below
 predates Layer 08's own implementation and still describes some Layer-08 state ownership as future
 work for historical/scope-boundary reasons (which layer owns WHICH field never changed); where it
@@ -249,10 +249,10 @@ consequence of delegating to `clear_all()`.
 
 ## Layer 08 — the run/turn state machine
 
-Normative, current-state contract (last rewritten PASS 4). This section describes ONE coherent
+Normative, current-state contract (last rewritten PASS 6). This section describes ONE coherent
 Layer-08 semantic contract as it stands today, verified directly against pinned Pi
 (`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
-passes; that history -- including two independent Rust review rejections and their remediation --
+passes; that history -- including four independent Rust review rejections and their remediation --
 lives in `assurance/layers/08-agent-loop-python.md`, not here. A normative section and an assurance
 history section serving different readers with different needs is deliberate: Rust review must be
 able to trust this section alone as the target to implement against, without cross-referencing which
@@ -390,8 +390,9 @@ substitutes for that automatically, an intentional Minion extension.
 
 Pinned Pi's `Agent.subscribe(listener)` is a public surface delivering the `AgentEvent` union
 (`agent_start`/`turn_start`/`message_start`/`message_update`/`message_end`/`turn_end`/`agent_end`,
-plus `tool_execution_start`/`tool_execution_end`) LIVE, during the run, through one seam --
-`processEvents(event)` -- that first reduces `Agent`'s own internal state for that event, then
+plus `tool_execution_start`/`tool_execution_update`/`tool_execution_end`) LIVE, during the run,
+through one seam -- `processEvents(event)` -- that first reduces `Agent`'s own internal state for
+that event, then
 awaits every subscribed listener in registration order with no catch around the loop: a listener
 that throws aborts the remaining listeners for that event and propagates out of `processEvents`
 itself (agent.ts:544-591). `runWithLifecycle`'s own `catch` calls `handleRunFailure` for any
@@ -420,15 +421,32 @@ the COMPLETE `AgentEvent` union, not a partial one:
   used everywhere else; it reproduces `collect()`'s own trivial drain loop at the one call site that
   needs an async per-chunk dispatch, dispatching `MessageStart`/`MessageUpdate`/`MessageEnd` for
   every chunk;
-- Layer-06's own `tools/execution-start`/`tools/execution-end` events (synchronous EMIT dispatch, by
-  certified Layer-06 design) are captured in real time -- the moment each one actually fires -- and
-  redelivered through this same seam once a tool batch settles, in the exact order Layer 06 emitted
-  them (every call's own start always precedes any call's own end, per Layer 06's own certified
-  batch structure). This is a disclosed, narrower fidelity than pinned Pi's own live blocking
-  dispatch for this one event pair specifically: a slow Minion listener cannot causally delay a
-  specific tool call's own further progress the way a slow pinned Pi listener could, since
-  Layer-06's EMIT dispatch mode is certified and this section does not reopen it;
-- `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before.
+- `ToolExecutionStart`/`ToolExecutionEnd` are genuinely LIVE, at real execution points, matching
+  pinned Pi's own blocking dispatch exactly (Layer 08, PASS 6, closing a gap PASS 5 left open):
+  Layer 06's own `tools/execute.py`/`tools/batch.py` gained additive, optional
+  `on_execution_start`/`on_execution_end` async hooks, awaited at the EXACT points the existing,
+  still-certified `tools/execution-start`/`tools/execution-end` EMIT events already fire --
+  `None` (every other caller) preserves Layer 06's own certified behavior exactly, no lower-layer
+  contract reopened. A listener failure here genuinely prevents that call's own `execute()` from
+  proceeding, and sequential-mode ordering is the real `start A, end A, start B, end B`, not a
+  batch-wide capture-and-replay;
+- `ToolExecutionUpdate` reaches the same seam too (previously missing from the union entirely): a
+  tool's own `execute()` calls its `update(partial)` callback SYNCHRONOUSLY, an established
+  SDK-level calling convention (`_wants_update`, `tools/execute.py`) no Layer-06 caller may
+  redesign out from under every existing tool definition -- genuinely different from the
+  `collect()` case above, which had a real live alternative available. Updates are captured via
+  the existing, certified, synchronous `tools/update` EMIT listener and redelivered per call,
+  immediately before that SAME call's own live `ToolExecutionEnd` dispatch: `accepting_updates`
+  (`tools/execute.py`) already guarantees every one of a call's own updates lands before that
+  call's own `execute()` promise settles, so per-call causal order (start, its own updates, end)
+  is exact. Only the interleaving of two DIFFERENT concurrent calls' updates is unreproducible
+  without that same tool-authoring redesign -- a disclosed, genuine SDK constraint, distinct from
+  an implementation convenience with an available fix;
+- `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
+  `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
+  `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is
+  caught and settled via `_settle_run_failure` the same as any other run-executor failure, not left
+  to escape uncaught past `_run_wrapped`'s own `finally`.
 
 `_settle_run_failure` (pinned Pi's `handleRunFailure`) is `async` and dispatches its own four-event
 sequence through this SAME seam, in the same order, letting a thrown listener propagate uncaught
