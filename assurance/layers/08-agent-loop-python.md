@@ -2321,7 +2321,7 @@ to that file now:
    the underlying LANGUAGE semantics (`async function` call timing) those lines depend on, which is
    where the actual remaining defect lived.
 
-## Next action
+## Next action (superseded -- see PASS 9 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-8 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -2333,3 +2333,189 @@ satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
 `NEXT_ACTION: complete a full independent Layer-08 contract re-review against the new PASS-8
 candidate SHAs; all prior verdicts apply only to their exact superseded candidates`. Then stop. Do
 not merge PR #13, #3, #4, #5, #6, #7, #8, or #9. Do not implement Rust. Do not start Layer 09.
+
+This candidate (code `c20376c`, docs `af207e1`) was independently reviewed and REJECTED a fifth
+time (`L08-R002`, `L08-R004` remained open -- PASS 8 correctly fixed the single-listener timing
+defect but left a new, deeper multi-listener suspension-boundary defect open; review commit
+`2818dd8`, evidence docs PR #10). This finding pair's own five-cycle recurrence triggered
+`process/agent-workflow.md` section 11.8's contract-convergence protocol (itself adopted this same
+remediation cycle). See `assurance/layers/08-agent-loop-contract-convergence.md` for the
+characterization/challenge/checkpoint record, and PASS 9 below for the implementation pass.
+
+# PASS 9 — contract-convergence implementation pass (L08-R002, R004)
+
+## Convergence reference
+
+Entered `CONTRACT_CONVERGENCE` after the PASS-8 candidate (code PR #13 @ `c20376cba8dbae7ca795f74
+7cb0b126ab39f7a1e`, docs PR #3 @ `af207e1602b68cf92a2400b50ebe768f9e7d64be`) was independently
+reviewed and **REJECTED** (`minion-agent-docs#10` @ `2818dd849ad1385d83d966f42f846466fa506876`,
+evidence docs PR #10) for the fifth consecutive time on the same finding pair. Full characterization
+(re-audit of pinned Pi's own `agent.ts:544-591::processEvents` and `runtime/events.py::EventBus.
+serial`/`_call`), challenge pass, and the agreed convergence-contract checkpoint are recorded at
+`assurance/layers/08-agent-loop-contract-convergence.md` (docs commit `d06654b2b0862b31dd713357d3
+5084081c92695a`) -- not reproduced verbatim here; this section covers the implementation pass and
+its own evidence only, per workflow section 11.8.6.
+
+## Implementation
+
+Per the agreed convergence-contract design: `runtime/events.py::EventBus.serial` gained an
+additive, keyword-only `yield_after_each: bool = False` parameter. The dispatch loop now does
+`result = await self._call(callback, *args); if yield_after_each: await asyncio.sleep(0)` per
+listener -- `asyncio.sleep(0)`, Python's own standard single-tick "yield to the event loop" idiom,
+runs unconditionally after EVERY listener when the flag is set, reproducing pinned Pi's own
+unconditional per-`await` microtask-turn deferral exactly. `AgentLoop._dispatch_agent_event`
+(`agent_loop/driver.py`) is the ONE caller that passes `yield_after_each=True`, for
+`AGENT_LIFECYCLE_EVENT` specifically; every other existing `serial()` call site
+(`AgentLoop._should_stop`'s own `AGENT_TURN_STOPPING` dispatch, `tests/conformance/runner.py`'s
+generic scripted-listener dispatch helper, and every pre-existing `runtime/test_events_async.py`/
+`test_events_scoped.py` test) omits the new parameter, keeping the default `False` and this
+module's own certified behavior exactly unchanged.
+
+`spec/runtime.md` RT-016 (Layer 05, certified) gained a short paragraph documenting
+`yield_after_each` as an additive, opt-in scheduling extension to `serial` dispatch -- explicitly
+NOT a new dispatch mode, and explicitly not a change to `serial`'s own ordering/error/return-value
+contract for any consumer that does not request it. `spec/agent.md`'s `ToolExecutionUpdate` bullet
+rewritten a fourth time to describe the corrected, now-genuinely-complete rule (synchronous start
+via `eager_task_factory` PLUS the per-listener suspension boundary via `yield_after_each`), citing
+both `agent-loop.ts:670-711` and `agent.ts:544-591`.
+
+## Narrow lower-layer delta audit (Layer 05, `runtime/events.py`)
+
+Required by the PASS-8 review's own instruction before claiming Layer-08 approval, and by this
+project's own standing convention for any certified-lower-layer touch. Full-codebase audit of
+every `.serial(` call site, this pass:
+
+```text
+src/minion_agent/agent_loop/driver.py:357   AgentLoop._dispatch_agent_event
+    -- the ONE opted-in caller: yield_after_each=True (AGENT_LIFECYCLE_EVENT)
+src/minion_agent/agent_loop/driver.py:686   AgentLoop._should_stop (AGENT_TURN_STOPPING)
+    -- omits the parameter; default False; unaffected
+tests/conformance/runner.py:285             generic scripted-listener dispatch helper
+    -- omits the parameter; default False; unaffected
+tests/runtime/test_events_async.py          8 pre-existing serial-mode tests
+    -- all omit the parameter; all still pass unchanged (see Quality gates below)
+tests/runtime/test_events_scoped.py:112     scope-filtering serial test
+    -- omits the parameter; default False; unaffected
+```
+
+No other production or test call site exists. `DispatchMode.SERIAL`'s own table entry
+(`spec/runtime.md` RT-016: `awaited / registration order / returns, last value wins`) is unchanged
+for every dispatch that does not request the new behavior -- confirmed both by inspection (the
+`yield_after_each=False` branch of the loop is byte-for-byte the pre-PASS-9 loop body) and by the
+full, unrelated-elsewhere-unchanged green test suite (below). `EventBus.parallel`/`waterfall` are
+untouched entirely.
+
+## RED evidence
+
+Re-ran PASS 8's own single-listener test (`test_on_execution_update_starts_synchronously_but_does_
+not_block_the_tool`) against the reverted (`yield_after_each=False`) implementation -- still
+passes, confirming it genuinely could not have caught this defect (it registers only one
+`AGENT_LIFECYCLE_EVENT` listener, so there is no "listener 2" for a missing suspension to expose).
+The new two-listener test (below), run against the SAME reverted implementation, FAILS exactly as
+the PASS-8 review's own focused probe predicted:
+`['listener-1', 'listener-2', 'tool-continued']` observed vs.
+`['listener-1', 'tool-continued', 'listener-2']` required.
+
+## GREEN evidence
+
+At the Layer-05 (`EventBus`) level (`tests/runtime/test_events_async.py`):
+`test_serial_by_default_does_not_yield_between_synchronous_listeners` (the delta-audit's own
+positive evidence: `yield_after_each` omitted still produces `[listener-1, listener-2, caller-
+continued]`, unchanged), `test_serial_yield_after_each_suspends_between_every_listener`
+(`[listener-1, caller-continued, listener-2]`, driven via the SAME `eager_task_factory` technique
+established in earlier passes), `test_serial_yield_after_each_suspends_after_every_listener_not_
+only_the_first` (a 3-listener probe confirming the yield is genuinely per-listener:
+`[listener-1, after-eager-start, listener-2, after-one-tick, listener-3]`, empirically verified
+standalone before being written as a permanent test).
+
+At the Layer-08 (`AgentLoop`) level (`tests/agent_loop/test_run_entry_points.py`):
+`test_two_lifecycle_listeners_each_suspend_before_the_tool_continues` -- two real
+`AGENT_LIFECYCLE_EVENT` listeners registered on a live `AgentLoop`, a tool calling `update()` once,
+asserting `order == ["listener-1", "tool-continued", "listener-2"]` through the REAL production
+seam (`tools/execute.py` → `driver.py` → `runtime/events.py`), not a standalone reproduction --
+confirmed to FAIL against the reverted implementation (see RED evidence) and PASS against the
+PASS-9 candidate.
+
+Every PASS-6/PASS-7/PASS-8 tool-execution-update test re-run unchanged: `test_tool_execution_
+update_reaches_the_lifecycle_seam`, `test_pending_tool_calls_still_shows_the_call_during_its_own_
+update_dispatch`, `test_tool_execution_update_listener_failure_is_a_genuine_run_failure`,
+`test_on_execution_update_is_awaited_for_every_call_in_order`, `test_a_failing_on_execution_
+update_listener_propagates_uncaught` -- the `yield_after_each` addition is observationally
+invisible to any test that does not specifically register two-or-more `AGENT_LIFECYCLE_EVENT`
+listeners, exactly as expected for a targeted, additive fix.
+
+## Regression verification for previously-closed findings
+
+`L08-R001`, `R003`, `R005`-`R010`: unaffected -- this pass's own edits are confined to `runtime/
+events.py::EventBus.serial`'s new opt-in branch and `driver.py::_dispatch_agent_event`'s own single
+call-site update; none of the turn/run lifecycle, streaming, tool-execution-start/end, no-cap, or
+boundary-stop mechanisms are touched. Full suite re-run confirms no regression (below).
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00% -- includes both branches of EventBus.serial's own
+                                      new yield_after_each conditional
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing
+conformance/ (full):                 all passing, including tests/conformance/runner.py's own
+                                      unaffected generic serial-dispatch call site
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 gained a PASS-9 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/agent.md's ToolExecutionUpdate bullet rewritten a fourth
+                                      time; spec/runtime.md RT-016 documents the new opt-in
+                                      parameter; last-rewritten/rejection-cycle markers updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+lower-layer delta audit:             every EventBus.serial call site enumerated and confirmed
+                                      unaffected by the new default-False parameter (see above)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R002 (tool_execution_update dispatch is now genuinely
+                               live, correctly non-blocking at callback time, AND correctly
+                               suspends between every registered listener, matching pinned Pi's own
+                               processEvents exactly for one, two, and three listeners)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R004 resolved
+unapproved intentional divergence   none
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+Per workflow section 11.8.7, the next review SHOULD be a TARGETED review of `L08-R002`/`L08-R004`
+and their own semantic dependencies, not another full release-level layer audit -- a successful
+targeted review records `L08-R002`/`L08-R004` as `PROVISIONALLY CLOSED @ <candidate SHA>`, not
+final layer approval; final certification still requires one complete independent review of the
+exact final candidate (workflow section 11.8.8, section 13).
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-9 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004 closure status; mark both Ready for Review once the candidate gate above is
+satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW` (or keep
+`CONTRACT_CONVERGENCE` with `OPEN_SURFACE` narrowed, per reviewer preference),
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @
+8875ebc, PASS-6 rejection #8 @ 752754a, PASS-7 rejection #9 @ 5713b39, PASS-8 rejection #10 @
+2818dd8`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a TARGETED independent Layer-08 contract
+re-review of L08-R002/L08-R004 against the new PASS-9 candidate SHAs (workflow section 11.8.7),
+not a full release-level layer audit -- all prior verdicts apply only to their exact superseded
+candidates`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust.
+Do not start Layer 09.

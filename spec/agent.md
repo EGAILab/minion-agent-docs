@@ -249,11 +249,13 @@ consequence of delegating to `clear_all()`.
 
 ## Layer 08 — the run/turn state machine
 
-Normative, current-state contract (last rewritten PASS 8). This section describes ONE coherent
+Normative, current-state contract (last rewritten PASS 9). This section describes ONE coherent
 Layer-08 semantic contract as it stands today, verified directly against pinned Pi
 (`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
-passes; that history -- including six independent Rust review rejections and their remediation --
-lives in `assurance/layers/08-agent-loop-python.md`, not here. A normative section and an assurance
+passes; that history -- including seven independent Rust review rejections, their remediation, and
+the contract-convergence cycle entered after PASS-8's own rejection -- lives in
+`assurance/layers/08-agent-loop-python.md` and `assurance/layers/08-agent-loop-contract-
+convergence.md`, not here. A normative section and an assurance
 history section serving different readers with different needs is deliberate: Rust review must be
 able to trust this section alone as the target to implement against, without cross-referencing which
 claims are current and which are historical narrative.
@@ -431,34 +433,50 @@ the COMPLETE `AgentEvent` union, not a partial one:
   proceeding, and sequential-mode ordering is the real `start A, end A, start B, end B`, not a
   batch-wide capture-and-replay;
 - `ToolExecutionUpdate` reaches the same seam too (previously missing from the union entirely),
-  genuinely live and correctly interleaved (Layer 08, PASS 8, closing a scheduling-timing gap PASS 7
-  left open): a tool's own `execute()` calls its `update(partial)` callback SYNCHRONOUSLY, an
-  established SDK-level calling convention (`_wants_update`, `tools/execute.py`) no Layer-06 caller
-  may redesign out from under every existing tool definition -- but pinned Pi's own
-  `tool_execution_update` dispatch is ITSELF not awaited inline either: its `update` callback calls
-  `emit(...)`, which -- because JS runs an `async function`'s body SYNCHRONOUSLY up to its own first
-  genuine suspension point before returning control to its caller at all -- begins listener delivery
-  IMMEDIATELY, at callback time, before `update()`'s own caller (the tool) resumes; only once
-  `execute()` itself settles does pinned Pi join every one of a call's own pending updates,
-  before `finalizeExecutedToolCall`/`tool_execution_end` ever runs (`agent-loop.ts:670-711`).
-  `asyncio.ensure_future`/`asyncio.create_task` cannot reproduce this: a Python `Task` always
-  schedules its own first step through `loop.call_soon`, DEFERRED to the next event-loop
-  iteration, so nothing of a `Task`-wrapped hook has run yet by the time `update()` returns (tried
-  in PASS 7; empirically produced `tool-continued, listener-entered, listener-resumed` where
-  pinned Pi's own order is `listener-entered, tool-continued, listener-resumed`).
-  `_execute_and_finalize` instead uses `asyncio.eager_task_factory` (stdlib since Python 3.12),
-  which drives the hook's own coroutine SYNCHRONOUSLY, in the same call stack, up to its own first
-  real suspension (or full completion, if it never suspends) before `update()` itself returns --
-  verified empirically to reproduce pinned Pi's exact three-step interleaving. Every one of THAT
-  call's own started dispatches is still joined (`asyncio.gather`, unwrapped by any try/except)
-  immediately after `execute()` settles, before `_finalize`/`tool_execution_end`. A listener
-  failure here propagates straight out, uncaught, the SAME causal category as a
+  genuinely live, correctly non-blocking, and correctly interleaved ACROSS EVERY REGISTERED
+  LISTENER (Layer 08, PASS 9, contract convergence -- closing a scheduling-timing gap PASS 7 and
+  PASS 8 each narrowed but did not fully close): a tool's own `execute()` calls its
+  `update(partial)` callback SYNCHRONOUSLY, an established SDK-level calling convention
+  (`_wants_update`, `tools/execute.py`) no Layer-06 caller may redesign out from under every
+  existing tool definition -- but pinned Pi's own `tool_execution_update` dispatch is ITSELF not
+  awaited inline either: its `update` callback calls `emit(...)`, which -- because JS runs an
+  `async function`'s body SYNCHRONOUSLY up to its own first genuine suspension point before
+  returning control to its caller at all -- begins listener delivery IMMEDIATELY, at callback time,
+  before `update()`'s own caller (the tool) resumes; only once `execute()` itself settles does
+  pinned Pi join every one of a call's own pending updates, before
+  `finalizeExecutedToolCall`/`tool_execution_end` ever runs (`agent-loop.ts:670-711`).
+  `asyncio.ensure_future`/`asyncio.create_task` cannot reproduce the synchronous-start half of this:
+  a Python `Task` always schedules its own first step through `loop.call_soon`, DEFERRED to the next
+  event-loop iteration (tried in PASS 7). `_execute_and_finalize` instead uses
+  `asyncio.eager_task_factory` (stdlib since Python 3.12), which drives the hook's own coroutine
+  SYNCHRONOUSLY, in the same call stack, up to its own first real suspension before `update()`
+  itself returns.
+
+  That alone is still not sufficient once TWO OR MORE listeners are subscribed to
+  `AGENT_LIFECYCLE_EVENT`, discovered in PASS 8's own independent re-review: pinned Pi's own serial
+  listener loop (`for (const listener of this.listeners) { await listener(event, signal); }`,
+  `agent.ts:544-591`) suspends after EVERY listener, even a fully synchronous one, because a JS
+  `await` always defers its own continuation by at least one microtask turn regardless of whether
+  its operand performed real async work -- but Python's `await` on a coroutine that itself never
+  genuinely suspends completes with ZERO scheduler turns, so `eager_task_factory` alone drove
+  PASS 8's own multi-listener dispatch straight through the WHOLE chain before `update()` returned
+  (`listener-1, listener-2, tool-continued`, not pinned Pi's own
+  `listener-1, tool-continued, listener-2`). `EventBus.serial` (`runtime/events.py`, Layer 05 --
+  see `spec/runtime.md` RT-016) gained an additive, keyword-only `yield_after_each: bool = False`
+  parameter -- default `False` so every OTHER `serial()` caller's own certified behavior is
+  unchanged -- that awaits a single-tick scheduler yield after EVERY listener, unconditionally.
+  `AgentLoop._dispatch_agent_event` is the one caller that passes `yield_after_each=True`, for
+  `AGENT_LIFECYCLE_EVENT` specifically -- verified empirically, standalone, before integrating it,
+  to reproduce pinned Pi's exact multi-listener interleaving for two and three listeners alike.
+
+  Every one of a call's own started update dispatches is still joined (`asyncio.gather`, unwrapped
+  by any try/except) immediately after `execute()` settles, before `_finalize`/`tool_execution_end`.
+  A listener failure here propagates straight out, uncaught, the SAME causal category as a
   `tool_execution_start`/`tool_execution_end` failure -- `_finalize`/`tool_execution_end` never run
-  for that call at all, matching pinned Pi exactly. Because updates now genuinely start running
-  live rather than merely being scheduled or captured as inert data, two different concurrent
-  calls' own update dispatches interleave according to real execution order, and a call stays
-  marked pending (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still
-  in flight, since `OnExecutionEnd` (which clears it) fires only once they have all resolved;
+  for that call at all, matching pinned Pi exactly. Two different concurrent calls' own update
+  dispatches interleave according to real execution order, and a call stays marked pending
+  (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still in flight, since
+  `OnExecutionEnd` (which clears it) fires only once they have all resolved;
 - `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
   `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
   `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is

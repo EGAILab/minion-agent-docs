@@ -205,3 +205,26 @@ NEXT_OWNER
 
 This is not final contract approval. It records that the remaining observable surface is
 sufficiently characterized for one coherent implementation attempt, per workflow §11.8.5.
+
+## Implementation pass (PASS 9)
+
+Completed per workflow §11.8.6. Full detail (implementation, delta audit, RED/GREEN evidence,
+regression verification, quality gates) is in `assurance/layers/08-agent-loop-python.md`'s own
+"# PASS 9" section, not duplicated here. Summary: `EventBus.serial` gained the agreed additive
+`yield_after_each: bool = False` parameter exactly as designed above; `AgentLoop._dispatch_agent_
+event` is the one caller that opts in; the standalone verification scripts above were re-confirmed
+against the real implementation (not merely the standalone reproduction) via new permanent tests at
+both the `EventBus` and `AgentLoop` levels, including a two-listener test through the real
+production seam that fails against the reverted implementation and passes against PASS 9.
+
+```text
+STATUS
+    L08-R002, L08-R004 -- awaiting targeted re-review (workflow §11.8.7)
+
+CANDIDATE
+    code PR #13 (new SHA after PASS 9) / docs PR #3 (new SHA after PASS 9)
+
+NEXT_OWNER
+    Codex (targeted finding-closure review, workflow §11.8.7 -- not a full
+    release-level layer audit)
+```
