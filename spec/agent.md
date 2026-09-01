@@ -249,10 +249,10 @@ consequence of delegating to `clear_all()`.
 
 ## Layer 08 — the run/turn state machine
 
-Normative, current-state contract (last rewritten PASS 9). This section describes ONE coherent
+Normative, current-state contract (last rewritten PASS 10). This section describes ONE coherent
 Layer-08 semantic contract as it stands today, verified directly against pinned Pi
 (`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
-passes; that history -- including seven independent Rust review rejections, their remediation, and
+passes; that history -- including eight independent Rust review rejections, their remediation, and
 the contract-convergence cycle entered after PASS-8's own rejection -- lives in
 `assurance/layers/08-agent-loop-python.md` and `assurance/layers/08-agent-loop-contract-
 convergence.md`, not here. A normative section and an assurance
@@ -409,10 +409,18 @@ pre-stream failures (an unresolvable model is a caller/config bug, not a run-exe
 raises immediately, uncaught).
 
 Minion reproduces this via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode --
-sequential await with no catch around the loop, matching pinned Pi's raw listener loop with no new
-primitive needed), the single seam every lifecycle event -- ordinary turn/run progress and
-`handleRunFailure` recovery alike -- passes through via `AgentLoop._dispatch_agent_event`, carrying
-the COMPLETE `AgentEvent` union, not a partial one:
+sequential await with no catch around the loop, matching pinned Pi's raw listener loop) -- the
+single seam every lifecycle event -- ordinary turn/run progress and `handleRunFailure` recovery
+alike -- passes through via `AgentLoop._dispatch_agent_event`, carrying the COMPLETE `AgentEvent`
+union, not a partial one. `SERIAL` dispatch alone was NOT sufficient, discovered in the Layer-08
+contract-convergence cycle (`L08-R002`, PASS 9): pinned Pi's own `for (const listener of listeners)
+{ await listener(event, signal); }` suspends between EVERY listener, even a fully synchronous one,
+because a JS `await` always defers its own continuation by at least one microtask turn regardless
+of whether its operand performed real async work -- a property Python's own `await` does not share
+when the awaited coroutine never itself genuinely suspends. `AgentLoop._dispatch_agent_event`
+therefore passes `EventBus.serial`'s own additive, opt-in `yield_after_each=True` (`runtime/
+events.py`, Layer 05 -- see `spec/runtime.md` RT-016), an explicit new per-listener scheduling
+boundary, not merely a reuse of the existing `SERIAL` mode's own base semantics:
 
 - every admission point (`_admit_messages`, for the prompt, steering, tool-result, and follow-up
   admission cases above) dispatches its own `MessageStart`/`MessageEnd`;
@@ -477,6 +485,17 @@ the COMPLETE `AgentEvent` union, not a partial one:
   dispatches interleave according to real execution order, and a call stays marked pending
   (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still in flight, since
   `OnExecutionEnd` (which clears it) fires only once they have all resolved;
+- `ToolExecutionUpdate.partial_result` is a STRUCTURED `ToolResult`, not a bare string (Layer 08,
+  PASS 10, contract-convergence final review, `L08-R011`): pinned Pi's own
+  `AgentToolUpdateCallback<T> = (partialResult: AgentToolResult<T>) => void`
+  (`packages/agent/src/types.ts:361-383`) carries `AgentToolResult<T>`, the SAME structured shape
+  (`content`/`details`/`usage`/`addedToolNames`/`terminate`) a tool's own final result is -- an
+  earlier revision narrowed `tools/definition.py::ToolUpdate` to `Callable[[str], None]`, a real
+  payload reduction pinned Pi does not have (certified Rust Layer 06 already used
+  `AgentToolResult` for this; Python was the narrower, wrong side of a cross-language divergence).
+  `ToolUpdate = Callable[[ToolResult], None]`; the tool-supplied partial's own `tool_call_id`/
+  `tool_name` are normalized to the real call's identity by `_execute_and_finalize`'s own `update`
+  closure, the same normalization already applied to the final result;
 - `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
   `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
   `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is
@@ -521,16 +540,24 @@ never truncating or altering one run's own outcome internally.
 `runWithLifecycle`/`finishRun` write points exactly -- once per `prompt()`/`continue()` invocation,
 not once per `run_until_idle()` pump iteration.
 
-`streaming_message`: non-`None` for exactly the duration of one provider request, matching pinned
-Pi's own `message_start`/`message_update` -> partial, `message_end` -> `None` write points, with
-FULL content fidelity -- text, thinking, and tool-call construction alike -- set directly from each
-stream chunk's own already-complete `partial` (the certified Layer-02/04 `StreamChunk` carries a
-complete `partial: AssistantMessage` on every variant; no independent reconstruction from raw deltas
-is attempted). Pinned Pi's own reducer does not distinguish the assistant's own streamed reply from
-any other admitted message: `streaming_message` is set (briefly, non-streamed) to EVERY message at
-its own `message_start` and cleared at its own `message_end`, whether that message is the assistant
-reply, an admitted prompt/steering message, a follow-up, or a tool result -- reproduced uniformly at
-every admission point ("Initial-turn admission" above) and every message emitted by `_run_step`.
+`streaming_message`: non-`None` for exactly the duration of one MESSAGE's own `message_start` ->
+`message_end` window, matching pinned Pi's own `message_start`/`message_update` -> partial,
+`message_end` -> `None` write points -- NOT scoped to "one provider request" (`L08-R012`,
+contract-convergence final review: an earlier revision of this paragraph opened with "non-`None`
+for exactly the duration of one provider request," directly contradicted by its own very next
+sentence, below, which correctly states the complete rule; only the complete rule is normative).
+Pinned Pi's own reducer does not distinguish the assistant's own streamed reply from any other
+admitted message: `streaming_message` is set (briefly, non-streamed, for a message that was never
+itself streamed) to EVERY message at its own `message_start` and cleared at its own `message_end`,
+whether that message is the assistant reply, an admitted prompt/steering message, a follow-up, or a
+tool result -- reproduced uniformly at every admission point ("Initial-turn admission" above) and
+every message emitted by `_run_step`. For the assistant's own genuinely-streamed reply specifically,
+`streaming_message` additionally carries FULL content fidelity -- text, thinking, and tool-call
+construction alike -- across every intermediate `message_update` between that message's own
+`message_start` and `message_end`, set directly from each stream chunk's own already-complete
+`partial` (the certified Layer-02/04 `StreamChunk` carries a complete `partial: AssistantMessage` on
+every variant; no independent reconstruction from raw deltas is attempted); a non-streamed admitted
+message has no intervening `message_update` at all, only its own `message_start`/`message_end` pair.
 
 `pending_tool_calls`: real per-call tracking (add on start, remove on end) through the
 already-certified Layer-06 `tools/execution-start`/`tools/execution-end` events -- an existing

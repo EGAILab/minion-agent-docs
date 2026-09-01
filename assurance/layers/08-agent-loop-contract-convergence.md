@@ -219,12 +219,28 @@ production seam that fails against the reverted implementation and passes agains
 
 ```text
 STATUS
-    L08-R002, L08-R004 -- awaiting targeted re-review (workflow §11.8.7)
+    L08-R002, L08-R004 -- PROVISIONALLY CLOSED @ a5a0fdc/eb4965d (workflow §11.8.7),
+    confirmed held by the subsequent final complete review (workflow §11.8.8) --
+    this convergence cycle is DONE, not reopened
 
 CANDIDATE
-    code PR #13 (new SHA after PASS 9) / docs PR #3 (new SHA after PASS 9)
+    code PR #13 @ a5a0fdc1a95d7e8f7f347de4bf9569d07abb426a
+    docs PR #3 @ eb4965d5344c14aeb5da030341602a60ef2f0386
 
 NEXT_OWNER
-    Codex (targeted finding-closure review, workflow §11.8.7 -- not a full
-    release-level layer audit)
+    n/a -- convergence cycle closed
 ```
+
+## Final complete review (workflow §11.8.8)
+
+The final complete review of the PASS-9 candidate (`minion-agent-docs#12` @ `e747e91536f9a66dce
+526cf5b91eebfbc6ef0ae7`) confirmed `L08-R002`/`L08-R004` held: "The targeted PASS-9 review remains
+provisionally closed: the opt-in per-listener yield reproduces Pi's awaited serial listener
+boundary without changing other `EventBus.serial` callers, and current normative prose describes
+that convergence mechanism." This convergence cycle is therefore CLOSED, exactly as workflow
+§11.8.8 anticipates ("A final complete review may discover a genuinely new blocker. If so,
+classify it normally.") -- the review found three genuinely new, unrelated findings
+(`L08-R011`/`R012`/`R013`) outside this converged surface, remediated as an ordinary next PASS
+(PASS 10, `assurance/layers/08-agent-loop-python.md`), not a re-entry into this convergence
+protocol. See that file's own PASS-10 section for the remediation and its own workflow
+retrospective notes on this outcome.

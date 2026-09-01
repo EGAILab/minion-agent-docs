@@ -2504,7 +2504,7 @@ targeted review records `L08-R002`/`L08-R004` as `PROVISIONALLY CLOSED @ <candid
 final layer approval; final certification still requires one complete independent review of the
 exact final candidate (workflow section 11.8.8, section 13).
 
-## Next action
+## Next action (superseded -- see PASS 10 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-9 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -2519,3 +2519,237 @@ re-review of L08-R002/L08-R004 against the new PASS-9 candidate SHAs (workflow s
 not a full release-level layer audit -- all prior verdicts apply only to their exact superseded
 candidates`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust.
 Do not start Layer 09.
+
+The PASS-9 candidate (code `a5a0fdc`, docs `eb4965d`) went to the FINAL COMPLETE review required
+by workflow §11.8.8 once `L08-R002`/`L08-R004` were provisionally closed. Verdict: **REJECTED**
+(review commit `e747e91536f9a66dce526cf5b91eebfbc6ef0ae7`, evidence docs PR #12,
+`review/08-rust-contract-final-pass9`). The targeted `L08-R002`/`L08-R004` convergence itself
+remained provisionally closed and was NOT reopened -- the final whole-contract audit found three
+NEW findings outside that checkpoint: `L08-R011` (`PI_PARITY_DEFECT`/`CONTRACT_ASSURANCE_DEFECT`
+-- the `tool_execution_update` partial payload was narrowed to a bare string; pinned Pi's own
+`AgentToolUpdateCallback<T>` carries a structured `AgentToolResult<T>`, and certified Rust Layer 06
+already used it, making Python the narrower, wrong side of a cross-language divergence),
+`L08-R012` (`CONTRACT_ASSURANCE_DEFECT` -- `streaming_message`'s own normative prose was internally
+contradictory, opening with a "one provider request" scope its own very next sentence
+contradicted), and `L08-R013` (`CONTRACT_ASSURANCE_DEFECT` -- `AG-001`'s own implementation
+evidence pointer named the wrong method). See PASS 10 below for the remediation.
+
+# PASS 10 — final-review remediation (L08-R011, R012, R013)
+
+## Final review reference
+
+The final complete review required by workflow §11.8.8, once `L08-R002`/`L08-R004` were
+provisionally closed by the targeted PASS-9 review, reviewed the PASS-9 candidate (code PR #13 @
+`a5a0fdc1a95d7e8f7f347de4bf9569d07abb426a`, docs PR #3 @ `eb4965d5344c14aeb5da030341602a60ef2f0386`)
+and **REJECTED** it (`minion-agent-docs#12` @ `e747e91536f9a66dce526cf5b91eebfbc6ef0ae7`, evidence
+docs PR #12, `review/08-rust-contract-final-review-pass9`) with three new, narrow findings. Full
+review text: `assurance/layers/08-agent-loop-rust-contract-final-review-pass9.md` on that branch
+(not reproduced verbatim here). The reviewer's own AG-001..AG-010/AG-021 ledger otherwise recorded
+PASS for every other row, confirming the targeted PASS-9 fix itself held and no other regression
+was introduced.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R011 — `tool_execution_update`'s own partial payload was narrowed to a bare string
+
+**Re-review finding:** "Pi tool updates carry structured `AgentToolResult`; shared/Python/schema
+narrow this to a string." A direct schema witness replacing a string with a structured result
+object was rejected as "not of type string." Certified Rust Layer 06 already used `AgentToolResult`
+for `ToolUpdateCallback`/`ToolExecutionUpdate.update` -- Python was the narrower side.
+
+**Pi reproduction:** confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`packages/agent/src/types.ts:361-383`): `AgentToolResult<T>` (`content`/`details`/`usage?`/
+`addedToolNames?`/`terminate?`) is the SAME type `AgentTool.execute` returns AND
+`AgentToolUpdateCallback<T> = (partialResult: AgentToolResult<T>) => void` receives -- a partial
+update is, structurally, the identical shape a final result is, just semantically incomplete.
+`AgentToolResult<T>` maps directly onto Minion's own already-existing `ToolResult` (`content:
+tuple[ToolResultContentBlock, ...]`, `details: dict`, `usage`, `added_tool_names`, `terminate`) --
+no new Python type was needed, only widening the existing narrowed one back to it.
+
+**Classification:** `PI_PARITY_DEFECT` and `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** `tools/definition.py::ToolUpdate` widened from `Callable[[str], None]` to
+`Callable[[ToolResult], None]`. `tools/execute.py::_execute_and_finalize`'s own `update(partial)`
+closure now accepts a `ToolResult` and normalizes its `tool_call_id`/`tool_name` to the real call's
+own identity -- the SAME normalization already applied to the final result (`executed = ToolResult(
+tool_call_id=call.id, tool_name=call.name, ...)`), so a tool need not stamp its own call's real
+id/name onto a partial. `OnExecutionUpdate`'s own type alias, `agent/projection.py::
+ToolExecutionUpdate.partial_result`, and `agent_loop/driver.py`'s own `on_execution_update` closure
+all carry `ToolResult` through unchanged, end to end. `conformance/schema/agent-scenario.schema.
+json`: `$defs.toolUpdate.properties.partial`, `$defs.toolStub.properties.emits_updates.items`, and
+`$defs.toolStub.properties.late_update` all changed from `type: string` to `type: object`, using
+the SAME minimal `{text: "..."}` shorthand `toolStub.result` already uses -- genuinely structured
+at the schema level, not a hidden string. `conformance/agent/late-tool-update-ignored.yaml`'s own
+`emits_updates`/`late_update`/`expect_updates[].partial` updated to that shorthand.
+`tests/conformance/agent_runner.py` gained a `_partial_result()` helper decoding the shorthand into
+a real `ToolResult`, and its own `seen_updates` capture listener encodes a captured `ToolResult`
+back to the `{text: ...}` shape for scenario-file comparison. Every Python-level test constructing
+a bare-string `update("...")` call updated to `update(text_result(...))` (or a local `_partial()`
+helper) across `tests/tools/test_updates.py` and `tests/agent_loop/test_run_entry_points.py`.
+
+**RED evidence:** re-ran the ORIGINAL PASS-9 candidate's own conformance suite with the schema
+change alone (before any Python fix) -- `late-tool-update-ignored` failed with a JSON-Schema
+`"not of type string"` validation error at the structured `partial` value, exactly reproducing the
+reviewer's own witness; every Python-level `update("...")` call site raised
+`AttributeError: 'str' object has no attribute 'content'` from inside `update()`'s own new
+normalization block once the Layer-06 type was widened, confirming those call sites were genuinely
+exercising the narrowed contract, not merely unreachable code.
+
+**GREEN evidence:** full suite re-run clean after remediation (fresh counts below, not the
+reviewer's own `1042 passed` figure, which predates this pass's own new/changed tests);
+`late-tool-update-ignored` passes with `partial: {text: live}`, proving
+Pi's own `IR-L06-005` payload fields (`tool_call_id`/`tool_name`/`arguments`/structured `partial`)
+round-trip through the real production seam; every `tests/tools/test_updates.py` and
+`tests/agent_loop/test_run_entry_points.py` update-related test re-passes with the widened type.
+
+**Spec/manifest changes:** `spec/tools.md`'s own "Live updates" paragraph gained a new closing
+paragraph describing the structured `partial` and the id/name normalization rule; `spec/agent.md`
+gained a new `ToolExecutionUpdate.partial_result` bullet stating the same. `pi-parity-manifest.
+yaml::TOOL-019` (the Layer-06-owned row for this payload) gained a PASS-10 paragraph; its own
+`rust:` field annotated to note certified Rust was already correct and unaffected.
+
+**Disposition:** resolved. `TOOL-019`: adopted, corrected.
+
+### L08-R012 — `streaming_message` normative prose was internally contradictory
+
+**Re-review finding:** the Layer-08 spec and `AG-008` opened with "`streaming_message` is
+non-`None` for exactly the duration of one provider request," then stated the complete Pi rule
+(set for every admitted message's own `message_start`..`message_end`, not only the streamed
+reply) in the very next sentence -- two independent Rust implementations could conform to
+different sentences of the same paragraph. A runtime witness confirmed the SECOND (complete)
+statement is what the implementation actually does; the opening sentence was simply wrong prose,
+not a description of a real narrower behavior.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (documentation-only; the implementation and its
+own already-cited tests were correct throughout -- `_admit_messages` has set `streaming_message`
+for every admitted message since PASS 4/5, unchanged by this pass).
+
+**Remediation:** `spec/agent.md`'s "Runtime-state transition timing" section and `pi-parity-
+manifest.yaml::AG-008` both rewritten to state the complete, correct rule up front (non-`None` for
+one MESSAGE's own start/end window, not scoped to "one provider request"), with the assistant's
+own full-stream-content-fidelity property described as specific to that one message, not a
+separate "provider request" scoping concept. Also addressed the review's own secondary note: the
+Layer-08 section's stale claim that `AGENT_LIFECYCLE_EVENT`'s `SERIAL` dispatch needed "no new
+primitive" is now false since PASS 9 added `yield_after_each` -- corrected to describe it as an
+explicit new per-listener scheduling boundary.
+
+**Disposition:** resolved. `AG-008`: adopted, corrected (documentation-only; no code change).
+
+### L08-R013 — `AG-001`'s implementation evidence pointer was inaccurate
+
+**Re-review finding:** `AG-001` cited `AgentLoop._run_step`, but that method owns subsequent
+provider/tool turns; initial prompt lifecycle ordering is implemented by `_execute_run`/
+`_run_inner`/`_admit_messages`. The rule and its own tests were correct; only the pointer was
+wrong.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (evidence-pointer only).
+
+**Remediation:** `pi-parity-manifest.yaml::AG-001`'s `python:` field corrected to
+`AgentLoop._execute_run/_run_inner/_admit_messages`, with a short paragraph explaining which
+method dispatches which part of the initial-prompt sequence (`_execute_run` -> `agent_start`;
+`_run_inner` -> `turn_start`, then admits the prompt; `_admit_messages` -> the prompt's own
+`message_start`/`message_end` pair).
+
+**Disposition:** resolved. `AG-001`: adopted, corrected.
+
+## Regression verification for previously-closed findings
+
+`L08-R002`/`L08-R004` (contract-convergence, PASS 9): NOT reopened by this pass -- the final
+review's own ledger confirmed the targeted fix held (`yield_after_each` unchanged; every related
+test from PASS 9 re-passes unchanged). `L08-R001`, `R003`, `R005`-`R010`: unaffected -- this pass's
+own edits are confined to the `update`/partial-payload type, two spec paragraphs, and two manifest
+evidence-pointer corrections; no turn/run lifecycle, streaming-timing, tool-execution-start/end, or
+boundary-stop mechanism is touched.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00%
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched (including
+                                      tests/conformance/agent_runner.py, re-formatted after this
+                                      pass's own edit introduced transient drift, caught and fixed
+                                      before commit)
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing, including the widened toolUpdate/emits_updates/
+                                      late_update object shapes
+conformance/ (full):                 all passing, including late-tool-update-ignored with its own
+                                      structured partial
+manifest parse + unique-ID audit:    76 / 76 unique (AG-001, AG-008 corrected; TOOL-019 gained a
+                                      PASS-10 paragraph; no new/removed rows)
+stale normative-text audit:          spec/tools.md and spec/agent.md both updated for the
+                                      structured-partial rule; spec/agent.md's streaming_message
+                                      paragraph and SERIAL-dispatch-primitive claim both corrected;
+                                      last-rewritten/rejection-cycle markers updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R011 resolved (tool_execution_update's own partial
+                               payload is now genuinely structured, matching pinned Pi's own
+                               AgentToolResult<T> and certified Rust exactly)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R011, L08-R012, L08-R013 all resolved
+unapproved intentional divergence   none
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+Per workflow §11.8.8, this candidate is ready for a FRESH final complete review -- `L08-R002`/
+`L08-R004` remain provisionally closed from PASS 9 (not reopened by this pass, and not re-litigated
+by the next review unless a new witness reopens them); `L08-R011`/`R012`/`R013` are the new
+narrow surface this pass closes.
+
+## Workflow-process retrospective notes (this cycle)
+
+The first genuinely successful application of the new §11.8 convergence protocol: the targeted
+`L08-R002`/`L08-R004` fix (PASS 9) held under the SAME final review that then found three
+completely unrelated, narrower findings the targeted review's own narrower scope had not been
+asked to check. This is the protocol working as designed, not a failure of it -- a full
+release-level audit at PASS 9 would likely have found the SAME three findings one pass earlier, at
+the cost of re-auditing everything the targeted review correctly skipped. Captured for later
+integration into `process/agent-workflow.md`:
+
+1. A final complete review after convergence can and should still find genuinely new findings
+   outside the converged surface -- this is expected, not a process failure, and workflow §11.8.8
+   already anticipates it ("A final complete review may discover a genuinely new blocker"). The
+   remediation for such a finding is an ordinary next PASS, not a re-entry into convergence, unless
+   the NEW finding itself meets a convergence trigger on its own.
+2. A cross-language payload-type divergence (`L08-R011`) is easiest to catch by checking BOTH
+   language implementations' own manifest rows for the SAME underlying Pi symbol, not just the one
+   currently being audited -- certified Rust had the correct, structured type the whole time;
+   checking Rust's own row would have surfaced this gap without needing pinned Pi source at all.
+3. A normative-text contradiction within the SAME paragraph (`L08-R012`) survived nine passes'
+   worth of review because every review focused on WHETHER the implementation was correct (it was)
+   rather than on whether the SPEC ITSELF was internally consistent sentence-to-sentence. A
+   dedicated "does this paragraph contradict its own next sentence" pass -- distinct from "does this
+   paragraph match the implementation" -- would catch this class of defect earlier.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-10 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R011/R012/R013 closure status; mark both Ready for Review once the candidate gate
+above is satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @
+8875ebc, PASS-6 rejection #8 @ 752754a, PASS-7 rejection #9 @ 5713b39, PASS-8 rejection #10 @
+2818dd8, PASS-9 final-review rejection #12 @ e747e91`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete
+a full independent Layer-08 contract re-review against the new PASS-10 candidate SHAs (workflow
+§11.8.8 -- L08-R002/R004 remain provisionally closed unless this review reopens them with a new
+witness); all prior verdicts apply only to their exact superseded candidates`. Then stop. Do not
+merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 09.

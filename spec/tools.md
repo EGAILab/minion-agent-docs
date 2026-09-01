@@ -298,6 +298,17 @@ reason): `tool_call_id`, `tool_name`, `arguments`, and the partial value. `argum
 call `prepareToolCall` was given, not the `prepareArguments`-shimmed value or the validated one
 `execute()` actually runs with.
 
+`partial` itself is **structured** -- an `AgentToolResult<T>`-shaped `ToolResult`, the SAME shape a
+tool's own final result is (pinned Pi's own `AgentToolUpdateCallback<T> = (partialResult:
+AgentToolResult<T>) => void`), never a bare string (`L08-R011`, `PI_PARITY_DEFECT` and
+`CONTRACT_ASSURANCE_DEFECT`, closed at the Layer-08 contract-convergence final review, PASS 10: an
+earlier revision narrowed `ToolUpdate` to `Callable[[str], None]`, a real payload reduction pinned
+Pi does not have -- certified Rust Layer 06 already used `AgentToolResult` for this update
+callback, so Python was the narrower, wrong side of a cross-language divergence, not Rust). A
+tool's own supplied partial need not carry its own call's real `tool_call_id`/`tool_name`:
+`_execute_and_finalize`'s own `update()` closure normalizes both to the real call's identity, the
+same normalization it already applies to the final result.
+
 ### Batch execution
 
 Effective mode is decided by the batch, not stored on `ToolDefinition` (Layer 05 intentionally
