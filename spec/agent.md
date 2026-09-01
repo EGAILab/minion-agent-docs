@@ -3,11 +3,16 @@
 This document spans two assurance layers over one master-phase surface (pinned Pi's
 `packages/agent/src/agent.ts` + `agent-loop.ts` + `types.ts`): **Layer 07 — Agent public state and
 inbox/queues** (below) and **Layer 08 — the run/turn state machine** (the rest of this document,
-not yet certified as its own layer). The split exists because Layer 07's primitives must be stable
-enough for Layer 08 to consume without redesign, and because "agent state and queues behave like
-Pi" is too coarse a requirement to test independently (`AG-011`..`AG-019`; `AG-001`..`AG-010`
-remain Layer-08/09-owned, unimplemented, and untouched by the Layer-07 pass that added this
-section).
+self-certified pending independent Rust contract review). The split exists because Layer 07's
+primitives had to be stable enough for Layer 08 to consume without redesign, and because "agent
+state and queues behave like Pi" was too coarse a requirement to test independently
+(`AG-011`..`AG-019`; `AG-001`..`AG-010` and `AG-021` are Layer-08-owned, specified in that
+section below -- `AG-007` alone remains Layer-09-owned and deferred). The Layer-07 section below
+predates Layer 08's own implementation and still describes some Layer-08 state ownership as future
+work for historical/scope-boundary reasons (which layer owns WHICH field never changed); where it
+does, a forward reference to the Layer 08 section's own current description resolves it -- Layer 07
+itself does not re-certify Layer 08's behavior, and this document's Layer 08 section is the sole
+normative source for that layer's own current state.
 
 ## Layer 07 — Agent public state and inbox/queues
 
@@ -26,7 +31,7 @@ Layer 07 defines:
 - the local invariants those primitives guarantee (order, independence, no invented or duplicated
   input).
 
-Deferred to Layer 08:
+Owned by Layer 08, not Layer 07 (specified in the Layer 08 section below, not here):
 
 - the run/turn/step state machine itself (`agent_start`/`turn_start`/`turn_end`/`agent_end`
   ordering, already described below in this same document, pre-dating the Layer-07/08 split and
@@ -37,7 +42,8 @@ Deferred to Layer 08:
 - `shouldStopAfterTurn`/`prepareNextTurn` orchestration and steering-vs-follow-up priority during a
   run;
 - exactly when/how `is_streaming`/`streaming_message`/`pending_tool_calls`/`error_message`
-  transition during a run (Layer 07 owns their vocabulary and initial values only -- see below).
+  transition during a run (Layer 07 owns their vocabulary and initial values only -- see below; the
+  Layer 08 section's own "Runtime-state transition timing" describes their current transitions).
 
 Deferred to Layer 09: abort/cancellation propagation into an active run, its providers, tools, and
 hooks. Layer 07 does not define or touch any cancellation primitive.
@@ -54,14 +60,15 @@ thinking_level       AgentInstance (mutable)           L07 (caller-driven, no ru
 messages             SessionLog (L03) via projection   L03 append / L07 public view
 tools                ToolRegistry (L05) via projection L05 register/withdraw / L07 public view
 is_streaming         AgentInstance.status              L08 (run/turn lifecycle timing)
-streaming_message    AgentInstance (vocabulary only)   L08 (not yet wired)
-pending_tool_calls   AgentInstance (vocabulary only)   L08 (not yet wired)
-error_message        AgentInstance (vocabulary only)   L08 (not yet wired)
+streaming_message    AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
+pending_tool_calls   AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
+error_message        AgentInstance (vocabulary only)   L08 (see Layer 08 section below)
 ```
 
 This table exists so Layer 08 does not reopen state ownership later: every field above already has
-a home and a type: Layer 08's job is to decide *when* to write to the ones it transitions, using the
-primitives this layer already defines, not to redesign where they live.
+a home and a type; Layer 08's own job was to decide *when* to write to the ones it transitions,
+using the primitives this layer already defines, not to redesign where they live -- the Layer 08
+section below is the normative source for those current write points.
 
 ### Mutable per-instance current configuration
 
@@ -71,9 +78,10 @@ mutates that one Agent's own current value, read by every subsequent run, distin
 default the Agent was constructed with. This is genuinely owned by Layer 07, not deferred to a
 later provider/orchestration layer: pinned Pi mutations are observable and take effect for
 subsequent runs regardless of whether anything has consumed them yet, so the state and its mutation
-surface must exist now, independent of when Layer 08 starts reading it.
+surface exists independent of Layer 08's own timing for reading it (Layer 08 now does, per its own
+"Run-start snapshot" section below).
 
-Minion keeps the existing frozen, shared `AgentDefinition` (definition defaults, `AG-009`) and adds
+Minion keeps the existing frozen, shared `AgentDefinition` (definition defaults, `AG-014`) and adds
 a mutable *current* value per instance: `system_prompt`, `model`, and `thinking_level` (pinned Pi's
 own seven-value `ThinkingLevel` union, adopted verbatim), each initialized from the definition's own
 default and freely reassignable afterward. Mutating one instance's current configuration never
@@ -87,26 +95,25 @@ Pinned Pi's `AgentState.isStreaming: boolean` -- true from the moment a run star
 a boolean. This is `adopted`, not an architectural adaptation that changes the observable semantic:
 it is a lossless, direct representation of the same two-value fact (`running` <-> `true`, `idle` <->
 `false`), and a third status value would give the signal more than one meaning. A live instance
-starts idle. The precise moments a run flips this to running and back are Layer-08 territory
-(transitions are driven by turn/step lifecycle timing this document does not yet certify); Layer 07
-owns the vocabulary and its initial value.
+starts idle. Layer 07 owns the vocabulary and its initial value; the precise moments a run flips
+this to running and back are Layer-08 territory, driven by turn/step lifecycle timing the Layer 08
+section's own "Runtime-state transition timing" now specifies.
 
 Pinned Pi's remaining runtime-state fields -- `streamingMessage` (the current partial assistant
 message), `pendingToolCalls` (tool-call ids currently executing), and `errorMessage` (the most
-recent failed/aborted turn's error) -- have their vocabulary and initial values represented now:
+recent failed/aborted turn's error) -- have their vocabulary and initial values represented here:
 `None`/empty/`None` respectively, matching pinned Pi's own `undefined`/empty-`Set`/`undefined`
-initial state exactly. Their *transitions* remain deferred to Layer 08: populating them meaningfully
-requires step/turn timing this layer does not implement, and no fake transition is manufactured to
-close this layer early.
+initial state exactly. Their *transitions* are Layer 08's own -- see that section's own
+"Runtime-state transition timing" below for the current, normative write points.
 
 Pi's own two *active-run-lifecycle* `isStreaming` transition points, recorded here as a reference
-for whoever implements Layer 08 (not implemented by this layer): a call to `prompt()`/`continue()`
-sets it `true` before anything else happens (`runWithLifecycle`), and `finishRun()` -- reached from
-a `finally` block, so it runs whether the run succeeded, threw, or was aborted -- unconditionally
-sets it back to `false` as its very first statement. Layer 08 must reproduce both write points
-exactly (entry: unconditional; exit: unconditional-via-`finally`, never skipped by an error) using
-the `AgentStatus` vocabulary and `AgentInstance.set_status` primitive this layer already provides;
-it does not need a different mechanism.
+for Layer 08 (which reproduces both exactly, not owned by Layer 07): a call to `prompt()`/
+`continue()` sets it `true` before anything else happens (`runWithLifecycle`), and `finishRun()` --
+reached from a `finally` block, so it runs whether the run succeeded, threw, or was aborted --
+unconditionally sets it back to `false` as its very first statement. Layer 08 reproduces both write
+points exactly (entry: unconditional; exit: unconditional-via-`finally`, never skipped by an error)
+using the `AgentStatus` vocabulary and `AgentInstance.set_status` primitive this layer already
+provides -- no different mechanism was needed.
 
 Two other, non-run-lifecycle code paths also assign `isStreaming` in pinned Pi, and Layer 07 (not
 Layer 08) already owns both: construction (`createMutableAgentState`'s own initial value is
@@ -240,40 +247,329 @@ choice either way; a wake that arrived before a caller reset an idle instance st
 real, unconsumed signal, so it is preserved rather than silently discarded as an incidental
 consequence of delegating to `clear_all()`.
 
----
+## Layer 08 — the run/turn state machine
 
-A run is one high-level prompt/continue invocation. A turn is one assistant response plus tool
-calls/results caused by it.
+Normative, current-state contract (last rewritten PASS 11). This section describes ONE coherent
+Layer-08 semantic contract as it stands today, verified directly against pinned Pi
+(`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
+passes; that history -- including nine independent Rust review rejections, their remediation, and
+the contract-convergence cycle entered after PASS-8's own rejection -- lives in
+`assurance/layers/08-agent-loop-python.md` and `assurance/layers/08-agent-loop-contract-
+convergence.md`, not here. A normative section and an assurance
+history section serving different readers with different needs is deliberate: Rust review must be
+able to trust this section alone as the target to implement against, without cross-referencing which
+claims are current and which are historical narrative.
 
-Prompt-run order:
+### Run/turn vocabulary and event boundaries
+
+A run is one high-level `prompt()`/`continue()` invocation, bracketed by `agent_start`/`agent_end`.
+A turn is one assistant response plus the tool calls/results it triggers -- never more than one
+provider request -- bracketed by `turn_start`/`turn_end`. Confirmed directly against
+`runAgentLoop`/`runLoop` (agent-loop.ts): `turn_start`/`turn_end` never span more than one provider
+request in pinned Pi. `AGENT_START`/`TURN_START` fire in that order, before any message entering the
+run/turn is logged, matching pinned Pi's own `runAgentLoop`/`runLoop` order.
+
+`agent_end.messages` is pinned Pi's own invocation-local field: every message this run itself
+produced or consumed, in order, reset at each `AGENT_START` -- never the whole transcript. `turn_end
+{message, toolResults}` is likewise scoped to that one turn's own messages, never a second,
+independently-logged copy of the same content. `causes` (which queued input triggered processing)
+is a disclosed Minion enrichment scoped to the run, not each turn within it -- pinned Pi's own bare
+`turn_start`/`agent_start` carry no fields at all.
+
+The complete post-turn ordering, confirmed directly against `runLoop`'s own body
+(agent-loop.ts:161-245):
 
 ```text
-agent_start
-turn_start
-initial prompt message lifecycle
-initial steering poll + claimed-message lifecycle
-first provider request
-assistant/tool lifecycle
-turn_end
+turn_end -> prepareNextTurn -> shouldStopAfterTurn -> steering poll -> follow-up poll (only if
+otherwise stopping)
 ```
 
-`prompt()` while active is rejected. `continue()` while active or with no transcript is rejected.
-When the last message is assistant, `continue()` drains eligible steering, else follow-up, else
-rejects; if it pre-drained steering, the run suppresses duplicate initial steering polling.
+`prepareNextTurn` (`agent/prepare-next-turn`, waterfall, terminal a no-op `RunConfigUpdate()`) may
+return a WHOLE replacement `context` (pinned Pi's own `AgentLoopTurnUpdate.context: AgentContext`,
+`currentContext = nextTurnSnapshot.context ?? currentContext` -- a whole-object swap via `??`, never
+a per-field merge) plus independently optional `model`/`thinking_level` replacements (the same
+`"off"`-vs-`undefined` special case already certified at `AG-014`), applying to the *next* provider
+request only, on a run-local snapshot (below) -- never persisted back to `AgentInstance`. Both
+`prepareNextTurn` and `shouldStopAfterTurn` listener signatures mirror pinned Pi's own
+`PrepareNextTurnContext`/`ShouldStopAfterTurnContext` exactly: `(message, tool_results, context,
+new_messages)`. Both are dispatched after every turn, including one a tool batch's unanimous
+`terminate` verdict ended -- `terminate` only ever affects `hasMoreToolCalls` (whether the
+tool-driven inner loop has more work), never this ordering, confirmed directly against `runLoop`.
 
-After a normally completed turn:
+A represented `error`/`aborted` assistant message is the one turn-ending case this ordering does NOT
+apply to: pinned Pi checks `stopReason` immediately after `streamAssistantResponse` returns and, for
+`"error"`/`"aborted"`, emits that turn's own `turn_end` with empty `toolResults` and returns
+immediately -- running none of `prepareNextTurn`/`shouldStopAfterTurn`/the steering or follow-up
+poll for that turn, and inspecting/executing no tool calls even if the response happened to include
+tool-call content (agent-loop.ts:196-200). `agent_end.messages` for this case still uses the run's
+own ordinary invocation-local accumulator (`newMessages`) -- this is a normally-produced message,
+distinct from `handleRunFailure`'s own synthesized failure (below).
 
-```text
-turn_end -> prepareNextTurn -> shouldStopAfterTurn -> steering poll
-```
+No turn-count cap exists on this ordering or on how many turns one run may take: pinned Layer 08 has
+no `max_steps`-equivalent stop rule, and Minion has none either -- a `prompt()`/`continue()` run
+continues for as many turns as the model actually requests.
 
-Follow-up is polled only when the run would otherwise stop.
+### `prompt()`/`continue_()`: the public run entry points
 
-`agent_end.messages` is invocation-local. Prompt runs include initial prompt + newly produced/consumed
-queue messages; continuation runs exclude pre-existing context.
+`AgentLoop.prompt(message)` and `AgentLoop.continue_()` (`continue` is a Python keyword) reproduce
+pinned Pi's `Agent.prompt()`/`Agent.continue()` exactly, confirmed directly against source
+(agent.ts:348-407):
 
-Abort actively signals the running provider/tools/hooks. Idle is reached only after terminal run
-settlement and awaited `agent_end` listeners.
+- `prompt()` rejects with pinned Pi's exact text ("Agent is already processing a prompt. Use
+  steer() or followUp() to queue messages, or wait for completion.") while a run is active;
+  otherwise starts a new run with the given message(s) as its own entering prompt. Accepts either
+  the typed `Message | tuple[Message, ...]` boundary, or pinned Pi's own convenience overload -- a
+  plain `str`, optionally with `images` -- normalized into exactly one `UserMessage` whose content
+  is `[{type:"text",...}, ...images]`, text first then the supplied images in order. The convenience
+  form is an ADDITIONAL accepted form, never a narrowing of the typed one; both coexist.
+- `continue_()` rejects with its own, different exact text ("Agent is already processing. Wait for
+  completion before continuing.") while active, and "No messages to continue from" on an empty
+  transcript. When the transcript's last message is assistant: drains eligible steering (skipping
+  this run's own initial steering poll, so the same batch is never claimed twice -- pinned Pi's
+  one-shot `skipInitialSteeringPoll`), else eligible follow-up, else rejects with "Cannot continue
+  from message role: assistant". Both the steering-drain and follow-up-drain sub-cases route
+  through the *pre-seeded* path (pinned Pi's own `runPromptMessages`, not `runAgentLoopContinue`),
+  confirmed directly against source -- a real, easy-to-miss distinction from the third case.
+  Otherwise (last message not assistant): a plain continuation, no entering messages, full history
+  still sent to the model (pinned Pi's `runAgentLoopContinue`, empty-seeded `newMessages`).
 
-Unexpected high-level transform/queue callback failure produces terminal assistant failure lifecycle,
-then `turn_end`, `agent_end`, then idle, subject to listener-failure behavior.
+A third, distinct "already processing" string (pinned Pi's own `runWithLifecycle` internal guard,
+"Agent is already processing.") guards run entry itself, defensive against a caller bypassing
+`prompt()`/`continue_()`'s own public checks -- normally unreachable under ordinary single-caller
+use, kept for the same reason pinned Pi keeps it. All four "already processing" strings across the
+certified surface (`prompt()`'s, `continue_()`'s, this internal guard's, and the already-certified
+Layer-07 `reset()`'s) are distinct, never consolidated into one shared message.
+
+### Run-start snapshot and whole-context replacement
+
+Pinned Pi's `Agent.createContextSnapshot()`/`createLoopConfig()`: at run start, `RunContext
+{system_prompt, messages, tools}` and `RunConfig{model, thinking_level}` are each taken ONCE -- a
+shallow top-level copy (`messages`/`tools` are each a fresh top-level list/tuple, never a deep
+clone) -- into a run-local snapshot, never re-read from the certified Layer-07 `AgentInstance`,
+Session, or `ToolRegistry` for the rest of that run. A caller mutating the instance mid-run, or an
+unrelated external tool registration reaching the live `ToolRegistry` while this run is in flight,
+does not retroactively alter a run already in progress. `RunContext.messages`/`.tools` ARE extended
+in place as the run's own turns produce them (admitted messages, and tool results naming
+`added_tool_names` the run's own execution just registered -- resolved only for those specific
+names, through the real registry, never a general live reread) -- this is the run's own local
+growth, not a leak from outside it. `prepareNextTurn` may still replace the whole snapshot
+run-locally (above); neither ordinary growth nor a `prepareNextTurn` replacement is ever written
+back to `AgentInstance`, and a second, independent run always starts from a fresh snapshot again.
+
+### Initial-turn admission: prompt lifecycle before the steering claim
+
+Pinned Pi's exact first-turn order: `agent_start`, `turn_start`, the initial prompt messages' own
+COMPLETE message lifecycle, and only THEN the initial steering poll (`runLoop`'s own first
+statement, called only after `runAgentLoop` has already emitted `turn_start` and the prompt
+messages' lifecycle) -- confirmed directly against source (agent-loop.ts:95-118, 161).
+
+Minion reproduces this as two explicit, sequential admission stages in `AgentLoop._run_inner`, both
+using the same `_admit_messages` helper every other admission point in this layer uses: (1) a
+`PreStepReason.INITIAL` decision governs the caller's own entering prompt ALONE, admitted (logged,
+dispatched, and accumulated into the run-local snapshot) immediately; (2) only then is the steering
+queue claimed, and if non-empty, a SECOND, independent `PreStepReason.STEERING` decision governs the
+claimed batch, admitted the same way. Both stages' messages feed the SAME first provider request --
+pinned Pi never splits them into separate turns; only their own admission/lifecycle timing is
+staged. `continue_()`'s own pre-drain (`skipInitialSteeringPoll`) skips stage (2) entirely, so the
+pre-drained batch is admitted once, under stage (1), never claimed a second time.
+
+### Mid-run follow-up continuation
+
+Pinned Pi's outer `runLoop` loop polls the follow-up queue only once the inner loop (turns within
+one continuation) would otherwise exit -- no more tool calls, nothing steered -- and, if follow-up
+is found, continues the *same* run (`agent_start`/`agent_end` still bracket it) rather than ending.
+`AgentLoop._run_inner` is a genuine outer/inner nested loop reproducing this exactly, with the outer
+loop claiming follow-up (admitted via the same `_admit_messages` helper) and extending the run's own
+`causes` when it does. Minion's own `run_until_idle()` pump (no pi equivalent, `AG-019`) is a thin
+caller over this: it still claims one batch and starts one run per claim, but because a run now
+drains follow-up internally while open, a single pump iteration typically consumes every queued
+batch in one run. The pump's own outer loop remains a safety net for the one case pinned Pi does not
+auto-continue either (a `shouldStopAfterTurn` listener stopping the run early while follow-up is
+still queued) -- pinned Pi would leave that for an explicit `continue()` call; Minion's pump
+substitutes for that automatically, an intentional Minion extension.
+
+### The live Agent-event seam, and `handleRunFailure` through it
+
+Pinned Pi's `Agent.subscribe(listener)` is a public surface delivering the `AgentEvent` union
+(`agent_start`/`turn_start`/`message_start`/`message_update`/`message_end`/`turn_end`/`agent_end`,
+plus `tool_execution_start`/`tool_execution_update`/`tool_execution_end`) LIVE, during the run,
+through one seam -- `processEvents(event)` -- that first reduces `Agent`'s own internal state for
+that event, then
+awaits every subscribed listener in registration order with no catch around the loop: a listener
+that throws aborts the remaining listeners for that event and propagates out of `processEvents`
+itself (agent.ts:544-591). `runWithLifecycle`'s own `catch` calls `handleRunFailure` for any
+exception the run executor produces -- including one a normal-path listener itself threw --
+and `handleRunFailure` delivers its own four-event failure sequence through the SAME
+`processEvents` seam (agent.ts:511-527): `message_start(failure)`, `message_end(failure)`,
+`turn_end(failure, [])` (no preceding `turn_start`), `agent_end(messages=[failure])`. A listener
+throwing during THIS sequence has no further catch around it at all -- the exception propagates all
+the way out to the caller of `prompt()`/`continue()`, while `finally { finishRun() }` still settles
+`isStreaming`/`pendingToolCalls`/status regardless. `handleRunFailure` explicitly excludes eager,
+pre-stream failures (an unresolvable model is a caller/config bug, not a run-executor failure, and
+raises immediately, uncaught).
+
+Minion reproduces this via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode --
+sequential await with no catch around the loop, matching pinned Pi's raw listener loop) -- the
+single seam every lifecycle event -- ordinary turn/run progress and `handleRunFailure` recovery
+alike -- passes through via `AgentLoop._dispatch_agent_event`, carrying the COMPLETE `AgentEvent`
+union, not a partial one. `SERIAL` dispatch alone was NOT sufficient, discovered in the Layer-08
+contract-convergence cycle (`L08-R002`, PASS 9): pinned Pi's own `for (const listener of listeners)
+{ await listener(event, signal); }` suspends between EVERY listener, even a fully synchronous one,
+because a JS `await` always defers its own continuation by at least one microtask turn regardless
+of whether its operand performed real async work -- a property Python's own `await` does not share
+when the awaited coroutine never itself genuinely suspends. `AgentLoop._dispatch_agent_event`
+therefore passes `EventBus.serial`'s own additive, opt-in `yield_after_each=True` (`runtime/
+events.py`, Layer 05 -- see `spec/runtime.md` RT-016), an explicit new per-listener scheduling
+boundary, not merely a reuse of the existing `SERIAL` mode's own base semantics:
+
+- every admission point (`_admit_messages`, for the prompt, steering, tool-result, and follow-up
+  admission cases above) dispatches its own `MessageStart`/`MessageEnd`;
+- the assistant reply's OWN streamed lifecycle is live too: `_run_step` iterates
+  `self.llm.stream(request)` directly rather than through the certified Layer-02/04 `collect()`
+  convenience wrapper (whose own `on_chunk` callback is synchronous by design and cannot itself
+  `await` a dispatch) -- this does not reopen or modify `collect()` itself, still certified, still
+  used everywhere else; it reproduces `collect()`'s own trivial drain loop at the one call site that
+  needs an async per-chunk dispatch, dispatching `MessageStart`/`MessageUpdate`/`MessageEnd` for
+  every chunk;
+- `ToolExecutionStart`/`ToolExecutionEnd` are genuinely LIVE, at real execution points, matching
+  pinned Pi's own blocking dispatch exactly (Layer 08, PASS 6, closing a gap PASS 5 left open):
+  Layer 06's own `tools/execute.py`/`tools/batch.py` gained additive, optional
+  `on_execution_start`/`on_execution_end` async hooks, awaited at the EXACT points the existing,
+  still-certified `tools/execution-start`/`tools/execution-end` EMIT events already fire --
+  `None` (every other caller) preserves Layer 06's own certified behavior exactly, no lower-layer
+  contract reopened. A listener failure here genuinely prevents that call's own `execute()` from
+  proceeding, and sequential-mode ordering is the real `start A, end A, start B, end B`, not a
+  batch-wide capture-and-replay;
+- `ToolExecutionUpdate` reaches the same seam too (previously missing from the union entirely),
+  genuinely live, correctly non-blocking, and correctly interleaved ACROSS EVERY REGISTERED
+  LISTENER (Layer 08, PASS 9, contract convergence -- closing a scheduling-timing gap PASS 7 and
+  PASS 8 each narrowed but did not fully close): a tool's own `execute()` calls its
+  `update(partial)` callback SYNCHRONOUSLY, an established SDK-level calling convention
+  (`_wants_update`, `tools/execute.py`) no Layer-06 caller may redesign out from under every
+  existing tool definition -- but pinned Pi's own `tool_execution_update` dispatch is ITSELF not
+  awaited inline either: its `update` callback calls `emit(...)`, which -- because JS runs an
+  `async function`'s body SYNCHRONOUSLY up to its own first genuine suspension point before
+  returning control to its caller at all -- begins listener delivery IMMEDIATELY, at callback time,
+  before `update()`'s own caller (the tool) resumes; only once `execute()` itself settles does
+  pinned Pi join every one of a call's own pending updates, before
+  `finalizeExecutedToolCall`/`tool_execution_end` ever runs (`agent-loop.ts:670-711`).
+  `asyncio.ensure_future`/`asyncio.create_task` cannot reproduce the synchronous-start half of this:
+  a Python `Task` always schedules its own first step through `loop.call_soon`, DEFERRED to the next
+  event-loop iteration (tried in PASS 7). `_execute_and_finalize` instead uses
+  `asyncio.eager_task_factory` (stdlib since Python 3.12), which drives the hook's own coroutine
+  SYNCHRONOUSLY, in the same call stack, up to its own first real suspension before `update()`
+  itself returns.
+
+  That alone is still not sufficient once TWO OR MORE listeners are subscribed to
+  `AGENT_LIFECYCLE_EVENT`, discovered in PASS 8's own independent re-review: pinned Pi's own serial
+  listener loop (`for (const listener of this.listeners) { await listener(event, signal); }`,
+  `agent.ts:544-591`) suspends after EVERY listener, even a fully synchronous one, because a JS
+  `await` always defers its own continuation by at least one microtask turn regardless of whether
+  its operand performed real async work -- but Python's `await` on a coroutine that itself never
+  genuinely suspends completes with ZERO scheduler turns, so `eager_task_factory` alone drove
+  PASS 8's own multi-listener dispatch straight through the WHOLE chain before `update()` returned
+  (`listener-1, listener-2, tool-continued`, not pinned Pi's own
+  `listener-1, tool-continued, listener-2`). `EventBus.serial` (`runtime/events.py`, Layer 05 --
+  see `spec/runtime.md` RT-016) gained an additive, keyword-only `yield_after_each: bool = False`
+  parameter -- default `False` so every OTHER `serial()` caller's own certified behavior is
+  unchanged -- that awaits a single-tick scheduler yield after EVERY listener, unconditionally.
+  `AgentLoop._dispatch_agent_event` is the one caller that passes `yield_after_each=True`, for
+  `AGENT_LIFECYCLE_EVENT` specifically -- verified empirically, standalone, before integrating it,
+  to reproduce pinned Pi's exact multi-listener interleaving for two and three listeners alike.
+
+  Every one of a call's own started update dispatches is still joined (`asyncio.gather`, unwrapped
+  by any try/except) immediately after `execute()` settles, before `_finalize`/`tool_execution_end`.
+  A listener failure here propagates straight out, uncaught, the SAME causal category as a
+  `tool_execution_start`/`tool_execution_end` failure -- `_finalize`/`tool_execution_end` never run
+  for that call at all, matching pinned Pi exactly. Two different concurrent calls' own update
+  dispatches interleave according to real execution order, and a call stays marked pending
+  (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still in flight, since
+  `OnExecutionEnd` (which clears it) fires only once they have all resolved;
+- `ToolExecutionUpdate.partial_result` is a STRUCTURED `ToolPartialResult`, not a bare string and
+  NOT the pipeline-level `ToolResult` either (Layer 08, PASS 11, contract-convergence final review,
+  `L08-R011`): pinned Pi's own `AgentToolUpdateCallback<T> = (partialResult: AgentToolResult<T>) =>
+  void` (`packages/agent/src/types.ts:361-383`) carries `AgentToolResult<T>` -- `content`/`details`
+  required, `usage`/`addedToolNames`/`terminate` genuinely optional, with NO `toolCallId`,
+  `toolName`, or `isError` field of its own; call identity already lives on the enclosing
+  `tool_execution_update` event (`ToolExecutionUpdate.tool_call_id`/`.tool_name`), and Pi's own
+  `execute()` throws on failure rather than encoding an error inside its returned/reported value.
+  An earlier revision narrowed `tools/definition.py::ToolUpdate` to `Callable[[str], None]` (a real
+  payload reduction pinned Pi does not have), then over-corrected to
+  `Callable[[ToolResult], None]` -- reusing the pipeline-level FINALIZED-outcome type and
+  normalizing spoofed `tool_call_id`/`tool_name` onto it, observably LARGER than Pi's own type (an
+  independent Rust re-review caught this; certified Rust Layer 06 already used the correct,
+  narrower shape throughout, so Python was the side needing correction, not Rust).
+  `ToolUpdate = Callable[[ToolPartialResult], None]` (`tools/result.py`); `update()`'s own closure
+  needs NO normalization at all now, since the type has no identity/error field to normalize away;
+- `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
+  `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
+  `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is
+  caught and settled via `_settle_run_failure` the same as any other run-executor failure, not left
+  to escape uncaught past `_run_wrapped`'s own `finally`.
+
+`_settle_run_failure` (pinned Pi's `handleRunFailure`) is `async` and dispatches its own four-event
+sequence through this SAME seam, in the same order, letting a thrown listener propagate uncaught
+exactly as pinned Pi does. Reduce, THEN dispatch, per event -- matching pinned Pi's own
+`processEvents` order exactly, for every event, not only the assistant's own streamed one:
+`streaming_message` is set to the message at `message_start` and cleared at `message_end` (pinned
+Pi's own reducer does not distinguish a streamed reply from a plain admitted message); the durable
+transcript entry for a message is appended at `message_end` time, not before `message_start`'s own
+dispatch; `error_message` is set as part of `turn_end`'s own reduce, before that event's own
+dispatch. An interrupted sequence therefore durably records exactly what pinned Pi's own reducer
+would have committed up to and including the event whose listener threw, and nothing after it.
+`AgentLoop._run_wrapped` mirrors pinned Pi's own `runWithLifecycle`/`finishRun` unconditional state
+writes exactly: `streaming_message`/`error_message` reset at entry; `streaming_message`/
+`pending_tool_calls` reset at exit, via `finally`, regardless of success or failure.
+`UnknownModelError` remains explicitly excluded and re-raised uncaught, matching pinned Pi's own
+eager boundary.
+
+### Active abort propagation (explicitly out of scope)
+
+Pinned Pi's `abort()` actively signals the running provider/tools/hooks. Idle is reached only after
+terminal run settlement and awaited `agent_end` listeners -- Layer 09's territory, per the
+already-certified Layer-07 contract's own deferral. Not attempted by Layer 08 at all:
+`handleRunFailure` above settles an aborted/failed turn correctly once it arrives, without itself
+implementing any provider, stream, tool, hook, or transport abort-signal propagation. Layer 08 has
+no local cancel/boundary-stop mechanism of any kind: a prior revision of this section documented one
+(`request_boundary_stop()`, renamed from `cancel()`), but it was removed entirely rather than kept
+and approved -- a public method that could alter a Pi-equivalent run's own observable outcome had no
+owner governance approval for that divergence, and no demonstrated product need justified keeping
+it, the same default this project already applied to `max_steps` (above). If a host-only safety
+mechanism is ever needed, it must sit entirely outside a single Pi-equivalent run's own semantic
+behavior -- limiting a HOST's own repeated scheduling/invocation policy across independent runs,
+never truncating or altering one run's own outcome internally.
+
+### Runtime-state transition timing
+
+`is_streaming`: flips per pi-equivalent run (`AgentLoop._run_wrapped`), matching pinned Pi's own
+`runWithLifecycle`/`finishRun` write points exactly -- once per `prompt()`/`continue()` invocation,
+not once per `run_until_idle()` pump iteration.
+
+`streaming_message`: non-`None` for exactly the duration of one MESSAGE's own `message_start` ->
+`message_end` window, matching pinned Pi's own `message_start`/`message_update` -> partial,
+`message_end` -> `None` write points -- NOT scoped to "one provider request" (`L08-R012`,
+contract-convergence final review: an earlier revision of this paragraph opened with "non-`None`
+for exactly the duration of one provider request," directly contradicted by its own very next
+sentence, below, which correctly states the complete rule; only the complete rule is normative).
+Pinned Pi's own reducer does not distinguish the assistant's own streamed reply from any other
+admitted message: `streaming_message` is set (briefly, non-streamed, for a message that was never
+itself streamed) to EVERY message at its own `message_start` and cleared at its own `message_end`,
+whether that message is the assistant reply, an admitted prompt/steering message, a follow-up, or a
+tool result -- reproduced uniformly at every admission point ("Initial-turn admission" above) and
+every message emitted by `_run_step`. For the assistant's own genuinely-streamed reply specifically,
+`streaming_message` additionally carries FULL content fidelity -- text, thinking, and tool-call
+construction alike -- across every intermediate `message_update` between that message's own
+`message_start` and `message_end`, set directly from each stream chunk's own already-complete
+`partial` (the certified Layer-02/04 `StreamChunk` carries a complete `partial: AssistantMessage` on
+every variant; no independent reconstruction from raw deltas is attempted); a non-streamed admitted
+message has no intervening `message_update` at all, only its own `message_start`/`message_end` pair.
+
+`pending_tool_calls`: real per-call tracking (add on start, remove on end) through the
+already-certified Layer-06 `tools/execution-start`/`tools/execution-end` events -- an existing
+seam, not a new one -- matching pinned Pi's own `processEvents` reducer exactly.
+
+`error_message`: set from a turn's own failed/aborted assistant message (`error_message`, when
+truthy) and, distinctly, NOT cleared at that same run's own `agent_end` -- it persists across an
+idle period after a failed run, cleared only at the *next* run's start or via the already-certified
+Layer-07 `reset()`, exactly matching pinned Pi (`finishRun` never touches `errorMessage`; only the
+next `runWithLifecycle` entry does).

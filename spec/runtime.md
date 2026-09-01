@@ -87,6 +87,17 @@ Dispatch mode is declared where the event is declared; declaring the same event 
 modes is a **startup error** — it surfaces at declaration time, before any step that uses the event
 runs, not as an ordinary mid-scenario failure.
 
+`serial` dispatch additionally supports an explicit, per-call, opt-in "yield after each listener"
+behavior (Python: `EventBus.serial(..., yield_after_each=True)`; default `False`, preserving the
+table above exactly for every dispatch that does not request it). When requested, the dispatcher
+suspends and yields one scheduling turn back to its own host runtime after EVERY listener
+completes — including one that performed no async work of its own — before advancing to the next.
+This is additive scheduling behavior, not a new dispatch mode: ordering, error propagation, and the
+last-value-wins return rule for `serial` are unchanged either way. A consumer requests it only when
+its own upstream observable contract requires a listener-to-listener suspension boundary regardless
+of whether a given listener suspends (Layer 08's Agent-event seam is the first such consumer — see
+`spec/agent.md`).
+
 ## RT-017 to RT-022 — Waterfall
 
 A listener is invoked as `listener(*args, next)`. Not calling `next` short-circuits: downstream

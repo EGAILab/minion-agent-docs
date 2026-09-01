@@ -298,6 +298,36 @@ reason): `tool_call_id`, `tool_name`, `arguments`, and the partial value. `argum
 call `prepareToolCall` was given, not the `prepareArguments`-shimmed value or the validated one
 `execute()` actually runs with.
 
+`partial` itself is **structured** -- `ToolPartialResult` (`tools/result.py`), pinned Pi's own
+`AgentToolResult<T>` EXACTLY (`content`/`details` required, `usage`/`added_tool_names`/`terminate`
+genuinely optional -- `None` when the tool did not set them, distinguishable from an explicit
+falsy/empty value the same way Pi's own `usage?`/`addedToolNames?`/`terminate?` are `undefined`,
+not defaulted, when omitted), never a bare string (`L08-R011`, `PI_PARITY_DEFECT` and
+`CONTRACT_ASSURANCE_DEFECT`). `ToolPartialResult` is DELIBERATELY NOT `ToolResult` (this module's
+own pipeline-level FINALIZED-outcome type): it has NO `tool_call_id`, `tool_name`, or `is_error`
+field of its own -- pinned Pi's own `AgentToolResult<T>` has none of those either, since call
+identity already lives on the enclosing `tool_execution_update` event
+(`tool_call_id`/`tool_name`), and Pi's own `execute()` throws on failure rather than encoding an
+error inside its returned/reported value ("Execute the tool call. Throw on failure instead of
+encoding errors in `content`," `AgentTool.execute`'s own docstring).
+
+An earlier revision narrowed `ToolUpdate` to `Callable[[str], None]` (a real payload reduction
+pinned Pi does not have), then over-corrected to `Callable[[ToolResult], None]`, reusing the
+pipeline-level type and normalizing spoofed identity onto it -- an independent Rust re-review
+caught this as observably LARGER than Pi's own type, not a harmless superset: a tool could report
+an `is_error` or identity pinned Pi has no way to express on a partial value at all. Certified Rust
+Layer 06 already used the correct, narrower `AgentToolResult` shape throughout -- Python was the
+side that needed correcting, not Rust.
+
+`details` is genuinely required at the Python type level, not merely in prose: `ToolPartialResult`
+carries no dataclass default for it, so construction fails without an explicit value (an earlier
+revision defaulted it to `{}`, letting `ToolPartialResult(content=())` build successfully and
+silently treating "required" as "optional in practice"). Canonical evidence encodes `details`
+unconditionally -- a required-but-empty `{}` is always present in observed output, never omitted
+as if unset -- and the canonical schema's own `toolPartialResult` definition is CLOSED
+(`required: [text, details]`, `additionalProperties: false`), rejecting any shape carrying a
+forbidden field (`is_error`, `tool_call_id`, `tool_name`) or missing a required one.
+
 ### Batch execution
 
 Effective mode is decided by the batch, not stored on `ToolDefinition` (Layer 05 intentionally
