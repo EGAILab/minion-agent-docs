@@ -298,16 +298,26 @@ reason): `tool_call_id`, `tool_name`, `arguments`, and the partial value. `argum
 call `prepareToolCall` was given, not the `prepareArguments`-shimmed value or the validated one
 `execute()` actually runs with.
 
-`partial` itself is **structured** -- an `AgentToolResult<T>`-shaped `ToolResult`, the SAME shape a
-tool's own final result is (pinned Pi's own `AgentToolUpdateCallback<T> = (partialResult:
-AgentToolResult<T>) => void`), never a bare string (`L08-R011`, `PI_PARITY_DEFECT` and
-`CONTRACT_ASSURANCE_DEFECT`, closed at the Layer-08 contract-convergence final review, PASS 10: an
-earlier revision narrowed `ToolUpdate` to `Callable[[str], None]`, a real payload reduction pinned
-Pi does not have -- certified Rust Layer 06 already used `AgentToolResult` for this update
-callback, so Python was the narrower, wrong side of a cross-language divergence, not Rust). A
-tool's own supplied partial need not carry its own call's real `tool_call_id`/`tool_name`:
-`_execute_and_finalize`'s own `update()` closure normalizes both to the real call's identity, the
-same normalization it already applies to the final result.
+`partial` itself is **structured** -- `ToolPartialResult` (`tools/result.py`), pinned Pi's own
+`AgentToolResult<T>` EXACTLY (`content`/`details` required, `usage`/`added_tool_names`/`terminate`
+genuinely optional -- `None` when the tool did not set them, distinguishable from an explicit
+falsy/empty value the same way Pi's own `usage?`/`addedToolNames?`/`terminate?` are `undefined`,
+not defaulted, when omitted), never a bare string (`L08-R011`, `PI_PARITY_DEFECT` and
+`CONTRACT_ASSURANCE_DEFECT`). `ToolPartialResult` is DELIBERATELY NOT `ToolResult` (this module's
+own pipeline-level FINALIZED-outcome type): it has NO `tool_call_id`, `tool_name`, or `is_error`
+field of its own -- pinned Pi's own `AgentToolResult<T>` has none of those either, since call
+identity already lives on the enclosing `tool_execution_update` event
+(`tool_call_id`/`tool_name`), and Pi's own `execute()` throws on failure rather than encoding an
+error inside its returned/reported value ("Execute the tool call. Throw on failure instead of
+encoding errors in `content`," `AgentTool.execute`'s own docstring).
+
+An earlier revision narrowed `ToolUpdate` to `Callable[[str], None]` (a real payload reduction
+pinned Pi does not have), then over-corrected to `Callable[[ToolResult], None]`, reusing the
+pipeline-level type and normalizing spoofed identity onto it -- an independent Rust re-review
+caught this as observably LARGER than Pi's own type, not a harmless superset: a tool could report
+an `is_error` or identity pinned Pi has no way to express on a partial value at all. Certified Rust
+Layer 06 already used the correct, narrower `AgentToolResult` shape throughout -- Python was the
+side that needed correcting, not Rust.
 
 ### Batch execution
 

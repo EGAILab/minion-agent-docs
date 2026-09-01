@@ -249,10 +249,10 @@ consequence of delegating to `clear_all()`.
 
 ## Layer 08 — the run/turn state machine
 
-Normative, current-state contract (last rewritten PASS 10). This section describes ONE coherent
+Normative, current-state contract (last rewritten PASS 11). This section describes ONE coherent
 Layer-08 semantic contract as it stands today, verified directly against pinned Pi
 (`agent-loop.ts`/`agent.ts`/`types.ts`). It does not narrate how the implementation evolved across
-passes; that history -- including eight independent Rust review rejections, their remediation, and
+passes; that history -- including nine independent Rust review rejections, their remediation, and
 the contract-convergence cycle entered after PASS-8's own rejection -- lives in
 `assurance/layers/08-agent-loop-python.md` and `assurance/layers/08-agent-loop-contract-
 convergence.md`, not here. A normative section and an assurance
@@ -485,17 +485,22 @@ boundary, not merely a reuse of the existing `SERIAL` mode's own base semantics:
   dispatches interleave according to real execution order, and a call stays marked pending
   (`AgentInstance.pending_tool_calls`) for the whole time its own updates are still in flight, since
   `OnExecutionEnd` (which clears it) fires only once they have all resolved;
-- `ToolExecutionUpdate.partial_result` is a STRUCTURED `ToolResult`, not a bare string (Layer 08,
-  PASS 10, contract-convergence final review, `L08-R011`): pinned Pi's own
-  `AgentToolUpdateCallback<T> = (partialResult: AgentToolResult<T>) => void`
-  (`packages/agent/src/types.ts:361-383`) carries `AgentToolResult<T>`, the SAME structured shape
-  (`content`/`details`/`usage`/`addedToolNames`/`terminate`) a tool's own final result is -- an
-  earlier revision narrowed `tools/definition.py::ToolUpdate` to `Callable[[str], None]`, a real
-  payload reduction pinned Pi does not have (certified Rust Layer 06 already used
-  `AgentToolResult` for this; Python was the narrower, wrong side of a cross-language divergence).
-  `ToolUpdate = Callable[[ToolResult], None]`; the tool-supplied partial's own `tool_call_id`/
-  `tool_name` are normalized to the real call's identity by `_execute_and_finalize`'s own `update`
-  closure, the same normalization already applied to the final result;
+- `ToolExecutionUpdate.partial_result` is a STRUCTURED `ToolPartialResult`, not a bare string and
+  NOT the pipeline-level `ToolResult` either (Layer 08, PASS 11, contract-convergence final review,
+  `L08-R011`): pinned Pi's own `AgentToolUpdateCallback<T> = (partialResult: AgentToolResult<T>) =>
+  void` (`packages/agent/src/types.ts:361-383`) carries `AgentToolResult<T>` -- `content`/`details`
+  required, `usage`/`addedToolNames`/`terminate` genuinely optional, with NO `toolCallId`,
+  `toolName`, or `isError` field of its own; call identity already lives on the enclosing
+  `tool_execution_update` event (`ToolExecutionUpdate.tool_call_id`/`.tool_name`), and Pi's own
+  `execute()` throws on failure rather than encoding an error inside its returned/reported value.
+  An earlier revision narrowed `tools/definition.py::ToolUpdate` to `Callable[[str], None]` (a real
+  payload reduction pinned Pi does not have), then over-corrected to
+  `Callable[[ToolResult], None]` -- reusing the pipeline-level FINALIZED-outcome type and
+  normalizing spoofed `tool_call_id`/`tool_name` onto it, observably LARGER than Pi's own type (an
+  independent Rust re-review caught this; certified Rust Layer 06 already used the correct,
+  narrower shape throughout, so Python was the side needing correction, not Rust).
+  `ToolUpdate = Callable[[ToolPartialResult], None]` (`tools/result.py`); `update()`'s own closure
+  needs NO normalization at all now, since the type has no identity/error field to normalize away;
 - `AgentStart`/`TurnStart`/`TurnEnd`/`AgentEnd` are dispatched at their own points as before, and
   `AgentStart`'s own dispatch plus a successful run's own `AgentEnd` dispatch both live inside
   `_execute_run`'s own exception boundary (Layer 08, PASS 6): a listener failure at either point is

@@ -2739,7 +2739,7 @@ integration into `process/agent-workflow.md`:
    dedicated "does this paragraph contradict its own next sentence" pass -- distinct from "does this
    paragraph match the implementation" -- would catch this class of defect earlier.
 
-## Next action
+## Next action (superseded -- see PASS 11 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-10 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -2753,3 +2753,238 @@ a full independent Layer-08 contract re-review against the new PASS-10 candidate
 §11.8.8 -- L08-R002/R004 remain provisionally closed unless this review reopens them with a new
 witness); all prior verdicts apply only to their exact superseded candidates`. Then stop. Do not
 merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 09.
+
+The PASS-10 candidate (code `3642906`, docs `b3f44f3`) was independently reviewed and REJECTED
+(review commit `c4627bdc1a3edc7aced8d1f050922066078e1924`, evidence docs PR #13,
+`review/08-rust-contract-final-pass10`). `L08-R012`/`L08-R013` RESOLVED; `L08-R002`/`L08-R004`
+remained provisionally closed. `L08-R011` came back `PARTIALLY_RESOLVED_BLOCKING`: PASS 10's own
+fix reused the pipeline-level `ToolResult` for the partial-update value -- observably LARGER than
+pinned Pi's/certified Rust's own `AgentToolResult<T>` (an extra `is_error` field Pi's own type has
+no equivalent of at all, plus normalized-in identity), canonical evidence remained lossy (text
+only), and the schema change broke certified Rust's own conformance test adapter. See PASS 11
+below for the remediation.
+
+# PASS 11 — second L08-R011 remediation (structured-shape correction)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-10 candidate (code PR #13 @
+`36429068c104f165e04a9aa06fa69f35a5f280ad`, docs PR #3 @ `b3f44f3a323ae00831a85ed8e75f9f86df1289fa`)
+**REJECTED** it (`minion-agent-docs#13` @ `c4627bdc1a3edc7aced8d1f050922066078e1924`, evidence docs
+PR #13). Full review text: `assurance/layers/08-agent-loop-rust-contract-final-review-pass10.md`
+on that branch (not reproduced verbatim here).
+
+## Finding, reproduced against pinned Pi and remediated
+
+### L08-R011 (second remediation) — reused `ToolResult` was observably larger than Pi's own type
+
+**Re-review finding:** pinned Pi's own `AgentToolResult<T>` (`content`/`details`/`usage?`/
+`addedToolNames?`/`terminate?`) has no `toolCallId`, `toolName`, or `isError` -- call identity is
+already carried by the enclosing `tool_execution_update` event. PASS 10 instead reused
+`ToolResult`, which adds `tool_call_id`/`tool_name`/`is_error` and concrete defaults
+(`terminate = false`, `added_tool_names = ()`) where Pi/Rust preserve optional absence. A direct
+live-event witness supplied spoofed identity, `is_error=true`, `details`, `terminate`, and
+`added_tool_names`; the listener observed all of them, including the two fields Pi's own type
+cannot express at all. The candidate's own spec text called the reused type "the SAME shape" while
+normatively specifying identity normalization onto it -- self-contradictory. Canonical evidence
+was independently insufficient (schema accepted unrestricted `object`, but the fixture
+decoder/observer recognized only `{text: ...}`), and the schema's `string` -> `object` change
+broke certified Rust's own conformance test adapter (`Value::as_str().unwrap()` panics on the new
+object shape) -- explicitly noted by the review as adapter/evidence work, not a Rust production
+parity defect, but leaving Layer-06 cross-language evidence non-green regardless.
+
+**Pi reproduction:** re-confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`packages/agent/src/types.ts:361-383`), read in full again, this time checking specifically for an
+`isError`-equivalent field on `AgentToolResult<T>` itself -- there is none; `AgentTool.execute`'s
+own docstring ("Execute the tool call. Throw on failure instead of encoding errors in `content`")
+confirms error state is a PIPELINE-level outcome (the executor's own catch), never a field a tool
+sets on its own returned/reported value, in either the final-result or partial-update case.
+
+**Classification:** `PI_PARITY_DEFECT` and `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** `tools/result.py` gained `ToolPartialResult`, a NEW type distinct from
+`ToolResult` -- `content`/`details` required, `usage`/`added_tool_names`/`terminate` genuinely
+`| None = None` (not concrete defaults, preserving Pi's own explicit-vs-absent distinction for its
+own optional fields), with structurally NO `tool_call_id`/`tool_name`/`is_error` slot at all
+(`@dataclass(frozen=True, slots=True)` -- not merely unset, genuinely absent from the type).
+`text_partial_result(text)` mirrors `text_result`'s own convenience shape. `tools/definition.py::
+ToolUpdate` widened to `Callable[[ToolPartialResult], None]`. `_execute_and_finalize`'s own
+`update()` closure needs NO normalization step at all now -- the self-contradiction the review
+caught (claiming "same shape" while normalizing foreign fields onto it) is closed structurally, not
+reworded. `OnExecutionUpdate`, `ToolExecutionUpdate.partial_result` (Layer 08), and `tools/update`'s
+own EMIT payload all carry `ToolPartialResult` through unchanged.
+
+Canonical evidence expanded, not merely re-typed: `tests/conformance/agent_runner.py`'s own
+`_partial_result()` decoder now reads `details`/`terminate`/`added_tool_names` from the scenario
+spec (`None` when omitted); a new `_encode_partial()` encoder serializes the FULL captured
+`ToolPartialResult` back to the scenario's own shorthand, omitting a key whose value is `None`
+rather than defaulting it -- an omitted key in observed output means "never set," matching Pi's own
+JSON-serialization behavior for an `undefined` field exactly.
+`late-tool-update-ignored.yaml`'s own single `emits_updates` entry now sets `details`/`terminate`/
+`added_tool_names` explicitly, and `expect_updates[].partial` asserts the complete structured
+shape, not only `text`.
+
+Rust cross-language evidence: NOT closed by this pass, and not claimed closed. Rust's own
+CONFORMANCE TEST ADAPTER (`minion-agent-rust/crates/minion-agent/tests/tool_execution_
+conformance.rs`) needs updating to parse the object-shaped canonical fixture through Rust's own
+already-correct, already-certified `AgentToolResult` seam -- this is Rust-owned work, out of scope
+for this pass under this project's own hard ownership boundary (`.claude/CLAUDE.md`: "Do not
+modify `minion-agent-rust/**` unless the user explicitly changes the ownership rule"). Flagged
+explicitly as an open, blocking, Rust-owned dependency in `pi-parity-manifest.yaml::TOOL-019`'s own
+`rust:` field, not silently claimed unaffected the way PASS 10's own row text was (the review's own
+correction of that specific false claim).
+
+**RED evidence:** the new `test_a_partial_carries_structured_details_terminate_and_added_tool_
+names` test, run against the REVERTED (PASS-10, `ToolResult`-reusing) implementation before this
+pass's own fix, fails immediately: `hasattr(seen[1], "tool_call_id")` is `True` (the type
+structurally carries the field pinned Pi's own type cannot), and `seen[0].terminate` is `False`
+(the PASS-10 implementation's own concrete default) rather than `None` (absent), demonstrating the
+exact defect the review named. The extended `late-tool-update-ignored` canonical scenario, run
+against the PASS-10 candidate's own runner code (schema accepting `object` but the old
+text-only decoder/observer), silently drops `details`/`terminate`/`added_tool_names` from both the
+constructed partial and the observed evidence -- proving the canonical gap was real, not merely
+alleged.
+
+**GREEN evidence:** `test_a_partial_carries_structured_details_terminate_and_added_tool_names`
+passes against the PASS-11 candidate, proving the explicit-vs-absent distinction for
+`terminate`/`added_tool_names`/`usage` and the structural absence of `tool_call_id`/`tool_name`/
+`is_error` via `hasattr`. `late-tool-update-ignored` passes with the full structured `partial`
+value asserted in `expect_updates`, through the real production seam (Layer-06's own `_execute_
+and_finalize` -> Layer-08's own capture -> the conformance runner's own encoder), not a standalone
+Python-level assertion only. Every other PASS-6 through PASS-10 update-related test re-run
+unchanged (`test_a_tool_may_report_partial_output`, `test_updates_carry_the_call_id_so_a_
+consumer_can_route_them`, `test_updates_carry_the_tool_name_and_original_arguments`, `test_no_
+listener_makes_updates_harmless`, `test_on_execution_update_is_awaited_for_every_call_in_order`,
+`test_a_failing_on_execution_update_listener_propagates_uncaught`, `test_on_execution_update_
+starts_synchronously_but_does_not_block_the_tool`, `test_a_late_update_after_the_tool_settles_is_
+ignored`, and the Layer-08-level `test_tool_execution_update_reaches_the_lifecycle_seam`/`test_
+pending_tool_calls_still_shows_the_call_during_its_own_update_dispatch`/`test_two_lifecycle_
+listeners_each_suspend_before_the_tool_continues`/`test_tool_execution_update_listener_failure_
+is_a_genuine_run_failure`) -- all updated to construct `ToolPartialResult`/`text_partial_result`
+instead of the reused `ToolResult`, none merely re-passing spuriously against the wrong type (each
+one re-verified, this pass, to actually construct and compare `ToolPartialResult` values, not a
+`ToolResult` that happens to compare equal by coincidence of matching field values -- a real risk
+caught and fixed during this pass's own review of its prior test fixtures).
+
+**Spec/manifest changes:** `spec/tools.md`'s "Live updates" closing paragraph and `spec/agent.md`'s
+`ToolExecutionUpdate.partial_result` bullet both rewritten to describe `ToolPartialResult`
+correctly (not `ToolResult`), explicitly stating the type has no `tool_call_id`/`tool_name`/
+`is_error` slot at all rather than claiming "same shape" while describing normalization.
+`pi-parity-manifest.yaml::TOOL-019` gained a PASS-11 paragraph (history preserved: PASS 10's own
+now-superseded design and its own now-corrected claims left exactly as PASS 10 wrote them); its own
+`rust:` field now explicitly names the outstanding, Rust-owned conformance-adapter dependency
+instead of claiming Rust unaffected.
+
+**Disposition:** resolved. `TOOL-019`: adopted, corrected a second time; Rust cross-language
+evidence for this row remains explicitly open pending Rust-owned adapter work.
+
+## Regression verification for previously-closed findings
+
+`L08-R002`/`L08-R004` (contract-convergence, PASS 9): NOT reopened -- unaffected by this pass's own
+narrow, `ToolPartialResult`-scoped edits. `L08-R012`/`L08-R013` (PASS 10): unaffected, both remain
+resolved -- neither this pass's own diff nor the prior review's own re-audit touched
+`streaming_message` prose or the `AG-001` evidence pointer. `L08-R001`, `R003`, `R005`-`R010`:
+unaffected.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00% -- includes tools/result.py's own new
+                                      ToolPartialResult/text_partial_result
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in earlier passes remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing
+conformance/ (full):                 all passing, including the extended late-tool-update-ignored
+                                      scenario asserting the full structured partial shape
+manifest parse + unique-ID audit:    76 / 76 unique (TOOL-019 gained a PASS-11 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/tools.md and spec/agent.md both corrected to describe
+                                      ToolPartialResult, not the reused ToolResult; last-rewritten/
+                                      rejection-cycle markers updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+Rust cross-language (Layer 06):      NOT GREEN -- Rust's own conformance test adapter (tool_
+                                      execution_conformance.rs) still parses emits_updates[] as a
+                                      bare string and panics against the now-object-shaped
+                                      canonical fixture; explicitly flagged as open, Rust-owned
+                                      follow-up in TOOL-019's own rust: field, not attempted by
+                                      this pass under its own hard ownership boundary
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R011 resolved on the Python/shared side (ToolPartialResult
+                               matches pinned Pi's own AgentToolResult<T> exactly, structurally,
+                               with no nested identity/error field to normalize)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R011, L08-R012, L08-R013 all resolved on the Python/
+                               shared side
+unapproved intentional divergence   none
+Rust cross-language dependency      OPEN -- Rust's own tool_execution_conformance.rs adapter needs
+                               updating to parse the object-shaped canonical fixture through its
+                               own already-correct AgentToolResult seam; Rust-owned, not attempted
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate) --
+                             the shared canonical schema change is correct and required, but Rust's
+                             own conformance ADAPTER (not production semantics) needs a
+                             corresponding update before Layer-06 cross-language evidence is green
+                             again; this is an explicit, open, Rust-owned dependency, not a Python-
+                             side blocker
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Second consecutive rejection specifically on `L08-R011`'s own structured-payload shape, after a
+prior pass (PASS 9) whose own targeted convergence fix held cleanly. Captured for later
+integration into `process/agent-workflow.md`:
+
+1. When a shared type gets "widened back" to match a Pi structure, verify the WIDENED type is
+   EXACTLY Pi's own shape, not a convenient existing type that happens to be a superset. Reusing
+   an existing, larger type (`ToolResult`) felt like the smaller, safer diff at the time; the
+   independent review correctly identified that a superset is not free -- every extra field is a
+   field two independent implementations can disagree about, exactly the risk workflow §7's own
+   contract-quality rule warns against ("two reasonable independent implementations being forced
+   to choose observably different behavior because the boundary is undefined").
+2. A canonical schema change from `string` to unrestricted `object` is necessary but not
+   sufficient evidence: the FIXTURE DECODER and OBSERVER must also actually read/assert the new
+   fields, or the schema's own permissiveness silently degrades to "the same string test as
+   before, plus fields nobody checks." Widening a schema type and widening what the runner
+   actually exercises through it are two separate, both-required steps.
+3. A shared/Python-side schema change that is REQUIRED for Pi parity can still leave a certified
+   OTHER language's own test infrastructure broken -- this is not a reason to avoid the correct
+   fix, but it IS a reason to say so explicitly rather than assert "Rust unaffected" from
+   inspection of production code alone; a conformance ADAPTER is test infrastructure, not
+   production semantics, and needs the same "did I actually check" discipline the shared schema
+   change itself needed.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-11 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and the second L08-R011 closure status (noting the still-open Rust adapter dependency); mark
+both Ready for Review once the candidate gate above is satisfied. Update coordination issue #12 to
+`STATUS: RUST_CONTRACT_REVIEW`, `CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`,
+`PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @ 88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4
+rejection #6 @ 65e665f, PASS-5 rejection #7 @ 8875ebc, PASS-6 rejection #8 @ 752754a, PASS-7
+rejection #9 @ 5713b39, PASS-8 rejection #10 @ 2818dd8, PASS-9 final-review rejection #12 @
+e747e91, PASS-10 final-review rejection #13 @ c4627bd`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete
+a full independent Layer-08 contract re-review against the new PASS-11 candidate SHAs; L08-R002/
+R004/R012/R013 remain resolved/provisionally closed unless this review finds a new witness; the
+outstanding Rust conformance-adapter dependency (TOOL-019) is explicitly flagged, not silently
+assumed closed`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement
+Rust. Do not start Layer 09.
