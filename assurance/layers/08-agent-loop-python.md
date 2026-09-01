@@ -2069,7 +2069,7 @@ retrospective, NOT applied to that file now:
    of a synchronous data-capture structure is what actually closes a fire-and-forget-shaped Pi
    event's own fidelity gap.
 
-## Next action
+## Next action (superseded -- see PASS 8 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-7 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -2081,3 +2081,255 @@ satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
 independent Layer-08 contract re-review against the new PASS-7 candidate SHAs; all prior verdicts
 apply only to their exact superseded candidates`. Then stop. Do not merge PR #13, #3, #4, #5, #6,
 #7, or #8. Do not implement Rust. Do not start Layer 09.
+
+This candidate (code `2564f5b`, docs `0af62da`) was independently reviewed and REJECTED (`L08-R002`,
+`L08-R004` remained open a fourth cycle -- `asyncio.ensure_future` schedules a `Task`'s first step
+deferred to the next event-loop iteration, not synchronously at callback time the way pinned Pi's
+own JS `async function` call does; review commit `5713b39`, evidence docs PR #9). See PASS 8 below
+for the remediation.
+
+# PASS 8 — remediation for the independent Rust re-review rejection (L08-R002, R004)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-7 candidate (code PR #13 @ `2564f5b36cae27004f04ff74e08
+e6ab0277cc708`, docs PR #3 @ `0af62da58562bb4968932b9f340b206fa0d50c17`, pinned Pi `b7bb00b936dbe2
+1b8e160b3e89efdec361846699`) **REJECTED** it (`minion-agent-docs#9` @ `5713b393a8870882c500f193c99
+76a6b0465ff02`, evidence docs PR #9). Two findings STILL OPEN, both a fourth-cycle continuation of
+`L08-R002`/`L08-R004`: `L08-R002` (`PI_PARITY_DEFECT`) -- "`asyncio.ensure_future` schedules update
+dispatch but does not begin the listener coroutine before `update()` returns. Pinned Pi immediately
+executes the reducer and first listener's synchronous prefix" -- with focused evidence: the
+PASS-7 candidate's own observable order was `tool-continued, listener-entered, listener-resumed`;
+pinned JS's own order is `listener-entered, tool-continued, listener-resumed` -- and `L08-R004`
+(`CONTRACT_ASSURANCE_DEFECT`) -- "spec/AG-009 promise immediate callback-time delivery and
+cross-call ordering, but the new tests discriminate neither property."
+
+Prior Rust approval does not exist for this or any later candidate SHA -- the rejection at
+`5713b39` applies only to the superseded PASS-7 candidate. The rejected review evidence PRs (#4,
+#5, #6, #7, #8, #9) are not modified or overwritten by this pass; they remain the immutable record
+of what PASS 2 through PASS 7 actually were and why each was rejected.
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L08-R002 — `asyncio.ensure_future` defers a Task's first step; pinned Pi does not
+
+**Re-review finding:** `asyncio.ensure_future` (PASS 7's own scheduling primitive) does not begin
+running the listener coroutine's body before `update()` returns to its own caller. Pinned Pi's own
+callback, by contrast, immediately executes the reducer AND the first listener's own synchronous
+prefix -- i.e., calling `emit(...)` in JS begins running the whole dispatch chain synchronously,
+right there, before `update()`'s own caller (the tool) resumes. The re-review's own focused
+evidence made the divergence directly observable: the PASS-7 candidate produced
+`tool-continued, listener-entered, listener-resumed`; pinned JS produces
+`listener-entered, tool-continued, listener-resumed` for the identical scenario.
+
+**Pi reproduction:** re-confirmed against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`agent-loop.ts:670-711`) and, this time, against the JS LANGUAGE SEMANTICS the source relies on,
+not merely the source text itself: a JS `async function` call does not merely "get scheduled" --
+calling one executes its body immediately and synchronously, in the caller's own stack, up to its
+own first genuine `await` suspension (or to completion, if it never suspends), and only THEN
+returns control to the caller. `emit(...)` (an `async function`, ultimately `processEvents`) is
+called directly, not scheduled via any microtask/macrotask queue, so this synchronous-start
+property applies to it exactly. Python's own `asyncio.Task` -- confirmed by reading CPython's own
+`Task.__init__`, which calls `loop.call_soon(self.__step, ...)` -- never runs any part of the
+wrapped coroutine synchronously at construction time, REGARDLESS of whether it is built via
+`ensure_future` or `create_task`: the first actual step is always deferred to the next event-loop
+iteration. This is the exact, source-level root cause of the observed reordering, not a fuzzy
+"Python and JS schedule things differently" hand-wave.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `asyncio.eager_task_factory` (Python stdlib since 3.12, this project's own pinned
+minimum -- confirmed available and behaviorally verified BEFORE use, standalone, outside any
+Layer-06 code, via two small scripts: one with a non-suspending listener, confirming full
+synchronous completion before the caller's own next statement; one with a listener that awaits
+`asyncio.sleep(0)`, confirming the EXACT pinned-JS three-step order,
+`listener-entered, tool-continued, listener-resumed`) is the correct primitive: calling
+`asyncio.eager_task_factory(loop, coro)` drives `coro` SYNCHRONOUSLY, in the calling stack, up to
+its own first real suspension, before returning a `Task` at all. `tools/execute.py::_execute_and_
+finalize`'s `update(partial)` closure now calls `asyncio.eager_task_factory(asyncio.get_running_
+loop(), on_execution_update(...))` in place of `asyncio.ensure_future(...)` -- the ONLY change to
+the scheduling primitive itself. Everything downstream of scheduling is unchanged from PASS 7 and
+remains correct: `pending_updates` collects the resulting `Task`s; an unwrapped `asyncio.gather`
+joins them immediately after `execute()` settles, before `_finalize`/`tools/execution-end`, letting
+a listener failure propagate uncaught; `driver.py`'s own `on_execution_update` hook, `pending_tool_
+calls` timing, and the removal of PASS-6's own capture-list design are all untouched. `OnExecution
+Update`'s own type alias is narrowed from `Awaitable[None]` to `Coroutine[Any, Any, None]`
+(`eager_task_factory` requires one specifically; every real `async def` implementation already
+produces one, so no actual caller is newly constrained).
+
+**RED evidence:** PASS 7's own `test_on_execution_update_does_not_block_the_tools_own_execute` put
+its ONLY observable side effect (`order.append("hook")`) AFTER the hook's own `await
+asyncio.sleep(0)` -- meaning the hook never appended anything before its own suspension point
+either way, so the test passed identically whether the scheduling primitive started the hook
+synchronously (correct) or only deferred-scheduled it (PASS 7's actual, wrong, behavior). This is
+precisely the "tests do not discriminate callback timing... or cross-call ordering" `L08-R004`
+names -- reproduced directly by re-running the OLD test body against the OLD (`ensure_future`)
+implementation and confirming it still passes despite the wrong order, before writing the fix.
+
+**GREEN evidence:** `test_on_execution_update_starts_synchronously_but_does_not_block_the_tool`
+(replacing the non-discriminating PASS-7 test): the hook now appends `"listener-entered"` as its
+own FIRST statement, before its own `await asyncio.sleep(0)`, and the tool appends
+`"tool-continued"` immediately after calling `update()`; the assertion
+(`order == ["listener-entered", "tool-continued", "listener-resumed"]`) fails outright against the
+PASS-7 (`ensure_future`) implementation and passes only against the corrected
+(`eager_task_factory`) one -- confirmed by re-running it against both, matching the re-review's own
+focused-evidence format exactly. Every other PASS-6/PASS-7 tool-execution-update test
+(`test_on_execution_update_is_awaited_for_every_call_in_order`,
+`test_a_failing_on_execution_update_listener_propagates_uncaught`,
+`test_pending_tool_calls_still_shows_the_call_during_its_own_update_dispatch`,
+`test_tool_execution_update_listener_failure_is_a_genuine_run_failure`) re-run unchanged and still
+passes -- the scheduling-primitive swap is observationally invisible to any test that does not
+specifically probe the synchronous-start property, exactly as expected for a targeted, narrow fix.
+
+**Spec/manifest changes:** `spec/agent.md`'s `ToolExecutionUpdate` bullet rewritten a third time to
+describe `eager_task_factory`'s own synchronous-start semantics and the empirically-confirmed
+three-step interleaving; the Layer-08 section's own "last rewritten"/rejection-cycle-count markers
+updated. `AG-009` manifest row gained a new PASS-8 paragraph (history preserved, including PASS 7's
+own now-superseded `asyncio.ensure_future` design and its own non-discriminating test, left exactly
+as PASS 7 wrote them); the `tests:` list's own citation of the old, non-discriminating test name was
+updated to the new, renamed, discriminating one (the old test no longer exists under that name; a
+stale citation to a nonexistent test would itself be a placeholder-evidence defect).
+
+**Disposition:** resolved. `AG-009`: adopted, without qualification.
+
+### L08-R004 — spec/AG-009 still promised immediate delivery; tests still did not discriminate it
+
+**Re-review finding:** "spec/AG-009 promise immediate callback-time delivery and cross-call
+ordering, but the new tests discriminate neither property."
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** closed as a direct consequence of `L08-R002`'s own remediation above: the
+implementation now genuinely delivers at callback time, so the spec's own promise is no longer
+false, and the rewritten test puts an observable side effect before the hook's own suspension
+point specifically so the assertion can distinguish "delivered now" from "delivered later" --
+exactly the discriminating coverage the finding named as missing.
+
+**Disposition:** resolved. No manifest row directly corresponds to this doc-only defect; `spec/
+agent.md` itself is the artifact.
+
+## Regression verification for the closed findings
+
+`L08-R005` (no-cap canonical genuinely discriminating): unchanged by this pass -- the scheduling-
+primitive swap touches nothing related to turn counting. Re-run and still passing at 21
+provider-script turns / 42 expected messages.
+
+`L08-R006` (initial prompt lifecycle before the steering claim):
+`test_the_initial_prompt_lifecycle_precedes_the_steering_claim` still passes unchanged; this pass's
+own edit is confined to one line inside `_execute_and_finalize`'s `update` closure plus the
+`OnExecutionUpdate` type alias, neither of which this sequencing depends on.
+
+`L08-R009` / `L08-R010` (`request_boundary_stop()` removed): confirmed still absent.
+
+`L08-R002`'s own `tool_execution_start`/`tool_execution_end` genuinely-live fix (PASS 6) and the
+`asyncio.gather`-based uncaught-failure-propagation/join-timing design for updates (PASS 7):
+unchanged and re-verified -- every PASS-6/PASS-7 test in this area still passes; this pass swapped
+exactly one scheduling primitive and touched no other logic.
+
+## Full Layer-08 semantic reconstruction
+
+Re-walked against pinned Pi after remediation, narrowly focused on the one property this pass
+corrected: `tool_execution_update`'s own callback-time synchronous-start behavior, verified BOTH
+against pinned Pi's own source AND against the underlying JS language semantics that source
+depends on (not merely re-reading the same source lines a third time and assuming the same
+conclusion still holds) -- and verified empirically, standalone, before integrating the fix, rather
+than trusting a plausible-sounding API name (`eager_task_factory`) without confirming its actual
+behavior. Every other PASS-6/PASS-7 mechanism (genuinely-live `tool_execution_start`/`_end`,
+complete `MessageUpdate`/`ToolExecutionEnd` payloads, the no-start fallback ordering, the
+`_execute_run` catch boundary, uncaught update-listener-failure propagation) was re-confirmed
+unchanged, not re-derived from scratch.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures (verified: zero FAILED lines in the
+                                      run's own output, exit code 0)
+coverage (certified src packages):   100.00%
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      Layer-08-unrelated files noted in earlier passes remain
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing
+conformance/ (full):                 all passing, including the no-cap regression, unchanged
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 gained a PASS-8 paragraph; the `tests:`
+                                      list's stale test-name citation corrected; no new/removed
+                                      rows)
+stale normative-text audit:          spec/agent.md's ToolExecutionUpdate bullet rewritten a third
+                                      time; last-rewritten/rejection-cycle markers updated
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      or a renamed/nonexistent test as satisfying evidence
+```
+
+## Active findings (after this pass)
+
+```text
+PI_BEHAVIOR_UNCERTAIN         none
+PI_PARITY_DEFECT              none -- L08-R002 (tool_execution_update now starts synchronously, at
+                               callback time, matching pinned Pi's own JS async-function-call
+                               semantics exactly, verified both against source and empirically)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R004 resolved
+unapproved intentional divergence   none
+Layer-09 implementation       none -- handleRunFailure composes correctly with a future Layer-09
+                               implementation without implementing any part of it
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Sixth rejection/remediation cycle for this layer -- the fourth consecutive cycle blocked on the
+same two finding IDs (`L08-R002`, `L08-R004`), all four turning on some aspect of
+`tool_execution_update`'s own dispatch-timing semantics specifically. Captured for later
+integration into `process/agent-workflow.md` at Layer-08's own closure retrospective, NOT applied
+to that file now:
+
+1. When a fix narrows a gap without closing it (PASS 6's per-call capture-then-redeliver, itself
+   narrower than PASS 5's batch-wide one; PASS 7's `ensure_future`, itself closer than PASS 6's
+   capture-and-replay but still deferred rather than synchronous), each narrowing can look like
+   genuine progress while still sharing the SAME root defect class as what it replaced. Before
+   declaring a timing/ordering fix complete, ask specifically: "does this reproduce the OTHER
+   language's actual execution-model semantics, or does it merely move the observable symptom
+   further away?"
+2. A regression test that only observes a side effect placed AFTER a listener's own suspension
+   point cannot distinguish "started synchronously, then suspended" from "never started until
+   later, then ran" -- both produce the identical trace if nothing is recorded before the
+   suspension. When testing an ordering/timing property specifically, put the discriminating
+   observation BEFORE the point where the two implementations would diverge, not after where they
+   necessarily converge again.
+3. Cross-language concurrency-primitive claims ("Python's X is the analogue of JS's Y") are exactly
+   the kind of claim this project's own "audit pinned Pi source before deciding" rule should extend
+   to verifying empirically, standalone, with a minimal reproduction script, BEFORE integrating the
+   primitive into real code -- not only reading API documentation/names and assuming a plausible
+   match holds. `asyncio.ensure_future` LOOKED like the right "fire and join later" primitive by
+   name and by rough shape; only running a two-line script proved it does not share JS's own
+   synchronous-start property, and only running the CORRECT script (with `eager_task_factory`)
+   proved that alternative actually does.
+4. When a finding recurs across multiple passes under the same ID, re-audit not just "does the
+   source still say what I thought" but "am I checking the right LAYER of the source" -- PASS 6 and
+   PASS 7 each re-read the same `agent-loop.ts:670-711` lines and drew a shape-level conclusion
+   (fire-and-forget, not awaited inline) that was correct as far as it went, but neither one checked
+   the underlying LANGUAGE semantics (`async function` call timing) those lines depend on, which is
+   where the actual remaining defect lived.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-8 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and L08-R002/R004 closure status; mark both Ready for Review once the candidate gate above is
+satisfied. Update coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`,
+`CODE PR #13 @ <new SHA>`, `DOCS PR #3 @ <new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @
+88a6aa6, PASS-3 rejection #5 @ a64b78a, PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @
+8875ebc, PASS-6 rejection #8 @ 752754a, PASS-7 rejection #9 @ 5713b39`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: complete a full independent Layer-08 contract re-review against the new PASS-8
+candidate SHAs; all prior verdicts apply only to their exact superseded candidates`. Then stop. Do
+not merge PR #13, #3, #4, #5, #6, #7, #8, or #9. Do not implement Rust. Do not start Layer 09.
