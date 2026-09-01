@@ -71,6 +71,54 @@ Unless the task explicitly narrows the pass further, use this sequence:
 
 Python may lead Rust by roughly half to one layer as allowed by the normative workflow. `NOT_IMPLEMENTED` in the lagging language is a valid state and is not itself a defect.
 
+### 4.1 Contract-first checkpoint for high-risk semantics
+
+For a layer or semantic slice with substantial concurrency, async scheduling, callback/listener ordering, cancellation, failure recovery, lifecycle interleaving, provider/tool interaction, or another behavior where small ordering differences are observable, front-load independent contract work before a large implementation pass.
+
+Preferred flow:
+
+```text
+Claude Pi audit + draft behavior matrix/spec/conformance
+                    ↓
+Codex independent Pi audit of the same semantic slice
+                    ↓
+resolve contract/evidence findings
+                    ↓
+CONTRACT CHECKPOINT
+                    ↓
+Python implementation
+                    ↓
+independent implementation-readiness review
+```
+
+The checkpoint is not cross-language certification and does not authorize Rust implementation. It exists to move semantic discovery earlier so the implementation review is not used as the primary contract-discovery mechanism.
+
+A contract checkpoint SHOULD be used when any of the following is true:
+
+- the surface depends on scheduler or callback timing;
+- the surface has several interacting dimensions whose cross-product matters;
+- prior layers have shown repeated late semantic discoveries in similar code;
+- the same rule would be expensive to repeatedly rewrite after implementation;
+- a reviewer cannot state a finite discriminating behavior matrix before implementation.
+
+### 4.2 Semantic slicing
+
+A large assurance layer may be implemented and reviewed in smaller semantic slices without changing the layer boundary.
+
+Example:
+
+```text
+Layer 08
+    slice A: run/turn boundaries
+    slice B: queue continuation
+    slice C: streaming/runtime state
+    slice D: AgentEvent/failure semantics
+```
+
+A slice is not independently certified as the whole layer. Slicing is a work-management technique that lets the shared contract and evidence for one tightly-coupled behavior settle before unrelated behavior is added.
+
+Prefer slices whose observable contracts can be characterized independently. Avoid slices that merely mirror implementation modules.
+
 ## 5. Scope discipline
 
 The current task's layer boundary is binding.
@@ -154,6 +202,89 @@ Do not force a canonical scenario through an unfinished later layer. If behavior
 
 Discover scenario counts dynamically. Do not hard-code old counts.
 
+### 9.1 Discriminating evidence
+
+Evidence must distinguish the claimed semantic rule from plausible incorrect implementations.
+
+A test that proves only a weaker neighboring condition does not close a review finding.
+
+Examples:
+
+```text
+required rule:
+    prompt lifecycle completes before steering is claimed
+
+insufficient evidence:
+    turn_start happens before steering is claimed
+```
+
+For callback, listener, scheduler, failure, and concurrency semantics, tests SHOULD cover the smallest cross-product necessary to distinguish the rule. Typical dimensions include:
+
+```text
+listener count       0 | 1 | 2+
+listener behavior    synchronous | suspending/async
+listener result      success | throw/reject
+execution mode       sequential | parallel
+event stage          start | update | end
+state timing         before listener | during listener | after listener
+completion timing    callback return | work continuation | event join
+```
+
+Do not test every theoretical combination mechanically. Select the combinations that distinguish the adopted rule from realistic incorrect implementations.
+
+### 9.2 Reviewer witness rule
+
+Every blocking `PI_PARITY_DEFECT`, `CONTRACT_ASSURANCE_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` discovered in independent review MUST include a minimal discriminating witness when the behavior is executable or observable.
+
+The witness must state:
+
+```text
+finding ID
+Pi/source basis
+minimal setup
+expected observable trace/state
+candidate observed trace/state
+why the difference is discriminating
+```
+
+When practical, the reviewer SHOULD provide an executable probe using the pinned Pi source and/or the real Minion seam.
+
+The remediation owner MUST turn the exact discriminating observation into permanent regression evidence before handing the finding back for closure.
+
+A prose-only finding is acceptable only when the defect is inherently documentary/traceability-only and no executable distinction exists.
+
+### 9.3 Pinned-Pi characterization probes
+
+For subtle observable behavior that depends on language runtime mechanics, it is acceptable and encouraged to maintain development-only Pi characterization probes against the pinned Pi revision.
+
+A suggested location is:
+
+```text
+reference/pi-characterization/<surface>/
+```
+
+or another clearly non-normative reference/test-support location.
+
+A characterization probe may normalize observable traces such as:
+
+```text
+listener_1_enter
+tool_continues
+listener_2_enter
+listeners_joined
+tool_end
+```
+
+Rules:
+
+- the pinned Pi source remains the semantic source;
+- the normative spec and canonical conformance remain the project contract;
+- characterization output is derivation/debugging evidence, not a new semantic authority;
+- do not make production Minion depend on the Pi harness;
+- pin the Pi revision used by the probe;
+- prefer deterministic, minimal examples;
+- when a probe reveals a semantic rule, express that rule in the normal manifest/spec/conformance/evidence chain.
+
 ## 10. Cross-language contract hazards
 
 Review these explicitly whenever relevant:
@@ -173,6 +304,7 @@ Review these explicitly whenever relevant:
 
 Implement the semantic contract, not the other language's mechanics.
 
+For async/callback semantics, describe observable scheduling boundaries language-neutrally. Do not encode JavaScript, Python, or Rust implementation primitives into the contract unless the primitive itself is part of the observable API.
 
 ## 11. GitHub coordination model
 
@@ -195,7 +327,8 @@ Keep this state block current:
 ```text
 STATUS
     PYTHON_SHARED | RUST_CONTRACT_REVIEW | PYTHON_REMEDIATION |
-    RUST_IMPLEMENTATION | CLOSURE_REVIEW | CLOSED
+    CONTRACT_CONVERGENCE | RUST_IMPLEMENTATION |
+    CLOSURE_REVIEW | CLOSED
 
 CODE PR
     #N @ <remote head SHA> | none
@@ -212,6 +345,10 @@ NEXT_ACTION
 
 There must be exactly one `NEXT_OWNER` and one `NEXT_ACTION` while a layer is active. Do not rely on chat history to determine ownership or progress.
 
+The coding agents SHOULD hand off directly through this GitHub control plane. The repository owner or an external coordinator does not need to translate routine review feedback between agents.
+
+A receiving agent is expected to fetch the coordination issue, candidate PRs, review comments, and review assurance artifact directly.
+
 ### 11.2 PRs are candidate and handoff objects
 
 Every substantive pass must be pushed to a remote branch and represented by a PR before another agent is asked to review or continue it.
@@ -222,23 +359,28 @@ Use short-lived branches named by layer and purpose, not permanent agent branche
 layer/08-python-shared
 review/08-rust-contract
 remediate/08-python-pass2
+converge/08-agent-events
 layer/08-rust-implementation
 closure/08
 ```
 
 When a layer changes both repositories, use paired PRs and cross-link them. Each PR description should identify the layer, companion PR, coordination issue, exact candidate head SHA, pass type, and stop condition.
 
+Work-in-progress implementation/remediation PRs SHOULD remain Draft. Mark them Ready for Review when ownership transfers to an independent reviewer.
+
 ### 11.3 Exact-SHA review invariant
 
-An independent review approves the exact remote candidate SHA(s) it reviewed.
+An independent **final approval** approves the exact remote candidate SHA(s) it reviewed.
 
 ```text
 candidate head changed
-    -> previous approval is stale
-    -> re-review required
+    -> previous final approval is stale
+    -> final re-review required
 ```
 
 A reviewer must fetch and verify the referenced remote SHA before starting. Do not approve prose descriptions of unavailable/local-only state.
+
+Intermediate targeted finding closure is allowed under the convergence protocol in §11.8. It is not final layer approval and does not waive the exact-SHA invariant for the final complete review.
 
 ### 11.4 Standard ownership flow
 
@@ -253,7 +395,14 @@ Claude
     shared/Python remediation if rejected
         ↓
 Codex
-    re-review until approved
+    targeted or complete re-review as appropriate
+        ↓
+if repeated rejection threshold reached:
+    CONTRACT_CONVERGENCE (§11.8)
+        ↓
+all blockers provisionally closed
+        ↓
+ONE final complete independent contract review
         ↓
 merge approved shared/Python candidate
         ↓
@@ -290,6 +439,183 @@ The repository owner is governance authority, not the routine merge bottleneck.
 
 Escalate to the owner for intentional Pi divergence, Pi-baseline changes, genuine lower-layer reopen decisions, unresolved Claude/Codex disagreement, master-design/layer-boundary changes, destructive history operations/ruleset bypass, and release-level governance decisions.
 
+Routine review/remediation handoff SHOULD proceed agent-to-agent through GitHub without requiring owner relay.
+
+### 11.8 Contract convergence protocol
+
+The normal remediation/re-review loop is intentionally strict, but it must not become an unbounded semantic-discovery loop.
+
+Enter `CONTRACT_CONVERGENCE` automatically when either condition is met:
+
+```text
+same material finding survives two independent reviews
+OR
+layer accumulates three rejected contract reviews
+```
+
+A reviewer may also recommend convergence earlier when the remaining blockers clearly form one tightly-coupled semantic surface.
+
+Entering convergence is a workflow/process decision. It does not weaken Pi fidelity, reopen certified semantics by itself, or change the finding taxonomy.
+
+#### 11.8.1 Convergence objective
+
+The objective is to stop discovering one semantic edge per implementation pass.
+
+During convergence:
+
+- freeze unrelated implementation work;
+- define the remaining semantic surface completely enough to implement once;
+- convert every open finding into discriminating acceptance evidence;
+- agree the contract/evidence before another large implementation pass;
+- use targeted finding closure until all blockers are provisionally closed;
+- then perform one final complete exact-SHA contract review.
+
+#### 11.8.2 Coordination state
+
+Update the layer issue to something like:
+
+```text
+STATUS
+    CONTRACT_CONVERGENCE
+
+OPEN_SURFACE
+    <finding IDs / semantic slice>
+
+NEXT_OWNER
+    Codex | Claude
+
+NEXT_ACTION
+    <one concrete characterization / challenge / implementation step>
+```
+
+The existing `CODE PR` and `DOCS PR` fields remain current.
+
+Exactly one owner acts at a time. Convergence is collaboration through durable artifacts, not simultaneous editing of the same shared files.
+
+#### 11.8.3 Characterization pass
+
+Normally the independent reviewer who discovered the repeated defect performs the first characterization pass.
+
+Produce a compact convergence artifact containing:
+
+```text
+OPEN FINDINGS
+PI SYMBOLS / TESTS AUDITED
+OBSERVABLE RULES
+BEHAVIOR MATRIX
+MINIMAL EXECUTABLE WITNESSES
+CURRENT CANDIDATE FAILURES
+SPEC / MANIFEST / CONFORMANCE DELTAS NEEDED
+IMPLEMENTATION CONSTRAINTS
+OUT-OF-SCOPE / DEFERRED BEHAVIOR
+```
+
+For concurrency/async/callback surfaces, explicitly enumerate the discriminating dimensions rather than relying on one happy-path example.
+
+Where practical, add pinned-Pi characterization probes as described in §9.3.
+
+This pass is contract/evidence characterization, not Rust implementation.
+
+#### 11.8.4 Challenge pass
+
+The implementation/shared-contract owner independently reviews the characterization before coding.
+
+The challenge should ask:
+
+- Is the Pi source mapping correct?
+- Is the behavior matrix complete enough to distinguish realistic wrong implementations?
+- Are any cases implementation mechanics rather than observable semantics?
+- Does any proposed fix silently reopen a lower certified layer?
+- Can both Python and Rust implement the rule idiomatically?
+- Are all previous review findings represented by an executable or documentary acceptance criterion?
+
+Disagreements should be resolved against pinned Pi and the existing semantic-authority chain. Escalate to the owner only for the normal governance cases in §11.7.
+
+#### 11.8.5 Convergence contract checkpoint
+
+Before implementation resumes, record an explicit checkpoint:
+
+```text
+CONVERGENCE CONTRACT
+    AGREED FOR IMPLEMENTATION
+
+OPEN FINDINGS
+    <IDs>
+
+ACCEPTANCE WITNESSES
+    <paths / probe IDs / tests>
+
+NORMATIVE DELTAS
+    <spec/manifest/conformance paths>
+
+NEXT_OWNER
+    <implementation owner>
+```
+
+This is not final contract approval. It means both agents agree that the remaining observable surface is sufficiently characterized for another implementation attempt.
+
+#### 11.8.6 Implementation pass
+
+The implementation owner then remediates the agreed surface in one coherent pass.
+
+Requirements:
+
+- implement against the agreed behavior matrix, not only the latest prose comment;
+- convert reviewer witnesses into permanent regression evidence;
+- keep shared spec/manifest/conformance synchronized with the implementation;
+- rerun directly affected previously-closed findings;
+- avoid unrelated cleanup unless necessary for correctness;
+- push the candidate and update exact remote SHAs.
+
+#### 11.8.7 Targeted finding-closure review
+
+After a convergence implementation pass, the reviewer SHOULD perform a targeted review rather than another full release-level layer audit.
+
+Review:
+
+```text
+open finding(s)
++
+semantic dependencies touched by the fix
++
+previously-closed high-risk regressions affected by the change
+```
+
+A successful targeted review records:
+
+```text
+Lxx-Ryyy
+    PROVISIONALLY CLOSED @ <candidate SHA>
+```
+
+`PROVISIONALLY CLOSED` means the specific finding has discriminating evidence at that candidate. It is not final layer approval.
+
+If the finding remains open, the review MUST provide a new or refined discriminating witness. Do not simply restate the previous finding.
+
+#### 11.8.8 Final complete review
+
+Once every blocking finding is provisionally closed:
+
+1. update the candidate to one exact remote code/docs SHA pair;
+2. run the complete gates;
+3. perform ONE complete independent contract review of that exact candidate;
+4. apply the normal certification gate;
+5. if approved, merge using the normal exact-SHA policy.
+
+A final complete review may discover a genuinely new blocker. If so, classify it normally. Re-enter convergence only if the convergence trigger is again met for the new/open surface.
+
+#### 11.8.9 No weakening of independence
+
+Convergence does not mean one agent dictates semantics to the other.
+
+- Pi remains the source.
+- Shared spec/conformance remain language-neutral.
+- Python does not become Rust's oracle.
+- Rust review does not prescribe Python mechanics.
+- Final approval remains independent and exact-SHA-bound.
+- Rust implementation still begins only after the shared/Python contract is approved and merged.
+
+The improvement is that semantic characterization happens before repeated implementation attempts, not that review strictness is reduced.
 
 ## 12. Repository and remote-state discipline
 
@@ -392,6 +718,8 @@ Certification requires, as applicable:
 
 Approval of a shared contract is not implementation certification. A language layer is not cross-language closed until the required implementations and assurance are complete and the closure state is durably available on GitHub.
 
+`PROVISIONALLY CLOSED` findings from §11.8 do not satisfy this gate by themselves. Final certification still requires one complete independent review of the exact final candidate.
+
 ## 14. Workflow improvement and periodic retrospective
 
 The workflow itself is versioned project infrastructure and should be reviewed regularly rather than treated as permanently correct.
@@ -402,6 +730,7 @@ Perform a lightweight workflow retrospective at least:
 
 - after each cross-language layer closes;
 - after any repeated rejection/remediation cycle;
+- immediately when the `CONTRACT_CONVERGENCE` trigger in §11.8 fires;
 - after any handoff failure, stale-state incident, remote-sync problem, duplicated work, or unclear ownership boundary;
 - when a coding agent repeatedly needs instructions that are not already captured here;
 - when a new language, tool, provider, CI system, or collaboration pattern materially changes how work is performed.
@@ -422,13 +751,17 @@ Ask:
 - Are any status labels, handoff states, or stop conditions ambiguous?
 - Did the workflow encourage overlong prompts that can now be shortened?
 - Can the same assurance strength be achieved with a simpler, more automated, or more deterministic process?
+- Did a remediation test prove the exact review observation, or only a weaker nearby condition?
+- Did the reviewer provide a discriminating witness that the remediation owner could directly turn into a regression test?
+- Should semantic characterization have happened before implementation?
+- Did repeated full re-reviews add assurance value, or would targeted provisional closure plus one final full review have been stronger and cheaper?
 
 ### 14.3 Improvement rule
 
 When a reusable process improvement is found:
 
 1. distinguish a **workflow/process improvement** from a **semantic-contract change**;
-2. update the appropriate persistent project guidance (`AGENT_WORKFLOW.md`, `CLAUDE.md`, `AGENTS.md`, or normative process docs);
+2. update the appropriate persistent project guidance (`agent-workflow.md`, `CLAUDE.md`, `AGENTS.md`, or normative process docs);
 3. keep semantic rules in spec/conformance rather than coding-agent instruction files;
 4. add or update automation/CI where a repeated manual check can be made deterministic;
 5. commit and push the workflow change so all agents receive the same rule;
@@ -452,6 +785,26 @@ A healthy trend is:
 
 `long repeated prompt -> recurring rule identified -> persistent workflow updated -> future prompt only states layer-specific deltas`
 
+For repeated semantic-review cycles, the healthier trend is:
+
+```text
+rejection
+-> discriminating witness
+-> contract convergence
+-> provisional finding closure
+-> one final complete review
+```
+
+rather than:
+
+```text
+rejection
+-> broad implementation pass
+-> complete review
+-> newly discovered adjacent edge
+-> repeat indefinitely
+```
+
 The coding-agent project files are therefore expected to evolve as the project learns.
 
 ## 15. Standard final report
@@ -468,5 +821,12 @@ Unless the task specifies another format, finish with a concise report containin
 8. `REMOTE STATE` — coordination issue, remote branch/ref, remote-reachable code/docs SHAs, paired PRs, and merge state.
 9. `NEW CANDIDATE` — resulting remote-reachable commit SHAs/artifacts.
 10. `NEXT ACTION` — exactly one next process step.
+
+When in `CONTRACT_CONVERGENCE`, also report:
+
+- current `OPEN_SURFACE`;
+- agreed behavior-matrix / witness artifact;
+- provisional finding-closure status;
+- whether the candidate is ready for final complete review.
 
 Respect the stop condition in the current task. Never continue automatically into the next review, implementation, or layer.
