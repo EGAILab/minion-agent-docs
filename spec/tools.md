@@ -319,6 +319,15 @@ an `is_error` or identity pinned Pi has no way to express on a partial value at 
 Layer 06 already used the correct, narrower `AgentToolResult` shape throughout -- Python was the
 side that needed correcting, not Rust.
 
+`details` is genuinely required at the Python type level, not merely in prose: `ToolPartialResult`
+carries no dataclass default for it, so construction fails without an explicit value (an earlier
+revision defaulted it to `{}`, letting `ToolPartialResult(content=())` build successfully and
+silently treating "required" as "optional in practice"). Canonical evidence encodes `details`
+unconditionally -- a required-but-empty `{}` is always present in observed output, never omitted
+as if unset -- and the canonical schema's own `toolPartialResult` definition is CLOSED
+(`required: [text, details]`, `additionalProperties: false`), rejecting any shape carrying a
+forbidden field (`is_error`, `tool_call_id`, `tool_name`) or missing a required one.
+
 ### Batch execution
 
 Effective mode is decided by the batch, not stored on `ToolDefinition` (Layer 05 intentionally

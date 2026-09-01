@@ -2972,7 +2972,7 @@ integration into `process/agent-workflow.md`:
    production semantics, and needs the same "did I actually check" discipline the shared schema
    change itself needed.
 
-## Next action
+## Next action (superseded -- see PASS 12 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-11 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -2988,3 +2988,226 @@ R004/R012/R013 remain resolved/provisionally closed unless this review finds a n
 outstanding Rust conformance-adapter dependency (TOOL-019) is explicitly flagged, not silently
 assumed closed`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement
 Rust. Do not start Layer 09.
+
+This candidate (code PR #13 @ `a8744f73aa254f573618b1eb1dfe8f2cdee82ac0`, docs PR #3 @
+`ddf324a20692919edae6a8e718fd9ed482ecf009`) was independently reviewed and **REJECTED**
+(`minion-agent-docs#14` @ `61805fe5c225a5debe6fb9da80a196f929da5bdd`, evidence docs PR #14,
+`review/08-rust-contract-final-pass11`): `L08-R012`/`L08-R013` RESOLVED, `L08-R002`/`L08-R004`
+remained provisionally closed, `L08-R011` `PARTIALLY_RESOLVED_BLOCKING` on two remaining
+sub-issues. See PASS 12 below.
+
+# PASS 12 — third L08-R011 remediation (required-field enforcement + closed schema + usage evidence)
+
+## Re-review reference
+
+The independent Rust re-review of the PASS-11 candidate (code PR #13 @
+`a8744f73aa254f573618b1eb1dfe8f2cdee82ac0`, docs PR #3 @ `ddf324a20692919edae6a8e718fd9ed482ecf009`)
+**REJECTED** it (`minion-agent-docs#14` @ `61805fe5c225a5debe6fb9da80a196f929da5bdd`, evidence docs
+PR #14, `review/08-rust-contract-final-pass11`) with two remaining `L08-R011` sub-findings; the
+reviewer's own ledger confirmed `L08-R012`/`L08-R013` RESOLVED and `L08-R002`/`L08-R004` remained
+provisionally closed, not reopened. Full review text: `assurance/layers/08-agent-loop-rust-
+contract-final-pass11.md` on that branch (not reproduced verbatim here).
+
+## Finding, reproduced against pinned Pi and remediated
+
+### L08-R011 (third remediation) — `details` required-but-defaulted; schema/`usage` evidence gaps
+
+**Re-review finding, sub-issue 1 (`details` required-but-optional):** `ToolPartialResult`'s own
+docstring called `details` required, but the dataclass field still carried
+`field(default_factory=dict)`, so `ToolPartialResult(content=())` constructed successfully without
+ever supplying it. The paired `_encode_partial()` encoder compounded this: `if partial.details:
+encoded["details"] = ...` silently dropped an EXPLICIT `{}` from observed canonical evidence as if
+it had never been set, collapsing "required and empty" into "absent."
+
+**Re-review finding, sub-issue 2 (schema/`usage` evidence gaps):** fresh schema witnesses
+(`{}`, `{"is_error": true}`, `{"tool_call_id": "nested"}`) were all ACCEPTED by the still-
+unrestricted `type: object` schema for `partial`/`emits_updates`/`late_update` -- the schema
+neither represented the approved field set nor excluded the Python-only fields the spec claimed
+were forbidden. `usage` was never decoded, encoded, or exercised with a concrete value anywhere in
+canonical evidence, despite being part of pinned Pi's own `AgentToolResult<T>`.
+
+**Pi reproduction:** re-confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`packages/agent/src/types.ts:361-383`): `details: T` carries no `?`, i.e. it is genuinely required
+with no default-when-absent concept in TypeScript's own type system either -- a Python type that
+lets construction proceed without it is not "a required field with a convenient default," it is a
+different, weaker contract. `usage?: Usage` is one of the three genuinely optional fields this same
+type declares, and had no representation at all in canonical evidence prior to this pass.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (both sub-issues -- neither is a Pi semantic
+question; both are Python/schema/canonical-evidence not yet matching the contract PASS 11 itself
+already correctly described in prose).
+
+**Remediation:** `tools/result.py::ToolPartialResult.details` dropped its dataclass default
+entirely -- now a genuinely required constructor parameter; `text_partial_result` continues to
+supply `{}` explicitly. `tests/conformance/agent_runner.py::_encode_partial()` now serializes
+`"details": partial.details` unconditionally, never gated on truthiness -- a required-but-empty
+`{}` is always present in observed evidence, the same discipline the same function's own
+`usage`/`terminate`/`added_tool_names` handling already applies in the OPPOSITE direction (included
+only when not `None`, i.e. genuinely set). `agent-scenario.schema.json` gained a new, CLOSED
+`$defs.toolPartialResult` definition (`required: [text, details]`, `additionalProperties: false`,
+`usage` via the existing `$defs.usage` reuse, `terminate`/`added_tool_names` as plain optional
+properties), wired into all three consumers (`toolUpdate.partial`, `toolStub.emits_updates.items`,
+`toolStub.late_update`), replacing the old unrestricted `object`.
+`tests/conformance/agent_runner.py::_partial_result()`/`_encode_partial()` gained `usage`
+decode/encode, reusing the SAME `_usage()`/`_normalize_usage()` helpers already used for
+assistant-message usage elsewhere in the same file (an absent scenario key decodes to `None`, not a
+concrete zero-valued `Usage()`, preserving the explicit-vs-absent distinction).
+
+`late-tool-update-ignored.yaml` now exercises TWO `emits_updates` entries -- the first with
+`details: {}` (proving required-but-empty survives encoding), the second with a concrete `details`,
+a real `usage: {input: 5, output: 3, total_tokens: 8}`, `terminate: false`, and `added_tool_names:
+[extra]` -- and `expect_updates[]` asserts the complete structured shape for both, including the
+full Pi-default-filled `usage` object (`cache_read`/`cache_write`/`cache_write_1h`/`reasoning`/
+`cost` all present per `_normalize_usage()`'s own existing convention).
+
+Rust cross-language evidence: unchanged from PASS 11, not claimed closed. The schema is now MORE
+precisely object-shaped than PASS 11 left it, not less, so Rust's own conformance-adapter fix
+remains the same required, out-of-scope-for-this-pass, Rust-owned follow-up.
+
+**RED evidence:** `_encode_partial()`'s fix was temporarily reverted to the buggy `if
+partial.details:` form; the extended `late-tool-update-ignored` scenario then FAILED with a clear
+diff on the first `expect_updates` entry (`{"text": "bare"}` observed vs `{"text": "bare",
+"details": {}}` expected), reproducing the exact required-but-empty collapse the review named. The
+schema fix was verified the same way in the opposite direction: run against the OLD unrestricted
+`object` schema, the reviewer's own three witness payloads (`{}`, `{"is_error": true}`,
+`{"tool_call_id": "nested"}`) all validated successfully -- confirmed the gap was real before
+fixing it.
+
+**GREEN evidence:** the fix was restored and the scenario re-confirmed passing. The new closed
+`toolPartialResult` schema was independently re-verified against the same three witness payloads
+(`{}`, `{"is_error": true}`, `{"tool_call_id": "nested"}`) -- all now `INVALID`
+(`'text' is a required property` / `additionalProperties` violations as applicable) -- and against
+`{"text": "x"}` alone (`INVALID`, `'details' is a required property`) and `{"text": "x", "details":
+{}}` (`VALID`). `late-tool-update-ignored` passes end to end with both `emits_updates` entries
+asserted, including the concrete `usage` value round-tripping through the real production seam
+(Layer-06's own `_execute_and_finalize` -> Layer-08's own capture -> the conformance runner's own
+`_encode_partial()`). Full suite re-run green (see gates below).
+
+**Spec/manifest changes:** `spec/tools.md`'s "Live updates" section gained a paragraph stating
+`details` is required at the Python TYPE level (no dataclass default), not merely in prose, and
+that the canonical schema's own `toolPartialResult` definition is now CLOSED.
+`pi-parity-manifest.yaml::TOOL-019` gained a PASS-12 paragraph (history preserved: PASS 10/11's own
+now-superseded text left exactly as each pass wrote it); its own `rust:` field updated to note the
+adapter dependency is unchanged in scope by PASS 10, 11, or 12.
+
+**Disposition:** resolved. `TOOL-019`: adopted, corrected a third time; Rust cross-language
+evidence for this row remains explicitly open pending Rust-owned adapter work.
+
+## Regression verification for previously-closed findings
+
+`L08-R002`/`L08-R004` (contract-convergence, PASS 9): NOT reopened -- no code touched by this
+pass's narrow `details`/schema/`usage` edits overlaps `EventBus.serial`/`_dispatch_agent_event`.
+`L08-R012`/`L08-R013` (PASS 10, confirmed RESOLVED by the PASS-11 review): unaffected -- neither
+`streaming_message` prose nor the `AG-001` evidence pointer was touched. `L08-R001`, `R003`,
+`R005`-`R010`: unaffected.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100.00% -- includes tools/result.py's own now-required
+                                      ToolPartialResult.details field (33 statements, 0 missed)
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched (tools/result.py,
+                                      tests/conformance/agent_runner.py, agent-scenario.schema.json,
+                                      late-tool-update-ignored.yaml); the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   all passing; new toolPartialResult $def independently
+                                      confirmed valid Draft 2020-12 (Draft202012Validator.
+                                      check_schema) and empirically re-tested against the review's
+                                      own three witness payloads plus two boundary cases
+conformance/ (full):                 all passing, including the extended two-entry
+                                      late-tool-update-ignored scenario
+manifest parse + unique-ID audit:    76 / 76 unique (TOOL-019 gained a PASS-12 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/tools.md gained a PASS-12 clarifying paragraph; spec/
+                                      agent.md's own ToolExecutionUpdate.partial_result bullet
+                                      re-checked, already accurate, no change needed
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+Rust cross-language (Layer 06):      NOT GREEN -- unchanged from PASS 11; Rust's own conformance
+                                      test adapter still parses emits_updates[] as a bare string;
+                                      explicitly flagged as open, Rust-owned follow-up in TOOL-019's
+                                      own rust: field, not attempted by this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R011 resolved on the Python/shared side (structurally
+                               since PASS 11; required-field enforcement and canonical-evidence
+                               completeness closed this pass)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R011 (all three remediation rounds), L08-R012, L08-R013
+                               all resolved on the Python/shared side
+unapproved intentional divergence   none
+Rust cross-language dependency      OPEN -- Rust's own tool_execution_conformance.rs adapter needs
+                               updating to parse the object-shaped canonical fixture through its
+                               own already-correct AgentToolResult seam; Rust-owned, not attempted;
+                               unchanged in scope by this pass
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 08         NOT_IMPLEMENTED
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from any rejected candidate) --
+                             the shared canonical schema change is correct and required, but Rust's
+                             own conformance ADAPTER (not production semantics) needs a
+                             corresponding update before Layer-06 cross-language evidence is green
+                             again; this is an explicit, open, Rust-owned dependency, not a Python-
+                             side blocker
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Third consecutive rejection specifically on `L08-R011`'s own structured-partial-value correctness,
+across PASS 10 (wrong type reused), PASS 11 (right type, but a defaulted required field and thin
+canonical evidence), and now PASS 12 (closing those last two gaps). Captured for later integration
+into `process/agent-workflow.md`:
+
+1. "Required" stated in a docstring is not evidence; it is a claim. The dataclass's own default
+   value is the actual contract, and PASS 11's own fix satisfied the STRUCTURAL half of `L08-R011`
+   (no identity/error fields) while leaving the REQUIREDNESS half unVERIFIED against the type's own
+   construction behavior. A `frozen=True, slots=True` dataclass with `field(default_factory=dict)`
+   on a "required" field is a self-contradiction the type checker cannot catch (mypy has no
+   "required in docstring" check) -- only an actual failing construction attempt (or, as the review
+   did, cargo/pytest fixtures probing it directly) surfaces it.
+2. An encoder's own asymmetric handling of required-vs-optional fields must be verified in BOTH
+   directions, not assumed from one working case: `_encode_partial()`'s `usage`/`terminate`/
+   `added_tool_names` omit-when-`None` logic was correct and reviewed clean, but the adjacent
+   `details` handling used the SAME "omit when falsy" shape for a field that is required, not
+   optional -- copy-adjacent-pattern risk, not a design misunderstanding. Every encoder field needs
+   its own explicit required/optional classification checked against the type's own contract, not
+   inherited from its neighbor's style.
+3. A canonical schema change is only as strong as the fresh witness cases run against it. PASS 11's
+   own schema update (`string` -> `object`) was necessary but the review's own three witness
+   payloads (`{}`, `is_error`, nested `tool_call_id`) were never actually tried against it during
+   PASS 11 itself -- an unrestricted `object` schema passes silently until someone deliberately
+   tries to break it. `additionalProperties: false` plus an explicit `required` list should be the
+   default shape for any canonical schema definition representing a genuinely closed Pi type, not
+   an afterthought added only after a reviewer's witness proves the gap.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
+#13/#3 bodies with the PASS-12 remediation summary, new head SHAs, reviewed/rejected predecessor
+SHAs, and the third `L08-R011` closure status (noting the still-open Rust adapter dependency,
+unchanged in scope); mark both Ready for Review once the candidate gate above is satisfied. Update
+coordination issue #12 to `STATUS: RUST_CONTRACT_REVIEW`, `CODE PR #13 @ <new SHA>`, `DOCS PR #3 @
+<new SHA>`, `PRIOR REVIEW EVIDENCE: PASS-2 rejection #4 @ 88a6aa6, PASS-3 rejection #5 @ a64b78a,
+PASS-4 rejection #6 @ 65e665f, PASS-5 rejection #7 @ 8875ebc, PASS-6 rejection #8 @ 752754a, PASS-7
+rejection #9 @ 5713b39, PASS-8 rejection #10 @ 2818dd8, PASS-9 final-review rejection #12 @
+e747e91, PASS-10 final-review rejection #13 @ c4627bd, PASS-11 final-review rejection #14 @
+61805fe`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a full independent Layer-08 contract
+re-review against the new PASS-12 candidate SHAs; L08-R002/R004/R012/R013 remain resolved/
+provisionally closed unless this review finds a new witness; the outstanding Rust
+conformance-adapter dependency (TOOL-019) is explicitly flagged, not silently assumed closed`. Then
+stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer
+09.
