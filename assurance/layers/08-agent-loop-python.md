@@ -3194,7 +3194,7 @@ into `process/agent-workflow.md`:
    default shape for any canonical schema definition representing a genuinely closed Pi type, not
    an afterthought added only after a reviewer's witness proves the gap.
 
-## Next action
+## Next action (superseded -- see PASS 13 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos); update PR
 #13/#3 bodies with the PASS-12 remediation summary, new head SHAs, reviewed/rejected predecessor
@@ -3210,4 +3210,222 @@ re-review against the new PASS-12 candidate SHAs; L08-R002/R004/R012/R013 remain
 provisionally closed unless this review finds a new witness; the outstanding Rust
 conformance-adapter dependency (TOOL-019) is explicitly flagged, not silently assumed closed`. Then
 stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer
+09.
+
+This candidate was independently re-reviewed and ACCEPTED as the `L08-R011` closure (confirmed by
+issue #12's own subsequent history: `STATUS` advanced past `RUST_CONTRACT_REVIEW`, and Rust Layer
+08 implementation began against this accepted baseline). Rust Layer-08 implementation then
+proceeded through Tasks 1-7 (draft PR `minion-agent-rust#14` @
+`d3006375dc56deda1514ee9793708a14c9dd3dfe`, full Rust suite 238 passed at Task 7) before stopping
+on Task 8 with a genuinely NEW, implementation-exposed contract gap: `L08-R014`, the failure
+`AssistantMessage`'s own identity source. Issue #12 recorded `STATUS: PYTHON_REMEDIATION`,
+`NEXT_OWNER: Claude`. See PASS 13 below.
+
+# PASS 13 — L08-R014 remediation (failure-message identity: persistent Agent model, not run-local override)
+
+## Finding reference
+
+Unlike PASS 3 through PASS 12, this finding did not arrive as a rejection of a submitted
+Python/shared candidate -- it is a NEW gap an independent Rust Layer-08 IMPLEMENTATION pass
+surfaced while building Task 8 against the already-ACCEPTED PASS-12 baseline (code `main` @
+`f428a7b47bcc720b0126ca799be7c72c5977f8c2`, docs `master` @
+`a77a3843279b59f567f171753147a4806e74982e`). Rust's own Tasks 1-7 are complete, independently
+reviewed, and unaffected (`minion-agent-rust#14` @ `d3006375dc56deda1514ee9793708a14c9dd3dfe`,
+draft PR, remote-reachable). Task 8 could not proceed because the shared contract, as written
+through PASS 12, never specified which model source `handleRunFailure`'s own synthesized failure
+message uses -- an implementation-exposed `CONTRACT_ASSURANCE_DEFECT`, not a defect Rust
+introduced.
+
+## Finding, reproduced against pinned Pi and remediated
+
+### L08-R014 — failure-message identity used the run-local model, not the Agent's persistent one
+
+**Rust's own finding:** a discriminating witness -- start a run with persistent Agent model A;
+`prepareNextTurn` replaces the RUN-LOCAL model with B for a later turn; a further lifecycle
+listener then throws -- produces model A in pinned Pi but model B in the merged Python
+implementation. `AG-009`'s own manifest text and `spec/agent.md`'s `handleRunFailure` section
+specified failure-event ORDER and REDUCTION completely, but never named which model source the
+failure message's own `api`/`provider`/`model` fields come from, so Rust could not implement
+independently without silently choosing a cross-language divergence.
+
+**Pi reproduction:** confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`).
+`agent.ts:511-517::handleRunFailure` reads `this._state.model.api`/`.provider`/`.id` for the
+synthesized failure message. A full-file grep of `agent.ts` for `_state.model` found exactly
+three occurrences: one read at `agent.ts:449` (building a turn's own initial `config.model`) and
+the two failure-message reads above -- NO assignment (`this._state.model = ...`) exists anywhere
+in the file, confirming `_state.model` is the Agent's own PERSISTENT model, fixed at construction.
+Separately, `agent-loop.ts:230-238` shows `prepareNextTurn`'s own returned `model` reassigns only
+the LOCAL `config` variable a single `run()` call keeps (`config = {...config, model:
+nextTurnSnapshot.model ?? config.model}`) -- a plain local variable write, never touching
+`this._state`. The two are therefore genuinely different values whenever a run-local override is
+in effect at failure time, and pinned Pi unambiguously uses the persistent one.
+
+**Classification:** `PI_PARITY_DEFECT` (the implementation read the wrong source) and
+`CONTRACT_ASSURANCE_DEFECT` (the shared contract never named a source at all, so the divergence
+was not a documented, approved choice -- it was silence a second implementation could not resolve
+independently).
+
+**Remediation:** `spec/agent.md` gained explicit normative text in both the `handleRunFailure`
+seam section and the Python-mapping section, naming the persistent-model source directly, stating
+the run-local `RunConfig`/`prepareNextTurn` override is NOT that source, and spelling out the
+concrete A -> run-local B -> failure witness so a future independent implementation does not have
+to rediscover it from source inspection alone. `pi-parity-manifest.yaml::AG-009` gained a PASS-13
+paragraph with the same content, plus updated `tests:`/`python:`/`rust:` fields (history
+preserved: PASS 4 through PASS 12's own text left exactly as each pass wrote it).
+
+`driver.py::AgentLoop._settle_run_failure` now reads `self.instance.model.model`/
+`self.instance.model.provider` (the Agent's own persistent model, matching pinned Pi's
+`this._state.model`) instead of `config.model.model`/`config.model.provider`. Its own
+`config: RunConfig` parameter is REMOVED entirely, not merely left unread -- the run-local config
+carried no other legitimate use in this method, and keeping an unused parameter around would have
+been the "backwards-compatibility hack" the project's own conventions reject. The one call site
+(`_execute_run`'s own `except Exception` handler) was updated to match; `config` itself remains a
+live local variable there (still passed to `_run_inner`), so no other reference broke.
+
+**Spec/manifest changes:** `spec/agent.md`'s `handleRunFailure` seam section and Python-mapping
+section both updated (see Remediation above). `pi-parity-manifest.yaml::AG-009` gained the PASS-13
+paragraph plus updated `tests:` (new test appended), `python:` (parenthetical noting the persistent
+source and removed parameter), and `rust:` (rewritten from the long-stale `PENDING -- Layer 08 not
+yet implemented in Rust` placeholder text PASS 9 left behind, to the actual current state: draft PR
+`minion-agent-rust#14` @ `d3006375d`, Tasks 1-7 complete and reviewed, Task 8 blocked on this row,
+not committed, preserved only as a local stash).
+
+**RED evidence:** the new test
+(`test_settle_run_failure_uses_the_agents_persistent_model_not_the_run_local_override`,
+`tests/agent_loop/test_run_entry_points.py`) was run against the pre-fix implementation (`config.
+model`-reading `_settle_run_failure`) first: it fails with `assert ('mock', 'mock-2') == ('mock',
+'mock-1')` -- the observed failure-message identity is the run-local override B (`mock-2`), not
+the persistent model A (`mock-1`) the assertion requires, reproducing `L08-R014` exactly.
+
+**GREEN evidence:** with the fix applied, the same test passes. The witness construction reuses
+existing, certified test machinery rather than inventing new fixtures: `_MultiModelAdapter`/
+`AGENT_PREPARE_NEXT_TURN` (already used by `test_prepare_next_turn_can_replace_model_and_thinking_
+level`, `AG-001`/`L08-R001`) supplies the persistent-A/run-local-B setup, and a throwing
+`AGENT_TURN_STOPPING` listener (the same mechanism `test_a_post_turn_callback_failure_recovers_
+through_the_live_seam` already uses) triggers `_settle_run_failure` AFTER `AGENT_PREPARE_NEXT_TURN`
+has already landed its own model replacement for that turn (confirmed by the loop's own body order
+in `driver.py::_run_inner`: `_prepare_next_turn` and its `config.model = update.model` application
+happen strictly before `_should_stop`/`AGENT_TURN_STOPPING` is even consulted, for every turn).
+Every other failure-settlement/recovery test in the same file (`test_a_run_executor_failure_
+recovers_through_the_live_lifecycle_event_seam`, `test_a_post_turn_callback_failure_recovers_
+through_the_live_seam`, all four `test_failure_*_listener_failure_interrupts_recovery` tests,
+`test_a_pre_step_listener_failure_settles_gracefully`, `test_a_turn_stopping_listener_failure_
+settles_gracefully`, `test_a_prepare_next_turn_listener_failure_settles_gracefully`, `test_a_post_
+turn_callback_failure_settles_gracefully`, `test_an_unresolvable_model_still_raises_uncaught`)
+re-run unchanged and still passing, confirming the `config` parameter removal did not disturb any
+other `_settle_run_failure` caller or behavior.
+
+No canonical (language-neutral) scenario was added this pass: the conformance schema/runner
+currently has no vocabulary for injecting a `prepareNextTurn` model override alongside a throwing
+lifecycle listener and asserting synthesized-failure identity fields, and building that vocabulary
+from scratch is a genuinely separate, larger addition than this narrow fix warrants -- consistent
+with this project's own "don't design for hypothetical future requirements" convention, and the
+Rust finding's own remediation guidance explicitly accepted "a discriminating canonical or explicit
+language test," not requiring both.
+
+**Disposition:** resolved. `AG-009`: adopted, corrected in place (a sixth correction to this row
+overall, across PASS 4 through PASS 9's own `L08-R002`/`L08-R004` history and now this pass's own
+`L08-R014`); Rust cross-language evidence for Tasks 1-7 remains independently reviewed and
+unaffected; Task 8 remains open pending this candidate's own independent re-review.
+
+## Regression verification for previously-closed findings
+
+`L08-R002`/`L08-R004` (contract-convergence, PASS 9): unaffected -- this pass's own diff is
+entirely inside `_settle_run_failure`'s own model-identity read and its call site's argument list;
+no `EventBus.serial`/`_dispatch_agent_event`/listener-ordering code was touched.
+`L08-R011`/`L08-R012`/`L08-R013` (PASS 10-12, all independently accepted): unaffected -- no
+`ToolPartialResult`/schema/tool-update code was touched. `L08-R001`, `R003`, `R005`-`R010`:
+unaffected.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100.00%
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched (driver.py,
+                                      test_run_entry_points.py); the same pre-existing, unrelated
+                                      7-file drift noted in every earlier pass remains untouched and
+                                      out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   unaffected (no schema changes this pass)
+conformance/ (full):                 all passing (no canonical scenario added or changed this pass)
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 gained a PASS-13 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/agent.md gained explicit failure-identity-source text in
+                                      two places; AG-009's own long-stale `rust:` field (`PENDING --
+                                      Layer 08 not yet implemented in Rust`, unchanged since PASS 9)
+                                      corrected to reflect Rust's actual current WIP state
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+Rust cross-language (Layer 08):      Tasks 1-7 independently reviewed and unaffected by this pass;
+                                      Task 8 blocked pending this candidate's own re-review, not
+                                      attempted or implemented by this pass under its own hard
+                                      ownership boundary
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R014 resolved on the Python/shared side
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R014's own missing-contract-answer half resolved by the
+                               new spec/agent.md and AG-009 text
+unapproved intentional divergence   none
+Rust cross-language dependency      Task 8 (minion-agent-rust#14) blocked pending independent
+                               re-review of this PASS-13 candidate; Tasks 1-7 unaffected
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract re-review)
+Rust Layer 08         PARTIALLY_IMPLEMENTED (Tasks 1-7 complete and independently reviewed, draft
+                             PR minion-agent-rust#14; Task 8 blocked on this row)
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT RE-REVIEW (remediated candidate;
+                             the PASS-12 baseline it builds on is already independently accepted --
+                             this pass narrows to the L08-R014 diff alone)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+First Layer-08 finding this session that arrived from Rust IMPLEMENTATION rather than Rust REVIEW
+of a submitted candidate -- a different failure mode than every PASS 3 through PASS 12 cycle.
+Captured for later integration into `process/agent-workflow.md`:
+
+1. A shared contract can pass every prior review and still be incomplete: `AG-009` was reviewed
+   and re-reviewed across nine prior passes (`L08-R002`/`L08-R004`, five times; `L08-R011`-flavored
+   findings target a different row) without anyone noticing the failure-identity SOURCE was never
+   actually specified, because every prior review focused on event ORDER/REDUCTION/listener-
+   delivery timing, not on which value populates the failure message's own fields. A contract can
+   be reviewed thoroughly along one axis (timing) while remaining silent along an orthogonal one
+   (identity source) -- exhaustive review of a NAMED finding does not imply exhaustive coverage of
+   the surface it lives on.
+2. Independent Rust IMPLEMENTATION is a genuinely different, complementary discovery mechanism from
+   independent Rust REVIEW of a Python-authored candidate: review finds divergences between a
+   written contract and a candidate's own behavior; implementation finds GAPS in the contract
+   itself, surfaced only when a second, independent author actually has to make a choice the
+   contract left unmade. Neither substitutes for the other.
+3. A manifest row's own `rust:` field can go stale silently across many passes if nothing forces a
+   re-check: `AG-009`'s own field still said `PENDING -- Layer 08 not yet implemented in Rust... PASS
+   9 is the remediated candidate awaiting re-review` through PASS 10, 11, and 12, three full passes
+   after Rust implementation had actually begun elsewhere. `rust:` fields should be re-verified
+   against the coordination issue's own current state at the START of every pass touching that row,
+   not only rewritten when a pass happens to have new Rust-relevant content to add.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos). Update PR
+#13/#3 (or open fresh candidate PRs if the PASS-12 candidate PRs were closed on acceptance --
+verify current PR state via `gh pr list` before assuming #13/#3 are still open) with the PASS-13
+remediation summary and new head SHAs. Update coordination issue #12: `STATUS:
+RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, record this pass's own remediation of
+`L08-R014` in the issue body/comment (referencing Rust's own finding comment and draft PR
+`minion-agent-rust#14` @ `d3006375d`), `NEXT_OWNER: Codex`, `NEXT_ACTION: complete an independent
+Layer-08 contract re-review of the L08-R014 fix (spec/agent.md, AG-009, driver.py::_settle_run_
+failure, the new discriminating test) against the exact PASS-13 candidate SHAs, then resume Rust
+Task 8 against the accepted result`. Then stop. Do not merge any candidate or review-evidence PR.
+Do not implement Rust. Do not start Layer
 09.

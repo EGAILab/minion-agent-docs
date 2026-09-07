@@ -408,6 +408,24 @@ the way out to the caller of `prompt()`/`continue()`, while `finally { finishRun
 pre-stream failures (an unresolvable model is a caller/config bug, not a run-executor failure, and
 raises immediately, uncaught).
 
+The synthesized failure's own `api`/`provider`/`model` identity (`L08-R014`) comes from the
+Agent's PERSISTENT model -- `this._state.model` (agent.ts:515-517) -- set once when the Agent is
+constructed and never reassigned anywhere in `agent.ts`: there is no `this._state.model = ...`
+statement in the file. This is a DIFFERENT value from the run-local model a
+`prepareNextTurn`/`AGENT_PREPARE_NEXT_TURN` listener may have already replaced for the run
+currently in flight -- pinned Pi's own `prepareNextTurn` return value only ever reassigns the
+LOCAL `config` a single `run()` call keeps (agent-loop.ts:230-238, `config = {...config, model:
+nextTurnSnapshot.model ?? config.model}`, a plain local variable reassignment), never
+`this._state.model` itself. Concretely: a run starting with persistent model A, whose
+`prepareNextTurn` replaces the run-local model with B for a later turn, and which then fails
+(any listener throwing, an adapter breaking its streaming contract, or any other unforeseen
+run-executor error) after that replacement has already landed, still reports failure identity A,
+not B -- the run-local override never reaches `handleRunFailure`'s own source of truth. An
+implementation that instead threads the run-local, possibly-already-replaced model into the
+failure path is a `PI_PARITY_DEFECT`, not an equally valid reading: the two sources are
+observably different exactly in this A -> run-local B -> failure ordering, and only the
+persistent-model reading matches pinned Pi.
+
 Minion reproduces this via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode --
 sequential await with no catch around the loop, matching pinned Pi's raw listener loop) -- the
 single seam every lifecycle event -- ordinary turn/run progress and `handleRunFailure` recovery
@@ -521,7 +539,11 @@ would have committed up to and including the event whose listener threw, and not
 writes exactly: `streaming_message`/`error_message` reset at entry; `streaming_message`/
 `pending_tool_calls` reset at exit, via `finally`, regardless of success or failure.
 `UnknownModelError` remains explicitly excluded and re-raised uncaught, matching pinned Pi's own
-eager boundary.
+eager boundary. The failure `AssistantMessage`'s own `model`/`provider` (`L08-R014`) come from
+`self.instance.model` -- `AgentInstance`'s own PERSISTENT model, matching pinned Pi's own
+`this._state.model` -- never from the run-local `RunConfig` a `AGENT_PREPARE_NEXT_TURN` listener
+may already have replaced for the run currently failing; `_settle_run_failure` takes no `RunConfig`
+parameter at all, since the run-local config has no legitimate use in this method.
 
 ### Active abort propagation (explicitly out of scope)
 
