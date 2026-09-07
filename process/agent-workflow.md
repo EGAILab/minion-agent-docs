@@ -154,7 +154,8 @@ Warning signs include:
 - special cases needed only to preserve underspecification;
 - errors swallowed or distorted to fit the contract;
 - bypassing an already-certified abstraction;
-- two reasonable independent implementations being forced to choose observably different behavior because the boundary is undefined.
+- two reasonable independent implementations being forced to choose observably different behavior because the boundary is undefined;
+- new normative prose that is true in isolation but contradicts an already-certified section elsewhere in the SAME document (fixing one finding's own narrow claim without re-checking whether a general-sounding phrase like "fixed," "never changes," or "set once" holds once other certified sections covering the same field/value are accounted for).
 
 ## 8. Shared artifacts and dispositions
 
@@ -252,6 +253,8 @@ When practical, the reviewer SHOULD provide an executable probe using the pinned
 The remediation owner MUST turn the exact discriminating observation into permanent regression evidence before handing the finding back for closure.
 
 A prose-only finding is acceptable only when the defect is inherently documentary/traceability-only and no executable distinction exists.
+
+If the review states that existing code already satisfies a new witness (a prose-only/contract-assurance finding, not a behavior defect), the remediation owner MUST run that exact witness against the UNCHANGED candidate and confirm it directly before relying on the claim -- report the confirmation, not merely the review's own assertion. A "no code change" remediation still needs the full discriminating-evidence treatment: the new regression test is what closes the contract ambiguity, even when no production line changes.
 
 ### 9.3 Pinned-Pi characterization probes
 
@@ -456,6 +459,8 @@ layer accumulates three rejected contract reviews
 A reviewer may also recommend convergence earlier when the remaining blockers clearly form one tightly-coupled semantic surface.
 
 Entering convergence is a workflow/process decision. It does not weaken Pi fidelity, reopen certified semantics by itself, or change the finding taxonomy.
+
+**Trigger check is mandatory, not advisory.** Before starting a new remediation pass on a named finding ID, the remediation owner MUST explicitly check both trigger conditions above against that finding ID's own review history (not the layer's history in general) and state the result -- e.g. "L08-R0NN: 2 prior rejections on this exact finding, below the 3-rejection/2-repeat threshold, proceeding as a normal point-fix." If a trigger condition is already met, entering convergence is the default; proceeding with another ordinary point-fix pass instead requires stating why (e.g. the reviewer's own evidence already narrowed the remaining surface to something a single targeted fix can close, as opposed to genuine unresolved semantic breadth). A Layer-08 remediation cycle went through three full rejection/re-review rounds on the same finding ID before this check was applied retroactively, and a separate finding on the same layer reached the two-repeat threshold without the check being applied at all -- in both cases the trigger was real and simply was not checked, not judged and declined. Do not rely on writing a retrospective note after the fact to substitute for checking the trigger before the fact.
 
 #### 11.8.1 Convergence objective
 
