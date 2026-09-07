@@ -1,7 +1,7 @@
 # Layer 08 — Rust implementation, conformance, and certification candidate
 
-**Status:** Rust implementation complete and locally certified; exact-SHA final closure verification
-pending. Layer 09 was not started.
+**Status:** `CROSS-LANGUAGE CERTIFIED / CLOSED` (independent final closure verification complete,
+below). Layer 09 was not started.
 
 ## Authority and starting state
 
@@ -133,6 +133,56 @@ evidence fields changed; Pi pointers, normative rules, tests, phase, and disposi
 - `PARITY_NEUTRAL_HARDENING`: typed Rust vocabulary, RAII run settlement, narrow lock scopes, and
   deterministic ordered collections.
 
+## Independent final closure verification
+
+Performed directly against the exact merged candidate SHAs -- code `minion-agent@main`
+`3ec1a386c86a93a13344ed38d796fbb74e9817bd` (squash-merged from PR #14 @
+`1fb88002d1093203787db85bf57b8c7d71dd18ba`), docs `minion-agent-docs@master` (this PR, from
+`80ba30b40e90abc41f558ac63a48a96852e76052`) -- via a disposable worktree
+(`minion-agent/.worktrees/rust-layer-08-final-closure-code`), never modified:
+
+```text
+cargo fmt --all -- --check                                       PASS
+cargo clippy --workspace --all-targets --all-features -- -D warnings   PASS
+cargo test --workspace --all-features                            PASS, 277/277 (exact match)
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps        PASS
+cargo run -p xtask -- conformance verify                          PASS (exit 0)
+cargo test -p minion-agent --features conformance
+    --test agent_loop_conformance -- --nocapture                 PASS, 2/2 harness tests
+    (all_layer_08_scenarios_drive_the_real_rust_agent_loop iterates every executable
+    Layer-08 canonical document and panics with the failing path on any mismatch --
+    confirmed non-vacuous by reading the harness source directly, not merely trusting
+    the reported 35/35 count)
+```
+
+Both `L08-R014` witnesses read directly from source and confirmed non-vacuous
+(`crates/minion-agent/tests/agent_loop_failure.rs`):
+
+- `run_local_model_replacement_does_not_change_synthesized_failure_identity` asserts the
+  failure identity equals the persistent model A, not the run-local `prepareNextTurn`
+  replacement B;
+- `persistent_model_mutation_during_run_is_read_live_by_failure_settlement` asserts the
+  failure identity equals C, a persistent-model mutation applied while the run was still
+  active -- confirming the live-read (not construction-time-snapshot) semantics
+  `spec/agent.md`'s own PASS-14 correction specifies, matching Python's own
+  `test_settle_run_failure_uses_the_agents_persistent_model_not_the_run_local_override`/
+  `test_settle_run_failure_reports_the_live_persistent_model_not_a_run_start_snapshot` exactly.
+
+`git diff` between the accepted shared baseline (`490d0d0`) and the Rust candidate
+(`1fb8800`) confirmed the change is scoped correctly: only `pi-parity-manifest.yaml`'s own
+`rust:` evidence fields changed outside `minion-agent-rust/**` (10 rows: AG-001 through
+AG-006, AG-008 through AG-010, AG-021 -- `id`/`pi`/`rule`/`tests`/`python`/`disposition`
+fields on every row unchanged); no Python, spec, or canonical-scenario semantic file was
+touched. Manifest re-validated: 76/76 unique rows, zero rows still reading `PENDING`
+(`AG-007` remains correctly `NOT_APPLICABLE -- deferred to Layer 09`, its own long-standing,
+unaffected disposition). A grep for `abort`/`cancel` in `agent_loop/` found only a pre-existing
+test name for the already-in-scope represented-terminal classification -- no Layer-09
+cancellation machinery was introduced.
+
+Every reported result was independently reproduced at the exact SHA, not merely re-stated from
+the candidate's own report or the separate independent package reviewer's own 267/267 (a
+narrower package-scoped subset of this same 277).
+
 ## Candidate verdict
 
 ```text
@@ -140,18 +190,17 @@ Python Layer 08
     CERTIFIED
 
 Rust Layer 08
-    IMPLEMENTED
-    CERTIFICATION CANDIDATE
+    CERTIFIED
 
 shared Layer-08 contract
-    APPROVED / IMPLEMENTED
+    APPROVED / IMPLEMENTED / CLOSED
 
 Layer 08 cross-language
-    NOT YET CLOSED — pending independent final closure verification
+    CROSS-LANGUAGE CERTIFIED / CLOSED
+
+Rust certified through
+    Layer 08
 
 Layer 09
-    NOT STARTED
+    ELIGIBLE / NOT STARTED
 ```
-
-This exact Rust candidate must be pushed and independently closure-reviewed before the durable
-cross-language status changes to `CERTIFIED / CLOSED`.
