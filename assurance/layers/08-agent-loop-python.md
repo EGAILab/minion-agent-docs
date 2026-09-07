@@ -3415,7 +3415,7 @@ Captured for later integration into `process/agent-workflow.md`:
    against the coordination issue's own current state at the START of every pass touching that row,
    not only rewritten when a pass happens to have new Rust-relevant content to add.
 
-## Next action
+## Next action (superseded -- see PASS 14 below)
 
 Push this pass's commits to the existing `layer/08-python-shared` branches (both repos). Update PR
 #13/#3 (or open fresh candidate PRs if the PASS-12 candidate PRs were closed on acceptance --
@@ -3428,4 +3428,209 @@ Layer-08 contract re-review of the L08-R014 fix (spec/agent.md, AG-009, driver.p
 failure, the new discriminating test) against the exact PASS-13 candidate SHAs, then resume Rust
 Task 8 against the accepted result`. Then stop. Do not merge any candidate or review-evidence PR.
 Do not implement Rust. Do not start Layer
+09.
+
+This candidate (code PR `minion-agent#15` @ `84137cbd1a1d648225959185b848e483a6bea4f8`, docs PR
+`minion-agent-docs#16` @ `cb88b55b15a5f8cd0fed8183c3235671d73d2909`) was independently re-reviewed
+and **REJECTED — PARTIALLY_RESOLVED_BLOCKING** (`minion-agent-docs#17`, review commit
+`87d1eba6bf0b702c5ca488b593e666c411d6f0a7`, artifact `assurance/layers/08-agent-loop-rust-
+contract-r014-rereview.md` on branch `review/08-rust-contract-r014-rereview`): the original A ->
+run-local B -> failure defect was confirmed **RESOLVED**, but a residual `CONTRACT_ASSURANCE_
+DEFECT` was found -- PASS 13's own normative prose described the persistent model as "fixed/set
+once at construction," contradicting the already-certified Layer-07 contract in the same document,
+which adopts pinned Pi's own live, freely-reassignable `AgentState.model`. The reviewer's own
+evidence section noted the CODE was already correct; only the prose (and a missing discriminating
+test for the resulting third witness) blocked acceptance. See PASS 14 below.
+
+# PASS 14 — L08-R014 second remediation (correct the persistent-model prose; no code change)
+
+## Re-review reference
+
+The independent re-review of the PASS-13 candidate (see above) rejected it narrowly:
+`PARTIALLY_RESOLVED_BLOCKING`. Full review text: `assurance/layers/08-agent-loop-rust-contract-
+r014-rereview.md` on branch `review/08-rust-contract-r014-rereview` (not reproduced verbatim
+here).
+
+## Finding, reproduced against pinned Pi and remediated
+
+### L08-R014 (second remediation) — normative prose claimed construction-time fixedness; live-read semantics were correct but unstated
+
+**Re-review finding:** pinned Pi establishes two distinct model authorities: `prepareNextTurn`
+applies only to the invocation-local loop config (`agent-loop.ts:230-238`), and `handleRunFailure`
+constructs the failure identity by reading `this._state.model` AT FAILURE SETTLEMENT
+(`agent.ts:511-524`). The public `Agent.state` getter returns the live `AgentState` object, and the
+already-certified Layer-07 contract (same `spec/agent.md`, "Mutable per-instance current
+configuration") explicitly adopts direct caller mutation of `AgentState.model`/`AgentInstance.
+model`. `this._state.model` is therefore the Agent's CURRENT persistent value at settlement, not
+necessarily its construction-time value -- but PASS 13's own repaired prose repeatedly said "set
+once when the Agent is constructed," "fixed at construction," or equivalent, contradicting Layer 07
+in the very same document. Required witness: persistent A -> run-local override B -> persistent
+Agent mutation C (via the adopted Layer-07 surface, while the run remains active) -> failure;
+synthesized identity must be C. Pinned Pi reports C (live read); PASS 13's own "fixed at
+construction" prose, read literally, predicts A.
+
+**Pi reproduction:** re-confirmed directly against pinned Pi source (`ref-repos/pi` @ `b7bb00b`).
+`agent.ts:515-517` reads `this._state.model.api`/`.provider`/`.id` inline, at the point
+`handleRunFailure` constructs the failure message -- there is no local variable, cache, or
+snapshot holding an earlier value; whatever `this._state.model` currently is at that exact
+statement is what gets read. Cross-checked against the already-certified Layer-07 section of the
+SAME `spec/agent.md` (not re-audited from Pi source this pass, since it is already certified):
+"Pinned Pi's `AgentState.systemPrompt`/`model`/`thinkingLevel` are directly assignable properties
+on the live state object `Agent.state` returns -- `agent.state.systemPrompt = "..."` immediately
+mutates that one Agent's own current value." This directly contradicts a construction-time-fixed
+reading of the same field.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (prose internally contradicted an already-certified
+section of the same document; the underlying code was not shown to be wrong and, per the analysis
+below, was not).
+
+**Remediation:** `spec/agent.md` rewrote both `L08-R014` passages (the `handleRunFailure` seam
+section and the Python-mapping section) to describe the value as read LIVE at settlement, name
+THREE sources explicitly instead of two -- run-local `prepareNextTurn` override (excluded, since it
+changes a different, local variable) and Layer-07 direct persistent mutation (INCLUDED, since it
+changes the very value read live) -- and state plainly that a construction-time snapshot/cache
+would ALSO be a `PI_PARITY_DEFECT`, not merely an alternative reading, since it would report A
+instead of C in the new witness. `driver.py::_settle_run_failure`'s own docstring received the
+identical correction. `pi-parity-manifest.yaml::AG-009` gained a PASS-14 paragraph (history
+preserved: PASS 13's own now-partially-superseded prose left exactly as PASS 13 wrote it, per this
+project's own "append remediation/re-review evidence instead of rewriting history" convention).
+
+**No production code changed this pass.** `driver.py::_settle_run_failure` already reads
+`self.instance.model` live, inline, with no snapshot in between -- exactly what the corrected prose
+now says. The reviewer's own evidence section stated this directly: "The current implementation
+should already satisfy it; the test closes the ambiguous contract branch." A new Python-level test
+(`test_settle_run_failure_reports_the_live_persistent_model_not_a_run_start_snapshot`,
+`tests/agent_loop/test_run_entry_points.py`) was run against the UNCHANGED production code FIRST,
+specifically to verify this claim before treating it as true rather than assuming a reviewer's own
+prediction: it passed immediately, confirming the persistent-model mutation (`loop.instance.model
+= mutated_persistent_model`, applied from inside the same throwing `AGENT_TURN_STOPPING` listener
+PASS 13's own A/B test already uses) is already visible to the failure message's own identity. This
+inverts the project's own usual RED-then-GREEN discipline deliberately: since the finding was that
+the CONTRACT was ambiguous, not that the CODE was wrong, the correct verification is "does the new
+test pass against unchanged code," not "does it fail against a deliberately-reverted one" -- there
+was nothing to revert.
+
+**RED evidence:** none in the code sense -- this pass changed no production behavior. The "red"
+this pass closes is the CONTRACT'S OWN internal contradiction: PASS 13's prose, if followed
+literally by a second implementation building a construction-time snapshot, would have failed the
+new C-witness test; the corrected prose no longer permits that reading.
+
+**GREEN evidence:** `test_settle_run_failure_reports_the_live_persistent_model_not_a_run_start_
+snapshot` passes against the unchanged `_settle_run_failure`. `test_settle_run_failure_uses_the_
+agents_persistent_model_not_the_run_local_override` (PASS 13's own A/B test) re-run unchanged and
+still passes, confirming the first witness remains closed. Full suite re-run green (see gates
+below).
+
+**Spec/manifest changes:** `spec/agent.md`'s two `L08-R014` passages rewritten (see Remediation
+above); `driver.py::_settle_run_failure`'s own docstring rewritten identically.
+`pi-parity-manifest.yaml::AG-009` gained a PASS-14 paragraph plus one new `tests:` entry; `python:`
+field's own `_settle_run_failure` parenthetical updated to describe the live-read/no-snapshot
+discipline explicitly.
+
+**Disposition:** resolved. `AG-009`: adopted, corrected in place (a seventh correction to this row
+overall); Rust cross-language evidence for Tasks 1-7 remains independently reviewed and unaffected;
+Task 8 remains open pending this candidate's own independent re-review.
+
+## Regression verification for previously-closed findings
+
+`L08-R002`/`L08-R004` (contract-convergence, PASS 9): unaffected -- no `EventBus.serial`/
+`_dispatch_agent_event`/listener-ordering code was touched. `L08-R011`/`L08-R012`/`L08-R013`
+(PASS 10-12, independently accepted): unaffected. The first `L08-R014` witness (A -> run-local B ->
+failure, PASS 13): confirmed still closed by this pass's own unchanged-code verification --
+`test_settle_run_failure_uses_the_agents_persistent_model_not_the_run_local_override` re-run and
+still passing. `L08-R001`, `R003`, `R005`-`R010`: unaffected.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 all passing, 0 failures
+coverage (certified src packages):   100.00%
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched (driver.py,
+                                      test_run_entry_points.py); the same pre-existing, unrelated
+                                      7-file drift noted in every earlier pass remains untouched and
+                                      out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 57 files
+schema validation:                   unaffected (no schema changes this pass)
+conformance/ (full):                 all passing (no canonical scenario added or changed this pass)
+manifest parse + unique-ID audit:    76 / 76 unique (AG-009 gained a PASS-14 paragraph; no new/
+                                      removed rows)
+stale normative-text audit:          spec/agent.md's own L08-R014 passages corrected to remove the
+                                      construction-time-fixed claim contradicting certified Layer 07
+placeholder-evidence audit:          no Layer-08 manifest row cites an unfilled placeholder scenario
+                                      as satisfying evidence
+Rust cross-language (Layer 08):      Tasks 1-7 independently reviewed and unaffected by this pass;
+                                      Task 8 blocked pending this candidate's own re-review, not
+                                      attempted or implemented by this pass under its own hard
+                                      ownership boundary
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L08-R014 resolved on the Python/shared side (both witnesses)
+CONTRACT_ASSURANCE_DEFECT     none -- L08-R014's own prose-contradicted-certified-Layer-07 defect
+                               closed by the corrected spec/agent.md text
+unapproved intentional divergence   none
+Rust cross-language dependency      Task 8 (minion-agent-rust#14) blocked pending independent
+                               re-review of this PASS-14 candidate; Tasks 1-7 unaffected
+Layer-09 implementation       none
+```
+
+## Verdict
+
+```text
+Python Layer 08     CERTIFIED (self-certified; pending independent Rust contract re-review)
+Rust Layer 08         PARTIALLY_IMPLEMENTED (Tasks 1-7 complete and independently reviewed, draft
+                             PR minion-agent-rust#14; Task 8 blocked on this row)
+shared Layer-08 contract   READY FOR INDEPENDENT RUST CONTRACT RE-REVIEW (remediated candidate;
+                             the PASS-12 baseline it builds on is already independently accepted --
+                             this pass narrows to the L08-R014 prose diff alone, no production code
+                             changed)
+Layer 08 cross-language     NOT CLOSED
+Layer 09                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+Second consecutive rejection on `L08-R014`, but a genuinely different kind than the session's
+earlier multi-pass findings (`L08-R002`/`L08-R004`/`L08-R011`): the CODE was correct on the first
+try; only the PROSE describing it was wrong, and wrong in a way that contradicted an ALREADY-
+CERTIFIED section of the same document rather than introducing a new claim. Captured for later
+integration into `process/agent-workflow.md`:
+
+1. Fixing a narrow implementation bug can produce prose that is locally accurate (true of the one
+   case just fixed, true of `agent.ts`'s own internal code) while being globally wrong once a
+   DIFFERENT, already-certified section of the same shared contract is accounted for. "No
+   assignment exists in `agent.ts`" is a true, verifiable fact; "the model is fixed at
+   construction" is a false generalization from it, since Layer 07's own external mutation surface
+   was never in scope for the narrow A/B fix and so was never re-checked against the new prose.
+   A contract-assurance pass touching one section should grep the same document for related claims
+   in OTHER sections before asserting a property ("fixed," "never changes," "set once") that
+   sounds general but was only verified narrowly.
+2. When a reviewer's own evidence says "the current implementation should already satisfy it,"
+   verify that claim directly before writing more prose or tests -- do not assume it and do not
+   silently re-derive it as new work. This pass ran the new C-witness test against UNCHANGED
+   production code specifically to confirm the reviewer's own claim was true rather than trusting
+   it, and reports that verification explicitly rather than merely restating the review's own
+   assertion.
+3. A "no code change" remediation pass still needs the full discriminating-evidence treatment: a
+   contract-assurance-only fix without a new test closing the branch a review specifically named
+   would leave the SAME ambiguity available to the next independent reader, even though the
+   underlying code was never wrong. Evidence closes contract ambiguity; code changes close behavior
+   defects; this pass needed only the former, but needed it in full.
+
+## Next action
+
+Push this pass's commits to the existing `layer/08-python-shared` branches (both repos). Verify
+current PR state via `gh pr list` before assuming any specific PR numbers are still open (PASS-13's
+own candidate PRs may already be closed/superseded by this pass's own force-push, or may need to
+be re-opened fresh). Update coordination issue #12: `STATUS: RUST_CONTRACT_REVIEW`, new exact
+`CODE PR`/`DOCS PR` SHAs, append the PASS-13 rejection reference
+(`minion-agent-docs#17` @ `87d1eba6b`) to `PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: complete an independent Layer-08 contract re-review of this narrow prose-only
+PASS-14 diff (spec/agent.md's two L08-R014 passages, driver.py's docstring, the new C-witness
+test) against the exact PASS-14 candidate SHAs; the A/B witness (PASS 13) remains resolved unless
+this review finds a new issue with it; then resume Rust Task 8 against the accepted result`. Then
+stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer
 09.

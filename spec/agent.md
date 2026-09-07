@@ -409,22 +409,45 @@ pre-stream failures (an unresolvable model is a caller/config bug, not a run-exe
 raises immediately, uncaught).
 
 The synthesized failure's own `api`/`provider`/`model` identity (`L08-R014`) comes from the
-Agent's PERSISTENT model -- `this._state.model` (agent.ts:515-517) -- set once when the Agent is
-constructed and never reassigned anywhere in `agent.ts`: there is no `this._state.model = ...`
-statement in the file. This is a DIFFERENT value from the run-local model a
-`prepareNextTurn`/`AGENT_PREPARE_NEXT_TURN` listener may have already replaced for the run
-currently in flight -- pinned Pi's own `prepareNextTurn` return value only ever reassigns the
-LOCAL `config` a single `run()` call keeps (agent-loop.ts:230-238, `config = {...config, model:
-nextTurnSnapshot.model ?? config.model}`, a plain local variable reassignment), never
-`this._state.model` itself. Concretely: a run starting with persistent model A, whose
-`prepareNextTurn` replaces the run-local model with B for a later turn, and which then fails
-(any listener throwing, an adapter breaking its streaming contract, or any other unforeseen
-run-executor error) after that replacement has already landed, still reports failure identity A,
-not B -- the run-local override never reaches `handleRunFailure`'s own source of truth. An
-implementation that instead threads the run-local, possibly-already-replaced model into the
-failure path is a `PI_PARITY_DEFECT`, not an equally valid reading: the two sources are
-observably different exactly in this A -> run-local B -> failure ordering, and only the
-persistent-model reading matches pinned Pi.
+Agent's PERSISTENT model -- `this._state.model`, read LIVE at the moment `handleRunFailure`
+constructs the failure message (agent.ts:515-517) -- NOT a value captured once and frozen when the
+Agent was constructed. This is the Agent's CURRENT persistent model at settlement time, the exact
+same value the already-certified Layer-07 "Mutable per-instance current configuration" section
+above describes: pinned Pi's own `Agent.state` getter returns the live `AgentState` object, and a
+caller may reassign `agent.state.model = "..."` directly at any time, including while a run is
+active (`agent.ts` itself never performs this reassignment internally -- there is no
+`this._state.model = ...` statement in the file -- but an external caller reaching through the
+public `state` getter can and does, and that mutation is exactly what Layer 07 already adopts as
+observable). `handleRunFailure` has no snapshot, cache, or construction-time capture of its own; it
+simply reads whatever `this._state.model` currently holds when it runs.
+
+This is a DIFFERENT value from the run-local model a `prepareNextTurn`/`AGENT_PREPARE_NEXT_TURN`
+listener may have already replaced for the run currently in flight -- pinned Pi's own
+`prepareNextTurn` return value only ever reassigns the LOCAL `config` a single `run()` call keeps
+(agent-loop.ts:230-238, `config = {...config, model: nextTurnSnapshot.model ?? config.model}`, a
+plain local variable reassignment), never `this._state.model` itself. A caller's own direct
+mutation of the persistent model (Layer 07's own adopted surface) is a THIRD, independent source,
+and IS visible to failure settlement, since `handleRunFailure` reads `this._state.model` live.
+
+Concretely, three sources, two of which reach `handleRunFailure` and one of which does not:
+
+- a run starting with persistent model A, whose `prepareNextTurn` replaces the RUN-LOCAL model
+  with B for a later turn, and which then fails (any listener throwing, an adapter breaking its
+  streaming contract, or any other unforeseen run-executor error) after that replacement has
+  already landed, still reports failure identity A, not B -- the run-local override never reaches
+  `handleRunFailure`'s own source of truth;
+- the SAME run, if a caller/listener additionally reassigns the Agent's own PERSISTENT model to C
+  (via the adopted Layer-07 mutation surface) at any point before the failure settles, reports
+  failure identity C, not A and not B -- the persistent mutation DOES reach `handleRunFailure`,
+  because it changed the very value `this._state.model` reads live, unlike the run-local override,
+  which changed a different (local) variable entirely.
+
+An implementation that threads the run-local, possibly-already-replaced model into the failure
+path is a `PI_PARITY_DEFECT` (reads the wrong source). An implementation that instead snapshots or
+caches the persistent model at run start, rather than reading it live at settlement, is ALSO a
+`PI_PARITY_DEFECT` -- it would report A instead of C in the second case above, contradicting pinned
+Pi's own live read. Only "read `self.instance.model` live, at the moment of settlement, with no
+intervening snapshot" matches pinned Pi in both cases.
 
 Minion reproduces this via `AGENT_LIFECYCLE_EVENT` (`agent/events.py`, `SERIAL` dispatch mode --
 sequential await with no catch around the loop, matching pinned Pi's raw listener loop) -- the
@@ -540,10 +563,13 @@ writes exactly: `streaming_message`/`error_message` reset at entry; `streaming_m
 `pending_tool_calls` reset at exit, via `finally`, regardless of success or failure.
 `UnknownModelError` remains explicitly excluded and re-raised uncaught, matching pinned Pi's own
 eager boundary. The failure `AssistantMessage`'s own `model`/`provider` (`L08-R014`) come from
-`self.instance.model` -- `AgentInstance`'s own PERSISTENT model, matching pinned Pi's own
-`this._state.model` -- never from the run-local `RunConfig` a `AGENT_PREPARE_NEXT_TURN` listener
-may already have replaced for the run currently failing; `_settle_run_failure` takes no `RunConfig`
-parameter at all, since the run-local config has no legitimate use in this method.
+`self.instance.model`, read LIVE at settlement -- `AgentInstance`'s own CURRENT persistent model,
+matching pinned Pi's own live read of `this._state.model` -- never from the run-local `RunConfig` a
+`AGENT_PREPARE_NEXT_TURN` listener may already have replaced for the run currently failing;
+`_settle_run_failure` takes no `RunConfig` parameter at all, since the run-local config has no
+legitimate use in this method. A caller mutating `self.instance.model` directly (Layer 07's own
+adopted mutation surface, above) IS visible here, since there is no snapshot in between -- see the
+`handleRunFailure` seam section above for the full three-source witness.
 
 ### Active abort propagation (explicitly out of scope)
 
