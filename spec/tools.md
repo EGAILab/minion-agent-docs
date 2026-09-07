@@ -271,20 +271,46 @@ for one listener or many, for a helper-registered or raw listener alike, and reg
 registration order.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
-plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's
-`(toolCallId, params, signal?, onUpdate?)` capability shape except for `signal`. Cross-language
-signal state is asymmetric, not uniformly absent (`L06-R005`; an earlier revision incorrectly
-claimed "no equivalent type exists in either language"): Python has no `AbortSignal`-equivalent
-abstraction yet, but certified Rust Layer 05 already reserves one structurally
-(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
-`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`) without exercising cancellation
-behavior. The accepted defer is behavioral, not architectural: Layer 06 certifies **non-cancelled**
-tool-execution semantics only; assurance Layer 09 owns cancellation propagation, abort timing,
-sibling effects, and cancellation result semantics, and can add that behavior later without
-changing any non-cancelled stage/ordering/result/event rule this document states, and without
-requiring Rust to discard or redesign its existing signal-bearing capability seam. A
-thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
-still flows through the after-hook exactly like success would.
+plus a `signal` third and `update` fourth parameter appended when the tool declares them --
+matching pinned Pi's `(toolCallId, params, signal?, onUpdate?)` capability shape and positional
+order exactly (Layer 09, `L09-C001`..`L09-C003`; a 3-parameter tool's own third parameter continues
+to mean `update`, unchanged since before Layer 09 -- a 4th parameter is required to also receive
+`signal`, a disclosed, minor Minion-specific constraint of arity-based dispatch relative to Pi's own
+fully-independent optional parameters). `signal` is `RunSignal | None` (`runtime/signal.py`,
+RT-024) -- Layer 06 certifies **non-cancelled** tool-execution semantics; Layer 09 realizes
+propagation, timing, and preflight/batch abort rules on top of it without changing any
+non-cancelled stage/ordering/result/event rule this document states. Certified Rust Layer 05
+already reserves the matching seam (`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
+`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`); Layer 09's own Python
+implementation does not require Rust to discard or redesign it. A thrown/rejected `execute()`
+becomes a normal error outcome -- **not** an immediate one -- so it still flows through the
+after-hook exactly like success would, and the after-hook runs UNCONDITIONALLY once `execute()` has
+been reached, regardless of the signal's own state at any point during or after `execute()`.
+
+**Preflight abort/error priority (`L09-C002`):** the active run's own signal is checked exactly
+ONCE per call, immediately after the before-hook waterfall resolves (whichever decision it
+produced), before that decision is examined -- in this exact priority order, earlier wins:
+
+```text
+1. tool not found                                     -> "Tool <name> not found"
+2. prepare_arguments/validate throws                   -> the exception's own message
+3. a before-hook listener throws                       -> the exception's own message
+4. before-hook waterfall resolves AND signal is aborted -> "Operation aborted"
+   (wins over the waterfall's own Block decision -- the discriminating case is an
+   aborted signal plus a Block, not plus a Proceed, since Proceed would reach
+   step 6 anyway)
+5. before-hook waterfall resolves to Block, not aborted -> the Block's own reason/terminate
+6. no listener aborted/blocked                          -> proceeds to execute()
+```
+
+Steps 1-3 are checked/raised BEFORE the signal is ever read, so an unknown tool, a validation
+failure, or a throwing before-hook listener all keep their own specific error regardless of the
+signal's state. Pinned Pi's own `prepareToolCall` has an independent SECOND abort check for the
+"no `beforeToolCall` configured at all" case its own single, nullable hook creates; Minion's
+`tools/pre-execute` waterfall always runs the same code path whether zero or more listeners are
+registered, so ONE checkpoint here covers both of Pi's two -- an intentional, disclosed
+architectural mapping, not an observable divergence (the two Pi-distinguishable states, "hook
+absent" and "hook ran without blocking/aborting," are the same code path in Minion).
 
 Live updates: `update(partial)` is silently ignored once `execute()`'s own call has settled
 (succeeded or failed) -- pinned Pi's `AgentToolUpdateCallback`: "Calls made after the tool promise
@@ -369,6 +395,39 @@ preflights every call concurrently too, observably different from pinned Pi when
 calls. Both Python and Rust implementations agreed with each other under that candidate, and both
 disagreed with Pi -- the reason prior cross-language certification is evidence of implementation
 agreement, never semantic authority on its own.
+
+**Abort polling differs by mode (`L09-C001`).** A generic "stop the batch" rule is wrong for
+either mode alone -- the two modes poll the active run's own signal at genuinely different points,
+matching pinned Pi's own `executeToolCallsSequential`/`executeToolCallsParallel` exactly:
+
+- **Sequential:** the signal is checked AFTER each call's own COMPLETE preflight-through-finalize
+  lifecycle, before starting the next call. A call already started always finishes; only calls not
+  yet reached are skipped -- the batch's own result count can be shorter than the source call count.
+- **Parallel:** preflight remains fully sequential (above, unchanged); the signal is checked after
+  EACH call's own preflight OUTCOME (immediate or prepared) is recorded, deciding whether to
+  preflight the NEXT source call -- NOT after execution. Every prepared outcome retained BEFORE
+  the poll still starts its own `execute()`/after-hook phase afterward, via the same concurrent
+  barrier described above, receiving the already-aborted signal cooperatively; an abort arising
+  DURING one prepared call's own execution cannot stop a sibling already committed to that barrier.
+  Immediate and prepared outcomes remain interleaved in the returned result set in retained SOURCE
+  order regardless of which finishes first (unchanged from the ordering rule below).
+
+Discriminating witness (source calls A, B, C; A has no before-hook issue; B's own before-hook
+calls `abort()` and returns normally -- a RETURNING hook, not a throwing one, and not a `Block`,
+since either of those would win over abort per the preflight priority order above regardless):
+
+```text
+tool_execution_start(A)                      -- A preflights normally, retained as prepared
+tool_execution_start(B)
+  B's before-hook runs, calls abort(), returns
+  B's own preflight priority step 4 fires: signal now aborted -> immediate "Operation aborted"
+tool_execution_end(B)                        -- emitted inline, during the sequential preflight phase
+-- poll after B: signal aborted -> stop preflighting; C's tool_execution_start never fires --
+-- barrier: A's retained closure starts, receiving the already-aborted signal cooperatively --
+execute(A) / after-hook(A)                   -- A does not check the signal; completes normally
+tool_execution_end(A)
+-- returned results: A, B in source order; C is entirely absent --
+```
 
 Two further orders are normative and different, matching pinned Pi's own `ToolExecutionMode`
 docstring verbatim, and apply to the concurrent phase described above: `tool_execution_end` fires

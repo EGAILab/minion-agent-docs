@@ -571,21 +571,82 @@ legitimate use in this method. A caller mutating `self.instance.model` directly 
 adopted mutation surface, above) IS visible here, since there is no snapshot in between -- see the
 `handleRunFailure` seam section above for the full three-source witness.
 
-### Active abort propagation (explicitly out of scope)
+### Active abort propagation (Layer 09)
 
-Pinned Pi's `abort()` actively signals the running provider/tools/hooks. Idle is reached only after
-terminal run settlement and awaited `agent_end` listeners -- Layer 09's territory, per the
-already-certified Layer-07 contract's own deferral. Not attempted by Layer 08 at all:
-`handleRunFailure` above settles an aborted/failed turn correctly once it arrives, without itself
-implementing any provider, stream, tool, hook, or transport abort-signal propagation. Layer 08 has
-no local cancel/boundary-stop mechanism of any kind: a prior revision of this section documented one
-(`request_boundary_stop()`, renamed from `cancel()`), but it was removed entirely rather than kept
-and approved -- a public method that could alter a Pi-equivalent run's own observable outcome had no
-owner governance approval for that divergence, and no demonstrated product need justified keeping
-it, the same default this project already applied to `max_steps` (above). If a host-only safety
-mechanism is ever needed, it must sit entirely outside a single Pi-equivalent run's own semantic
-behavior -- limiting a HOST's own repeated scheduling/invocation policy across independent runs,
-never truncating or altering one run's own outcome internally.
+Pinned Pi's `abort()` actively signals the running provider/tools/hooks -- cooperatively, never a
+forced interrupt. Full audit and discriminating witnesses:
+`assurance/layers/09-active-abort-contract-checkpoint.md`.
+
+**Public surface:** `AgentInstance.signal: RunSignal | None` (`runtime/signal.py`, RT-024) --
+`None` while idle, matching pinned Pi's own `Agent.signal` getter returning `undefined` with no
+active run. `AgentInstance.abort() -> None` -- a no-op, never raising, when idle; when a run is
+active, flips that run's own signal. One NEW `RunSignal()` per run, created at the same point
+`AgentLoop._run_wrapped` performs its other unconditional entry writes (matching pinned Pi's own
+`new AbortController()` inside `runWithLifecycle`) and cleared back to `None` at the same point in
+`finally` those entry writes are undone (matching `finishRun()` clearing `activeRun`) -- live for
+the run's ENTIRE duration, including `_settle_run_failure`'s own recovery dispatch and `agent_end`
+listener settlement. `abort()` does not itself change `status`; `reset()` still rejects until the
+run has actually settled, exactly as for a non-aborted active run.
+
+**Consumer/settlement matrix** (every place the SAME per-run signal reaches, and whether the loop
+itself forces a stop there — none do, except the two explicit tool-preflight polls below):
+
+| Surface | Receives the signal | Loop forces a stop there? |
+|---|---:|---:|
+| `AGENT_LIFECYCLE_EVENT` listeners (`subscribe`-equivalent) | via `instance.signal` (already the listener's own first argument) | no |
+| provider request (`llm/service.py::Request.signal`, `AI-027`) | yes | no -- the adapter chooses whether to honor it and represent `StopReason.ABORTED` |
+| tool `before`-hook (`TOOLS_PRE_EXECUTE` waterfall) | yes, threaded explicitly (no `instance` access at Layer 06) | only at the two explicit preflight polls -- see `spec/tools.md` |
+| tool `execute()` | yes, its own cooperative 3rd/4th positional parameter | no -- the tool's own choice; never forcibly interrupted |
+| tool after-hook (`TOOLS_POST_EXECUTE` waterfall) | yes | no -- runs unconditionally regardless of abort state |
+| per-batch (sequential/parallel) | n/a, batch-level | yes, but only BETWEEN calls -- see `spec/tools.md`'s own split algorithms |
+| `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listeners | via `instance.signal` (already the listener's own first argument) | no |
+| steering/follow-up queue drains | not applicable -- plain queue-drain operations, no signal parameter, matching pinned Pi exactly |
+
+Minion's own architectural mapping, not an observable divergence: pinned Pi threads `signal` as an
+EXPLICIT parameter to every one of `agent-loop.ts`'s own consumers, including its own lifecycle
+listeners (`subscribe(listener)`'s own second parameter) and `prepareNextTurn`/`shouldStopAfterTurn`
+(via `agent.ts`'s own wrapping closures reading `this.signal` live). Minion's own established
+convention already passes `instance` as the first argument to every `AGENT_LIFECYCLE_EVENT`/
+`AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listener, so those listeners already have a way to
+reach `instance.signal` without a new parameter -- only the tool-execution seam (Layer 06, which has
+no `instance` access at all, being architecturally below Layer 07) needs the signal threaded
+explicitly, and does. The OBSERVABLE fact -- every one of these consumers CAN read the current run's
+signal -- is identical either way; only the mechanism differs.
+
+**The load-bearing rule:** every consumer above may IGNORE the signal, and if every one of them
+does, the run completes exactly as if `abort()` had never been called. Four distinct
+abort-adjacent outcomes must be kept separate:
+
+1. a represented provider `StopReason.ABORTED` terminal (already Layer-08-owned -- the existing
+   represented-error/aborted short-circuit handles it; Layer 09 adds no new code for this path
+   itself, only the signal propagation that lets a real/scripted adapter choose to produce it);
+2. an exception escaping ordinary run execution while `instance.signal.aborted` happens to be
+   true AT THE MOMENT `_settle_run_failure` reads it -- classified `stopReason: aborted` instead
+   of `error`, purely from the signal's CURRENT state at that moment, with NO causal requirement
+   that the exception was actually caused by the abort (pinned Pi's own `abortController.signal.
+   aborted` read at `handleRunFailure` catch time has the identical property);
+3. a cooperative tool's own normal/throwing outcome after observing the signal -- ordinary,
+   already-certified Layer-06 execute/finalize semantics; the after-hook still runs unconditionally;
+4. abort requested while `agent_end` listeners are still being awaited -- the signal is already
+   aborted (or becomes aborted mid-dispatch), but that already-in-flight `agent_end` dispatch's own
+   listener settlement still completes normally before the Agent becomes idle.
+
+**Not in this layer's scope:** actual network-transport cancellation remains deferred to `PROV-004`
+(or an explicitly later real-provider phase) -- this project has no real provider transport yet.
+Layer 09 certifies generic signal PROPAGATION to the adapter-call boundary through the existing
+scripted/mock adapter, not that any real transport was cancelled. Layer 08's own prior removal of
+`request_boundary_stop()`/`cancel()` (below) remains correctly removed and is UNRELATED to this
+section: that was a Minion-only host-safety mechanism with no Pi basis and no owner approval;
+`abort()`/`signal` here are pinned Pi's own feature, implemented faithfully, not a revival of the
+removed one. Layer 08 itself still has no local cancel/boundary-stop mechanism of its own kind: a
+prior revision of this section documented one (`request_boundary_stop()`, renamed from `cancel()`),
+but it was removed entirely rather than kept and approved -- a public method that could alter a
+Pi-equivalent run's own observable outcome had no owner governance approval for that divergence, and
+no demonstrated product need justified keeping it, the same default this project already applied to
+`max_steps` (above). If a host-only safety mechanism is ever needed, it must sit entirely outside a
+single Pi-equivalent run's own semantic behavior -- limiting a HOST's own repeated scheduling/
+invocation policy across independent runs, never truncating or altering one run's own outcome
+internally.
 
 ### Runtime-state transition timing
 
