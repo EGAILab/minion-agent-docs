@@ -271,21 +271,52 @@ for one listener or many, for a helper-registered or raw listener alike, and reg
 registration order.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
-plus a `signal` third and `update` fourth parameter appended when the tool declares them --
-matching pinned Pi's `(toolCallId, params, signal?, onUpdate?)` capability shape and positional
-order exactly (Layer 09, `L09-C001`..`L09-C003`; a 3-parameter tool's own third parameter continues
-to mean `update`, unchanged since before Layer 09 -- a 4th parameter is required to also receive
-`signal`, a disclosed, minor Minion-specific constraint of arity-based dispatch relative to Pi's own
-fully-independent optional parameters). `signal` is `RunSignal | None` (`runtime/signal.py`,
-RT-024) -- Layer 06 certifies **non-cancelled** tool-execution semantics; Layer 09 realizes
-propagation, timing, and preflight/batch abort rules on top of it without changing any
-non-cancelled stage/ordering/result/event rule this document states. Certified Rust Layer 05
-already reserves the matching seam (`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
-`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`); Layer 09's own Python
-implementation does not require Rust to discard or redesign it. A thrown/rejected `execute()`
-becomes a normal error outcome -- **not** an immediate one -- so it still flows through the
-after-hook exactly like success would, and the after-hook runs UNCONDITIONALLY once `execute()` has
-been reached, regardless of the signal's own state at any point during or after `execute()`.
+plus `signal`/`update` parameters when the tool declares them -- matching pinned Pi's
+`(toolCallId, params, signal?, onUpdate?)` capability shape and positional order (Layer 09,
+`L09-C001`..`L09-C003`, `L09-R001`, `L09-R003`). `signal` is a `RunSignal` (`runtime/signal.py`,
+RT-024) -- the READ-ONLY view (`L09-R004`); a tool cannot itself trigger cancellation merely by
+holding it.
+
+Capability is DECLARED EXPLICITLY, not inferred from arity alone (`ToolDefinition.wants_signal:
+bool = False`, Layer 05, `L09-R003`): pinned Pi's own `signal`/`onUpdate` are INDEPENDENT optional
+parameters -- a tool may want either, both, or neither -- and Python's own pre-existing arity-based
+`update` detection (3 parameters means `update`, unchanged since before Layer 09) cannot by itself
+also distinguish "this 3rd parameter is `signal`" without breaking that established meaning. An
+earlier revision tried arity alone (a 4th parameter always meant "signal then update") and could
+not represent a tool wanting `signal` WITHOUT `update` at all -- Pi's own signal-only tool had no
+Python equivalent, a `PI_PARITY_DEFECT`. The corrected dispatch:
+
+```text
+wants_signal   arity   execute(...) receives
+False          2       (tool_call_id, arguments)                    -- neither
+False          3       (tool_call_id, arguments, update)             -- update only (unchanged)
+True           3       (tool_call_id, arguments, signal)             -- signal only
+True           4       (tool_call_id, arguments, signal, update)     -- both
+```
+
+`wants_signal=False` (every pre-Layer-09 tool) preserves the existing arity dispatch exactly for
+both rows; `wants_signal=True` shifts the 3rd-parameter meaning to `signal`, with a 4th (if
+declared) receiving `update`. Certified Rust Layer 05 already reserves the matching seam
+(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in `minion-agent-rust/crates/minion-agent/
+src/tools/definition.rs`), independently of `update` -- Rust's own typed request already
+represents all four combinations; Python's `wants_signal` flag closes the same gap.
+
+Before-hook and after-hook waterfalls ALSO receive `signal` explicitly, as a payload argument
+before `next_` (`L09-R001`) -- pinned Pi's own `beforeToolCall(context, signal)`/
+`afterToolCall(context, signal)` pass it as their own second parameter; Layer 06 has no `instance`
+access at all (architecturally below Layer 07, where `AGENT_LIFECYCLE_EVENT`-style listeners
+instead read `instance.signal` directly -- see `spec/agent.md`), so this seam threads it
+explicitly. A listener that delegates via bare `next_()` sees `signal` unchanged automatically; one
+that delegates with an explicit replacement value must re-supply `signal` alongside it
+(`next_(replacement, signal)`) or later listeners in the same chain will not see it --
+`register_after_tool_call_hook`'s own wrapper does this already, and `tools/post-execute`'s own
+identity-restoration `normalize_step` (`L06-R003`, above) tolerates either shape (with or without a
+trailing signal) rather than requiring it.
+
+A thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
+still flows through the after-hook exactly like success would, and the after-hook runs
+UNCONDITIONALLY once `execute()` has been reached, regardless of the signal's own state at any
+point during or after `execute()`.
 
 **Preflight abort/error priority (`L09-C002`):** the active run's own signal is checked exactly
 ONCE per call, immediately after the before-hook waterfall resolves (whichever decision it

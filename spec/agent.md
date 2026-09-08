@@ -577,30 +577,73 @@ Pinned Pi's `abort()` actively signals the running provider/tools/hooks -- coope
 forced interrupt. Full audit and discriminating witnesses:
 `assurance/layers/09-active-abort-contract-checkpoint.md`.
 
-**Public surface:** `AgentInstance.signal: RunSignal | None` (`runtime/signal.py`, RT-024) --
-`None` while idle, matching pinned Pi's own `Agent.signal` getter returning `undefined` with no
-active run. `AgentInstance.abort() -> None` -- a no-op, never raising, when idle; when a run is
-active, flips that run's own signal. One NEW `RunSignal()` per run, created at the same point
-`AgentLoop._run_wrapped` performs its other unconditional entry writes (matching pinned Pi's own
-`new AbortController()` inside `runWithLifecycle`) and cleared back to `None` at the same point in
-`finally` those entry writes are undone (matching `finishRun()` clearing `activeRun`) -- live for
-the run's ENTIRE duration, including `_settle_run_failure`'s own recovery dispatch and `agent_end`
-listener settlement. `abort()` does not itself change `status`; `reset()` still rejects until the
-run has actually settled, exactly as for a non-aborted active run.
+**Authority split (`L09-R004`):** `RunSignal`/`RunAbortController` (`runtime/signal.py`, RT-024)
+reproduce pinned Pi's own `AbortSignal`/`AbortController` split exactly. `RunAbortController` is
+PRIVATE -- held only by `AgentInstance` (as `_active_controller`, no public accessor) and never
+handed to a tool, hook, adapter, or lifecycle listener; only `AgentInstance.abort()` may call its
+`.abort()`. Every consumer instead receives a `RunSignal` -- pinned Pi's own `AbortSignal` --
+which has NO `.abort()` of its own at all: observing the signal never grants authority to trigger
+cancellation. An earlier revision handed every consumer the SAME mutable object (so a tool or
+adapter could call `.abort()` itself, authority Pi's own type system forbids) and made
+`AgentInstance.signal` a plain public attribute any listener could reassign mid-run, redirecting
+later requests to a caller-supplied replacement -- an independent Rust review caught both as
+observable divergences from Pi (`L09-R004`).
 
-**Consumer/settlement matrix** (every place the SAME per-run signal reaches, and whether the loop
-itself forces a stop there — none do, except the two explicit tool-preflight polls below):
+**Public surface:** `AgentInstance.signal: RunSignal | None` -- a READ-ONLY property with no
+setter at all, `None` while idle, matching pinned Pi's own `Agent.signal` getter returning
+`undefined` with no active run, and returning the SAME `RunSignal` object for a run's entire
+duration (never a fresh wrapper per access -- pinned Pi's own "stable per-run identity").
+`AgentInstance.abort() -> None` -- a no-op, never raising, when idle; when a run is active, flips
+that run's own PRIVATE controller. One NEW `RunAbortController()` per run, created at the same
+point `AgentLoop._run_wrapped` performs its other unconditional entry writes (matching pinned Pi's
+own `new AbortController()` inside `runWithLifecycle`, via internal `_start_run_signal`/`_end_run_
+signal` methods Layer 08 alone calls) and cleared back to `None` at the same point in `finally`
+those entry writes are undone (matching `finishRun()` clearing `activeRun`) -- live for the run's
+ENTIRE duration, including `_settle_run_failure`'s own recovery dispatch and `agent_end` listener
+settlement. `abort()` does not itself change `status`; `reset()` still rejects until the run has
+actually settled, exactly as for a non-aborted active run.
+
+**Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
+loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
 
 | Surface | Receives the signal | Loop forces a stop there? |
 |---|---:|---:|
 | `AGENT_LIFECYCLE_EVENT` listeners (`subscribe`-equivalent) | via `instance.signal` (already the listener's own first argument) | no |
+| `AGENT_TRANSFORM_CONTEXT` listeners (`L09-R005`, new) | yes, explicit 3rd payload argument | no |
 | provider request (`llm/service.py::Request.signal`, `AI-027`) | yes | no -- the adapter chooses whether to honor it and represent `StopReason.ABORTED` |
-| tool `before`-hook (`TOOLS_PRE_EXECUTE` waterfall) | yes, threaded explicitly (no `instance` access at Layer 06) | only at the two explicit preflight polls -- see `spec/tools.md` |
-| tool `execute()` | yes, its own cooperative 3rd/4th positional parameter | no -- the tool's own choice; never forcibly interrupted |
-| tool after-hook (`TOOLS_POST_EXECUTE` waterfall) | yes | no -- runs unconditionally regardless of abort state |
+| tool `before`-hook (`TOOLS_PRE_EXECUTE` waterfall, `L09-R001`) | yes, threaded explicitly as a payload argument (no `instance` access at Layer 06) | only at the two explicit preflight polls -- see `spec/tools.md` |
+| tool `execute()` | yes, when the tool declares `ToolDefinition.wants_signal=True` (`L09-R003`) -- its own cooperative 3rd/4th positional parameter | no -- the tool's own choice; never forcibly interrupted |
+| tool after-hook (`TOOLS_POST_EXECUTE` waterfall, `L09-R001`) | yes, threaded explicitly as a payload argument | no -- runs unconditionally regardless of abort state |
 | per-batch (sequential/parallel) | n/a, batch-level | yes, but only BETWEEN calls -- see `spec/tools.md`'s own split algorithms |
 | `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listeners | via `instance.signal` (already the listener's own first argument) | no |
 | steering/follow-up queue drains | not applicable -- plain queue-drain operations, no signal parameter, matching pinned Pi exactly |
+
+`AGENT_TRANSFORM_CONTEXT` (`L09-R005`): pinned Pi's own `config.transformContext(messages, signal)`
+(`agent-loop.ts:290-292`), an OPTIONAL per-request projection of the outgoing message history,
+invoked immediately before every provider request -- omitted entirely from an earlier revision of
+this matrix, a `CONTRACT_ASSURANCE_DEFECT` an independent Rust review named explicitly. Genuinely
+NEW to Minion: no prior layer had an equivalent extensibility point at this exact seam.
+`AGENT_PRE_STEP` is NOT equivalent -- it runs once, at INPUT ADMISSION boundaries, and changes
+what gets durably admitted into the run's own transcript; `AGENT_TRANSFORM_CONTEXT` runs on every
+REQUEST and never mutates the persistent/run-local transcript itself, matching pinned Pi's own
+`streamAssistantResponse` reassigning only its own LOCAL `messages` variable, never
+`currentContext.messages` -- a transform's own output is provider-local for that one request only,
+never carried into a later turn's own request. Zero listeners (the default, matching every caller
+before this event existed) preserves prior behavior exactly.
+
+Tool-side signal capability is EXPLICIT, not inferred from arity alone (`L09-R003`):
+`ToolDefinition.wants_signal: bool = False` (Layer 05). Pinned Pi's own `execute(toolCallId,
+params, signal?, onUpdate?)` treats `signal`/`onUpdate` as independent optional parameters -- a
+tool may want either, both, or neither. Python's own pre-existing arity-based `update` detection
+(3 parameters means `update`, unchanged since before this layer) cannot by itself also distinguish
+"this 3rd parameter is `signal`" without breaking that established meaning; an earlier revision
+tried arity alone and could not represent a tool wanting `signal` without ALSO being forced to
+declare an unused `update` parameter it did not want -- a `PI_PARITY_DEFECT` an independent Rust
+review caught (`L09-R003`): Pi's own signal-only tool has no Python equivalent under that design.
+`wants_signal=False` (every pre-Layer-09 tool) preserves the existing arity dispatch exactly;
+`wants_signal=True` shifts `execute`'s own 3rd-parameter meaning to `signal`, with a 4th parameter
+(if declared) receiving `update` -- all four Pi-equivalent combinations (neither, update-only,
+signal-only, both) are representable. See `spec/tools.md` for the complete dispatch table.
 
 Minion's own architectural mapping, not an observable divergence: pinned Pi threads `signal` as an
 EXPLICIT parameter to every one of `agent-loop.ts`'s own consumers, including its own lifecycle
