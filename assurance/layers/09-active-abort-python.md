@@ -1184,7 +1184,7 @@ Layer 10                     NOT STARTED
    claiming they prove the reorder itself would have been dishonest, so this pass records the
    distinction explicitly rather than eliding it.
 
-## Next action
+## Next action (superseded -- see PASS 6 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-5 remediation summary and new head SHAs. Update coordination issue
@@ -1197,4 +1197,188 @@ L09-R001-R006/R008/R009 remain provisionally closed unless this review finds a n
 them. Per §11.8.8, once this targeted review also provisionally closes L09-R007, ANOTHER final
 complete review of that exact candidate is required before certification -- this is not optional`.
 Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
+Layer 10.
+
+This candidate (code PR `minion-agent#17` @ `92885995d66dce716b69e92793d61e924cb030fc`, docs PR
+`minion-agent-docs#26` @ `b390c867247179b506847c653bd6060f60c9f636`) was targeted-re-reviewed
+(`minion-agent-docs#32`, review commit `03db3aaa1cee5e09d91be2ba7a1a77b91744ab4c`): the agreed
+`L09-R007` status/signal and preclaimed-input BEHAVIOR was independently re-verified and confirmed
+correct (48 targeted tests re-run, all passing), but provisional closure was **WITHHELD** -- a new
+finding, `L09-R010` (`CONTRACT_ASSURANCE_DEFECT`), blocked it: `Inbox.restore()`, the mechanism
+PASS 5 used to deliver the agreed rollback behavior, was an unrestricted PUBLIC method any caller
+could invoke with any envelope tuple, manufacturing duplicate queue entries with the same id --
+violating `AG-011`'s own certified exactly-once invariant. See PASS 6 below.
+
+# PASS 6 — remediate L09-R010 (restrict the L09-R007 rollback mechanism's own authority)
+
+## Re-review reference
+
+The targeted independent Rust re-review of the PASS-5 candidate (see above) withheld provisional
+closure of `L09-R007`: the agreed observable behavior was verified correct, but a new finding
+(`L09-R010`) against the mechanism blocked closure. `L09-R008`/`L09-R009` remain `PROVISIONALLY
+CLOSED`, unaffected, not reopened. Full review text: `assurance/layers/09-active-abort-rust-
+targeted-rereview-pass5.md` on branch `review/09-r007-convergence-challenge` (not reproduced
+verbatim here).
+
+## Finding, reproduced against the exact candidate and remediated
+
+### L09-R010 — unrestricted public restore authority
+
+**Re-review finding:** `CONTRACT_ASSURANCE_DEFECT`. The convergence contract approved an
+OBSERVABLE rollback result and explicitly left the mechanism implementation-owned -- it did not
+approve a new unrestricted caller-facing operation. PASS 5's own `Inbox.restore(target,
+envelopes)` was an ordinary PUBLIC method on the exported `Inbox` type: it accepted any envelope
+tuple, tracked no claim ownership, and had no one-shot guard, so any caller could restore an
+envelope still queued and never claimed, restore the same claimed batch multiple times, or move a
+claimed batch across targets -- manufacturing duplicate queue entries sharing the same envelope
+id/message/origin. The review's own executed witness: `inbox.followup(a); inbox.restore(NEXT_TURN,
+(a,))` produced TWO entries sharing `a`'s own id; calling `restore` again produced three, with no
+claim or failed run-entry involved at all.
+
+**Pi reproduction:** re-confirmed pinned Pi's own `PendingMessageQueue` is PRIVATE to `Agent` and
+exposes no restore operation any caller could misuse this way. Minion's `Inbox` is intentionally
+public (`AG-011`), so this method's own visibility was itself an observable divergence, not a
+Python-only implementation detail dismissible as such.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (violates `AG-011`'s own certified exactly-once
+invariant; not a Pi-parity question -- Pi has no equivalent operation to diverge from).
+
+**Remediation:** removes the restoration surface entirely rather than restricting it. `Inbox.
+restore` no longer exists. `Inbox.peek(target, policy)` (new, PUBLIC, read-only) returns exactly
+what `claim(target, policy)` would, without removing anything -- structurally incapable of
+corrupting the queue regardless of how a caller uses it, since it never mutates state at all. The
+actual destructive removal is deferred to `Inbox._commit_claim(target, envelopes)` (new, PRIVATE
+-- the same "Layer 07 owns vocabulary, Layer 08 owns per-run lifecycle" split already established
+for `AgentInstance._start_run_signal`/`_end_run_signal`), called by `AgentLoop._run_wrapped` itself
+ONLY once `set_status(RUNNING)` has already succeeded, with no intervening `await` between a
+caller's own `peek()` and `_run_wrapped`'s own commit. `continue_()`'s steering/follow-up branches
+and `run_until_idle()`'s follow-up claim now peek, not `claim()`, before calling `_run_wrapped`,
+passing a `commit_entry_claim` closure invoked only on success. A RUNNING-notification failure
+therefore needs NO restoration step at all: nothing was ever removed from `Inbox` in the first
+place, so there is nothing to put back and no way to duplicate an id. `_commit_claim` is
+removal-only, by count from the queue's own front, and structurally cannot INSERT an envelope, so
+even a caller that bypasses the `_` naming convention and calls it directly, repeatedly, can only
+ever remove more of whatever is currently queued -- never manufacture a duplicate, unlike the
+removed `restore()`.
+
+**RED evidence:** nine tests in `agent/test_inbox.py` changed -- the four PASS-5 `Inbox.restore`
+unit tests replaced with `peek`/`_commit_claim` unit coverage plus two dedicated negative
+witnesses, `test_the_old_public_restore_method_no_longer_exists` and `test_the_reviewers_
+duplicate_id_witness_is_no_longer_expressible` (the latter reproduces the review's own exact
+scenario). All nine were run against the reverted PASS-5 candidate (via revert-and-confirm) and
+FAILED as expected: the six `peek`/`_commit_claim`-based tests with `AttributeError: 'Inbox'
+object has no attribute 'peek'`; `test_the_old_public_restore_method_no_longer_exists` because
+`restore` still existed; `test_the_reviewers_duplicate_id_witness_is_no_longer_expressible`
+because the attack it expects to be impossible still succeeded (`pytest.raises(AttributeError)`
+did not raise).
+
+**GREEN evidence:** all nine pass against the restored implementation. All eight PASS-5 `agent_
+loop/test_active_abort.py` preclaimed-input/status-signal witnesses needed NO changes at all and
+continue to pass unchanged -- confirmed unaffected by the same revert (passed both before and
+after) -- proving the OBSERVABLE contract is identical under the new mechanism; only the internal
+implementation changed, exactly matching the convergence contract's own "observable result, not
+mechanism" scoping.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R006`, `L09-R008`, `L09-R009`, and the `L09-R007` status/signal half
+(the four PASS-5 status/signal witnesses): unaffected -- this pass's own diff touches only
+`Inbox`'s own claim-adjacent surface and the two `_run_wrapped`-feeding call sites; no other
+production code changed. `AG-011`'s own certified `InputEnvelope` identity/FIFO-ordering rules:
+confirmed preserved, not reopened -- `peek`'s own selection logic is identical to `claim`'s (same
+first-envelope-or-whole-queue rule for a given `policy`), and the new unit tests assert exact
+`id`/`message`/`origin` equality and count-based removal directly.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1110 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the extended agent/inbox.py and
+                                      agent_loop/driver.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 unaffected, unchanged this pass (no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a PASS-6 paragraph; AG-011's
+                                      own cross-reference note updated to describe peek/
+                                      _commit_claim instead of the removed restore; no new row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009/R010 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 5, plus:) Inbox.peek()/
+                               _commit_claim() -- a public inspect/private commit split -- is a
+                               Minion-specific integrity mechanism with no Pi analogue (Pi's own
+                               PendingMessageQueue is private to Agent and has no equivalent
+                               inspect-before-claim seam at all)
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST TARGETED RE-REVIEW of L09-R010 specifically
+                             (the mechanism-authority remediation); per §11.8.8, once L09-R007 is
+                             provisionally closed, ANOTHER final complete review of the exact
+                             candidate is still required before certification
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. A convergence contract that deliberately leaves the mechanism implementation-owned still
+   constrains that mechanism's own AUTHORITY, even when it does not prescribe the mechanism's own
+   shape: `§11.8.5`'s own agreed record approved an observable ROLLBACK RESULT, and PASS 5's own
+   implementation correctly delivered that result, but the specific mechanism chosen (a public
+   method reversing a destructive claim) introduced a NEW capability -- arbitrary queue mutation
+   by any caller -- the agreement never actually approved and the implementation pass did not
+   separately ask whether it needed to justify. "The observable behavior is correct" and "the
+   mechanism used to produce it introduces no new capability beyond what was approved" are two
+   different questions, and this cycle is a second, independent confirmation (after `L09-R006`'s
+   own precedent, "signal is authoritative event metadata, not ordinary payload a listener may
+   transform") that a project choosing to leave mechanism open-ended should still explicitly
+   re-examine what NEW authority/visibility that mechanism grants, not only whether it produces
+   the agreed result.
+2. Removing a flawed capability entirely, rather than restricting it, was available here because
+   the underlying need (defer destructive removal until success is certain) had a strictly safer
+   equivalent formulation (inspect-then-commit) that never required an undo operation at all. When
+   a defect is "this operation can be misused," the first question worth asking is whether the
+   operation is even necessary, not only how to gate it -- a design that structurally cannot
+   express the misuse (no insertion capability at all, only removal) is more robust than one that
+   relies on a one-shot guard or naming convention to prevent it, even though both would have
+   satisfied the review's own stated acceptance criteria.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-6 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append
+the PASS-5 targeted-review withheld-closure reference (`minion-agent-docs#32` @ `03db3aaa1`) to
+`PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust
+re-review of this PASS-6 candidate against L09-R010 specifically (the Inbox.peek/_commit_claim
+authority remediation); L09-C001-C003, L09-R001-R006, L09-R008, and L09-R009 remain provisionally
+closed, and the L09-R007 status/signal/preclaimed-input BEHAVIOR was already independently
+verified correct in the PASS-5 targeted review, unless this review finds a new issue with any of
+them. Per §11.8.8, once L09-R007/L09-R010 are both provisionally closed, ANOTHER final complete
+review of that exact candidate is required before certification -- this is not optional`. Then
+stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
 Layer 10.

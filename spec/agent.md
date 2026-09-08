@@ -642,11 +642,11 @@ dispatched. The two transitions are therefore governed asymmetrically, not by on
   failing listener chain, an infinite-rollback hazard); no `agent_start`, no `_settle_run_failure`-
   synthesized turn, and no `message_start`/`message_end`/`turn_end`/`agent_end` sequence is
   produced (`_settle_run_failure` is Pi's own `handleRunFailure`, invoked only once a run has
-  genuinely begun); any input a caller already destructively claimed from `Inbox` before entering
-  this method (see "Preclaimed inbox input" below) is restored so it is not silently lost; and the
-  observer's own original exception propagates DIRECTLY out of `prompt()`/`continue_()`/
-  `run_until_idle()`, unconverted. A subsequent `prompt()`/`continue_()` call then succeeds
-  normally, exactly as if the failed attempt had never been made.
+  genuinely begun); entering input a caller already inspected from `Inbox` before entering this
+  method (see "Preclaimed inbox input" below) was never actually removed, so nothing needs
+  restoring; and the observer's own original exception propagates DIRECTLY out of `prompt()`/
+  `continue_()`/`run_until_idle()`, unconverted. A subsequent `prompt()`/`continue_()` call then
+  succeeds normally, exactly as if the failed attempt had never been made.
 - **An IDLE-notification failure** does NOT retroactively hide or duplicate the run's own
   already-committed outcome (success, or a `_settle_run_failure`-settled failure/abort): every
   other exit-time write (`_end_run_signal()`, `streaming_message`, `pending_tool_calls`) completes
@@ -666,29 +666,45 @@ dispatched. The two transitions are therefore governed asymmetrically, not by on
   only after `emit` returns without raising -- ever runs) already governs both transitions
   identically, the same as every other `EMIT` event in this codebase.
 
-**Preclaimed inbox input (`L09-R007`, convergence-agreed contract):** `continue_()`'s own steering
-and follow-up branches, and `run_until_idle()`'s own follow-up claim (`AG-011`), destructively
-remove entering envelopes from `Inbox` BEFORE ever calling `_run_wrapped` -- pinned Pi's own
-`Agent.continue()` has the identical pre-drain-then-`runWithLifecycle` shape (`PendingMessageQueue.
-drain()` is equally destructive, with no rollback of its own; Pi simply never observes this gap
-because nothing between its own drain and `finishRun` can throw). A RUNNING-notification failure,
-per the rule above, means the run never validly began -- so a caller's already-claimed input must
-not be silently lost either, or that framing is contradicted by an externally observable effect no
-less real than a stuck status or a leaked signal:
+**Preclaimed inbox input (`L09-R007`, convergence-agreed contract; mechanism corrected under
+`L09-R010`):** `continue_()`'s own steering and follow-up branches, and `run_until_idle()`'s own
+follow-up claim, need to know their entering input BEFORE `_run_wrapped`'s own RUNNING notification
+runs, and must not have removed it from `Inbox` (`AG-011`) if that notification then fails -- pinned
+Pi's own `Agent.continue()` has the identical pre-drain-then-`runWithLifecycle` shape
+(`PendingMessageQueue.drain()` is equally destructive, with no rollback of its own; Pi simply never
+observes this gap because nothing between its own drain and `finishRun` can throw). The observable
+rule:
 
 ```text
-RUNNING notification fails after Inbox.claim() has already removed entering envelopes
-    -> no claimed envelope is lost or duplicated
-    -> each restored envelope's own id/message/origin are exactly the values that were claimed
-    -> restored envelopes precede any input the failing observer itself enqueued at the same
-       target during its own (failing) execution
-    -> a subsequent claim at the same target observes the restored envelope(s) exactly once
+RUNNING notification fails after a caller has already inspected entering envelopes from Inbox
+    -> no inspected envelope is lost or duplicated
+    -> each envelope's own id/message/origin are exactly the values a subsequent claim observes
+    -> input the failing observer itself enqueues at the same target during its own (failing)
+       execution never precedes the inspected envelopes at a later claim
+    -> a subsequent claim at the same target observes the inspected envelope(s) exactly once
 ```
 
 Applies to `continue_()`'s steering and follow-up branches and `run_until_idle()`'s follow-up
 claim, under both `ClaimPolicy.ONE_AT_A_TIME` and `ClaimPolicy.ALL`. `prompt()` is unaffected: it
-never claims from `Inbox` at all. `AG-011`'s own already-certified `InputEnvelope` identity/FIFO-
-ordering rules are read, not rewritten, by this addition -- no lower-layer reopen.
+never reads from `Inbox` at all.
+
+An earlier revision satisfied this by claiming (destructively removing) eagerly and exposing a
+PUBLIC `Inbox.restore(target, envelopes)` to reverse a failed claim. An independent Rust review
+found that method callable by ANY caller with ANY envelope tuple -- including one still queued and
+never claimed, or the same envelope repeatedly -- manufacturing duplicate queue entries that shared
+an id, contradicting `AG-011`'s own exactly-once invariant (`L09-R010`, `CONTRACT_ASSURANCE_
+DEFECT`: the convergence contract approved an observable rollback RESULT, not an unrestricted new
+caller-facing operation). The corrected mechanism removes the restoration surface entirely rather
+than merely restricting it: `Inbox.peek(target, policy)` -- public, read-only, returns what
+`claim(target, policy)` would without removing anything -- lets a caller inspect entering input
+first; the actual removal is deferred to an internal-only commit, performed by `AgentLoop._run_
+wrapped` itself only once the RUNNING notification has already succeeded. A failed RUNNING
+notification therefore needs no restoration step at all -- nothing was ever removed from `Inbox` in
+the first place, so there is nothing to put back and no way to duplicate an id. `AG-011`'s own
+already-certified `InputEnvelope` identity/FIFO-ordering rules are read, not rewritten, by this
+addition -- no lower-layer reopen. `peek`/`claim`'s own selection logic for a given `policy` is
+identical (the same first-envelope-or-whole-queue rule), so this changes only WHEN removal happens,
+never WHAT would be removed.
 
 **Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
 loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
