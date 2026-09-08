@@ -948,7 +948,7 @@ Layer 10                     NOT STARTED
    list from the previous pass's own template is not the same as re-verifying each line is still
    accurate.
 
-## Next action
+## Next action (superseded -- see PASS 5 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-4 remediation summary and new head SHAs. Update coordination issue
@@ -961,3 +961,240 @@ and L09-R001-R006 remain provisionally closed unless this review finds a new iss
 complete review of that exact candidate is required before certification -- this is not optional
 and does not shortcut back to a single targeted-review approval`. Then stop. Do not merge any
 candidate or review-evidence PR. Do not implement Rust. Do not start Layer 10.
+
+This candidate (code PR `minion-agent#17` @ `f13ee17404aa0c1a65b3a8c1c1d622340713f929`, docs PR
+`minion-agent-docs#26` @ `8c5610623520cafeb6b55ecba91ff2115b73f978`) was targeted-re-reviewed:
+`L09-R008`/`L09-R009` `PROVISIONALLY CLOSED` (`minion-agent-docs#31`, review commit
+`054de61af0632c1ca9ddc84b4dcdfb2ddf0fe063`), but `L09-R007` was found `PARTIALLY_RESOLVED_
+BLOCKING` for a SECOND time -- the happy-path status/signal reorder was confirmed correct, but a
+synchronous RUNNING/IDLE observer that itself throws was left entirely ungoverned, leaking a live
+signal and permanently stranding the agent `RUNNING`. Surviving two independent reviews on the
+same finding met `process/agent-workflow.md` §11.8's mandatory `CONTRACT_CONVERGENCE` trigger. See
+PASS 5 below.
+
+# PASS 5 — L09-R007 contract convergence and full implementation
+
+## Convergence cycle reference
+
+`L09-R007` entered `CONTRACT_CONVERGENCE` per §11.8. The convergence artifact -- checkpoint,
+challenge, revision, agreement -- lives at `assurance/layers/09-active-abort-contract-checkpoint-
+r007-convergence.md` and is not reproduced verbatim here; a summary:
+
+1. **Checkpoint revision 1** (`§11.8.4`/`§11.8.5` challenge pass): proposed an asymmetric
+   RUNNING-rollback / IDLE-propagate-after-commit policy, re-verified directly against pinned Pi
+   (`agent.ts:486-535`). Independently challenged (`minion-agent-docs#32`, review commit
+   `17cdfb61b4996206a75baececb3c50d0dcf5130b`): **REVISION REQUIRED** -- the status/signal policy
+   was accepted in full, but the checkpoint never addressed already-claimed `Inbox` input
+   (`continue_()`'s steering/follow-up branches, `run_until_idle()`'s follow-up claim, all of which
+   destructively claim BEFORE `_run_wrapped` is called) that a RUNNING-notification failure then
+   silently discarded.
+2. **Checkpoint revision 2**: re-verified pinned Pi's `Agent.continue()`/`PendingMessageQueue.
+   drain()` directly (`agent.ts:361-388`, `125-159`) -- Pi has the identical pre-drain-then-
+   `runWithLifecycle` shape and an equally irrecoverable drain, but never observes the gap because
+   nothing between its own drain and `finishRun` can throw. Added a mechanism-agnostic observable
+   restoration rule (no envelope lost/duplicated, identity preserved, restored input precedes
+   anything the failing observer itself enqueues, exactly-once retry) and four new witnesses.
+3. **Agreement** (docs PR #32, review commit `b410cb9fa1dbb9468b7555ce3c1aa37c9dbd59db`):
+   **CONVERGENCE CONTRACT — AGREED FOR IMPLEMENTATION**, with four implementation constraints
+   (fixed pre-drain claim-membership boundary if delaying the claim; "same identity" means
+   semantic envelope identity, not object identity; retry witnesses must remove the failing
+   observer before retrying; rollback stays local to the failed entry attempt, no cross-target
+   ordering imposed).
+
+## Implementation
+
+**`AgentInstance._force_idle_after_failed_entry_notification()`** (`agent/instance.py`, new):
+forces `status` directly to `IDLE` with NO `AGENT_STATUS` emit and NO `on_status_change` call --
+distinct from every other status write, which always goes through `set_status`. Used only from
+`AgentLoop._run_wrapped`'s own RUNNING-failure rollback, avoiding the "rollback re-invokes the same
+failing listener" hazard the agreement's own constraints named.
+
+**`Inbox.restore(target, envelopes)`** (`agent/inbox.py`, new): prepends `envelopes` back to the
+front of `target`, ahead of whatever the queue already holds -- satisfying the agreed "restored
+input precedes anything the failing observer itself enqueues" rule directly, since a failing
+observer's own `steer()`/`followup()` call (synchronous, in the same call stack, before it raises)
+has already appended to the queue by the time rollback runs.
+
+**`AgentLoop._run_wrapped`** (`agent_loop/driver.py`): restructured per the agreed policy.
+
+- Entry: `_start_run_signal()` runs unconditionally (cannot fail); `set_status(AgentStatus.
+  RUNNING)` now runs inside its own `try`/`except Exception`. On failure: `_end_run_signal()`
+  discards the signal, `_force_idle_after_failed_entry_notification()` restores `status` without
+  re-invoking the listener chain, the new `restore_on_entry_failure` callback (if supplied) puts
+  back any already-claimed `Inbox` input, and the observer's own original exception is re-raised
+  bare (preserving its type and traceback) -- no `_settle_run_failure`, no `agent_start`, no
+  message lifecycle at all, matching the agreed "the run never validly began" framing. On success,
+  entry proceeds exactly as PASS 4 left it (`streaming_message`/`error_message` resets, unchanged
+  relative order, `AG-008` untouched).
+- Exit: `finally` now completes `_end_run_signal()`/`streaming_message`/`pending_tool_calls`
+  UNCONDITIONALLY before `set_status(AgentStatus.IDLE)`, which moved to be the LAST write instead
+  of the first. `set_status`'s own internal `self._status` write already happens before its own
+  emit/callback, so a throwing IDLE notification's own exception is observed only once every other
+  field already holds its correct settled value.
+- New keyword-only parameter `restore_on_entry_failure: Callable[[], None] | None = None`,
+  supplied by every `Inbox`-claiming caller.
+
+**`continue_()`/`run_until_idle()`** (`agent_loop/driver.py`): each call site that claims from
+`Inbox` before entering `_run_wrapped` now constructs its own `restore_on_entry_failure` closure,
+capturing the exact claimed envelopes and the correct target. `prompt()` is unchanged -- it never
+claims from `Inbox`.
+
+## Evidence
+
+Twelve new tests. Eight in `agent_loop/test_active_abort.py`:
+
+- **Status/signal failure atomicity** (four): a raising `on_status_change` on RUNNING rolls back
+  and propagates, with a successful second `prompt()` proving no permanent damage; a raising raw
+  `AGENT_STATUS` listener on RUNNING produces the identical outcome and proves `on_status_change`
+  is never reached (`EventBus.emit`'s own fail-fast rule); a raising `on_status_change` on IDLE
+  does not hide a successful run's own committed outcome; the same for a run settled as a failure
+  via `_settle_run_failure` (proving the settled failure and the later notification failure are
+  not conflated or duplicated).
+- **Preclaimed-input restoration** (four): `continue_()`'s steering branch restores an exact
+  envelope on a RUNNING failure, consumed exactly once by a retry with the failing observer
+  removed; the same for the follow-up branch; `ClaimPolicy.ALL` restoration precedes input the
+  failing observer itself enqueues at the same target (`A, B, C`, not `C, A, B` or a lost `C`);
+  `run_until_idle()` restores its own preclaimed follow-up, propagates rather than swallowing or
+  silently retrying, and a later, separate pump call successfully drains it.
+
+Four in `agent/test_inbox.py`, direct unit coverage of the new `Inbox.restore` method: restores a
+claimed envelope's own exact identity; precedes input enqueued after the claim; an empty batch is
+a harmless no-op; does not touch the wake signal (matching `claim()`'s own established
+orthogonality).
+
+**RED evidence (revert-and-confirm):** the three new source files (`driver.py`, `instance.py`,
+`inbox.py`) were reverted to the exact PASS-4 candidate state and all twelve new tests re-run.
+Ten failed as expected -- six of the eight `test_active_abort.py` witnesses (the two RUNNING-
+failure-rollback status/signal witnesses and all four preclaimed-input-restoration witnesses) and
+all four `Inbox.restore` unit tests (`AttributeError: 'Inbox' object has no attribute 'restore'`,
+since the method did not exist on the reverted candidate). **Disclosed, not overstated:** the two
+IDLE-notification witnesses PASSED even against the reverted PASS-4 candidate -- `streaming_
+message`/`pending_tool_calls` are already reset by `_execute_run`'s own success path or
+`_settle_run_failure`'s own settlement before `_run_wrapped`'s `finally` ever reaches them, in
+every currently reachable scenario, so the exit-side reorder has no live bug to discriminate
+against for these two specific fields; they are retained as permanent regression evidence for the
+agreed contract's own explicit requirement (and do genuinely prove the observer's own exception
+propagates, and that the run's own committed outcome is never hidden), not claimed as RED-proven
+for the reorder itself.
+
+**GREEN evidence:** all twelve tests pass against the restored implementation; the full suite
+(below) is unaffected elsewhere.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R006`, `L09-R008`, `L09-R009`: unaffected -- this pass's own diff is
+additive (one new `AgentInstance` method, one new `Inbox` method, a `try`/`except` around one
+existing call plus a `finally`-block reorder in `_run_wrapped`, and closures at three call sites)
+on top of the same already-certified structures, not a rewrite of any of them. `AG-008`'s own
+certified write-order rule: unaffected on the success path (see "Implementation" above); the
+exit-side reorder only defines behavior `AG-008` never specified (the failure case). `AG-011`'s own
+certified `InputEnvelope` identity/FIFO-ordering rules: read, not rewritten, by `Inbox.restore` --
+confirmed directly by the new unit tests asserting exact `id`/`message`/`origin` equality and FIFO
+placement.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1105 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the extended agent/instance.py,
+                                      agent/inbox.py, agent_loop/driver.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files (one default-arg-lambda
+                                      type-inference issue fixed by using a named local function
+                                      with an explicit annotation instead)
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 unaffected, unchanged this pass (no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a PASS-5 paragraph; AG-011
+                                      gained a cross-reference note only, not a new paragraph
+                                      chronology; no new row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009 closed; L09-R007's own convergence-identified
+                               CONTRACT_ASSURANCE_DEFECT (missing failure-atomicity/preclaimed-
+                               input policy) closed by this pass's own agreed-contract
+                               implementation
+PI_BEHAVIOR_UNCERTAIN         none -- L09-R007's own status-observer/preclaimed-input surfaces are
+                               explicitly Minion-owned architectural-mapping decisions, not
+                               uncertainty about Pi (Pi has no equivalent extension point at all)
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 4, plus:) the RUNNING-notification-
+                               failure entry-rollback policy (discard signal, force IDLE without
+                               re-publishing, restore preclaimed input, propagate the observer's
+                               own exception) and the IDLE-notification-failure exit-ordering
+                               policy (settle all other state before the possibly-throwing
+                               notification, then propagate) are both Minion-specific integrity
+                               guarantees with no direct Pi analogue -- Pi has no synchronous
+                               status-notification extension point to fail in the first place
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST TARGETED RE-REVIEW of L09-R007 specifically
+                             (the convergence-agreed surface); per §11.8.8, once that targeted
+                             review also provisionally closes L09-R007, ANOTHER final complete
+                             review of the exact candidate is still required before certification
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. The `§11.8` convergence protocol worked as designed: `L09-R007` surviving two independent
+   reviews (the mandatory `§11.8.8` final review, then a targeted re-review) triggered convergence
+   automatically rather than continuing an unbounded remediation/re-review loop on the same
+   finding. The characterization → challenge → revision → agreement cycle produced a genuinely
+   more complete contract (catching the preclaimed-inbox-input gap the ORIGINAL implementation
+   pass had no reason to consider, since it was never asked to think about `Inbox` claim
+   atomicity at all) before another large implementation attempt, exactly matching `§11.8.1`'s own
+   stated objective.
+2. A convergence checkpoint's own FIRST draft can itself be incomplete in the same way an
+   implementation candidate can (echoing `L09-R005`'s own PASS-1 retrospective note about
+   checkpoints generally): revision 1 correctly re-derived and re-verified the status/signal policy
+   against Pi, but scoped its own "what does RUNNING-failure rollback need to restore" question too
+   narrowly, considering only state `_run_wrapped` itself owns (`status`/`signal`) and not state a
+   CALLER had already mutated before `_run_wrapped` was ever entered (`Inbox`, via `claim()`). The
+   fix was not re-deriving the status/signal policy (which stayed correct across both revisions)
+   but widening the QUESTION being asked.
+3. Not every acceptance witness a checkpoint requires will turn out to be RED-discriminating in
+   practice, and disclosing that honestly is worth more than a false discrimination claim: the two
+   IDLE-notification witnesses passed against both the old and new code, because the specific
+   fields they check (`streaming_message`/`pending_tool_calls`) were already correct by the time
+   `finally` reached the reordered write, in every currently reachable scenario. They remain
+   valuable as permanent regression evidence for an explicitly agreed contract requirement, and as
+   proof the observer's own exception propagates and the run's own outcome is preserved -- but
+   claiming they prove the reorder itself would have been dishonest, so this pass records the
+   distinction explicitly rather than eliding it.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-5 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append
+the convergence-agreement reference (`minion-agent-docs#32` @ `b410cb9fa1dbb9468b7555ce3c1aa37c9dbd59db`)
+to `PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust
+re-review of this PASS-5 candidate against the convergence-agreed L09-R007 surface specifically
+(status/signal failure atomicity, preclaimed-inbox-input restoration); L09-C001-C003 and
+L09-R001-R006/R008/R009 remain provisionally closed unless this review finds a new issue with
+them. Per §11.8.8, once this targeted review also provisionally closes L09-R007, ANOTHER final
+complete review of that exact candidate is required before certification -- this is not optional`.
+Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
+Layer 10.

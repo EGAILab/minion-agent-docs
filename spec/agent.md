@@ -611,11 +611,84 @@ read it, or the observer sees the wrong run's signal state (`None` during RUNNIN
 just-finished run's stale live signal during IDLE) despite the rule above holding once the
 callback returns. An earlier revision installed/cleared the controller AFTER each status publish
 instead, which an independent Rust review's own executable witness caught: a RUNNING observer's
-own `abort()` call was a no-op, and an IDLE observer saw the previous run's still-live signal. This
-reorders ONLY the signal calls relative to `set_status`; the relative order of `set_status`/
-`streaming_message`/`error_message`/`pending_tool_calls` themselves is unchanged, still matching
-pinned Pi's own `runWithLifecycle`/`finishRun` write order exactly (see "Runtime-state transition
-timing" below).
+own `abort()` call was a no-op, and an IDLE observer saw the previous run's still-live signal.
+Entry-side relative order (`_start_run_signal`, `set_status(RUNNING)`, `streaming_message`,
+`error_message`) is unchanged from `AG-008`'s own certified sequence. Exit-side order changed
+further, as part of the failure-atomicity rule below: `set_status(AgentStatus.IDLE)` moved to be
+the LAST write in `_run_wrapped`'s own `finally` block, after `_end_run_signal()`/
+`streaming_message`/`pending_tool_calls`, not before them. This has NO observable effect on the
+success path -- `streaming_message`/`pending_tool_calls` already hold their final values by that
+point regardless of the write's own position, since the run's own normal completion (or a settled
+failure via `_settle_run_failure`) already set them -- so `AG-008`'s own certified rule (the four
+fields' final values match pinned Pi's own `runWithLifecycle`/`finishRun` write order once the
+whole sequence completes) is not reopened, only extended below to define the FAILURE case `AG-008`
+never addressed at all.
+
+**Status-observer failure atomicity (`L09-R007`, convergence-agreed contract):** Pi has no
+synchronous, listener-driven status-notification extension point at all -- `isStreaming = true`
+and `finishRun()`'s own writes are plain, non-throwing property assignments in Pi, made
+unconditionally outside Pi's own run-lifecycle `try`/executor boundary, so Pi never has an
+"entry/exit notification observer throws" case to define. This is therefore a genuinely
+Minion-owned architectural-mapping decision, derived from the ONE structural fact Pi's own design
+does establish: `isStreaming = true` (RUNNING's own Pi analogue) is written BEFORE ANY of the run's
+own observable event stream (including `agent_start`) exists, while `finishRun()` (IDLE's own Pi
+analogue) runs AFTER the run's own observable outcome has already been fully committed and
+dispatched. The two transitions are therefore governed asymmetrically, not by one uniform rule:
+
+- **A RUNNING-notification failure** (an `AGENT_STATUS` EMIT listener or `on_status_change`
+  raising) means the run never validly began, matching Pi's own "nothing observable exists yet at
+  this point" structure: the freshly-created signal is discarded; `status` is forced back to
+  `AgentStatus.IDLE` directly, WITHOUT calling `set_status` again (which would re-invoke the SAME
+  failing listener chain, an infinite-rollback hazard); no `agent_start`, no `_settle_run_failure`-
+  synthesized turn, and no `message_start`/`message_end`/`turn_end`/`agent_end` sequence is
+  produced (`_settle_run_failure` is Pi's own `handleRunFailure`, invoked only once a run has
+  genuinely begun); any input a caller already destructively claimed from `Inbox` before entering
+  this method (see "Preclaimed inbox input" below) is restored so it is not silently lost; and the
+  observer's own original exception propagates DIRECTLY out of `prompt()`/`continue_()`/
+  `run_until_idle()`, unconverted. A subsequent `prompt()`/`continue_()` call then succeeds
+  normally, exactly as if the failed attempt had never been made.
+- **An IDLE-notification failure** does NOT retroactively hide or duplicate the run's own
+  already-committed outcome (success, or a `_settle_run_failure`-settled failure/abort): every
+  other exit-time write (`_end_run_signal()`, `streaming_message`, `pending_tool_calls`) completes
+  UNCONDITIONALLY before the possibly-throwing `set_status(AgentStatus.IDLE)` call, which is
+  therefore LAST, not first. `set_status`'s own internal write to `self._status` happens before its
+  own emit/callback (unchanged, already true today), so `status` is ALSO already `IDLE` internally
+  by the time a throwing listener's exception propagates -- meaning `signal`/`streaming_message`/
+  `pending_tool_calls`/`status` are all already fully consistent with a normally-settled idle
+  instance the instant the exception is observed by a caller. That exception then propagates OUT of
+  `_run_wrapped`/`prompt()`/`continue_()` UNCAUGHT, matching pinned Pi's own precedent that a
+  listener failure during settlement is never silently absorbed (`_settle_run_failure`'s own
+  "a listener invoked during this very recovery sequence itself throws... the exception propagates
+  uncaught" rule, above).
+- **Ordering/short-circuit across `AGENT_STATUS` listeners and `on_status_change`** needs no
+  separate rule: `EventBus.emit`'s own existing fail-fast semantics (a throwing listener propagates
+  immediately, so no later listener in the same dispatch -- including `on_status_change`, called
+  only after `emit` returns without raising -- ever runs) already governs both transitions
+  identically, the same as every other `EMIT` event in this codebase.
+
+**Preclaimed inbox input (`L09-R007`, convergence-agreed contract):** `continue_()`'s own steering
+and follow-up branches, and `run_until_idle()`'s own follow-up claim (`AG-011`), destructively
+remove entering envelopes from `Inbox` BEFORE ever calling `_run_wrapped` -- pinned Pi's own
+`Agent.continue()` has the identical pre-drain-then-`runWithLifecycle` shape (`PendingMessageQueue.
+drain()` is equally destructive, with no rollback of its own; Pi simply never observes this gap
+because nothing between its own drain and `finishRun` can throw). A RUNNING-notification failure,
+per the rule above, means the run never validly began -- so a caller's already-claimed input must
+not be silently lost either, or that framing is contradicted by an externally observable effect no
+less real than a stuck status or a leaked signal:
+
+```text
+RUNNING notification fails after Inbox.claim() has already removed entering envelopes
+    -> no claimed envelope is lost or duplicated
+    -> each restored envelope's own id/message/origin are exactly the values that were claimed
+    -> restored envelopes precede any input the failing observer itself enqueued at the same
+       target during its own (failing) execution
+    -> a subsequent claim at the same target observes the restored envelope(s) exactly once
+```
+
+Applies to `continue_()`'s steering and follow-up branches and `run_until_idle()`'s follow-up
+claim, under both `ClaimPolicy.ONE_AT_A_TIME` and `ClaimPolicy.ALL`. `prompt()` is unaffected: it
+never claims from `Inbox` at all. `AG-011`'s own already-certified `InputEnvelope` identity/FIFO-
+ordering rules are read, not rewritten, by this addition -- no lower-layer reopen.
 
 **Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
 loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
