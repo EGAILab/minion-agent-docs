@@ -306,12 +306,14 @@ before `next_` (`L09-R001`) -- pinned Pi's own `beforeToolCall(context, signal)`
 `afterToolCall(context, signal)` pass it as their own second parameter; Layer 06 has no `instance`
 access at all (architecturally below Layer 07, where `AGENT_LIFECYCLE_EVENT`-style listeners
 instead read `instance.signal` directly -- see `spec/agent.md`), so this seam threads it
-explicitly. A listener that delegates via bare `next_()` sees `signal` unchanged automatically; one
-that delegates with an explicit replacement value must re-supply `signal` alongside it
-(`next_(replacement, signal)`) or later listeners in the same chain will not see it --
-`register_after_tool_call_hook`'s own wrapper does this already, and `tools/post-execute`'s own
-identity-restoration `normalize_step` (`L06-R003`, above) tolerates either shape (with or without a
-trailing signal) rather than requiring it.
+explicitly. `signal` is AUTHORITATIVE event metadata, not a listener's own to replace, redirect, or
+drop (`L09-R006`): both waterfalls supply `normalize_step` (`tools/pre-execute`'s own
+`_restore_signal`; `tools/post-execute`'s own `_restore`, extended from its pre-existing
+`L06-R003` identity restoration) that forces `signal` back to the run's ORIGINAL value at every
+listener-to-listener handoff, regardless of what a listener passes when it delegates -- a listener
+does not need to re-supply `signal` to preserve it, and cannot override it for a later listener even
+by supplying a replacement or omitting it entirely. `register_after_tool_call_hook`'s own wrapper
+relies on this: it never re-supplies `signal` when delegating.
 
 A thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
 still flows through the after-hook exactly like success would, and the after-hook runs

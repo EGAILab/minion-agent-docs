@@ -490,7 +490,7 @@ into `process/agent-workflow.md`:
    separately asked "and can a consumer that merely observes this value also mutate it?" until an
    independent implementation review asked exactly that.
 
-## Next action
+## Next action (superseded -- see PASS 3 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-2 remediation summary and new head SHAs. Update coordination issue
@@ -500,3 +500,179 @@ the PASS-1 rejection reference (`minion-agent-docs#27` @ `0a781d3f6`) to `PRIOR 
 candidate against L09-R001 through L09-R005 specifically; L09-C001/C002/C003 remain provisionally
 closed unless this review finds a new issue with them`. Then stop. Do not merge any candidate or
 review-evidence PR. Do not implement Rust. Do not start Layer 10.
+
+This candidate (code PR `minion-agent#17` @ `ee24b8d03bdd4ed26e22356165fe4809be07ec05`, docs PR
+`minion-agent-docs#26` @ `5474cf1fdea345438920500a55f9f7032ff16cdc`) was independently
+re-reviewed and **REJECTED FOR RUST IMPLEMENTATION**, targeted (`minion-agent-docs#28`, review
+commit `9a8b9632f78a7bf0ba398f9ba4cc314981bdb8d4`, `assurance/layers/09-active-abort-rust-
+targeted-rereview.md`): `L09-C001`/`L09-C002`, `L09-R002`, `L09-R003`, and the transform-context
+semantic surface portion of `L09-R005` were confirmed correct; `L09-R001`/`L09-R004` were only
+partially resolved, and a new finding, `L09-R006`, explained why. See PASS 3 below.
+
+# PASS 3 — remediate L09-R006 (and close the residual L09-R001/R004 gap)
+
+## Re-review reference
+
+The independent Rust targeted re-review of the PASS-2 candidate (see above) rejected it: shared
+Layer-09 contract `REJECTED FOR RUST IMPLEMENTATION`, Python Layer 09 `REOPENED`. Full review
+text: `assurance/layers/09-active-abort-rust-targeted-rereview.md` on branch
+`review/09-active-abort-targeted-pass2` (not reproduced verbatim here).
+
+## Finding, reproduced against pinned Pi and remediated
+
+### L09-R006 — raw waterfall listeners could replace or drop the authoritative signal for later listeners
+
+**Re-review finding:** `PI_PARITY_DEFECT`. PASS 2's own fix for `L09-R001` added `signal` as an
+explicit payload argument to `TOOLS_PRE_EXECUTE`/`TOOLS_POST_EXECUTE`, but never protected it from
+a listener's own delegation call: a raw listener could call `next_(replacement_args...,
+forged_signal)` -- or delegate WITHOUT re-supplying `signal` at all -- and the NEXT listener in the
+same waterfall chain would observe the forgery or `None` instead of the run's own original signal.
+The review's own executable witness showed later `tools/pre-execute` and `tools/post-execute`
+listeners receiving a fabricated replacement signal while execution still succeeded (`is_original=
+False is_replacement=True result_error=False` for both events). `spec/tools.md`'s own PASS-2 text
+made this an EXPLICIT, documented contract ("must re-supply it... or later listeners will not see
+it") rather than an oversight -- contradicting the same document's own "the SAME per-run signal
+reaches every consumer" guarantee.
+
+**Pi reproduction:** re-confirmed pinned Pi's own `beforeToolCall(context, signal)`/
+`afterToolCall(context, signal)` (`agent-loop.ts:619-627`, `724-736`) and `config.transformContext(
+messages, signal)` (`agent-loop.ts:288-292`) all thread the SAME `AbortSignal` instance from
+`activeRun.abortController.signal` at every call site -- pinned Pi has no waterfall/middleware
+chain at all for these hooks (each is a single, directly-invoked optional callback), so it has no
+analogous "a listener redirects what the next listener sees" hazard in the first place. The hazard
+is Minion-specific, introduced by choosing a waterfall/delegation design for these seams; closing
+it is a Minion-owned integrity guarantee, not itself a Pi behavior being reproduced.
+
+**Classification:** `PI_PARITY_DEFECT` (breaks the "same signal reaches every consumer" contract
+`AG-007`/`TOOL-024` both already claimed as certified).
+
+**Remediation:** `signal` (like `tool_call_id`/`tool_name`/`added_tool_names`, `L06-R003`) is
+AUTHORITATIVE event metadata, not ordinary payload a listener is free to transform when it
+delegates. All three waterfall dispatches that carry it now supply a `normalize_step` closure that
+forces the payload tuple's own `signal` slot back to the closure-captured ORIGINAL value at every
+listener-to-listener handoff, regardless of what a listener passes when it delegates:
+
+- `tools/execute.py::_preflight` -- new `_restore_signal` closure for `TOOLS_PRE_EXECUTE`;
+- `tools/execute.py::_finalize` -- its own pre-existing `_restore` closure (`L06-R003`) extended
+  to also force `signal` back to the original, replacing PASS 2's own "tolerate either shape"
+  behavior with unconditional restoration, for `TOOLS_POST_EXECUTE`;
+- `agent_loop/driver.py::_transform_context` -- new `_restore_signal` closure for
+  `AGENT_TRANSFORM_CONTEXT`.
+
+A listener no longer needs to re-supply `signal` when delegating with a replacement result, and
+cannot override it for a later listener even by supplying a forgery or omitting it entirely --
+`register_after_tool_call_hook`'s own wrapper was simplified accordingly: it no longer re-supplies
+`signal` on delegation, relying on `_restore` to preserve it regardless. `spec/tools.md`'s own
+"must re-supply or lose it" language and `spec/agent.md`'s consumer/settlement matrix are corrected
+to describe the authoritative-restoration guarantee instead, per the review's own explicit
+instruction to synchronize spec and manifest.
+
+**RED evidence:** five new regression tests in `tools/test_execute.py` (before-hook redirect,
+before-hook drop, after-hook redirect, after-hook drop, and the after-hook wrapper's own
+simplification) plus one in `agent_loop/test_active_abort.py`
+(`test_a_transform_listener_cannot_redirect_a_later_listener_to_a_replacement_signal`) were each
+run against the PASS-2 candidate with the corresponding `normalize_step` argument temporarily
+stripped -- all six failed, observing the forged/omitted signal reach the later listener exactly as
+the review's own witness described -- before restoring the fix.
+
+**GREEN evidence:** all six pass against the fix, each asserting the later listener observed the
+run's own ORIGINAL signal object -- the same one the surrounding request/call actually received --
+never the forgery.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`/`L09-C002` (batch algorithms, preflight priority), `L09-R002` (exception
+classification), `L09-R003` (signal-only tools), and the transform-context SEMANTIC surface portion
+of `L09-R005` (provider-local, non-persistent): unaffected -- the targeted re-review's own ledger
+confirmed all as `PROVISIONALLY CLOSED`, and this pass's own diff is additive (a `normalize_step`
+closure on three already-existing waterfall dispatches) on top of the SAME dispatch structure, not
+a rewrite of it. Every PASS-1/PASS-2 test for these findings re-run unchanged and still passing.
+`TOOL-023`/`IR-L06-001` (sequential-preflight/concurrent-execution barrier): unaffected, not
+reopened.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1089 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the extended tools/execute.py and
+                                      agent_loop/driver.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 all passing (unchanged -- no canonical scenario added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007/AG-023/TOOL-024 each gained a PASS-3
+                                      paragraph; no new row -- this fix is within their own
+                                      already-described surfaces, not a new capability)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005 closed (both halves)
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AGENT_LIFECYCLE_EVENT/AGENT_PREPARE_NEXT_TURN/
+                               AGENT_TURN_STOPPING/AGENT_TRANSFORM_CONTEXT read the signal via
+                               instance.signal or an explicit payload argument rather than Pi's own
+                               explicit-parameter-everywhere design (spec/agent.md); a single
+                               preflight abort checkpoint covers both of pinned Pi's two
+                               (spec/tools.md); ToolDefinition.wants_signal is an explicit
+                               capability flag rather than Pi's fully-independent optional
+                               parameters; normalize_step-based authoritative signal restoration at
+                               every waterfall handoff is a Minion-specific integrity guarantee with
+                               no Pi analogue (Pi has no waterfall/delegation chain for these hooks)
+disclosed Minion-specific constraint   4-parameter arity dispatch required for a tool wanting
+                               signal (cannot want signal alone without also declaring update)
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from the rejected PASS-2
+                             candidate)
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. An "authoritative restoration" fix applied to one waterfall dispatch does not automatically
+   generalize to a sibling dispatch carrying the same value (`L09-R006`): `L06-R003`'s own
+   `normalize_step` precedent already existed for `tool_call_id`/`tool_name`/`added_tool_names` on
+   `TOOLS_POST_EXECUTE` before this pass, yet PASS 2 added `signal` to THREE waterfall dispatches
+   (`TOOLS_PRE_EXECUTE`, `TOOLS_POST_EXECUTE`, `AGENT_TRANSFORM_CONTEXT`) as ordinary payload
+   without asking whether the SAME precedent applied to each of them individually. A value that
+   needs authoritative-restoration protection on one dispatch needs it evaluated explicitly, seam
+   by seam, wherever else it is threaded -- not assumed inherited from a sibling's own protection.
+2. Documenting a limitation precisely is not the same as the limitation being acceptable
+   (`L09-R006`, echoing `L09-R003`'s own PASS-2 retrospective note): PASS 2's own spec text stated
+   the "must re-supply or lose it" behavior clearly and accurately -- it was not an implementation
+   bug hiding behind vague prose -- but accurate documentation of an authority gap is still an
+   authority gap; the independent review treated the precise disclosure as the defect report
+   itself, not as mitigating it.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-3 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append
+the PASS-2 targeted-review rejection reference (`minion-agent-docs#28` @ `9a8b9632f`) to `PRIOR
+REVIEW EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust re-review
+of this PASS-3 candidate against L09-R001/L09-R004/L09-R006 specifically; L09-C001/C002, L09-R002/
+R003, and the transform-context portion of L09-R005 remain provisionally closed unless this review
+finds a new issue with them`. Then stop. Do not merge any candidate or review-evidence PR. Do not
+implement Rust. Do not start Layer 10.

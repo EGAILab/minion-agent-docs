@@ -629,7 +629,11 @@ REQUEST and never mutates the persistent/run-local transcript itself, matching p
 `streamAssistantResponse` reassigning only its own LOCAL `messages` variable, never
 `currentContext.messages` -- a transform's own output is provider-local for that one request only,
 never carried into a later turn's own request. Zero listeners (the default, matching every caller
-before this event existed) preserves prior behavior exactly.
+before this event existed) preserves prior behavior exactly. `signal` is AUTHORITATIVE event
+metadata at this waterfall too (`L09-R006`): `normalize_step` forces it back to the run's ORIGINAL
+value at every listener-to-listener handoff, so a listener that delegates with a replacement or
+omitted `signal` cannot redirect or drop it for a later listener -- the same mechanism `spec/
+tools.md` describes for `TOOLS_PRE_EXECUTE`/`TOOLS_POST_EXECUTE`.
 
 Tool-side signal capability is EXPLICIT, not inferred from arity alone (`L09-R003`):
 `ToolDefinition.wants_signal: bool = False` (Layer 05). Pinned Pi's own `execute(toolCallId,
