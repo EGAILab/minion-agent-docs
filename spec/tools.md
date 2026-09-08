@@ -242,8 +242,16 @@ unchanged; this addition applies identically whether one listener or several are
 
 After-hook waterfall: listeners run in registration order. The recommended registration path,
 `register_after_tool_call_hook`, gives each listener the current, already-merged `ToolResult`
-(read-only) and expects an `AfterToolCallOverride` (or `None`/nothing for no change) in return --
-**never** the whole result. `AfterToolCallOverride` carries exactly Pi's five `AfterToolCallResult`
+(read-only) -- and, when the listener declares its own second parameter for it, the active run's
+`signal` too (`L09-R008`: pinned Pi's own `afterToolCall(context, signal)` delivers `signal`
+unconditionally; an independent Rust review found the recommended helper delivered it to raw
+`tools/post-execute` listeners but not to hooks registered through this constrained path, so a
+caller using the intended API could not observe cancellation at all -- arity alone decides which
+form a given hook wants, unambiguous here since a hook has only one optional second slot, unlike
+`execute()`'s own `wants_signal`/arity split above) -- and expects an `AfterToolCallOverride` (or
+`None`/nothing for no change) in return -- **never** the whole result. A one-parameter hook (every
+hook written before Layer 09) is called exactly as before, unaffected. `AfterToolCallOverride`
+carries exactly Pi's five `AfterToolCallResult`
 fields (`content`/`details`/`is_error`/`usage`/`terminate`) and structurally has no slot for
 `tool_call_id`, `tool_name`, or `added_tool_names`, so a hook written against this API cannot even
 attempt to touch them. But `tools/post-execute` remains a public Runtime event, and a caller may

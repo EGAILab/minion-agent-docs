@@ -665,7 +665,7 @@ Layer 10                     NOT STARTED
    authority gap; the independent review treated the precise disclosure as the defect report
    itself, not as mitigating it.
 
-## Next action
+## Next action (superseded -- see PASS 4 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-3 remediation summary and new head SHAs. Update coordination issue
@@ -676,3 +676,288 @@ of this PASS-3 candidate against L09-R001/L09-R004/L09-R006 specifically; L09-C0
 R003, and the transform-context portion of L09-R005 remain provisionally closed unless this review
 finds a new issue with them`. Then stop. Do not merge any candidate or review-evidence PR. Do not
 implement Rust. Do not start Layer 10.
+
+This candidate (code PR `minion-agent#17` @ `ffecd2f9860dc4edd1d605f22ad571f5b36f66c5`, docs PR
+`minion-agent-docs#26` @ `7dde9ad3e4596e1d1fb64207de62f7bff00eace1`) was targeted-re-reviewed and
+all of `L09-R001`/`L09-R004`/`L09-R006` were `PROVISIONALLY CLOSED` (`minion-agent-docs#29`, review
+commit `17c6abdc234f0ced60f543421608679d95744304`, `assurance/layers/09-active-abort-rust-
+targeted-rereview-pass3.md`). Per `process/agent-workflow.md` §11.8.8, every blocking finding
+being provisionally closed triggers the mandatory
+FINAL COMPLETE independent review of one exact candidate SHA pair -- code `ffecd2f9860dc4edd1d
+605f22ad571f5b36f66c5`, docs `7dde9ad3e4596e1d1fb64207de62f7bff00eace1` (unchanged since PASS 3;
+no new commits were needed to request it). That final review **REJECTED FOR RUST IMPLEMENTATION**
+(`minion-agent-docs#30`, review commit `364504a1e1823ff40277da5a4fe08c0dc3e407cb`, `assurance/
+layers/09-active-abort-rust-final-contract-review.md`): `L09-C001`-`C003` and `L09-R001`-`R006`
+were all confirmed CLOSED at that exact candidate; three NEW findings the targeted reviews never
+exercised blocked it -- `L09-R007`/`L09-R008` (`PI_PARITY_DEFECT`) and `L09-R009`
+(`CONTRACT_ASSURANCE_DEFECT`). See PASS 4 below.
+
+# PASS 4 — remediate L09-R007, L09-R008, L09-R009 (§11.8.8 final review findings)
+
+## Re-review reference
+
+The mandatory `process/agent-workflow.md` §11.8.8 final complete independent review of the exact
+PASS-3 candidate (code `ffecd2f9860dc4edd1d605f22ad571f5b36f66c5`, docs
+`7dde9ad3e4596e1d1fb64207de62f7bff00eace1`) rejected it: shared Layer-09 contract `REJECTED FOR
+RUST IMPLEMENTATION`, Python Layer 09 `REOPENED`. All checkpoint findings (`L09-C001`-`C003`) and
+all prior implementation-review findings (`L09-R001`-`R006`) were independently re-confirmed
+CLOSED at this exact candidate -- this pass does not reopen or re-touch any of them. Full review
+text: `assurance/layers/09-active-abort-rust-final-contract-review.md` on branch
+`review/09-active-abort-final-contract` (not reproduced verbatim here).
+
+## Findings, reproduced against pinned Pi and remediated
+
+### L09-R007 — signal lifetime inverted at public RUNNING/IDLE status transitions
+
+**Re-review finding:** `PI_PARITY_DEFECT`. This row's own rule (`AG-007`) states `signal` is live
+for the run's ENTIRE active duration and `None` while idle. `AgentInstance.set_status` emits
+`agent/status` and calls `on_status_change` SYNCHRONOUSLY. `AgentLoop._run_wrapped` (PASS 1
+through PASS 3) published `set_status(RUNNING)` BEFORE calling `_start_run_signal()`, and
+published `set_status(IDLE)` BEFORE calling `_end_run_signal()`. An independent real-loop witness
+registered `on_status_change`, read `instance.signal` at each transition, and called
+`instance.abort()` when RUNNING was published:
+
+```text
+status_observations = [('running', True, None), ('idle', False, False)]
+request_signal_aborted = False
+after_run_signal_is_none = True
+```
+
+The RUNNING observer saw no signal (its own `abort()` call was consequently a no-op, and the
+following provider request's own signal was NOT aborted); the IDLE observer saw the JUST-FINISHED
+run's still-live signal, not `None`. Both values become correct once each synchronous callback
+returns -- the defect is a genuine visibility gap during the callback itself, not merely a stale
+final value.
+
+**Pi reproduction:** re-confirmed against pinned Pi source (`ref-repos/pi` @ `b7bb00b`,
+`agent.ts`): Pi creates and installs the active run/controller BEFORE setting `isStreaming = true`,
+and `finishRun` clears `isStreaming` and THEN removes `activeRun` -- outside Minion's own
+synchronous transition-callback seam (which Pi does not have an equivalent of), there is no
+externally interleavable point between those writes in Pi's own execution either. Minion's own
+status-observer callback is an intentional Minion architectural extension (Pi has no synchronous
+"observe every status transition" hook), but once that extension exists, it must see values
+consistent with Pi's own "controller-first, isStreaming-second" / "isStreaming-cleared-first,
+controller-removed-second" write order, not the inverted order PASS 1-3 implemented.
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** `AgentLoop._run_wrapped` now calls `self.instance._start_run_signal()` BEFORE
+`self.instance.set_status(AgentStatus.RUNNING)`, and `self.instance._end_run_signal()` BEFORE
+`self.instance.set_status(AgentStatus.IDLE)` in the `finally` block. This reorders ONLY the signal
+calls relative to `set_status` -- the relative order of `set_status`/`streaming_message`/
+`error_message` (entry) and `set_status`/`streaming_message`/`pending_tool_calls` (exit) is
+unchanged, preserving `AG-008`'s own already-certified write order matching pinned Pi's
+`runWithLifecycle`/`finishRun` exactly.
+
+**RED evidence:** the new `test_the_running_status_observer_sees_a_live_signal_and_the_idle_
+observer_sees_none` (`agent_loop/test_active_abort.py`), run against the PASS-3 candidate's own
+`RUNNING`-then-`_start_run_signal`/`IDLE`-then-`_end_run_signal` ordering (temporarily restored via
+revert-and-confirm), fails: the RUNNING observer sees `instance.signal is None`, and the following
+request's own signal is confirmed NOT aborted -- reproducing the review's own witness exactly.
+
+**GREEN evidence:** the same test passes against the corrected ordering: the RUNNING observer sees
+a live signal and its own `abort()` call lands (confirmed via the following request's `signal.
+aborted is True`); the IDLE observer sees `None`.
+
+### L09-R008 — the recommended after-hook helper hides the signal
+
+**Re-review finding:** `PI_PARITY_DEFECT`. Pinned Pi calls `afterToolCall(context, signal)`
+unconditionally -- every after-hook receives the active signal. Raw `tools/post-execute` listeners
+do (`L09-R001`/`L09-R006`), but the public, exported, documented-as-recommended
+`register_after_tool_call_hook` helper still defined its hook as `Callable[[ToolResult], ...]` and
+invoked only `hook(result)`. An independent witness registered a helper hook accepting `(result,
+signal)` and executed a real tool call with an active signal:
+
+```text
+seen = []
+is_error = True
+content = "hook() missing 1 required positional argument: 'signal'"
+```
+
+A caller using the intended, constrained typed-hook API could not observe cancellation through its
+after-hook at all -- only a raw listener bypassing the recommended path could.
+
+**Pi reproduction:** re-confirmed `finalizeExecutedToolCall`'s own `config.afterToolCall(context,
+signal)` (`agent-loop.ts:724-736`) -- `signal` is unconditionally the hook's own second parameter
+in pinned Pi; there is no "the recommended wrapper omits it" carve-out in Pi's own design, since Pi
+has no separate wrapper/raw-listener distinction at all (that split is a Minion-specific
+architectural extension for composing N hooks -- `TOOL-005`).
+
+**Classification:** `PI_PARITY_DEFECT`.
+
+**Remediation:** new `_hook_wants_signal(hook)` (`tools/execute.py`) inspects `hook`'s own arity:
+`>= 2` means the hook declared its own second parameter for `signal`. Unlike `execute()`'s own
+`wants_signal`/arity split (`L09-R003`, `TOOL-024`), arity alone is unambiguous here -- a hook has
+only ONE optional second slot, with no `update`-shaped alternative it could be confused with, so no
+separate declared-capability flag is needed. `register_after_tool_call_hook`'s own `listener` now
+calls `hook(result, signal)` when `_hook_wants_signal(hook)`, otherwise `hook(result)` exactly as
+before -- every one-parameter hook written before this pass is unaffected.
+
+**RED evidence:** three new tests (`tests/tools/test_post_execute.py`) -- a two-parameter hook
+receiving the active signal, the same form receiving `None` while idle, and a one-parameter hook
+regression -- run against the PASS-3 candidate's own always-`hook(result)` call (temporarily
+restored via revert-and-confirm): the two signal-aware tests fail with the exact `TypeError` the
+review's own witness reproduced (surfaced as an error `ToolResult`, since `_execute_and_finalize`
+converts an after-hook exception into one), while the one-parameter regression test correctly
+stays green throughout, confirming the fix does not merely shift the failure elsewhere.
+
+**GREEN evidence:** all three pass against the arity-aware dispatch.
+
+### L09-R009 — manifest and assurance retained contradictory superseded rules
+
+**Re-review finding:** `CONTRACT_ASSURANCE_DEFECT`. `TOOL-024`'s own opening paragraphs stated the
+PASS-1-era "four-parameter-only" design and the PASS-2-era "must re-supply or degrade" design as
+though still current, without being clearly marked superseded -- an independent Rust implementer
+could reasonably derive conflicting `execute()`/hook APIs from this row alone despite `spec/
+tools.md` already containing the correct rule. This assurance document's own PASS-3 "Active
+findings" section separately still listed "4-parameter arity dispatch required for a tool wanting
+signal (cannot want signal alone without also declaring update)" as an active disclosed
+constraint, disproven since PASS 2's own `L09-R003` remediation. `AG-007`'s own opening "DEFERRED
+to Layer 09... not Layer 08's ownership" wording, read in isolation, could also be misread as a
+current-state claim rather than the Layer-08-era historical text it is.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`.
+
+**Remediation:** `TOOL-024` gained a `CURRENT RULE` summary at the very top of its own `rule:`
+text, stating the unambiguous current `execute()` dispatch table and the `signal`-authority
+guarantee in one place, and its two superseded PASS-1/PASS-2 claims were annotated IN PLACE
+(bracketed `[SUPERSEDED ...]` notes, not deletions -- preserving the historical remediation record
+this project's own conventions require) pointing back to that summary and to the specific
+later-PASS finding that superseded each one. `AG-007` gained an equivalent `CURRENT STATUS` note
+at the top of its own `rule:` text, pointing past its own historical "DEFERRED" wording to its
+`disposition: adopted` and the actual Layer-09 rule below. This document's own now-corrected
+"Active findings (after this pass)" section (below) replaces the stale PASS-3 line -- it is
+current, superseding PASS 3's own copy, the same way each pass's own "Next action" is marked
+superseded without rewriting the pass's own historical prose.
+
+**Evidence:** a manifest structural audit (`yaml.safe_load` + unique-ID count) confirms 79/79
+unique rows, unchanged, after every wording correction -- this is a documentation-clarity fix, not
+a capability/row-count change. No new Python behavior was introduced by this finding; there is no
+RED/GREEN pair for it, matching pinned Pi's own review the same way `L09-R009`'s classification
+(`CONTRACT_ASSURANCE_DEFECT`, not `PI_PARITY_DEFECT`) already signals.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003` and `L09-R001`-`R006`: unaffected -- the final review's own ledger independently
+re-confirmed all as CLOSED at the exact PASS-3 candidate before finding the three new surfaces
+above, and this pass's own diff is additive (a two-line reorder in `_run_wrapped`, one new
+arity-check function plus a one-line dispatch change in `register_after_tool_call_hook`, and
+documentation-only manifest/assurance wording) on top of the SAME already-certified structures, not
+a rewrite of any of them. Every PASS-1/PASS-2/PASS-3 test for these findings re-run unchanged and
+still passing. `AG-008`'s own certified `set_status`/`streaming_message`/`error_message`/
+`pending_tool_calls` relative write order: unaffected, not reopened -- only the signal calls moved
+relative to `set_status`, not relative to each other.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1093 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the extended tools/execute.py and
+                                      agent_loop/driver.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass (tests/conformance/test_
+                                      schema_validation.py + tests/llm/test_tool_schema.py: 196
+                                      passed)
+conformance/ (full):                 298 passed, 19 xfailed (unchanged -- no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007/TOOL-024 each gained a PASS-4
+                                      paragraph plus a CURRENT-RULE/CURRENT-STATUS clarifying note;
+                                      no new row -- L09-R007/R008 are within their own
+                                      already-described surfaces, and L09-R009 is a wording fix)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AGENT_LIFECYCLE_EVENT/AGENT_PREPARE_NEXT_TURN/
+                               AGENT_TURN_STOPPING/AGENT_TRANSFORM_CONTEXT read the signal via
+                               instance.signal or an explicit payload argument rather than Pi's own
+                               explicit-parameter-everywhere design (spec/agent.md); a single
+                               preflight abort checkpoint covers both of pinned Pi's two
+                               (spec/tools.md); ToolDefinition.wants_signal is an explicit
+                               capability flag rather than Pi's fully-independent optional
+                               parameters; normalize_step-based authoritative signal restoration at
+                               every waterfall handoff, and register_after_tool_call_hook's own
+                               arity-based signal delivery, are Minion-specific integrity/
+                               convenience mechanisms with no direct Pi analogue (Pi has no
+                               waterfall/delegation chain or wrapper/raw-listener split for these
+                               hooks)
+disclosed Minion-specific constraint   none currently active -- the PASS-1-era "4-parameter arity
+                               dispatch required for signal-only tools" constraint this document
+                               previously listed here was disproven by PASS 2's own L09-R003
+                               remediation (`wants_signal` makes a genuinely 3-parameter
+                               signal-only tool representable) and should not have still appeared
+                               in PASS 3's own copy of this section -- removed here per L09-R009
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST CONTRACT REVIEW (remediated candidate; no
+                             prior Rust approval carries forward from the rejected PASS-3
+                             candidate -- the §11.8.8 final review found new blocking surfaces the
+                             convergence-targeted reviews had no mandate to exercise)
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. `process/agent-workflow.md` §11.8.8's own final complete review is not a rubber stamp on top of
+   provisionally-closed targeted findings -- it exists precisely because §11.8.7's own targeted
+   re-reviews deliberately scope themselves to "open finding(s) + semantic dependencies touched by
+   the fix + previously-closed high-risk regressions affected by the change," not a full re-audit
+   of the whole layer against Pi from scratch. `L09-R007` (status/signal boundary timing) and
+   `L09-R008` (the helper hook's own missing signal parameter) were both genuine, PRE-EXISTING
+   defects present since PASS 1/PASS 2 respectively -- neither was introduced by PASS 3's own
+   `L09-R006` fix, and neither was a "semantic dependency" or "regression" a PASS-3-scoped targeted
+   review would have had any reason to re-examine. Only a review with an explicit mandate to
+   re-derive the COMPLETE consumer/settlement surface from Pi source, independent of what the most
+   recent targeted finding named, was positioned to find them.
+2. This is the SAME general shape of gap `L09-R005`'s own PASS-1 retrospective note already
+   recorded for the checkpoint-vs-full-review distinction (a checkpoint closing named findings is
+   not the same guarantee as "this surface's full consumer list is complete") -- §11.8.8
+   generalizes that lesson to the convergence-targeted-review-vs-final-review distinction, and this
+   pass is a second, independent confirmation of the same general shape of gap recurring at a
+   different review-scoping boundary. A project relying on scoped/targeted re-reviews for
+   efficiency should expect this class of gap to recur at each such boundary and should treat the
+   final complete review as load-bearing, not ceremonial, every time.
+3. A stale claim can persist for multiple passes even after the code it describes has been fixed
+   (`L09-R009`, echoing `L09-R003`'s own PASS-2 note and `L09-R006`'s own PASS-3 note about
+   documenting-a-limitation-precisely-is-not-the-same-as-acceptable): PASS 2 fixed the actual
+   `execute()` capability gap `L09-R003` named, but PASS 3's own "Active findings" section still
+   copied forward PASS 1's original "4-parameter arity dispatch required" language into ITS OWN
+   "current" section without checking whether it remained true. Carrying forward a fixed-findings
+   list from the previous pass's own template is not the same as re-verifying each line is still
+   accurate.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-4 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append
+the PASS-3 §11.8.8 final-review rejection reference (`minion-agent-docs#30` @ `364504a1e`) to
+`PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust
+re-review of this PASS-4 candidate against L09-R007/L09-R008/L09-R009 specifically; L09-C001-C003
+and L09-R001-R006 remain provisionally closed unless this review finds a new issue with them. Per
+§11.8.8, once this targeted re-review also provisionally closes its findings, ANOTHER final
+complete review of that exact candidate is required before certification -- this is not optional
+and does not shortcut back to a single targeted-review approval`. Then stop. Do not merge any
+candidate or review-evidence PR. Do not implement Rust. Do not start Layer 10.

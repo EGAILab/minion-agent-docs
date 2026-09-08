@@ -594,14 +594,28 @@ setter at all, `None` while idle, matching pinned Pi's own `Agent.signal` getter
 `undefined` with no active run, and returning the SAME `RunSignal` object for a run's entire
 duration (never a fresh wrapper per access -- pinned Pi's own "stable per-run identity").
 `AgentInstance.abort() -> None` -- a no-op, never raising, when idle; when a run is active, flips
-that run's own PRIVATE controller. One NEW `RunAbortController()` per run, created at the same
-point `AgentLoop._run_wrapped` performs its other unconditional entry writes (matching pinned Pi's
-own `new AbortController()` inside `runWithLifecycle`, via internal `_start_run_signal`/`_end_run_
-signal` methods Layer 08 alone calls) and cleared back to `None` at the same point in `finally`
-those entry writes are undone (matching `finishRun()` clearing `activeRun`) -- live for the run's
-ENTIRE duration, including `_settle_run_failure`'s own recovery dispatch and `agent_end` listener
-settlement. `abort()` does not itself change `status`; `reset()` still rejects until the run has
-actually settled, exactly as for a non-aborted active run.
+that run's own PRIVATE controller. One NEW `RunAbortController()` per run, created via internal
+`_start_run_signal`/`_end_run_signal` methods Layer 08 alone calls (matching pinned Pi's own `new
+AbortController()` inside `runWithLifecycle`) -- live for the run's ENTIRE duration, including
+`_settle_run_failure`'s own recovery dispatch and `agent_end` listener settlement. `abort()` does
+not itself change `status`; `reset()` still rejects until the run has actually settled, exactly as
+for a non-aborted active run.
+
+**Signal/status transition ordering (`L09-R007`):** `AgentInstance.set_status` emits `agent/
+status` and calls `on_status_change` SYNCHRONOUSLY, so a status-transition observer runs INSIDE
+the same synchronous call that publishes `RUNNING`/`IDLE`. `_start_run_signal()` is therefore
+called BEFORE `set_status(AgentStatus.RUNNING)`, and `_end_run_signal()` BEFORE
+`set_status(AgentStatus.IDLE)` -- the controller must exist before a RUNNING observer could read
+`instance.signal` or call `instance.abort()`, and must be cleared before an IDLE observer could
+read it, or the observer sees the wrong run's signal state (`None` during RUNNING, or the
+just-finished run's stale live signal during IDLE) despite the rule above holding once the
+callback returns. An earlier revision installed/cleared the controller AFTER each status publish
+instead, which an independent Rust review's own executable witness caught: a RUNNING observer's
+own `abort()` call was a no-op, and an IDLE observer saw the previous run's still-live signal. This
+reorders ONLY the signal calls relative to `set_status`; the relative order of `set_status`/
+`streaming_message`/`error_message`/`pending_tool_calls` themselves is unchanged, still matching
+pinned Pi's own `runWithLifecycle`/`finishRun` write order exactly (see "Runtime-state transition
+timing" below).
 
 **Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
 loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
