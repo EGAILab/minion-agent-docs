@@ -2082,7 +2082,7 @@ Layer 10                     NOT STARTED
    confidently -- the same discipline this project already applies to Pi-parity citations should
    extend to Minion's own internal safety claims about its own new mechanisms.
 
-## Next action
+## Next action (superseded -- see PASS 10 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-9 remediation summary and new head SHAs. Update coordination issue
@@ -2095,3 +2095,229 @@ unless this review finds a new issue with any of them. Per §11.8.8, once every 
 provisionally closed, ONE final complete review of that exact candidate is still required before
 certification -- this is not optional`. Then stop. Do not merge any candidate or review-evidence
 PR. Do not implement Rust. Do not start Layer 10.
+
+# PASS 10 — implement the agreed L09-R018 convergence contract (AGENT_TRANSFORM_CONTEXT grammar)
+
+## Re-review reference
+
+The mandatory `§11.8.8` final complete review of the PASS-9 candidate (`minion-agent-docs#38`,
+review commit `a5f6316e5d46d773160acd34707dea5018ea27ee`) **REJECTED FOR RUST IMPLEMENTATION**:
+`L09-R012`/`R013`/`R014`/`R015`/`R017` all confirmed `CLOSED`; a new finding, `L09-R018`
+(`PI_PARITY_DEFECT`), blocked certification, and the review explicitly invoked workflow
+convergence rather than requesting a direct patch: "Because this is the same authority-
+normalization mechanism family as `L09-R006` and `L09-R015` after repeated review cycles,
+workflow convergence applies... the reviewer must not author that shared repair."
+
+The resulting characterization/challenge/agreement cycle produced
+`assurance/layers/09-active-abort-contract-checkpoint-r018-convergence.md`, two revisions:
+
+- **Revision 1** (`minion-agent-docs#39` challenge, review commit
+  `a6c05675d85b76a01ce6ba1b6d0a0abdf1d37f80`): **CONVERGENCE CONTRACT -- PROPOSED, REVISION
+  REQUIRED**. The core `{0, 1, 3}` legal-delegation-length grammar and the full re-audit of every
+  other authoritative-metadata waterfall were accepted outright. Three corrections required:
+  `C18-1` (reject the ambiguous length-2 case DIRECTLY at the authority boundary, not by relying
+  on a downstream listener's own arity to reject it -- `EventBus.waterfall` permits arbitrary
+  registered callables, including a variadic one that could silently absorb it); `C18-2` (the
+  real-Agent-loop witnesses must assert the represented Layer-08 run-failure outcome, not a bare
+  escaping exception -- `_transform_context` already runs inside `_execute_run`'s own exception
+  boundary); `C18-3` (correct the revert-and-confirm accounting -- both length-2 refusal witnesses
+  are genuine RED against PASS 9, not one RED and one already-passing regression guard).
+- **Revision 2** (`minion-agent-docs#40` agreement, review commit
+  `15d5173d5d7a18c35f7841fe42d533e74bb672a2`): **CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION**.
+  All three findings closed: `_restore_signal` now raises `WaterfallError` directly, before the
+  malformed tuple is forwarded, proven by a deliberately variadic downstream listener that is
+  never invoked; the real-loop witnesses assert `prompt()` completing normally with a represented
+  terminal `error` and no provider request sent; the accounting corrected.
+
+This is the authorizing contract for this pass.
+
+## Findings, reproduced against the exact candidate and remediated
+
+### L09-R018 — AGENT_TRANSFORM_CONTEXT positional delegation is ambiguous for a 2-element replacement
+
+**Re-review finding:** `PI_PARITY_DEFECT`. `AGENT_TRANSFORM_CONTEXT`'s own payload,
+`(instance, messages, signal)`, sandwiches its ONE transformable field (`messages`) between its
+TWO authoritative fields (`instance` leading, `signal` trailing) -- the ONLY current waterfall
+dispatch in this codebase with authoritative fields on BOTH sides of a transformable one. PASS 3's
+own `_restore_signal` treated any `current` of length >= 2 as `(instance_attempt, messages, ...)`
+unconditionally: correct for a listener genuinely omitting only `signal`
+(`next_(instance_attempt, messages)`, the originally-documented convenience), but SILENTLY WRONG
+for one genuinely omitting only `instance` (`next_(messages, signal)`) -- both produce an
+identical length-2 tuple, so nothing about the tuple's own length or position (without inspecting
+content) could tell them apart. Under the untested direction, the caller's real `messages` was
+discarded as though it were a forged `instance`, and the live `signal` object (a `RunSignal`) was
+forwarded downstream, and eventually into the real provider request, AS `messages`. The review's
+own executed witness reproduced this exactly (`downstream_messages_type RunSignal`,
+`request_messages_type RunSignal`, `Agent.error_message none`).
+
+**Classification:** `PI_PARITY_DEFECT` -- pinned Pi's own `transformContext(messages, signal)`
+correctly maps to this event's semantic values; the defect is entirely in Minion's own N-listener
+waterfall extension's delegation grammar, not in the underlying Pi mapping itself.
+
+**Remediation (agreed convergence design):** legal `_transform_context` delegation lengths are
+restricted to exactly `{0, 1, 3}`. Length 0 (`next_()`) is the existing true no-op forward. Length
+1 (`next_(new_messages)`) is the SOLE legal partial form -- both `instance` and `signal` are
+restored to their original values regardless of what (if anything) a listener said about them; a
+strict generalization of the original "no need to re-supply `signal`" convenience to "no need to
+re-supply EITHER authoritative field." Length 3 (full explicit) is unchanged. ANY OTHER length --
+in practice, exactly length 2 -- is REJECTED directly at this authority boundary: `_restore_signal`
+raises `WaterfallError` (`runtime/errors.py`, already certified -- "A waterfall listener misused
+its `next` continuation"; no new exception type introduced) BEFORE the malformed tuple is ever
+forwarded to `step(index + 1, ...)`, so no downstream listener -- however permissive its own
+signature -- can ever observe or absorb it. Because `_transform_context` (and therefore this
+`normalize_step` call) runs inside `AgentLoop._execute_run`'s own `try`/`except Exception`
+boundary (`L08-R002`, unchanged, already certified), the raised `WaterfallError` is caught there
+and routed to `_settle_run_failure` exactly like any other run-executor failure --
+`prompt()`/`continue_()` completes normally, with a synthesized terminal `error` assistant
+message, never an escaping exception; the real provider request is never sent for that turn.
+
+A type-based disambiguation alternative (inspecting whether a given position's value is a
+`RunSignal` instance) was considered during convergence and rejected -- exactly the "type/position
+guessing" the final review's own requirement 3 prohibited, fragile against a `RunSignal`
+subclass, a mock, or a future refactor of what `signal` even is, and not specifiable
+language-neutrally without effectively re-deriving a typed/discriminated representation anyway.
+
+**Pi reproduction:** unaffected -- `transformContext(messages, signal)`'s own mapping was already
+confirmed correct under `L09-R005`/`AG-023`; this finding and its remediation are entirely about
+Minion's own N-listener waterfall extension's delegation grammar, a Minion-owned integrity
+question with no Pi analogue (Pi has exactly one non-extensible `transformContext` callback, with
+no "which argument did the caller omit" ambiguity to resolve).
+
+**RED evidence:** six new tests in `agent_loop/test_active_abort.py`, at two levels per `C18-2`:
+
+- DIRECT (calling `AgentLoop._transform_context` in isolation, so a raised `WaterfallError`
+  propagates immediately, not through the settlement boundary):
+  `test_transform_context_rejects_leading_agent_omission_before_forwarding` and
+  `test_transform_context_rejects_trailing_signal_omission_before_forwarding`, each registering a
+  deliberately VARIADIC, short-circuit-capable second listener and asserting it is NEVER invoked
+  (`C18-1`'s own required non-forwarding proof).
+- REAL-LOOP (through an actual `loop.prompt(...)` call):
+  `test_transform_context_leading_omission_settles_as_a_represented_run_failure` and
+  `test_transform_context_trailing_omission_settles_as_a_represented_run_failure`, each asserting
+  `prompt()` completes normally, the mock adapter recorded no request, `loop.instance.status is
+  AgentStatus.IDLE`, and the settled message carries `stop_reason is StopReason.ERROR` with the
+  `WaterfallError`'s own text (`C18-2`).
+- POSITIVE: `test_transform_context_message_only_delegation_preserves_both_authoritative_fields`
+  (the new length-1 shorthand, chained after a prior listener) and
+  `test_transform_context_message_only_delegation_as_the_first_listener` (the same shorthand as
+  the VERY FIRST step in the chain, confirming `_restore_signal` handles it regardless of chain
+  position).
+
+All six were run against the exact rejected PASS-9 candidate SHA
+(`e015c20c25b3506372c1887a6f7b079a7f8d9e7a`) via revert-and-confirm and FAILED as expected: the
+two leading-omission witnesses by NEVER raising (the old code silently corrupted the payload
+instead); the two trailing-omission witnesses by the provider being REACHED when it should not
+have been (PASS 9 actively ACCEPTED that shape rather than refusing it, matching `C18-3`'s own
+corrected accounting -- not merely "already passing"); the two positive-shorthand witnesses with
+`IndexError` (`current[1]` assumed at least two elements). The existing, unchanged
+`test_a_transform_listener_cannot_redirect_a_later_listener_to_a_replacement_signal` (the
+already-agreed full-length redirect witness) remained the sole already-GREEN regression guard
+throughout, confirmed unaffected by the revert.
+
+**GREEN evidence:** all six pass against the fix; the full existing `L09-C001`-`C003`,
+`L09-R001`-`R017` suite (unchanged) remains green throughout.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R017`: unaffected -- this pass's own diff is confined to
+`_transform_context`'s own `_restore_signal` closure (a new `WaterfallError` import and the
+arity-check branching) and one new manifest/spec/assurance documentation set. `_prepare_next_turn`/
+`_pre_step`'s own already-agreed (`L09-R015`) arity-aware design, `Inbox._reserve`/`_Reservation`
+(`L09-R012`-`R014`/`R017`), and every other waterfall dispatch are untouched -- confirmed via the
+re-audit already performed during the convergence checkpoint itself (no other dispatch shares this
+ambiguity, so none needed a corresponding change).
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1131 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the new _restore_signal branches
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   PASS, 215 tests
+conformance/ (full):                 PASS, 298 passed, 19 xfailed -- unaffected, unchanged this
+                                      pass (no canonical scenario added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a brief PASS-10 cross-
+                                      reference; AG-023 gained the full PASS-10 paragraph; no new
+                                      row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008/R015/R018 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009/R010/R011/R012/R013/R014/R016/R017 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 9, plus:) the {0, 1, 3}-legal-arity,
+                               explicit-rejection delegation grammar for AGENT_TRANSFORM_CONTEXT
+                               is a Minion-specific waterfall-extension integrity mechanism with no
+                               Pi analogue (Pi's own transformContext has exactly one non-
+                               extensible callback, no delegation-omission ambiguity to resolve)
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR TARGETED RUST CLOSURE REVIEW of L09-R018 specifically;
+                             L09-C001-C003, L09-R001-R017 remain provisionally closed unless this
+                             review finds a new issue with any of them. Per §11.8.8, once every
+                             Layer-09 finding is provisionally closed, ONE final complete review
+                             of the exact candidate is STILL required before certification -- this
+                             pass does not satisfy that requirement on its own
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. An arity-aware fix generalized from a single-authoritative-field event does not automatically
+   transfer to a multi-authoritative-field event, even when the underlying failure MODE is
+   identical: `L09-R015`'s own "distinguish full-length from one-shorter-than-full" rule is
+   provably unambiguous when exactly one authoritative field always occupies a fixed position, but
+   the SAME reasoning silently breaks down the moment a second authoritative field exists on the
+   OTHER side of the transformable region -- two different single-field omissions then collapse to
+   the same length. The generalization that actually holds is narrower than it first appears:
+   "the only safe partial arity is exactly the transformable-field count," not "one shorter than
+   full" -- these coincide for a single trailing authoritative field but diverge as soon as a
+   second authoritative field is added anywhere else in the payload. A fix pattern proven correct
+   for one event needs its own explicit re-derivation, not a copy-paste assumption, when applied to
+   a structurally different payload shape.
+2. A convergence checkpoint's own FIRST proposed remediation for a genuinely ambiguous case can
+   itself under-specify the FAILURE mode, not merely the SUCCESS grammar: revision 1 correctly
+   identified the `{0, 1, 3}` legal-length rule but proposed enforcing it by omission ("return
+   `current` unchanged, let the next listener's own arity reject it") rather than by explicit
+   construction -- a plausible-looking but structurally weaker mechanism that an independent
+   challenge correctly caught (`C18-1`) because `EventBus.waterfall` permits arbitrary registered
+   callables, not only ones with a conveniently mismatched arity. When a design closes a defect
+   class "by construction," the construction itself needs to be as scrutinized as the grammar it
+   enforces -- "the rule is right" and "the mechanism actually enforces the rule against every
+   possible downstream listener" are separate claims requiring separate verification.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-10 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the
+mandatory-final-review rejection (`minion-agent-docs#38` @
+`a5f6316e5d46d773160acd34707dea5018ea27ee`) and the `L09-R018` convergence-agreement-v2 reference
+(`minion-agent-docs#40` @ `15d5173d5d7a18c35f7841fe42d533e74bb672a2`) to `PRIOR REVIEW EVIDENCE`,
+`NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust review of this PASS-10
+candidate against L09-R018 specifically, per the agreed convergence contract; L09-C001-C003,
+L09-R001-R017 remain provisionally closed unless this review finds a new issue with any of them.
+Per §11.8.8, once every Layer-09 finding is provisionally closed, ONE final complete review of
+that exact candidate is still required before certification -- this is not optional`. Then stop.
+Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 10.

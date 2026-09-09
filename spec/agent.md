@@ -755,11 +755,45 @@ REQUEST and never mutates the persistent/run-local transcript itself, matching p
 `streamAssistantResponse` reassigning only its own LOCAL `messages` variable, never
 `currentContext.messages` -- a transform's own output is provider-local for that one request only,
 never carried into a later turn's own request. Zero listeners (the default, matching every caller
-before this event existed) preserves prior behavior exactly. `signal` is AUTHORITATIVE event
-metadata at this waterfall too (`L09-R006`): `normalize_step` forces it back to the run's ORIGINAL
-value at every listener-to-listener handoff, so a listener that delegates with a replacement or
-omitted `signal` cannot redirect or drop it for a later listener -- the same mechanism `spec/
-tools.md` describes for `TOOLS_PRE_EXECUTE`/`TOOLS_POST_EXECUTE`.
+before this event existed) preserves prior behavior exactly. `instance`/`signal` are BOTH
+AUTHORITATIVE event metadata at this waterfall (`L09-R006`, extended by `L09-R018`): the payload
+is `(instance, messages, signal)`, sandwiching its ONE transformable field (`messages`) between
+its two authoritative fields -- a listener no longer needs to re-supply EITHER authoritative field
+when delegating with a replacement.
+
+The full delegation grammar (`L09-R018`, convergence-agreed, `assurance/layers/09-active-abort-
+contract-checkpoint-r018-convergence.md`): legal delegation lengths are exactly `{0, 1, 3}`.
+`next_()` (length 0) is a true no-op forward. `next_(new_messages)` (length 1) supplies ONLY the
+transformable field -- both `instance` and `signal` are restored to their original values
+regardless of what (if anything) the listener says about them. `next_(instance, messages, signal)`
+(length 3, full explicit) restores both authoritative positions from their original values
+regardless of content, taking only the middle position as `messages`. ANY OTHER delegation length
+-- in practice, exactly length 2 -- is REJECTED directly at this authority boundary (a
+`WaterfallError`, per `runtime/errors.py`) before the malformed tuple is ever forwarded to a later
+listener: a two-element replacement is inherently AMBIGUOUS between "the leading `instance` was
+omitted" (`next_(messages, signal)`) and "the trailing `signal` was omitted" (`next_(instance,
+messages)`) -- both produce an identical length-2 tuple, and neither a bare tuple's own length nor
+its content (inspecting whether a value happens to be a `RunSignal` instance -- explicitly rejected
+as "type/position guessing") can safely disambiguate them. An earlier revision instead committed to
+ONE interpretation unconditionally, which silently corrupted the request when the OTHER
+interpretation was the listener's actual intent (`L09-R018`, `PI_PARITY_DEFECT`): a genuine
+leading-`instance` omission had its real `messages` discarded as though it were a forged `instance`,
+and the live `signal` object forwarded downstream, and eventually to the real provider request, AS
+IF it were `messages`.
+
+Because `AGENT_TRANSFORM_CONTEXT` is dispatched from inside `AgentLoop._execute_run`'s own
+`try`/`except Exception` boundary (`L08-R002`, unchanged), a rejected delegation's `WaterfallError`
+is caught there and routed to `_settle_run_failure` exactly like any other run-executor failure:
+`prompt()`/`continue_()` itself completes normally, with a synthesized terminal `error` assistant
+message -- never a bare exception escaping the run. The malformed delegation never reaches a later
+listener or the real provider request.
+
+This is the SAME `normalize_step` mechanism `spec/tools.md` describes for `TOOLS_PRE_EXECUTE`/
+`TOOLS_POST_EXECUTE`, generalized here to a payload with authoritative fields on BOTH sides of its
+transformable field rather than only one -- the other authoritative-metadata waterfalls in this
+codebase (`AGENT_PRE_STEP`, `AGENT_PREPARE_NEXT_TURN`, `TOOLS_PRE_EXECUTE`, `TOOLS_POST_EXECUTE`)
+each have exactly ONE authoritative field, always at a fixed end, and so have no equivalent
+two-length-2-readings ambiguity to resolve.
 
 Tool-side signal capability is EXPLICIT, not inferred from arity alone (`L09-R003`):
 `ToolDefinition.wants_signal: bool = False` (Layer 05). Pinned Pi's own `execute(toolCallId,
