@@ -1861,7 +1861,7 @@ Layer 10                     NOT STARTED
    a reviewer's citation is itself a claim requiring the same source-verification standard as any
    other Pi-parity claim in this project, not a lower bar because it is corrective in intent.
 
-## Next action
+## Next action (superseded -- see PASS 9 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-8 remediation summary and new head SHAs. Update coordination issue
@@ -1876,3 +1876,222 @@ any of them. Per §11.8.8, once every Layer-09 finding is provisionally closed, 
 review of that exact candidate is still required before certification -- this is not optional`.
 Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
 Layer 10.
+
+# PASS 9 — remediate L09-R015 (true omission) and L09-R017 (mutable reservation binding)
+
+## Re-review reference
+
+The targeted `§11.8.7` independent Rust review of the PASS-8 candidate (code `#17` @
+`551aa162cb0ff0c6b052f6a1500d8687d0ded825`, docs `#26` @
+`57b7f8797a11670f77388f0ecb35f1f43d98d4a5`) **REJECTED FOR PROVISIONAL CLOSURE**. `L09-R012`,
+`L09-R013`, `L09-R014`, and `L09-R016` all `PROVISIONALLY CLOSED` -- the claim-before-observer
+architecture was confirmed to close the exact `L09-R013`/`L09-R014` re-entrancy window, and
+`AG-011`'s current prose was confirmed repaired. `L09-R015` remained `STILL OPEN`; a new finding,
+`L09-R017`, was raised. Full review text: `minion-agent-docs#36`, review commit
+`9d93ddf5a50c32c2d1738e53d5a56b8c7d1962b9` (not reproduced verbatim here).
+
+## Findings, reproduced against the exact candidate and remediated
+
+### L09-R015 (still open) — the omission half of the authority rule was never actually exercised
+
+**Re-review finding:** `PI_PARITY_DEFECT`, still open. PASS 8's own `_restore_instance` closures
+(both `AGENT_PRE_STEP` and `AGENT_PREPARE_NEXT_TURN`) correctly fixed the REDIRECT half (a listener
+delegating with a fabricated replacement `instance`), confirmed by the review. The OMISSION half
+was not actually fixed, and PASS 8's own `test_..._cannot_drop_the_instance_for_a_later_listener`
+witnesses could not have caught this: both called `next_()` with no arguments at all, which
+`EventBus.waterfall`'s own `forwarded = replacement or current` logic treats as an unchanged
+forward of the FULL current tuple (an empty `replacement` tuple is falsy) -- `normalize_step` never
+even sees a shortened tuple in that case, so the test exercised nothing beyond the already-correct
+"delegate with nothing changed" path.
+
+The review's own executable witness genuinely omits `instance` by delegating with one fewer
+argument than the full payload (`next_(message, tool_results, context, new_messages)` for
+`AGENT_PREPARE_NEXT_TURN`, one element shorter than its own five-element payload). Against PASS 8's
+own unconditional `(original_instance, *current[1:])`, this produced a represented failure:
+`Agent.error_message` reading `"second() missing 1 required positional argument: 'next_'"` --
+`current[1:]` had silently discarded the genuinely-first transformable field (`message`) instead of
+`instance` (which was never present in `current` at all under true omission), handing the next
+listener a payload one argument short of its own declared arity.
+
+**Classification:** `PI_PARITY_DEFECT`, on the corrected understanding that the omission case needs
+distinct handling from the redirect case, not shared logic that happens to work for one and not the
+other.
+
+**Remediation:** `_restore_instance` (both `_prepare_next_turn` and `_pre_step`) is now
+ARITY-AWARE: it checks `len(current)` before deciding how to restore `instance`. When `current` is
+exactly ONE ELEMENT SHORTER than the dispatch's own full payload length (`instance` genuinely
+omitted), it PREPENDS the original instead of slicing anything off. Otherwise (an `instance` slot
+is present in `current`, whether the original or a forged replacement -- the already-fixed redirect
+case), it slices `current[1:]` as before. A `current` of any OTHER length remains a malformed
+delegation this method does not specially handle, per the review's own explicit instruction --
+`EventBus.waterfall`'s own existing arity-mismatch behavior governs it unchanged.
+
+**Pi reproduction:** unaffected -- this is purely a Minion-owned waterfall-extension correctness
+question, not a new Pi-parity claim; the underlying Pi citation (`agent.ts:445-471`) established
+under `L09-R015`'s own original finding is unchanged.
+
+**RED evidence:** `test_pre_step_cannot_drop_the_instance_for_a_later_listener` and
+`test_prepare_next_turn_cannot_drop_the_instance_for_a_later_listener`
+(`agent_loop/test_active_abort.py`) are corrected IN PLACE, not merely renamed -- their own PASS-8
+bodies (`next_()`) were themselves the non-discriminating defect the review flagged, so leaving
+them unchanged and adding new ones would have kept dead, misleading coverage in the suite. Both now
+delegate via true omission, reproducing the review's own exact scenario. Run against the reverted,
+exact rejected PASS-8 candidate SHA (`551aa162cb0ff0c6b052f6a1500d8687d0ded825`) via
+revert-and-confirm, both FAILED as expected -- `IndexError: list index out of range` when asserting
+on `seen[0]`, because the downstream listener's own `TypeError` (matching the review's own reported
+failure) prevented it from ever appending to `seen` at all.
+
+**GREEN evidence:** both pass against the fix; the two already-correct redirect-half witnesses
+(`test_pre_step_cannot_redirect_a_later_listener_to_a_replacement_instance`,
+`test_prepare_next_turn_cannot_redirect_to_a_replacement_instance`) remain green throughout,
+confirming the arity-aware rewrite did not regress the case PASS 8 already got right.
+
+### L09-R017 — `_Reservation.envelopes` was a plain writable attribute
+
+**Re-review finding:** `CONTRACT_ASSURANCE_DEFECT`, new. The agreed `C09-1` contract (convergence
+checkpoint revision 2) requires `_Reservation.envelopes` bound READ-ONLY to the exact batch its own
+`claim()` call removed, with no path for a caller to substitute a replacement. PASS 8's own
+implementation declared `envelopes` as an ordinary `__slots__` attribute with no property wrapper --
+plain Python attribute assignment (`reservation.envelopes = (foreign,)`) succeeded silently. The
+review's own executable witness: reserve `A` from `NEXT_TURN`; a DIFFERENT envelope `B` genuinely
+queued at `NEXT_STEP`; reassign `reservation.envelopes = (B,)`; call `.rollback()` -- this restored
+`B` at `NEXT_TURN` (the genuinely reserved `A` silently lost, never restored anywhere) while `B`
+ALSO remained at its own original `NEXT_STEP` queue, manufacturing two copies of `B`'s own id across
+both queues -- exactly the class of defect `L09-R010`/`C09-1` were meant to close for good, now
+reachable through a different route (attribute mutation, not a method parameter). PASS 8's own
+`test_rollback_cannot_accept_a_foreign_envelope` proved only that `.rollback()`/`.commit()`
+THEMSELVES take no argument -- it never exercised assignment to `.envelopes` directly, so it could
+not have caught this gap.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` -- the agreed convergence contract's own read-only
+requirement was not actually delivered, only asserted in the row's own descriptive prose.
+
+**Remediation:** `_Reservation.envelopes` is now a READ-ONLY property, `__slots__` renamed to a
+private `_envelopes` with no corresponding setter of any kind -- assignment raises `AttributeError`
+immediately, before any caller-supplied value could ever reach `.rollback()`. This closes the gap
+structurally (the attribute cannot be reassigned at all) rather than defensively (a copy, an
+isinstance check, or a runtime comparison against the original batch).
+
+**Pi reproduction:** not applicable -- `_Reservation` has no Pi analogue (established under the
+`L09-R012` convergence: Pi's own `PendingMessageQueue` has no reentrant notification seam between
+selection and removal at all), so this is entirely a Minion-owned integrity guarantee.
+
+**RED evidence:** two new tests in `agent/test_inbox.py`: `test_envelopes_has_no_setter` (a direct
+structural check -- assigning any value to `.envelopes` raises `AttributeError`) and
+`test_reassigning_envelopes_is_refused` (reproduces the review's own exact scenario: reserve `A`,
+attempt to reassign to a foreign queued `B`, confirm the reassignment itself is refused, then roll
+back and confirm `A` is restored, `B` is untouched at its own original queue, and no id is
+duplicated across queues). Both FAILED as expected against the reverted PASS-8 candidate --
+`test_envelopes_has_no_setter` failed because assignment succeeded silently (`pytest.raises
+(AttributeError)` did not trigger); `test_reassigning_envelopes_is_refused` failed for the same
+reason before ever reaching its own rollback assertions.
+
+**GREEN evidence:** both pass against the fix; the four existing `C09-1` negative witnesses (double
+rollback, foreign-argument rejection on the terminal methods themselves, commit-then-rollback and
+rollback-then-commit ordering) remain green throughout, confirming the property conversion did not
+regress the terminal-method guarantees PASS 8 already got right.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R014`, `L09-R016`: unaffected -- this pass's own diff is confined to
+`_Reservation.envelopes`'s own representation (a private slot plus a read-only property, same
+externally-observable value) and `_restore_instance`'s own internal branching (the redirect case's
+own code path -- `current[1:]` when an `instance` slot IS present -- is byte-for-byte unchanged;
+only a new conditional branch was added ahead of it). `Inbox.claim`, `Inbox._reserve`'s own atomic
+claim-at-reserve-time behavior, `.commit()`/`.rollback()`'s own one-shot settlement guard, and every
+other `Inbox`/`_Reservation` method are untouched.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1125 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the arity-aware normalize_step branches
+                                      and the new envelopes property
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 unaffected, unchanged this pass (no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a PASS-9 paragraph; AG-011's
+                                      own cross-reference paragraph gained a one-sentence note that
+                                      the read-only claim is now structurally enforced; no new row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008/R015 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009/R010/R011/R012/R013/R014/R016/R017 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 8) _Reservation's own
+                               claim-at-reserve-time/one-shot-settle design remains a Minion-
+                               specific reentrancy-safety mechanism with no Pi analogue; the
+                               arity-aware normalize_step branch is an implementation refinement of
+                               the same already-disclosed L09-R006 pattern, not a new kind of
+                               mapping
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR ANOTHER TARGETED RUST RE-REVIEW of L09-R015/L09-R017
+                             specifically; L09-R012/R013/R014/R016 remain provisionally closed
+                             unless this review finds a new issue with any of them. Per §11.8.8,
+                             once every Layer-09 finding is provisionally closed, ONE final
+                             complete review of the exact candidate is STILL required before
+                             certification -- this pass does not satisfy that requirement on its
+                             own
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. A witness written to demonstrate "listener omits a value" must actually construct an omission,
+   not a no-op delegation that happens to look similar: PASS 8's own `next_()` (empty-argument
+   delegate) and a genuine `next_(<n-1 args>)` (true omission) are OPPOSITE cases under
+   `EventBus.waterfall`'s own `forwarded = replacement or current` truthiness check -- the first
+   never reaches `normalize_step` with anything shortened at all, so a test using it can pass
+   against both a correct AND a broken omission-handling branch without ever distinguishing them.
+   This is a sharper, mechanism-specific version of PASS 7's own "a test that asserts a defect's
+   own symptom as expected behavior is worse than no test" lesson: here the test wasn't wrong about
+   what it expected, it simply never exercised the code path its own name claimed to cover. Before
+   trusting a "listener omits X" witness for any waterfall/middleware-style dispatch, check what the
+   framework's own forwarding rule treats as genuine omission versus a trivial delegate -- they are
+   not automatically the same thing.
+2. A row's own descriptive prose asserting a guarantee ("read-only") is not evidence that the
+   guarantee is actually enforced: `AG-011`'s own PASS-8 cross-reference paragraph already said
+   `.envelopes` was "read-only" before this pass -- accurately describing the INTENDED contract, but
+   not backed by code that made reassignment impossible. A manifest/spec claim about a safety
+   property should be checked against an actual negative test (attempt the disallowed action, assert
+   it is refused), not accepted as satisfied merely because the surrounding prose states it
+   confidently -- the same discipline this project already applies to Pi-parity citations should
+   extend to Minion's own internal safety claims about its own new mechanisms.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-9 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the
+PASS-8 targeted-review rejection (`minion-agent-docs#36` @
+`9d93ddf5a50c32c2d1738e53d5a56b8c7d1962b9`) to `PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: complete a targeted independent Rust review of this PASS-9 candidate against
+L09-R015/L09-R017 specifically; L09-C001-C003, L09-R001-R014, L09-R016 remain provisionally closed
+unless this review finds a new issue with any of them. Per §11.8.8, once every Layer-09 finding is
+provisionally closed, ONE final complete review of that exact candidate is still required before
+certification -- this is not optional`. Then stop. Do not merge any candidate or review-evidence
+PR. Do not implement Rust. Do not start Layer 10.
