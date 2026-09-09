@@ -1,34 +1,45 @@
 # Layer 10 — L10-R001/R002/R004 contract convergence (disposition semantics + canonical-scenario grammar/observation)
 
-**Revision 2, NOT yet approved.** Revision 1 (this same file) was independently challenged
+**Revision 3, NOT yet approved.** Revision 1 was independently challenged
 (`assurance/layers/10-provider-abstraction-convergence-challenge.md`, docs PR #47, review commit
-`60ef1cd5410c81bd33b526859cca5d49dc096584`): **CONVERGENCE CONTRACT — CHANGES REQUIRED**. The
-disposition split/relabel (A), the conditional schema fix and count-delta observation direction
-(B1/B2), and the new register-A/stream-A/replace-B/resolve witness (C) were all accepted as-is.
-Pinned Pi was independently reconfirmed to require `streamSimple` as a public, invocable operation,
-not merely internal plumbing. Four challenge findings required revision:
+`60ef1cd5410c81bd33b526859cca5d49dc096584`): **CONVERGENCE CONTRACT — CHANGES REQUIRED**, findings
+`C10-C001`-`C10-C004` (summarized below, all addressed in revision 2). Revision 2 was independently
+challenged again (same docs PR #47, review commit `1ced90250ca7c0df7169780ae95a4dcf6d410b70`):
+**CONVERGENCE CONTRACT — CHANGES REQUIRED** a second time, with `C10-C001`-`C10-C004` explicitly
+confirmed closed ("No additional challenge remains for `C10-C001` through `C10-C004`") and one new
+finding:
 
-- **`C10-C001`** (streamSimple's own deferred-parity closure criterion was too weak): the proposed
-  `AI-031` risked being markable "complete" once SOME internal per-provider option translation
-  existed, without Minion ever exposing an externally invocable operation matching Pi's own
-  `streamSimple(model, context, options) -> AssistantMessageEventStream` shape. Revision 2 states
-  the observable-callable closure criterion explicitly.
-- **`C10-C002`** (registration-handle grammar was ambiguous): the proposed canonical grammar still
-  addressed `withdraw` by adapter FIXTURE id, not by a specific REGISTRATION's own handle --
-  undefined for a fixture registered more than once, for a duplicate fixture id, and for an
-  unknown register/withdraw reference. Revision 2 redesigns `register`/`withdraw` around explicit,
-  unique handle ids and adds pre-flight reference validation, following the same "runner validates
-  structural references before any registry object is touched" pattern
-  `tool_registry_runner.py::_validate_references` already established.
-- **`C10-C003`** (observation-id namespace had no integrity rules): `queries[].id` and
-  `steps[].stream.as` write the same `observations` mapping with no uniqueness or
-  dangling-reference check. Revision 2 adds both, and states explicitly that an observation never
-  referenced by `expect` is a legal setup-only action (the new C-witness's own A-stream step is the
-  concrete example).
-- **`C10-C004`** (count-delta observation could still silently pick a wrong owner): the proposed
-  `next(...)` search silently takes the first adapter whose count grew, masking a zero- or
-  multiple-match runner defect as a plausible-looking owner. Revision 2 collects every adapter
-  whose own count grew and asserts EXACTLY one, failing explicitly otherwise.
+- **`C10-C005`** (the new same-fixture/two-handle witness exposes a REAL Python PRODUCTION defect,
+  not merely a new grammar capability): revision 2's own required acceptance witness -- register
+  the SAME adapter fixture twice under two distinct handles, withdraw only the first, the second
+  registration remains resolvable -- exercises `AI-030`'s own ALREADY-normative rule that a
+  withdrawal handle owns exactly the entries its own `register()` call added. Current
+  `LlmService.register()` (`llm/service.py`) cannot satisfy this: it records only the ADAPTER
+  OBJECT in `_adapters`, and its returned closure removes an entry whenever the CURRENT value `is
+  adapter`. Registering the SAME adapter object twice makes the two calls indistinguishable by that
+  check -- the review's own direct reproduction confirms it: `register(a)` twice, `models()` shows
+  1 entry, withdrawing the FIRST handle drops it to 0 (wrong; the SECOND registration should
+  remain). Revision 2 mischaracterized this witness as a new grammar capability with "no PASS-2
+  baseline" needing only schema/runner/scenario work; it is a genuine `CONTRACT_ASSURANCE_DEFECT`
+  in already-certified Python production code, requiring an actual Python production repair as part
+  of this convergence's own implementation pass.
+
+Revision 3 (this text) accordingly adds a Python production repair surface -- previously-accepted
+`C10-C001`-`C10-C004` are UNCHANGED from revision 2, reproduced below only for continuity.
+
+**Prior challenge findings, addressed in revision 2, unchanged since (see the exact wording in
+docs PR #47's own review commits for the full original text):**
+
+- **`C10-C001`**: `streamSimple`'s own deferred-parity closure criterion states the observable,
+  externally-invocable obligation explicitly, not merely internal per-provider translation
+  plumbing.
+- **`C10-C002`**: `register`/`withdraw` redesigned around explicit, unique handle ids with
+  pre-flight reference validation, closing the fixture-vs-handle ambiguity.
+- **`C10-C003`**: the combined `queries[].id`/`steps[].stream.as` observation namespace gained
+  uniqueness and dangling-expectation validation, with setup-only observations explicitly
+  permitted.
+- **`C10-C004`**: owner detection requires exactly one request-count delta, failing explicitly on
+  zero or multiple matches.
 
 **Trigger check (mandatory, `process/agent-workflow.md` §11.8):**
 
@@ -58,13 +69,22 @@ not merely internal plumbing. Four challenge findings required revision:
   convergence pass for coordination efficiency -- the same "freeze unrelated implementation work,
   bundle a non-triggering sibling finding sharing the same mechanism" pattern the `L09-R012`
   convergence already established for `L09-R015`/`L09-R016`.
+- **`C10-C005`** does not itself need a separate two-review repeat-trigger determination: it is a
+  finding raised DURING this SAME already-active convergence's own challenge cycle (`§11.8.4`), not
+  a fresh independent contract review outside the convergence -- exactly the iterative
+  characterization/challenge negotiation `§11.8` already provides for, not a new instance of the
+  repeated-rejection trigger. It is absorbed into this convergence's own already-open scope, per the
+  challenge review's own explicit instruction ("Revision 3 must... add `C10-C005` to the open
+  convergence surface").
 
-**Determination:** enter `CONTRACT_CONVERGENCE` for two coupled surfaces: (A) manifest disposition
-semantics as applied to `AI-028`/`AI-029`/`AI-030` (`L10-R001`/`L10-R002`), and (B) the
-`llm-service` canonical scenario schema/runner's own grammar completeness and ownership-observation
-soundness (`L10-R004`). This is a `§11.8.3` characterization pass, proposed here for Codex's own
-independent agreement. No implementation in this artifact -- `§11.8.1`'s "freeze unrelated
-implementation work" applies.
+**Determination:** enter `CONTRACT_CONVERGENCE` for THREE coupled surfaces: (A) manifest
+disposition semantics as applied to `AI-028`/`AI-029`/`AI-030`/`AI-031` (`L10-R001`/`L10-R002`),
+(B) the `llm-service` canonical scenario schema/runner's own grammar completeness and
+ownership-observation soundness (`L10-R004`), and (C), new in revision 3, `LlmService.register()`'s
+own Python PRODUCTION registration-call-ownership defect (`C10-C005`). This is a `§11.8.3`
+characterization pass, proposed here for Codex's own independent agreement. No implementation in
+this artifact -- `§11.8.1`'s "freeze unrelated implementation work" applies, including to the newly
+identified production repair.
 
 ## Exact state under convergence
 
@@ -151,6 +171,47 @@ requests, one in A's own log and one in B's. The search finds A first (registrat
 reporting the WRONG owner even though `LlmService` itself correctly dispatched the second call to
 B. The review's own reproduction confirms this exactly: real current owner `B`, runner observation
 `adapter-a`.
+
+### C. Registration-call ownership defect in Python production (`C10-C005`), new in revision 3
+
+`AI-030`'s own already-certified normative rule (unchanged since PASS 2, restated here for
+precision): `register(adapter)` returns a withdrawal handle scoped to EXACTLY the entries THAT
+call added -- an EARLIER registration's own handle must be a safe no-op once a LATER call has
+replaced the same identity, never removing what the later call added. This rule was always stated
+in terms of REGISTRATION CALLS, never adapter OBJECTS -- but the current implementation conflates
+the two.
+
+Direct read of `llm/service.py::LlmService.register`, confirmed by the review's own reproduction:
+
+```python
+def register(self, adapter: Adapter) -> Callable[[], None]:
+    ids = [ModelId(adapter.provider, model, adapter.api) for model in adapter.models]
+    for model_id in ids:
+        self._adapters[model_id] = adapter
+    def withdraw() -> None:
+        for model_id in ids:
+            if self._adapters.get(model_id) is adapter:
+                del self._adapters[model_id]
+    return withdraw
+```
+
+The withdrawal closure's own ownership check, `self._adapters.get(model_id) is adapter`, tests
+ADAPTER OBJECT identity, not REGISTRATION CALL identity. These are the SAME question only when an
+adapter object is registered at most once. When the identical adapter OBJECT is registered TWICE
+(for the same or different identities -- a legitimate use this DSL's own required witness now
+constructs, and nothing in `AI-030`'s own normative rule forbids), both calls' own closures share
+the exact same `is adapter` test, so NEITHER handle can distinguish "I am the call that currently
+owns this entry" from "some other call registered the same object here too." The FIRST handle
+therefore incorrectly removes the SECOND (current) registration's own entry -- confirmed directly:
+`register(a)` twice, `models()` shows 1 entry, withdrawing the FIRST handle drops it to 0 (should
+remain 1, since the second registration is still current).
+
+This is a `CONTRACT_ASSURANCE_DEFECT` in already-certified Layer-02/Layer-10-PASS-1/PASS-2 Python
+production code -- not a canonical-DSL-only gap. The DSL's own new same-fixture/two-handle witness
+did not introduce a new requirement; it is the first witness to actually EXERCISE a case
+`AI-030`'s own rule already covered but no prior test happened to construct (registering the exact
+same adapter object more than once was never tried before this convergence's own required
+witness).
 
 ## Proposed design
 
@@ -296,6 +357,57 @@ expected owner `B`. This is the exact shape no PASS-2 scenario happened to const
 the earlier registrant before replacement, so its own request log stays empty and the bug never
 triggers there).
 
+### F. Registration-call ownership repair, new under `C10-C005`
+
+**Language-neutral observable rule (unchanged, now explicit):** a withdrawal handle owns exactly
+the registry entries added by its OWN `register()` call -- including when two SEPARATE calls
+register the IDENTICAL adapter object for the identical model identities. Registering the same
+object twice does not merge or share ownership between the two calls; each call's own handle
+withdraws only its own contribution, exactly as if two different adapter objects had been used.
+This was already `AI-030`'s own normative claim; this convergence does not change the RULE, only
+repairs an implementation that did not actually satisfy it for a case no prior test constructed.
+
+**Python production repair.** `LlmService.register` gains a fresh, opaque per-call token -- any
+value guaranteed unique to THIS call, unrelated to adapter object identity -- stored alongside the
+adapter, and the withdrawal closure checks the TOKEN, not the adapter object, to decide whether it
+still owns an entry:
+
+```python
+def register(self, adapter: Adapter) -> Callable[[], None]:
+    token = object()  # unique per call; distinguishes this registration from any other,
+                       # including a later one for the identical adapter object
+    ids = [ModelId(adapter.provider, model, adapter.api) for model in adapter.models]
+    for model_id in ids:
+        self._adapters[model_id] = (adapter, token)
+
+    def withdraw() -> None:
+        for model_id in ids:
+            entry = self._adapters.get(model_id)
+            if entry is not None and entry[1] is token:
+                del self._adapters[model_id]
+
+    return withdraw
+```
+
+`stream()`/`models()` are updated to unwrap the `(adapter, token)` pair (`stream()` uses only the
+adapter; `models()` is unaffected, since it already only ever read the dict's own KEYS). This is
+one illustrative Python mechanism, not a mandated one -- the review's own required constraint is
+only that SOME per-call-unique marker exists; a monotonically increasing counter, a `uuid4()`, or
+any other opaque per-call value satisfies the same rule identically. Behavior for every
+ALREADY-certified case is unchanged: ordinary registration/resolution (`token` is irrelevant to
+`stream()`'s own dispatch, which reads only `adapter`), replace-in-place (a later `register()` call
+always overwrites the dict entry regardless of token, so "last write wins" is untouched), and
+ordinary non-stale withdrawal (the handle's own token still matches, since nothing replaced it).
+The ONLY behavior this changes is the previously-broken case: two calls registering the identical
+adapter object no longer share a false ownership signal, because each call's own `token` is a
+distinct object regardless of whether `adapter` is too.
+
+Double-withdrawal remains safely idempotent, unchanged: the first successful `withdraw()` call
+deletes the dict entry entirely, so a second call on the SAME handle finds `entry is None` and
+takes no action -- it never risks re-deleting a DIFFERENT, later registration's own entry that
+might occupy the same key by then, for exactly the same reason the token-based check already
+prevents that for the FIRST call.
+
 ## Required acceptance witnesses
 
 1. Schema: `behavior: reject` with `reject_message` OMITTED -> schema validation FAILS (currently
@@ -307,9 +419,13 @@ triggers there).
    resolve) -> observed owner is `B`, not `A` (currently reports `A` -- a genuine RED witness
    against the PASS-2 runner; new under the revised grammar since the PASS-2 runner has no handle
    concept to construct this exact sequence against at all).
-4. Runner (`C10-C002`): a scenario registering the SAME adapter fixture twice under two DIFFERENT
-   handles, withdrawing only the FIRST handle -> the SECOND registration's own entry remains
-   resolvable (proves handles, not fixtures, are the unit of withdrawal).
+4. Runner/production (`C10-C002`/`C10-C005`, corrected characterization): a scenario registering
+   the SAME adapter fixture twice under two DIFFERENT handles, withdrawing only the FIRST handle ->
+   the SECOND registration's own entry remains resolvable (proves handles, not fixtures, are the
+   unit of withdrawal, AND exercises the Python production repair directly). This is a genuine RED
+   witness against the EXACT PASS-2 candidate's own `llm/service.py` -- revision 2 incorrectly
+   described it as a new grammar capability with no PASS-2 baseline; the challenge review's own
+   direct reproduction confirms it fails against PASS-2 production code regardless of grammar.
 5. Runner (`C10-C002`): a scenario with a duplicate `adapters[].id`, a `register.adapter` naming an
    undeclared fixture, a `register.as` handle id reused by an earlier registration, and a
    `withdraw` naming an undeclared handle -- each independently -> `_validate_references` rejects
@@ -329,14 +445,30 @@ triggers there).
 8. Manifest: `AI-028` (narrowed), new `AI-031` (with its own explicit public-callable closure
    criterion), `AI-029` (relabeled) all present with mutually coherent, single-subject dispositions;
    83/83 unique rows (82 PASS-2-era + 1 new).
+9. Direct Python unit test (`C10-C005`, new in revision 3, `tests/llm/test_service.py`): the
+   review's own exact reproduction at the `LlmService` API directly, with no canonical DSL in the
+   way -- `w1 = service.register(a); w2 = service.register(a)` for the same identity (or
+   `a`'s own declared models); `service.models()` shows one identity; `w1()`; `service.models()`
+   STILL shows that identity (the second registration's own entry survives); a resolving `stream()`
+   call still dispatches to `a` (trivially true here since it is the same object, but confirms
+   nothing was corrupted); `w2()`; `service.models()` now shows no such identity (the CURRENT,
+   still-owning handle correctly removes its own entry) -- the symmetric check the review's own
+   required item 5 asks for.
+10. Direct Python unit test (`C10-C005`): double-withdrawal remains idempotent -- `w1()` twice in a
+    row (after `w2()` has already run, or standalone) raises nothing and leaves state unchanged on
+    the second call, matching the ALREADY-established idempotent-withdrawal guarantee, now verified
+    to survive the token-based rewrite too.
 
-Confirmed via revert-and-confirm once implemented: witnesses 1-3 and 5-7 must FAIL against the
-exact PASS-2 candidate SHAs above (schema currently accepts both malformed shapes; the PASS-2
-grammar has no handle concept and no reference validation at all; the PASS-2 owner-detection
-cannot fail loudly) and PASS once the corrected schema/grammar/validation/runner are restored;
-witness 4 is a NEW capability the PASS-2 grammar could not even express (no handle concept to
-construct it with), so it has no PASS-2 baseline to revert against -- it is added as permanent
-regression evidence for the new grammar directly.
+Confirmed via revert-and-confirm once implemented: witnesses 1-9 must FAIL against the exact
+PASS-2 candidate SHAs above (schema currently accepts both malformed shapes; the PASS-2 grammar has
+no handle concept and no reference validation at all, so witness 5's own four malformed-input
+sub-cases are either silently accepted or fail with an unclear low-level error rather than an
+explicit, descriptive rejection; the PASS-2 owner-detection cannot fail loudly; PASS-2's own
+`LlmService.register` genuinely removes the second registration's entry when the first handle
+withdraws, so witnesses 4 and 9 both fail) and PASS once the corrected schema/grammar/validation/
+runner/production code are restored; witness 10 (double-withdrawal idempotency) already passes
+against PASS-2 production code today (the pre-existing guarantee this rewrite must not regress) and
+serves as a regression guard, not a RED witness.
 
 ## Normative deltas required
 
@@ -362,27 +494,50 @@ regression evidence for the new grammar directly.
   `register: {adapter, as}` grammar (a mechanical rewrite, no behavioral change to what each already
   asserts); the new discriminating registration-then-stream-then-replace-then-resolve scenario
   (`E`), authored directly against the new grammar.
+- `minion-agent-python/src/minion_agent/llm/service.py`, new in revision 3 (`C10-C005`):
+  `LlmService.register`/its own returned withdrawal closure, and `LlmService.stream` (to unwrap the
+  new per-call token alongside the adapter) -- the ONLY Python PRODUCTION source file this
+  convergence's own implementation pass touches; every other delta above is documentation, schema,
+  or test/tooling.
+- `minion-agent-python/tests/llm/test_service.py`, new in revision 3 (`C10-C005`): the two direct
+  unit-level witnesses (required acceptance witnesses 9-10).
 - `minion-agent-docs/assurance/layers/10-provider-abstraction-python.md`: a new PASS 3 section
   recording this convergence's own implementation once agreed.
 
 ## Rust implementability
 
-No Rust production code is implicated by this convergence -- all four surfaces (disposition
-labeling, conditional schema grammar, handle-scoped registration grammar, observation-namespace
-integrity, count-delta ownership enforcement) are shared-contract/Python-tooling concerns. The
-corrected `AI-028`/`AI-029`/`AI-031` dispositions are simpler for a future Rust implementation pass
-to trace against (each row now asserts exactly one thing), not harder. The corrected schema's own
-`if`/`then`/`else` grammar and handle-scoped `register`/`withdraw` shape are both standard,
-language-neutral JSON Schema/DSL constructs any future Rust scenario runner must respect
-structurally -- a handle-based design in particular maps directly onto Rust's own idiomatic
-resource-ownership patterns (an owned handle value, consumed by `withdraw`), noted for whoever
-eventually builds a Rust `llm_service` runner, not implemented here. `L10-R003` remains the sole
-open Rust-production obligation, unaffected by and explicitly out of scope for this convergence.
+Three of the four original surfaces (disposition labeling, conditional schema grammar,
+observation-namespace integrity, count-delta ownership enforcement) remain shared-contract/
+Python-tooling concerns implicating no Rust production code. The corrected `AI-028`/`AI-029`/
+`AI-031` dispositions are simpler for a future Rust implementation pass to trace against (each row
+now asserts exactly one thing), not harder. The corrected schema's own `if`/`then`/`else` grammar
+and handle-scoped `register`/`withdraw` shape are both standard, language-neutral JSON Schema/DSL
+constructs any future Rust scenario runner must respect structurally -- a handle-based design in
+particular maps directly onto Rust's own idiomatic resource-ownership patterns (an owned handle
+value, consumed by `withdraw`), noted for whoever eventually builds a Rust `llm_service` runner,
+not implemented here.
+
+`C10-C005`'s own registration-call-ownership rule, however, is a LANGUAGE-NEUTRAL observable rule
+(section F above), and certified Rust's own `LlmService::register(identity, adapter)` -- already
+confirmed under PASS 2 to take one `(ModelIdentity, Arc<dyn LlmAdapter>)` pair per call with no
+withdrawal handle of any kind (`AI-030`'s own Rust status, unaffected by this convergence) -- has
+no withdrawal mechanism to exhibit this exact defect YET, since it cannot withdraw at all. This
+convergence does NOT prescribe how a future Rust implementation pass represents per-call ownership
+(an owned, move-only handle type Rust's own borrow checker would enforce single-use on is one
+natural fit, matching how `_Reservation`'s own one-shot design was chosen for a different Layer-09
+finding, but this is Rust's own future implementation decision, not mandated here) -- only that
+WHEN Rust eventually implements withdrawal, it must satisfy the SAME observable rule: two
+registration calls for the identical adapter object must remain independently ownable and
+independently withdrawable. Recorded as a future Rust obligation alongside `L10-R003`, not resolved
+by this convergence.
 
 ## Out of scope / deferred
 
 - `L10-R003` (current Rust production permits an eager adapter-start failure) -- untouched,
   remains an open, disclosed Rust-implementation defect for a future Rust pass.
+- `C10-C005`'s own future Rust obligation (certified Rust `LlmService::register` has no withdrawal
+  mechanism at all yet, so cannot currently exhibit or fix this exact defect) -- recorded, not
+  implemented; Rust's own eventual withdrawal design is that future pass's own decision.
 - Any Rust `llm_service` canonical runner implementation -- not started; the current gap (Rust's
   own agent-conformance discovery does not yet classify `llm_service`-keyed documents at all) is
   pre-existing, unaffected by this convergence, and not a new obligation created here.
@@ -390,34 +545,42 @@ open Rust-production obligation, unaffected by and explicitly out of scope for t
 
 ```text
 CONVERGENCE CONTRACT
-    PROPOSED -- AWAITING INDEPENDENT AGREEMENT (revision 2)
+    PROPOSED -- AWAITING INDEPENDENT AGREEMENT (revision 3)
 
 OPEN FINDINGS
     L10-R001 (bundled, same root cause as L10-R002, non-blocking on its own)
     L10-R002
     L10-R004
+    C10-C005 (Python production repair, new in revision 3)
+
+PROVISIONALLY ACCEPTED (confirmed closed by the revision-2 challenge; unchanged in revision 3)
+    C10-C001
+    C10-C002
+    C10-C003
+    C10-C004
 
 CORE DESIGN RETAINED (accepted in revision 1, unchanged)
     AI-028 narrowed to stream (adopted); new AI-031 for streamSimple (deferred parity)
-    AI-029 relabeled intentional divergence; AI-030 unchanged
+    AI-029 relabeled intentional divergence; AI-030 unchanged except a documentary handle-scoping
+      note
     if/then/else schema constraint tying reject_message to behavior
-    count-delta ownership observation (not value equality)
+    count-delta ownership observation with exactly-one-owner enforcement (not value equality)
+    handle-scoped register/withdraw grammar with pre-flight reference validation
+    unified, validated observation-id namespace with an explicit setup-only-observation policy
     new register-A/stream-A/replace-B/resolve discriminating scenario
 
-CHALLENGE FINDINGS ADDRESSED
-    C10-C001  AI-031's own closure criterion now states the deferred parity obligation is an
-              externally invocable operation matching Pi's own streamSimple(model, context,
-              options) -> stream shape, not merely internal per-provider translation plumbing
-    C10-C002  register/withdraw redesigned around explicit, unique handle ids (not fixture ids);
-              new pre-flight _validate_references rejects duplicate adapter ids, unknown/
-              duplicate handle references, matching tool_registry_runner.py's own established
-              reference-validation pattern
-    C10-C003  queries[].id and steps[].stream.as now share one namespace with uniqueness and
-              dangling-expectation validation; setup-only unasserted observations explicitly
-              stated legal
-    C10-C004  owner detection collects every adapter whose own request count grew and asserts
-              exactly one, raising explicitly on zero or multiple matches rather than silently
-              picking a first match
+NEW IN REVISION 3 (`C10-C005`)
+    LlmService.register's own withdrawal closure checked ADAPTER OBJECT identity, not
+    REGISTRATION CALL identity -- registering the identical adapter object twice made both
+    calls' own handles indistinguishable, so the FIRST handle incorrectly removed the SECOND
+    (current) registration's own entry. Confirmed by the reviewer's own direct reproduction
+    against the exact PASS-2 candidate. Repaired with a fresh, opaque per-call token stored
+    alongside the adapter; the withdrawal closure now checks the token, not the adapter object.
+    Every already-certified behavior (resolution, replace-in-place, non-stale withdrawal,
+    double-withdrawal idempotency) is unchanged; only the previously-broken same-object-twice
+    case is fixed. Two new direct Python unit witnesses added (tests/llm/test_service.py); the
+    canonical same-fixture/two-handle witness is now correctly characterized as a genuine RED
+    witness against PASS-2 production code, not a new grammar-only capability.
 
 ACCEPTANCE WITNESSES
     conformance/schema/llm-service-scenario.schema.json (2 new negative schema witnesses)
@@ -425,8 +588,11 @@ ACCEPTANCE WITNESSES
       exactly-one enforcement; new _validate_references negative witnesses -- duplicate adapter
       id, unknown/duplicate handle reference, duplicate/dangling observation id)
     conformance/agent/ (1 new discriminating scenario reproducing the review's own exact witness
-      under the new handle grammar; 1 new same-fixture-two-handles witness; 4 existing scenarios
-      mechanically updated to the new grammar)
+      under the new handle grammar; 1 new same-fixture-two-handles witness -- now a genuine RED
+      witness against PASS-2 PRODUCTION code; 4 existing scenarios mechanically updated to the
+      new grammar)
+    minion-agent-python/tests/llm/test_service.py (2 new direct unit witnesses: symmetric
+      current-handle withdrawal, double-withdrawal idempotency under the token rewrite)
     pi-parity-manifest.yaml (AI-028 narrowed, new AI-031 with explicit closure criterion, AI-029
       relabeled, AI-030 documentary handle-scoping note)
     -- none yet written; this is a contract/evidence checkpoint, not an implementation pass
@@ -436,6 +602,10 @@ NORMATIVE DELTAS
     minion-agent-docs/spec/llm.md (disposition-framing corrections; AI-030 handle-scoping note)
     minion-agent/conformance/schema/llm-service-scenario.schema.json (if/then/else grammar;
       register becomes {adapter, as}; withdraw documented as handle-scoped)
+    minion-agent-python/src/minion_agent/llm/service.py (Python PRODUCTION repair, new in
+      revision 3 -- the only production source file this convergence's implementation pass
+      touches)
+    minion-agent-python/tests/llm/test_service.py (2 new direct unit witnesses, new in revision 3)
     minion-agent-python/tests/conformance/llm_service_runner.py (count-delta ownership with
       exactly-one enforcement; new _validate_references pre-flight pass)
     minion-agent/conformance/agent/*.yaml (4 scenarios updated to new grammar; 1 new scenario)
