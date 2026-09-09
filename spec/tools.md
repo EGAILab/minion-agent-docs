@@ -33,12 +33,14 @@ AgentTool extends Tool
     prepare_arguments?      (args) -> args -- field/signature only; when/whether it
                              runs is Layer 06 (`TOOL-F002`)
     execute                 (tool_call_id, params, signal?, on_update?) -> result --
-                             target capability shape (`TOOL-F003`); Layer 06 has since
-                             closed the tool_call_id/on_update half (`TOOL-017`,
-                             `TOOL-018`) -- only the cancellation-signal half remains
-                             open, asymmetrically (Python has no AbortSignal-equivalent
-                             abstraction yet; certified Rust Layer 05 already reserves
-                             one structurally, unexercised), Layer 09 territory
+                             target capability shape (`TOOL-F003`); Layer 06 closed the
+                             tool_call_id/on_update half (`TOOL-017`, `TOOL-018`), and
+                             Layer 09 has since closed the cancellation-signal half too
+                             (`ToolDefinition.wants_signal`, `L09-R003` -- see `AG-007`/
+                             `TOOL-024`): all four combinations (neither, update-only,
+                             signal-only, both) are now realized; corrected here after a
+                             stale-documentation finding (`L09-R016`) found this row still
+                             describing the signal half as open
     execution_mode?          parallel | sequential -- per-tool override; absent means
                              "no per-tool preference," defers to the run-level default
                              (`TOOL-F004`), never itself contributes contagion exclusivity
@@ -525,10 +527,14 @@ matches.
 
 ### Explicitly not certified by Layer 06
 
-Cancellation/abort propagation through `execute`/hooks (assurance Layer 09 -- Python has no
-`AbortSignal`-equivalent type yet; certified Rust Layer 05 already reserves one structurally
-without exercising cancellation behavior, `L06-R005`), provider-specific constrained-sampling
-enforcement (Real Providers, assurance Layer 11), and everything the master's own agent run loop
-owns: `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
+Cancellation/abort propagation through `execute`/hooks was assurance Layer 09's territory, not
+Layer 06's, at THIS row's own Layer-06 certification -- Python then had no `AbortSignal`-equivalent
+type at all; certified Rust Layer 05 already reserved one structurally without exercising
+cancellation behavior (`L06-R005`). Layer 09 has since REALIZED it (`ToolDefinition.wants_signal`,
+`RunSignal`, `L09-R003` -- see `spec/agent.md`'s own consumer/settlement matrix and `AG-007`); this
+note is corrected for present tense (`L09-R016`) rather than left describing a gap that no longer
+exists. Also not certified by Layer 06: provider-specific constrained-sampling enforcement (Real
+Providers, assurance Layer 11), and everything the master's own agent run loop owns:
+`prompt()`/`continue()` lifecycle, steering/follow-up message injection,
 `shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
 condition actually suppresses/continues the next model turn.

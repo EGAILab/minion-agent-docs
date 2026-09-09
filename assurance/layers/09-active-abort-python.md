@@ -1559,7 +1559,7 @@ Layer 10                     NOT STARTED
    (no duplication) is not the same as demonstrating the FULL safety envelope the mechanism needs
    (no duplication AND no incorrect deletion).
 
-## Next action
+## Next action (superseded -- see PASS 8 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-7 remediation summary and new head SHAs. Update coordination issue
@@ -1572,3 +1572,307 @@ new issue with any of them. Per §11.8.8, once every Layer-09 finding is provisi
 final complete review of that exact candidate is required before certification -- this is not
 optional`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do
 not start Layer 10.
+
+# PASS 8 — implement the agreed L09-R012/R013/R014 convergence contract (and bundled L09-R015/R016)
+
+## Re-review reference
+
+The mandatory `§11.8.8` final complete review of the PASS-7 candidate (required once
+`L09-R007`/`L09-R010`/`L09-R011` were all provisionally closed) **REJECTED FOR RUST
+IMPLEMENTATION**, five findings. Full review text: `minion-agent-docs#33`, review commit
+`bbd9fa67a0ecfe335a45739cadb470ffc3aa5513` (not reproduced verbatim here).
+
+`L09-R012` recurred for a SECOND time: `AG-011`'s own `rule:` prose (not merely its `python:`
+pointer, which PASS 7 already corrected) still described the removed `peek`/`_commit_claim` design
+as this row's own settled mechanism. Surviving two independent reviews on the same material finding
+met workflow `§11.8`'s mandatory convergence trigger on its own. Four new findings accompanied it:
+`L09-R013` (a RUNNING observer that itself claims the peeked batch and then THROWS loses it),
+`L09-R014` (a partial-prefix re-entrant `ONE_AT_A_TIME` claim on the same target could leave stale
+messages queued for duplicate admission), `L09-R015` (`PI_PARITY_DEFECT`: `AGENT_PREPARE_NEXT_TURN`
+listeners can replace authoritative `instance`/signal metadata for a later listener), `L09-R016`
+(stale Layer-05-era signal-capability prose in `spec/tools.md`/the manifest's own `TOOL-009` row/
+`tools/execute.py`'s own docstring).
+
+The resulting characterization/challenge/agreement cycle produced
+`assurance/layers/09-active-abort-contract-checkpoint-r012-convergence.md`, two revisions:
+
+- **Revision 1** (`minion-agent-docs#34`, review commit `190cf12c32d58314f607e69b8d789703683eee06`):
+  **CONVERGENCE CONTRACT — CHANGES REQUIRED**. The trigger determination, root-cause diagnosis
+  (tracing the whole `L09-R007`→`R010`→`R011`→`R013`/`R014` lineage to one architectural window
+  between `peek()` and commit), the claim-before-observer direction, all four interleaving
+  scenarios, the `AGENT_PRE_STEP` expansion, and the `L09-R016` cleanup were all accepted as-is.
+  Two findings required revision: `C09-1` (the proposed rollback method,
+  `Inbox._restore_claimed(target, envelopes)`, still took a caller-supplied envelope tuple with no
+  one-shot guard -- materially the same authority defect `L09-R010` already rejected, not closed by
+  a leading underscore alone); `C09-2` (revision 1's own "correction" of the reviewer's `L09-R015`
+  Pi citation -- claiming pinned Pi's `prepareNextTurn` carries no `signal` at all -- was itself
+  wrong, having read only `agent-loop.ts`'s own low-level shape and missed `agent.ts`'s own public
+  `Agent.createLoopConfig()` wrapper).
+- **Revision 2** (`minion-agent-docs#35`, review commit
+  `5c796f3b1bac3ee6a1c71f80a2dac2163d055f83`): **CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION**.
+  Both findings remediated: `C09-1` closed by replacing `_restore_claimed` with a private, linear
+  `_Reservation` type (`.commit()`/`.rollback()`, no-argument, one-shot, obtainable only via a
+  private `Inbox._reserve()`); `C09-2` closed by re-verifying pinned Pi source directly and
+  confirming the reviewer's own correction -- `Agent.createLoopConfig()` (`agent.ts:445-471`) does
+  wrap `AgentOptions.prepareNextTurn(signal)`/`prepareNextTurnWithContext(context, signal)`/
+  `shouldStopAfterTurn(context, signal)` with the Agent's own live `this.signal`. Also adopted the
+  reviewer's own required behavior matrix verbatim and three new negative witnesses (double
+  rollback, foreign-envelope rejection, commit-then-rollback/rollback-then-commit refusal).
+
+This is the authorizing contract for this pass, per the user's own recorded instruction:
+"Implement L09-R012 through L09-R016 together, then return exact SHAs for targeted provisional
+closure."
+
+## Findings, reproduced against the exact candidate and remediated
+
+### L09-R012 (second recurrence) / L09-R013 / L09-R014 — the peek-then-commit window itself
+
+**Root cause (not three independent defects):** PASS 6's own "peek, notify RUNNING, then commit"
+design left a WINDOW, between `peek()` and `_commit_claim()`, during which a re-entrant observer on
+the same target could act. `L09-R011` (PASS 7) closed one exploit shape through that window
+(count-only removal deleting unrelated input); `L09-R013`/`L09-R014` are two MORE exploit shapes
+through the exact same window that PASS 7's own identity check did not address: an observer that
+claims the peeked batch and then throws never gets that batch restored on the RUNNING-failure
+rollback path (nothing was ever removed to begin with, under peek/commit, so there was nothing
+PASS-5/7's own `restore_on_entry_failure` callback machinery was wired to restore for this case);
+and a `ONE_AT_A_TIME` re-entrant claim narrower than the originally peeked batch could leave a
+stale, already-selected-but-not-yet-committed prefix eligible for a SEPARATE later claim to select
+again. `L09-R012`'s own recurrence is `AG-011`'s documentary symptom of the same underlying design
+never having been corrected at the rule level, only at the pointer level (PASS 7).
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (`L09-R012`, `L09-R013`, `L09-R014`) — Pi has no
+reentrant notification seam of this kind at all (`PendingMessageQueue.drain()` is a single,
+synchronous, non-observer-triggering operation), so this is entirely a Minion-owned integrity
+concern introduced by the synchronous `AGENT_STATUS`/`on_status_change` extension point itself, not
+a Pi-parity question.
+
+**Remediation (agreed convergence design):** removes the window entirely rather than adding a
+further case-by-case check for each exploit shape. `Inbox` gains a private
+`_reserve(target, policy) -> _Reservation` (`agent/inbox.py`), the sole construction path for a new
+`_Reservation` object: `.envelopes` is read-only and bound at construction; the entering batch is
+`claim()`'d ATOMICALLY at reserve time — removed from `Inbox` immediately, before the RUNNING
+notification ever runs. `.commit()`/`.rollback()` take NO argument at all (closing the "foreign/
+duplicate envelope" half of `C09-1` by the absence of a parameter, not convention) and are guarded
+by a private `_settled` flag raising `RuntimeError` on any second terminal call, whichever method it
+is (closing the "double action" half structurally). `Inbox.peek`/`_commit_claim` (PASS 6/7's own
+mechanism) are removed entirely, not merely superseded — `Inbox.claim()` remains the only OTHER
+removal path, unchanged.
+
+`AgentLoop._run_wrapped` (`agent_loop/driver.py`) now takes `entry_reservation: _Reservation | None`
+in place of PASS 7's own `commit_entry_claim` closure parameter: a RUNNING-failure calls
+`entry_reservation.rollback()` before re-raising; a successful entry calls
+`entry_reservation.commit()`. `continue_()`'s steering/follow-up branches and `run_until_idle()`
+each now call `inbox._reserve(target, policy)` directly, passing the `_Reservation` straight
+through. Because removal happens at RESERVE time, not commit time, a re-entrant observer on the
+same target during the RUNNING notification can no longer see or touch the reserved batch at all —
+regardless of whether it throws, returns normally, or performs its own unrelated claim/clear/
+enqueue on that target — closing `L09-R013`/`L09-R014` by construction. `AG-011`'s own `rule:` prose
+is corrected to describe this mechanism accurately (closing `L09-R012` at the level the review
+actually flagged, not merely its evidence pointer again).
+
+**Pi reproduction:** re-confirmed (twice — see `C09-2` above) directly against pinned Pi source at
+`b7bb00b936dbe21b8e160b3e89efdec361846699`; unrelated to this specific reentrancy question, which
+remains a Minion-only integrity concern as established under `L09-R011`.
+
+**RED evidence:** fourteen new/changed unit tests in `agent/test_inbox.py`
+(`test_reserve_atomically_claims_the_selected_batch`, `test_reserve_matches_claim_for_all_policy`,
+`test_reserve_on_an_empty_target_returns_an_empty_reservation`,
+`test_commit_leaves_the_reserved_batch_removed`, `test_rollback_restores_the_exact_reserved_batch`,
+`test_a_reservation_never_settled_leaves_the_batch_removed`,
+`test_the_old_public_restore_method_no_longer_exists` (now also asserts no `peek`),
+`test_the_reviewers_duplicate_id_witness_is_no_longer_expressible`,
+`test_double_rollback_cannot_duplicate_an_envelope`,
+`test_rollback_cannot_accept_a_foreign_envelope`,
+`test_commit_then_rollback_cannot_mutate_the_queue_a_second_time`,
+`test_rollback_then_commit_cannot_mutate_the_queue_a_second_time`,
+`test_rollback_precedes_input_enqueued_after_the_reservation`,
+`test_a_reentrant_claim_on_the_same_target_sees_only_unrelated_input`) plus four new/rewritten
+through-the-real-driver witnesses in `agent_loop/test_active_abort.py`
+(`test_a_running_observer_that_claims_and_throws_does_not_lose_the_reserved_batch` — the exact
+`L09-R013` scenario; `test_a_running_observer_that_claims_and_returns_finds_nothing_and_entry_
+proceeds` — the exact `L09-R014` scenario; `test_a_running_observer_that_clears_and_enqueues_does_
+not_lose_the_new_input` — kept unchanged, already correct;
+`test_a_running_observer_that_clears_and_enqueues_then_throws_restores_ahead_of_it` — new
+failure-path counterpart). The PASS-7 witness
+`test_a_running_observer_that_claims_the_peeked_input_does_not_lose_other_input` is REMOVED, not
+merely renamed: its own assumption that an unclaimed remainder stays queued no longer holds once
+`ClaimPolicy.ONE_AT_A_TIME` reserves only the ONE entering envelope at reserve time, and
+Layer 08's own separate, already-certified post-turn steering poll legitimately claims the
+remainder moments later as part of ordinary continuation logic (confirmed via a debug script before
+redesigning the replacement witnesses, per this project's established discipline) — the old
+assertion was factually wrong under the new design, not a rename target. All eighteen new/changed
+tests were run against the reverted PASS-7 candidate (`peek`/`_commit_claim` restored) via
+revert-and-confirm and FAILED as expected, reproducing the reviewers' own described defects exactly
+(`test_a_reservation_never_settled_leaves_the_batch_removed`,
+`test_reserve_atomically_claims_the_selected_batch`, etc. — `Inbox` has no `_reserve`/`_Reservation`
+at all under the reverted source; the two driver witnesses reproduced `L09-R013`/`L09-R014`'s own
+exact loss scenarios), then PASSED once the `_Reservation` implementation was restored.
+
+**GREEN evidence:** all eighteen pass against the fix; the full existing `L09-C001`-`C003`,
+`L09-R001`-`R011` suite (unchanged) remains green throughout.
+
+### L09-R015 — AGENT_PRE_STEP/AGENT_PREPARE_NEXT_TURN can redirect or drop `instance`
+
+**Re-review finding:** `PI_PARITY_DEFECT`. `AGENT_PREPARE_NEXT_TURN`'s own waterfall dispatch never
+protected its `instance` payload slot the way `L09-R006` already protects `signal` at
+`AGENT_TRANSFORM_CONTEXT` — a delegating listener could redirect a later listener to a fabricated
+`instance`, or drop it entirely by omitting it when delegating. Pinned Pi's own public
+`Agent.createLoopConfig()` (`agent.ts:445-471`) wraps `AgentOptions.prepareNextTurn(signal)`/
+`prepareNextTurnWithContext(context, signal)` with the SAME Agent's own live `this.signal` before
+handing them to the low-level loop, so this is a faithful mapping of an existing Pi guarantee, not
+a Minion-added one (`C09-2`, above).
+
+**Classification:** `PI_PARITY_DEFECT`, on the corrected Pi citation.
+
+**Remediation:** `_prepare_next_turn`'s own `AGENT_PREPARE_NEXT_TURN` waterfall dispatch gains a
+`normalize_step` closure (`_restore_instance`) that forces the payload tuple's own `instance` slot
+back to the closure-captured ORIGINAL value at every listener-to-listener handoff, regardless of
+what a delegating listener passes — the same mechanism already certified for
+`AGENT_TRANSFORM_CONTEXT`'s own `signal` slot (`L09-R006`) and `TOOL-024`'s own `tool_call_id`/
+`tool_name` slots (`L06-R003`), now applied to `instance` for the first time. A full audit of every
+`.waterfall()` dispatch in `src/` (five call sites total) found `AGENT_PRE_STEP`'s own `_pre_step`
+had the IDENTICAL unprotected `instance` slot — not itself separately reported by any review —
+fixed proactively with the same closure pattern before an independent review had to find it
+separately. `AGENT_TURN_STOPPING`/other `.waterfall()` sites were inspected and confirmed already
+protected or structurally immune (`EventBus.serial()` dispatches have no delegation seam at all, so
+cannot exhibit this defect).
+
+**Pi reproduction:** `agent.ts:445-471` (pinned `b7bb00b936dbe21b8e160b3e89efdec361846699`),
+re-verified directly against source.
+
+**RED/GREEN evidence:** four new witnesses in `agent_loop/test_active_abort.py`
+(`test_pre_step_cannot_redirect_a_later_listener_to_a_replacement_instance`,
+`test_pre_step_cannot_drop_the_instance_for_a_later_listener`,
+`test_prepare_next_turn_cannot_redirect_to_a_replacement_instance`,
+`test_prepare_next_turn_cannot_drop_the_instance_for_a_later_listener`) — included in the eighteen
+confirmed via revert-and-confirm above.
+
+### L09-R016 — stale Layer-05-era signal-capability prose
+
+**Re-review finding:** documentary only. `spec/tools.md`'s own `execute` field description, this
+manifest's own `TOOL-009` row, and `tools/execute.py::_execute_and_finalize`'s own docstring all
+still described the cancellation-signal half of tool dispatch as open ("Python has no
+AbortSignal-equivalent abstraction... only the cancellation-signal half remains open"), contradicting
+Layer 09's own already-implemented `wants_signal`-based four-combination dispatch (`L09-R003`).
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT`, documentary only — no code or behavior changed.
+
+**Remediation:** `spec/tools.md` (two occurrences — the `AgentTool.execute` field table and the
+"Explicitly not certified by Layer 06" section), `pi-parity-manifest.yaml`'s own `TOOL-009` row, and
+`tools/execute.py::_execute_and_finalize`'s own docstring are all corrected to state the signal half
+is realized (`ToolDefinition.wants_signal`, `RunSignal`, `L09-R003`), matching `L09-R009`'s own
+precedent that a documentary-only finding needs no new executable witness.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R010` (status/signal ordering, exception classification, tool hooks,
+signal-only tools, `transformContext`, and `Inbox.restore`'s removal): unaffected — this pass's own
+diff is confined to `Inbox`'s claim/reservation surface, `driver.py`'s run-entry/normalize_step
+wiring, and documentary corrections; `Inbox.claim`, `Inbox.send`/`followup`/`steer`/`inject`,
+`Inbox.clear`/`clear_all`/`has_pending`/`wake_requested`/`take_wake` are all untouched.
+`L09-R011`'s own identity-check discipline is SUPERSEDED, not violated: the new design makes the
+question moot by removing the window the identity check was defending, rather than checking harder
+at the same boundary. `AG-011`'s own certified `InputEnvelope` identity/FIFO-ordering rules:
+confirmed preserved — `_reserve`/`_Reservation` read them exactly (`id`/`message`/`origin`, order)
+and `.rollback()` can never manufacture a duplicate id, since it only ever re-inserts the SAME
+envelope objects it removed, once.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1123 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the redesigned agent/inbox.py and the
+                                      normalize_step additions in agent_loop/driver.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 unaffected, unchanged this pass (no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a PASS-8 paragraph; AG-011's
+                                      own rule: prose corrected under L09-R012; TOOL-009 corrected
+                                      under L09-R016; no new row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008/R015 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009/R010/R011/R012/R013/R014/R016 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 7, plus:) _Reservation's own
+                               claim-at-reserve-time/one-shot-settle design is a Minion-specific
+                               reentrancy-safety mechanism with no Pi analogue (Pi has no reentrant
+                               notification seam between selection and removal at all); the
+                               normalize_step protection on AGENT_PRE_STEP/AGENT_PREPARE_NEXT_TURN's
+                               own instance slot is the established L09-R006 pattern, not new in
+                               kind
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST TARGETED RE-REVIEW of L09-R012/L09-R013/
+                             L09-R014/L09-R015/L09-R016 together, per the user's own recorded
+                             NEXT_ACTION; per §11.8.8, once every Layer-09 finding is provisionally
+                             closed, ONE final complete review of the exact candidate is STILL
+                             required before certification -- this pass does not satisfy that
+                             requirement on its own
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. A finding that recurs after a fix which corrected only the EVIDENCE POINTER, not the underlying
+   rule prose itself (`L09-R012`, PASS 7 → PASS 8), is a sharper version of this cycle's own
+   recurring lesson: closing what a review's own words most immediately point at is not the same as
+   closing what the review actually means. PASS 7 read `L09-R012` as "the pointer is stale" and
+   fixed exactly that; the review meant "this row does not accurately describe its own mechanism,"
+   which the pointer fix alone could not satisfy. Future documentary-correction findings should be
+   checked against the FULL row (rule prose AND evidence pointer), not just the field the finding's
+   own text happened to name first.
+2. Root-cause reassessment across a WHOLE finding lineage, not the latest symptom alone, is a
+   qualitatively different remediation lever than the per-finding patching this cycle used through
+   PASS 7: tracing `L09-R007`→`R010`→`R011`→`R013`/`R014` to one shared architectural window and
+   removing the window itself closed three nominally-separate findings (`R012`/`R013`/`R014`) with
+   ONE coherent design change, rather than three more case-by-case checks layered onto an already
+   fragile mechanism. This is the direct successor to PASS 7's own retrospective note ("a fix that
+   closes the exact witness a review executed can still leave an adjacent surface open") — the fix
+   for THAT lesson is not "check every adjacent surface individually forever," it is "ask whether
+   the surfaces share a root cause that construction can eliminate."
+3. A checkpoint author's own "correction" of an independent reviewer's factual claim needs the SAME
+   verification rigor as the original implementation (`C09-2`): re-reading only part of the relevant
+   Pi source (the low-level `agent-loop.ts` shape, missing `agent.ts`'s own public wrapper) produced
+   a confident but wrong retraction of a correct reviewer finding. A convergence checkpoint disputing
+   a reviewer's citation is itself a claim requiring the same source-verification standard as any
+   other Pi-parity claim in this project, not a lower bar because it is corrective in intent.
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-8 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the
+PASS-7 final-review rejection (`minion-agent-docs#33` @ `bbd9fa67a0ecfe335a45739cadb470ffc3aa5513`)
+and the `L09-R012` convergence-agreement-v2 reference (`minion-agent-docs#35` @
+`5c796f3b1bac3ee6a1c71f80a2dac2163d055f83`) to `PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: complete a targeted independent Rust review of this PASS-8 candidate against
+L09-R012/L09-R013/L09-R014/L09-R015/L09-R016 together, per the agreed convergence contract;
+L09-C001-C003, L09-R001-R011 remain provisionally closed unless this review finds a new issue with
+any of them. Per §11.8.8, once every Layer-09 finding is provisionally closed, ONE final complete
+review of that exact candidate is still required before certification -- this is not optional`.
+Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
+Layer 10.

@@ -667,59 +667,67 @@ dispatched. The two transitions are therefore governed asymmetrically, not by on
   identically, the same as every other `EMIT` event in this codebase.
 
 **Preclaimed inbox input (`L09-R007`, convergence-agreed contract; mechanism corrected under
-`L09-R010`):** `continue_()`'s own steering and follow-up branches, and `run_until_idle()`'s own
-follow-up claim, need to know their entering input BEFORE `_run_wrapped`'s own RUNNING notification
-runs, and must not have removed it from `Inbox` (`AG-011`) if that notification then fails -- pinned
-Pi's own `Agent.continue()` has the identical pre-drain-then-`runWithLifecycle` shape
-(`PendingMessageQueue.drain()` is equally destructive, with no rollback of its own; Pi simply never
-observes this gap because nothing between its own drain and `finishRun` can throw). The observable
-rule:
+`L09-R010`, then again under the `L09-R012`/`R013`/`R014` convergence -- current mechanism is
+claim-then-reservation-rollback, NOT peek-then-commit):** `continue_()`'s own steering and follow-up
+branches, and `run_until_idle()`'s own follow-up claim, need to know their entering input BEFORE
+`_run_wrapped`'s own RUNNING notification runs, and must not leave it lost from `Inbox` (`AG-011`)
+if that notification then fails -- pinned Pi's own `Agent.continue()` has the identical
+pre-drain-then-`runWithLifecycle` shape (`PendingMessageQueue.drain()` is equally destructive, with
+no rollback of its own; Pi simply never observes this gap because nothing between its own drain and
+`finishRun` can throw). The observable rule:
 
 ```text
-RUNNING notification fails after a caller has already inspected entering envelopes from Inbox
-    -> no inspected envelope is lost or duplicated
+RUNNING notification fails after a caller has already reserved entering envelopes from Inbox
+    -> no reserved envelope is lost or duplicated
     -> each envelope's own id/message/origin are exactly the values a subsequent claim observes
     -> input the failing observer itself enqueues at the same target during its own (failing)
-       execution never precedes the inspected envelopes at a later claim
-    -> a subsequent claim at the same target observes the inspected envelope(s) exactly once
+       execution never precedes the restored envelopes at a later claim
+    -> a subsequent claim at the same target observes the reserved envelope(s) exactly once
 ```
 
 Applies to `continue_()`'s steering and follow-up branches and `run_until_idle()`'s follow-up
 claim, under both `ClaimPolicy.ONE_AT_A_TIME` and `ClaimPolicy.ALL`. `prompt()` is unaffected: it
 never reads from `Inbox` at all.
 
-An earlier revision satisfied this by claiming (destructively removing) eagerly and exposing a
-PUBLIC `Inbox.restore(target, envelopes)` to reverse a failed claim. An independent Rust review
-found that method callable by ANY caller with ANY envelope tuple -- including one still queued and
-never claimed, or the same envelope repeatedly -- manufacturing duplicate queue entries that shared
-an id, contradicting `AG-011`'s own exactly-once invariant (`L09-R010`, `CONTRACT_ASSURANCE_
-DEFECT`: the convergence contract approved an observable rollback RESULT, not an unrestricted new
-caller-facing operation). The corrected mechanism removes the restoration surface entirely rather
-than merely restricting it: `Inbox.peek(target, policy)` -- public, read-only, returns what
-`claim(target, policy)` would without removing anything -- lets a caller inspect entering input
-first; the actual removal is deferred to an internal-only commit, performed by `AgentLoop._run_
-wrapped` itself only once the RUNNING notification has already succeeded. A failed RUNNING
-notification therefore needs no restoration step at all -- nothing was ever removed from `Inbox` in
-the first place, so there is nothing to put back and no way to duplicate an id. `AG-011`'s own
-already-certified `InputEnvelope` identity/FIFO-ordering rules are read, not rewritten, by this
-addition -- no lower-layer reopen. `peek`/`claim`'s own selection logic for a given `policy` is
-identical (the same first-envelope-or-whole-queue rule), so this changes only WHEN removal happens,
-never WHAT would be removed.
+Two earlier mechanisms were tried and rejected before the current design. The first satisfied the
+rule by claiming (destructively removing) eagerly and exposing a PUBLIC `Inbox.restore(target,
+envelopes)` to reverse a failed claim; an independent Rust review found that method callable by ANY
+caller with ANY envelope tuple -- including one still queued and never claimed, or the same envelope
+repeatedly -- manufacturing duplicate queue entries that shared an id, contradicting `AG-011`'s own
+exactly-once invariant (`L09-R010`, `CONTRACT_ASSURANCE_DEFECT`). The second removed the
+restoration surface but introduced a peek-then-commit split instead: `Inbox.peek(target, policy)`
+(public, read-only) let a caller inspect entering input without removing it, deferring the actual
+removal to an internal-only `_commit_claim`, performed only once the RUNNING notification had
+already succeeded. This closed the duplicate-id defect but opened a WINDOW between `peek()` and the
+later commit during which a re-entrant observer on the same target -- the very listener
+`_run_wrapped` awaits synchronously in between -- could itself claim the peeked envelopes, clear the
+target, or enqueue more input; a commit that then removed by COUNT alone could silently delete
+input the observer never touched (`L09-R011`), and even an identity-checked commit left a claiming-
+and-THEN-throwing observer's own claimed batch unrestored (`L09-R013`), or a partial re-entrant
+`ONE_AT_A_TIME` claim leaving a stale prefix eligible for duplicate admission (`L09-R014`) --
+every one of these was a different exploit shape through the SAME window, not an independent defect.
 
-**Commit must verify identity, not merely count (`L09-R011`):** the synchronous RUNNING
-notification `_run_wrapped` awaits BETWEEN a caller's own `peek()` and its own subsequent commit
-may itself call any public `Inbox` operation on the SAME target before returning normally --
-claim the very envelopes this run peeked, clear the target, enqueue more input, or any
-combination. A commit that removes by COUNT alone (an earlier revision) would then silently delete
-whatever CURRENTLY occupies the queue's own front, which may no longer be the peeked batch at all
--- an independent Rust review's own executable witness: queue `A, B`; `A` peeked; the RUNNING
-observer itself claims `A` and returns; a count-only commit for the peeked `(A,)` then deleted `B`
-too, input never selected for this run and never touched by the observer's own action. The
-corrected rule: a run-entry commit removes `envelopes` ONLY if they are STILL the exact envelopes
-occupying the target's own front, in the same order, at commit time; otherwise it removes NOTHING
-at all, leaving whatever the observer itself already did (claimed, cleared, enqueued, or any
-combination) as the sole source of truth for that target -- an observer's own reentrant mutation of
-`Inbox` is never silently undone, broadened, or treated as though it never happened.
+The current mechanism removes the window entirely rather than adding a further case-by-case check:
+`Inbox._reserve(target, policy)` (private, Layer-08-only) atomically `claim()`s the selected batch
+IMMEDIATELY -- removing it from `Inbox` the instant it is selected, before the RUNNING notification
+ever runs -- and returns a private, one-shot `_Reservation` bound to exactly that batch
+(`.envelopes`, read-only, bound at construction). Exactly one of `.commit()` (settles the removal
+permanently) or `.rollback()` (restores the exact reserved batch, verbatim and in the same order,
+ahead of whatever the target holds by then) may ever be called, and each takes NO argument at all --
+closing the "foreign/duplicate envelope" authority gap `L09-R010` found by the absence of a
+parameter, not by convention; a second call to either, after the first, raises `RuntimeError` --
+closing the "double action" half structurally. `AgentLoop._run_wrapped` calls `.rollback()` on a
+RUNNING-notification failure and `.commit()` on success. Because removal happens at RESERVE time,
+not commit time, a re-entrant observer on the same target during the RUNNING notification can never
+see or act on the reserved batch at all -- whether it throws, returns normally, or performs its own
+unrelated claim/clear/enqueue on that target -- closing `L09-R011`/`L09-R013`/`L09-R014` by
+construction. Only the reservation's own claimed batch is ever rolled back: a genuinely different,
+unrelated claim the observer itself performs, a `clear()`, or new input the observer enqueues are
+never reversed or treated as though they did not happen -- rollback restores exactly what THIS
+reservation removed, nothing more. `AG-011`'s own already-certified `InputEnvelope` identity/
+FIFO-ordering rules are read, not rewritten, by any of this -- no lower-layer reopen. `Inbox.restore`
+(the first mechanism) and `Inbox.peek`/`_commit_claim` (the second) are both removed entirely, not
+merely superseded in place -- `Inbox.claim()` remains the only OTHER removal path, unchanged.
 
 **Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
 loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
@@ -770,13 +778,38 @@ signal-only, both) are representable. See `spec/tools.md` for the complete dispa
 Minion's own architectural mapping, not an observable divergence: pinned Pi threads `signal` as an
 EXPLICIT parameter to every one of `agent-loop.ts`'s own consumers, including its own lifecycle
 listeners (`subscribe(listener)`'s own second parameter) and `prepareNextTurn`/`shouldStopAfterTurn`
-(via `agent.ts`'s own wrapping closures reading `this.signal` live). Minion's own established
-convention already passes `instance` as the first argument to every `AGENT_LIFECYCLE_EVENT`/
-`AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listener, so those listeners already have a way to
-reach `instance.signal` without a new parameter -- only the tool-execution seam (Layer 06, which has
-no `instance` access at all, being architecturally below Layer 07) needs the signal threaded
-explicitly, and does. The OBSERVABLE fact -- every one of these consumers CAN read the current run's
-signal -- is identical either way; only the mechanism differs.
+(via `agent.ts`'s own PUBLIC `Agent.createLoopConfig()`, `agent.ts:445-471`, which wraps the
+application-facing `AgentOptions.prepareNextTurn(signal)`/`prepareNextTurnWithContext(context,
+signal)`/`shouldStopAfterTurn(context, signal)` callbacks with the SAME Agent's own live
+`this.signal` before handing them down to the low-level loop). `instance.signal` for
+`AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` is therefore a FAITHFUL MAPPING of an existing Pi
+capability -- Pi genuinely supplies `signal` explicitly at this exact point -- not a Minion-added
+one (an earlier revision of this section claimed pinned Pi's `prepareNextTurn` carries no `signal`
+at all; that claim was itself wrong, having read only `agent-loop.ts`'s own low-level
+`AgentLoopConfig.prepareNextTurn(context)` shape and missed `agent.ts`'s own public wrapper --
+corrected here, `L09-R015` convergence, `C09-2`). Minion's own established convention already
+passes `instance` as the first argument to every `AGENT_LIFECYCLE_EVENT`/`AGENT_PREPARE_NEXT_TURN`/
+`AGENT_TURN_STOPPING` listener, so those listeners already have a way to reach `instance.signal`
+without a new parameter -- only the tool-execution seam (Layer 06, which has no `instance` access at
+all, being architecturally below Layer 07) needs the signal threaded explicitly, and does. The
+OBSERVABLE fact -- every one of these consumers CAN read the current run's signal -- is identical
+either way; only the mechanism differs.
+
+**`instance` is authoritative event metadata at the `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN`
+waterfalls (`L09-R015`):** both dispatches pass `instance` as the first payload argument, and (like
+`signal` at `AGENT_TRANSFORM_CONTEXT`, `L09-R006`, and `tool_call_id`/`tool_name` at
+`TOOLS_PRE_EXECUTE`/`TOOLS_POST_EXECUTE`, `L06-R003`) it is identity/authority a listener has no
+business redirecting for a listener downstream of it -- unlike `reason` (`AGENT_PRE_STEP`) or
+`message`/`tool_results`/`context`/`new_messages` (`AGENT_PREPARE_NEXT_TURN`), which remain
+genuinely listener-transformable, intentionally out of this rule's scope. Both dispatches supply a
+`normalize_step` closure (`_restore_instance`) that forces the payload tuple's own `instance` slot
+back to the closure-captured ORIGINAL value at every listener-to-listener handoff, regardless of
+what a delegating listener passes -- a listener can no longer redirect a later listener to a
+fabricated replacement `instance`, or drop it by omitting it when delegating, even though it remains
+free to transform every other payload field. `AGENT_PRE_STEP`'s own exposure was found during a full
+audit of every `.waterfall()` dispatch in this codebase alongside the reviewed
+`AGENT_PREPARE_NEXT_TURN` finding -- the identical unprotected shape, not itself separately reported
+by any review.
 
 **The load-bearing rule:** every consumer above may IGNORE the signal, and if every one of them
 does, the run completes exactly as if `abort()` had never been called. Four distinct
