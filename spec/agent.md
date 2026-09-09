@@ -706,6 +706,21 @@ addition -- no lower-layer reopen. `peek`/`claim`'s own selection logic for a gi
 identical (the same first-envelope-or-whole-queue rule), so this changes only WHEN removal happens,
 never WHAT would be removed.
 
+**Commit must verify identity, not merely count (`L09-R011`):** the synchronous RUNNING
+notification `_run_wrapped` awaits BETWEEN a caller's own `peek()` and its own subsequent commit
+may itself call any public `Inbox` operation on the SAME target before returning normally --
+claim the very envelopes this run peeked, clear the target, enqueue more input, or any
+combination. A commit that removes by COUNT alone (an earlier revision) would then silently delete
+whatever CURRENTLY occupies the queue's own front, which may no longer be the peeked batch at all
+-- an independent Rust review's own executable witness: queue `A, B`; `A` peeked; the RUNNING
+observer itself claims `A` and returns; a count-only commit for the peeked `(A,)` then deleted `B`
+too, input never selected for this run and never touched by the observer's own action. The
+corrected rule: a run-entry commit removes `envelopes` ONLY if they are STILL the exact envelopes
+occupying the target's own front, in the same order, at commit time; otherwise it removes NOTHING
+at all, leaving whatever the observer itself already did (claimed, cleared, enqueued, or any
+combination) as the sole source of truth for that target -- an observer's own reentrant mutation of
+`Inbox` is never silently undone, broadened, or treated as though it never happened.
+
 **Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
 loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
 

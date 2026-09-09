@@ -1367,7 +1367,7 @@ Layer 10                     NOT STARTED
    relies on a one-shot guard or naming convention to prevent it, even though both would have
    satisfied the review's own stated acceptance criteria.
 
-## Next action
+## Next action (superseded -- see PASS 7 below)
 
 Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
 #17/#26 bodies with the PASS-6 remediation summary and new head SHAs. Update coordination issue
@@ -1382,3 +1382,193 @@ them. Per §11.8.8, once L09-R007/L09-R010 are both provisionally closed, ANOTHE
 review of that exact candidate is required before certification -- this is not optional`. Then
 stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do not start
 Layer 10.
+
+This candidate (code PR `minion-agent#17` @ `f3dddebd935c1bc5b18e01ca62d1f9f03a5a4eee`, docs PR
+`minion-agent-docs#26` @ `7f5d3328a2a04eadf739a8d5c59ae5453a98f0fd`) was targeted-re-reviewed
+(`minion-agent-docs#32`, review commit `248dd3c62f96b66d7dfed50519b468c78f80c9a3`): `L09-R007`/
+`L09-R010` are **PROVISIONALLY CLOSED** at these exact SHAs, but two new findings blocked the
+mandatory final review -- `L09-R011` (`CONTRACT_ASSURANCE_DEFECT`: PASS 6's own `_commit_claim`
+removed envelopes by COUNT alone, which a re-entrant RUNNING-notification observer could exploit
+to delete unrelated, never-selected input) and `L09-R012` (`CONTRACT_ASSURANCE_DEFECT`,
+documentary only: `AG-011`'s own evidence pointer still named the removed `Inbox.restore`). See
+PASS 7 below.
+
+# PASS 7 — remediate L09-R011 and L09-R012
+
+## Re-review reference
+
+The targeted independent Rust re-review of the PASS-6 candidate (see above) provisionally closed
+`L09-R007`/`L09-R010` but found two new blockers before the mandatory final review could proceed.
+`L09-C001`-`C003`, `L09-R001`-`R006`, `L09-R008`, `L09-R009` remain `PROVISIONALLY CLOSED`,
+unaffected, not reopened. Full review text: `assurance/layers/09-active-abort-rust-targeted-
+rereview-pass6.md` on branch `review/09-r007-convergence-challenge` (not reproduced verbatim
+here).
+
+## Findings, reproduced against the exact candidate and remediated
+
+### L09-R011 — commit-by-count removes non-peeked input after observer reentrancy
+
+**Re-review finding:** `CONTRACT_ASSURANCE_DEFECT`. PASS 6's own `Inbox._commit_claim(target,
+envelopes)` removed envelopes by COUNT from the queue's own front (`queue[:len(envelopes)] = []`),
+never checking that the envelopes actually occupying that front at commit time were the SAME ones
+a prior `peek()` had returned. The synchronous RUNNING-notification observer `_run_wrapped` awaits
+BETWEEN a caller's own `peek()` and its own subsequent commit may itself call any public `Inbox`
+operation on the same target before returning normally -- claim the very envelopes this run
+peeked, clear the target, enqueue more input, or any combination -- and PASS 6's own count-only
+commit had no way to notice. The review's own executed witness: queue `A, B`; `A` peeked; the
+RUNNING observer itself calls `inbox.claim(NEXT_STEP, ONE_AT_A_TIME)`, removing `A` and returning
+normally (queue now `[B]`); `_commit_claim(NEXT_STEP, (A,))` then deleted `B` too -- input never
+selected for this run and never touched by the observer's own action at all. PASS 6's own new test
+`test_calling_commit_claim_repeatedly_only_removes_never_duplicates` actively CODIFIED this defect
+as intended behavior (it asserted an unrelated envelope `B` was also removed by a second commit
+call), which the review flagged directly: "proving a private operation cannot insert duplicates is
+insufficient if it can delete arbitrary non-selected input."
+
+**Pi reproduction:** re-confirmed pinned Pi has no reentrant seam of this kind at all -- its own
+`PendingMessageQueue.drain()` (the closest analogue) is a single, synchronous, non-observer-
+triggering operation, with no notification point a caller's own code could hook into between
+selection and removal. This is entirely a Minion-owned integrity concern introduced by the
+synchronous `AGENT_STATUS`/`on_status_change` extension point itself (`L09-R007`), not a Pi-parity
+question.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (the mechanism does not deliver the convergence-
+agreed "commit removes only the exact batch selected at the pre-drain boundary" guarantee under
+reentrancy, even though it delivered it correctly in the non-reentrant case PASS 6's own witnesses
+happened to exercise).
+
+**Remediation:** `_commit_claim` now verifies IDENTITY, position by position (`queue[i] is not
+envelopes[i]` for each index), not merely count, before removing anything. If the queue's own
+front no longer matches the peeked batch exactly, it removes NOTHING at all, leaving whatever the
+observer itself already did (claim, clear, enqueue, or any combination) as the sole source of
+truth for that target -- an observer's own reentrant mutation is never silently undone, broadened,
+or treated as though it never happened. This is unconditionally safe for the non-reentrant case
+too (the common path): the front DOES still match, so the exact same removal happens as before.
+`test_calling_commit_claim_repeatedly_only_removes_never_duplicates` is corrected (renamed
+`test_calling_commit_claim_again_with_a_stale_batch_is_a_safe_no_op`) to assert the FIXED
+behavior -- a stale second commit call is a safe no-op, not a repeat deletion of unrelated input.
+
+**RED evidence:** two new through-the-real-driver witnesses in `agent_loop/test_active_abort.py`
+(`ONE_AT_A_TIME`, a RUNNING observer that itself claims the peeked envelope; `ClaimPolicy.ALL`, a
+RUNNING observer that clears the target and enqueues new input) reproduce the review's own two
+required scenarios exactly, plus two new `Inbox`-level unit tests. All four were run against the
+reverted (count-only) PASS-6 candidate via revert-and-confirm and FAILED as expected, reproducing
+the review's own witness precisely (the unrelated envelope silently lost), then PASSED once the
+identity check was restored.
+
+**GREEN evidence:** all four pass against the fix; the corrected/renamed test and the full
+existing `L09-R007`/`L09-R010` suite (unchanged) remain green throughout.
+
+### L09-R012 — stale AG-011 implementation pointer
+
+**Re-review finding:** `CONTRACT_ASSURANCE_DEFECT`, documentary only. PASS 6 corrected `AG-011`'s
+own rule PROSE to describe `Inbox.peek`/`Inbox._commit_claim`, but its `python:` EVIDENCE POINTER
+still named the removed `Inbox.restore` -- contradicting that same row's own already-corrected
+text and the actual current implementation.
+
+**Classification:** `CONTRACT_ASSURANCE_DEFECT` (traceability/evidence-pointer accuracy; no
+semantic or behavioral question).
+
+**Remediation:** `AG-011`'s own `python:` field corrected to name `Inbox.peek`/`Inbox._commit_
+claim`, with a brief note that `Inbox.restore` (PASS 5's own mechanism) was removed under
+`L09-R010`. No executable witness needed, matching the review's own instruction; no code or
+behavior changed.
+
+## Regression verification for previously-closed findings
+
+`L09-C001`-`C003`, `L09-R001`-`R006`, `L09-R008`, `L09-R009`, the `L09-R007` status/signal half,
+and `L09-R010`'s own no-public-restore/no-duplicate-id guarantees: unaffected -- this pass's own
+diff is confined to `Inbox._commit_claim`'s own removal condition (count-check widened to an
+identity check) and the one flawed test it corrected; `Inbox.peek`, `Inbox.claim`, and every other
+`Inbox` method are untouched. `AG-011`'s own certified `InputEnvelope` identity/FIFO-ordering
+rules: confirmed preserved -- the identity check makes those rules MORE strictly enforced at the
+commit boundary, not less.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1114 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, including the extended agent/inbox.py
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier pass remains
+                                      untouched and out of this pass's ownership scope
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+schema validation:                   unaffected, unchanged this pass
+conformance/ (full):                 unaffected, unchanged this pass (no canonical scenario
+                                      added/changed)
+manifest parse + unique-ID audit:    79 / 79 unique (AG-007 gained a PASS-7 paragraph; AG-011's
+                                      own stale python: pointer corrected under L09-R012; no new
+                                      row)
+placeholder-evidence audit:          active-abort-tool/active-abort-provider/abort-settles-before-
+                                      idle remain explicitly unfilled and are NOT cited as
+                                      satisfying evidence anywhere in any row touched this pass
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT              none -- L09-R001/R002/R003/R004/R006/R007/R008 all closed
+CONTRACT_ASSURANCE_DEFECT     none -- L09-R005/R009/R010/R011/R012 closed
+PI_BEHAVIOR_UNCERTAIN         none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   (unchanged from PASS 6, plus:) Inbox._commit_claim's own
+                               identity-checked, do-nothing-on-mismatch removal is a Minion-
+                               specific reentrancy-safety mechanism with no Pi analogue (Pi has no
+                               reentrant notification seam between selection and removal at all)
+disclosed Minion-specific constraint   none currently active
+Rust cross-language dependency      NOT_IMPLEMENTED -- certified Rust Layer 06's own
+                               ToolExecutionSignal seam remains reserved, unexercised; awaiting
+                               this candidate's own independent contract review
+Layer 10                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 09     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 09         NOT_IMPLEMENTED
+shared Layer-09 contract   READY FOR INDEPENDENT RUST TARGETED RE-REVIEW of L09-R011/L09-R012
+                             specifically; per §11.8.8, once every Layer-09 finding is
+                             provisionally closed, ONE final complete review of the exact
+                             candidate is still required before certification
+Layer 09 cross-language     NOT CLOSED
+Layer 10                     NOT STARTED
+```
+
+## Workflow-process retrospective notes (this cycle)
+
+1. A fix that closes the exact witness a review executed can still leave an ADJACENT surface of
+   the same mechanism open, if the review's own witness happened not to exercise it: PASS 6's own
+   `_commit_claim` correctly closed `L09-R010`'s own duplicate-insertion attack (verified by that
+   review's own witness) and PASS 6's own tests all passed -- but the SAME method's own count-only
+   removal condition had a second, independent defect (deletion of unrelated input under
+   reentrancy) that no PASS-6 witness happened to construct a scenario for. This is the third
+   related lesson in this same Layer-09 cycle (after `L09-R006`'s "authoritative restoration
+   doesn't automatically generalize to a sibling dispatch" and `L09-R010`'s "mechanism authority
+   is a separate question from behavior correctness"): a security- or integrity-relevant fix to
+   one specific attack shape does not by itself establish that the surrounding mechanism is safe
+   against every other attack shape reachable through the SAME reentrant seam -- each one needs
+   its own explicit consideration, not inference from a sibling's own closure.
+2. A test that asserts a defect's own observable symptom as the EXPECTED, desired behavior is a
+   distinct and more dangerous failure mode than a missing test: PASS 6's own new test didn't just
+   fail to catch `L09-R011` -- it actively documented the wrong behavior as correct, which an
+   independent reviewer had to specifically call out as "codifying the exact defect." A newly
+   authored test should be checked not only for "does it pass" but "does its own passing assertion
+   actually describe behavior the project WANTS," particularly for tests written to demonstrate a
+   safety property (here, "misuse cannot duplicate") -- demonstrating one safety property
+   (no duplication) is not the same as demonstrating the FULL safety envelope the mechanism needs
+   (no duplication AND no incorrect deletion).
+
+## Next action
+
+Push this pass's commits to the existing `layer/09-python-shared` branches (both repos); update PR
+#17/#26 bodies with the PASS-7 remediation summary and new head SHAs. Update coordination issue
+#16 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append
+the PASS-6 targeted-review reference (`minion-agent-docs#32` @ `248dd3c62`) to `PRIOR REVIEW
+EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust re-review of
+this PASS-7 candidate against L09-R011/L09-R012 specifically; L09-C001-C003, L09-R001-R006,
+L09-R008, L09-R009, and L09-R007/L09-R010 remain provisionally closed unless this review finds a
+new issue with any of them. Per §11.8.8, once every Layer-09 finding is provisionally closed, ONE
+final complete review of that exact candidate is required before certification -- this is not
+optional`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do
+not start Layer 10.
