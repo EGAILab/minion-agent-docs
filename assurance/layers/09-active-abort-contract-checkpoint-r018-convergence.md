@@ -1,6 +1,35 @@
 # Layer 09 — L09-R018 contract convergence (AGENT_TRANSFORM_CONTEXT delegation grammar)
 
-**Revision 1, PROPOSED — AWAITING INDEPENDENT AGREEMENT.**
+**Revision 2, NOT yet approved.** Revision 1 (this same file) was independently challenged
+(`assurance/layers/09-active-abort-contract-checkpoint-r018-rust-challenge.md`, docs PR #39,
+review commit `a6c05675d85b76a01ce6ba1b6d0a0abdf1d37f80`): **CONVERGENCE CONTRACT — PROPOSED,
+REVISION REQUIRED**. The core `{0, 1, 3}` legal-delegation-length grammar was ACCEPTED outright,
+along with the structural-ambiguity diagnosis and the full re-audit of every other
+authoritative-metadata waterfall. Three narrow corrections were required before explicit
+agreement:
+
+- **`C18-1`** (reject at the authority boundary, not downstream): revision 1's own pseudocode for
+  the invalid length-2 case (`return current` unchanged, relying on the next listener's own fixed
+  arity to reject it) does not structurally refuse the tuple -- `EventBus.waterfall` permits
+  arbitrary registered callables, including a variadic listener or one with compatible defaults
+  that could silently ABSORB a malformed 2-tuple instead of raising. Revision 2 raises directly
+  inside `normalize_step` itself, before the malformed tuple is ever forwarded to `step(index + 1,
+  ...)` -- see "Proposed design" below.
+- **`C18-2`** (represented failure, not bare propagation): revision 1's own acceptance witness 1
+  said to assert a bare `TypeError` "raises/propagates" out of the run. That is not what the
+  already-certified Layer-08 contract actually does: `_transform_context` runs inside
+  `_execute_run`'s own `try`/`except Exception` boundary, so ANY exception it raises (including
+  the new `WaterfallError` this revision introduces) is caught and routed to `_settle_run_failure`
+  -- `prompt()`/`continue_()` itself completes normally, with a synthesized terminal `error`
+  assistant message, not an escaping exception. Revision 2's real-loop witnesses now assert that
+  represented-failure outcome explicitly (and that no provider request was ever sent), reserving
+  the bare exception assertion for the DIRECT unit-level witness only.
+- **`C18-3`** (RED/regression accounting corrected): revision 1 mischaracterized the retired
+  trailing-omission shape's own witness as "already passes today... a regression guard." It does
+  not -- PASS 9's own `_restore_signal` currently ACCEPTS that shape (silently, via `current[1]`),
+  so a new test asserting it is now REFUSED is a genuine RED witness against PASS 9, exactly like
+  the leading-omission witness. Only the UNCHANGED full-length redirect test is an already-green
+  regression guard. Corrected below.
 
 **Trigger check (mandatory, `process/agent-workflow.md` §11.8):**
 
@@ -145,15 +174,18 @@ Legal lengths for `AGENT_TRANSFORM_CONTEXT` are therefore exactly `{0, 1, 3}`:
   states exactly that and nothing else.
 - **3** (`next_(a, b, c)`): full explicit form, unchanged from today -- `current[1]` is `messages`;
   positions 0 and 2 are unconditionally forced back to original regardless of content.
-- **Any other length (in practice, only 2)**: NOT specially interpreted. `normalize_step` returns
-  `current` UNCHANGED (does not attempt to reshape it into either candidate reading). The
-  wrong-arity tuple then reaches the next listener's own call (`self._call(callbacks[index], *
-  current, next_)`), which Python's own parameter-count enforcement rejects immediately as a
-  `TypeError` -- a represented, LOUD failure, structurally incapable of silently delivering a
-  `RunSignal` (or anything else) into `messages`. This satisfies the final review's own requirement
-  3 verbatim: the rule does not GUESS between the two length-2 readings; it refuses to interpret
-  the ambiguous shape at all, converting what was silent data corruption into an immediate,
-  observable failure.
+- **Any other length (in practice, only 2)**: rejected DIRECTLY at this authority boundary --
+  `normalize_step` itself raises, BEFORE the malformed tuple is ever forwarded to `step(index + 1,
+  ...)` (revised under `C18-1`; revision 1's own "return `current` unchanged and rely on the next
+  listener's own fixed arity" was rejected by the challenge review precisely because
+  `EventBus.waterfall` permits arbitrary registered callables -- a variadic listener, one with
+  compatible defaults, or one that accepts the malformed shape and short-circuits could silently
+  ABSORB a 2-length tuple instead of erroring, making the "refusal" depend on downstream listener
+  implementation details rather than being true by construction). Raising inside `normalize_step`
+  closes that gap structurally: the raise happens synchronously inside `next_`'s own body, before
+  `step` (and therefore any downstream listener, however permissive its own signature) is ever
+  reached -- no listener registered after the offending one can ever observe the malformed tuple,
+  regardless of its own arity or short-circuit behavior.
 
 ```python
 def _restore_signal(current: tuple[object, ...]) -> tuple[object, ...]:
@@ -161,11 +193,26 @@ def _restore_signal(current: tuple[object, ...]) -> tuple[object, ...]:
         return (original_instance, current[0], original_signal)
     if len(current) == 3:
         return (original_instance, current[1], original_signal)
-    return current  # length 2 (or any other non-{1,3} length): deliberately left unnormalized --
-    # an ambiguous partial delegation is refused, not guessed at; EventBus.waterfall's own
-    # existing arity-mismatch behavior (a represented TypeError at the next listener's own call)
-    # governs it, the same fallback style already established for L09-R015.
+    raise WaterfallError(
+        f"AGENT_TRANSFORM_CONTEXT: ambiguous delegation of length {len(current)} -- a partial "
+        "replacement must supply exactly the transformable field (`messages` alone) or the full "
+        "payload; a two-element replacement cannot be disambiguated between an omitted leading "
+        "Agent and an omitted trailing signal"
+    )
 ```
+
+`WaterfallError` (`runtime/errors.py`, already certified -- "A waterfall listener misused its
+`next` continuation") is the exact, already-established error type for this class of misuse; no
+new exception type is introduced. Because `_transform_context` (and therefore this `normalize_step`
+call) runs inside `AgentLoop._execute_run`'s own `try`/`except Exception` boundary (`L08-R002`,
+unchanged, already certified), this `WaterfallError` is caught there and routed to
+`_settle_run_failure` exactly like any other run-executor failure -- `prompt()`/`continue_()`
+itself completes normally, with a synthesized terminal `error` assistant message (`stop_reason
+is StopReason.ERROR`, `error_message` carrying this exception's own text), not an escaping
+exception (`C18-2`; revision 1's own acceptance witness incorrectly described a bare `TypeError`
+"raising/propagating" out of the run as the expected observable outcome -- that contradicts the
+already-certified Layer-08 exception boundary every OTHER run-executor failure already goes
+through, and this finding does not carve out an exception to it).
 
 ### Why this is a genuine, not merely mechanical, contract question
 
@@ -185,8 +232,10 @@ language-neutrally without effectively re-deriving a discriminated union anyway 
 Rust would need an actual typed representation, not a positional tuple, while Python would need
 runtime `isinstance` checks against a type this module does not otherwise need to import), and it
 would leave the SAME ambiguity dormant for any future third authoritative field this event might
-gain. A construction-based refusal closes the defect CLASS, not just this one witness -- the same
-standard already applied to the `L09-R012`/`R013`/`R014` `_Reservation` redesign.
+gain. A construction-based refusal -- an explicit, immediate `WaterfallError` raised at the
+authority boundary itself, per `C18-1` -- closes the defect CLASS, not just this one witness, and
+does so as a represented Layer-08 run failure rather than an escaping exception, per `C18-2` -- the
+same standard already applied to the `L09-R012`/`R013`/`R014` `_Reservation` redesign.
 
 A more conservative alternative, also considered: retire the shorthand ENTIRELY (`{0, 3}` only, no
 length-1 form at all), requiring a listener to always restate all three positions (even though 0
@@ -200,33 +249,70 @@ explicitly in case the independent review weighs the tradeoff differently.
 
 ## Required acceptance witnesses
 
-1. **The final review's own exact corrupting scenario, now safely refused**: a listener delegates
-   via `next_(new_messages, some_signal)` (length 2, the reviewer's own leading-omission shape) --
-   assert the run raises/propagates a `TypeError` from the malformed downstream call, and assert
-   the real provider request was NEVER SENT with a `RunSignal` (or anything other than a proper
-   message tuple) in its own `messages` field -- the corruption itself must be structurally
-   impossible, not merely rare.
-2. **The retired trailing-omission shape, now also safely refused** (for symmetry/completeness,
-   confirming shape 2 and shape 3 are refused identically, not selectively): a listener delegates
-   via `next_(some_instance_attempt, new_messages)` (length 2, the OLD convenience shape) -- assert
-   the SAME `TypeError` failure mode, not a silent accept with the forged/garbage `instance_attempt`
-   merely ignored.
-3. **The new sole legal shorthand, positive case**: a listener delegates via
+Two levels, per `C18-2`: a DIRECT unit-level witness against `_restore_signal`/the waterfall
+dispatch itself may assert the immediate typed exception; the real-Agent-loop witness must assert
+the represented Layer-08 run-failure outcome, never a bare escaping exception.
+
+1. **Direct, leading-omission shape, immediate rejection with proof of non-forwarding
+   (`C18-1`)**: register two listeners on `AGENT_TRANSFORM_CONTEXT` directly against the real
+   `EventBus`/`AgentLoop` machinery (not a bare call to `_restore_signal` in isolation, so the
+   waterfall's own `step`/`next_` wiring is genuinely exercised) -- listener A delegates via
+   `next_(new_messages, some_signal)` (length 2, leading-omission shape); listener B is
+   deliberately VARIADIC/short-circuit-capable (e.g. `async def listener_b(*args): sneaky_calls.
+   append(args); return "whatever"`), registered AFTER A, specifically chosen because its own
+   permissive signature would happily absorb a malformed 2-tuple if the malformed tuple were ever
+   forwarded to it. Assert `WaterfallError` is raised (propagating out of the `waterfall()` call
+   itself, at this direct level) AND assert `sneaky_calls == []` -- listener B is never invoked at
+   all, proving the rejection happens at the authority boundary itself, not merely because a FIXED
+   next listener happened to have an incompatible arity.
+2. **Direct, trailing-omission shape, same treatment**: the same structure as (1), but listener A
+   delegates via `next_(some_instance_attempt, new_messages)` (length 2, the OLD convenience
+   shape) -- assert the SAME `WaterfallError` and the SAME "listener B never invoked" proof. This
+   demonstrates shape 2 and shape 3 (both length-2 readings) are refused IDENTICALLY, not
+   selectively.
+3. **Real-loop, leading-omission shape, represented failure (`C18-2`)**: through an actual
+   `loop.prompt(...)` call, a listener on `AGENT_TRANSFORM_CONTEXT` delegates via
+   `next_(new_messages, some_signal)`. Assert `await loop.prompt(...)` COMPLETES NORMALLY (no
+   exception escapes it); assert the settled turn's own assistant message has `stop_reason is
+   StopReason.ERROR` and `error_message` reflecting the `WaterfallError`'s own text (matching the
+   established pattern `test_an_unrelated_exception_without_abort_is_still_settled_as_error`
+   already uses); assert the mock adapter recorded NO request for that turn (or, if a prior turn's
+   request already exists in `adapter.requests`, that no NEW request was appended) -- the malformed
+   delegation must never reach the provider at all; assert the Agent's own `status` returns to
+   `AgentStatus.IDLE` afterward, per the existing, unmodified `_run_wrapped`/`_execute_run`
+   contract.
+4. **Real-loop, trailing-omission shape, same treatment**: the same structure as (3), with the
+   trailing-omission delegation shape.
+5. **The new sole legal shorthand, positive case**: a listener delegates via
    `next_(new_messages)` (length 1) -- assert the NEXT listener observes the ORIGINAL `instance`
    and the ORIGINAL `signal` (not `None`, not a forgery), and observes the TRANSFORMED `messages`;
    assert the real provider request's own `Request.messages` reflects the transformed value.
-4. **The already-passing full-length redirect witness** (`test_a_transform_listener_cannot_
+6. **The already-passing full-length redirect witness** (`test_a_transform_listener_cannot_
    redirect_a_later_listener_to_a_replacement_signal`): re-run unchanged against the fixed
    implementation to confirm no regression -- length-3 handling is untouched by this design.
-5. **A length-1 delegation with NO prior listener** (a single listener, `next_(new_messages)`,
+7. **A length-1 delegation with NO prior listener** (a single listener, `next_(new_messages)`,
    nothing upstream) -- confirms the shorthand works even as the very first step, not only when
    chained after a prior full-length or no-op step.
 
-Confirmed via revert-and-confirm once implemented: witnesses 1-3 and 5 must FAIL against the
-current PASS-9 candidate (1 fails by NOT raising -- it silently corrupts instead; 2 already passes
-today, since it is the currently-supported shape, so it is a REGRESSION guard rather than a RED
-witness; 3 and 5 fail with `IndexError` today, since `current[1]` assumes at least 2 elements) and
-PASS once the arity-aware `_restore_signal` above is restored.
+**Revert-and-confirm accounting, corrected (`C18-3`):** witnesses 1, 2, 3, 4, 5, and 7 are all
+genuine RED witnesses against the current PASS-9 candidate:
+
+- 1 and 3 (leading-omission shape) fail today by NOT raising at all -- `_restore_signal` silently
+  treats the malformed tuple as `(instance_attempt, messages)` and corrupts the payload instead;
+- 2 and 4 (trailing-omission shape) ALSO fail today, but for the OPPOSITE reason: PASS 9's own
+  `_restore_signal` currently ACCEPTS this exact shape successfully (it is the shape the
+  already-shipped code was designed to support), so asserting it is now REFUSED is a genuine RED
+  test against PASS 9's own actual behavior, not a pre-passing regression guard -- revision 1's own
+  claim that this witness "already passes today" was wrong;
+- 5 and 7 (length-1 shorthand) fail today with `IndexError`, since `current[1]` assumes at least 2
+  elements.
+
+Only witness 6 (the unchanged full-length redirect test) is an already-GREEN regression guard, not
+a RED witness -- it must remain passing throughout, unmodified, confirming length-3 handling is
+untouched by this design.
+
+All RED witnesses (1, 2, 3, 4, 5, 7) must PASS once the arity-aware, explicitly-rejecting
+`_restore_signal` above is restored; witness 6 must remain passing throughout.
 
 ## Normative deltas required
 
@@ -275,20 +361,41 @@ idiomatic realization of it, not a divergence.
 
 ```text
 CONVERGENCE CONTRACT
-    PROPOSED -- AWAITING INDEPENDENT AGREEMENT (revision 1)
+    PROPOSED -- AWAITING INDEPENDENT AGREEMENT (revision 2)
 
-OPEN FINDINGS
+OPEN FINDING
     L09-R018
 
+CORE RULE RETAINED (accepted in revision 1, unchanged)
+    legal external delegation shapes {0, 1, 3}
+    length 1 means messages only
+    full length restores authoritative Agent and signal
+
+CHALLENGE FINDINGS ADDRESSED
+    C18-1  reject at the authority boundary: normalize_step now raises WaterfallError directly,
+           before the malformed tuple is ever forwarded to the next listener -- proven by a
+           variadic/short-circuit-capable downstream listener that is never invoked (witnesses
+           1-2), not merely relying on a fixed next listener's own incompatible arity
+    C18-2  represented failure, not bare propagation: the direct unit-level witnesses (1-2) may
+           assert the immediate WaterfallError; the real-Agent-loop witnesses (3-4) now assert
+           the represented Layer-08 run-failure outcome (prompt() completes normally, terminal
+           stop_reason is StopReason.ERROR, no provider request sent, status returns IDLE) --
+           see the revised "Proposed design" and witnesses above
+    C18-3  RED/regression accounting corrected: witnesses 1, 2, 3, 4, 5, and 7 are all genuine
+           RED against PASS 9 (2 and 4 fail because PASS 9 currently ACCEPTS that shape, not
+           because it already rejects it); only witness 6 (unchanged full-length redirect) is
+           an already-green regression guard
+
 ACCEPTANCE WITNESSES
-    tests/agent_loop/test_active_abort.py (5 new/changed AGENT_TRANSFORM_CONTEXT witnesses --
+    tests/agent_loop/test_active_abort.py (7 new/changed AGENT_TRANSFORM_CONTEXT witnesses --
       see "Required acceptance witnesses" above)
     -- none yet written; this is a contract/evidence checkpoint, not an implementation pass
 
 NORMATIVE DELTAS
     minion-agent-docs/spec/agent.md (AGENT_TRANSFORM_CONTEXT delegation grammar corrected to the
-      {0, 1, 3}-legal-arity rule; "no need to re-supply signal" corrected to "no need to
-      re-supply either authoritative field")
+      {0, 1, 3}-legal-arity rule, explicit rejection at the authority boundary via WaterfallError,
+      and represented Layer-08 failure settlement for the rejected case; "no need to re-supply
+      signal" corrected to "no need to re-supply either authoritative field")
     minion-agent-docs/assurance/layers/09-active-abort-python.md (new PASS section once
       implemented)
     minion-agent/pi-parity-manifest.yaml, AG-007 (L09-R018 paragraph) and AG-023 (FAIL corrected
