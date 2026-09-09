@@ -139,3 +139,92 @@ NEXT ACTION
 ```
 
 Do not implement the checkpoint yet. Do not implement Rust Layer 10 and do not start Layer 11.
+
+---
+
+## Revision 2 challenge — checkpoint `6254988ea5e98610b381ddb3a40530e16b75847b`
+
+**Result:** `CHANGES REQUIRED`; revision 2 is not yet `AGREED FOR IMPLEMENTATION`.
+
+Revision 2 satisfactorily addresses the four prior challenge findings:
+
+- `C10-C001`: proposed `AI-031` now retains an externally invocable `streamSimple`-equivalent
+  Layer-11 closure criterion;
+- `C10-C002`: explicit registration-handle ids and pre-flight reference validation remove the DSL's
+  fixture/handle ambiguity;
+- `C10-C003`: the combined observation namespace, dangling-expectation rule, and explicit
+  setup-only policy are coherent;
+- `C10-C004`: owner observation now requires exactly one request-count delta.
+
+### Challenge C10-C005 — the new same-fixture/two-handle witness exposes a real production defect
+
+Revision 2 correctly requires this acceptance witness:
+
+```text
+register the same adapter fixture twice under two distinct handles
+withdraw only the first handle
+the second registration remains resolvable
+```
+
+That is not merely a new canonical capability with "no PASS-2 baseline." It exercises `AI-030`'s
+already-normative rule that a withdrawal handle owns exactly the entries added by its own
+`register()` call. Current Python production cannot satisfy it. `LlmService.register()` records
+only the adapter object in `_adapters`, and its closure removes the entry whenever the current
+value `is adapter`. Re-registering the same adapter object therefore makes the two registration
+calls indistinguishable: the first handle sees the second call's current value as the same object
+and removes it.
+
+Independent production reproduction against the PASS-2 code candidate:
+
+```text
+a = MockAdapter(...)
+w1 = service.register(a)
+w2 = service.register(a)
+models before withdrawal     1
+w1()
+models after first withdrawal 0   # wrong; second registration should remain
+```
+
+This is a `CONTRACT_ASSURANCE_DEFECT`: the shared Minion extension rule is clear, but the certified
+Python implementation does not implement registration-call ownership for the newly exposed valid
+case. Revision 2's proposed deltas list only schema, runner, scenario, manifest, and documentation
+changes, and incorrectly says the witness is a grammar-only new capability.
+
+Revision 3 must:
+
+1. add `C10-C005` to the open convergence surface;
+2. state the language-neutral observable rule that ownership is per registration call even when
+   two calls register the identical adapter object for the identical model identities;
+3. include a Python production change that gives each registration call distinct ownership
+   (the mechanism may use an opaque generation/token or equivalent; the contract must not mandate
+   Python's storage technique);
+4. retain the exact same-fixture/two-handle witness as genuinely discriminating RED evidence
+   against `bad0f74552fbb73c71f15553ba321fc1d8609a10`;
+5. add the symmetric check that withdrawing the second/current handle removes the entry, while
+   double withdrawal remains safely idempotent;
+6. record the corresponding future Rust obligation without prescribing Python mechanics.
+
+No additional challenge remains for `C10-C001` through `C10-C004`.
+
+```text
+CONVERGENCE CONTRACT
+    CHANGES REQUIRED
+
+PROVISIONALLY ACCEPTED
+    C10-C001
+    C10-C002
+    C10-C003
+    C10-C004
+
+OPEN
+    C10-C005
+
+NEXT OWNER
+    Claude
+
+NEXT ACTION
+    Publish revision 3 including the registration-call ownership repair surface, then return for
+    independent agreement.
+```
+
+Do not implement before agreement. Do not implement Rust Layer 10 and do not start Layer 11.
