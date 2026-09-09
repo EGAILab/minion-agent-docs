@@ -185,7 +185,7 @@ this large (a full prior layer's worth of already-certified work), which is wort
 spective noting explicitly if it recurs (e.g., if Layer 12 "Execution seams" turns out to already
 be substantially built under Layer 06's own tool-execution pass).
 
-## Next action
+## Next action (superseded -- see PASS 2 below)
 
 Create the Layer 10 coordination issue in `minion-agent` (`STATUS: PYTHON_SHARED`, `NEXT_OWNER:
 Claude` while candidates are pushed, then `RUST_CONTRACT_REVIEW`/`NEXT_OWNER: Codex` once pushed).
@@ -196,3 +196,246 @@ of `AI-028`/`AI-029` and the new `spec/llm.md` section; Layer 11 remains not sta
 Rust behavior was changed by this pass). Request Codex confirm whether the existing Rust
 implementation already satisfies both new rows as formalized, or identify a narrow remediation, per
 the standing ownership flow. Do not implement Rust. Do not start Layer 11.
+
+# PASS 2 — remediate L10-R001..R004 (misstated Pi shape, mixed dispositions, current Rust defect, missing canonical evidence)
+
+## Re-review reference
+
+The independent Rust contract review of the PASS-1 candidate (code PR #20 @
+`4deef8f8d8dba1f109057ee03755aa7a55ad1a7c`, docs PR #45 @ `1d395df1770cc7d6a32bc4597f1220c4f8e3de5b`,
+`assurance/layers/10-provider-abstraction-rust-contract-review.md`, review commit
+`d43559dfbc1770bb8508fcb2f27a88c0f5a4530c`) **REJECTED** the candidate with four findings:
+
+- **`L10-R001`** (`PI_PARITY_DEFECT`): PASS 1 misread pinned Pi's own `ProviderStreams.streamSimple`
+  as optional; it is required (only `fetchDeferred?`/`cancelDeferred?` are optional). PASS 1's own
+  "direct, faithful mapping" claim for Minion's single-operation `Adapter` protocol needed an
+  explicit disposition for the missing second required operation, not a false "optional" reading.
+- **`L10-R002`** (`CONTRACT_ASSURANCE_DEFECT`): `AI-029` mixed Pi's own single-vs-API-map provider
+  dispatch, Minion's eager full-identity simplification, Minion-only registration/withdrawal
+  mechanics, and `models()` introspection under ONE `adopted` disposition -- different semantic
+  subjects that cannot coherently share one disposition. The row's own Rust evidence was also
+  materially inaccurate (current Rust has no adapter-declared model set, withdrawal handle, or
+  `models()` at all).
+- **`L10-R003`** (`PI_PARITY_DEFECT`, current Rust production, OPEN): `LlmAdapter::start` may return
+  an eager, typed `AdapterStartError` after the model has already resolved and the adapter's own
+  code has already run -- contrary to Pi's own never-raises boundary, which requires an expected
+  failure at that point to settle IN the returned stream. The permanent Rust test
+  `adapter_start_failure_remains_eager_and_typed` locks this in as current, not hypothetical,
+  behavior.
+- **`L10-R004`** (`CONTRACT_ASSURANCE_DEFECT`): the cited canonical scenarios never exercised the
+  newly normative registration/replacement/withdrawal/introspection/resolution/failure-settlement
+  rules -- only stream-terminal-content scenarios, none of which construct a multi-adapter registry
+  or an adapter-DETECTED (as opposed to mid-network) failure.
+
+The review's own read-only checks (Rust adapter/stream/conformance tests 11/11, schema validation
+185/185, manifest 81/81 unique IDs) passed but explicitly did not close any finding: "Green tests
+do not close the findings because the new contract is misstated and the cited tests do not
+discriminate the missing behavior."
+
+## Findings, reproduced against the exact candidate and remediated
+
+### L10-R001 — `streamSimple` misread as optional
+
+**Re-review finding:** confirmed by re-reading `packages/ai/src/types.ts:264-281` directly: neither
+`stream` nor `streamSimple` carries a `?`; both are required. Only `fetchDeferred?`/`cancelDeferred?`
+are optional.
+
+**Root cause:** re-reading `streamSimple`'s own implementations directly (e.g.
+`packages/ai/src/api/openai-completions.ts:683-702`), it is not a semantically distinct operation --
+every API module's own `streamSimple` is a thin wrapper translating the provider-neutral
+`SimpleStreamOptions` into that ONE API's own specific options shape, then delegating to that SAME
+module's own `stream()`. Its content is therefore inherently wire-protocol-specific, with nothing
+generic to specify at Layer 10's own abstraction level.
+
+**Remediation:** `AI-028`'s own `rule:` corrected to state both operations are required, and
+`streamSimple`'s own translation responsibility explicitly DEFERRED to Layer 11 (`PROV-###`) --
+disclosed as a deferred mapping, not silently declared optional or silently omitted. `spec/llm.md`
+corrected identically.
+
+### L10-R002 — AI-029 mixed several semantic subjects under one disposition
+
+**Re-review finding:** confirmed -- the prior `AI-029` covered Pi's own resolution mapping
+(genuinely Pi-motivated), Minion's eager-lookup simplification (a disclosed architectural choice
+authorized by master design §4), and Minion-only registration/withdrawal/introspection mechanics
+(no Pi analogue at all) as one row with one `adopted` disposition.
+
+**Remediation:** split into two rows. `AI-029` narrowed to ONLY the resolution/unresolvable-identity
+mapping (kept `disposition: adopted`, since this half IS genuinely Pi-motivated via
+`createProvider`/`apiFor`/`dispatch` plus master design's own eager/lazy boundary). New `AI-030`
+covers registration/replacement/withdrawal/introspection (`disposition: intentional divergence`,
+matching the pattern `AG-011` already uses for `Inbox.inject` -- a Minion architectural extension
+with literally no Pi behavior to diverge FROM, since Pi has no registry concept at all). Both rows'
+own Rust evidence corrected to match direct source re-reads (see `L10-R003`/below): `AI-029`'s own
+resolution/unresolvable-identity behavior IS confirmed satisfied by current Rust; `AI-030`'s own
+registration surface is only PARTIALLY satisfied (replacement works; withdrawal and `models()` do
+not exist in Rust at all), disclosed as open, not claimed complete.
+
+### L10-R003 — current Rust permits an eager adapter-start failure the never-raises boundary forbids
+
+**Re-review finding:** confirmed by direct source read. `minion-agent-rust/crates/minion-agent/src/
+llm/adapter.rs::LlmAdapter::start(&self, request) -> Result<RawAssistantStream, AdapterStartError>`
+grants a synchronous, typed failure channel usable even after a model has resolved and the
+adapter's own code has run. `service.rs::LlmService::stream` folds this into the SAME eager
+`LlmStartError` enum as the (correctly eager) unknown-model case: `Err(LlmStartError::
+AdapterStart(_))`. The permanent test `adapter_start_failure_remains_eager_and_typed`
+(`tests/llm_adapter.rs`) constructs exactly the case Pi's own contract forbids -- an adapter
+reporting "invalid provider configuration," an ordinary EXPECTED failure, not a programming bug --
+and asserts it surfaces eagerly. `exhausted_scripted_adapter_fails_before_stream_creation` shows
+Rust's own reference/scripted adapter diverges from Python's already-certified `MockAdapter` the
+identical way: an exhausted script is an in-band `StopReason.ERROR` response in Python
+(`MockAdapter._take()`) but an eager `AdapterStart` error in Rust.
+
+**Classification:** `PI_PARITY_DEFECT`, current Rust production, genuinely OPEN -- not something
+this shared/Python pass fixes (Rust ownership boundary; the review's own required remediation
+explicitly scopes this to "a later implementation pass").
+
+**Remediation (this pass):** `AI-028`'s own `rust:` pointer corrected from "already implemented, no
+new requirement" (false) to an explicit `PENDING` marker naming the exact defect
+(`LlmAdapter::start`/`AdapterStartError`, `ScriptedAdapter`'s own matching divergence) and stating
+remediation is a future Rust implementation pass's own responsibility. `spec/llm.md` corrected to
+state the current-Rust gap explicitly rather than silently presenting Rust as compliant.
+
+### L10-R004 — cited canonical evidence never exercised the newly normative rules
+
+**Re-review finding:** confirmed -- `eager-invalid-model-fails-before-stream`/`public-stream-fuses-
+after-first-terminal`/`represented-provider-error-rides-stream` all exercise stream TERMINAL
+content or the (already-certified) unknown-model case; none construct more than one registered
+adapter, exercise replacement/withdrawal, exercise `models()`, or distinguish an adapter-DETECTED
+failure from a mid-network one.
+
+**Remediation:** a new canonical family, discriminated by a top-level `llm_service` key
+(`conformance/schema/llm-service-scenario.schema.json`, following the SAME "extra schema for
+`conformance/agent/`'s own directory, not a new top-level canonical family" convention
+`tool-registry-scenario.schema.json`/`agent-inbox-scenario.schema.json` already established) --
+exercises the real `LlmService`/`Adapter`/`MockAdapter` seam directly, with no Agent loop in the
+way. Four new scenarios:
+
+- `llm-service-registration-and-replacement.yaml` -- same-identity replacement, different-identity
+  independence, and the eager unresolvable-identity case, all as direct `resolve` queries (`AI-029`/
+  `AI-030`'s own required discriminating dimension).
+- `llm-service-withdrawal-does-not-remove-a-later-replacement.yaml` -- a stale withdrawal (an
+  earlier registrant's own handle, called after a later registrant has already replaced the same
+  key) is a safe no-op; an ordinary withdrawal (the current owner's own handle) does remove its own
+  entry (`AI-030`).
+- `llm-service-introspection-reflects-current-registrations.yaml` -- `models()` tracks
+  registration/withdrawal exactly, with one entry per model name a multi-model adapter declares
+  (`AI-030`).
+- `llm-service-adapter-detected-failure-settles-in-band.yaml` -- an adapter that detects an expected
+  failure at stream-creation time settles IN the returned stream (`settled: error`), never raises,
+  distinct from the SEPARATE, legitimately-eager unresolvable-identity case (`AI-028`/`L10-R003`'s
+  own required discriminating dimension, direct at this seam rather than only through the Agent
+  loop).
+
+A new `tests/conformance/llm_service_runner.py` drives the real seam (register through the real
+`register()` effect, withdraw through the real handle it returns, `stream()` drained to its own
+terminal, `models()`/resolution observed through the public API only -- ownership of a `resolve`
+query is determined via `MockAdapter.requests`, its own sanctioned testability instrumentation
+already established under `LLM-F009`, never a private `LlmService` attribute); a new
+`test_llm_service_conformance.py` parametrizes over every `llm_service`-keyed scenario, matching the
+existing `tool_registry`/`agent_inbox` runner pattern exactly. `test_schema_validation.py` and
+`test_agent_conformance.py` both updated to recognize and correctly route/exclude the new
+discriminator key, the same way they already do for `tool_registry`/`agent_inbox`/`transform`.
+
+All four new scenarios were run directly against the real Python seam and PASS (Rust remains
+unmodified by this pass; the `llm-service-adapter-detected-failure-settles-in-band` scenario is
+EXPECTED to currently fail if run against Rust's own `xtask conformance verify`, since it exercises
+exactly the `L10-R003` defect that pass does not fix -- this is disclosed here, not silently
+claimed passing for Rust).
+
+## Regression verification for previously-closed findings
+
+`LLM-011`, `LLM-012`, `LLM-018`, `LLM-019`, `LLM-F006`, `LLM-F007`, `LLM-F009`, `LLM-F010`
+(Layer 02): unaffected -- no existing Python source file was modified; the diff is confined to two
+new test/runner files, four new canonical scenarios, one new schema, two small additions to
+existing schema-validation/agent-conformance test files (a new discriminator branch each, mirroring
+existing ones exactly), and the manifest/spec text corrected in place. `AI-011`/`AI-012`/`AI-027`
+(the never-raises contract, `Context`, and the Layer-09 signal addition): unaffected, not
+referenced by this pass's own corrections.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1140 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, unchanged (no source file under src/ touched)
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier layer's own
+                                      passes remains untouched and out of this pass's ownership
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 307 passed, 19 xfailed (up from 298 -- 4 new llm_service
+                                      scenarios, 5 new schema-validation checks)
+manifest parse + unique-ID audit:    82 / 82 unique (79 PASS-9-era + AI-028/AI-029 from PASS 1 +
+                                      new AI-030 this pass)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only (LlmAdapter::start/
+                                AdapterStartError permits an eager failure the never-raises
+                                boundary forbids); disclosed, not silently claimed satisfied;
+                                remediation is a future Rust implementation pass's own decision
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R002/R004 closed this pass
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification of
+                                Pi's two-level Provider/apiFor resolution (unchanged from PASS 1,
+                                now correctly isolated to its own coherent row)
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, no Pi
+                                analogue, disposition: intentional divergence); ModelId.api's own
+                                Python-only "mock" default (LLM-F006, unchanged, now explicitly
+                                marked Python-specific rather than universalized in spec/llm.md)
+Rust cross-language dependency      PARTIAL -- AI-029's own resolution/unresolvable-identity
+                                behavior confirmed satisfied by direct source read; AI-028's own
+                                never-raises boundary for adapter-detected failures (L10-R003) and
+                                AI-030's own withdrawal/introspection surface are OPEN, disclosed
+                                gaps for a future Rust implementation pass
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending independent Rust contract review)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, per direct source
+                          confirmation this pass
+shared Layer-10 contract   READY FOR TARGETED RUST CONTRACT RE-REVIEW of L10-R001/R002/R003/R004
+                             together; the corrected AI-028/AI-029/AI-030 rows and spec/llm.md
+                             section, plus the new llm-service canonical evidence
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Workflow-process retrospective note (this pass)
+
+A prior pass's own confident "already implemented / no new requirement" claim about the OTHER
+language needs the SAME source-verification discipline as any other Pi-parity claim, not a lower
+bar because it is a cross-language status note rather than a semantic rule: PASS 1 asserted current
+Rust already satisfied the never-raises boundary and the full registration surface without reading
+`minion-agent-rust/**` at all (a reasonable ownership-boundary choice for NOT modifying Rust, but
+not for asserting its current behavior). The independent review caught a genuine, current defect
+(`L10-R003`) and a materially inaccurate completeness claim (`L10-R002`) this pass could have
+caught itself by reading the three Rust files it eventually did read here, before ever claiming
+their state. This is the SAME lesson `assurance/process-history.md`'s own Layer 09 entry already
+recorded for a DIFFERENT direction (a convergence checkpoint's own "can the other language
+implement this" question needing to ask whether the underlying extensibility point exists there at
+all) -- here the miss was narrower and more basic: do not describe the other language's current
+behavior without having read it, even when the point of the pass is explicitly to avoid modifying
+that language.
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); update PR
+#20/#45 bodies with the PASS-2 remediation summary and new head SHAs. Update coordination issue #19
+(`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the
+PASS-1 rejection reference (`minion-agent-docs#46` @ `d43559dfbc1770bb8508fcb2f27a88c0f5a4530c`) to
+`PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted independent Rust
+contract review of this PASS-2 candidate against L10-R001/L10-R002/L10-R003/L10-R004 together --
+confirm the corrected AI-028/AI-029/AI-030 dispositions and Rust-status disclosures are now
+accurate, and confirm the new llm-service canonical scenarios genuinely discriminate what they
+claim to (including that the adapter-detected-failure scenario correctly reproduces L10-R003
+against current Rust, not merely against Python). L10-R003/AI-030's own open Rust gaps remain
+explicitly NOT fixed by this pass and are not blocking further shared/Python work; Layer 11 remains
+not started`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust.
+Do not start Layer 11.
