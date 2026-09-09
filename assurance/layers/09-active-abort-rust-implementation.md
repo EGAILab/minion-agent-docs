@@ -150,3 +150,107 @@ started.
 Python Layer 09 remains certified. Rust Layer 09 is a certification candidate at the exact SHA
 above. Cross-language Layer 09 is **not closed** until the independent shared/Python owner verifies
 this candidate and completes the merge/closure workflow.
+
+## Independent closure verification (shared/Python owner)
+
+Performed against the exact reviewed SHAs -- code PR #18 at
+`7437bcc913e6248a5e4f3cca96e351fc91b376ab`, docs PR #43 at
+`9f9c622ff6f62b22d9d161ea6dc5c6b91f6bca61` -- fetched directly from GitHub into
+`review-worktrees/rust-layer-09-impl` (a clean worktree; `git status --short` confirmed empty
+before and after this review), not read from local-only or chat-reported state. Coordination
+issue #16 (`STATUS: CLOSURE_REVIEW`, `NEXT_OWNER: Claude`) and both candidate PRs were confirmed
+open, mergeable, and unmerged before verification began.
+
+**Scope confirmation:** `gh pr diff 18` covers exactly `minion-agent-rust/**` (12 source/test
+files) plus `pi-parity-manifest.yaml`. The manifest diff touches only the `rust:` evidence field
+on exactly four rows (`AI-027`, `AG-007`, `AG-023`, `TOOL-024`) -- their own `id`/`pi`/`rule`/
+`tests`/`python`/`disposition` fields are byte-for-byte unchanged. No `minion-agent-python/**`
+path appears anywhere in the diff. Docs PR #43 touches exactly one new assurance file (this one) --
+no `spec/**` or `conformance/**` path changed.
+
+**Architecture read, independently, before reading this file's own claims:** confirmed directly
+from source (`agent/instance.rs`, `agent_loop/driver.rs`) that `AgentInstance::try_begin_run`/
+`finish_run` never invoke listener code between claiming entering input and committing to a run --
+both the status/controller flip and the subsequent `Inbox` claim are synchronous, non-`async`
+calls with no `.await` between them, and `finish_run` itself is a plain field-write with no
+dispatch of any kind, invoked unconditionally via `PreparedRun`'s own `Drop` impl regardless of
+success, failure, or early return. This independently confirms the "no synchronous status-observer
+extension exists in Rust" claim above BEFORE reading it -- the Python-specific `_Reservation`
+mechanism genuinely has no applicable Rust counterpart, not merely an undisclosed one.
+
+Read `agent_loop/decisions.rs` directly: `AGENT_TRANSFORM_CONTEXT`'s Rust realization
+(`TransformContextAction::{Next(Option<Vec<Message>>), Replace(Vec<Message>)}`) cannot express an
+`instance`/`signal` replacement in its own type at all -- the `L09-R018` leading-vs-trailing-
+omission ambiguity is structurally unrepresentable, not merely avoided by convention. `pre_step`/
+`prepare_next_turn` use the pre-existing (unmodified by this PR) `EventBus::waterfall_normalized`
+primitive with a field-level closure (`delegated.signal = authoritative.clone()`) rather than a
+positional-tuple transform -- confirmed by reading `runtime/event.rs::run_waterfall` directly that
+the normalize closure is applied at every listener-to-listener handoff, matching the shared
+contract's own normative rule.
+
+Read `tools/execution.rs` and the `parallel_abort_stops_future_preflight_but_runs_already_
+prepared_calls` test directly: reproduces the required A/B/C scenario exactly (A prepared and
+executed; B aborts during its own before-hook and settles immediately via the preflight-priority
+path, never reaching `execute`; C's own before-hook never runs at all) with the correct message
+count (2, not 3 -- C produces no result at all, matching Pi's own truncation semantics already
+certified at Layer 06), not merely a passing test taken on faith.
+
+**Gates independently re-run**, not accepted from the candidate's own report:
+
+```text
+cargo fmt --all -- --check                                   PASS (reproduced)
+cargo clippy --workspace --all-targets --all-features
+    -- -D warnings                                            PASS (reproduced)
+cargo test --workspace --all-features                        287 passed, 0 failed (reproduced,
+                                                                exact count matches)
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps    PASS (reproduced)
+cargo run -p xtask -- conformance verify                      PASS, exit 0 (reproduced)
+git diff --check (main..candidate)                             PASS (reproduced)
+pi-parity-manifest.yaml parse + unique-ID audit                79 rows / 79 unique (reproduced,
+                                                                independent parse)
+shared schema validation (pytest tests/conformance/
+    test_schema_validation.py)                                 185 passed (reproduced)
+```
+
+**Canonical placeholder audit:** read `conformance/agent/abort-settles-before-idle.yaml` directly
+-- still genuinely `TO_BE_FILLED_FROM_PINNED_PI_BEHAVIOR`/`TO_BE_BOUND_TO_REAL_PUBLIC_API`/
+`TO_BE_PINNED_EXACTLY`, not fabricated or silently marked filled. `active-abort-provider.yaml`/
+`active-abort-tool.yaml` confirmed the same by file listing; all three remain excluded from
+`xtask conformance verify`'s own passing scope, matching the disclosed evidence policy.
+
+**Baseline currency:** `origin/main` at `f94d840453b47e5f6572e05ddeba4c138fe0e250` and
+`origin/master` at `561cdd289973ee607eccbe93a2f578ba535aa50b` independently confirmed to be the
+CURRENT tips of both default branches at review time, matching the baselines this candidate and
+the final approval (docs PR #42) both declare -- neither PR was building on stale state.
+
+No active blocker found. Both candidates approved at the exact reviewed SHAs and merged:
+
+- code PR #18 -> `main`, merge commit `6c10aa5d75b2c78dbb999278363b156c99cf4b70`
+- docs PR #43 -> `master`, merge commit `5209ab75d970eab1d22d5b739b50b36cbabaf680`
+
+Workflow `§14` retrospective performed at closure -- two reusable lessons promoted into
+`process/agent-workflow.md` (multi-field authority-protection witnesses; Rust-applicability
+characterization for a defect's own root extensibility point), recorded in full at
+`assurance/process-history.md`'s own Layer 09 entry.
+
+## Candidate verdict
+
+```text
+Python Layer 09
+    CERTIFIED
+
+Rust Layer 09
+    CERTIFIED
+
+shared Layer-09 contract
+    APPROVED / IMPLEMENTED / CLOSED
+
+Layer 09 cross-language
+    CROSS-LANGUAGE CERTIFIED / CLOSED
+
+Rust certified through
+    Layer 09
+
+Layer 10
+    ELIGIBLE / NOT STARTED
+```

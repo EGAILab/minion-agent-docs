@@ -4,6 +4,80 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layer 09 (Active Abort/Cancellation) — closed 2026-09-09
+
+Layer 09 took ten shared/Python passes, three contract-convergence cycles (`L09-R007`; the
+combined `L09-R012`/`R013`/`R014`; `L09-R018`), and one Rust implementation/closure pass. Two
+reusable lessons were promoted into `process/agent-workflow.md` itself (see the diff for this
+entry's own commit); this section records the fuller context.
+
+### 1. An authority-protection fix needs a separate witness for EACH protected field's own omission, not one shared witness assumed to cover all of them
+
+The same underlying failure mode recurred three times on the same event family:
+
+- `L09-R006` (PASS 3) closed `AGENT_TRANSFORM_CONTEXT`'s signal-REDIRECT case (a listener
+  delegating with a fabricated replacement signal). It did not test signal-OMISSION or
+  instance-omission at all -- not yet part of that finding's own scope.
+- `L09-R015` (found at the PASS-9 mandatory final review, closed in PASS 9 itself after one
+  targeted re-review round) found `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN`'s own instance-
+  redirect case was fixed but instance-OMISSION was not: PASS 8's own two "drop" witnesses both
+  called the dispatch primitive's argument-less continuation form (`next_()`), which the
+  primitive's own forwarding rule (`replacement or current`) treats as an unchanged forward -- a
+  fundamentally different code path from a genuine, shorter replacement missing the protected
+  field. Both tests passed against a candidate that could not actually handle true omission,
+  because they never reached the omission-handling branch at all.
+- `L09-R018` (found at the mandatory final review of the PASS-9 candidate) found that
+  `AGENT_TRANSFORM_CONTEXT` -- the ONE event with two protected fields (`instance` leading,
+  `signal` trailing) on opposite sides of its one transformable field -- could not safely resolve
+  a delegation one field shorter than full at all: the SAME shortened length is produced by
+  omitting EITHER protected field, so a fix correct for one single-field omission was silently
+  wrong for the other. This required its own convergence cycle to resolve (legal delegation
+  lengths restricted to exactly the transformable-field count or full, with any other length
+  rejected explicitly rather than guessed).
+
+Three passes, three independent reviews, one recurring meta-lesson: closing the redirect case
+does not imply the omission case is closed, closing one field's own omission does not imply
+another field's omission is closed, and a witness using a bare no-argument continuation call does
+not exercise omission handling at all, regardless of its own name or docstring.
+
+**Fix:** `process/agent-workflow.md` section 9.1 now states this directly -- enumerate each
+protected field's own redirect and omission separately for a multi-field authority-protection fix,
+and construct a genuinely shorter delegation for an omission witness rather than an argument-less
+continuation call.
+
+### 2. A convergence checkpoint's "can Rust implement this" question is not the same question as "does Rust need this at all"
+
+`L09-R007`'s own convergence cycle (PASS 4/5) designed a claim-then-rollback mechanism
+(`_Reservation`) specifically to defend `Inbox` claims against a synchronous, reentrant
+`on_status_change` observer running between a run-entry attempt and its own commit. Every
+convergence checkpoint through this layer asked, and answered, "can Rust implement this
+idiomatically" -- always yes, via a typed equivalent. None asked whether Rust's own already-
+certified Layer-08 architecture exposed the synchronous, listener-observable status-transition
+hook that created the vulnerability in Python in the first place. It does not: Rust's own
+`AgentInstance::try_begin_run`/`finish_run` never invoke arbitrary listener code between claiming
+entering input and committing to a run, so no reentrancy window exists there at all, and the whole
+`_Reservation` mechanism -- five Python implementation passes plus one convergence cycle -- turned
+out to have no Rust counterpart whatsoever. This was disclosed correctly and honestly at Rust-
+implementation time, but discovering it that late meant the cross-language cost of the underlying
+Python architectural choice (a synchronous, fallible `on_status_change` extension point) was never
+weighed against its own downstream assurance burden until the very end of the layer.
+
+**Fix:** `process/agent-workflow.md` section 11.8.4's own challenge questions now ask directly
+whether a defect's root cause depends on an extensibility point one language's own certified lower
+layers expose and the other does not -- surfacing a one-language-only mechanism during
+characterization, not only at Rust-closure time.
+
+### Not promoted to persistent guidance
+
+The independent Rust closure review for this layer read the full implementation, independently
+re-ran every claimed gate (fmt, clippy, `cargo test` workspace at 287/287, rustdoc, `xtask
+conformance verify`, schema validation at 185/185, manifest at 79/79 unique rows) rather than
+trusting the candidate's own summary, and found the architecture, gate results, and Rust-side
+canonical-placeholder disclosure all matched the claims exactly. This is a clean confirmation that
+the existing exact-SHA review invariant (§11.3) and reviewer witness rule (§9.2) work as intended
+under a large, multi-pass layer with three separate convergence cycles -- no new rule is needed
+here, only the observation that the discipline held.
+
 ## Layer 08 (Agent Loop) — closed 2026-09-07
 
 Layer 08 took fourteen shared/Python remediation passes, one contract-convergence cycle

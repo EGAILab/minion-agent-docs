@@ -233,6 +233,10 @@ completion timing    callback return | work continuation | event join
 
 Do not test every theoretical combination mechanically. Select the combinations that distinguish the adopted rule from realistic incorrect implementations.
 
+For an authority-protection fix on a multi-field payload (a listener must not redirect or drop one or more protected fields for a later listener), enumerate EACH protected field's own redirect and omission separately, not one shared witness assumed to cover all of them. Two protected fields on opposite sides of the transformable region are a distinct failure mode from either one alone: a delegation shorter than the full payload can be genuinely ambiguous about WHICH field was omitted, and a fix that resolves the redirect case correctly can still leave one field's own omission case silently wrong (Layer 09: `L09-R006` closed signal-redirect; `L09-R015` later found the same event's own instance-omission case still open; `L09-R018` then found that closing BOTH single-field omissions independently was still incomplete once the payload had two protected fields, because a shortened delegation could not say which one was missing).
+
+A witness asserting "a listener omits field X when delegating" must construct a delegation that is genuinely shorter than the full payload with X specifically absent -- not a bare, argument-less continuation call. A dispatch primitive's own no-argument continuation is typically defined as "forward the current values unchanged," a different code path from "forward a replacement that is missing one specific field," and a witness using the former cannot discriminate a real omission-handling defect no matter how its own name and docstring describe it (Layer 09, `L09-R015`: two "drop" tests both called the argument-less continuation form and passed against a candidate that could not actually handle true omission, because that form never reaches the omission-handling code path at all).
+
 ### 9.2 Reviewer witness rule
 
 Every blocking `PI_PARITY_DEFECT`, `CONTRACT_ASSURANCE_DEFECT`, or `PI_BEHAVIOR_UNCERTAIN` discovered in independent review MUST include a minimal discriminating witness when the behavior is executable or observable.
@@ -532,6 +536,7 @@ The challenge should ask:
 - Are any cases implementation mechanics rather than observable semantics?
 - Does any proposed fix silently reopen a lower certified layer?
 - Can both Python and Rust implement the rule idiomatically?
+- Does the defect's own ROOT CAUSE depend on an extensibility point (a synchronous listener hook, a reentrant callback, a mutable shared handle) that one language's own already-certified lower layers expose and the other does not? If so, say which side actually needs the fix and which side may need nothing at all -- a "yes, idiomatically implementable" answer can still hide that the mechanism itself is a one-language-only cost the other language's own architecture never introduced (Layer 09: five Python passes and a convergence cycle defended against a reentrant `on_status_change` observer that had no Rust counterpart, because Rust's own Layer-08 architecture never exposed a synchronous status-observer hook at all -- this was only discovered at Rust-closure time, not during characterization).
 - Are all previous review findings represented by an executable or documentary acceptance criterion?
 
 Disagreements should be resolved against pinned Pi and the existing semantic-authority chain. Escalate to the owner only for the normal governance cases in §11.7.
