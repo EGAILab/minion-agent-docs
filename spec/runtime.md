@@ -118,3 +118,26 @@ Plugin config validates through Pydantic; JSON Schema export is available where 
 layer needs it. This is a Python-specific mechanism detail — not part of the language-neutral
 runtime contract `conformance/runtime/` covers, and not required to have canonical conformance
 evidence. A second-language implementation validates config through its own idiomatic mechanism.
+
+## RT-024 — Cancellation signal (Layer 09)
+
+`RunSignal` (Python: `runtime/signal.py`) is one run's cancellation flag: poll-based (`aborted`
+property), set at most once per instance (`abort()` is idempotent), never reused across runs. It
+carries no dependency on any higher layer — it is pure additive infrastructure, the same way
+`EventBus.serial`'s own `yield_after_each` (RT-016) is an additive extension to an existing
+certified primitive rather than a new one, except `RunSignal` is a wholly new, standalone type.
+
+Deliberately NOT built on the host language's own task-cancellation primitive (Python:
+`asyncio.Task.cancel()`/`CancelledError`; matches pinned Pi's own choice not to build `abort()` on
+anything that would forcibly interrupt a promise chain mid-flight). A forced-cancellation
+mechanism would interrupt cooperative code at an arbitrary suspension point; `RunSignal` instead
+gives every consumer an explicit value to poll, and each consumer decides for itself whether and
+when to react — see `spec/agent.md`'s own "Active abort propagation" section for the full
+consumer/settlement matrix this signal serves, and `spec/tools.md` for the tool-execution
+preflight/batch rules built on it.
+
+Certified Rust Layer 06 already reserves a structurally equivalent, poll-based
+`ToolExecutionSignal` trait (`fn is_cancelled(&self) -> bool`) in `tools/definition.rs`, not in a
+`runtime`-equivalent crate — an intentional Rust-side architectural placement difference from
+Python's own `runtime/signal.py`, not an observable divergence: both expose the identical poll-based
+shape to identical consumers.

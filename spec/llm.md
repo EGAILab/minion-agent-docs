@@ -40,3 +40,12 @@ raw EOF synthesizes one error terminal preserving partial assistant state; the p
 Responses replay uses content-owned opaque strings: retained same-model `thinking_signature` replays;
 same-model unsigned thinking emits no reasoning replay item. `text_signature` preserves response
 message identity/phase where supported.
+
+The request carried into `stream()` gains one optional, additive field: the active run's own
+cancellation signal (`AI-027`, Layer 09 -- `runtime/signal.py::RunSignal`, absent for every
+request outside an Agent-driven run). This project has no real network transport yet, so `stream()`
+itself never inspects or acts on it -- it is carried through to the adapter unexamined, exactly like
+every other request field, and an adapter MAY poll it to represent `StopReason.ABORTED` in its own
+returned stream, cooperatively, matching pinned Pi's own `streamFunction(model, context, {...config,
+signal})`. Actual transport cancellation remains deferred to `PROV-004`. See `spec/agent.md`'s own
+"Active abort propagation" section for the complete consumer/settlement matrix this signal serves.

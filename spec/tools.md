@@ -33,12 +33,14 @@ AgentTool extends Tool
     prepare_arguments?      (args) -> args -- field/signature only; when/whether it
                              runs is Layer 06 (`TOOL-F002`)
     execute                 (tool_call_id, params, signal?, on_update?) -> result --
-                             target capability shape (`TOOL-F003`); Layer 06 has since
-                             closed the tool_call_id/on_update half (`TOOL-017`,
-                             `TOOL-018`) -- only the cancellation-signal half remains
-                             open, asymmetrically (Python has no AbortSignal-equivalent
-                             abstraction yet; certified Rust Layer 05 already reserves
-                             one structurally, unexercised), Layer 09 territory
+                             target capability shape (`TOOL-F003`); Layer 06 closed the
+                             tool_call_id/on_update half (`TOOL-017`, `TOOL-018`), and
+                             Layer 09 has since closed the cancellation-signal half too
+                             (`ToolDefinition.wants_signal`, `L09-R003` -- see `AG-007`/
+                             `TOOL-024`): all four combinations (neither, update-only,
+                             signal-only, both) are now realized; corrected here after a
+                             stale-documentation finding (`L09-R016`) found this row still
+                             describing the signal half as open
     execution_mode?          parallel | sequential -- per-tool override; absent means
                              "no per-tool preference," defers to the run-level default
                              (`TOOL-F004`), never itself contributes contagion exclusivity
@@ -242,8 +244,16 @@ unchanged; this addition applies identically whether one listener or several are
 
 After-hook waterfall: listeners run in registration order. The recommended registration path,
 `register_after_tool_call_hook`, gives each listener the current, already-merged `ToolResult`
-(read-only) and expects an `AfterToolCallOverride` (or `None`/nothing for no change) in return --
-**never** the whole result. `AfterToolCallOverride` carries exactly Pi's five `AfterToolCallResult`
+(read-only) -- and, when the listener declares its own second parameter for it, the active run's
+`signal` too (`L09-R008`: pinned Pi's own `afterToolCall(context, signal)` delivers `signal`
+unconditionally; an independent Rust review found the recommended helper delivered it to raw
+`tools/post-execute` listeners but not to hooks registered through this constrained path, so a
+caller using the intended API could not observe cancellation at all -- arity alone decides which
+form a given hook wants, unambiguous here since a hook has only one optional second slot, unlike
+`execute()`'s own `wants_signal`/arity split above) -- and expects an `AfterToolCallOverride` (or
+`None`/nothing for no change) in return -- **never** the whole result. A one-parameter hook (every
+hook written before Layer 09) is called exactly as before, unaffected. `AfterToolCallOverride`
+carries exactly Pi's five `AfterToolCallResult`
 fields (`content`/`details`/`is_error`/`usage`/`terminate`) and structurally has no slot for
 `tool_call_id`, `tool_name`, or `added_tool_names`, so a hook written against this API cannot even
 attempt to touch them. But `tools/post-execute` remains a public Runtime event, and a caller may
@@ -271,20 +281,79 @@ for one listener or many, for a helper-registered or raw listener alike, and reg
 registration order.
 
 `execute(tool_call_id, arguments)` receives the pipeline's own real call id as its first argument,
-plus an `update` callback appended when the tool declares a third parameter -- matching pinned Pi's
-`(toolCallId, params, signal?, onUpdate?)` capability shape except for `signal`. Cross-language
-signal state is asymmetric, not uniformly absent (`L06-R005`; an earlier revision incorrectly
-claimed "no equivalent type exists in either language"): Python has no `AbortSignal`-equivalent
-abstraction yet, but certified Rust Layer 05 already reserves one structurally
-(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in
-`minion-agent-rust/crates/minion-agent/src/tools/definition.rs`) without exercising cancellation
-behavior. The accepted defer is behavioral, not architectural: Layer 06 certifies **non-cancelled**
-tool-execution semantics only; assurance Layer 09 owns cancellation propagation, abort timing,
-sibling effects, and cancellation result semantics, and can add that behavior later without
-changing any non-cancelled stage/ordering/result/event rule this document states, and without
-requiring Rust to discard or redesign its existing signal-bearing capability seam. A
-thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
-still flows through the after-hook exactly like success would.
+plus `signal`/`update` parameters when the tool declares them -- matching pinned Pi's
+`(toolCallId, params, signal?, onUpdate?)` capability shape and positional order (Layer 09,
+`L09-C001`..`L09-C003`, `L09-R001`, `L09-R003`). `signal` is a `RunSignal` (`runtime/signal.py`,
+RT-024) -- the READ-ONLY view (`L09-R004`); a tool cannot itself trigger cancellation merely by
+holding it.
+
+Capability is DECLARED EXPLICITLY, not inferred from arity alone (`ToolDefinition.wants_signal:
+bool = False`, Layer 05, `L09-R003`): pinned Pi's own `signal`/`onUpdate` are INDEPENDENT optional
+parameters -- a tool may want either, both, or neither -- and Python's own pre-existing arity-based
+`update` detection (3 parameters means `update`, unchanged since before Layer 09) cannot by itself
+also distinguish "this 3rd parameter is `signal`" without breaking that established meaning. An
+earlier revision tried arity alone (a 4th parameter always meant "signal then update") and could
+not represent a tool wanting `signal` WITHOUT `update` at all -- Pi's own signal-only tool had no
+Python equivalent, a `PI_PARITY_DEFECT`. The corrected dispatch:
+
+```text
+wants_signal   arity   execute(...) receives
+False          2       (tool_call_id, arguments)                    -- neither
+False          3       (tool_call_id, arguments, update)             -- update only (unchanged)
+True           3       (tool_call_id, arguments, signal)             -- signal only
+True           4       (tool_call_id, arguments, signal, update)     -- both
+```
+
+`wants_signal=False` (every pre-Layer-09 tool) preserves the existing arity dispatch exactly for
+both rows; `wants_signal=True` shifts the 3rd-parameter meaning to `signal`, with a 4th (if
+declared) receiving `update`. Certified Rust Layer 05 already reserves the matching seam
+(`ToolExecutionSignal`, `ToolExecutionRequest.signal` in `minion-agent-rust/crates/minion-agent/
+src/tools/definition.rs`), independently of `update` -- Rust's own typed request already
+represents all four combinations; Python's `wants_signal` flag closes the same gap.
+
+Before-hook and after-hook waterfalls ALSO receive `signal` explicitly, as a payload argument
+before `next_` (`L09-R001`) -- pinned Pi's own `beforeToolCall(context, signal)`/
+`afterToolCall(context, signal)` pass it as their own second parameter; Layer 06 has no `instance`
+access at all (architecturally below Layer 07, where `AGENT_LIFECYCLE_EVENT`-style listeners
+instead read `instance.signal` directly -- see `spec/agent.md`), so this seam threads it
+explicitly. `signal` is AUTHORITATIVE event metadata, not a listener's own to replace, redirect, or
+drop (`L09-R006`): both waterfalls supply `normalize_step` (`tools/pre-execute`'s own
+`_restore_signal`; `tools/post-execute`'s own `_restore`, extended from its pre-existing
+`L06-R003` identity restoration) that forces `signal` back to the run's ORIGINAL value at every
+listener-to-listener handoff, regardless of what a listener passes when it delegates -- a listener
+does not need to re-supply `signal` to preserve it, and cannot override it for a later listener even
+by supplying a replacement or omitting it entirely. `register_after_tool_call_hook`'s own wrapper
+relies on this: it never re-supplies `signal` when delegating.
+
+A thrown/rejected `execute()` becomes a normal error outcome -- **not** an immediate one -- so it
+still flows through the after-hook exactly like success would, and the after-hook runs
+UNCONDITIONALLY once `execute()` has been reached, regardless of the signal's own state at any
+point during or after `execute()`.
+
+**Preflight abort/error priority (`L09-C002`):** the active run's own signal is checked exactly
+ONCE per call, immediately after the before-hook waterfall resolves (whichever decision it
+produced), before that decision is examined -- in this exact priority order, earlier wins:
+
+```text
+1. tool not found                                     -> "Tool <name> not found"
+2. prepare_arguments/validate throws                   -> the exception's own message
+3. a before-hook listener throws                       -> the exception's own message
+4. before-hook waterfall resolves AND signal is aborted -> "Operation aborted"
+   (wins over the waterfall's own Block decision -- the discriminating case is an
+   aborted signal plus a Block, not plus a Proceed, since Proceed would reach
+   step 6 anyway)
+5. before-hook waterfall resolves to Block, not aborted -> the Block's own reason/terminate
+6. no listener aborted/blocked                          -> proceeds to execute()
+```
+
+Steps 1-3 are checked/raised BEFORE the signal is ever read, so an unknown tool, a validation
+failure, or a throwing before-hook listener all keep their own specific error regardless of the
+signal's state. Pinned Pi's own `prepareToolCall` has an independent SECOND abort check for the
+"no `beforeToolCall` configured at all" case its own single, nullable hook creates; Minion's
+`tools/pre-execute` waterfall always runs the same code path whether zero or more listeners are
+registered, so ONE checkpoint here covers both of Pi's two -- an intentional, disclosed
+architectural mapping, not an observable divergence (the two Pi-distinguishable states, "hook
+absent" and "hook ran without blocking/aborting," are the same code path in Minion).
 
 Live updates: `update(partial)` is silently ignored once `execute()`'s own call has settled
 (succeeded or failed) -- pinned Pi's `AgentToolUpdateCallback`: "Calls made after the tool promise
@@ -370,6 +439,39 @@ calls. Both Python and Rust implementations agreed with each other under that ca
 disagreed with Pi -- the reason prior cross-language certification is evidence of implementation
 agreement, never semantic authority on its own.
 
+**Abort polling differs by mode (`L09-C001`).** A generic "stop the batch" rule is wrong for
+either mode alone -- the two modes poll the active run's own signal at genuinely different points,
+matching pinned Pi's own `executeToolCallsSequential`/`executeToolCallsParallel` exactly:
+
+- **Sequential:** the signal is checked AFTER each call's own COMPLETE preflight-through-finalize
+  lifecycle, before starting the next call. A call already started always finishes; only calls not
+  yet reached are skipped -- the batch's own result count can be shorter than the source call count.
+- **Parallel:** preflight remains fully sequential (above, unchanged); the signal is checked after
+  EACH call's own preflight OUTCOME (immediate or prepared) is recorded, deciding whether to
+  preflight the NEXT source call -- NOT after execution. Every prepared outcome retained BEFORE
+  the poll still starts its own `execute()`/after-hook phase afterward, via the same concurrent
+  barrier described above, receiving the already-aborted signal cooperatively; an abort arising
+  DURING one prepared call's own execution cannot stop a sibling already committed to that barrier.
+  Immediate and prepared outcomes remain interleaved in the returned result set in retained SOURCE
+  order regardless of which finishes first (unchanged from the ordering rule below).
+
+Discriminating witness (source calls A, B, C; A has no before-hook issue; B's own before-hook
+calls `abort()` and returns normally -- a RETURNING hook, not a throwing one, and not a `Block`,
+since either of those would win over abort per the preflight priority order above regardless):
+
+```text
+tool_execution_start(A)                      -- A preflights normally, retained as prepared
+tool_execution_start(B)
+  B's before-hook runs, calls abort(), returns
+  B's own preflight priority step 4 fires: signal now aborted -> immediate "Operation aborted"
+tool_execution_end(B)                        -- emitted inline, during the sequential preflight phase
+-- poll after B: signal aborted -> stop preflighting; C's tool_execution_start never fires --
+-- barrier: A's retained closure starts, receiving the already-aborted signal cooperatively --
+execute(A) / after-hook(A)                   -- A does not check the signal; completes normally
+tool_execution_end(A)
+-- returned results: A, B in source order; C is entirely absent --
+```
+
 Two further orders are normative and different, matching pinned Pi's own `ToolExecutionMode`
 docstring verbatim, and apply to the concurrent phase described above: `tool_execution_end` fires
 in actual **completion** order; the final `ToolResultMessage` sequence preserves **source**
@@ -425,10 +527,14 @@ matches.
 
 ### Explicitly not certified by Layer 06
 
-Cancellation/abort propagation through `execute`/hooks (assurance Layer 09 -- Python has no
-`AbortSignal`-equivalent type yet; certified Rust Layer 05 already reserves one structurally
-without exercising cancellation behavior, `L06-R005`), provider-specific constrained-sampling
-enforcement (Real Providers, assurance Layer 11), and everything the master's own agent run loop
-owns: `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
+Cancellation/abort propagation through `execute`/hooks was assurance Layer 09's territory, not
+Layer 06's, at THIS row's own Layer-06 certification -- Python then had no `AbortSignal`-equivalent
+type at all; certified Rust Layer 05 already reserved one structurally without exercising
+cancellation behavior (`L06-R005`). Layer 09 has since REALIZED it (`ToolDefinition.wants_signal`,
+`RunSignal`, `L09-R003` -- see `spec/agent.md`'s own consumer/settlement matrix and `AG-007`); this
+note is corrected for present tense (`L09-R016`) rather than left describing a gap that no longer
+exists. Also not certified by Layer 06: provider-specific constrained-sampling enforcement (Real
+Providers, assurance Layer 11), and everything the master's own agent run loop owns:
+`prompt()`/`continue()` lifecycle, steering/follow-up message injection,
 `shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
 condition actually suppresses/continues the next model turn.

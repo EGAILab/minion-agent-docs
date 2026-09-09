@@ -571,21 +571,314 @@ legitimate use in this method. A caller mutating `self.instance.model` directly 
 adopted mutation surface, above) IS visible here, since there is no snapshot in between -- see the
 `handleRunFailure` seam section above for the full three-source witness.
 
-### Active abort propagation (explicitly out of scope)
+### Active abort propagation (Layer 09)
 
-Pinned Pi's `abort()` actively signals the running provider/tools/hooks. Idle is reached only after
-terminal run settlement and awaited `agent_end` listeners -- Layer 09's territory, per the
-already-certified Layer-07 contract's own deferral. Not attempted by Layer 08 at all:
-`handleRunFailure` above settles an aborted/failed turn correctly once it arrives, without itself
-implementing any provider, stream, tool, hook, or transport abort-signal propagation. Layer 08 has
-no local cancel/boundary-stop mechanism of any kind: a prior revision of this section documented one
-(`request_boundary_stop()`, renamed from `cancel()`), but it was removed entirely rather than kept
-and approved -- a public method that could alter a Pi-equivalent run's own observable outcome had no
-owner governance approval for that divergence, and no demonstrated product need justified keeping
-it, the same default this project already applied to `max_steps` (above). If a host-only safety
-mechanism is ever needed, it must sit entirely outside a single Pi-equivalent run's own semantic
-behavior -- limiting a HOST's own repeated scheduling/invocation policy across independent runs,
-never truncating or altering one run's own outcome internally.
+Pinned Pi's `abort()` actively signals the running provider/tools/hooks -- cooperatively, never a
+forced interrupt. Full audit and discriminating witnesses:
+`assurance/layers/09-active-abort-contract-checkpoint.md`.
+
+**Authority split (`L09-R004`):** `RunSignal`/`RunAbortController` (`runtime/signal.py`, RT-024)
+reproduce pinned Pi's own `AbortSignal`/`AbortController` split exactly. `RunAbortController` is
+PRIVATE -- held only by `AgentInstance` (as `_active_controller`, no public accessor) and never
+handed to a tool, hook, adapter, or lifecycle listener; only `AgentInstance.abort()` may call its
+`.abort()`. Every consumer instead receives a `RunSignal` -- pinned Pi's own `AbortSignal` --
+which has NO `.abort()` of its own at all: observing the signal never grants authority to trigger
+cancellation. An earlier revision handed every consumer the SAME mutable object (so a tool or
+adapter could call `.abort()` itself, authority Pi's own type system forbids) and made
+`AgentInstance.signal` a plain public attribute any listener could reassign mid-run, redirecting
+later requests to a caller-supplied replacement -- an independent Rust review caught both as
+observable divergences from Pi (`L09-R004`).
+
+**Public surface:** `AgentInstance.signal: RunSignal | None` -- a READ-ONLY property with no
+setter at all, `None` while idle, matching pinned Pi's own `Agent.signal` getter returning
+`undefined` with no active run, and returning the SAME `RunSignal` object for a run's entire
+duration (never a fresh wrapper per access -- pinned Pi's own "stable per-run identity").
+`AgentInstance.abort() -> None` -- a no-op, never raising, when idle; when a run is active, flips
+that run's own PRIVATE controller. One NEW `RunAbortController()` per run, created via internal
+`_start_run_signal`/`_end_run_signal` methods Layer 08 alone calls (matching pinned Pi's own `new
+AbortController()` inside `runWithLifecycle`) -- live for the run's ENTIRE duration, including
+`_settle_run_failure`'s own recovery dispatch and `agent_end` listener settlement. `abort()` does
+not itself change `status`; `reset()` still rejects until the run has actually settled, exactly as
+for a non-aborted active run.
+
+**Signal/status transition ordering (`L09-R007`):** `AgentInstance.set_status` emits `agent/
+status` and calls `on_status_change` SYNCHRONOUSLY, so a status-transition observer runs INSIDE
+the same synchronous call that publishes `RUNNING`/`IDLE`. `_start_run_signal()` is therefore
+called BEFORE `set_status(AgentStatus.RUNNING)`, and `_end_run_signal()` BEFORE
+`set_status(AgentStatus.IDLE)` -- the controller must exist before a RUNNING observer could read
+`instance.signal` or call `instance.abort()`, and must be cleared before an IDLE observer could
+read it, or the observer sees the wrong run's signal state (`None` during RUNNING, or the
+just-finished run's stale live signal during IDLE) despite the rule above holding once the
+callback returns. An earlier revision installed/cleared the controller AFTER each status publish
+instead, which an independent Rust review's own executable witness caught: a RUNNING observer's
+own `abort()` call was a no-op, and an IDLE observer saw the previous run's still-live signal.
+Entry-side relative order (`_start_run_signal`, `set_status(RUNNING)`, `streaming_message`,
+`error_message`) is unchanged from `AG-008`'s own certified sequence. Exit-side order changed
+further, as part of the failure-atomicity rule below: `set_status(AgentStatus.IDLE)` moved to be
+the LAST write in `_run_wrapped`'s own `finally` block, after `_end_run_signal()`/
+`streaming_message`/`pending_tool_calls`, not before them. This has NO observable effect on the
+success path -- `streaming_message`/`pending_tool_calls` already hold their final values by that
+point regardless of the write's own position, since the run's own normal completion (or a settled
+failure via `_settle_run_failure`) already set them -- so `AG-008`'s own certified rule (the four
+fields' final values match pinned Pi's own `runWithLifecycle`/`finishRun` write order once the
+whole sequence completes) is not reopened, only extended below to define the FAILURE case `AG-008`
+never addressed at all.
+
+**Status-observer failure atomicity (`L09-R007`, convergence-agreed contract):** Pi has no
+synchronous, listener-driven status-notification extension point at all -- `isStreaming = true`
+and `finishRun()`'s own writes are plain, non-throwing property assignments in Pi, made
+unconditionally outside Pi's own run-lifecycle `try`/executor boundary, so Pi never has an
+"entry/exit notification observer throws" case to define. This is therefore a genuinely
+Minion-owned architectural-mapping decision, derived from the ONE structural fact Pi's own design
+does establish: `isStreaming = true` (RUNNING's own Pi analogue) is written BEFORE ANY of the run's
+own observable event stream (including `agent_start`) exists, while `finishRun()` (IDLE's own Pi
+analogue) runs AFTER the run's own observable outcome has already been fully committed and
+dispatched. The two transitions are therefore governed asymmetrically, not by one uniform rule:
+
+- **A RUNNING-notification failure** (an `AGENT_STATUS` EMIT listener or `on_status_change`
+  raising) means the run never validly began, matching Pi's own "nothing observable exists yet at
+  this point" structure: the freshly-created signal is discarded; `status` is forced back to
+  `AgentStatus.IDLE` directly, WITHOUT calling `set_status` again (which would re-invoke the SAME
+  failing listener chain, an infinite-rollback hazard); no `agent_start`, no `_settle_run_failure`-
+  synthesized turn, and no `message_start`/`message_end`/`turn_end`/`agent_end` sequence is
+  produced (`_settle_run_failure` is Pi's own `handleRunFailure`, invoked only once a run has
+  genuinely begun); entering input a caller already inspected from `Inbox` before entering this
+  method (see "Preclaimed inbox input" below) was never actually removed, so nothing needs
+  restoring; and the observer's own original exception propagates DIRECTLY out of `prompt()`/
+  `continue_()`/`run_until_idle()`, unconverted. A subsequent `prompt()`/`continue_()` call then
+  succeeds normally, exactly as if the failed attempt had never been made.
+- **An IDLE-notification failure** does NOT retroactively hide or duplicate the run's own
+  already-committed outcome (success, or a `_settle_run_failure`-settled failure/abort): every
+  other exit-time write (`_end_run_signal()`, `streaming_message`, `pending_tool_calls`) completes
+  UNCONDITIONALLY before the possibly-throwing `set_status(AgentStatus.IDLE)` call, which is
+  therefore LAST, not first. `set_status`'s own internal write to `self._status` happens before its
+  own emit/callback (unchanged, already true today), so `status` is ALSO already `IDLE` internally
+  by the time a throwing listener's exception propagates -- meaning `signal`/`streaming_message`/
+  `pending_tool_calls`/`status` are all already fully consistent with a normally-settled idle
+  instance the instant the exception is observed by a caller. That exception then propagates OUT of
+  `_run_wrapped`/`prompt()`/`continue_()` UNCAUGHT, matching pinned Pi's own precedent that a
+  listener failure during settlement is never silently absorbed (`_settle_run_failure`'s own
+  "a listener invoked during this very recovery sequence itself throws... the exception propagates
+  uncaught" rule, above).
+- **Ordering/short-circuit across `AGENT_STATUS` listeners and `on_status_change`** needs no
+  separate rule: `EventBus.emit`'s own existing fail-fast semantics (a throwing listener propagates
+  immediately, so no later listener in the same dispatch -- including `on_status_change`, called
+  only after `emit` returns without raising -- ever runs) already governs both transitions
+  identically, the same as every other `EMIT` event in this codebase.
+
+**Preclaimed inbox input (`L09-R007`, convergence-agreed contract; mechanism corrected under
+`L09-R010`, then again under the `L09-R012`/`R013`/`R014` convergence -- current mechanism is
+claim-then-reservation-rollback, NOT peek-then-commit):** `continue_()`'s own steering and follow-up
+branches, and `run_until_idle()`'s own follow-up claim, need to know their entering input BEFORE
+`_run_wrapped`'s own RUNNING notification runs, and must not leave it lost from `Inbox` (`AG-011`)
+if that notification then fails -- pinned Pi's own `Agent.continue()` has the identical
+pre-drain-then-`runWithLifecycle` shape (`PendingMessageQueue.drain()` is equally destructive, with
+no rollback of its own; Pi simply never observes this gap because nothing between its own drain and
+`finishRun` can throw). The observable rule:
+
+```text
+RUNNING notification fails after a caller has already reserved entering envelopes from Inbox
+    -> no reserved envelope is lost or duplicated
+    -> each envelope's own id/message/origin are exactly the values a subsequent claim observes
+    -> input the failing observer itself enqueues at the same target during its own (failing)
+       execution never precedes the restored envelopes at a later claim
+    -> a subsequent claim at the same target observes the reserved envelope(s) exactly once
+```
+
+Applies to `continue_()`'s steering and follow-up branches and `run_until_idle()`'s follow-up
+claim, under both `ClaimPolicy.ONE_AT_A_TIME` and `ClaimPolicy.ALL`. `prompt()` is unaffected: it
+never reads from `Inbox` at all.
+
+Two earlier mechanisms were tried and rejected before the current design. The first satisfied the
+rule by claiming (destructively removing) eagerly and exposing a PUBLIC `Inbox.restore(target,
+envelopes)` to reverse a failed claim; an independent Rust review found that method callable by ANY
+caller with ANY envelope tuple -- including one still queued and never claimed, or the same envelope
+repeatedly -- manufacturing duplicate queue entries that shared an id, contradicting `AG-011`'s own
+exactly-once invariant (`L09-R010`, `CONTRACT_ASSURANCE_DEFECT`). The second removed the
+restoration surface but introduced a peek-then-commit split instead: `Inbox.peek(target, policy)`
+(public, read-only) let a caller inspect entering input without removing it, deferring the actual
+removal to an internal-only `_commit_claim`, performed only once the RUNNING notification had
+already succeeded. This closed the duplicate-id defect but opened a WINDOW between `peek()` and the
+later commit during which a re-entrant observer on the same target -- the very listener
+`_run_wrapped` awaits synchronously in between -- could itself claim the peeked envelopes, clear the
+target, or enqueue more input; a commit that then removed by COUNT alone could silently delete
+input the observer never touched (`L09-R011`), and even an identity-checked commit left a claiming-
+and-THEN-throwing observer's own claimed batch unrestored (`L09-R013`), or a partial re-entrant
+`ONE_AT_A_TIME` claim leaving a stale prefix eligible for duplicate admission (`L09-R014`) --
+every one of these was a different exploit shape through the SAME window, not an independent defect.
+
+The current mechanism removes the window entirely rather than adding a further case-by-case check:
+`Inbox._reserve(target, policy)` (private, Layer-08-only) atomically `claim()`s the selected batch
+IMMEDIATELY -- removing it from `Inbox` the instant it is selected, before the RUNNING notification
+ever runs -- and returns a private, one-shot `_Reservation` bound to exactly that batch
+(`.envelopes`, read-only, bound at construction). Exactly one of `.commit()` (settles the removal
+permanently) or `.rollback()` (restores the exact reserved batch, verbatim and in the same order,
+ahead of whatever the target holds by then) may ever be called, and each takes NO argument at all --
+closing the "foreign/duplicate envelope" authority gap `L09-R010` found by the absence of a
+parameter, not by convention; a second call to either, after the first, raises `RuntimeError` --
+closing the "double action" half structurally. `AgentLoop._run_wrapped` calls `.rollback()` on a
+RUNNING-notification failure and `.commit()` on success. Because removal happens at RESERVE time,
+not commit time, a re-entrant observer on the same target during the RUNNING notification can never
+see or act on the reserved batch at all -- whether it throws, returns normally, or performs its own
+unrelated claim/clear/enqueue on that target -- closing `L09-R011`/`L09-R013`/`L09-R014` by
+construction. Only the reservation's own claimed batch is ever rolled back: a genuinely different,
+unrelated claim the observer itself performs, a `clear()`, or new input the observer enqueues are
+never reversed or treated as though they did not happen -- rollback restores exactly what THIS
+reservation removed, nothing more. `AG-011`'s own already-certified `InputEnvelope` identity/
+FIFO-ordering rules are read, not rewritten, by any of this -- no lower-layer reopen. `Inbox.restore`
+(the first mechanism) and `Inbox.peek`/`_commit_claim` (the second) are both removed entirely, not
+merely superseded in place -- `Inbox.claim()` remains the only OTHER removal path, unchanged.
+
+**Consumer/settlement matrix** (every place the SAME per-run `RunSignal` reaches, and whether the
+loop itself forces a stop there — none do, except the two explicit tool-preflight polls below):
+
+| Surface | Receives the signal | Loop forces a stop there? |
+|---|---:|---:|
+| `AGENT_LIFECYCLE_EVENT` listeners (`subscribe`-equivalent) | via `instance.signal` (already the listener's own first argument) | no |
+| `AGENT_TRANSFORM_CONTEXT` listeners (`L09-R005`, new) | yes, explicit 3rd payload argument | no |
+| provider request (`llm/service.py::Request.signal`, `AI-027`) | yes | no -- the adapter chooses whether to honor it and represent `StopReason.ABORTED` |
+| tool `before`-hook (`TOOLS_PRE_EXECUTE` waterfall, `L09-R001`) | yes, threaded explicitly as a payload argument (no `instance` access at Layer 06) | only at the two explicit preflight polls -- see `spec/tools.md` |
+| tool `execute()` | yes, when the tool declares `ToolDefinition.wants_signal=True` (`L09-R003`) -- its own cooperative 3rd/4th positional parameter | no -- the tool's own choice; never forcibly interrupted |
+| tool after-hook (`TOOLS_POST_EXECUTE` waterfall, `L09-R001`) | yes, threaded explicitly as a payload argument | no -- runs unconditionally regardless of abort state |
+| per-batch (sequential/parallel) | n/a, batch-level | yes, but only BETWEEN calls -- see `spec/tools.md`'s own split algorithms |
+| `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listeners | via `instance.signal` (already the listener's own first argument) | no |
+| steering/follow-up queue drains | not applicable -- plain queue-drain operations, no signal parameter, matching pinned Pi exactly |
+
+`AGENT_TRANSFORM_CONTEXT` (`L09-R005`): pinned Pi's own `config.transformContext(messages, signal)`
+(`agent-loop.ts:290-292`), an OPTIONAL per-request projection of the outgoing message history,
+invoked immediately before every provider request -- omitted entirely from an earlier revision of
+this matrix, a `CONTRACT_ASSURANCE_DEFECT` an independent Rust review named explicitly. Genuinely
+NEW to Minion: no prior layer had an equivalent extensibility point at this exact seam.
+`AGENT_PRE_STEP` is NOT equivalent -- it runs once, at INPUT ADMISSION boundaries, and changes
+what gets durably admitted into the run's own transcript; `AGENT_TRANSFORM_CONTEXT` runs on every
+REQUEST and never mutates the persistent/run-local transcript itself, matching pinned Pi's own
+`streamAssistantResponse` reassigning only its own LOCAL `messages` variable, never
+`currentContext.messages` -- a transform's own output is provider-local for that one request only,
+never carried into a later turn's own request. Zero listeners (the default, matching every caller
+before this event existed) preserves prior behavior exactly. `instance`/`signal` are BOTH
+AUTHORITATIVE event metadata at this waterfall (`L09-R006`, extended by `L09-R018`): the payload
+is `(instance, messages, signal)`, sandwiching its ONE transformable field (`messages`) between
+its two authoritative fields -- a listener no longer needs to re-supply EITHER authoritative field
+when delegating with a replacement.
+
+The full delegation grammar (`L09-R018`, convergence-agreed, `assurance/layers/09-active-abort-
+contract-checkpoint-r018-convergence.md`): legal delegation lengths are exactly `{0, 1, 3}`.
+`next_()` (length 0) is a true no-op forward. `next_(new_messages)` (length 1) supplies ONLY the
+transformable field -- both `instance` and `signal` are restored to their original values
+regardless of what (if anything) the listener says about them. `next_(instance, messages, signal)`
+(length 3, full explicit) restores both authoritative positions from their original values
+regardless of content, taking only the middle position as `messages`. ANY OTHER delegation length
+-- in practice, exactly length 2 -- is REJECTED directly at this authority boundary (a
+`WaterfallError`, per `runtime/errors.py`) before the malformed tuple is ever forwarded to a later
+listener: a two-element replacement is inherently AMBIGUOUS between "the leading `instance` was
+omitted" (`next_(messages, signal)`) and "the trailing `signal` was omitted" (`next_(instance,
+messages)`) -- both produce an identical length-2 tuple, and neither a bare tuple's own length nor
+its content (inspecting whether a value happens to be a `RunSignal` instance -- explicitly rejected
+as "type/position guessing") can safely disambiguate them. An earlier revision instead committed to
+ONE interpretation unconditionally, which silently corrupted the request when the OTHER
+interpretation was the listener's actual intent (`L09-R018`, `PI_PARITY_DEFECT`): a genuine
+leading-`instance` omission had its real `messages` discarded as though it were a forged `instance`,
+and the live `signal` object forwarded downstream, and eventually to the real provider request, AS
+IF it were `messages`.
+
+Because `AGENT_TRANSFORM_CONTEXT` is dispatched from inside `AgentLoop._execute_run`'s own
+`try`/`except Exception` boundary (`L08-R002`, unchanged), a rejected delegation's `WaterfallError`
+is caught there and routed to `_settle_run_failure` exactly like any other run-executor failure:
+`prompt()`/`continue_()` itself completes normally, with a synthesized terminal `error` assistant
+message -- never a bare exception escaping the run. The malformed delegation never reaches a later
+listener or the real provider request.
+
+This is the SAME `normalize_step` mechanism `spec/tools.md` describes for `TOOLS_PRE_EXECUTE`/
+`TOOLS_POST_EXECUTE`, generalized here to a payload with authoritative fields on BOTH sides of its
+transformable field rather than only one -- the other authoritative-metadata waterfalls in this
+codebase (`AGENT_PRE_STEP`, `AGENT_PREPARE_NEXT_TURN`, `TOOLS_PRE_EXECUTE`, `TOOLS_POST_EXECUTE`)
+each have exactly ONE authoritative field, always at a fixed end, and so have no equivalent
+two-length-2-readings ambiguity to resolve.
+
+Tool-side signal capability is EXPLICIT, not inferred from arity alone (`L09-R003`):
+`ToolDefinition.wants_signal: bool = False` (Layer 05). Pinned Pi's own `execute(toolCallId,
+params, signal?, onUpdate?)` treats `signal`/`onUpdate` as independent optional parameters -- a
+tool may want either, both, or neither. Python's own pre-existing arity-based `update` detection
+(3 parameters means `update`, unchanged since before this layer) cannot by itself also distinguish
+"this 3rd parameter is `signal`" without breaking that established meaning; an earlier revision
+tried arity alone and could not represent a tool wanting `signal` without ALSO being forced to
+declare an unused `update` parameter it did not want -- a `PI_PARITY_DEFECT` an independent Rust
+review caught (`L09-R003`): Pi's own signal-only tool has no Python equivalent under that design.
+`wants_signal=False` (every pre-Layer-09 tool) preserves the existing arity dispatch exactly;
+`wants_signal=True` shifts `execute`'s own 3rd-parameter meaning to `signal`, with a 4th parameter
+(if declared) receiving `update` -- all four Pi-equivalent combinations (neither, update-only,
+signal-only, both) are representable. See `spec/tools.md` for the complete dispatch table.
+
+Minion's own architectural mapping, not an observable divergence: pinned Pi threads `signal` as an
+EXPLICIT parameter to every one of `agent-loop.ts`'s own consumers, including its own lifecycle
+listeners (`subscribe(listener)`'s own second parameter) and `prepareNextTurn`/`shouldStopAfterTurn`
+(via `agent.ts`'s own PUBLIC `Agent.createLoopConfig()`, `agent.ts:445-471`, which wraps the
+application-facing `AgentOptions.prepareNextTurn(signal)`/`prepareNextTurnWithContext(context,
+signal)`/`shouldStopAfterTurn(context, signal)` callbacks with the SAME Agent's own live
+`this.signal` before handing them down to the low-level loop). `instance.signal` for
+`AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` is therefore a FAITHFUL MAPPING of an existing Pi
+capability -- Pi genuinely supplies `signal` explicitly at this exact point -- not a Minion-added
+one (an earlier revision of this section claimed pinned Pi's `prepareNextTurn` carries no `signal`
+at all; that claim was itself wrong, having read only `agent-loop.ts`'s own low-level
+`AgentLoopConfig.prepareNextTurn(context)` shape and missed `agent.ts`'s own public wrapper --
+corrected here, `L09-R015` convergence, `C09-2`). Minion's own established convention already
+passes `instance` as the first argument to every `AGENT_LIFECYCLE_EVENT`/`AGENT_PREPARE_NEXT_TURN`/
+`AGENT_TURN_STOPPING` listener, so those listeners already have a way to reach `instance.signal`
+without a new parameter -- only the tool-execution seam (Layer 06, which has no `instance` access at
+all, being architecturally below Layer 07) needs the signal threaded explicitly, and does. The
+OBSERVABLE fact -- every one of these consumers CAN read the current run's signal -- is identical
+either way; only the mechanism differs.
+
+**`instance` is authoritative event metadata at the `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN`
+waterfalls (`L09-R015`):** both dispatches pass `instance` as the first payload argument, and (like
+`signal` at `AGENT_TRANSFORM_CONTEXT`, `L09-R006`, and `tool_call_id`/`tool_name` at
+`TOOLS_PRE_EXECUTE`/`TOOLS_POST_EXECUTE`, `L06-R003`) it is identity/authority a listener has no
+business redirecting for a listener downstream of it -- unlike `reason` (`AGENT_PRE_STEP`) or
+`message`/`tool_results`/`context`/`new_messages` (`AGENT_PREPARE_NEXT_TURN`), which remain
+genuinely listener-transformable, intentionally out of this rule's scope. Both dispatches supply a
+`normalize_step` closure (`_restore_instance`) that forces the payload tuple's own `instance` slot
+back to the closure-captured ORIGINAL value at every listener-to-listener handoff, regardless of
+what a delegating listener passes -- a listener can no longer redirect a later listener to a
+fabricated replacement `instance`, or drop it by omitting it when delegating, even though it remains
+free to transform every other payload field. `AGENT_PRE_STEP`'s own exposure was found during a full
+audit of every `.waterfall()` dispatch in this codebase alongside the reviewed
+`AGENT_PREPARE_NEXT_TURN` finding -- the identical unprotected shape, not itself separately reported
+by any review.
+
+**The load-bearing rule:** every consumer above may IGNORE the signal, and if every one of them
+does, the run completes exactly as if `abort()` had never been called. Four distinct
+abort-adjacent outcomes must be kept separate:
+
+1. a represented provider `StopReason.ABORTED` terminal (already Layer-08-owned -- the existing
+   represented-error/aborted short-circuit handles it; Layer 09 adds no new code for this path
+   itself, only the signal propagation that lets a real/scripted adapter choose to produce it);
+2. an exception escaping ordinary run execution while `instance.signal.aborted` happens to be
+   true AT THE MOMENT `_settle_run_failure` reads it -- classified `stopReason: aborted` instead
+   of `error`, purely from the signal's CURRENT state at that moment, with NO causal requirement
+   that the exception was actually caused by the abort (pinned Pi's own `abortController.signal.
+   aborted` read at `handleRunFailure` catch time has the identical property);
+3. a cooperative tool's own normal/throwing outcome after observing the signal -- ordinary,
+   already-certified Layer-06 execute/finalize semantics; the after-hook still runs unconditionally;
+4. abort requested while `agent_end` listeners are still being awaited -- the signal is already
+   aborted (or becomes aborted mid-dispatch), but that already-in-flight `agent_end` dispatch's own
+   listener settlement still completes normally before the Agent becomes idle.
+
+**Not in this layer's scope:** actual network-transport cancellation remains deferred to `PROV-004`
+(or an explicitly later real-provider phase) -- this project has no real provider transport yet.
+Layer 09 certifies generic signal PROPAGATION to the adapter-call boundary through the existing
+scripted/mock adapter, not that any real transport was cancelled. Layer 08's own prior removal of
+`request_boundary_stop()`/`cancel()` (below) remains correctly removed and is UNRELATED to this
+section: that was a Minion-only host-safety mechanism with no Pi basis and no owner approval;
+`abort()`/`signal` here are pinned Pi's own feature, implemented faithfully, not a revival of the
+removed one. Layer 08 itself still has no local cancel/boundary-stop mechanism of its own kind: a
+prior revision of this section documented one (`request_boundary_stop()`, renamed from `cancel()`),
+but it was removed entirely rather than kept and approved -- a public method that could alter a
+Pi-equivalent run's own observable outcome had no owner governance approval for that divergence, and
+no demonstrated product need justified keeping it, the same default this project already applied to
+`max_steps` (above). If a host-only safety mechanism is ever needed, it must sit entirely outside a
+single Pi-equivalent run's own semantic behavior -- limiting a HOST's own repeated scheduling/
+invocation policy across independent runs, never truncating or altering one run's own outcome
+internally.
 
 ### Runtime-state transition timing
 
