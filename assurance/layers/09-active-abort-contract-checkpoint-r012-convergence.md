@@ -1,5 +1,25 @@
 # Layer 09 — L09-R012/R013/R014 contract convergence (run-entry input reservation)
 
+**Revision 2, NOT yet approved.** Revision 1 (this same file) was independently challenged
+(`assurance/layers/09-active-abort-r012-convergence-challenge.md`, docs PR #34, review commit
+`190cf12c32d58314f607e69b8d789703683eee06`): **CONVERGENCE CONTRACT — CHANGES REQUIRED**. The
+reviewer accepted the trigger determination, the peek-then-commit root-cause diagnosis, the
+claim-before-observer direction, all four interleaving scenarios, the `AGENT_PRE_STEP` expansion,
+and the `L09-R016` cleanup -- but found two challenge findings:
+
+- **C09-1**: revision 1's own `_restore_claimed(target, envelopes)` still took `envelopes` as a
+  caller-supplied PARAMETER and had no one-shot guard -- a leading underscore does not
+  structurally prevent an arbitrary caller from invoking it with a foreign envelope tuple, or
+  calling it twice to manufacture a duplicate. This is materially the same authority defect
+  `L09-R010` rejected, not closed by renaming alone. Revision 2 replaces it with a genuine
+  claim-bound, one-shot reservation object -- see "Proposed design" below.
+- **C09-2**: revision 1's own correction to the `L09-R015` Pi citation was itself wrong -- it read
+  only the LOW-LEVEL `agent-loop.ts::AgentLoopConfig.prepareNextTurn(context)` shape and missed
+  the PUBLIC `Agent.createLoopConfig()`'s own wrapping, which explicitly supplies `this.signal`
+  to the application-facing `AgentOptions.prepareNextTurn(signal)`/`prepareNextTurnWithContext
+  (context, signal)` callbacks. Re-verified directly against pinned Pi below -- the reviewer's
+  correction is right, and revision 1's own "correction" is retracted.
+
 **Trigger check (mandatory, `process/agent-workflow.md` §11.8):**
 
 - `L09-R012` (AG-011's own manifest rule contradicts the implemented commit mechanism): found by
@@ -53,35 +73,53 @@ that application code could hook into -- Pi's own equivalent of "claim, then may
 single atomic JS statement. This remains a purely Minion-owned architectural-integrity question,
 not a Pi-parity question, exactly as established for the original `L09-R007` convergence.
 
-For `L09-R015`: **the review's own stated Pi-source justification is imprecise, corrected here.**
-The review says "Pinned Pi wraps `prepareNextTurn` for one Agent and supplies that Agent's `this.
-signal`." Re-audited directly against pinned Pi (`agent-loop.ts:226-232`, `types.ts:124-147`):
-`prepareNextTurn`'s own context type, `PrepareNextTurnContext`, extends `ShouldStopAfterTurnContext`
--- `{ message, toolResults, context, newMessages }` -- and carries **NO `signal` field at all**.
-`config.prepareNextTurn` is also a SINGLE, nullable, directly-invoked callback (`await config.
-prepareNextTurn?.(nextTurnContext)`), not a listener chain of any kind -- Pi has no "one listener
-redirects a later one" hazard here because Pi has no LATER listener to redirect: there is exactly
-one callback, called once. Contrast pinned Pi's own `Agent.subscribe(listener: (event, signal) =>
-...)` (`agent.ts:250`), which DOES thread `signal` explicitly as an argument -- confirming the
-distinction spec/agent.md itself should have drawn (see "Required deltas" below): Pi threads
-`signal` explicitly to `subscribe`-style listeners, but NOT to `prepareNextTurn`/
-`shouldStopAfterTurn` at all. Minion's own choice to give `AGENT_PREPARE_NEXT_TURN`/`AGENT_
-TURN_STOPPING` listeners `instance.signal` access (since they already receive `instance` as their
-own first argument, an established Minion convention) is therefore a Minion-added CAPABILITY
-beyond what Pi's own `prepareNextTurn`/`shouldStopAfterTurn` hooks receive, not a "mapping" of an
-existing Pi capability to a different mechanism.
+For `L09-R015` (revised under C09-2 -- revision 1's own "correction" here was itself wrong, and
+is retracted): re-audited pinned Pi a second time, this time including the layer revision 1
+missed. `agent-loop.ts`'s own low-level `AgentLoopConfig.prepareNextTurn(context)` shape indeed
+carries no `signal` parameter at its OWN level -- that part of revision 1's reading was accurate
+as far as it went. But that low-level shape is not what an application actually supplies: pinned
+Pi's own PUBLIC `Agent` class (`agent.ts`) defines its own, higher-level `AgentOptions.
+prepareNextTurn?: (signal?: AbortSignal) => ...` and `AgentOptions.prepareNextTurnWithContext?:
+(context: PrepareNextTurnContext, signal?: AbortSignal) => ...` (`agent.ts:109-115`, mirrored as
+public `Agent` fields at `agent.ts:197-200`, assigned from `runtimeOptions` in the constructor at
+`agent.ts:229-230`) -- BOTH of which explicitly accept `signal` as their own parameter. `Agent.
+createLoopConfig()` (`agent.ts:445-471`) is what actually WRAPS these into the low-level shape
+`agent-loop.ts` consumes:
 
-Despite that correction, the underlying integrity concern is independently valid on Minion's own
-terms, and the classification (`PI_PARITY_DEFECT`) remains defensible under this project's own
-established precedent: `L09-R006` classified the identical shape of defect (a Minion-only
-waterfall extension of a Pi single-callback design failing to preserve a value's own required
-single-identity-per-run guarantee) as `PI_PARITY_DEFECT`, reasoning that the VALUE under threat
-(the same per-run signal reaching every consumer with stable identity) is a genuine Pi-parity
-guarantee even where the SPECIFIC mechanism putting it at risk (an N-listener waterfall) is
-Minion's own addition. `spec/agent.md`'s own already-certified consumer/settlement matrix already
-LISTS `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` listeners as signal consumers (via `instance.
-signal`) -- having made that listing, Pi-parity requires the SAME stable identity every other
-listed consumer receives. The classification stands; the stated Pi citation is corrected.
+```text
+prepareNextTurn:
+    this.prepareNextTurnWithContext || this.prepareNextTurn
+        ? async (context) => {
+                if (this.prepareNextTurnWithContext) {
+                    return await this.prepareNextTurnWithContext(context, this.signal);
+                }
+                return await this.prepareNextTurn?.(this.signal);
+            }
+        : undefined,
+```
+
+`this.signal` -- the SAME live Agent signal every other consumer receives -- is threaded explicitly
+into the wrapped callback at exactly this point. (The identical pattern, confirmed at the same
+read, also applies to `shouldStopAfterTurn`: `AgentOptions.shouldStopAfterTurn?: (context, signal?)
+=> ...`, wrapped at `agent.ts:460-462` as `async (context) => await shouldStopAfterTurn(context,
+this.signal)` -- reinforcing, not merely paralleling, that `AGENT_TURN_STOPPING`'s own existing
+`instance.signal` consumer-matrix entry is correct today and needs no revision, independent of its
+own separate immunity to redirection via `.serial()`'s own non-delegating dispatch, established
+below.)
+
+So the ORIGINAL final review's own citation was accurate, and revision 1's own attempted
+correction was wrong because it inspected only the internal `agent-loop.ts` layer and never
+followed the wrapping up to the public `Agent` class that actually supplies these callbacks to
+application code. Pi genuinely DOES supply `this.signal` explicitly to `prepareNextTurn`/
+`prepareNextTurnWithContext` (and `shouldStopAfterTurn`) -- `instance.signal` is Minion's own
+faithful mapping of that same capability (through `instance`, the established convention for
+these listeners, rather than a bespoke explicit parameter), not a Minion-added extension beyond
+Pi. Pi has exactly ONE such callback (no listener chain), so Pi itself has no "one listener
+redirects a later one" hazard to violate -- but the VALUE Pi threads there (the Agent's own live,
+stable signal) is unambiguously a genuine Pi-parity guarantee, and Minion's own N-listener
+waterfall extension of that single callback (an intentional, disclosed Minion architectural
+choice, unchanged by this correction) must preserve it at every listener handoff. The
+classification (`PI_PARITY_DEFECT`) stands, now on the CORRECT citation.
 
 **Is `AGENT_TURN_STOPPING` also vulnerable?** No -- re-confirmed by inspecting its own dispatch
 (`driver.py::_should_stop`, `ctx.events.serial(...)`) against `EventBus.serial`'s own
@@ -135,11 +173,13 @@ four required scenarios below, including the two the final review's own witnesse
   attempt) -- the observer literally cannot see or touch the entering batch at all, eliminating
   the entire "partial-prefix"/"unrelated deletion" class of defect by construction, not by
   case-by-case checking;
-- on a RUNNING-notification failure, a PRIVATE rollback closure -- bound 1:1 to the exact
-  envelopes THIS SAME claim() call returned, never independently constructible by an arbitrary
-  caller with arbitrary envelopes (closing `L09-R010` the same way PASS 6 did: by construction, not
-  convention alone) -- puts them back at the front, ahead of anything the observer itself enqueued
-  in the meantime (preserving the original `L09-R007` FIFO-precedence requirement).
+- on a RUNNING-notification failure, a private, linear `_Reservation.rollback()` -- bound 1:1 at
+  construction to the exact envelopes THIS SAME `_reserve()` call's own `claim()` produced, never
+  independently constructible or invokable with arbitrary envelopes by an arbitrary caller, and
+  callable at most once (closing `L09-R010` AND `C09-1` by construction: no parameter through
+  which to substitute envelopes, no way to invoke it twice) -- puts them back at the front, ahead
+  of anything the observer itself enqueued in the meantime (preserving the original `L09-R007`
+  FIFO-precedence requirement).
 
 ### Verification against all four required scenarios
 
@@ -166,6 +206,19 @@ four required scenarios below, including the two the final review's own witnesse
       -- exactly the `L09-R007`-established FIFO-precedence rule.
 ```
 
+### Behavior matrix required for agreement (the reviewer's own table, adopted verbatim)
+
+| Surface | Observer behavior | Entry outcome | Required queue result |
+|---|---|---|---|
+| Reserved A,B | no mutation, returns | success | A,B admitted once; absent from queue |
+| Reserved A,B | claims same target, returns | success | observer can see only later/unrelated input; A,B admitted once |
+| Reserved A,B | claims same target, throws | failure | A,B restored once in original order; observer-consumed unrelated input is not fabricated |
+| Reserved A,B | clear + enqueue C, returns | success | A,B admitted once; C remains according to observer mutation |
+| Reserved A,B | clear + enqueue C, throws | failure | A,B restored once ahead of C; no duplicate |
+| Any reservation | rollback invoked twice | failure path | second terminal action is inert/rejected; no duplicate |
+| Any reservation | caller offers foreign envelope | any | foreign envelope cannot enter through rollback |
+| Prepare/pre-step waterfall | first listener redirects/drops instance | success | later listener sees original Agent and authoritative run signal |
+
 Scenario 2 is the exact shape `L09-R013`'s own witness constructs (queue `A,B`; `ALL` claims both
 immediately; the observer's own subsequent `claim(ONE_AT_A_TIME)` on the now-empty relevant
 portion of the queue cannot obtain `A` at all) and `L09-R014`'s own witness (there is no partial-
@@ -173,33 +226,59 @@ prefix state to be in at all, since the ENTIRE batch is removed atomically in on
 the observer ever runs) -- both are closed by the SAME structural change, not by two separate
 patches.
 
-## Proposed design
+## Proposed design (revised under C09-1)
 
-**`Inbox` (`agent/inbox.py`):** remove `peek()` (PASS 6's own now-superseded public method -- no
-longer serves any purpose once destructive removal moves back to claim time) and `_commit_claim`
-(same). Add:
+Revision 1's own `_restore_claimed(target, envelopes)` took `envelopes` as a caller-supplied
+parameter and had no one-shot guard -- structurally the SAME shape of authority defect as the
+removed public `restore()` (`L09-R010`), merely renamed and made conventionally-private, not
+actually closed. Revision 2 makes rollback a genuine linear, claim-bound CAPABILITY rather than a
+general-purpose Inbox operation, matching the reviewer's own required shape exactly:
+
+**`Inbox` (`agent/inbox.py`):** remove `peek()` and `_commit_claim` (PASS 6's own now-superseded
+methods). Add a private reservation type and a private constructor for it:
 
 ```text
-_restore_claimed(target, envelopes) -> None   [PRIVATE, Layer 08 only]
-    prepend envelopes to target, ahead of whatever is queued there now.
-    Not part of the public API. Called exactly once per failed run-entry attempt, with exactly
-    the envelopes that SAME attempt's own prior claim() call returned -- never independently
-    constructible or callable with arbitrary envelopes by an arbitrary caller (closes L09-R010
-    the same way the removed peek/_commit_claim pair did: by construction).
+Inbox._reserve(target, policy) -> _Reservation   [PRIVATE, Layer 08 only]
+    Atomically claim()s the entering batch and returns a fresh, single-use _Reservation bound to
+    it. Not part of the public API.
+
+_Reservation   [PRIVATE class -- never independently constructible by external code; the ONLY
+                way to obtain one is Inbox._reserve()]
+    .envelopes -> tuple[InputEnvelope, ...]   [read-only; exactly what _reserve()'s own claim()
+                                                call removed -- never caller-suppliable]
+    .commit() -> None      [terminal; may be called AT MOST ONCE, and only if .rollback() has not
+                             already been called; leaves the claimed envelopes removed (a no-op,
+                             since claim() already removed them) and marks the reservation settled]
+    .rollback() -> None    [terminal; may be called AT MOST ONCE, and only if .commit() has not
+                             already been called; prepends `.envelopes` back to `target`, ahead of
+                             whatever is queued there now, and marks the reservation settled]
 ```
 
-`Inbox.claim()`/`Inbox.pending()`/every other already-certified `Inbox` method: UNCHANGED.
+Neither `.commit()` nor `.rollback()` accepts ANY argument -- there is no parameter through which
+a caller could substitute foreign envelopes, closing that half of C09-1 by the absence of a
+parameter, not by convention. A private `_settled` flag, checked and set at the START of both
+methods, raises if either is called after the OTHER has already run, or a second time on itself --
+closing the double-terminal-action half of C09-1 structurally, not by trusting callers to behave.
+`_Reservation` itself is a private class (leading underscore, not exported from any public
+surface); its sole constructor path is `Inbox._reserve()`, itself private -- an external caller
+cannot obtain one AT ALL except by going through the one code path that binds it to a real,
+just-executed `claim()` call.
+
+`Inbox.claim()`/`Inbox.pending()`/every other already-certified public `Inbox` method: UNCHANGED
+-- `claim()` remains the sole PUBLIC removal operation, exactly as the reviewer's own required
+shape specifies.
 
 **`AgentLoop` (`agent_loop/driver.py`):**
 
 - `continue_()`'s steering/follow-up branches and `run_until_idle()`'s follow-up claim: call
-  `Inbox.claim()` (not `peek()`) as they did before PASS 6, and pass a NEW `rollback_entry_claim:
-  Callable[[], None]` closure to `_run_wrapped` (replacing PASS 6/7's own `commit_entry_claim`),
-  each closing over the exact claimed envelopes and calling `Inbox._restore_claimed` with them.
-- `_run_wrapped`: the RUNNING-notification `except` branch calls `rollback_entry_claim()` (if
-  supplied) instead of PASS 6/7's own `commit_entry_claim()` on the SUCCESS path -- there is no
-  longer a separate "commit" step at all, since `claim()` already removed the input unconditionally
-  before `set_status(RUNNING)` runs; success needs no further action.
+  `Inbox._reserve()` (not `claim()`/`peek()` directly) and pass the resulting `_Reservation` to
+  `_run_wrapped` via a new keyword-only `entry_reservation` parameter.
+- `_run_wrapped`: on a RUNNING-notification failure, calls `entry_reservation.rollback()` (if an
+  `entry_reservation` was supplied); on success, calls `entry_reservation.commit()` immediately
+  after `set_status(RUNNING)` returns without raising, before proceeding to `_execute_run`. Exactly
+  one of `.commit()`/`.rollback()` is ever called, on exactly one code path each, matching the
+  reservation's own one-shot contract by construction (there is no third path through
+  `_run_wrapped` that could call either twice or omit both).
 - `_pre_step`: `AGENT_PRE_STEP`'s own waterfall dispatch gains a `normalize_step` closure
   restoring `self.instance` (only -- `reason`/`messages` remain intentionally listener-
   transformable, matching this event's own documented purpose and matching the narrow scope of
@@ -207,6 +286,14 @@ _restore_claimed(target, envelopes) -> None   [PRIVATE, Layer 08 only]
   the two authority-bearing fields this convergence actually examined is deliberately avoided).
 - `_prepare_next_turn`: `AGENT_PREPARE_NEXT_TURN`'s own waterfall dispatch gains the identical
   `normalize_step` closure restoring `self.instance`.
+
+**Explicit disposition of unrelated observer side effects (the reviewer's own required
+clarification, stated normatively so Python and Rust cannot diverge):** only the entry
+reservation's OWN claimed batch is ever rolled back on failure. Anything else a RUNNING observer
+did to `Inbox` -- claiming genuinely different, unrelated input; clearing a target; enqueuing new
+input -- is NOT reversed, regardless of whether the run-entry attempt itself succeeds or fails.
+The reservation mechanism protects exactly one thing: that ITS OWN selected batch is never lost or
+duplicated. It is not a general transaction over the whole `Inbox`.
 
 **`spec/agent.md`/`spec/tools.md` (`L09-R016`):**
 
@@ -251,13 +338,27 @@ New/replacing witnesses:
 5. `spec/tools.md`/`TOOL-009`/`_execute_and_finalize` docstring corrections: documentary only, no
    new witness required, matching `L09-R009`'s own precedent.
 
+New in revision 2, per `C09-1`'s own required negative evidence (`Inbox`-level, direct):
+
+6. Double rollback cannot duplicate an envelope: `reservation = inbox._reserve(...)`;
+   `reservation.rollback()`; a second `reservation.rollback()` call raises (does not re-insert).
+7. Rollback cannot restore a foreign envelope: confirm `_Reservation.rollback()`/`.commit()` accept
+   no arguments at all (a structural, not merely behavioral, guarantee -- attempting to call either
+   with an argument is a `TypeError` from Python's own function-signature enforcement, not a
+   defect this project's own test suite needs to separately assert).
+8. Commit-then-rollback and rollback-then-commit cannot mutate the queue a second time: for each
+   ordering, call the first terminal method, then assert the second raises and the queue is
+   unchanged by the second (rejected) call.
+
 ## Normative deltas required
 
 - `minion-agent-docs/spec/agent.md`: correct the "Preclaimed inbox input" section's own mechanism
-  description (claim-then-rollback, not peek-then-commit); correct the `AGENT_LIFECYCLE_EVENT`/
-  `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` grouping to note only `subscribe`
-  (`AGENT_LIFECYCLE_EVENT`) receives `signal` explicitly in Pi; add the `AGENT_PRE_STEP`/
-  `AGENT_PREPARE_NEXT_TURN` authoritative-instance rule.
+  description (claim-then-reservation-rollback, not peek-then-commit); add a citation note that
+  pinned Pi's own `Agent.createLoopConfig()` wraps `prepareNextTurn`/`prepareNextTurnWithContext`/
+  `shouldStopAfterTurn` with the Agent's own live `this.signal` (`agent.ts:445-471`), so `instance.
+  signal` for `AGENT_PREPARE_NEXT_TURN`/`AGENT_TURN_STOPPING` is a faithful mapping of an existing
+  Pi capability, not a Minion-added one (revision 1's own contrary claim here is retracted); add
+  the `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN` authoritative-instance rule.
 - `minion-agent-docs/spec/tools.md`: correct the stale Layer-05 signal-capability prose
   (`L09-R016`).
 - `minion-agent/pi-parity-manifest.yaml`, `AG-007`: a PASS-8 paragraph recording this
@@ -271,13 +372,15 @@ New/replacing witnesses:
 ## Rust implementability
 
 Confirmed idiomatic, matching the final review's own "Existing Rust architecture feasibility"
-section: an owned, claimed batch with a `Drop`-based or explicit rollback method (no interior
-mutability or lock needed, since Rust's own ownership model already prevents a re-entrant observer
-from touching envelopes this attempt already owns) is a natural fit -- arguably MORE natural in
-Rust than the Python peek/commit design ever was, since Rust's own borrow checker would have made
-the reentrancy window this whole cluster is about considerably harder to introduce by accident in
-the first place. `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN` instance-authority restoration uses the
-identical typed-middleware pattern already established and accepted for `L09-R006`.
+section and the challenge's own C09-1 guidance: an owned `Reservation` value with `commit(self)`/
+`rollback(self)` consuming methods (`self`, by value -- not `&self`) is a NATURAL fit for Rust's
+own ownership model, and structurally STRONGER than Python's own guard-flag approach: Rust's own
+move semantics make calling either method a SECOND time a compile-time error, not a runtime check
+at all, since the value no longer exists after its first consuming call. No interior mutability or
+lock is needed, since Rust's own borrow checker already prevents a re-entrant observer from
+touching envelopes this attempt already owns. `AGENT_PRE_STEP`/`AGENT_PREPARE_NEXT_TURN`
+instance-authority restoration uses the identical typed-middleware pattern already established and
+accepted for `L09-R006`.
 
 ## Out of scope / deferred
 
@@ -291,7 +394,7 @@ identical typed-middleware pattern already established and accepted for `L09-R00
 
 ```text
 CONVERGENCE CONTRACT
-    PROPOSED -- AWAITING INDEPENDENT AGREEMENT
+    PROPOSED -- AWAITING INDEPENDENT AGREEMENT (revision 2)
 
 OPEN FINDINGS
     L09-R012
@@ -300,16 +403,27 @@ OPEN FINDINGS
     L09-R015 (bundled, non-blocking -- narrow, already-specified fix)
     L09-R016 (bundled, non-blocking -- documentary only)
 
+CHALLENGE FINDINGS ADDRESSED
+    C09-1  rollback authority: replaced Inbox._restore_claimed(target, envelopes) with a private,
+           linear _Reservation type (.commit()/.rollback(), no-argument, one-shot, obtainable
+           only via private Inbox._reserve()) -- see "Proposed design"
+    C09-2  L09-R015 Pi citation: retracted revision 1's own claim that prepareNextTurn carries no
+           signal in Pi; Agent.createLoopConfig() wraps it (and shouldStopAfterTurn) with the
+           Agent's own live this.signal -- see the revised L09-R015 section
+
 ACCEPTANCE WITNESSES
-    tests/agent/test_inbox.py (Inbox.claim/_restore_claimed unit coverage, replacing the removed
-      peek/_commit_claim tests)
+    tests/agent/test_inbox.py (Inbox._reserve/_Reservation unit coverage -- claim binding,
+      commit/rollback one-shot enforcement, double-terminal-action rejection -- replacing the
+      removed peek/_commit_claim tests)
     tests/agent_loop/test_active_abort.py (L09-R013/R014 real-driver scenarios; AGENT_PRE_STEP/
       AGENT_PREPARE_NEXT_TURN redirect/drop witnesses)
     -- none yet written; this is a contract/evidence checkpoint, not an implementation pass
 
 NORMATIVE DELTAS
-    minion-agent-docs/spec/agent.md ("Preclaimed inbox input" mechanism correction; consumer-
-      matrix Pi-citation correction; AGENT_PRE_STEP/AGENT_PREPARE_NEXT_TURN authority rule)
+    minion-agent-docs/spec/agent.md ("Preclaimed inbox input" mechanism correction to claim-then-
+      reservation-rollback; corrected Pi citation for AGENT_PREPARE_NEXT_TURN/AGENT_TURN_STOPPING
+      signal delivery; AGENT_PRE_STEP/AGENT_PREPARE_NEXT_TURN authority rule; explicit "unrelated
+      observer side effects are not reversed" statement)
     minion-agent-docs/spec/tools.md (stale Layer-05 signal-capability prose, L09-R016)
     minion-agent/pi-parity-manifest.yaml, AG-007 (PASS-8 paragraph)
     minion-agent/pi-parity-manifest.yaml, AG-011 (rule: prose corrected -- closes L09-R012)
