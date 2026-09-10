@@ -1035,3 +1035,141 @@ already provisionally closed and no further finding is open -- proceed directly 
 §11.8.8 final complete review of this exact candidate. L10-R003 remains an explicit, disclosed,
 OPEN Rust-only defect, out of scope; Layer 11 remains not started`. Then stop. Do not merge any
 candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.
+
+# PASS 6 — remediate the mandatory §11.8.8 final complete review's own narrow L10-R008 finding
+
+## Final complete review reference
+
+The MANDATORY §11.8.8 final complete independent Rust contract review of the PASS-5 candidate
+(code PR #20 @ `ef1d2b033deced9cbc0396467eeda2f3e3454008`, docs PR #45 @
+`038fc5488e8b7473654f37ec04d49d7a5881c622`, `minion-agent-docs#47` @
+`dc5b6a48eed12269a2c13f6a8bb6c008c0aa03e5`) confirmed `L10-R001`/`L10-R002`/`L10-R004`/`C10-C005`/
+`L10-R005`/`L10-R006`/`L10-R007` all CLOSED -- "All semantics, canonical behavior, runner design,
+and Rust feasibility otherwise passed" -- but **REJECTED** the candidate on one new, narrow finding:
+
+- **`L10-R008`** (`CONTRACT_ASSURANCE_DEFECT`, blocking): parsing `pi-parity-manifest.yaml` with
+  `yaml.safe_load` showed two Layer-10 `tests:` entries (`AI-029[1]`, `AI-030[7]`) were YAML
+  mappings, not evidence strings -- an unquoted `: ` inside a plain scalar list item silently
+  starts a one-key mapping, which `yaml.safe_load` accepts without error. The same whole-manifest
+  probe found two PRE-EXISTING `AG-007` entries with the identical defect. Separately, the new
+  `llm-service-more-than-eight-calls-settle-ok.yaml` acceptance witness (`L10-R007`) appeared only
+  in assurance prose, linked from no requirement row's own `tests:` list.
+
+Independently re-verified this pass: parsed the manifest and confirmed all four malformed entries
+present, verbatim, exactly as the review cited them (`AI-029` tests[1], `AI-030` tests[7], `AG-007`
+tests[36] and tests[38], all `dict` instead of `str`) -- not accepted on the review's own prose
+alone.
+
+## Finding closed this pass
+
+### L10-R008 — malformed and incomplete Layer-10 manifest evidence
+
+**Remediation (documentary only, matching the review's own required narrow scope -- no production,
+canonical behavior, spec semantics, disposition, or owner-governance change):**
+
+1. The two Layer-10 `tests:` entries (`AI-029`, `AI-030`) and the two pre-existing `AG-007` entries
+   quoted as proper single-quoted YAML scalar strings (embedded apostrophes doubled per YAML
+   single-quote escaping), so each parses as a plain string again, not a one-key mapping.
+2. `llm-service-more-than-eight-calls-settle-ok.yaml` added to `AI-028`'s own `tests:` list --
+   `AI-028` is the natural owner, since the scenario proves repeated successful calls through the
+   `stream` seam `AI-028` itself governs.
+3. A new, PERMANENT automated gate: `tests/conformance/test_manifest_validation.py`, five tests --
+   unique row IDs, every row carries the required field set, every row's own `disposition` is one
+   of the three values `agent-workflow.md` section 8 defines, every `tests:` entry is a non-empty
+   STRING (the exact structural check this finding's own root cause needed and the prior ad-hoc,
+   manually-run "N rows / N unique IDs" one-liner never performed), and every row has at least one
+   `tests:` entry. This closes the review's own explicit "extend the manifest validation gate"
+   requirement -- the check is now a committed, repeatable pytest module, not a one-off command
+   typed into a shell each pass.
+
+## Revert-and-confirm (genuine RED against the exact PASS-5 candidate)
+
+The new `test_every_tests_entry_is_a_non_empty_string` gate was verified to genuinely discriminate
+before being trusted: the exact PASS-5 candidate's own `pi-parity-manifest.yaml` (`git show
+ef1d2b0:pi-parity-manifest.yaml`) was temporarily restored in place of the fixed manifest; the new
+test FAILED, reporting exactly the four malformed entries the review's own audit found (`AI-029`
+tests[1], `AI-030` tests[7], `AG-007` tests[36], `AG-007` tests[38], all `dict`) -- the other four
+new manifest-validation tests passed even against the unfixed candidate (row-ID uniqueness,
+required fields, valid dispositions, and non-empty `tests:` lists were never the defect). The fixed
+manifest was restored; all five tests pass again.
+
+## Regression verification for previously-closed findings
+
+`L10-R001`/`L10-R002`/`L10-R004`/`C10-C005`/`L10-R005`/`L10-R006`/`L10-R007`: unaffected -- no
+production, schema, runner, spec, or disposition content changed, only manifest evidence-string
+quoting and one new traceability link. No Python source file under `src/` was touched. All seven
+llm-service canonical scenarios and all twelve runner-validation tests still pass unchanged.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1168 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, unchanged (no source file under src/ touched)
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier layer's own
+                                      passes remains untouched (the new test_manifest_validation.py
+                                      itself needed one auto-format pass after this pass's own
+                                      edit, applied and re-verified clean)
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 334 passed, 19 xfailed (up from 329 -- five new manifest
+                                      validation tests)
+manifest parse + unique-ID audit:    84 / 84 unique, unchanged; ALL tests[] entries now confirmed
+                                      genuine non-empty strings (0 malformed, down from 4), enforced
+                                      going forward by the new permanent gate
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R008 closed this pass; no finding remains open
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                unchanged
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, compared
+                                honestly against all three real Pi registration surfaces, no
+                                residual contradictory wording, owner-approved intentional
+                                divergence, §11.7 decision recorded); AI-031 (streamSimple,
+                                deferred parity); AI-032 (fetchDeferred/cancelDeferred, deferred
+                                parity, four-layer closure criterion); ModelId.api's own
+                                Python-only "mock" default (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending independent re-review of this exact
+                       candidate -- L10-R008 was raised at the mandatory §11.8.8 final complete
+                       review itself, so per that review's own instruction, "any changed candidate
+                       SHA requires another complete exact-SHA review," the NEXT review of this
+                       candidate is another full §11.8.8 final complete review, not a narrower
+                       targeted closure)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, unchanged
+shared Layer-10 contract   No finding open at this exact candidate; READY FOR ANOTHER MANDATORY
+                             §11.8.8 FINAL COMPLETE REVIEW (the changed-SHA rule applies since
+                             L10-R008 was found at that exact review stage)
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); verify
+both new commits are remote-reachable; update PR #20/#45 bodies with this remediation summary and
+the new head SHAs. Update coordination issue #19 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`,
+new exact `CODE PR`/`DOCS PR` SHAs, append the final-complete-rejection reference
+(`minion-agent-docs#47` @ `dc5b6a48eed12269a2c13f6a8bb6c008c0aa03e5`) to `PRIOR REVIEW EVIDENCE`,
+`NEXT_OWNER: Codex`, `NEXT_ACTION: L10-R008 was raised at the mandatory §11.8.8 final complete
+review itself -- per that review's own instruction, a changed candidate SHA requires ANOTHER
+complete exact-SHA review, not a narrower targeted closure. Perform a full §11.8.8 final complete
+review of this exact candidate: confirm the four manifest evidence entries now parse as genuine
+strings, confirm the new >8-call scenario is now linked from AI-028's own tests: list, and confirm
+the new permanent manifest-validation gate itself correctly enforces the structural invariant this
+finding exposed. L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of scope;
+Layer 11 remains not started`. Then stop. Do not merge any candidate or review-evidence PR. Do not
+implement Rust. Do not start Layer 11.
