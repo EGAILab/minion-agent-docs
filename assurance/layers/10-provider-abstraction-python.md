@@ -649,9 +649,11 @@ unapproved intentional divergence   none
 disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
                                 now correctly disposed as intentional divergence rather than adopted
 disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, token-based
-                                per-call ownership, idempotent repeated withdrawal, no Pi analogue);
-                                AI-031 (streamSimple, deferred parity, explicit closure criterion);
-                                ModelId.api's own Python-only "mock" default (LLM-F006, unchanged)
+                                per-call ownership, idempotent repeated withdrawal; Pi comparison
+                                corrected under L10-R005/PASS 4 below, see that pass's own Active
+                                findings table for the current-state summary); AI-031 (streamSimple,
+                                deferred parity, explicit closure criterion); ModelId.api's own
+                                Python-only "mock" default (LLM-F006, unchanged)
 Rust cross-language dependency      PARTIAL, unchanged by this pass -- AI-029's own resolution
                                 behavior confirmed satisfied; AI-028's never-raises boundary
                                 (L10-R003) and AI-030's withdrawal/introspection surface remain OPEN,
@@ -904,3 +906,132 @@ L10-R007. L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of
 after this targeted closure, workflow §11.8.8 still requires ONE final complete review of the exact
 final candidate before Rust implementation may begin; Layer 11 remains not started`. Then stop. Do
 not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.
+
+# PASS 5 — remediate the §11.8.7 targeted closure review's own narrow L10-R005 finding
+
+## Targeted closure reference
+
+The §11.8.7 targeted finding-closure review of the PASS-4 candidate (code PR #20 @
+`1c4f2959c5ffeaed35f8a97cfbc1509ebaadbdc5`, docs PR #45 @ `cd8b690fccbd63f8b20bdb187bc1f0b6f7c61ed2`,
+`minion-agent-docs#47` @ `ae599ba9660907593ac9d020bdeca1ca57d01fe2`) returned `REJECTED -- NARROW
+REVISION REQUIRED`:
+
+- **`L10-R006`**: `PROVISIONALLY CLOSED`. New `AI-032`/`spec/llm.md` state all four agreed
+  observable layers; `C10-D002` satisfied.
+- **`L10-R007`**: `PROVISIONALLY CLOSED`. Fresh targeted execution (`test_llm_service_conformance.py`
+  + `test_llm_service_runner_validation.py`, 19 passed) confirms the non-predictive provisioning
+  fix and the new >8-call scenario against real production `LlmService`/`MockAdapter`.
+- **`L10-R005`**: still `OPEN`, `CONTRACT_ASSURANCE_DEFECT` (the ORIGINAL finding, not a new one).
+  `pi-parity-manifest.yaml::AI-030` retained two statements readable as the disproven current
+  premise even after PASS 4's own correction elsewhere in the SAME row: the row-opening "there is
+  no Pi behavior to 'adopt' here at all" (a historical framing PASS 4 never updated), and
+  `LlmService.models()`'s own "with no Pi analogue" claim (PASS 4 corrected this exact language in
+  `spec/llm.md` but missed the parallel manifest paragraph). The review found both by reading the
+  full row, not merely PASS 4's own narrative summary of it.
+
+Independently re-verified this pass: both quoted phrases were confirmed present, verbatim, at
+`pi-parity-manifest.yaml` lines 602-603 and 705-709 (pre-remediation), exactly as the review cited
+them -- not accepted on the review's own prose alone.
+
+## Finding closed this pass
+
+### L10-R005 — residual contradictory wording in `AI-030`
+
+**Remediation (documentary only, no production/schema/runner/governance change, matching the
+review's own required scope):**
+
+1. The row-opening historical sentence ("Split out of `AI-029` under `L10-R002`...there is no Pi
+   behavior to 'adopt' here at all") rewritten to state the CURRENT, corrected rule directly:
+   three real Pi registration surfaces exist (`L10-R005`, cross-referenced to the corrected
+   comparison later in the same row), but Minion directly adopts NONE of them -- the conclusion
+   (a Minion architectural extension is still the right disclosure) is unchanged, only the
+   now-contradicted "no Pi behavior at all" framing is removed.
+2. The `LlmService.models()` paragraph's own "with no Pi analogue" claim replaced with the SAME
+   corrected language PASS 4 already applied to `spec/llm.md`: Pi's own `MutableModels.
+   getProviders`/`getProvider`/`getModels`/`getModel` and `compat.ts`'s own `getApiProvider`/
+   `getApiProviders` are real, directly-comparable introspection surfaces (not "no analogue"),
+   each at its own coarser key, with richer catalog/refresh semantics this project does not need
+   yet.
+3. This pass's own PASS-4 `Active findings` table entry for `AI-030` corrected to stop
+   reasserting "no Pi analogue" as a current-state summary; it now points to PASS 4's own later
+   `Active findings` table (the one immediately following PASS 4's own implementation, which
+   already correctly said "now compared honestly against all three real Pi registration
+   surfaces") rather than restating the superseded phrase. PASS 3's OWN `Active findings` table
+   (an earlier, historical per-pass snapshot, preserved per this project's own
+   historical-artifact-preservation rule) is left untouched -- it accurately reflects the state as
+   of PASS 3, before PASS 4's own correction existed, and is not the "active" summary a reader
+   would mistake for current.
+
+`spec/llm.md` needed NO change this pass -- the review's own audit confirmed the normative spec
+already states the corrected comparison accurately; only the manifest (and this assurance
+document's own PASS-4 summary line) had drifted from it.
+
+## Regression verification for previously-closed findings
+
+`L10-R006`/`L10-R007` (PASS 4, provisionally closed by the targeted review above): unaffected --
+no file either finding's own evidence depends on was touched this pass. `L10-R001`/`L10-R002`/
+`L10-R004`/`C10-C005` (PASS 3): unaffected, no production file touched. No Python source file under
+`src/` or `tests/` was touched by this pass at all -- the diff is confined to `pi-parity-manifest.
+yaml` prose and this assurance document's own PASS-4 summary line.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1163 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+                                      (unchanged from PASS 4 -- no Python file touched)
+coverage (certified src packages):   100.00%, unchanged
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean; the same pre-existing, unrelated 7-file drift remains
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 329 passed, 19 xfailed, unchanged from PASS 4
+manifest parse + unique-ID audit:    84 / 84 unique, unchanged from PASS 4 (documentary edit only,
+                                      no row added or removed)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R005 closed this pass; L10-R006/R007 already
+                                provisionally closed by the targeted review
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                unchanged
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, compared
+                                honestly against all three real Pi registration surfaces
+                                throughout the ENTIRE row now, no residual contradictory wording,
+                                owner-approved intentional divergence, §11.7 decision recorded);
+                                AI-031 (streamSimple, deferred parity); AI-032 (fetchDeferred/
+                                cancelDeferred, deferred parity, four-layer closure criterion);
+                                ModelId.api's own Python-only "mock" default (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending the mandatory §11.8.8 final complete review)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, unchanged
+shared Layer-10 contract   L10-R005/R006/R007 all now closed at this exact candidate; READY FOR
+                             THE MANDATORY §11.8.8 FINAL COMPLETE REVIEW
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); verify
+both new commits are remote-reachable; update PR #20/#45 bodies with this remediation summary and
+the new head SHAs. Update coordination issue #19 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`,
+new exact `CODE PR`/`DOCS PR` SHAs, append the targeted-closure-rejection reference
+(`minion-agent-docs#47` @ `ae599ba9660907593ac9d020bdeca1ca57d01fe2`) to `PRIOR REVIEW EVIDENCE`,
+`NEXT_OWNER: Codex`, `NEXT_ACTION: confirm L10-R005's own residual contradictory wording is fully
+removed from AI-030 (both the row-opening historical sentence and the LlmService.models() paragraph)
+and from this assurance document's own PASS-4 summary line, then -- since L10-R006/L10-R007 are
+already provisionally closed and no further finding is open -- proceed directly to the mandatory
+§11.8.8 final complete review of this exact candidate. L10-R003 remains an explicit, disclosed,
+OPEN Rust-only defect, out of scope; Layer 11 remains not started`. Then stop. Do not merge any
+candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.
