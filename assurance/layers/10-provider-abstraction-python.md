@@ -1173,3 +1173,124 @@ the new permanent manifest-validation gate itself correctly enforces the structu
 finding exposed. L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of scope;
 Layer 11 remains not started`. Then stop. Do not merge any candidate or review-evidence PR. Do not
 implement Rust. Do not start Layer 11.
+
+# PASS 7 — remediate the second §11.8.8 review's own narrow L10-R008 finding (container-type gap)
+
+## Second final complete review reference
+
+The second mandatory §11.8.8 final complete review of the PASS-6 candidate (code PR #20 @
+`a7d05f26b22e1168c58578f5423d9a5c6f2ed0e3`, docs PR #45 @ `7c8d8ed68d0c903b8262e82aca80537bd2267ed8`,
+`minion-agent-docs#47` @ `b41bcd982eb65072717a49b5c9214db1253893d7`) confirmed every OTHER finding
+CLOSED -- `L10-R001`/`L10-R002`/`L10-R004`/`C10-C005`/`L10-R005`/`L10-R006`/`L10-R007` -- but
+**REJECTED** narrowly: `L10-R008` was PARTIALLY RESOLVED, not fully closed.
+
+The review's own discriminating probe: `test_manifest_validation.py`'s PASS-6 checks iterated
+`row["tests"]` and inspected only what iteration yielded, never asserting the container itself was
+a `list`. A scalar STRING is itself iterable, yielding one-character strings that are each
+individually non-empty -- so a synthetic row `{"tests": "evidence"}` passed BOTH the
+"every entry is a non-empty string" check (its own iteration yields `"e"`, `"v"`, `"i"`, ...,
+each non-empty) AND the separate "at least one entry" truthiness check (a non-empty string is
+truthy). Independently re-verified this pass by reconstructing the exact PASS-6 file's own two
+check bodies against the reviewer's own synthetic row -- both incorrectly reported zero violations,
+confirmed before any fix was written.
+
+## Finding closed this pass
+
+### L10-R008 — permanent manifest gate did not assert `tests` is a list before iterating it
+
+**Remediation:** `tests/conformance/test_manifest_validation.py` rewritten around a single,
+directly-testable `_tests_field_violations(row)` helper that asserts `isinstance(row["tests"],
+list)` FIRST, before any iteration -- a non-list container is rejected immediately, never iterated.
+The two PASS-6 checks (`test_every_tests_entry_is_a_non_empty_string`,
+`test_every_row_has_at_least_one_tests_entry`) replaced with one `test_every_row_tests_field_is_
+well_formed` that runs the same helper against the real manifest. Four new direct unit tests
+exercise the helper itself against synthetic rows, independent of the real manifest content:
+`test_tests_field_violations_rejects_a_scalar_string_container` -- the review's own exact
+discriminating probe, `{"id": "X", "tests": "evidence"}`, now correctly rejected;
+`test_tests_field_violations_accepts_a_well_formed_list` -- the positive counterpart;
+`test_tests_field_violations_rejects_an_empty_list`; `test_tests_field_violations_rejects_a_
+non_string_entry` -- a list containing one genuine string and one non-string member.
+
+## Revert-and-confirm (genuine RED against the exact PASS-6 candidate)
+
+The new scalar-container rejection was verified to genuinely discriminate before being trusted:
+the exact PASS-6 candidate's own two check bodies (`git show a7d05f2:.../test_manifest_
+validation.py`) were reconstructed and run directly against the reviewer's own synthetic probe
+row (`{"id": "X", "tests": "evidence"}`) -- both PASS-6 checks reported ZERO violations (the bug,
+reproduced exactly as the review described), confirming the exact candidate the review examined
+genuinely had this gap. The new `_tests_field_violations` helper, run against the same row,
+correctly reports one violation naming the container-type defect. All 8 tests in the rewritten
+module pass against the real manifest (which remains clean, unchanged from PASS 6).
+
+## Regression verification for previously-closed findings
+
+`L10-R001`/`L10-R002`/`L10-R004`/`C10-C005`/`L10-R005`/`L10-R006`/`L10-R007`: unaffected -- only
+`tests/conformance/test_manifest_validation.py` changed; no manifest content, production, schema,
+runner, spec, or disposition file was touched. All seven llm-service canonical scenarios and all
+twelve runner-validation tests still pass unchanged.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1171 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, unchanged
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean; the same pre-existing, unrelated 7-file drift remains
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 337 passed, 19 xfailed (up from 334 -- net +3 from the
+                                      rewritten manifest-validation module: 2 checks replaced by
+                                      1, plus 4 new direct unit witnesses)
+manifest parse + unique-ID audit:    84 / 84 unique, unchanged; container-type structural gap now
+                                      closed by the permanent gate itself
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R008 fully closed this pass; no finding remains open
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                unchanged
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, compared
+                                honestly against all three real Pi registration surfaces, owner-
+                                approved intentional divergence, §11.7 decision recorded); AI-031
+                                (streamSimple, deferred parity); AI-032 (fetchDeferred/
+                                cancelDeferred, deferred parity, four-layer closure criterion);
+                                ModelId.api's own Python-only "mock" default (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending independent re-review of this exact
+                       candidate -- L10-R008 was raised at a mandatory §11.8.8 final complete
+                       review itself, so per that review lineage's own repeated instruction, "any
+                       changed candidate SHA requires another complete exact-SHA review," the NEXT
+                       review of this candidate is another full §11.8.8 final complete review)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, unchanged
+shared Layer-10 contract   No finding open at this exact candidate; READY FOR ANOTHER MANDATORY
+                             §11.8.8 FINAL COMPLETE REVIEW
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); verify
+both new commits are remote-reachable; update PR #20/#45 bodies with this remediation summary and
+the new head SHAs. Update coordination issue #19 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`,
+new exact `CODE PR`/`DOCS PR` SHAs, append the second-final-complete-rejection reference
+(`minion-agent-docs#47` @ `b41bcd982eb65072717a49b5c9214db1253893d7`) to `PRIOR REVIEW EVIDENCE`,
+`NEXT_OWNER: Codex`, `NEXT_ACTION: L10-R008 was raised at a mandatory §11.8.8 final complete review
+itself -- per that review's own repeated instruction, a changed candidate SHA requires ANOTHER
+complete exact-SHA review, not a narrower targeted closure. Perform a full §11.8.8 final complete
+review of this exact candidate: confirm the manifest-validation gate now asserts tests is a list
+before iterating it, and confirm the new scalar-container negative witness genuinely discriminates.
+L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of scope; Layer 11 remains not
+started`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do
+not start Layer 11.
