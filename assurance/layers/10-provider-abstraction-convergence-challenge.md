@@ -228,3 +228,74 @@ NEXT ACTION
 ```
 
 Do not implement before agreement. Do not implement Rust Layer 10 and do not start Layer 11.
+
+---
+
+## Revision 3 agreement — checkpoint `f6375ebbe12a5a76099b86966fec3e57d3b105ca`
+
+**Result:** `CONVERGENCE CONTRACT — AGREED FOR IMPLEMENTATION`.
+
+Revision 3 closes `C10-C005`. The language-neutral rule is now precise: ownership belongs to one
+registration call, not to adapter object identity, including when the identical object is
+registered repeatedly for the identical identities. A fresh opaque per-call token stored beside
+the adapter is an appropriate Python mechanism. It preserves last-write replacement, makes an old
+handle stale, lets the current handle remove its own entry, and leaves repeated withdrawal a safe
+no-op.
+
+The direct production witness is genuinely discriminating against the PASS-2 candidate, and the
+symmetric current-handle and idempotence witnesses cover the meaningful neighboring outcomes.
+Rust can implement the same observable rule with its own typed ownership mechanism when it adds
+withdrawal.
+
+### Binding implementation clarification
+
+Revision 3's Rust-feasibility paragraph mentions a "move-only handle type ... enforce single-use"
+as a possible implementation. That particular API shape is not conforming if it makes the agreed
+double-withdrawal observation impossible: this checkpoint explicitly retains repeated withdrawal
+as an idempotent no-op. The normative rule and acceptance witnesses control. The implementation
+pass must remove that misleading example from current assurance/spec wording and ensure `AI-030`/
+the normative spec state idempotent repeated withdrawal if the witness remains part of shared
+evidence. Rust remains free to use an owned typed handle, but its public operation must preserve the
+same repeat-withdraw/no-op behavior rather than consume the only observable handle on first use.
+
+This clarification narrows an illustrative mechanism; it does not change the agreed behavior and
+does not require another checkpoint revision.
+
+```text
+CONVERGENCE CONTRACT
+    AGREED FOR IMPLEMENTATION
+
+OPEN FINDINGS TO IMPLEMENT
+    L10-R001
+    L10-R002
+    L10-R004
+    C10-C005
+
+ACCEPTANCE WITNESSES
+    behavior=reject without reject_message rejected
+    behavior=ok with reject_message rejected
+    explicit unique registration-handle references validated
+    duplicate/unknown handle and fixture references rejected
+    combined observation namespace collisions/dangling expectations rejected
+    setup-only unasserted observations permitted
+    register A -> stream A -> replace B -> resolve reports B
+    owner count delta requires exactly one adapter
+    same adapter object registered twice: first handle cannot remove second registration
+    current handle removes its registration
+    repeated withdrawal is idempotent
+    AI-028/AI-029/AI-030/AI-031 have coherent single-subject dispositions
+
+NORMATIVE DELTAS
+    checkpoint revision 3 list, plus the binding idempotence clarification above
+
+NEXT OWNER
+    Claude
+
+NEXT ACTION
+    Implement the agreed convergence surface, prove RED against the exact PASS-2 baseline, push
+    exact candidate SHAs, then return for targeted finding-closure review under §11.8.7.
+```
+
+`L10-R003` remains outside this convergence implementation as a disclosed Rust-only production
+defect for the later Rust Layer-10 implementation pass. No Rust work and no Layer-11 work is
+authorized by this agreement.
