@@ -223,3 +223,96 @@ This agreement is not final Layer-10 contract approval. `L10-R003` remains a dis
 implementation defect. After targeted closure, workflow §11.8.8 still requires a complete review
 of the exact final shared/Python candidate before Rust implementation may begin. Do not start
 Layer 11.
+
+---
+
+## Targeted implementation closure review — code `1c4f295`, docs `cd8b690`
+
+**Exact code SHA:** `1c4f2959c5ffeaed35f8a97cfbc1509ebaadbdc5`
+
+**Exact docs SHA:** `cd8b690fccbd63f8b20bdb187bc1f0b6f7c61ed2`
+
+**Result:** `REJECTED — NARROW REVISION REQUIRED`.
+
+This is the workflow §11.8.7 targeted review of the implemented convergence checkpoint. It is not
+the final §11.8.8 complete review. The candidate branches were not modified.
+
+### L10-R005 — still open
+
+The three-surface comparison, faux source-tag precision, tag-dependent stale-removal outcomes, and
+owner governance record are present and accurate in the normative spec and most of `AI-030`.
+However, `AI-030` still retains two statements readable as the disproven current premise:
+
+```text
+there is no Pi behavior to "adopt" here at all
+
+LlmService.models() ... Minion's own minimal introspection surface, with no Pi analogue
+```
+
+The same manifest row now documents `MutableModels.getProviders/getProvider/getModels/getModel`
+and compat `getApiProvider/getApiProviders`, and its corrected spec explicitly calls these “real,
+directly-comparable introspection surfaces (not 'no analogue').” The row therefore contradicts
+itself. The PASS-4 assurance active-findings table also still summarizes `AI-030` as “no Pi
+analogue,” despite its later PASS-4 narrative saying that exact claim was corrected.
+
+This is the original `L10-R005` `CONTRACT_ASSURANCE_DEFECT`, not a new semantic finding. Narrow
+remediation:
+
+1. replace the row-opening “no Pi behavior to adopt” phrase with the precise rule that Minion does
+   not directly adopt any one of Pi's three registry contracts;
+2. replace the `models()` “no Pi analogue” phrase with the already-correct spec distinction:
+   directly comparable Pi introspection exists, but uses different/coarser registry ownership and
+   richer catalog semantics;
+3. correct the PASS-4 assurance active-state summary so it no longer reasserts the superseded
+   premise.
+
+No production, schema, runner, or governance change is required.
+
+### L10-R006 — provisionally closed
+
+New `AI-032` and `spec/llm.md` state all four agreed layers: provider-stream shapes, Models-facing
+fetch/cancel asymmetry, mixed-API capability selection, and supported faux unknown/cancelled-handle
+behavior. The row is explicitly `deferred parity`, cites no fabricated Layer-10 executable
+evidence, requires externally callable Layer-11 operations, and distinguishes fetch's represented
+failure settlement from cancel's eager provider/capability rejection. `C10-D002` is satisfied.
+
+### L10-R007 — provisionally closed
+
+The runner now computes a scenario-derived upper bound from every stream step plus every resolve
+query and gives that bound to each adapter fixture. This does not predict which adapter resolution
+selects and removes the undocumented constant cap. The new canonical scenario performs nine calls
+through the same `behavior: ok` adapter and expects all nine to settle successfully.
+
+Fresh targeted execution:
+
+```text
+python -m pytest tests/conformance/test_llm_service_conformance.py \
+  tests/conformance/test_llm_service_runner_validation.py --no-cov -q
+    19 passed
+```
+
+The scenario and runner exercise production `LlmService`/`MockAdapter`; the runner does not
+implement resolution or settlement semantics. `L10-R007` is satisfied.
+
+```text
+TARGETED FINDING CLOSURE
+    REJECTED — NARROW DOCUMENTARY REVISION REQUIRED
+
+PROVISIONALLY CLOSED
+    L10-R006
+    L10-R007
+
+STILL OPEN
+    L10-R005 — CONTRACT_ASSURANCE_DEFECT
+
+NEXT OWNER
+    Claude
+
+NEXT ACTION
+    Remove the three residual current-state "no Pi analogue/no Pi behavior" statements identified
+    above, rerun documentary validation, push exact SHAs, and return for targeted L10-R005 closure.
+```
+
+The mandatory workflow §11.8.8 final complete review remains pending after targeted closure.
+`L10-R003` remains the disclosed Rust-only implementation defect. Do not start Rust Layer 10 or
+Layer 11.
