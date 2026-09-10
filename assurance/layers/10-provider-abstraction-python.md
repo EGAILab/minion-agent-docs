@@ -689,3 +689,218 @@ Python production repair all genuinely close their respective findings against t
 candidate, not merely against the agreed design. L10-R003 remains an explicit, disclosed, OPEN
 Rust-only defect, out of scope per the agreement; Layer 11 remains not started`. Then stop. Do not
 merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.
+
+# PASS 4 — implement the agreed §11.8 convergence surface (L10-R005/R006/R007)
+
+## Convergence reference
+
+The final complete independent Rust contract review of the PASS-3 candidate (code PR #20 @
+`4d63349d85d517359545b94ce0937548d3fb7314`, docs PR #45 @ `57edf9fd08e9b7411d32177f5991756182dd6a7a`,
+`minion-agent-docs#47` @ `e8a2d395dc4697eb65b42958eb043c9c7eede185`) confirmed `L10-R001`/`L10-R002`/
+`L10-R004`/`C10-C005` CLOSED but **REJECTED** the candidate on three new findings, and Layer 10 had
+by then accumulated three rejected contract reviews -- `agent-workflow.md` §11.8's own automatic
+trigger ("layer accumulates three rejected contract reviews") applied regardless of finding
+repetition (issue #19: `STATUS: CONTRACT_CONVERGENCE`).
+
+- **`L10-R005`**: `AI-030`'s own "Pi has no adapter-registration concept at all" premise was false.
+- **`L10-R006`**: `fetchDeferred`/`cancelDeferred` had no disposition anywhere.
+- **`L10-R007`**: the canonical runner's own `_build_adapter()` hard-coded exactly 8 scripted
+  responses per fixture, silently capping what a schema-valid scenario could express.
+
+A first characterization checkpoint (`10-provider-abstraction-contract-checkpoint-
+r005-r007-convergence.md`, docs PR #45 @ `d445901cc8441e6ab66acfd929df4e93e6fc6763`) independently
+re-audited pinned Pi (`ref-repos/pi` at the pinned SHA) and proposed corrections. The repository
+owner separately APPROVED (`§11.7`) continuing Minion's registry as an intentional divergence,
+scoped to `AI-030`'s own granularity, recorded in the checkpoint (docs PR #45 @
+`43216a98d1c911f808a1f1557e73ed3d3239c0bb`). An independent challenge (`minion-agent-docs#47` @
+`273951ad2b4a1bd6aa984b502a370b79935a0931`) accepted `L10-R007` outright but found two gaps in the
+Pi-source mapping (`C10-D001`: the checkpoint omitted `compat.ts::registerFauxProvider`'s own
+per-call `unregister()` precedent and mischaracterized stale-removal as "not applicable"; `C10-D002`:
+the proposed deferred-operation row conflated several distinct fetch/cancel failure boundaries).
+Revision 2 (docs PR #45 @ `004c92b268a01fc50ad05af90708f5ad539a4242`) remediated both, each
+independently re-verified against `ref-repos/pi` before being accepted. The revision was
+**AGREED FOR IMPLEMENTATION** (`minion-agent-docs#47` @ `4a4012b14541dabc98d3ccfc0faedd363099436e`),
+with one binding source-accuracy clarification: `registerFauxProvider`'s own pseudo-random source
+tag is NOT collision-checked, so normative wording must describe it as "freshly generated per-call,
+normally distinct," never as mathematically guaranteed unique. This pass implements the full agreed
+surface and closes `L10-R005`, `L10-R006`, and `L10-R007` together, per the agreement's own recorded
+`NEXT_ACTION`.
+
+## Findings closed this pass
+
+### L10-R005 — `AI-030`'s false "no Pi analogue" premise
+
+**Remediation:** `AI-030`'s `pi:` and `rule:` fields rewritten to compare Minion's registry against
+THREE real, currently-live Pi surfaces, each independently re-read against `ref-repos/pi` this pass:
+(1) `models.ts::MutableModels.setProvider/deleteProvider/clearProviders` -- keyed by `provider.id`,
+whole-provider replacement; (2) `compat.ts`'s generic `registerApiProvider`/`unregisterApiProviders`
+-- keyed by `provider.api`, bulk tag-scoped removal, an explicitly TEMPORARY compatibility surface
+("deleted with the coding-agent ModelManager migration"); (3) `compat.ts::registerFauxProvider`,
+built on (2) -- generates a fresh, pseudo-random `sourceId` per call (per the binding clarification,
+described as "freshly generated per-call, normally distinct," NOT guaranteed unique) and returns a
+`FauxProviderRegistration` (`providers/faux.ts:132-141`) whose own `unregister()` closes over that
+call's tag, a live per-registration-call unregistration precedent on Pi's OWN faux/mock surface
+specifically. The stale-removal matrix now states the actual tag-identity-dependent outcomes
+(differing tags: safe; shared tags: deliberate bulk/current-entry removal) instead of the prior
+"not applicable" claim. `LlmService.models()`'s own "no Pi analogue" claim corrected similarly --
+Pi's own introspection (`getProviders`/`getModels`, `getApiProvider`/`getApiProviders`) is real and
+directly comparable, just at each surface's own coarser key.
+
+Minion's registry matches none of the three (finer-grained keying, per-key rather than whole-
+provider/api replacement, generic rather than faux-specific per-call ownership) -- this conclusion
+is unchanged from PASS 3's own reasoning, now grounded in an accurate, complete comparison rather
+than a false "no analogue at all" premise. `disposition:` unchanged (`intentional divergence`).
+
+**Governance (`§11.7`, recorded):** the repository owner explicitly approved continuing Minion's
+registry semantics as an intentional divergence, scoped to `AI-030`'s own registration/replacement/
+withdrawal/introspection granularity, against exactly the three-surface comparison above. Full
+decision text is recorded in the convergence checkpoint's own `GOVERNANCE DECISION (§11.7) --
+RECORDED` section and summarized in `AI-030`'s own `rule:` field. `spec/llm.md`'s own `AI-030`
+section mirrors all of the above, plus the same governance citation.
+
+No Python source file changed for this finding -- purely documentary, per the checkpoint's own
+`IMPLEMENTATION CONSTRAINTS` (no redesign toward any of the three Pi surfaces was requested or
+proposed).
+
+### L10-R006 — `fetchDeferred`/`cancelDeferred` had no disposition
+
+**Remediation:** new manifest row `AI-032` (`disposition: deferred parity`), mirroring `AI-031`'s
+own `streamSimple` shape but stating FOUR distinct observable layers pinned Pi keeps separate
+(each independently re-verified against `ref-repos/pi` this pass, not merely restated from the
+checkpoint's own prose):
+
+1. Low-level, per-API-module (`types.ts::ProviderStreams.fetchDeferred?`/`cancelDeferred?`):
+   `fetchDeferred` returns a stream (never-raises, matching `stream`/`AI-012`); `cancelDeferred`
+   returns `Promise<void>`.
+2. High-level, caller-facing (`models.ts::ModelsImpl.fetchDeferred`/`cancelDeferred`, read directly
+   at `models.ts:706-732` this pass): NOT symmetric -- `fetchDeferred` wraps provider/capability
+   lookup, auth, and delegation entirely inside `lazyStream(...).result()`, so a missing provider or
+   capability settles as a REPRESENTED, in-band `AssistantMessage` error; `cancelDeferred` performs
+   the SAME lookup EAGERLY outside any `lazyStream` wrapper (confirmed via `ModelsImpl.
+   requireProvider`'s own plain synchronous `throw`, `models.ts:628-634`), so the identical failure
+   THROWS as a rejected promise instead.
+3. Provider-level, mixed-API capability selection (`models.ts::createProvider`, `:835-859`, read
+   directly this pass): a per-model capability mismatch in a mixed-API provider inherits the
+   IDENTICAL asymmetry as (2) -- fetch settles in-band, cancel throws eagerly.
+4. Reference (faux/mock) implementation's own concrete unknown/cancelled-handle behavior
+   (`providers/faux.ts:567-642`, already characterized in the checkpoint's revision 1): for a
+   SUPPORTED capability specifically, fetch's own unknown/cancelled-handle failure settles in-band;
+   cancel's own unknown handle is a silent no-op -- distinct from (2)/(3)'s missing-provider/
+   capability case, not the same rule restated.
+
+Closure criterion: a future Layer-11 implementation must preserve all four distinctions -- it must
+not make `cancel_deferred` globally never-raising, and must not make `fetch_deferred` throw eagerly
+on a missing/unsupported capability. Executable provider witnesses remain deferred to Layer 11
+(Layer 10 has no concrete wire-protocol implementation to test against). `spec/llm.md` gains a new
+matching `fetchDeferred`/`cancelDeferred` section. No Python source file changed for this finding
+either -- `AI-009`'s own already-certified `DeferredHandle` vocabulary is unaffected, and no
+speculative Layer-11 plumbing was added.
+
+### L10-R007 — canonical runner's own undocumented eight-call cap
+
+**Remediation:** `tests/conformance/llm_service_runner.py::_build_adapter` no longer hard-codes
+`script = [response] * 8`. A new `_max_possible_calls(spec_doc)` helper counts every
+`steps[].stream` action plus every `queries[].resolve` query in the scenario document (each is at
+most one call to SOME one adapter) and returns that total; `_build_adapter` now accepts this count
+as `script_length` and provisions exactly that many identical scripted responses per fixture -- a
+safe, non-predictive upper bound (it does not guess which adapter the service will actually
+resolve to; every fixture gets the SAME generous bound). New canonical scenario
+`llm-service-more-than-eight-calls-settle-ok.yaml`: one `behavior: ok` adapter, one registration,
+nine `stream` calls against the same identity, all expecting `ok` -- the review's own exact
+reproduction.
+
+## Revert-and-confirm (genuine RED against the exact PASS-3 candidate)
+
+`L10-R007`'s fix was verified to genuinely discriminate before being trusted: the exact PASS-3
+candidate's own `llm_service_runner.py` (`git show 4d63349:...`, confirmed as a clean, isolated
+diff against the fixed version -- only the `_build_adapter`/`_max_possible_calls`/call-site change)
+was temporarily restored; the new nine-call scenario FAILED exactly as the review's own
+reproduction predicted (`call_9`: `error` instead of `ok`, `"mock script exhausted after 8
+response(s); the scenario asked for one more"`). The fix was restored; all 7 llm-service scenarios
+and all 12 runner-validation tests pass again.
+
+`L10-R005`/`L10-R006` are purely documentary/manifest corrections with no Python behavior change,
+so there is no code to revert-and-confirm against -- their own acceptance evidence is the corrected
+prose itself, independently checkable against the cited Pi source ranges (all re-read directly
+against `ref-repos/pi` this pass, not merely copied from the checkpoint's own text), plus the
+recorded `§11.7` governance decision for `L10-R005` specifically.
+
+## Regression verification for previously-closed findings
+
+`L10-R001`/`L10-R002`/`L10-R004`/`C10-C005` (PASS 3): unaffected -- `service.py` was not touched
+this pass; the four PASS-3-era `llm_service` scenarios and the two `C10-C004`/`C10-C005` scenarios
+all still pass unchanged. `LLM-011`/`LLM-012`/`LLM-018`/`LLM-019`/`LLM-F006`/`LLM-F007`/`LLM-F009`/
+`LLM-F010` (Layer 02): unaffected, no source file under `src/` was touched by this pass at all --
+the only production-adjacent change is test/tooling (`llm_service_runner.py`).
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1163 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, unchanged (no source file under src/ touched)
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier layer's own
+                                      passes remains untouched and out of this pass's ownership
+                                      (llm_service_runner.py itself needed one auto-format pass
+                                      after this pass's own edit, applied and re-verified clean)
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 329 passed, 19 xfailed (up from 327 -- one new >8-call
+                                      llm_service scenario, plus its own schema-validation checks)
+manifest parse + unique-ID audit:    84 / 84 unique (83 PASS-3-era + new AI-032)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged by this
+                                pass (out of scope per the agreement's own explicit instruction)
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R005/R006/R007 closed this pass
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                unchanged by this pass
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, now compared
+                                honestly against all three real Pi registration surfaces, owner-
+                                approved intentional divergence, §11.7 decision recorded); AI-031
+                                (streamSimple, deferred parity); AI-032 (fetchDeferred/
+                                cancelDeferred, deferred parity, four-layer closure criterion, new
+                                this pass); ModelId.api's own Python-only "mock" default
+                                (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged by this pass -- AI-029's own resolution
+                                behavior confirmed satisfied; AI-028's never-raises boundary
+                                (L10-R003) and AI-030's withdrawal/introspection surface remain OPEN,
+                                disclosed gaps
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending independent Rust §11.8.7 targeted
+                       finding-closure review)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, unchanged by this pass
+shared Layer-10 contract   READY FOR TARGETED §11.8.7 FINDING-CLOSURE REVIEW of L10-R005/R006/R007
+                             together, against this exact candidate
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); verify
+both new commits are remote-reachable; update PR #20/#45 bodies with this implementation summary
+and the new head SHAs. Update coordination issue #19 (`minion-agent`): `STATUS:
+RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the independent-agreement
+reference (`minion-agent-docs#47` @ `4a4012b14541dabc98d3ccfc0faedd363099436e`) to `PRIOR REVIEW
+EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted §11.8.7 finding-closure review of
+this candidate against L10-R005/L10-R006/L10-R007 together -- confirm the corrected AI-030
+three-surface comparison (including the binding non-guaranteed-uniqueness wording for
+registerFauxProvider's own source tag) and the new AI-032 row's own four-layer closure criterion
+genuinely close their respective findings against this exact candidate, and confirm the
+>8-call canonical scenario and the runner's own non-predictive provisioning fix genuinely close
+L10-R007. L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of scope; note that
+after this targeted closure, workflow §11.8.8 still requires ONE final complete review of the exact
+final candidate before Rust implementation may begin; Layer 11 remains not started`. Then stop. Do
+not merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.
