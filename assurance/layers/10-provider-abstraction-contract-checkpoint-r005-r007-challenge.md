@@ -159,3 +159,67 @@ NEXT ACTION
 
 `L10-R003` remains the previously disclosed Rust-only implementation defect outside this
 checkpoint. No Rust Layer-10 implementation or Layer-11 work is authorized by this challenge.
+
+---
+
+## Revision 2 agreement — checkpoint `004c92b268a01fc50ad05af90708f5ad539a4242`
+
+**Result:** `CONVERGENCE CONTRACT — AGREED FOR IMPLEMENTATION`.
+
+Revision 2 closes both challenge findings against the Pi source:
+
+- `C10-D001`: the checkpoint now includes `compat.ts::registerFauxProvider`, the public
+  `FauxProviderRegistration.unregister()` operation, its per-call generated source tag, and the
+  distinct-tag/shared-tag stale-removal outcomes of the underlying generic registry. It correctly
+  distinguishes Pi's faux-specific per-registration observable precedent from Minion's generic
+  per-registration ownership rule. The already-recorded owner approval remains scoped and valid;
+  no registry redesign or governance reopening is required.
+- `C10-D002`: the checkpoint now separates low-level provider-stream shapes, high-level
+  Models-facing behavior, mixed-API capability selection, and supported faux handle behavior. It
+  binds fetch's represented failure settlement separately from cancel's eager provider/capability
+  rejection and its supported-capability unknown-handle no-op. This is complete enough to prevent
+  the two realistic wrong implementations identified by the challenge while leaving wire encoding
+  and executable provider evidence to Layer 11.
+- `L10-R007`: remains accepted. The proposed total-observation upper bound does not predict adapter
+  ownership and the greater-than-eight-call scenario directly detects the runner's hidden cap.
+
+### Binding source-accuracy clarification
+
+Pinned `registerFauxProvider` generates a fresh pseudo-random source tag on every call but does not
+collision-check it. Current normative wording must therefore avoid promising mathematically
+guaranteed uniqueness. Describe the implementation as a freshly generated per-call tag (normally
+distinct), and characterize per-call stale safety for the observed distinct-tag case. The shared-
+tag matrix already records the collision/reuse outcome. This is a precision correction to prose,
+not a new semantic design or a reason for another checkpoint revision.
+
+```text
+CONVERGENCE CONTRACT
+    AGREED FOR IMPLEMENTATION
+
+OPEN FINDINGS TO IMPLEMENT
+    L10-R005
+    L10-R006
+    L10-R007
+
+ACCEPTANCE WITNESSES
+    corrected AI-030 three-surface Pi comparison and scoped governance record
+    distinct-tag and shared-tag compat removal outcomes
+    externally callable Layer-11 deferred operations preserving all four AI-032 boundaries
+    greater-than-eight calls through one behavior=ok canonical adapter
+    runner provisions without predicting the resolved adapter
+
+NORMATIVE DELTAS
+    checkpoint revision 2, plus the binding source-tag wording clarification above
+
+NEXT OWNER
+    Claude
+
+NEXT ACTION
+    Implement the agreed convergence surface, prove RED against the exact rejected candidate,
+    push exact candidate SHAs, and return for the targeted workflow §11.8.7 finding-closure review.
+```
+
+This agreement is not final Layer-10 contract approval. `L10-R003` remains a disclosed Rust-only
+implementation defect. After targeted closure, workflow §11.8.8 still requires a complete review
+of the exact final shared/Python candidate before Rust implementation may begin. Do not start
+Layer 11.
