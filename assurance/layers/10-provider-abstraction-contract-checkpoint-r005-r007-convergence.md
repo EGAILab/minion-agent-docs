@@ -219,8 +219,61 @@ the final review's own guidance: "without predicting which adapter the service w
   can become `AGREED FOR IMPLEMENTATION`: the final review's own text states "If an observable
   divergence remains after the truthful mapping, obtain the governance approval required by
   workflow §11.7 rather than inferring it from the current implementation." This checkpoint
-  concludes divergence DOES remain after the truthful mapping (see BEHAVIOR MATRIX), so this is a
-  live governance item, not a formality -- see NEXT_ACTION below.
+  concludes divergence DOES remain after the truthful mapping (see BEHAVIOR MATRIX). **This
+  governance item is now DECIDED** -- see `GOVERNANCE DECISION (§11.7)` immediately below.
+
+## GOVERNANCE DECISION (§11.7) — RECORDED
+
+The repository owner APPROVED continuing Minion's existing `LlmService` registry semantics as an
+intentional, disclosed divergence, on the exact behavior-matrix comparison this checkpoint
+documents above. Recorded verbatim (owner's own words, via the shared/Python owner's relay):
+
+```text
+L10-R005 GOVERNANCE DECISION
+APPROVED — INTENTIONAL DIVERGENCE
+
+Minion may retain the existing LlmService registry semantics:
+- registration key:            full (provider, api, model_id) identity
+- composition/replacement:     per full-identity key
+- withdrawal ownership:        per individual registration call / withdrawal handle
+- stale or repeated withdrawal: does not remove a later replacement
+
+This intentionally differs from both pinned-Pi registry surfaces:
+1. MutableModels
+   - provider.id keyed
+   - whole-provider replacement/removal
+2. compat.ts ApiProvider registry
+   - api keyed
+   - last-write-wins per API
+   - bulk sourceId-scoped unregister
+   - explicitly temporary compatibility surface
+
+RATIONALE
+The divergence is architectural and deliberate, not based on an absence of Pi precedent. It
+follows Minion's frozen registration-ownership model, where the registration context owns its
+registration lifetime and individual registries define their own composition semantics, and it is
+consistent with Minion's frozen canonical model identity of (provider + api + model_id).
+Redesign toward MutableModels is therefore NOT required for Layer 10.
+
+REQUIRED DOCUMENTATION
+AI-030 and spec/llm.md must:
+- explicitly cite and compare both real Pi registries;
+- remove any claim that Pi has no analogous registration concept;
+- mark Minion's granularity/replacement/withdrawal behavior as intentional divergence;
+- state the exact observable differences;
+- record this governance approval;
+- avoid implying that unrelated provider behavior is also approved to diverge.
+
+SCOPE OF APPROVAL
+This approval applies only to L10-R005 / AI-030 registry registration, replacement, introspection,
+and withdrawal granularity. It does not approve unrelated provider/API semantic divergence and
+does not alter the project's general Pi-fidelity requirement.
+```
+
+This decision does not by itself close `L10-R005` or advance this checkpoint to `AGREED FOR
+IMPLEMENTATION` -- the independent Codex challenge of the Pi-source mapping (§11.8.4) remains a
+SEPARATE, still-outstanding track. `L10-R006`/`L10-R007` are unaffected by this decision (neither
+involves an intentional-divergence claim).
 - `L10-R006`'s remediation is ALSO documentary/disposition-only at this layer -- Layer 10 has no
   concrete wire-protocol implementation to attach real `fetch_deferred`/`cancel_deferred` behavior
   to yet (matching `AI-031`'s own already-accepted reasoning for `streamSimple`). Do not build
@@ -272,8 +325,9 @@ NEXT_OWNER
 NEXT_ACTION
     Independent challenge (§11.8.4) of this characterization: confirm the Pi source mapping above
     (MutableModels/compat.ts granularity comparison, fetchDeferred/cancelDeferred capability-gated
-    status, the >8-call witness design) is correct and complete enough to implement once. Separately
-    and explicitly: L10-R005 needs agent-workflow.md §11.7 owner governance sign-off on continuing
-    Minion's own intentional divergence now that the comparison is grounded in both real Pi
-    registries -- this is being raised to the repository owner directly alongside this checkpoint;
-    record the owner's decision on issue #19 once given, independent of the Codex challenge pass.
+    status, the >8-call witness design) is correct and complete enough to implement once. The
+    §11.7 governance track for L10-R005 is now RESOLVED -- see `GOVERNANCE DECISION (§11.7) --
+    RECORDED` above (owner APPROVED the intentional divergence, scoped to AI-030's own
+    registration/replacement/withdrawal/introspection granularity, with required documentation
+    content specified) -- the Codex challenge should now focus solely on the Pi-source-mapping
+    correctness, not on whether the divergence itself is acceptable.
