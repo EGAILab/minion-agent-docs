@@ -439,3 +439,253 @@ against current Rust, not merely against Python). L10-R003/AI-030's own open Rus
 explicitly NOT fixed by this pass and are not blocking further shared/Python work; Layer 11 remains
 not started`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust.
 Do not start Layer 11.
+
+# PASS 3 — implement the agreed §11.8 convergence surface (L10-R001/R002/R004, C10-C005)
+
+## Convergence reference
+
+The PASS-2 candidate (code PR #20 @ `bad0f74552fbb73c71f15553ba321fc1d8609a10`, docs PR #45 @
+`f6375ebbe12a5a76099b86966fec3e57d3b105ca`) was re-reviewed and **REJECTED** a second time
+(`minion-agent-docs#47` @ `2df53c68aa374b291846e9f64216534a054b4c0a`): `L10-R001`/`L10-R002`
+partially resolved but blocking (the corrected `AI-028`/`AI-029` still bundled `stream`/`streamSimple`
+under one disposition), `L10-R004` still open (the runner's own value-equality `resolve` search and
+the schema's missing `reject_message` grammar constraint). `L10-R002` and `L10-R004` met the
+repeated-finding threshold, opening the mandatory `agent-workflow.md` §11.8 Contract Convergence
+Protocol (issue #19: `STATUS: CONTRACT_CONVERGENCE`).
+
+Three convergence-checkpoint revisions followed (`minion-agent-docs#45` @
+`405798a93dfe058f212072256b354985091c07af`, `6254988ea5e98610b381ddb3a40530e16b75847b`,
+`f6375ebbe12a5a76099b86966fec3e57d3b105ca`), each independently challenged (`minion-agent-docs#47`
+@ `60ef1cd5410c81bd33b526859cca5d49dc096584`, `1ced90250ca7c0df7169780ae95a4dcf6d410b70`) and each
+closing the prior challenge's own findings (`C10-C001`..`C10-C004` in revision 2; `C10-C005` -- a genuine PASS-2 Python production
+defect in `LlmService.register`'s own withdrawal-ownership check, not merely a documentary gap --
+newly raised against revision 2 and closed in revision 3). The convergence was independently
+**AGREED FOR IMPLEMENTATION** (`minion-agent-docs#47` @ `05e03a7faefb9bbc45eeff20ed1996267414d16d`),
+with one binding implementation clarification: the checkpoint's own "Rust implementability" section
+had suggested a consuming, move-only Rust handle type as one natural fit for `C10-C005`'s ownership
+rule; the reviewer ruled this non-conforming, since it would make the ALREADY-agreed idempotent-
+repeat-withdrawal observation impossible to express, and required the misleading example removed
+from current wording. This pass implements the full agreed surface
+(`assurance/layers/10-provider-abstraction-contract-checkpoint-r002-r004-convergence.md`, revision
+3, corrected per that clarification) and closes `L10-R001`, `L10-R002`, `L10-R004`, and `C10-C005`
+together, per the agreement's own recorded `NEXT_ACTION`.
+
+## Findings closed this pass
+
+### L10-R001 / L10-R002 (repeated) — `AI-028` still bundled `stream` and `streamSimple` under one disposition
+
+**Remediation:** `AI-028` narrowed to cover ONLY `stream` (`disposition: adopted`, unchanged for
+that half). New `AI-031` created for `streamSimple` (`disposition: deferred parity`), carrying the
+same wire-protocol-specific characterization PASS 2 already established for it, now under its own
+correct disposition rather than bundled with a satisfied operation, plus an explicit closure
+criterion (`C10-C001`, binding on whichever future pass closes it): the obligation Layer 11 owes is
+an EXTERNALLY INVOCABLE operation matching Pi's own `streamSimple(model, context, options) ->
+AssistantMessageEventStream` shape, not merely internal per-provider translation plumbing with no
+caller-facing entry point. `spec/llm.md` mirrors both corrections, plus a new `streamSimple`
+paragraph.
+
+`AI-029`'s own `disposition:` corrected from `adopted` to `intentional divergence` (`C10-C001`): the
+row's own text already characterized Minion's single eager `UnknownModelError` check as "an
+intentional, disclosed Minion architectural SIMPLIFICATION... not a literal mechanical port" --
+that is a description of divergence, not adoption; master design's own eager/lazy boundary
+authorizes the collapse, but authorization is a separate claim from "matches Pi's own observable
+behavior." `spec/llm.md` corrected identically.
+
+`AI-030`'s own `rule:` gains the documentary corrections the convergence agreement requires: a note
+that the canonical scenario grammar addresses registration by HANDLE id, not fixture id, and an
+explicit statement of the token-based, per-registration-call ownership mechanism (see `C10-C005`
+below) plus the idempotent-repeated-withdrawal guarantee, stated as a binding, non-negotiable
+observable rule rather than left implicit. `spec/llm.md` mirrors this.
+
+### L10-R004 (repeated) — schema/runner defects the prior pass's own evidence never closed
+
+**Remediation, schema (`C10-C002`):** `conformance/schema/llm-service-scenario.schema.json`'s
+`adapterEntry` now carries an `if`/`then`/`else` constraint tying `reject_message` to `behavior`
+both directions (required when `reject`, forbidden when `ok`) -- PASS-2's schema accepted both
+malformed shapes silently. `step.register` changed from a bare fixture-id string to a `{adapter,
+as}` object (both required): `adapter` names the fixture being registered, `as` introduces the
+handle id its own withdrawal is later addressed by. `withdraw` now names a handle id, never a
+fixture id.
+
+**Remediation, runner grammar and validation (`C10-C002`/`C10-C003`):**
+`tests/conformance/llm_service_runner.py` rewritten for the new grammar (`register`/`withdraw`
+steps address handles via a `handles: dict[str, Callable[[], None]]` map, replacing PASS-2's
+fixture-id-keyed `withdrawals` map that could not express two independent handles for the same
+fixture). A new `_validate_references` pre-flight pass (mirroring
+`tool_registry_runner.py::_validate_references`'s own established boundary) rejects, before any
+`LlmService`/`Adapter` object is constructed: a duplicate `adapters[].id`; a `register.adapter`
+naming an undeclared fixture; a `register.as` handle id reused by an earlier `register` step; a
+`withdraw` naming an undeclared handle; a duplicate observation id across the single
+`queries[].id`/`steps[].stream.as` namespace; an `expect` key naming no declared observation id.
+Deliberately NOT rejected: withdrawing an already-withdrawn handle (idempotent, `AI-030`) and a
+declared observation id `expect` never names (a legitimate setup-only action). A new
+`tests/conformance/test_llm_service_runner_validation.py` exercises these cases directly against
+the runner module, independent of the canonical scenario schema: seven tests confirm each malformed
+shape is rejected, and two confirm the two deliberately-permitted cases above proceed normally (the
+file's remaining three tests exercise the `_owner_from_growth` guard directly -- see `C10-C004`
+below).
+
+**Remediation, ownership-detection defect (`C10-C004`):** the `resolve` query's ownership search
+was a value-equality search over `MockAdapter.requests` -- unsound, since every `Request` this
+runner builds varies only in `model`, so two adapters called through different identities produce
+value-equal requests and the search could silently pick the wrong, registration-order-first
+adapter. This is the review's own exact reproduction (register A; stream through A; register B
+replacing A for the same identity; resolve -- reported `A`, not the real current owner `B`). Fixed
+by snapshotting each candidate's own request-log length BEFORE the call (before invoking
+`LlmService.stream()`, not merely before draining the returned stream -- `MockAdapter.stream()`
+appends synchronously at call time, and `LlmService.stream()` invokes it eagerly) and requiring
+EXACTLY one candidate's count to have grown by one afterward, raising `AssertionError` on zero or
+multiple matches rather than normalizing via `next()`'s own first-match behavior. Factored into a
+standalone `_owner_from_growth` helper, directly unit-tested against synthetically-constructed
+zero-growth and multiple-growth cases (a naively-shared mock object under two fixture ids), not
+only through the full scenario-document runner.
+
+Two new canonical scenarios: `llm-service-resolve-ownership-survives-replacement.yaml` (the
+review's own exact reproduction under the new handle grammar, including a setup-only `stream`
+step never named in `expect`, proving that permission explicitly) and
+`llm-service-same-fixture-two-handles.yaml` (see `C10-C005` below). The four PASS-2 scenarios
+mechanically updated to the new `register`/`withdraw` grammar. `test_schema_validation.py` gains
+four new parametrized checks (two negative, two positive) pinning the `reject_message`/`behavior`
+constraint directly against the schema, independent of any scenario file.
+
+### C10-C005 — per-registration-call ownership: a genuine PASS-2 production defect, not a new grammar-only capability
+
+**Finding (raised against convergence revision 2, closed in revision 3):** revision 2 mischaracterized
+the same-fixture/two-handle witness as "a new capability the PASS-2 grammar could not even express...
+with no PASS-2 baseline to revert against." The challenge review corrected this: the witness
+exercises `AI-030`'s already-normative rule that a withdrawal handle owns exactly the entries its own
+`register()` call added, and PASS-2's actual `LlmService.register`/`withdraw` -- `self._adapters.get
+(model_id) is adapter` -- checks adapter-OBJECT identity, not registration-CALL identity, so it
+cannot distinguish two calls that happen to register the identical adapter object. The review's own
+direct reproduction: `register(a)` twice, `models()` shows one entry, withdrawing the FIRST handle
+incorrectly dropped it to zero instead of leaving the second registration live.
+
+**Remediation:** `minion-agent-python/src/minion_agent/llm/service.py::LlmService.register`
+rewritten to store a fresh, opaque per-call `token = object()` alongside the adapter
+(`self._adapters[model_id] = (adapter, token)`); the returned withdrawal closure checks
+`entry[1] is token`, not the adapter object, before deleting an entry. `stream()` unpacks the tuple
+and is otherwise unchanged. This is the ONLY production source file this convergence touches.
+
+Two new direct Python unit witnesses (`tests/llm/test_service.py`):
+`test_registering_the_same_adapter_object_twice_gives_each_call_its_own_ownership` (the review's own
+exact reproduction at the `LlmService` API directly -- register the same object twice, withdraw the
+first, confirm the second registration's own entry survives, withdraw the second, confirm it is
+correctly removed) and the pre-existing `test_withdrawing_twice_is_harmless` (already covers
+double-withdrawal idempotency; re-confirmed, not new). New canonical DSL witness:
+`llm-service-same-fixture-two-handles.yaml`, the same shape expressed at the scenario layer under
+the new handle grammar.
+
+## Binding implementation clarification applied
+
+`assurance/layers/10-provider-abstraction-contract-checkpoint-r002-r004-convergence.md`'s own "Rust
+implementability" section is corrected in place: the "an owned, move-only handle type Rust's own
+borrow checker would enforce single-use on" suggestion is withdrawn and replaced with an explicit
+statement that any future Rust representation must keep repeat withdrawal a safe no-op (e.g. a
+handle exposing `withdraw(&self)` rather than a consuming `withdraw(self)`), matching the SAME
+observable rule this pass's own Python fix establishes. No other checkpoint content changed; this
+is the exact, narrow correction the agreement's own binding clarification required.
+
+## Revert-and-confirm (genuine RED against the exact PASS-2 candidate)
+
+Each production/tooling fix was verified to genuinely discriminate before being trusted, per this
+project's own established discipline -- backed up, reverted to the exact PASS-2 state, confirmed
+RED, restored, confirmed GREEN:
+
+- **`service.py` (`C10-C005`):** reverted to PASS-2's `is adapter`-based check ->
+  `test_registering_the_same_adapter_object_twice_gives_each_call_its_own_ownership` FAILED exactly
+  as the review's own reproduction predicted (`models()` incorrectly showed `frozenset()` after
+  only the first handle's withdrawal). Restored -> all 10 `test_service.py` tests pass.
+- **`llm_service_runner.py`'s own `resolve` ownership detection (`C10-C004`):** the fixed
+  count-delta logic temporarily replaced with PASS-2's own value-equality search (grammar/schema
+  left at their current, fixed state, since PASS-2's grammar cannot express this scenario at all)
+  -> `llm-service-resolve-ownership-survives-replacement.yaml` FAILED, reporting the stale owner
+  `adapter-a` instead of the real current owner `adapter-b`. Restored -> all 6 llm-service
+  scenarios pass again.
+- **`llm-service-scenario.schema.json`'s own `adapterEntry` constraint (`C10-C002`):** validated
+  the two malformed shapes (`behavior: reject` without `reject_message`; `behavior: ok` with
+  `reject_message` present) directly against the EXACT PASS-2 schema file (`git show HEAD:...`,
+  the committed PASS-2 candidate) -- both passed validation with zero errors under PASS-2, and are
+  now correctly rejected.
+
+The `_validate_references` negative witnesses and the `_owner_from_growth` synthetic zero-/
+multiple-growth witnesses have no PASS-2 baseline to revert against in the classical sense (PASS-2
+had no such validation or guard at all -- the check simply did not exist), so their RED evidence is
+the check's own absence in PASS-2, not a revert-and-confirm cycle; each is confirmed to pass
+against the current, fixed code.
+
+## Regression verification for previously-closed findings
+
+`LLM-011`, `LLM-012`, `LLM-018`, `LLM-019`, `LLM-F006`, `LLM-F007`, `LLM-F009`, `LLM-F010`
+(Layer 02), `AI-011`/`AI-012`/`AI-027` (never-raises contract, `Context`, Layer-09 signal): all
+unaffected. `service.py`'s own change is additive at the exact boundary `AI-030` already owned (the
+withdrawal closure's own internal ownership check); every existing caller of `register`/`stream`/
+`models()` is unaffected, confirmed by the full existing `test_service.py` suite passing unchanged
+plus the one new test. No other Python source file under `src/` was touched.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1161 passed, 19 xfailed (pre-existing, unrelated), 0 failed
+coverage (certified src packages):   100.00%, unchanged
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean on every file this pass touched; the same pre-existing,
+                                      unrelated 7-file drift noted in every earlier layer's own
+                                      passes remains untouched and out of this pass's ownership
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 327 passed, 19 xfailed (up from 307 -- new llm_service
+                                      scenarios, a new runner-validation file, and new
+                                      schema-validation checks account for the increase)
+manifest parse + unique-ID audit:    83 / 83 unique (82 PASS-2-era + new AI-031)
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged by this
+                                pass (out of scope per the agreement's own explicit instruction)
+CONTRACT_ASSURANCE_DEFECT      none -- L10-R001/R002/R004 and C10-C005 closed this pass
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                now correctly disposed as intentional divergence rather than adopted
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, token-based
+                                per-call ownership, idempotent repeated withdrawal, no Pi analogue);
+                                AI-031 (streamSimple, deferred parity, explicit closure criterion);
+                                ModelId.api's own Python-only "mock" default (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged by this pass -- AI-029's own resolution
+                                behavior confirmed satisfied; AI-028's never-raises boundary
+                                (L10-R003) and AI-030's withdrawal/introspection surface remain OPEN,
+                                disclosed gaps; C10-C005's own future Rust obligation recorded
+                                (certified Rust `LlmService::register` has no withdrawal mechanism
+                                at all yet, so cannot currently exhibit or fix this exact defect)
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (self-certified; pending independent Rust §11.8.7 targeted
+                       finding-closure review)
+Rust Layer 10          NOT_IMPLEMENTED for L10-R003/AI-030's own open gaps; PARTIALLY_IMPLEMENTED
+                          for AI-028's stream/AI-029's resolution behavior, unchanged by this pass
+shared Layer-10 contract   READY FOR TARGETED §11.8.7 FINDING-CLOSURE REVIEW of
+                             L10-R001/R002/R004/C10-C005 together, against this exact candidate
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to the existing `layer/10-python-shared` branches (both repos); verify
+both new commits are remote-reachable; update PR #20/#45 bodies with this implementation summary
+and the new head SHAs. Update coordination issue #19 (`minion-agent`): `STATUS:
+RUST_CONTRACT_REVIEW`, new exact `CODE PR`/`DOCS PR` SHAs, append the independent-agreement
+reference (`minion-agent-docs#47` @ `05e03a7faefb9bbc45eeff20ed1996267414d16d`) to `PRIOR REVIEW
+EVIDENCE`, `NEXT_OWNER: Codex`, `NEXT_ACTION: complete a targeted §11.8.7 finding-closure review of
+this candidate against L10-R001/L10-R002/L10-R004/C10-C005 together -- confirm the corrected
+AI-028/AI-029/AI-030/AI-031 dispositions, the handle-based registration grammar and its reference
+validation, the count-delta exactly-one ownership fix, and the token-based per-registration-call
+Python production repair all genuinely close their respective findings against this exact
+candidate, not merely against the agreed design. L10-R003 remains an explicit, disclosed, OPEN
+Rust-only defect, out of scope per the agreement; Layer 11 remains not started`. Then stop. Do not
+merge any candidate or review-evidence PR. Do not implement Rust. Do not start Layer 11.

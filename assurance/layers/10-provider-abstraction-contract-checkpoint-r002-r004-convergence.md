@@ -512,10 +512,10 @@ Python-tooling concerns implicating no Rust production code. The corrected `AI-0
 `AI-031` dispositions are simpler for a future Rust implementation pass to trace against (each row
 now asserts exactly one thing), not harder. The corrected schema's own `if`/`then`/`else` grammar
 and handle-scoped `register`/`withdraw` shape are both standard, language-neutral JSON Schema/DSL
-constructs any future Rust scenario runner must respect structurally -- a handle-based design in
-particular maps directly onto Rust's own idiomatic resource-ownership patterns (an owned handle
-value, consumed by `withdraw`), noted for whoever eventually builds a Rust `llm_service` runner,
-not implemented here.
+constructs any future Rust scenario runner must respect structurally -- noted for whoever eventually
+builds a Rust `llm_service` runner, not implemented here. Whatever Rust value represents a
+withdrawal handle, it must remain safely callable more than once (see immediately below); the
+schema's own handle-id-addressed grammar does not by itself require or suggest a consuming design.
 
 `C10-C005`'s own registration-call-ownership rule, however, is a LANGUAGE-NEUTRAL observable rule
 (section F above), and certified Rust's own `LlmService::register(identity, adapter)` -- already
@@ -523,13 +523,21 @@ confirmed under PASS 2 to take one `(ModelIdentity, Arc<dyn LlmAdapter>)` pair p
 withdrawal handle of any kind (`AI-030`'s own Rust status, unaffected by this convergence) -- has
 no withdrawal mechanism to exhibit this exact defect YET, since it cannot withdraw at all. This
 convergence does NOT prescribe how a future Rust implementation pass represents per-call ownership
-(an owned, move-only handle type Rust's own borrow checker would enforce single-use on is one
-natural fit, matching how `_Reservation`'s own one-shot design was chosen for a different Layer-09
-finding, but this is Rust's own future implementation decision, not mandated here) -- only that
-WHEN Rust eventually implements withdrawal, it must satisfy the SAME observable rule: two
-registration calls for the identical adapter object must remain independently ownable and
-independently withdrawable. Recorded as a future Rust obligation alongside `L10-R003`, not resolved
-by this convergence.
+-- only that WHEN Rust eventually implements withdrawal, it must satisfy the SAME observable rules
+this convergence establishes for Python: two registration calls for the identical adapter object
+must remain independently ownable and independently withdrawable, AND withdrawal must remain a
+safe, idempotent no-op when called more than once on the same handle or after a later registration
+has superseded it (this row's own binding double-withdrawal rule, unchanged from `AI-030`'s
+existing text). A prior revision of this section suggested "an owned, move-only handle type Rust's
+own borrow checker would enforce single-use on" as a natural fit, matching how `_Reservation`'s own
+one-shot design was chosen for a different Layer-09 finding -- that suggestion is WITHDRAWN here
+(binding implementation clarification on the convergence agreement): a consuming, single-use
+handle would make a second call to an already-withdrawn handle a COMPILE error rather than a
+runtime no-op, which is not conforming, since it would make the agreed idempotent-repeat-withdrawal
+observation impossible to express at all. Any Rust representation that keeps repeat withdrawal a
+safe no-op (e.g. a handle exposing `withdraw(&self)` rather than `withdraw(self)`) remains
+available; this convergence does not choose among them. Recorded as a future Rust obligation
+alongside `L10-R003`, not resolved by this convergence.
 
 ## Out of scope / deferred
 
