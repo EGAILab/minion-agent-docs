@@ -1294,3 +1294,124 @@ before iterating it, and confirm the new scalar-container negative witness genui
 L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of scope; Layer 11 remains not
 started`. Then stop. Do not merge any candidate or review-evidence PR. Do not implement Rust. Do
 not start Layer 11.
+
+# PASS 8 — repair Rust implementation preflight blockers (L10-I001, L10-I002)
+
+## Preflight reference
+
+The PASS-7 candidate (code PR #20 @ `ea4f250fe0c6d640036960459dd74711795a51d7`, docs PR #45 @
+`a99f348f947431ecfa1b09cdc00f137f3fd0cd80`) was APPROVED by a third `§11.8.8` final complete review
+(`assurance/layers/10-provider-abstraction-final-contract-rereview-3.md`, evidence PR #47 @
+`8e18072666c104369cbed2922e7d9084a090af9d`, merged) and both PRs were merged under the normal
+exact-SHA policy (code `main` @ `f12c0e37f8d33ca8be78028ab4ec9bd2b59c9eb8`, docs `master` @
+`8e18072666c104369cbed2922e7d9084a090af9d`). This is NOT a fourth contract-review rejection --
+`agent-workflow.md` §11.8's own repeated/three-strikes trigger does not apply here.
+
+Before writing any Rust code, a Rust implementation preflight audit (`assurance/layers/
+10-provider-abstraction-rust-implementation-preflight.md`, docs PR #48 @
+`3ada6cf9f6612bff1efdb66a65b02e7977d953a1`) re-read the merged spec/manifest/canonical evidence and
+found two narrow, evidence-only defects blocking the start of Rust work:
+
+- **`L10-I001`** (`CONTRACT_ASSURANCE_DEFECT`): the merged, approved review-3 artifact's own "Exact
+  approved candidate" header cites the PRECEDING PASS-6 candidate heads (`a7d05f26...`/`7c8d8ed6...`)
+  instead of the PASS-7 heads its own audit actually covers and coordination issue #19 recorded as
+  merged.
+- **`L10-I002`** (`CONTRACT_ASSURANCE_DEFECT`): three canonical scenario `notes:` fields
+  (`llm-service-registration-and-replacement.yaml`, `llm-service-withdrawal-does-not-remove-
+  a-later-replacement.yaml`, `llm-service-introspection-reflects-current-registrations.yaml`) still
+  say Pi has no registration/introspection concept or analogue at all -- language `AI-030`/
+  `spec/llm.md` corrected under `L10-R005` (PASS 4/5) but that correction was never propagated to
+  these three scenarios' own documentary prose.
+
+Independently re-verified this pass before remediating: read the review-3 artifact directly and
+confirmed its own `## Fresh gates` section numbers (`337 passed`, `manifest validation 8 passed`,
+`manifest malformed tests fields 0`) match PASS 7's own recorded output exactly, while PASS 6
+reported `334`/`5`/`0` -- confirming the review's own AUDIT is genuinely of the PASS-7 candidate,
+only its header citation is stale. Read all three flagged canonical scenario files directly and
+confirmed the exact stale phrases the preflight quoted are present verbatim.
+
+## Findings closed this pass
+
+### L10-I001 — exact-SHA approval evidence drift
+
+**Remediation:** an `## Erratum (L10-I001)` section appended to the END of
+`10-provider-abstraction-final-contract-rereview-3.md`, per this project's own
+historical-artifact-preservation rule -- nothing above it was altered. States the corrected exact
+approved candidate (code `ea4f250f...`, docs `a99f348f...`), the evidence that the review's own
+audit already covered that candidate (the fresh-gates number match above), and that this is a
+citation correction, not a semantic re-review.
+
+### L10-I002 — stale canonical Pi-registration characterization
+
+**Remediation:** all three flagged scenarios' own `notes:` fields rewritten to state the corrected
+`AI-030` comparison -- Pi exposes three real registration surfaces (`MutableModels`, compat's
+generic API registry, `registerFauxProvider`'s per-call unregister handle), Minion's full-identity,
+per-registration-call registry adopts none of their exact granularity/composition rules, and this
+is the owner-approved intentional divergence, not an absence of any Pi concept. `llm_service:`/
+`steps:`/`queries:`/`expect:` content in all three files is byte-for-byte unchanged -- confirmed by
+diff: every changed line falls inside the `notes:` block.
+
+## Regression verification for previously-closed findings
+
+All seven llm-service canonical scenarios pass unchanged (schema validation and runner execution
+both re-verified); `L10-R001`/`L10-R002`/`L10-R004`/`C10-C005`/`L10-R005`/`L10-R006`/`L10-R007`/
+`L10-R008`: unaffected -- no production, schema, runner, manifest, or spec file touched this pass.
+
+## Quality gates (fresh, this pass)
+
+```text
+pytest (full suite):                 1171 passed, 19 xfailed (pre-existing, unrelated), 0 failed,
+                                      unchanged from PASS 7 (no test logic changed, only scenario
+                                      and assurance prose)
+coverage (certified src packages):   100.00%, unchanged
+ruff check:                          clean (whole tree)
+ruff format --check:                 clean; the same pre-existing, unrelated 7-file drift remains
+mypy (configured scope, src only):   clean, 0 errors, 58 source files
+conformance/ (full):                 337 passed, 19 xfailed, unchanged from PASS 7
+manifest parse + unique-ID audit:    84 / 84 unique, unchanged
+```
+
+## Active findings (after this pass)
+
+```text
+PI_PARITY_DEFECT               L10-R003 -- OPEN, current Rust production only, unchanged
+CONTRACT_ASSURANCE_DEFECT      none -- L10-I001/I002 closed this pass; no finding remains open
+PI_BEHAVIOR_UNCERTAIN          none
+unapproved intentional divergence   none
+disclosed Minion architectural mapping   AI-029's own eager full-identity-lookup simplification,
+                                unchanged
+disclosed Minion-specific constraint   AI-030 (registration/withdrawal/introspection, compared
+                                honestly against all three real Pi registration surfaces
+                                throughout manifest, spec, AND all seven canonical scenarios now,
+                                owner-approved intentional divergence, §11.7 decision recorded);
+                                AI-031 (streamSimple, deferred parity); AI-032 (fetchDeferred/
+                                cancelDeferred, deferred parity); ModelId.api's own Python-only
+                                "mock" default (LLM-F006, unchanged)
+Rust cross-language dependency      PARTIAL, unchanged
+Layer 11                       NOT STARTED
+```
+
+## Verdict
+
+```text
+Python Layer 10     CERTIFIED (already merged; this pass repairs certification EVIDENCE only)
+Rust Layer 10          NOT_IMPLEMENTED, BLOCKED pending this pass's own handoff
+shared Layer-10 contract   Evidence repaired at this exact candidate; READY TO HAND BACK TO CODEX
+                             for Rust implementation to resume
+Layer 10 cross-language     NOT CLOSED
+Layer 11                     NOT STARTED
+```
+
+## Next action
+
+Push this pass's commits to FRESH short-lived branches in both repos (`layer/
+10-i001-i002-remediation`, since the prior `layer/10-python-shared` branches are merged/closed);
+open new PRs against `main`/`master`; verify both new commits are remote-reachable. Update
+coordination issue #19 (`minion-agent`): `STATUS: RUST_CONTRACT_REVIEW`, new exact code/docs PR
+SHAs, append the preflight-blocker reference (docs PR #48 @
+`3ada6cf9f6612bff1efdb66a65b02e7977d953a1`) to `PRIOR REVIEW EVIDENCE`, `NEXT_OWNER: Codex`,
+`NEXT_ACTION: confirm the L10-I001 erratum and the L10-I002 canonical-note corrections fully
+resolve the preflight's own two findings, then resume the Rust Layer-10 implementation this
+preflight was blocking. L10-R003 remains an explicit, disclosed, OPEN Rust-only defect, out of
+scope; Layer 11 remains not started`. Then stop. Do not merge any candidate or review-evidence PR.
+Do not implement Rust. Do not start Layer 11.
