@@ -133,3 +133,37 @@ Layer 11                    NOT STARTED
 
 The approved shared/Python candidate may merge under the exact-SHA rule. After it is merged, issue
 #19 should transfer to Codex for a separate Rust Layer-10 implementation/certification pass.
+
+---
+
+## Erratum (`L10-I001`) — exact-SHA citation corrected
+
+**Recorded by the shared/Python owner, appended in place per this project's own
+historical-artifact-preservation rule; nothing above this line was altered.**
+
+The Rust implementation preflight (`assurance/layers/
+10-provider-abstraction-rust-implementation-preflight.md`, docs PR #48 @
+`3ada6cf9f6612bff1efdb66a65b02e7977d953a1`) found this review's own "Exact approved candidate"
+section, above, cites the PRECEDING PASS-6 candidate heads (code `a7d05f26b22e1168c58578f5423d9a5c6f2ed0e3`,
+docs `7c8d8ed68d0c903b8262e82aca80537bd2267ed8`) rather than the PASS-7 candidate this review's own
+body actually audited and approved.
+
+Independently re-verified: every fresh-gates number this review's own `## Fresh gates` section
+reports (`337 passed`, `manifest validation 8 passed`, `manifest malformed tests fields 0`) matches
+PASS 7's own recorded quality-gate output exactly (`assurance/layers/
+10-provider-abstraction-python.md`, PASS 7 section) -- PASS 6 reported `334`/`5`/`0` respectively,
+not `337`/`8`/`0`. The review's own AUDIT is therefore genuinely of the PASS-7 candidate; only its
+own header-line SHA citation is stale, evidently left over from an earlier draft of this same
+review before the container-type fix (`L10-R008`, second re-review) was folded in.
+
+**Corrected exact approved candidate:**
+
+- code PR #20: `ea4f250fe0c6d640036960459dd74711795a51d7`
+- docs PR #45: `a99f348f947431ecfa1b09cdc00f137f3fd0cd80`
+- pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699` (unchanged)
+
+This is the SAME candidate pair coordination issue #19 already recorded as merged (`PR #20 MERGED
+from approved head ea4f250...`, `PR #45 MERGED from approved head a99f348...`) and the same pair
+`f12c0e37f8d33ca8be78028ab4ec9bd2b59c9eb8`/`8e18072666c104369cbed2922e7d9084a090af9d` were merged
+from. No semantic re-review is implied or required by this erratum -- it corrects a citation, not
+a conclusion.
