@@ -4,6 +4,43 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layer 10 (Provider abstraction + mock adapter) — closed 2026-09-12
+
+Layer 10 mostly formalized provider infrastructure that already existed from Layer 02, but its
+contract and evidence still required several review/convergence cycles before Rust implementation.
+Two reusable assurance lessons were promoted into `process/agent-workflow.md` at closure.
+
+### 1. Canonical list ordering needs both a named key and a crossing-key witness
+
+Python and Rust both exposed the same current set of registered models, yet their canonical
+runners used different ordering keys: `(provider, model, api)` versus `(provider, api, model)`.
+Seven scenarios remained green because every relevant observation contained at most one identity.
+The difference surfaced only during Rust closure review, after implementation, when the reviewer
+constructed two identities whose `model` and `api` values deliberately cross under those keys.
+
+**Fix:** section 9 now requires the shared contract to state the exact canonicalization key and
+field precedence whenever an implementation-defined collection becomes an ordered canonical list,
+to separate that tooling rule from production return-order semantics, and to retain a multi-entry
+witness that distinguishes plausible competing keys.
+
+### 2. Artifact validators must reject the wrong container before iterating it
+
+Four manifest `tests:` values had silently parsed as YAML mappings rather than lists. The first
+permanent validation gate then checked only the values produced by iteration, allowing a scalar
+string to masquerade as a one-entry iterable. A later review added the missing container-type
+assertion and malformed scalar/mapping witnesses.
+
+**Fix:** section 8 now requires validators to check container shape before content iteration and
+to retain negative probes for plausible malformed shapes. The Layer-10 manifest validator already
+implements this rule, so the workflow change records and generalizes proven automation rather than
+adding a new ceremonial check.
+
+### Not promoted to persistent guidance
+
+The stale exact-SHA header and three stale scenario notes were repaired through the existing
+historical-artifact and exact-remote-state rules. Those rules worked once the inconsistencies were
+found, so no additional workflow mechanism was needed.
+
 ## Layer 09 (Active Abort/Cancellation) — closed 2026-09-09
 
 Layer 09 took ten shared/Python passes, three contract-convergence cycles (`L09-R007`; the
