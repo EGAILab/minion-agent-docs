@@ -88,6 +88,24 @@ relative path segment. Pi's own interface comment also states `fileExists` is "a
 browsers"; this project has no browser runtime target, so that clause is architecturally
 inapplicable here rather than weakened or silently dropped.
 
+**The default reference implementation's own exact `file_exists` behavior (`L11-R013`).** Two
+properties, both specific to the default implementation (not a protocol-level requirement, unlike
+the general leading-`~` rule above, which any implementation must satisfy in SOME form):
+
+1. Tilde expansion is LITERAL STRING CONCATENATION -- Pi's own `homedir() + path.slice(1)` -- not
+   path-join, and not a `~username` other-user lookup. Only the leading `~` character itself is
+   replaced; everything after it is appended UNCHANGED, with no separator inserted. `~/foo`
+   therefore resolves as expected (the home directory typically has no trailing slash, so
+   concatenating `/foo` directly reads naturally), but a non-separator suffix like `~foo` resolves
+   to `<homedir>foo` (home directory string with `foo` appended directly, not `<homedir>/foo` and
+   not another user's own home directory) -- a deliberately naive rule, not full path-normalization
+   or username-lookup semantics.
+2. The WHOLE operation -- resolving the path and checking the filesystem -- is one failure
+   boundary that resolves `False` on ANY error (Pi's own `try { ... } catch { return false; }`),
+   not only "the target does not exist." A permission error or other filesystem failure reports
+   `False`, identically to a genuinely missing path -- it never propagates an exception to the
+   caller.
+
 The default, reference implementation reads real process environment variables and the real
 filesystem, but reads NO provider-specific credential file (a Codex CLI credential file, or any
 other single filesystem source) as part of this generic seam -- that would bake one provider's own
@@ -168,12 +186,22 @@ independently reading a token from some other source (a filesystem, a CLI's own 
 and rewriting it outside this seam. There is no silent fallback to an ambient/external credential
 source after a failed refresh, or for a credential type without a matching handler.
 
-A refresh triggers only when the stored OAuth credential is within a trigger window of expiring
-(a default of five minutes). The actual refresh call happens INSIDE `modify()`'s own callback,
-which re-checks expiry under the store's per-provider lock before calling the injected refresh
-operation -- this double-checked pattern is what makes two concurrent callers that both observed
-"expiring soon" via an outside-the-lock optimistic read refresh EXACTLY ONCE: the second caller's
-own callback, running after the first's has already committed, observes the now-current
+A refresh triggers when the stored OAuth credential is within an EFFECTIVE trigger window of
+expiring: `max(default_five_minutes, explicit_caller_minimum_or_zero)`. This SAME effective
+threshold -- never the raw, un-maxed caller value alone -- governs THREE separate checks, not just
+the first: the initial (optimistic, outside-the-lock) trigger decision, the re-check performed
+under the store's per-provider lock before actually calling the injected refresh operation, and
+(when the caller supplied an explicit minimum) the POST-refresh validation of the newly-refreshed
+credential (`L11-R011`; an earlier revision incorrectly post-validated against the raw, un-maxed
+caller value, which could accept a refreshed credential still expiring within the DEFAULT window
+whenever the caller's own explicit minimum was smaller than that default). There is only ever ONE
+threshold value in play for a given call, reused identically across all three checks.
+
+The actual refresh call happens INSIDE `modify()`'s own callback, which re-checks expiry under the
+store's per-provider lock (against that same effective threshold) before calling the injected
+refresh operation -- this double-checked pattern is what makes two concurrent callers that both
+observed "expiring soon" via an outside-the-lock optimistic read refresh EXACTLY ONCE: the second
+caller's own callback, running after the first's has already committed, observes the now-current
 (no-longer-expiring) credential and returns it unchanged, without calling refresh again. If the
 credential has been logged out (or replaced by a non-OAuth credential) by the time the lock is
 acquired, the callback returns absent rather than attempting to refresh something that no longer
@@ -245,6 +273,16 @@ State transitions:
 The default interval, when the caller supplies none, is 5 seconds (RFC 8628 section 3.2's own
 default). Every interval is floored at a minimum of 1 second, regardless of what the caller or a
 `slow_down` response requests.
+
+**Millisecond flooring (`L11-R012`).** Before the 1-second minimum is applied, BOTH the caller's
+own initial interval and a finite/positive server-provided `slow_down` interval are first FLOORED
+to whole milliseconds (Pi's own `Math.floor(seconds * 1000)`) -- a fractional-second interval
+(e.g. `1.2349` seconds) schedules exactly `1.234` seconds, never the raw fractional value. This is
+a normative scheduling rule, not merely a floating-point-representation detail: two implementations
+that both satisfy every other rule in this section can still schedule observably different wait
+durations for a fractional interval unless both apply this exact floor. The fixed `slow_down`
+fallback increment (5 seconds) is already a whole-millisecond quantity and needs no additional
+flooring when added to an already-floored current interval.
 
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
