@@ -299,6 +299,24 @@ whose own flooring/clamping arithmetic raises for non-finite input at setup time
 has even run, narrows this contract incorrectly; flooring for a non-finite value must be a
 no-op/pass-through, not an error.
 
+**A non-finite interval that IS actually used must still make progress (`L11-R014`, second half,
+resolved by §11.8 convergence agreement).** If the first poll attempt does NOT report
+`DevicePollComplete`, the initial interval is actually consulted to schedule a sleep before the
+next attempt. A non-finite value at that point must NOT be scheduled literally: Pi's own pure
+arithmetic (`Math.floor`/`Math.max`) never throws and faithfully propagates `NaN`/`Infinity`
+unchanged, but the VALUE Pi's own host timer (`setTimeout`) actually receives is separately clamped
+by that host to its own minimal schedulable delay when the requested value is out of its valid
+range -- `NaN`/`Infinity` both fail that range check identically. The observable, portable
+requirement this contract adopts is: a non-finite interval that is actually used clamps to the
+SAME minimum interval (1 second) every other too-small interval already clamps to, so the loop
+reaches its next poll attempt deterministically rather than raising, hanging indefinitely (a naive
+port that slices an ever-infinite remaining duration into fixed-size steps without ever detecting
+non-finiteness never terminates), or silently substituting some OTHER, unspecified value. The
+EXACT host-timer latency Pi's own runtime would produce (sub-millisecond in Node) is deliberately
+NOT made normative here -- only that progress happens, and that the specific clamped value is the
+project's own established minimum interval, not left for each implementation to invent
+independently.
+
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
 The timeout carries one of two distinct messages: a plain timeout message if no `slow_down`
