@@ -30,6 +30,16 @@ exactly `api_key`/`headers`/`base_url`: a value that cannot be expressed as one 
 provider CONFIG, not auth, and does not belong on this type. `source` on `AuthResult`/`AuthCheck`
 is a human-readable status-UI label, not a machine-discriminated enum.
 
+**Credential value semantics (`L11-R006`, intentional divergence).** Pi's own in-memory store
+holds mutable credential objects and `read`/`modify` expose live references to them, so mutating a
+field on a returned object is observably visible on a later `read`. This project's own
+`Credential` union is instead a fully immutable VALUE at every level (the credential itself, plus
+any embedded `env`/`extra` mapping) -- an intentional architectural hardening, not a literal port.
+`modify()` remains the sole supported mutation authority either way; since a `Credential` is fully
+immutable, "returned by reference" vs. "returned by value" is not an observable distinction a
+caller can detect, which is what actually resolves the divergence, not the specific container type
+an implementation happens to use.
+
 ## AuthContext
 
 The environment-access seam for auth resolution (`PROV-006`), injectable for tests:
@@ -39,10 +49,15 @@ AuthContext.env(name) -> string|absent
 AuthContext.file_exists(path) -> bool
 ```
 
-`env(name)` returns the named environment value, or absent if the variable is unset OR set to a
-blank/whitespace-only value -- a blank value is treated identically to an unset one, not as a
-present-but-empty string. `file_exists(path)` reports whether `path` exists, expanding a leading
-`~` to the user's home directory. The default, reference implementation reads real process
+`env(name)` returns the named environment value, or absent if the variable is genuinely unset.
+This protocol-level contract permits ANY implementation to resolve a present-but-blank value
+(e.g. an empty string) unchanged -- blank-to-absent normalization is NOT part of the protocol
+itself (`L11-R003`). Only the DEFAULT reference implementation additionally treats a
+whitespace-only value as absent; that normalization is a property of the default implementation,
+not a requirement every conforming `AuthContext` must satisfy. `file_exists(path)` reports whether
+`path` exists, expanding a leading `~` to the user's home directory -- again a concrete behavior of
+the default implementation, not a protocol-level guarantee (an injected test context, for example,
+need not touch the filesystem at all). The default, reference implementation reads real process
 environment variables and the real filesystem, but reads NO provider-specific credential file (a
 Codex CLI credential file, or any other single filesystem source) as part of this generic seam --
 that would bake one provider's own storage location into the generic auth API, which this contract
@@ -72,6 +87,13 @@ otherwise whatever was already stored. `read`/`list` are explicitly NOT serializ
 `modify`/`delete` -- a `read` racing an in-flight `modify` observes whatever is currently stored
 at the moment it runs, from either side of the mutation.
 
+`list()` enumerates providers in INSERTION order of each provider's own CURRENT entry (`L11-R007`)
+-- a provider deleted and later given a fresh credential re-appears at the END of that order, not
+its original position. This is a normative production-API rule, not merely an incidental property
+of one language's map/dict type: an implementation using a hash-based collection with no stable
+iteration order does not satisfy this contract on its own and must track insertion order
+separately.
+
 This is the property the whole contract exists to guarantee: a caller that needs to refresh a
 rotating OAuth token can run its own check-and-refresh sequence entirely inside one `modify()`
 callback and be certain no second concurrent caller for the SAME provider id can read the same
@@ -82,12 +104,31 @@ An in-memory reference implementation proves IN-PROCESS serialization ONLY -- it
 cross-process, filesystem, or distributed locking. A concrete backing store MAY provide those
 stronger guarantees, but the generic `CredentialStore` contract does not require them, and nothing
 in this document should be read as promising more than what the in-memory reference actually
-proves.
+proves. Per-provider ordering is a FIFO chain: a `modify`/`delete` call queued behind an earlier
+one for the same provider id does not begin until the earlier one has settled (successfully or by
+raising), and one call's own failure never blocks a later queued call from proceeding.
 
-`AuthOperationOptions.signal`, when supplied and already aborted (or aborted while `fn` is
-in-flight, observed once `fn` resolves but before its result commits), causes the operation to
-raise a cancellation error instead of completing -- checked before a queued mutation begins, and
-again immediately after `fn` resolves.
+**Cancellation (`AuthOperationOptions.signal`, `L11-R001`).** `read`/`list` check the signal once,
+immediately, before doing anything else. `modify`/`delete` check it at up to three distinct
+points, and this contract requires all three, not merely the union's overall effect:
+
+1. Immediately, if the signal is already aborted before a queued call even begins waiting.
+2. Once a queued call's own turn begins -- i.e. once every EARLIER call for the same provider id
+   has itself settled -- and BEFORE its own `fn`/removal runs at all. An abort observed here means
+   `fn` (for `modify`) or the removal (for `delete`) never runs.
+3. For `modify` only, again immediately after `fn` resolves but before its result would commit:
+   an abort observed here means `fn`'s own result is DISCARDED, never written to the store, even
+   though `fn` itself ran to completion.
+
+Independently of all three checkpoints above, the CALLER'S OWN WAIT for a `modify`/`delete` call
+races against the signal separately: an abort observed while the caller is still waiting -- even
+while `fn` is already running past checkpoint 2 -- makes the caller's own call raise a cancellation
+error PROMPTLY, without waiting for the underlying operation to finish. This does NOT stop the
+underlying operation itself; it keeps running in the background to its own natural conclusion
+(settling checkpoint 3 above on its own timetable). A caller that races away a `modify` call this
+way must not assume the credential was left unchanged merely because it saw a cancellation -- it
+was, in fact, left unchanged (checkpoint 3 discards a too-late result), but that is a consequence
+of checkpoint 3, not of the caller's own race having "stopped" anything.
 
 ## Refresh / ownership authority (`PROV-008`)
 
@@ -112,6 +153,15 @@ Two distinct failure classes are never conflated: the injected refresh operation
 (the provider rejected the refresh) is a different, distinguishable error from the credential
 store's own read/modify mechanism failing (a local storage problem) -- a caller can tell "the
 provider rejected the refresh" apart from "the local credential store is broken."
+
+**Refresh cancellation/timeout (`L11-R002`).** The refresh operation itself receives a live,
+abort-observable signal as a second argument, alongside the expiring credential -- it is not
+called with the credential alone. That signal aborts when EITHER the caller's own cancellation
+fires OR a fixed budget (15 seconds) elapses on its own, independent of whether the caller ever
+cancels anything at all. This composed signal exists specifically so a hung refresh call cannot
+hold this credential's own store lock forever; the refresh operation is expected to honor it
+cooperatively (poll it and stop), the same cooperative contract every other abort-aware operation
+in this seam follows -- this module does not forcibly interrupt a refresh call that ignores it.
 
 ## PKCE (`PROV-009`)
 
@@ -152,10 +202,12 @@ State transitions:
 
 - **Pending**: retry at the current interval.
 - **SlowDown**: increase the interval before the next attempt. If the server supplies an explicit
-  interval, that value governs outright (preferred over a fixed increment, since trusting only a
-  client-tracked increment risks polling too early forever under clock drift). If the server
-  supplies no interval, the current interval increases by a fixed 5 seconds (RFC 8628 section
-  3.5's own default increment).
+  interval that is FINITE and positive, that value governs outright (preferred over a fixed
+  increment, since trusting only a client-tracked increment risks polling too early forever under
+  clock drift). A non-finite value (e.g. positive infinity) is treated exactly like an absent one
+  (`L11-R004`) -- it must never be scheduled as an actual sleep duration. If the server supplies no
+  interval, or a non-finite/non-positive one, the current interval increases by a fixed 5 seconds
+  (RFC 8628 section 3.5's own default increment).
 - **Failed**: a terminal protocol error. Polling stops immediately on this attempt -- it is never
   retried.
 - **Complete**: the flow succeeded; the loop returns `poll`'s own value unchanged.
@@ -191,6 +243,30 @@ provider endpoint, a Codex CLI credential-file loader, and any real provider tra
 `PROV-010` above are the generic, provider-neutral primitives a future pass's real OAuth
 integration will consume as its own transport-injected seam -- this pass does not itself perform
 any provider's specific endpoint calls.
+
+## Deferred generic auth/provider orchestration surface (`PROV-013`)
+
+Pinned Pi's public auth vocabulary extends well beyond what Pass 1 builds: `AuthPrompt`,
+`AuthInfoLink`, `AuthEvent`, `AuthInteraction`, `ProviderAuthInteraction` (the login-interaction/
+prompt/notification vocabulary a provider's own login flow uses), `ApiKeyAuth`, `OAuthAuth`,
+`ProviderAuth` (the per-provider auth-METHOD vocabulary -- `login`/`resolve`/`check`/`refresh`/
+`toAuth` callables a concrete provider registers), and the `Models` collection's own orchestration
+entry points (`checkAuth`, `getAuth`, `login`, `logout`) built on top of `resolveProviderAuth`
+(`L11-R005`).
+
+This is EXPLICITLY NOT a demand to implement any of this in Pass 1 -- interactive login flows,
+provider-method registration, and top-level auth orchestration are real provider-integration
+concerns with no generic-seam content of their own until a concrete provider exists to exercise
+them. It IS a demand not to silently lose track of this discovered Pi surface: without an explicit
+disposition, two independent future implementers could reasonably make incompatible choices (one
+building the vocabulary extensible for login interactions now, one omitting it entirely), each
+individually consistent with Pass 1's own artifacts but incompatible with each other.
+
+Closure criterion (binding on whichever future pass closes this row): a future Layer-11 pass
+integrating a real provider's own login flow (Codex OAuth network integration, slice 11B, or a
+later provider) must audit this exact Pi vocabulary and either adopt it directly or document a
+deliberate, disclosed divergence -- it must not invent an unrelated ad hoc login/prompt shape
+without first comparing it against Pi's own `AuthPrompt`/`AuthEvent`/`AuthInteraction` vocabulary.
 
 ## Deferred Codex-specific behavior (`PROV-011`, `PROV-012`)
 
