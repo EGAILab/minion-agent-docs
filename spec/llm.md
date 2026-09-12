@@ -240,6 +240,21 @@ catalog/refresh semantics at ITS OWN coarser key -- dynamic model overlays, cred
 filtering -- this project does not need yet, since Minion has no config-driven provider catalog of
 its own.
 
+`models()`'s own RETURN order is not part of the observable contract -- any implementation may
+return currently-resolvable identities in any order it finds convenient, deterministic or not, and
+no caller may depend on a specific order. This is deliberate: nothing about `models()`'s own
+purpose (introspection) makes a particular order semantically meaningful. The CANONICAL EVIDENCE
+FORMAT is narrower, for tooling reasons only: an `introspect: models` query's own observation, once
+collected by a conformance runner in ANY language, MUST be reported sorted by `(provider, model,
+api)` before comparison against a scenario's own `expect.models` list -- this is the ONE shared,
+required canonicalization step every conformance runner performs, precisely so that two runners
+producing the SAME underlying set in DIFFERENT raw orders still compare equal against the SAME
+`expect.models` list (`L10-C001`, an independent Rust closure review's own finding: a prior Rust
+conformance runner reported `models()`'s own raw return order directly, sorted internally by
+`(provider, api, model)` -- a DIFFERENT key from the one every current canonical scenario's own
+`expect.models` list is written against -- which the seven current scenarios never exposed only
+because none happens to declare more than one entry whose `api`/`model` cross under the two keys).
+
 Current Rust only PARTIALLY satisfies this row: `LlmService::register` takes one
 `(ModelIdentity, Arc<dyn LlmAdapter>)` pair per call (not an adapter-declared model set) and
 performs last-write replacement via a plain map insert, correctly satisfying the replacement half;
