@@ -221,7 +221,7 @@ Layer 10 cross-language      NOT CLOSED
 Layer 11                     NOT STARTED
 ```
 
-## Next action
+## Next action (superseded -- see targeted closure re-review below)
 
 Codex applies the one narrow fix `L10-C001` still requires (sort the `introspect: models`
 observation by `(provider, model, api)` in `llm_service_conformance.rs` before comparison; run the
@@ -229,3 +229,74 @@ new `llm-service-introspection-order-does-not-depend-on-api-first-sort.yaml` sce
 confirm), pushes the updated exact candidate SHA, and returns for a targeted closure re-review
 limited to `L10-C001`. `L10-C002` needs no further Rust action -- it closed entirely on the
 shared/Python side. `L10-R003` is closed; do not reopen it. Layer 11 remains not started.
+
+---
+
+## Targeted closure re-review — code `82a7a74`, docs `a39f121`
+
+**Exact code SHA:** `82a7a74988fbd0d2480cee090417968a04dad043`
+
+**Exact docs SHA:** `a39f121494615b81b5a1ea25f6f211b63d28efdd`
+
+**Result:** `APPROVED -- ALL FINDINGS CLOSED`.
+
+Independently re-verified before approving, not accepted on the candidate's own self-report:
+
+- Diffed `6452679` (the reviewed Rust implementation commit) against `82a7a74` (this fix) directly:
+  the ENTIRE change is 10 lines in `llm_service_conformance.rs`'s own `introspect: models` branch --
+  `service.models()`'s own output is now re-sorted by `(left.provider(), left.model_id(),
+  left.api())` before mapping to the canonical JSON observation, and the scenario-count assertion
+  updated from `7` to `8`. No other file changed in this commit. `minion-agent-rust/crates/
+  minion-agent/src/llm/service.rs` (the production `LlmService::models()` implementation) is
+  untouched -- confirmed by the diff itself, not merely by the candidate's own claim.
+- Re-ran every gate against a FRESH worktree of the exact new candidate SHA: `cargo fmt --check`
+  (clean), `cargo clippy --workspace --all-targets --all-features -D warnings` (0 warnings),
+  `cargo test --workspace --all-features` (292 passed, 0 failed, independently summed from the raw
+  per-crate output), specifically `cargo test --test llm_service_conformance` (both of its own
+  tests pass, including `all_layer_10_scenarios_drive_the_real_rust_llm_service` now asserting and
+  exercising 8 scenarios), `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` (clean),
+  `cargo run -p xtask -- conformance verify` (exit 0).
+- Re-ran the Python-side gates from the same worktree: `test_schema_validation.py` +
+  `test_manifest_validation.py` together report `206 passed` (up from `205`, the new scenario's own
+  schema-validation parametrization), and the manifest parses to `84 rows / 84 unique IDs`.
+- Read the updated `10-provider-abstraction-rust-implementation.md`'s own diff (`0acc9a0..a39f121`):
+  accurately records the new candidate SHA, the scenario count change, the gate-count change, and
+  explicitly states "Production `LlmService::models()` remains unchanged because its return order
+  is explicitly outside the observable contract" -- matching what the diff itself shows, not an
+  unverified claim.
+
+`L10-C001` is CLOSED: the shared contract-side requirement (pinned `(provider, model, api)` as the
+required canonicalization) and the Rust-side fix (apply that exact key in the conformance runner's
+own comparison step) are both now in place and independently confirmed correct. `L10-C002` and
+`L10-R003` remain closed, unaffected by this narrow commit. No finding remains open on Layer 10.
+
+```text
+CLOSURE REVIEW
+    APPROVED -- ALL FINDINGS CLOSED
+
+CLOSED
+    L10-R001, L10-R002, L10-R003, L10-R004, L10-R005, L10-R006, L10-R007, L10-R008
+    C10-C005
+    L10-C001, L10-C002
+
+NEXT OWNER
+    Codex
+
+NEXT ACTION
+    Merge minion-agent PR #22 (code, exact head 82a7a74988fbd0d2480cee090417968a04dad043) and
+    minion-agent-docs PR #50 (docs, exact head a39f121494615b81b5a1ea25f6f211b63d28efdd) using the
+    normal exact-SHA merge policy (agent-workflow.md §11.6/§11.8.8 step 5), then update
+    coordination issue #19 to record Layer 10 cross-language CLOSED. The repository owner has asked
+    that Codex (not the shared/Python owner) execute this merge. Layer 11 remains not started; do
+    not start it as part of this closure.
+```
+
+## Verdict (final)
+
+```text
+shared Layer-10 contract    APPROVED, no findings open
+Python Layer 10              CERTIFIED
+Rust Layer 10                APPROVED CERTIFICATION CANDIDATE at 82a7a74 / a39f121, ready to merge
+Layer 10 cross-language      READY TO CLOSE (pending Codex's own merge of the approved candidate)
+Layer 11                     NOT STARTED
+```
