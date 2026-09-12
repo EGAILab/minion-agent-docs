@@ -20,29 +20,41 @@ AuthResult{auth:ModelAuth,env?,source?}
 AuthCheck{type,source?}
 ```
 
-`expires` is a Unix-epoch-MILLISECONDS timestamp, not a duration and not seconds. `extra` is an
-OPEN escape hatch (mirroring Pi's own `OAuthCredentials`'s `[key: string]: unknown` index
-signature), not a closed field set: a provider-specific login flow attaches fields alongside the
-three required ones (e.g. Codex's own `accountId`, `PROV-011`, deferred) without widening the core
-shape every other provider shares. `CredentialInfo` never carries a secret field (`key`, `access`,
-`refresh`, or `extra`) -- it exists only for account/status enumeration. `ModelAuth` is closed to
-exactly `api_key`/`headers`/`base_url`: a value that cannot be expressed as one of those three is
-provider CONFIG, not auth, and does not belong on this type. `source` on `AuthResult`/`AuthCheck`
-is a human-readable status-UI label, not a machine-discriminated enum.
+`expires` is a Unix-epoch-MILLISECONDS timestamp, not a duration and not seconds. `env`'s own
+domain is pinned Pi's own `ProviderEnv = Record<string, string>` (`types.ts:113`) -- a FLAT
+string-to-string mapping, never recursive JSON (`L11-R010`). `extra` is a SEPARATE, OPEN escape
+hatch (mirroring Pi's own `OAuthCredentials`'s `[key: string]: unknown` index signature), not a
+closed field set and NOT limited to flat strings: a provider-specific login flow attaches fields
+of ANY JSON shape alongside the three required ones (e.g. Codex's own `accountId`, `PROV-011`,
+deferred) without widening the core shape every other provider shares. `env` and `extra` are
+therefore two DIFFERENT domains, not the same rule applied to two fields -- evidence for one must
+never be constructed using the other's own domain. `CredentialInfo` never carries a secret field
+(`key`, `access`, `refresh`, or `extra`) -- it exists only for account/status enumeration.
+`ModelAuth` is closed to exactly `api_key`/`headers`/`base_url`: a value that cannot be expressed
+as one of those three is provider CONFIG, not auth, and does not belong on this type. `source` on
+`AuthResult`/`AuthCheck` is a human-readable status-UI label, not a machine-discriminated enum.
 
-**Credential value/reference semantics (`L11-R006`, resolved by explicit owner governance decision
-under `agent-workflow.md` §11.7/§11.8 -- NO intentional divergence approved).** Pi stores plain,
-mutable credential objects with no freezing or defensive copying anywhere, and `read`/`modify`
-expose direct references into the SAME backing store. This project adopts that exact observable
-behavior: a `Credential`'s `env`/`extra` mapping is stored EXACTLY as given at construction, with
-no copy and no freeze at any level. Concretely: mutating the ORIGINAL mapping/list passed to a
-constructor remains observable through the credential afterward; mutating a nested dict/list value
-reached through `credential.env`/`credential.extra` itself persists and is observed by a later
-access, including through `CredentialStore.read()`; this applies recursively to nested containers,
-not only the outer mapping. Two prior candidate revisions instead attempted a deep-immutable-value
-model without the required owner approval for that intentional Pi divergence, and did so only
-shallowly (outer-mapping protection with nested values still aliased) -- both are corrected by
-this adopted, owner-decided resolution.
+**Credential value/reference semantics (`L11-R006`/`L11-R009`, resolved by explicit owner
+governance decision under `agent-workflow.md` §11.7/§11.8 -- NO intentional divergence approved).**
+Pi stores plain, mutable credential objects with no freezing or defensive copying anywhere, at ANY
+field, and `read`/`modify` expose direct references into the SAME backing store. This project
+adopts that exact observable behavior IN FULL, not only for `env`/`extra`:
+
+- A credential's SCALAR fields (`key`; `access`, `refresh`, `expires`) are directly reassignable,
+  and a later access -- including through `CredentialStore.read()` -- observes the reassignment.
+- Mutating the ORIGINAL mapping/list passed to a constructor for `env`/`extra` remains observable
+  through the credential afterward.
+- Assigning a BRAND-NEW top-level key directly on `credential.env`/`credential.extra` itself
+  succeeds and is observed by a later access, matching a plain Pi object field assignment.
+- For `extra` specifically (never `env`, per its own flat domain above): mutating a NESTED dict/
+  list value reached through `credential.extra` itself persists and is observed by a later access,
+  recursively, not only at the outer mapping.
+
+Two prior candidate revisions instead attempted an intentional deep-immutable-value divergence
+without the required owner approval, implemented it only shallowly (outer-mapping protection with
+nested values still aliased), and left the credential dataclasses themselves non-reassignable at
+the scalar-field level even after adopting the owner's Pi-parity decision for `env`/`extra` -- all
+three gaps are corrected by this fully-adopted, owner-decided resolution.
 
 `CredentialStore.modify()` remains the documented, INTENDED sole mutation authority (`PROV-007`) --
 this aliasing behavior does not weaken or reinterpret that guarantee. A caller that instead mutates
