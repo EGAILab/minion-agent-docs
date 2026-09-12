@@ -100,11 +100,15 @@ the general leading-`~` rule above, which any implementation must satisfy in SOM
    to `<homedir>foo` (home directory string with `foo` appended directly, not `<homedir>/foo` and
    not another user's own home directory) -- a deliberately naive rule, not full path-normalization
    or username-lookup semantics.
-2. The WHOLE operation -- resolving the path and checking the filesystem -- is one failure
-   boundary that resolves `False` on ANY error (Pi's own `try { ... } catch { return false; }`),
-   not only "the target does not exist." A permission error or other filesystem failure reports
-   `False`, identically to a genuinely missing path -- it never propagates an exception to the
-   caller.
+2. The WHOLE operation -- INCLUDING home-directory resolution itself (rule 1 above), not only the
+   filesystem check that follows it -- is one failure boundary that resolves `False` on ANY error,
+   filtered to no particular exception type (Pi's own bare `try { ... } catch { return false; }`),
+   not only "the target does not exist." A failure resolving the home directory, a permission
+   error, or any other filesystem failure all report `False`, identically to a genuinely missing
+   path -- none of them ever propagates an exception to the caller. `L11-R013` (remediated twice):
+   a first remediation wrapped only the filesystem check in `try`/`except`, leaving home-directory
+   resolution OUTSIDE that boundary, and narrowed the caught exception type -- both are contrary to
+   this rule, which this sentence now states explicitly enough to prevent that exact recurrence.
 
 The default, reference implementation reads real process environment variables and the real
 filesystem, but reads NO provider-specific credential file (a Codex CLI credential file, or any
@@ -283,6 +287,17 @@ that both satisfy every other rule in this section can still schedule observably
 durations for a fractional interval unless both apply this exact floor. The fixed `slow_down`
 fallback increment (5 seconds) is already a whole-millisecond quantity and needs no additional
 flooring when added to an already-floored current interval.
+
+**Non-finite initial intervals must not fail setup (`L11-R014`).** UNLIKE the server-provided
+`slow_down` interval (which the finite/positive guard above explicitly gates), the CALLER's own
+initial interval carries NO such guard in Pi -- an `Infinity` or `NaN` initial interval is
+accepted at setup and never causes an error on its own. If the very first poll attempt reports
+`DevicePollComplete`, the loop returns that value immediately, without ever computing or
+attempting to schedule a sleep at all -- so a non-finite initial interval that is never actually
+used to sleep must never prevent that immediate success from being returned. An implementation
+whose own flooring/clamping arithmetic raises for non-finite input at setup time, before any poll
+has even run, narrows this contract incorrectly; flooring for a non-finite value must be a
+no-op/pass-through, not an error.
 
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
