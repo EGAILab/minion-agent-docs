@@ -181,6 +181,11 @@ A useful manifest row traces:
 
 Preserve review/remediation history. Do not rewrite a historical rejection into an approval; add later remediation/re-review evidence.
 
+Machine validation of traceability artifacts must validate each field's container shape before
+validating or iterating its contents. An iterable scalar or mapping must not accidentally satisfy
+a required list field. Keep negative probes for plausible malformed container shapes alongside the
+validator.
+
 ## 9. Canonical conformance
 
 There are exactly three canonical behavior families:
@@ -202,6 +207,12 @@ Valid mocking uses a scripted provider/tool through the real Minion seam. Invali
 Do not force a canonical scenario through an unfinished later layer. If behavior is not independently observable at the current layer, document the boundary and use explicit language evidence or a justified deferred scenario until the real seam exists.
 
 Discover scenario counts dynamically. Do not hard-code old counts.
+
+When canonical observations convert an unordered or implementation-defined collection into an
+ordered list, the shared contract must specify the canonicalization key, including field
+precedence. Keep that evidence-only ordering distinct from any production API return-order rule.
+The canonical evidence should contain at least two entries chosen to distinguish plausible but
+different sort keys; single-entry observations cannot certify ordering agreement.
 
 ### 9.1 Discriminating evidence
 
