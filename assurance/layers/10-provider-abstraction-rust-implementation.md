@@ -5,8 +5,8 @@ Layer 11 was not started.
 
 ## Authority and baseline
 
-- merged code baseline: `95266a1af7bfe9856140c77e6fc1f99c6294f5b9`
-- merged docs baseline: `87914bd2ae3d6dbae60b87c30a0ac9ff1ebd4d2e`
+- merged code baseline: `6f38b4539b808265a2fa71720f9f3b81567e6595`
+- merged docs baseline: `7a9267b7076ff0d135bc8a8c9e744e355a17201b`
 - pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`
 - exact shared/Python candidate approved by the final independent review: code
   `ea4f250fe0c6d640036960459dd74711795a51d7`; docs
@@ -16,7 +16,7 @@ Layer 11 was not started.
   `L10-I001` exact-SHA erratum
 - implementation preflight evidence:
   `assurance/layers/10-provider-abstraction-rust-implementation-preflight.md`
-- Rust implementation candidate: `feda44dcecc24eb03c8e531a9aa60f2c23d71f58`
+- Rust implementation candidate: `82a7a74988fbd0d2480cee090417968a04dad043`
 
 The implementation began only after code PR #21 and docs PR #49 repaired and merged the two
 preflight evidence defects. Rust was implemented from pinned Pi and the merged shared contract.
@@ -53,7 +53,7 @@ introduced.
 
 ## Canonical evidence
 
-The new `llm_service_conformance.rs` adapter discovers and executes all seven current
+The new `llm_service_conformance.rs` adapter discovers and executes all eight current
 `llm-service-*.yaml` scenarios:
 
 - adapter-detected failure settles in-band;
@@ -62,12 +62,15 @@ The new `llm_service_conformance.rs` adapter discovers and executes all seven cu
 - stale withdrawal after replacement;
 - introspection of current registrations;
 - same adapter fixture registered through two distinct handles;
-- more than eight stream observations.
+- more than eight stream observations;
+- introspection canonicalization whose model/API values discriminate the required sort key.
 
 The runner parses, validates references, dispatches to the real typed `LlmService`, and normalizes
 observations. It does not implement registration ownership, replacement, withdrawal, introspection,
 or stream settlement. Ownership observations use the real adapters' request-count deltas and fail
-unless exactly one adapter handled the request.
+unless exactly one adapter handled the request. Its canonical `introspect: models` observation is
+sorted by the shared evidence key `(provider, model, api)`; this does not constrain or alter the
+production service's own return order.
 
 ## Rust language tests
 
@@ -92,7 +95,7 @@ All lower-layer tests remained enabled. The full workspace gate passed **292 tes
 - `cargo test --workspace --all-features`: PASS, 292 tests.
 - `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps`: PASS.
 - `cargo run -p xtask -- conformance verify`: PASS.
-- shared schema and manifest validation: PASS, 205 tests.
+- shared schema and manifest validation: PASS, 206 tests.
 - manifest parse/unique-ID audit: PASS, 84 rows / 84 unique IDs.
 - `git diff --check`: PASS.
 
@@ -110,6 +113,12 @@ Layer-11 deferred-parity obligations. This pass did not implement or claim them.
 ## Findings and boundary
 
 - `L10-R003`: **RESOLVED** by removing the resolved-adapter eager expected-error channel.
+- `L10-C001`: **RESOLVED**. The shared contract-side remediation was merged through code PR #23
+  and docs PR #51. The Rust runner now canonicalizes model observations by `(provider, model, api)`,
+  and the new crossing-key scenario passes. Production `LlmService::models()` remains unchanged
+  because its return order is explicitly outside the observable contract.
+- `L10-C002`: **RESOLVED** by the merged shared/Python remediation; Rust already rejected an
+  unasserted query and required no implementation change.
 - `PI_PARITY_DEFECT`: none active.
 - `CONTRACT_ASSURANCE_DEFECT`: none active.
 - `PI_BEHAVIOR_UNCERTAIN`: none active.
