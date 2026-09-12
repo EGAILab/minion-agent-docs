@@ -30,15 +30,25 @@ exactly `api_key`/`headers`/`base_url`: a value that cannot be expressed as one 
 provider CONFIG, not auth, and does not belong on this type. `source` on `AuthResult`/`AuthCheck`
 is a human-readable status-UI label, not a machine-discriminated enum.
 
-**Credential value semantics (`L11-R006`, intentional divergence).** Pi's own in-memory store
-holds mutable credential objects and `read`/`modify` expose live references to them, so mutating a
-field on a returned object is observably visible on a later `read`. This project's own
-`Credential` union is instead a fully immutable VALUE at every level (the credential itself, plus
-any embedded `env`/`extra` mapping) -- an intentional architectural hardening, not a literal port.
-`modify()` remains the sole supported mutation authority either way; since a `Credential` is fully
-immutable, "returned by reference" vs. "returned by value" is not an observable distinction a
-caller can detect, which is what actually resolves the divergence, not the specific container type
-an implementation happens to use.
+**Credential value/reference semantics (`L11-R006`, resolved by explicit owner governance decision
+under `agent-workflow.md` §11.7/§11.8 -- NO intentional divergence approved).** Pi stores plain,
+mutable credential objects with no freezing or defensive copying anywhere, and `read`/`modify`
+expose direct references into the SAME backing store. This project adopts that exact observable
+behavior: a `Credential`'s `env`/`extra` mapping is stored EXACTLY as given at construction, with
+no copy and no freeze at any level. Concretely: mutating the ORIGINAL mapping/list passed to a
+constructor remains observable through the credential afterward; mutating a nested dict/list value
+reached through `credential.env`/`credential.extra` itself persists and is observed by a later
+access, including through `CredentialStore.read()`; this applies recursively to nested containers,
+not only the outer mapping. Two prior candidate revisions instead attempted a deep-immutable-value
+model without the required owner approval for that intentional Pi divergence, and did so only
+shallowly (outer-mapping protection with nested values still aliased) -- both are corrected by
+this adopted, owner-decided resolution.
+
+`CredentialStore.modify()` remains the documented, INTENDED sole mutation authority (`PROV-007`) --
+this aliasing behavior does not weaken or reinterpret that guarantee. A caller that instead mutates
+a retained credential reference directly, bypassing `modify()`, can do so -- exactly as Pi's own
+plain-object credential type permits, including Pi's own documented bypassability. This is an
+accepted characteristic of the adopted design, not a new gap introduced by matching Pi.
 
 ## AuthContext
 
@@ -54,14 +64,22 @@ This protocol-level contract permits ANY implementation to resolve a present-but
 (e.g. an empty string) unchanged -- blank-to-absent normalization is NOT part of the protocol
 itself (`L11-R003`). Only the DEFAULT reference implementation additionally treats a
 whitespace-only value as absent; that normalization is a property of the default implementation,
-not a requirement every conforming `AuthContext` must satisfy. `file_exists(path)` reports whether
-`path` exists, expanding a leading `~` to the user's home directory -- again a concrete behavior of
-the default implementation, not a protocol-level guarantee (an injected test context, for example,
-need not touch the filesystem at all). The default, reference implementation reads real process
-environment variables and the real filesystem, but reads NO provider-specific credential file (a
-Codex CLI credential file, or any other single filesystem source) as part of this generic seam --
-that would bake one provider's own storage location into the generic auth API, which this contract
-deliberately avoids.
+not a requirement every conforming `AuthContext` must satisfy.
+
+`file_exists(path)` reports whether `path` exists, expanding a leading `~` to the user's home
+directory. UNLIKE `env`'s own blank-normalization, leading-`~` support IS part of the PROTOCOL
+contract itself (`L11-R008`; Pi's own interface places this exact behavior directly on the
+`fileExists` method's own doc comment, distinct from `env`, which carries no interface-level
+comment about blank values at all) -- every conforming `AuthContext` implementation, not only the
+default one, must interpret a leading `~` as the user's home directory rather than a literal
+relative path segment. Pi's own interface comment also states `fileExists` is "always false in
+browsers"; this project has no browser runtime target, so that clause is architecturally
+inapplicable here rather than weakened or silently dropped.
+
+The default, reference implementation reads real process environment variables and the real
+filesystem, but reads NO provider-specific credential file (a Codex CLI credential file, or any
+other single filesystem source) as part of this generic seam -- that would bake one provider's own
+storage location into the generic auth API, which this contract deliberately avoids.
 
 ## CredentialStore (`PROV-007`)
 
