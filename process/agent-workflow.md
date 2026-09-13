@@ -642,6 +642,99 @@ Convergence does not mean one agent dictates semantics to the other.
 
 The improvement is that semantic characterization happens before repeated implementation attempts, not that review strictness is reduced.
 
+### 11.9 Subagent and background-agent capability boundary
+
+`READ_ONLY AGENT MEANS READ_ONLY CAPABILITY.`
+
+A subagent, fork, or background research agent assigned read-only work MUST NOT be given, and MUST NOT exercise, authority to:
+
+```text
+create/update/close a GitHub issue
+create/update/close a pull request
+push a branch
+commit a project change
+edit spec, manifest, or assurance content
+change NEXT_OWNER / NEXT_ACTION or any coordination status field
+emit a handoff label or signal to another agent
+merge anything
+claim certification
+claim owner approval
+```
+
+Prompt-level "read only" wording is NOT sufficient as an authorization boundary by itself. Where the launching environment permits it, a read-only agent MUST be launched without GitHub write credentials, git push credentials, or any other repository-mutation capability. If technical isolation is not available, the launching agent MUST tell the subagent explicitly that any write capability it happens to still have is UNUSABLE for that task, and the launching agent remains fully responsible for independently verifying, after the subagent returns, that no writes occurred (issues, PRs, branches, commits, comments) before treating any part of its output as authoritative.
+
+A subagent's own self-report that it stayed within scope is not evidence. The launching agent must check the actual remote/local state.
+
+### 11.10 Governance-decision provenance
+
+Extends §11.7's escalation list with a provenance requirement for citing that escalation's outcome. An agent may state that something is "owner approved," "owner decided," "per owner decision," or "governance approved" ONLY when it can cite an existing, explicit governance record for that exact decision. Valid provenance is one of:
+
+- an explicit message from the owner in the currently-authorized controlling conversation, once that message has been durably recorded into project coordination/assurance evidence; or
+- an already-existing governance record in the project's own artifacts (an issue comment, an assurance file, a convergence agreement) that clearly names and scopes the decision being cited.
+
+When citing owner governance, record:
+
+```text
+GOVERNANCE_SOURCE
+    <artifact / issue / assurance record>
+    <exact decision>
+    <exact scope>
+```
+
+If no such source exists, the agent MUST NOT assert approval. It must instead report:
+
+```text
+STATUS
+    BLOCKED_FOR_OWNER
+NEXT_OWNER
+    Owner
+```
+
+An agent MUST NOT infer owner approval from: its own or another agent's prior recommendation; an existing architectural preference; the mere existence of an implementation or a draft branch; another agent's own unverified statement that the owner approved something; silence; or the word "Recommended" attached to one option in a menu of choices presented to the owner.
+
+A question that asks the owner to choose among semantic, architectural, parity, scope, or divergence options does not become a decision until the owner actually answers it. Marking one option "Recommended" is a recommendation, not approval — no agent, and no subagent it launches, may act on the recommended option before the owner's own explicit answer is received and durably recorded.
+
+### 11.11 Handoff validation
+
+Before treating a coordination issue, PR, or candidate SHA as eligible for review, implementation, or handoff to another agent, verify:
+
+```text
+coordination issue is OPEN and valid
+STATUS is not INVALID_UNAUTHORIZED / INCIDENT / BLOCKED_FOR_OWNER
+NEXT_OWNER is present
+NEXT_ACTION is present
+referenced PR(s) are open/current where the status claims they are
+candidate SHA(s) are remote-reachable
+any governance-dependent choice cited carries a valid GOVERNANCE_SOURCE (§11.10)
+the candidate is not built on or derived from a quarantined artifact (§11.12)
+```
+
+If any check fails:
+
+```text
+HANDOFF_BLOCKED
+```
+
+and no next-agent review or implementation may begin from that handoff. This check applies to every agent-to-agent handoff described in §11.4, and to any future automated PR/issue-triggered handoff between Claude and Codex.
+
+### 11.12 Quarantine semantics
+
+An artifact (branch, PR, issue, commit) produced outside its author's actual authorization, or otherwise found to rest on a false governance claim, is `QUARANTINED_ARTIFACT`:
+
+```text
+may be preserved for forensic/incident history
+must not be merged
+must not be reviewed as a candidate
+must not be cherry-picked into a valid candidate
+must not satisfy manifest/spec/assurance evidence
+must not be used for certification
+must not be used as the base for a new implementation branch
+```
+
+Mark a quarantined issue/PR's title and body with an explicit governance-correction notice, preserving the original content below it for the record, then close it without merging. Preserve the underlying branch(es) until the incident retrospective and any resulting workflow hardening have landed; deletion is then a separate, explicit cleanup decision.
+
+If a quarantined artifact appears to contain a genuinely useful factual observation, it must be RE-DERIVED independently from authoritative sources (pinned Pi, the accepted default branches, current project artifacts) before being relied on for anything. Do not assume prose or code inside a quarantined artifact is correct merely because it reads as well-reasoned.
+
 ## 12. Repository and remote-state discipline
 
 ### 12.1 GitHub remote is the durable project state
@@ -757,6 +850,7 @@ Perform a lightweight workflow retrospective at least:
 - after any repeated rejection/remediation cycle;
 - immediately when the `CONTRACT_CONVERGENCE` trigger in §11.8 fires;
 - after any handoff failure, stale-state incident, remote-sync problem, duplicated work, or unclear ownership boundary;
+- immediately after any unauthorized agent action or other authorization-control failure (a subagent exceeding its assigned capability, a false governance/approval claim, an out-of-scope write) — see §11.9-§11.12;
 - when a coding agent repeatedly needs instructions that are not already captured here;
 - when a new language, tool, provider, CI system, or collaboration pattern materially changes how work is performed.
 
