@@ -312,43 +312,79 @@ whose own flooring/clamping arithmetic raises for non-finite input at setup time
 has even run, narrows this contract incorrectly; flooring for a non-finite value must be a
 no-op/pass-through, not an error.
 
-**A non-finite interval that IS actually used must still make progress, at Pi's own magnitude
-(`L11-R014`, resolved by §11.8 convergence agreement, revision 2).** If the first poll attempt does
-NOT report `DevicePollComplete`, the initial interval is actually consulted to schedule a sleep
-before the next attempt. A non-finite value at that point must NOT be scheduled literally: Pi's own
-pure arithmetic (`Math.floor`/`Math.max`) never throws and faithfully propagates `NaN`/`Infinity`
-unchanged, but the VALUE Pi's own host timer (`setTimeout`) actually receives is separately clamped
-by that host to its own minimal schedulable delay when the requested value is out of its valid
-range -- `NaN`/`Infinity` both fail that range check identically. Node's own documented `setTimeout`
-contract clamps any out-of-range delay to exactly ONE MILLISECOND, independently confirmed live
-against a real Node process during review.
+**Two separate boundaries, two different rules (`L11-R017`, `L11-R018`).** Pi exposes TWO
+independently-observable seams that a non-finite (or otherwise out-of-range) interval can reach,
+and they do NOT apply the same clamp:
+
+1. **The poll loop's own upstream normalization.** Before scheduling any sleep,
+   `pollOAuthDeviceCodeFlow` itself computes `Math.max(MINIMUM_INTERVAL_MS, Math.floor(...))` on
+   the interval it is about to use. This is ORDINARY arithmetic, not a validity check -- it
+   resolves correctly, with no special-casing, for every value except `NaN` (which fails every
+   comparison and so is not resolved by `Math.max` at all; see the paragraph below). A value that
+   has already passed through this normalization is, by construction, an ordinary valid delay by
+   the time it could ever reach the second boundary.
+2. **The exported `abortableSleep` function itself.** Called directly -- which the poll loop does,
+   but which any other caller may also do, bypassing step 1's normalization entirely -- it performs
+   NO normalization of its own and hands its `ms` argument straight to `setTimeout`. Node's own
+   `setTimeout` then applies its own documented delay-bounds contract, independent of anything the
+   poll loop does.
+
+**`NaN`, the ONLY value the poll loop's own normalization cannot resolve, must still make progress,
+at Pi's own magnitude (`L11-R014`, resolved by §11.8 convergence agreement, revision 2).** If the
+first poll attempt does NOT report `DevicePollComplete`, the interval is actually consulted to
+schedule a sleep before the next attempt. `NaN` fails every comparison `Math.max` would otherwise
+use to resolve it, so it survives that computation unchanged and reaches `setTimeout` as an
+out-of-range delay -- clamped, per that host's own documented contract, to exactly ONE
+MILLISECOND, independently confirmed live against a real Node process during review. (Positive AND
+negative `Infinity` both need no special-casing at this boundary at all: `Math.max` already
+resolves both correctly via ordinary comparison, see the two paragraphs below -- this paragraph's
+subject is `NaN` alone, not "every non-finite value.")
 
 A revision 1 of this rule adopted the project's own PRE-EXISTING one-second minimum-interval floor
 (the SAME constant every too-small but otherwise ordinary finite interval already clamps to) as the
 fallback for this case too -- three orders of magnitude larger than Pi's own real value, and an
 UNAPPROVED observable departure from Pi once examined closely: it is not "good enough progress,"
 it is a materially different, undisclosed-as-such replacement value, while `PROV-010` continued to
-claim `adopted` (Pi-parity) disposition. The corrected rule: a non-finite interval that is actually
-used clamps to Pi's own real magnitude -- one millisecond -- using a DEDICATED constant distinct
-from the ordinary minimum-interval floor (the two concepts are unrelated: one is RFC 8628's own
-"never poll faster than this" rule for ordinary finite intervals; the other is a fallback for a
-value that cannot be scheduled at all). The EXACT sub-millisecond precision Pi's own host runtime
-would produce is still not made normative (Python's own scheduler cannot guarantee it either) --
-only the MAGNITUDE (roughly one millisecond, not roughly one second) is adopted as the portable,
-cross-language observable rule.
+claim `adopted` (Pi-parity) disposition. The corrected rule: `NaN`, when actually used to schedule
+a sleep by the poll loop, clamps to Pi's own real magnitude -- one millisecond -- using a DEDICATED
+constant distinct from the ordinary minimum-interval floor (the two concepts are unrelated: one is
+RFC 8628's own "never poll faster than this" rule for ordinary finite intervals; the other is a
+fallback for a value that cannot be scheduled at all). The EXACT sub-millisecond precision Pi's own
+host runtime would produce is still not made normative (Python's own scheduler cannot guarantee it
+either) -- only the MAGNITUDE (roughly one millisecond, not roughly one second) is adopted as the
+portable, cross-language observable rule.
 
-**Negative `Infinity` is a DIFFERENT case from `NaN`/positive `Infinity` (`L11-R016`).** Pi's own
-pure arithmetic (`Math.max(MINIMUM_INTERVAL_MS, Math.floor(-Infinity * 1000))`) resolves this case
-ORDINARILY, to the plain one-second RFC-8628 floor -- negative `Infinity` is a valid, comparable
-number that simply LOSES every `Math.max` comparison against a finite value, so it NEVER reaches
-the host timer as an "invalid delay" the way `NaN`/positive `Infinity` do. An implementation that
-treats every non-finite value identically (routing negative `Infinity` through the SAME one-
-millisecond host-timer-clamp fallback the paragraph above describes) diverges from Pi in the
-OPPOSITE direction this section's own earlier revision did: Pi actually waits the FULL one-second
-floor for this specific input, not one millisecond. The observable rule: negative `Infinity`,
-when actually used to schedule a sleep, resolves to the SAME ordinary one-second minimum-interval
-floor every other too-small-or-invalid-in-this-specific-way value resolves to -- only `NaN` and
-POSITIVE `Infinity` take the separate, one-millisecond host-timer-clamp path above.
+**Negative `Infinity`, reached through the poll loop's own normalization, is a DIFFERENT case from
+`NaN` (`L11-R016`).** Pi's own pure arithmetic (`Math.max(MINIMUM_INTERVAL_MS, Math.floor(-Infinity
+* 1000))`) resolves this case ORDINARILY, to the plain one-second RFC-8628 floor -- negative
+`Infinity` is a valid, comparable number that simply LOSES every `Math.max` comparison against a
+finite value, so it NEVER reaches `setTimeout` as an "invalid delay" the way `NaN` does when routed
+through this SAME boundary. An implementation that treats every non-finite value identically at
+THIS boundary (routing negative `Infinity` through the SAME one-millisecond clamp `NaN` takes)
+diverges from Pi in the OPPOSITE direction this section's own earlier revision did: Pi actually
+waits the FULL one-second floor for this specific input at this boundary, not one millisecond. The
+observable rule, scoped to the poll loop's own normalization: negative `Infinity`, when actually
+used to schedule a sleep THROUGH THE POLL LOOP, resolves to the SAME ordinary one-second
+minimum-interval floor every other too-small-but-ordinary value resolves to -- only `NaN`, at this
+boundary, takes the separate, one-millisecond clamp path above.
+
+**The exported `abortableSleep`/`abortable_sleep` seam applies Node's FULL `setTimeout` bounds
+check, uniformly, to every invalid value including negative `Infinity` (`L11-R017`).** This is a
+SEPARATE boundary from the poll loop's own normalization above, and reaches a DIFFERENT answer for
+negative `Infinity` specifically: called directly -- bypassing the poll loop's own `Math.max`
+normalization entirely, which a caller of the exported function is free to do -- a raw negative
+`Infinity` (or `NaN`, positive `Infinity`, zero, any other negative number, or any positive
+sub-millisecond number) reaches `setTimeout` as an out-of-range delay and is clamped, per Node's own
+documented contract ("If delay is larger than 2147483647 or less than 1, the delay will be set to
+1"), to exactly ONE MILLISECOND -- the SAME magnitude `NaN` receives when it reaches this boundary,
+regardless of sign. An implementation of the exported function that excludes negative `Infinity`
+from this clamp (treating it as if it were an ordinary, schedulable delay, or performing zero
+sleep at all) diverges from Pi: Pi's own exported `abortableSleep` has no such exclusion, because it
+has no normalization step of its own to begin with. The poll loop's own call into this function
+never actually exercises this case for negative `Infinity` in practice, since the poll loop's own
+upstream normalization (above) has already turned it into an ordinary, valid delay by the time this
+function is called -- but the function itself, callable independently, must still honor Node's full
+bounds check on whatever raw value it is given.
 
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
