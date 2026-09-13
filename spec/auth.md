@@ -386,6 +386,19 @@ upstream normalization (above) has already turned it into an ordinary, valid del
 function is called -- but the function itself, callable independently, must still honor Node's full
 bounds check on whatever raw value it is given.
 
+**A VALID delay is still truncated to a whole millisecond before scheduling (`L11-R019`).** Node's
+real `setTimeout` does not schedule an accepted delay (one already inside `[1, 2147483647]`
+milliseconds, i.e. one the rule above does not touch at all) at its own exact fractional value --
+it internally truncates ANY accepted delay to a whole integer millisecond count first. This is a
+THIRD rule, independent of both the poll loop's own explicit millisecond flooring (the first
+rule in this section) and the invalid-delay clamp immediately above: it governs an already-VALID
+delay at the exported `abortableSleep`/`abortable_sleep` seam specifically. A delay of `1.9`
+milliseconds, passed directly to `abortableSleep`, is neither invalid nor out of range -- it
+schedules at exactly `1` millisecond, not `1.9`. A poll-loop-sourced delay is already
+whole-millisecond by construction (the poll loop's own explicit flooring already produced it, per
+the first rule above), so this rule is a no-op for that path in practice; it is observable only
+through a direct call to the exported function with a raw fractional-millisecond delay.
+
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
 The timeout carries one of two distinct messages: a plain timeout message if no `slow_down`
