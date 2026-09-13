@@ -1,11 +1,12 @@
-# Auth Semantics (Layer 11 Pass 1 -- Auth Foundation)
+# Auth Semantics (Layer 11 Pass 1 -- Auth Foundation; Pass 2 -- Codex OAuth Integration)
 
 This document covers the provider-neutral authentication seam: stored credentials, the
 credential-store concurrency contract, refresh/ownership authority, and the two generic OAuth
-primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds. It does NOT cover any real
-provider's own wire-protocol request/response encoding, or any concrete provider's own OAuth
-network integration (Codex browser/device-code endpoints, token exchange, the local callback
-server) -- those are later Layer 11 passes' own territory (`PROV-011`, `PROV-012`, deferred).
+primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds, plus Codex's own pure (non-network)
+account-id projection (`PROV-011`, Pass 2, below). It does NOT cover any real provider's own
+wire-protocol request/response encoding, or Codex's own OAuth NETWORK integration (browser/
+device-code endpoints, token exchange, the local callback server) -- that remains `PROV-012`,
+deferred to a later Layer 11 Pass 2 slice.
 
 ```text
 ApiKeyCredential{type=api_key,key?,env?}
@@ -26,7 +27,7 @@ string-to-string mapping, never recursive JSON (`L11-R010`). `extra` is a SEPARA
 hatch (mirroring Pi's own `OAuthCredentials`'s `[key: string]: unknown` index signature), not a
 closed field set and NOT limited to flat strings: a provider-specific login flow attaches fields
 of ANY JSON shape alongside the three required ones (e.g. Codex's own `accountId`, `PROV-011`,
-deferred) without widening the core shape every other provider shares. `env` and `extra` are
+below) without widening the core shape every other provider shares. `env` and `extra` are
 therefore two DIFFERENT domains, not the same rule applied to two fields -- evidence for one must
 never be constructed using the other's own domain. `CredentialInfo` never carries a secret field
 (`key`, `access`, `refresh`, or `extra`) -- it exists only for account/status enumeration.
@@ -451,23 +452,64 @@ later provider) must audit this exact Pi vocabulary and either adopt it directly
 deliberate, disclosed divergence -- it must not invent an unrelated ad hoc login/prompt shape
 without first comparing it against Pi's own `AuthPrompt`/`AuthEvent`/`AuthInteraction` vocabulary.
 
-## Deferred Codex-specific behavior (`PROV-011`, `PROV-012`)
+## Codex account-id projection (`PROV-011`, Layer 11 Pass 2, adopted)
 
-Pinned Pi's Codex OAuth flow has pure (non-network) semantics this pass characterizes but does not
-implement, to avoid losing track of them while real network integration is deferred:
+Pinned Pi's Codex OAuth flow's pure (non-network) half: extracting `chatgpt_account_id` from an
+access token's JWT payload, and projecting a stored Codex credential to the bearer-style request
+auth every model request needs.
 
-- JWT payload decoding to extract `chatgpt_account_id` -- UNVERIFIED claim extraction only, never
-  cryptographic signature validation. The extracted account id rides on `OAuthCredential.extra`
-  above, not a separate wrapper type.
-- Projecting a resolved OAuth access token to a bearer-style `ModelAuth` for provider-facing
-  requests.
+**JWT payload decoding is UNVERIFIED claim extraction only** -- never cryptographic signature
+validation; this decodes what the token CLAIMS, it does not authenticate it (pinned Pi performs no
+signature check anywhere in this flow either). Malformed input decodes to an absent result, not an
+error:
+
+- a token must split on `.` into EXACTLY three segments; any other count is malformed;
+- the middle (payload) segment is decoded via pinned Pi's own EXACT `atob` semantics -- STANDARD
+  base64 only, never base64url: a MISSING padding suffix is accepted (auto-padded), but the
+  base64url-specific `-`/`_` characters are REJECTED outright, and a segment length whose
+  remainder mod 4 is exactly `1` is never valid regardless of padding. A genuinely
+  base64url-encoded real-world JWT payload (one whose underlying bytes happen to need a `-`/`_`
+  replacement character) therefore FAILS to decode through this exact rule -- this is pinned Pi's
+  own real, unfixed behavior, not a defect this pass corrects;
+- the decoded bytes are interpreted as a Latin-1/ISO-8859-1 BINARY STRING before JSON parsing,
+  never UTF-8-decoded -- matching pinned Pi's own `atob` return-value semantics exactly. A claim
+  value containing a genuine non-ASCII character therefore decodes to MOJIBAKE (two separate
+  Latin-1 codepoints per multi-byte UTF-8 character), not the original character. This is pinned
+  Pi's own real, observable behavior for any non-ASCII claim value -- an implementation must
+  faithfully reproduce it, not "fix" it with a UTF-8 decode pinned Pi itself never performs;
+- any decode/parse failure at any step (segment count, base64 alphabet, JSON syntax) yields an
+  absent result for the WHOLE decode, never a partial one.
+
+`chatgpt_account_id` must be extracted from the namespaced claim path (a full URL string used as
+an object/mapping key, not a path to traverse) and must be a non-empty STRING -- a present but
+non-string or empty-string value is treated as absent, matching pinned Pi's own `typeof accountId
+=== "string" && accountId.length > 0` guard exactly (not merely "falsy" in the host language's own
+sense).
+
+**Credential projection.** Given a raw OAuth token (access/refresh/expires), a failed account-id
+extraction is a LOGIN-FLOW FAILURE, not a partially-successful credential -- the whole projection
+must fail, matching pinned Pi's own thrown error exactly. On success, the extracted account id
+rides on `OAuthCredential.extra` under the `"accountId"` key (this project's own single open
+escape hatch, `PROV-006`), not a separate wrapper type or a new named field.
+
+**Request-auth derivation.** A stored Codex credential's own access token IS the bearer token every
+model request needs, with no additional headers or base-url override.
+
+## Deferred Codex-specific behavior (`PROV-012`)
+
+Pinned Pi's Codex OAuth flow's network half remains deferred, to avoid losing track of it while
+real network integration is not yet implemented:
+
 - Browser callback state validation, including a documented exception: a user pasting a bare
   authorization code (rather than a full callback URL) is a recognized quirk Pi's own flow
   accommodates, not an error condition.
-- The browser/PKCE callback flow and device-code Codex endpoint integration themselves.
+- The browser/PKCE callback flow (including the local OAuth callback HTTP server) and device-code
+  Codex endpoint integration themselves, and the token exchange/refresh HTTP calls against
+  `auth.openai.com`.
 
-These are recorded as `deferred parity` in `pi-parity-manifest.yaml`, each with its own closure
+This is recorded as `deferred parity` in `pi-parity-manifest.yaml`, with its own closure
 criterion, not as `adopted` and not silently omitted. A future pass implementing real Codex
-browser/device network integration must audit pinned Pi source for each of these before writing
-any code, and must use only synthetic (never real-account) fixtures for any JWT-shaped test data,
-per this project's own security constraint against live secrets in tests/fixtures.
+browser/device network integration must audit pinned Pi source before writing any code, and must
+use only synthetic (never real-account) fixtures for any JWT-shaped test data and no live network
+calls in the committed test suite, per this project's own security constraint against live secrets
+in tests/fixtures.
