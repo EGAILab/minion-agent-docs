@@ -337,6 +337,19 @@ would produce is still not made normative (Python's own scheduler cannot guarant
 only the MAGNITUDE (roughly one millisecond, not roughly one second) is adopted as the portable,
 cross-language observable rule.
 
+**Negative `Infinity` is a DIFFERENT case from `NaN`/positive `Infinity` (`L11-R016`).** Pi's own
+pure arithmetic (`Math.max(MINIMUM_INTERVAL_MS, Math.floor(-Infinity * 1000))`) resolves this case
+ORDINARILY, to the plain one-second RFC-8628 floor -- negative `Infinity` is a valid, comparable
+number that simply LOSES every `Math.max` comparison against a finite value, so it NEVER reaches
+the host timer as an "invalid delay" the way `NaN`/positive `Infinity` do. An implementation that
+treats every non-finite value identically (routing negative `Infinity` through the SAME one-
+millisecond host-timer-clamp fallback the paragraph above describes) diverges from Pi in the
+OPPOSITE direction this section's own earlier revision did: Pi actually waits the FULL one-second
+floor for this specific input, not one millisecond. The observable rule: negative `Infinity`,
+when actually used to schedule a sleep, resolves to the SAME ordinary one-second minimum-interval
+floor every other too-small-or-invalid-in-this-specific-way value resolves to -- only `NaN` and
+POSITIVE `Infinity` take the separate, one-millisecond host-timer-clamp path above.
+
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
 The timeout carries one of two distinct messages: a plain timeout message if no `slow_down`
