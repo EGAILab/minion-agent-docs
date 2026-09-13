@@ -216,6 +216,19 @@ Two distinct failure classes are never conflated: the injected refresh operation
 store's own read/modify mechanism failing (a local storage problem) -- a caller can tell "the
 provider rejected the refresh" apart from "the local credential store is broken."
 
+**An explicit `NaN` caller-supplied minimum suppresses refresh entirely (`L11-R015`).** Combining
+the caller's own explicit minimum with the five-minute default (the `max` this section already
+describes) must match Pi's own special-number semantics, not an ordinary numeric implementation's
+incidental behavior: if EITHER operand is `NaN`, the combined result is `NaN` too (Pi's own
+`Math.max`'s documented rule -- an ordinary two-argument comparison-based `max`, by contrast,
+silently discards a `NaN` operand and returns the OTHER value instead, which is the wrong answer
+here). A `NaN` effective threshold then makes every subsequent expiry comparison resolve to
+`False` (a comparison against `NaN` is always `False`, in every language this contract targets) --
+so a stored credential is returned UNCHANGED, with no refresh attempted at all, regardless of how
+close to its own real expiry it is. An implementation whose combined-threshold arithmetic instead
+silently falls back to the five-minute default for a `NaN` explicit minimum incorrectly grants
+refresh authority Pi itself withholds for this exact input.
+
 **Refresh cancellation/timeout (`L11-R002`).** The refresh operation itself receives a live,
 abort-observable signal as a second argument, alongside the expiring credential -- it is not
 called with the credential alone. That signal aborts when EITHER the caller's own cancellation
@@ -299,23 +312,30 @@ whose own flooring/clamping arithmetic raises for non-finite input at setup time
 has even run, narrows this contract incorrectly; flooring for a non-finite value must be a
 no-op/pass-through, not an error.
 
-**A non-finite interval that IS actually used must still make progress (`L11-R014`, second half,
-resolved by §11.8 convergence agreement).** If the first poll attempt does NOT report
-`DevicePollComplete`, the initial interval is actually consulted to schedule a sleep before the
-next attempt. A non-finite value at that point must NOT be scheduled literally: Pi's own pure
-arithmetic (`Math.floor`/`Math.max`) never throws and faithfully propagates `NaN`/`Infinity`
+**A non-finite interval that IS actually used must still make progress, at Pi's own magnitude
+(`L11-R014`, resolved by §11.8 convergence agreement, revision 2).** If the first poll attempt does
+NOT report `DevicePollComplete`, the initial interval is actually consulted to schedule a sleep
+before the next attempt. A non-finite value at that point must NOT be scheduled literally: Pi's own
+pure arithmetic (`Math.floor`/`Math.max`) never throws and faithfully propagates `NaN`/`Infinity`
 unchanged, but the VALUE Pi's own host timer (`setTimeout`) actually receives is separately clamped
 by that host to its own minimal schedulable delay when the requested value is out of its valid
-range -- `NaN`/`Infinity` both fail that range check identically. The observable, portable
-requirement this contract adopts is: a non-finite interval that is actually used clamps to the
-SAME minimum interval (1 second) every other too-small interval already clamps to, so the loop
-reaches its next poll attempt deterministically rather than raising, hanging indefinitely (a naive
-port that slices an ever-infinite remaining duration into fixed-size steps without ever detecting
-non-finiteness never terminates), or silently substituting some OTHER, unspecified value. The
-EXACT host-timer latency Pi's own runtime would produce (sub-millisecond in Node) is deliberately
-NOT made normative here -- only that progress happens, and that the specific clamped value is the
-project's own established minimum interval, not left for each implementation to invent
-independently.
+range -- `NaN`/`Infinity` both fail that range check identically. Node's own documented `setTimeout`
+contract clamps any out-of-range delay to exactly ONE MILLISECOND, independently confirmed live
+against a real Node process during review.
+
+A revision 1 of this rule adopted the project's own PRE-EXISTING one-second minimum-interval floor
+(the SAME constant every too-small but otherwise ordinary finite interval already clamps to) as the
+fallback for this case too -- three orders of magnitude larger than Pi's own real value, and an
+UNAPPROVED observable departure from Pi once examined closely: it is not "good enough progress,"
+it is a materially different, undisclosed-as-such replacement value, while `PROV-010` continued to
+claim `adopted` (Pi-parity) disposition. The corrected rule: a non-finite interval that is actually
+used clamps to Pi's own real magnitude -- one millisecond -- using a DEDICATED constant distinct
+from the ordinary minimum-interval floor (the two concepts are unrelated: one is RFC 8628's own
+"never poll faster than this" rule for ordinary finite intervals; the other is a fallback for a
+value that cannot be scheduled at all). The EXACT sub-millisecond precision Pi's own host runtime
+would produce is still not made normative (Python's own scheduler cannot guarantee it either) --
+only the MAGNITUDE (roughly one millisecond, not roughly one second) is adopted as the portable,
+cross-language observable rule.
 
 **Expiry.** A caller may supply a deadline (elapsed seconds from the loop's own start); absent one,
 the loop never expires on its own. Reaching the deadline with no successful poll raises a timeout.
