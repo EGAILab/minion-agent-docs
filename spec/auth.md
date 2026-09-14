@@ -732,21 +732,346 @@ keeps it under the OPEN `extra` escape hatch (`extra["account_id"]`), rather tha
 shared credential shape every other provider's own OAuth flow also uses, for one Codex-specific
 field. This is a disclosed architectural mapping, not a claimed direct-parity field placement.
 
-## Deferred Codex network integration (`PROV-012`)
+## Codex OAuth network integration (`PROV-012`, Pass 2 Slice C, contract)
 
-Pinned Pi's Codex OAuth NETWORK behavior remains deferred to a later Pass-2 slice:
+Pinned Pi's Codex OAuth NETWORK half (`packages/ai/src/auth/oauth/openai-codex.ts`,
+`packages/ai/src/auth/oauth/pkce.ts`, `packages/ai/src/auth/oauth/device-code.ts` (already certified
+as `PROV-009`/`PROV-010`), `packages/ai/src/utils/abort.ts`) -- consuming the interaction/auth-method
+vocabulary (`PROV-014`) and the Codex account-id projection (`PROV-011`) already adopted above.
 
-- Browser callback state validation, including a documented exception: a user pasting a bare
-  authorization code (rather than a full callback URL) is a recognized quirk Pi's own flow
-  accommodates, not an error condition.
-- The browser/PKCE callback flow (local OAuth callback HTTP server, authorization-URL construction
-  and the `auth_url` notification event -- browser LAUNCHING itself remains out of scope; this
-  layer only emits the notification, matching Pi exactly) and device-code Codex endpoint
-  integration (consuming the already-certified `PROV-010` poller), plus token exchange/refresh
-  against `auth.openai.com` (consuming the already-certified `PROV-008` refresh authority).
+This section is the SHARED CONTRACT for this slice, produced contract-first per the owner's own
+Pass-2 scope decision (`GOVERNANCE_SOURCE`,
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5659001629`): "Slice C: PROV-012,
+Codex OAuth network integration consuming Slice B vocabulary." Python implementation, tests, and
+gates for this contract are a separate, following pass; this section alone is not itself a claim
+that Python or Rust code implementing it yet exists.
 
-This is recorded as `deferred parity` in `pi-parity-manifest.yaml`, with its own closure criterion,
-not as `adopted` and not silently omitted. The pass implementing it must audit pinned Pi source for
-each of these before writing any code, must use only synthetic (never real-account) fixtures for
-any JWT-shaped test data, and must not perform any live network call or use any real secret in the
-committed test suite, per this project's own security constraint.
+### Fixed identity/endpoint constants
+
+These are literal values sent to or compared against a real third-party OAuth server -- part of the
+OBSERVABLE contract, not implementation mechanics, and MUST be reproduced exactly, not merely
+"some client id"/"some URL":
+
+```text
+CLIENT_ID                  = "app_EMoamEEZ73f0CkXaXp7hrann"
+AUTH_BASE_URL               = "https://auth.openai.com"
+AUTHORIZE_URL                = AUTH_BASE_URL + "/oauth/authorize"
+TOKEN_URL                     = AUTH_BASE_URL + "/oauth/token"
+REDIRECT_URI (browser flow)    = "http://localhost:1455/auth/callback"
+DEVICE_USER_CODE_URL             = AUTH_BASE_URL + "/api/accounts/deviceauth/usercode"
+DEVICE_TOKEN_URL                  = AUTH_BASE_URL + "/api/accounts/deviceauth/token"
+DEVICE_VERIFICATION_URI            = AUTH_BASE_URL + "/codex/device"
+DEVICE_REDIRECT_URI (device flow)   = AUTH_BASE_URL + "/deviceauth/callback"
+DEVICE_CODE_TIMEOUT_SECONDS          = 900        # 15 minutes, fixed
+SCOPE                                 = "openid profile email offline_access"
+LOGIN_METHOD_BROWSER                   = "browser"       # select-prompt option id, default
+LOGIN_METHOD_DEVICE_CODE                = "device_code"   # select-prompt option id
+```
+
+The local callback server always LISTENS on port `1455` (not configurable) at a HOST that IS
+configurable (`PI_OAUTH_CALLBACK_HOST` environment variable, default `"127.0.0.1"` when absent or
+blank) -- read directly from the process environment, NOT through the `AuthContext` seam
+`ApiKeyCheck`/`ApiKeyResolve` use (Pi's own `OAuthLogin`/`OAuthRefresh`/`OAuthToAuth` callables never
+receive an `AuthContext` parameter at all; this is a genuine, disclosed asymmetry in Pi's own
+design, not an omission to correct). `REDIRECT_URI`'s own HOSTNAME is always the literal string
+`"localhost"` regardless of the configured callback host -- it is the value sent to the remote
+authorize/token endpoints, distinct from the local socket's own bind address.
+
+### Login method selection
+
+`OAuthAuth.login` first prompts a `select` (`PROV-014`'s own `AuthPromptSelect`) with message
+`"Select OpenAI Codex login method:"` and exactly two options, in this order:
+
+```text
+{id: "browser", label: "Browser login (default)"}
+{id: "device_code", label: "Device code login (headless)"}
+```
+
+then dispatches to the browser flow or the device-code flow by the returned id (`PROV-014`'s own
+select-returns-`id` rule). Any OTHER returned id is a contract violation by the `AuthInteraction`
+implementation, not a recognized login method -- raise/reject, do not silently fall back to either
+flow.
+
+### Browser/PKCE flow
+
+1. Generate a PKCE pair (`PROV-009`'s own `generate_pkce()`) and a random state: 16 cryptographically
+   random bytes, hex-encoded (32 lowercase hex characters) -- Pi's own `randomBytes(16).toString
+   ("hex")`.
+2. Build the authorization URL from `AUTHORIZE_URL` with these EXACT query parameters, in this
+   order, all always present:
+
+   ```text
+   response_type=code
+   client_id=<CLIENT_ID>
+   redirect_uri=<REDIRECT_URI>
+   scope=<SCOPE>
+   code_challenge=<PKCE challenge>
+   code_challenge_method=S256
+   state=<generated state>
+   id_token_add_organizations=true
+   codex_cli_simplified_flow=true
+   originator=pi
+   ```
+
+   `originator` is a FIXED literal `"pi"` -- pinned Pi's own single real call site never varies it;
+   this is not a configurable per-provider value.
+3. Start a local HTTP callback server bound to the configured callback host (see above) on port
+   `1455`. Binding is NOT infallible: if the port is already in use (or any other bind error
+   occurs), the server MUST NOT raise/crash the login flow -- it silently becomes a permanently-empty
+   source (its own "wait for code" outcome resolves to absent immediately and forever), so the
+   flow falls through entirely to the manual-code path below. This is a real, easily-missed Pi
+   behavior (`startLocalOAuthServer`'s own `.on("error", ...)` handler), not a hypothetical edge
+   case -- a discriminating test MUST exercise it (e.g. by first occupying the port).
+4. The server handles exactly one route, `/auth/callback`, with these EXACT response rules (every
+   other route is `404`):
+
+   ```text
+   path != "/auth/callback"                        -> 404, error page ("Callback route not found.")
+   query "state" != the state generated in step 1   -> 400, error page ("State mismatch.")
+   query "code" absent                              -> 400, error page ("Missing authorization code.")
+   otherwise                                         -> 200, success page; yields {code} to the flow
+   ```
+
+   The response body content itself (the HTML success/error pages) is presentation, not part of
+   this contract's own observable surface -- what matters is the status code and that the SAME
+   `code`/`state` query-parameter extraction and validation order above is followed exactly.
+5. Emit an `auth_url` notification (`PROV-014`'s own `AuthEventUrl`) carrying the built URL and the
+   fixed instructions text `"A browser window should open. Complete login to finish."` -- emitting
+   this event is NOT the same as opening a browser (browser LAUNCHING remains explicitly OUT OF
+   SCOPE for this row, confirmed by the owner's own Pass-2 scope decision; this layer only emits the
+   notification, matching Pi's own `packages/ai` boundary exactly, since Pi's own browser-opening
+   utility lives entirely in a separate CLI-layer package).
+6. Concurrently with waiting for the server's own callback, prompt a `manual_code` prompt
+   (`PROV-014`'s own `AuthPromptManualCode`) with message `"Complete login in your browser, or paste
+   the authorization code / redirect URL here:"` and `placeholder` set to `REDIRECT_URI`, racing it
+   against the server callback with this EXACT precedence, discriminating every combination
+   explicitly (this is a genuinely concurrent, multi-source race -- not one happy-path example):
+
+   ```text
+   server yields a code FIRST                                  -> use the server's code; cancel the
+                                                                    still-pending manual prompt
+   manual entry resolves FIRST (any non-empty parsed input)     -> stop waiting on the server;
+                                                                    parse the manual input (below);
+                                                                    use its own code
+   manual entry itself raises/rejects (e.g. its own signal
+     aborts) BEFORE the server yields anything                  -> propagate that error; do not fall
+                                                                    back to the server
+   BOTH still pending when the WHOLE login flow's own `signal`
+     aborts                                                     -> stop waiting on the server (its
+                                                                    own bind-failure/never-arrives
+                                                                    path, functionally identical);
+                                                                    the manual prompt's own signal is
+                                                                    a SEPARATE, per-prompt signal
+                                                                    (`PROV-014`) the flow cancels
+                                                                    itself when it no longer needs an
+                                                                    answer, not the same object as
+                                                                    the whole-flow `signal`
+   the server's own "wait for code" resolves ABSENT (bind
+     failure, or the flow-level `signal` aborted) with no
+     manual code yet either                                     -> wait for the still-pending manual
+                                                                    prompt to settle rather than
+                                                                    failing immediately; only if THAT
+                                                                    also yields no usable code is
+                                                                    `"Missing authorization code"`
+                                                                    raised
+   neither source ever yields a code                            -> raise/reject
+     ("Missing authorization code")
+   ```
+
+   The manual prompt is always cancelled (its own per-prompt signal aborted) once the server yields
+   a code, and the server is always closed and the flow-level abort listener always detached, when
+   the flow concludes by ANY path (success, error, or cancellation) -- an unconditional cleanup,
+   not merely a success-path one.
+7. **Manual input parsing** (`parse_authorization_input`) accepts three shapes, tried in this exact
+   order, and is a documented, intentional accommodation, not an error condition:
+
+   ```text
+   empty/whitespace-only input                        -> {code: absent, state: absent}
+   parses as an absolute URL                           -> {code, state} from its own query string
+                                                           (either may be absent)
+   contains "#"                                        -> split on the FIRST "#" into exactly two
+                                                           parts: code = everything before it,
+                                                           state = everything STRICTLY BETWEEN the
+                                                           first "#" and a SECOND "#" if one exists,
+                                                           or the whole remainder if it does not --
+                                                           a Pi-observable split-with-limit-2
+                                                           behavior (content after a SECOND "#", if
+                                                           present, is DISCARDED, never appended to
+                                                           `state`); an implementation using a plain
+                                                           "keep everything after the first split
+                                                           point" split (a common host-language
+                                                           default, unlike Pi's own limited split)
+                                                           diverges observably for an input
+                                                           containing two or more "#" characters and
+                                                           MUST be corrected to match Pi's own
+                                                           discard-the-remainder behavior exactly
+   contains "code="                                    -> parsed as a bare query string (no leading
+                                                           "?" required) -> {code, state} from it
+   otherwise                                           -> {code: the whole trimmed input, state:
+                                                           absent} -- a bare pasted authorization
+                                                           code with no URL/query wrapper at all
+   ```
+
+   If the parsed `state` is present and does not match the state generated in step 1, raise/reject
+   `"State mismatch"` before ever attempting a token exchange.
+8. Exchange the resolved authorization code for tokens (below), using the ORIGINAL `REDIRECT_URI`
+   (not the device-flow's own redirect URI) and the PKCE verifier from step 1.
+
+### Device-code flow
+
+1. POST `DEVICE_USER_CODE_URL` with a JSON body `{client_id: CLIENT_ID}`. On a non-`2xx` response:
+   a `404` status raises a SPECIFIC message ("OpenAI Codex device code login is not enabled for this
+   server. Use browser login or verify the server URL."); any OTHER non-`2xx` status raises a
+   generic status+body message. On success, the response body MUST supply a non-empty
+   `device_auth_id` (string), a non-empty `user_code` (string), and an `interval` that is EITHER a
+   number or a string coercible to a finite, non-negative number (a string is trimmed and parsed;
+   an uncoercible/negative/non-finite result -- including the string failing to parse at all -- is a
+   contract violation, raise/reject with the invalid-response message, INCLUDING the case where
+   `interval` is a non-numeric string).
+2. Emit a `device_code` notification (`PROV-014`'s own `AuthEventDeviceCode`) carrying the returned
+   `user_code`, the FIXED `DEVICE_VERIFICATION_URI`, the returned interval as `interval_seconds`,
+   and the FIXED `DEVICE_CODE_TIMEOUT_SECONDS` as `expires_in_seconds`.
+3. Poll `DEVICE_TOKEN_URL` through the already-certified `PROV-010` device-authorization poll state
+   machine, with the server-returned interval as the initial interval, `DEVICE_CODE_TIMEOUT_SECONDS`
+   as the deadline, and NO initial pre-poll wait (polling begins immediately). Each poll attempt POSTs
+   a JSON body `{device_auth_id, user_code}` and maps the HTTP response to `PROV-010`'s own poll
+   outcomes EXACTLY as follows -- no other mapping is conforming:
+
+   ```text
+   2xx, body has BOTH authorization_code and code_verifier (non-empty strings)
+                                                             -> COMPLETE, value = {authorization_code,
+                                                                code_verifier}
+   2xx, body missing either field                            -> FAILED ("Invalid ... token response:
+                                                                 <body>")
+   403 or 404                                                  -> PENDING
+   other status, error body parses as JSON with
+     error === "deviceauth_authorization_pending"
+     (or error.code === that string)                           -> PENDING
+   other status, error body parses as JSON with
+     error === "slow_down" (or error.code === that string)      -> SLOW_DOWN, with NO server-provided
+                                                                    interval override -- this
+                                                                    endpoint never supplies one, so
+                                                                    `PROV-010`'s own fixed +5-second
+                                                                    increment ALWAYS applies here,
+                                                                    never the server-interval branch
+   any other status/body (including an unparseable
+     error body)                                                -> FAILED (status+body message)
+   ```
+
+4. Exchange the returned `authorization_code`/`code_verifier` for tokens (below), using
+   `DEVICE_REDIRECT_URI` (NOT the browser flow's own `REDIRECT_URI`) and the RETURNED
+   `code_verifier` (NOT a locally-generated PKCE verifier -- the device flow's own verifier is
+   server-issued, unlike the browser flow's own client-generated one).
+
+### Token exchange and refresh
+
+Both POST `TOKEN_URL` with `Content-Type: application/x-www-form-urlencoded`:
+
+```text
+exchange: grant_type=authorization_code, client_id, code, code_verifier, redirect_uri
+refresh:  grant_type=refresh_token, refresh_token, client_id
+```
+
+The response is parsed identically for both operations: a non-`2xx` status raises
+`"OpenAI Codex token {exchange|refresh} failed ({status}): {body text, or the status's own reason
+phrase if the body is empty/unreadable}"`. A `2xx` response body MUST supply a non-empty
+`access_token` (string), a non-empty `refresh_token` (string), and a numeric `expires_in` -- any
+missing/wrong-typed field raises `"OpenAI Codex token {exchange|refresh} response missing fields:
+{the parsed body}"`. On success, the resulting token's own `expires` is the CURRENT wall-clock time
+in Unix-epoch milliseconds PLUS `expires_in * 1000` (matching `OAuthCredential.expires`'s own
+existing epoch-milliseconds contract, `PROV-006`) -- computed at response-parse time, not at
+request-send time.
+
+**Cancellation and error-wrapping differ between the two operations, and this asymmetry is itself
+part of the contract, not an oversight to harmonize:**
+
+- **Exchange** distinguishes a network failure caused by the caller's OWN cancellation from every
+  other network failure: if the underlying request fails WHILE the given signal is already aborted,
+  the operation raises the FIXED message `"Login cancelled"`, discarding the underlying transport
+  error entirely; any OTHER network failure (the signal not aborted) propagates the underlying
+  error unchanged.
+- **Refresh** applies NO such translation: ANY network-level failure (not a non-2xx HTTP response,
+  which is handled by the shared response-parsing rule above, but a failure to complete the request
+  at all -- e.g. the connection itself was aborted) is wrapped as `"OpenAI Codex token refresh
+  error: {the underlying error's own message}"`, with no cancellation-specific message, regardless
+  of whether the signal was the cause. This asymmetry exists because refresh's own caller
+  (`PROV-008`'s own `refresh_if_expiring`, already certified) supplies a `CombinedSignal` -- a fixed
+  time budget, not a user-driven "I cancelled this login," so a "Login cancelled" message would be
+  actively misleading there.
+
+**Cancellation mechanism -- disclosed mapping, not a new observable behavior.** Pinned Pi's own
+`fetch` natively aborts its own underlying connection when the SAME `AbortSignal` object passed to
+it fires (push-based, no polling). This project's own established `Abortable`/`RunSignal`
+abstraction (Layer 09) is POLL-BASED BY CERTIFIED DESIGN and has no push/event mechanism -- exactly
+the same already-disclosed constraint `abortable_sleep` (`PROV-010`) works within for timers. An
+HTTP transport implementation MUST reproduce the same OBSERVABLE effect (an in-flight request that
+is genuinely torn down, not merely "stopped being awaited while it keeps running unobserved in the
+background," and whose caller sees an error promptly after the signal aborts, not only after the
+request would have finished or timed out on its own) using this project's own poll-based
+primitives -- e.g. running the request as a cancellable task and polling the signal at a short,
+fixed interval, the same idiom `abortable_sleep` already establishes for a different primitive.
+This is a disclosed, narrow language/architecture mapping (poll-based cancellation reproducing a
+push-based primitive's observable effect), not new behavior invented for this contract, and MUST
+NOT be confused with `Models`-level `raceWithAbortSignal`'s own, materially DIFFERENT and NARROWER
+behavior (`PROV-013`, deferred, out of scope for this row): pinned Pi's own `raceWithAbortSignal`
+(`packages/ai/src/utils/abort.ts:17-50`) does NOT cancel the underlying operation at all -- it only
+stops WAITING for it while continuing to observe the abandoned promise in the background, a
+narrower guarantee this row's own transport-level cancellation must not be conflated with.
+
+### Injectable HTTP transport (implementation mechanics, owner-approved)
+
+Per the owner's own Pass-2 scope decision, `httpx` is approved as the Python implementation
+mechanism for every network call in this row, subject to these constraints, none of which are
+optional:
+
+- the language-neutral contract above describes HTTP behavior (status codes, body shapes, header
+  content-type, cancellation semantics), never `httpx`-specific behavior;
+- provider/auth code depends on an INJECTABLE transport seam -- a concrete `httpx`-backed
+  implementation is one conforming implementation of that seam, never the only one a caller can
+  supply;
+- every test in the committed suite uses a deterministic fake/scripted transport; no test performs
+  a live network call or depends on a real `auth.openai.com` response;
+- no live secret (a real Codex access/refresh token, a real device/authorization code) appears
+  anywhere in the committed test suite -- synthetic fixtures only, matching `PROV-011`'s own
+  established constraint;
+- `httpx`'s own request/response/client types do not appear in any shared, language-neutral type
+  (the transport seam's own request/response shapes are this project's own minimal types, not
+  `httpx.Request`/`httpx.Response` re-exported);
+- cancellation and timeout map through this project's own existing `Abortable`/`RunSignal` contract
+  (see above), never becoming `httpx`-defined timeout/cancellation semantics a caller must learn
+  separately.
+
+The local OAuth callback HTTP server (browser flow, step 3 above) is a SEPARATE concern from the
+outbound-request transport seam above -- it is an inbound listener, not a client, and Pi's own
+equivalent uses Node's raw `http` module directly with no injectable-transport abstraction of its
+own; a Python implementation MAY use `httpx`, the standard library, or any other mechanism for this
+inbound listener, subject to the same testability constraint (no test binds a real, non-loopback
+port or depends on an externally-reachable server).
+
+### `OAuthAuth` composite
+
+```text
+name             = "OpenAI (ChatGPT Plus/Pro)"
+is_subscription  = true
+login(interaction)      -> select method, then dispatch (above)
+refresh(credential, signal) -> exchange credential.refresh via the refresh operation above, then
+                                project through the ALREADY-ADOPTED `PROV-011` `credentials_from_token`
+to_auth(credential)      -> the ALREADY-ADOPTED `PROV-011` `to_auth`, reused unchanged, not
+                             reimplemented for this row
+```
+
+### Out of scope for this row (owner-confirmed, restated)
+
+- Browser LAUNCHING itself (this row only emits the `auth_url` notification).
+- The `codex-responses` LLM wire adapter.
+- `PROV-013` generic `Models`-level orchestration (`resolveProviderAuth`, `Models.checkAuth`/
+  `getAuth`/`login`/`logout`, provider-registry race semantics) -- this row's own `login`/`refresh`/
+  `to_auth` are the PER-PROVIDER auth-method vocabulary `PROV-013`'s own deferred orchestration
+  would eventually CONSUME, not that orchestration itself.
+- A Codex CLI credential-file loader (reading an existing `~/.codex/...`-shaped file directly) --
+  explicitly out of scope per the owner's own Pass-2 scope decision.
+
+If implementation discovers that this contract cannot be expressed through the already-certified
+`PROV-008`/`PROV-009`/`PROV-010` seams without changing their own observable semantics, that is an
+`IMPLEMENTATION_DISCOVERED_CONTRACT_DEFECT` requiring owner governance before proceeding -- those
+seams' own certified contracts are not silently widened to accommodate this row.
