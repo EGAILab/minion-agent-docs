@@ -491,23 +491,38 @@ OAuthAuth{
 ProviderAuth{api_key?, oauth?}   # at least one of the two REQUIRED
 ```
 
-**Failure and delivery semantics (`L11-SB-R003`, second independent review).** Every async callable
-above (`ApiKeyAuth.login`/`check`/`resolve`, `OAuthAuth.login`/`refresh`/`to_auth`) MAY raise/reject
--- confirmed directly against pinned Pi's own real call sites, each of which `await`s the callable
-inside its own `try`/`catch` and wraps a rejection into a typed failure (`models.ts:495-504` for
-`check`; `resolve.ts:174-178` for `to_auth`; `resolve.ts:188-192` for `resolve`; `resolve.ts:127-
-179` for `refresh`). None of these callables carries an error-suppression contract of its own; a
-caller CONSUMING one of them (the still-deferred `PROV-013` orchestration, not this row) owns
-deciding how a raised exception is wrapped/reported. `to_auth` being side-effect-free describes
-what it does to the WORLD (no I/O, no stored-state mutation), not whether it can fail -- those are
-independent properties, and an earlier revision of this section incorrectly conflated them.
+**Failure and delivery semantics (`L11-SB-R003`, second independent review; call-site accuracy
+corrected per `L11-SB-R007`, third independent review).** Every async callable above
+(`ApiKeyAuth.login`/`check`/`resolve`, `OAuthAuth.login`/`refresh`/`to_auth`) MAY raise/reject, but
+pinned Pi's own real call sites do NOT uniformly wrap that rejection -- confirmed directly against
+Pi, distinguishing the two groups explicitly rather than stating one blanket rule for all six:
+
+- `check` (`models.ts:495-504`), `resolve` (`resolve.ts:188-192`), `to_auth` (`resolve.ts:174-178`),
+  and `refresh` (`resolve.ts:127-179`) are each `await`ed inside their own real call site's own
+  `try`/`catch`, with a rejection wrapped into a typed failure.
+- `ApiKeyAuth.login`/`OAuthAuth.login` are NOT wrapped at their own real call site.
+  `Models.login()` (`models.ts:565-575`) calls `method.login({...interaction, signal})` and awaits
+  the result through `raceWithAbortSignal(loginOperation, signal)` directly, with no enclosing
+  `try`/`catch` around that call -- a login rejection propagates straight out of `Models.login()`
+  itself. (`Models.login()` DOES have a later `try`/`catch`, `models.ts:591-613`, but that covers
+  only the SUBSEQUENT credential-store mutation step, not the login call itself -- an earlier
+  revision of this paragraph incorrectly generalized that later, unrelated wrapping to `login` too.)
+
+None of these callables carries an error-suppression contract of its own; a caller CONSUMING one of
+them (the still-deferred `PROV-013` orchestration, not this row) owns deciding how a raised
+exception is wrapped/reported -- for `login` specifically, that includes deciding whether/how to
+wrap what Pi itself leaves unwrapped, since there is no existing Pi wrapping convention to mirror.
+`to_auth` being side-effect-free describes what it does to the WORLD (no I/O, no stored-state
+mutation), not whether it can fail -- those are independent properties, and an earlier revision of
+this section incorrectly conflated them.
 
 `AuthInteraction.notify()` is a DIRECT SYNCHRONOUS call, not fire-and-forget/detached delivery --
-confirmed directly against pinned Pi's own real call sites (`openai-codex.ts:429`, `:456`):
-`interaction.notify({...})` is an ordinary, un-awaited, un-wrapped statement with no enclosing
-`try`/`catch` and no detachment mechanism. A synchronous throw from `notify()` propagates directly
-out of its own caller, exactly like any other synchronous statement -- it is never silently
-swallowed or queued for later delivery.
+confirmed directly against pinned Pi's own real call sites
+(`packages/ai/src/auth/oauth/openai-codex.ts:429`, `:456`): `interaction.notify({...})` is an
+ordinary, un-awaited, un-wrapped statement with no enclosing `try`/`catch` and no detachment
+mechanism. A synchronous throw from `notify()` propagates directly out of its own caller, exactly
+like any other synchronous statement -- it is never silently swallowed or queued for later
+delivery.
 
 `AuthPrompt` is the shape of a prompt shown to the user during login: `text`/`secret` are
 free-text/masked entry (identical shape, differing only in display treatment); `select` presents a
