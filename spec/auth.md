@@ -573,6 +573,47 @@ these types immutable (e.g. a frozen/read-only value object) introduces an unapp
 divergence from Pi's own assignable-property semantics, the same question this project already
 resolved for Layer-11 credentials (`PROV-006`) by adopting Pi's assignable fields in full.
 
+ONE NAMED EXCEPTION: `AuthInteraction.signal`/`ProviderAuthInteraction.signal`'s own assignability
+through a value STATICALLY TYPED as either of those two interfaces specifically -- an intentional,
+narrow, owner-approved language-binding divergence, not part of this section's own general
+mutability rule. See `PROV-015` immediately below.
+
+## Interaction-type assignability divergence (`PROV-015`, intentional divergence)
+
+Pinned Pi's own TypeScript type system permits BOTH of the following simultaneously for
+`AuthInteraction`/`ProviderAuthInteraction`'s own `signal` field: (1) `ProviderAuthInteraction` is
+a genuine SUBTYPE of `AuthInteraction` (usable anywhere the wider, optional-`signal` type is
+expected -- the relationship `PROV-014`'s own `AuthInteraction`/`ProviderAuthInteraction` section
+above states normatively); and (2) `signal` is a plain, non-`readonly` property on BOTH types,
+assignable through either.
+
+A sound static type system cannot express both properties simultaneously when the two interfaces'
+own `signal` type genuinely differs (optional vs. required) -- this is a real, unavoidable
+consequence of TypeScript's own well-documented UNSOUNDNESS for exactly this mutable-property-
+variance combination, not an implementation gap any amount of cleverer code closes. Owner
+governance (recorded verbatim as the `GOVERNANCE_SOURCE` at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5664609556`) explicitly chose to
+preserve property (1) -- the subtyping relationship, and the guarantee that a provider's own
+`login()` always receives a present `signal` -- over property (2), after confirming that no actual
+pinned-Pi call site anywhere ever reassigns an interaction's own `signal` after construction; the
+sacrificed capability is a static permission Pi's own real code never exercises.
+
+**Scope, exactly:** a value statically typed as `AuthInteraction`/`ProviderAuthInteraction`
+specifically cannot have `.signal` assigned through that reference in an implementation choosing
+this trade-off. This divergence does NOT extend to runtime behavior or to any concrete
+implementation backing either interface: a concrete provider's own object remains free to expose
+its own mutable `signal` field or setter through its OWN concrete type, matching Pi's own real
+object behavior exactly -- only what a generic, vocabulary-consuming caller can do THROUGH the
+widened interface type is affected. No runtime immutability is introduced anywhere by this
+divergence, and it must not be used to justify one.
+
+**For a future Rust implementation:** this divergence is NOT itself a mechanism to replicate.
+Rust must preserve the language-neutral semantic contract -- `ProviderAuthInteraction` specializes
+`AuthInteraction`; a provider's own `login()` receives a guaranteed-present `signal` -- using
+whatever mutability representation is idiomatic and sound for Rust's own type system. That
+representation is reviewed independently when Rust implements this row; this document does not
+prescribe Rust mechanics.
+
 ## Deferred generic auth/provider orchestration surface (`PROV-013`)
 
 The real dispatcher/orchestration built ON TOP of `PROV-014`'s own vocabulary: `resolveProviderAuth`
