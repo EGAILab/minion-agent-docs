@@ -1,17 +1,17 @@
 # Auth Semantics (Layer 11 Pass 1 -- Auth Foundation; Pass 2 Slice A -- Codex account-id
-projection)
+projection; Pass 2 Slice B -- provider-auth interaction/auth-method vocabulary)
 
 This document covers the provider-neutral authentication seam: stored credentials, the
 credential-store concurrency contract, refresh/ownership authority, the two generic OAuth
-primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds, and Codex's own pure (non-network)
-account-id projection (`PROV-011`, Pass 2 Slice A, adopted -- below). It does NOT cover any real
+primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds, Codex's own pure (non-network)
+account-id projection (`PROV-011`, Pass 2 Slice A, adopted -- below), and the generic
+login-interaction/prompt/notification and per-provider auth-method VOCABULARY (`PROV-014`, Pass 2
+Slice B, adopted -- below) a provider's own login flow consumes. It does NOT cover any real
 provider's own wire-protocol request/response encoding, Codex's own OAuth NETWORK integration
 (browser/device-code endpoints, token exchange, the local callback server, `PROV-012`), or the
-generic `AuthPrompt`/`AuthEvent`/`AuthInteraction`/`OAuthAuth`/`ApiKeyAuth`/`ProviderAuth`
-interaction vocabulary those slices consume -- currently still attributed, together with the
-`Models`-level orchestration built on top of it, to the single bundled `PROV-013` row (see
-"Deferred generic auth/provider orchestration surface" below); splitting the interaction
-vocabulary out into its own row is a separately-reviewed Slice B contract, not yet performed.
+real `resolveProviderAuth`/`Models`-level dispatch ORCHESTRATION built on top of the `PROV-014`
+vocabulary (`PROV-013`, still deferred -- see "Deferred generic auth/provider orchestration
+surface" below) -- those remain later Layer 11 Pass 2 slices' own territory.
 
 ```text
 ApiKeyCredential{type=api_key,key?,env?}
@@ -434,29 +434,93 @@ provider endpoint, a Codex CLI credential-file loader, and any real provider tra
 integration will consume as its own transport-injected seam -- this pass does not itself perform
 any provider's specific endpoint calls.
 
+## Provider-auth interaction and auth-method vocabulary (`PROV-014`, Pass 2 Slice B, adopted)
+
+Pinned Pi's public auth vocabulary a provider's own login flow uses, split out of the previously-
+bundled `PROV-013` row (owner-approved, 2026-09-14, durably recorded verbatim at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5659001629`) because `PROV-012`'s
+own Codex `login()` contract consumes it directly, with no dependency on the still-deferred
+`Models`-level orchestration below. VOCABULARY ONLY -- no `Models`-equivalent dispatcher, no
+`LlmService` extension, no new generic `AuthService`/`AuthManager` architecture.
+
+```text
+AuthPromptText{message,placeholder?,signal?}
+AuthPromptSecret{message,placeholder?,signal?}
+AuthPromptOption{id,label,description?}
+AuthPromptSelect{message,options:AuthPromptOption[],signal?}
+AuthPromptManualCode{message,placeholder?,signal?}
+AuthPrompt = AuthPromptText|AuthPromptSecret|AuthPromptSelect|AuthPromptManualCode
+
+AuthInfoLink{url,label?}
+AuthEventInfo{message,links?:AuthInfoLink[]}
+AuthEventUrl{url,instructions?}
+AuthEventDeviceCode{user_code,verification_uri,interval_seconds?,expires_in_seconds?}
+AuthEventProgress{message}
+AuthEvent = AuthEventInfo|AuthEventUrl|AuthEventDeviceCode|AuthEventProgress
+
+AuthInteraction{signal?, prompt(AuthPrompt)->string, notify(AuthEvent)->None}
+ProviderAuthInteraction{signal, prompt(AuthPrompt)->string, notify(AuthEvent)->None}
+
+ApiKeyAuth{name, resolve, login?, check?}
+OAuthAuth{name, login, refresh, to_auth, is_subscription?, login_label?}
+ProviderAuth{api_key?, oauth?}   # at least one of the two REQUIRED
+```
+
+`AuthPrompt` is the shape of a prompt shown to the user during login: `text`/`secret` are
+free-text/masked entry (identical shape, differing only in display treatment); `select` presents a
+fixed option set, and its OWN resolved value is the CHOSEN OPTION'S `id`, never its `label`;
+`manual_code` is a fallback entry prompt used when an interactive callback (e.g. a local OAuth
+server) is racing this same prompt -- the prompt's own `signal` is what that race cancels it
+through, matching Pi's own doc comment naming exactly this pattern ("a `manual_code` prompt raced
+against a callback server, aborted when the callback wins"). The racing mechanics themselves are a
+concrete login flow's own concern (`PROV-012`), not part of this vocabulary.
+
+`AuthEvent` is the shape of a notification a login flow may emit: `info` (optionally with
+supporting links), `auth_url` (a URL the user should open to continue login -- emitting this is
+NOT the same as opening a browser; browser LAUNCHING is confirmed architecturally out of scope for
+this layer entirely, a CLI-layer concern Minion has no equivalent of yet), `device_code` (RFC 8628
+device-code display details, the notification counterpart to the already-certified `PROV-010`
+poll state machine's own outcomes), and `progress` (a free-text update with no further structure).
+
+`AuthInteraction` is the login-interaction callback surface serving both api-key and OAuth flows:
+`prompt()` returns the entered/selected string; `notify()` emits an `AuthEvent`; `signal` cancels
+the WHOLE login flow (distinct from a specific `AuthPrompt`'s own per-prompt `signal`).
+`ProviderAuthInteraction` is the identical shape with `signal` REQUIRED rather than optional -- the
+normalized interaction a concrete provider's own login implementation actually receives, by the
+time a caller has already normalized an absent top-level signal into a real one.
+
+`ApiKeyAuth`/`OAuthAuth` are the per-provider auth-METHOD vocabulary a concrete provider registers.
+`ApiKeyAuth.login` is optional (absent means ambient-only, no interactive setup); `check` is an
+optional side-effect-free availability probe (used when `resolve` itself may perform request-time
+work); `resolve` is required. `OAuthAuth.login`/`refresh`/`to_auth` are all required -- the
+`refresh`/`to_auth` split lets an orchestration layer own the locked-refresh pattern: `refresh`
+produces a credential, `to_auth` derives request auth from whatever credential ends up stored
+(already-certified `PROV-011`'s own Codex `credentials_from_token`/`to_auth` is a concrete instance
+of exactly this split). `ProviderAuth` MUST carry at least one of `api_key`/`oauth` -- a real,
+enforced constraint, not merely a convention: even an ambient-credential or keyless provider
+supplies `api_key` auth whose own `resolve()` reports configuration status.
+
 ## Deferred generic auth/provider orchestration surface (`PROV-013`)
 
-Pinned Pi's public auth vocabulary extends well beyond what Pass 1 builds: `AuthPrompt`,
-`AuthInfoLink`, `AuthEvent`, `AuthInteraction`, `ProviderAuthInteraction` (the login-interaction/
-prompt/notification vocabulary a provider's own login flow uses), `ApiKeyAuth`, `OAuthAuth`,
-`ProviderAuth` (the per-provider auth-METHOD vocabulary -- `login`/`resolve`/`check`/`refresh`/
-`toAuth` callables a concrete provider registers), and the `Models` collection's own orchestration
-entry points (`checkAuth`, `getAuth`, `login`, `logout`) built on top of `resolveProviderAuth`
-(`L11-R005`).
+The real dispatcher/orchestration built ON TOP of `PROV-014`'s own vocabulary: `resolveProviderAuth`
+(stored-OAuth vs. api-key vs. ambient-env dispatch) and the `Models` collection's own orchestration
+entry points (`checkAuth`, `getAuth`, `login`, `logout`, `getAvailable`) (`L11-R005`, originally
+discovered bundled with the vocabulary now split into `PROV-014` above).
 
-This is EXPLICITLY NOT a demand to implement any of this in Pass 1 -- interactive login flows,
-provider-method registration, and top-level auth orchestration are real provider-integration
-concerns with no generic-seam content of their own until a concrete provider exists to exercise
-them. It IS a demand not to silently lose track of this discovered Pi surface: without an explicit
-disposition, two independent future implementers could reasonably make incompatible choices (one
-building the vocabulary extensible for login interactions now, one omitting it entirely), each
-individually consistent with Pass 1's own artifacts but incompatible with each other.
+This is EXPLICITLY NOT a demand to implement any of this in Pass 2 either -- extending `LlmService`
+or inventing a replacement orchestration service is explicitly out of scope (owner-approved,
+2026-09-14, same durable record as the split above). It requires a real
+`Provider{id, auth: ProviderAuth, getModels()}`-shaped registry Minion's own `LlmService`
+(`register`/`models`/`stream` only, confirmed absent during the Pass-2 restart audit) does not have
+yet. `Models.login`'s own commit-race-safety semantics (an abort-vs-mutation-started race) will
+additionally need their own careful design when this row is eventually closed, not a trivial
+wire-up.
 
-Closure criterion (binding on whichever future pass closes this row): a future Layer-11 pass
-integrating a real provider's own login flow (Codex OAuth network integration, slice 11B, or a
-later provider) must audit this exact Pi vocabulary and either adopt it directly or document a
-deliberate, disclosed divergence -- it must not invent an unrelated ad hoc login/prompt shape
-without first comparing it against Pi's own `AuthPrompt`/`AuthEvent`/`AuthInteraction` vocabulary.
+Closure criterion (binding on whichever future pass closes this row, unchanged from the original
+`L11-R005` discovery other than the vocabulary split above): a future pass that introduces the
+provider/auth composition surface actually needing `Models`-equivalent orchestration must design
+the integration contract-first against pinned Pi, consuming `PROV-014`'s own already-adopted
+vocabulary directly rather than inventing an ad hoc replacement shape.
 
 ## Codex account-id projection (`PROV-011`, Pass 2 Slice A, adopted)
 
