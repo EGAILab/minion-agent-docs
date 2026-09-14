@@ -461,7 +461,9 @@ AuthEvent = AuthEventInfo|AuthEventUrl|AuthEventDeviceCode|AuthEventProgress
 AuthInteraction{
     signal?,
     prompt(AuthPrompt) -> string (async; raises/rejects on cancel/abort),
-    notify(AuthEvent) -> None (sync, fire-and-forget)
+    notify(AuthEvent) -> None (SYNCHRONOUS, direct call -- NOT fire-and-forget/detached; a
+                                synchronous throw propagates to notify()'s own caller exactly like
+                                any other synchronous statement, it is not swallowed or queued)
 }
 ProviderAuthInteraction{
     signal,   # REQUIRED here; SAME two methods as AuthInteraction
@@ -474,20 +476,38 @@ ProviderAuthInteraction{
 
 ApiKeyAuth{
     name: string,
-    resolve(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthResult|absent,   # REQUIRED, async
+    resolve(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthResult|absent,   # REQUIRED, async; MAY raise/reject
     login(interaction: ProviderAuthInteraction) -> ApiKeyCredential,   # OPTIONAL; async, raises/rejects on failure
-    check(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthCheck|absent   # OPTIONAL, async
+    check(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthCheck|absent   # OPTIONAL, async; MAY raise/reject
 }
 OAuthAuth{
     name: string,
     login(interaction: ProviderAuthInteraction) -> OAuthCredential,          # REQUIRED; async, raises/rejects on failure
     refresh(credential: OAuthCredential, signal) -> OAuthCredential,         # REQUIRED; async, raises on failure (invalid_grant etc.), no separate error channel
-    to_auth(credential: OAuthCredential) -> ModelAuth,                      # REQUIRED; async, side-effect-free, not expected to raise for a valid credential
+    to_auth(credential: OAuthCredential) -> ModelAuth,                      # REQUIRED; async, side-effect-free but MAY still raise/reject on an unexpected/malformed credential
     is_subscription?: boolean,   # THREE-valued: absent | false | true, all independently observable
     login_label?: string
 }
 ProviderAuth{api_key?, oauth?}   # at least one of the two REQUIRED
 ```
+
+**Failure and delivery semantics (`L11-SB-R003`, second independent review).** Every async callable
+above (`ApiKeyAuth.login`/`check`/`resolve`, `OAuthAuth.login`/`refresh`/`to_auth`) MAY raise/reject
+-- confirmed directly against pinned Pi's own real call sites, each of which `await`s the callable
+inside its own `try`/`catch` and wraps a rejection into a typed failure (`models.ts:495-504` for
+`check`; `resolve.ts:174-178` for `to_auth`; `resolve.ts:188-192` for `resolve`; `resolve.ts:127-
+179` for `refresh`). None of these callables carries an error-suppression contract of its own; a
+caller CONSUMING one of them (the still-deferred `PROV-013` orchestration, not this row) owns
+deciding how a raised exception is wrapped/reported. `to_auth` being side-effect-free describes
+what it does to the WORLD (no I/O, no stored-state mutation), not whether it can fail -- those are
+independent properties, and an earlier revision of this section incorrectly conflated them.
+
+`AuthInteraction.notify()` is a DIRECT SYNCHRONOUS call, not fire-and-forget/detached delivery --
+confirmed directly against pinned Pi's own real call sites (`openai-codex.ts:429`, `:456`):
+`interaction.notify({...})` is an ordinary, un-awaited, un-wrapped statement with no enclosing
+`try`/`catch` and no detachment mechanism. A synchronous throw from `notify()` propagates directly
+out of its own caller, exactly like any other synchronous statement -- it is never silently
+swallowed or queued for later delivery.
 
 `AuthPrompt` is the shape of a prompt shown to the user during login: `text`/`secret` are
 free-text/masked entry (identical shape, differing only in display treatment); `select` presents a
