@@ -8,8 +8,10 @@ account-id projection (`PROV-011`, Pass 2 Slice A, adopted -- below). It does NO
 provider's own wire-protocol request/response encoding, Codex's own OAuth NETWORK integration
 (browser/device-code endpoints, token exchange, the local callback server, `PROV-012`), or the
 generic `AuthPrompt`/`AuthEvent`/`AuthInteraction`/`OAuthAuth`/`ApiKeyAuth`/`ProviderAuth`
-interaction vocabulary those slices consume (`PROV-014`) -- those remain later Layer 11 Pass 2
-slices' own territory, deferred.
+interaction vocabulary those slices consume -- currently still attributed, together with the
+`Models`-level orchestration built on top of it, to the single bundled `PROV-013` row (see
+"Deferred generic auth/provider orchestration surface" below); splitting the interaction
+vocabulary out into its own row is a separately-reviewed Slice B contract, not yet performed.
 
 ```text
 ApiKeyCredential{type=api_key,key?,env?}
@@ -30,7 +32,8 @@ string-to-string mapping, never recursive JSON (`L11-R010`). `extra` is a SEPARA
 hatch (mirroring Pi's own `OAuthCredentials`'s `[key: string]: unknown` index signature), not a
 closed field set and NOT limited to flat strings: a provider-specific login flow attaches fields
 of ANY JSON shape alongside the three required ones (e.g. Codex's own `accountId`, `PROV-011`,
-deferred) without widening the core shape every other provider shares. `env` and `extra` are
+adopted -- see "Codex account-id projection" below) without widening the core shape every other
+provider shares. `env` and `extra` are
 therefore two DIFFERENT domains, not the same rule applied to two fields -- evidence for one must
 never be constructed using the other's own domain. `CredentialInfo` never carries a secret field
 (`key`, `access`, `refresh`, or `extra`) -- it exists only for account/status enumeration.
