@@ -467,7 +467,7 @@ call, so it is adopted directly rather than deferred alongside `PROV-012`'s own 
 integration below.
 
 ```text
-decode_jwt(token) -> JsonValue        # whatever json.loads produces; NOT necessarily an object
+decode_jwt(token) -> JS-JSON.parse-equivalent value | absent   # NOT necessarily an object
 get_account_id(access_token) -> string|absent
 credentials_from_token(access, refresh, expires) -> OAuthCredential   # raises if no account id
 to_auth(credential) -> ModelAuth      # {api_key: credential.access}
@@ -478,23 +478,52 @@ never performs cryptographic signature validation. No signature verification may
 Pi performs only unverified decoding; treating an unverified claim as authenticated identity would
 be a false strengthening of this contract, not a hardening of it.
 
-`decode_jwt` reproduces two Pi/JS-specific decode quirks EXACTLY, not approximately:
+`decode_jwt`'s own decode boundary is a language-neutral equivalent of pinned Pi's `atob(payload)`
+followed by `JSON.parse(...)` -- EXACTLY, not approximately, and its result type is whatever value
+that equivalent produces, not merely "parsed JSON" in the general sense. Four binding rules,
+each independently confirmed against a live Node process before being adopted here:
 
-1. The payload segment is decoded as STANDARD base64 only -- a base64url alphabet character
-   (`-`/`_`) makes the whole token fail to decode (returns absent), while a MISSING padding
-   character does not. An implementation that is lenient about `-`/`_` (e.g. silently discarding
-   them rather than rejecting the token) diverges observably from Pi's own `atob`, which throws
-   for exactly this input.
-2. The decoded payload bytes are interpreted as LATIN-1, never UTF-8. A JWT claim VALUE containing
-   a non-ASCII character (encoded as UTF-8 bytes before base64, the universal way JWTs are built)
+1. **Base64 decoding follows the WHATWG "forgiving-base64 decode" algorithm** (the algorithm
+   `atob` itself implements), not an implementation's own base64 library defaults:
+   - every ASCII whitespace code point (tab, line feed, form feed, carriage return, space)
+     anywhere in the payload segment -- leading, trailing, or interior -- is removed before
+     decoding; a segment containing one is not thereby invalid.
+   - a trailing `=` is accepted ONLY when the whitespace-stripped segment's own length is a
+     multiple of 4 AND it ends in EXACTLY one or two `=` characters; that padding is then
+     stripped before decoding the remaining content. Any other placement or count of `=`
+     characters -- including a segment whose length is not a multiple of 4 to begin with, or one
+     ending in three or more `=` -- makes the WHOLE segment invalid. A segment with NO trailing
+     `=` at all decodes normally (padding is optional, not required); a segment with GENUINELY
+     malformed padding (e.g. one `=` where two are required) must be REJECTED, never silently
+     repaired by adding the padding it appears to be missing.
+   - after that stripping, a resulting length leaving remainder 1 (mod 4) is invalid; every
+     remaining character must be in the standard base64 alphabet (`A-Za-z0-9+/`) -- base64url's
+     `-`/`_` alphabet characters are therefore always invalid, covered by this same rule, not a
+     separate check.
+2. **The decoded bytes are interpreted as LATIN-1, never UTF-8.** A JWT claim VALUE containing a
+   non-ASCII character (encoded as UTF-8 bytes before base64, the universal way JWTs are built)
    therefore decodes to MOJIBAKE, not the original character. This is the correct, Pi-faithful
    observable behavior for this unverified-decode path, not a defect to silently repair by
-   decoding as UTF-8 instead -- doing so would itself be an unapproved observable divergence from
-   Pi. `decode_jwt` itself does not validate that the decoded/parsed payload is an object; a
-   non-object result (array, string, number, or the JSON literal `null`) is tolerated by
-   `get_account_id`'s own graceful lookup, not rejected earlier -- a payload segment that decodes
-   to the JSON literal `null` is therefore indistinguishable from a malformed token, matching Pi's
-   own `JSON.parse("null") === null` ambiguity.
+   decoding as UTF-8 instead -- doing so would itself be an unapproved observable divergence.
+3. **The bare tokens `NaN`, `Infinity`, and `-Infinity` are INVALID at any position a JSON value is
+   expected**, matching JavaScript's own `JSON.parse` (which rejects all three as non-JSON) rather
+   than the broader "JSON plus numeric-constant extensions" grammar some JSON parsers accept by
+   default. A payload segment containing one of these bare tokens anywhere fails to decode as a
+   whole, exactly like any other JSON syntax error.
+4. **Every JSON number literal -- including integers -- is coerced through IEEE-754 double
+   precision**, matching JavaScript's own single numeric type: a literal beyond `2**53` silently
+   loses precision to the nearest representable double (e.g. the literal `9007199254740993`
+   becomes the value `9007199254740992`), and the literal `-0` produces a genuine, sign-preserving
+   negative zero distinct from `+0`. An implementation that instead preserves exact,
+   arbitrary-precision integers, or that collapses `-0` to an unsigned zero, diverges observably
+   from this contract for any claim carrying such a value, even though it is "more correct" or
+   "more precise" by an ordinary JSON reader's own standard.
+
+`decode_jwt` itself does not validate that the decoded/parsed payload is an object; a non-object
+result (array, string, number, or the JSON literal `null`) is tolerated by `get_account_id`'s own
+graceful lookup, not rejected earlier -- a payload segment that decodes to the JSON literal `null`
+is therefore indistinguishable from a malformed token, matching Pi's own `JSON.parse("null") ===
+null` ambiguity.
 
 `get_account_id` returns the `chatgpt_account_id` claim under the `"https://api.openai.com/auth"`
 namespace, or absent if the token is malformed, the decoded payload (or that namespace) is not an
