@@ -1,17 +1,17 @@
 # Auth Semantics (Layer 11 Pass 1 -- Auth Foundation; Pass 2 Slice A -- Codex account-id
-projection)
+projection; Pass 2 Slice B -- provider-auth interaction/auth-method vocabulary)
 
 This document covers the provider-neutral authentication seam: stored credentials, the
 credential-store concurrency contract, refresh/ownership authority, the two generic OAuth
-primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds, and Codex's own pure (non-network)
-account-id projection (`PROV-011`, Pass 2 Slice A, adopted -- below). It does NOT cover any real
+primitives (PKCE, RFC 8628 device-code polling) Pass 1 builds, Codex's own pure (non-network)
+account-id projection (`PROV-011`, Pass 2 Slice A, adopted -- below), and the generic
+login-interaction/prompt/notification and per-provider auth-method VOCABULARY (`PROV-014`, Pass 2
+Slice B, adopted -- below) a provider's own login flow consumes. It does NOT cover any real
 provider's own wire-protocol request/response encoding, Codex's own OAuth NETWORK integration
 (browser/device-code endpoints, token exchange, the local callback server, `PROV-012`), or the
-generic `AuthPrompt`/`AuthEvent`/`AuthInteraction`/`OAuthAuth`/`ApiKeyAuth`/`ProviderAuth`
-interaction vocabulary those slices consume -- currently still attributed, together with the
-`Models`-level orchestration built on top of it, to the single bundled `PROV-013` row (see
-"Deferred generic auth/provider orchestration surface" below); splitting the interaction
-vocabulary out into its own row is a separately-reviewed Slice B contract, not yet performed.
+real `resolveProviderAuth`/`Models`-level dispatch ORCHESTRATION built on top of the `PROV-014`
+vocabulary (`PROV-013`, still deferred -- see "Deferred generic auth/provider orchestration
+surface" below) -- those remain later Layer 11 Pass 2 slices' own territory.
 
 ```text
 ApiKeyCredential{type=api_key,key?,env?}
@@ -434,29 +434,222 @@ provider endpoint, a Codex CLI credential-file loader, and any real provider tra
 integration will consume as its own transport-injected seam -- this pass does not itself perform
 any provider's specific endpoint calls.
 
+## Provider-auth interaction and auth-method vocabulary (`PROV-014`, Pass 2 Slice B, adopted)
+
+Pinned Pi's public auth vocabulary a provider's own login flow uses, split out of the previously-
+bundled `PROV-013` row (owner-approved, 2026-09-14, durably recorded verbatim at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5659001629`) because `PROV-012`'s
+own Codex `login()` contract consumes it directly, with no dependency on the still-deferred
+`Models`-level orchestration below. VOCABULARY ONLY -- no `Models`-equivalent dispatcher, no
+`LlmService` extension, no new generic `AuthService`/`AuthManager` architecture.
+
+```text
+AuthPromptText{message,placeholder?,signal?}
+AuthPromptSecret{message,placeholder?,signal?}
+AuthPromptOption{id,label,description?}
+AuthPromptSelect{message,options:AuthPromptOption[],signal?}
+AuthPromptManualCode{message,placeholder?,signal?}
+AuthPrompt = AuthPromptText|AuthPromptSecret|AuthPromptSelect|AuthPromptManualCode
+
+AuthInfoLink{url,label?}
+AuthEventInfo{message,links?:AuthInfoLink[]}
+AuthEventUrl{url,instructions?}
+AuthEventDeviceCode{user_code,verification_uri,interval_seconds?,expires_in_seconds?}
+AuthEventProgress{message}
+AuthEvent = AuthEventInfo|AuthEventUrl|AuthEventDeviceCode|AuthEventProgress
+
+AuthInteraction{
+    signal?,
+    prompt(AuthPrompt) -> string (async; raises/rejects on cancel/abort),
+    notify(AuthEvent) -> None (SYNCHRONOUS, direct call -- NOT fire-and-forget/detached; a
+                                synchronous throw propagates to notify()'s own caller exactly like
+                                any other synchronous statement, it is not swallowed or queued)
+}
+ProviderAuthInteraction{
+    signal,   # REQUIRED here; SAME two methods as AuthInteraction
+    prompt(AuthPrompt) -> string,
+    notify(AuthEvent) -> None
+}
+# ProviderAuthInteraction IS-A AuthInteraction: any value satisfying the former (signal always
+# present) also satisfies the latter (signal optionally present) -- ordinary structural subtyping,
+# not two unrelated shapes that merely happen to look similar.
+
+ApiKeyAuth{
+    name: string,
+    resolve(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthResult|absent,   # REQUIRED, async; MAY raise/reject
+    login(interaction: ProviderAuthInteraction) -> ApiKeyCredential,   # OPTIONAL; async, raises/rejects on failure
+    check(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthCheck|absent   # OPTIONAL, async; MAY raise/reject
+}
+OAuthAuth{
+    name: string,
+    login(interaction: ProviderAuthInteraction) -> OAuthCredential,          # REQUIRED; async, raises/rejects on failure
+    refresh(credential: OAuthCredential, signal) -> OAuthCredential,         # REQUIRED; async, raises on failure (invalid_grant etc.), no separate error channel
+    to_auth(credential: OAuthCredential) -> ModelAuth,                      # REQUIRED; async, side-effect-free but MAY still raise/reject on an unexpected/malformed credential
+    is_subscription?: boolean,   # THREE-valued: absent | false | true, all independently observable
+    login_label?: string
+}
+ProviderAuth{api_key?, oauth?}   # at least one of the two REQUIRED
+```
+
+**Failure and delivery semantics (`L11-SB-R003`, second independent review; call-site accuracy
+corrected per `L11-SB-R007`, third independent review).** Every async callable above
+(`ApiKeyAuth.login`/`check`/`resolve`, `OAuthAuth.login`/`refresh`/`to_auth`) MAY raise/reject, but
+pinned Pi's own real call sites do NOT uniformly wrap that rejection -- confirmed directly against
+Pi, distinguishing the two groups explicitly rather than stating one blanket rule for all six:
+
+- `check` (`models.ts:495-504`), `resolve` (`resolve.ts:188-192`), `to_auth` (`resolve.ts:174-178`),
+  and `refresh` (`resolve.ts:127-179`) are each `await`ed inside their own real call site's own
+  `try`/`catch`, with a rejection wrapped into a typed failure.
+- `ApiKeyAuth.login`/`OAuthAuth.login` are NOT wrapped at their own real call site.
+  `Models.login()` (`models.ts:565-575`) calls `method.login({...interaction, signal})` and awaits
+  the result through `raceWithAbortSignal(loginOperation, signal)` directly, with no enclosing
+  `try`/`catch` around that call -- a login rejection propagates straight out of `Models.login()`
+  itself. (`Models.login()` DOES have a later `try`/`catch`, `models.ts:591-613`, but that covers
+  only the SUBSEQUENT credential-store mutation step, not the login call itself -- an earlier
+  revision of this paragraph incorrectly generalized that later, unrelated wrapping to `login` too.)
+
+None of these callables carries an error-suppression contract of its own; a caller CONSUMING one of
+them (the still-deferred `PROV-013` orchestration, not this row) owns deciding how a raised
+exception is wrapped/reported -- for `login` specifically, that includes deciding whether/how to
+wrap what Pi itself leaves unwrapped, since there is no existing Pi wrapping convention to mirror.
+`to_auth` being side-effect-free describes what it does to the WORLD (no I/O, no stored-state
+mutation), not whether it can fail -- those are independent properties, and an earlier revision of
+this section incorrectly conflated them.
+
+`AuthInteraction.notify()` is a DIRECT SYNCHRONOUS call, not fire-and-forget/detached delivery --
+confirmed directly against pinned Pi's own real call sites
+(`packages/ai/src/auth/oauth/openai-codex.ts:429`, `:456`): `interaction.notify({...})` is an
+ordinary, un-awaited, un-wrapped statement with no enclosing `try`/`catch` and no detachment
+mechanism. A synchronous throw from `notify()` propagates directly out of its own caller, exactly
+like any other synchronous statement -- it is never silently swallowed or queued for later
+delivery.
+
+`AuthPrompt` is the shape of a prompt shown to the user during login: `text`/`secret` are
+free-text/masked entry (identical shape, differing only in display treatment); `select` presents a
+fixed option set, and its OWN resolved value -- once some concrete `AuthInteraction`
+implementation actually resolves a `select` prompt -- is the CHOSEN OPTION'S `id`, never its
+`label` (this vocabulary itself defines no such implementation; the behavioral claim belongs to
+whichever slice first supplies one); `manual_code` is a fallback entry prompt used when an
+interactive callback (e.g. a local OAuth server) is racing this same prompt -- the prompt's own
+`signal` is what that race cancels it through, matching Pi's own doc comment naming exactly this
+pattern ("a `manual_code` prompt raced against a callback server, aborted when the callback
+wins"). The racing mechanics themselves are a concrete login flow's own concern (`PROV-012`), not
+part of this vocabulary.
+
+`AuthEvent` is the shape of a notification a login flow may emit: `info` (optionally with
+supporting links), `auth_url` (a URL the user should open to continue login -- emitting this is
+NOT the same as opening a browser; browser LAUNCHING is confirmed architecturally out of scope for
+this layer entirely, a CLI-layer concern Minion has no equivalent of yet), `device_code` (RFC 8628
+device-code display details, the notification counterpart to the already-certified `PROV-010`
+poll state machine's own outcomes), and `progress` (a free-text update with no further structure).
+
+`AuthInteraction` is the login-interaction callback surface serving both api-key and OAuth flows:
+`prompt()` returns the entered/selected string; `notify()` emits an `AuthEvent`; `signal` cancels
+the WHOLE login flow (distinct from a specific `AuthPrompt`'s own per-prompt `signal`).
+`ProviderAuthInteraction` is the identical shape with `signal` REQUIRED rather than optional -- the
+normalized interaction a concrete provider's own login implementation actually receives, by the
+time a caller has already normalized an absent top-level signal into a real one. Because a value
+with `signal` always present trivially satisfies "`signal` optionally present," `ProviderAuthInteraction`
+is a genuine SUBTYPE of `AuthInteraction`: anywhere `AuthInteraction` is accepted, a
+`ProviderAuthInteraction` value must also be usable -- an implementation that cannot statically
+express this relationship (e.g. two unrelated shapes a checker treats as merely coincidentally
+similar) diverges from Pi's own intersection-type semantics, even if every individual field type
+is otherwise correct.
+
+`ApiKeyAuth`/`OAuthAuth` are the per-provider auth-METHOD vocabulary a concrete provider registers,
+and every one of their own callables has a FULLY SPECIFIED input bundle and result shape (not left
+to be inferred from the field-level summary above): `ApiKeyAuth.check`/`resolve` each take Pi's own
+same three logical inputs (`ctx`, an OPTIONAL stored `credential`, and a REQUIRED `signal`) and
+return an async, optional result (`AuthCheck`/`AuthResult`, `absent` meaning "not configured"); a
+language MAY represent these three inputs as one structured bundle or as separate parameters
+however is idiomatic for it (a disclosed MAPPING -- see `PROV-014`'s own row in the parity
+manifest for the exact language used), but must change no input's own optionality, requiredness,
+or the result's own shape in doing so. `ApiKeyAuth.login` is OPTIONAL (absent means ambient-only,
+no interactive setup) and takes the normalized interaction, returning a new credential or
+raising/rejecting. `OAuthAuth.login`/`refresh`/`to_auth` are all REQUIRED, each with ONE
+unambiguous argument list (no bundling question, unlike `ApiKeyAuth.check`/`resolve`) -- the
+`refresh`/`to_auth` split lets an orchestration layer own the locked-refresh pattern: `refresh`
+produces a credential (raising on failure, e.g. `invalid_grant`, with no separate error channel),
+`to_auth` derives request auth from whatever credential ends up stored, side-effect-free and not
+expected to raise for a valid credential (already-certified `PROV-011`'s own Codex
+`credentials_from_token`/`to_auth` is a concrete instance of exactly this split). `is_subscription`
+is GENUINELY three-valued (absent / `false` / `true`), matching Pi's own optional-boolean field
+exactly -- an implementation collapsing "absent" into "`false`" narrows this contract observably.
+`ProviderAuth` MUST carry at least one of `api_key`/`oauth` -- a real, enforced constraint, not
+merely a convention: even an ambient-credential or keyless provider supplies `api_key` auth whose
+own `resolve()` reports configuration status.
+
+**Mutability.** Every field on every type in this section is ORDINARILY ASSIGNABLE after
+construction, matching pinned Pi's own public object/interface shapes, none of which are
+`readonly` -- ONLY the two collection fields (`AuthPromptSelect.options`, `AuthEventInfo.links`)
+are `readonly` in Pi, a narrower restriction on replacing a collection's own elements, distinct
+from an ordinary field being freely reassignable. An implementation that makes any OTHER field of
+these types immutable (e.g. a frozen/read-only value object) introduces an unapproved observable
+divergence from Pi's own assignable-property semantics, the same question this project already
+resolved for Layer-11 credentials (`PROV-006`) by adopting Pi's assignable fields in full.
+
+ONE NAMED EXCEPTION: `AuthInteraction.signal`/`ProviderAuthInteraction.signal`'s own assignability
+through a value STATICALLY TYPED as either of those two interfaces specifically -- an intentional,
+narrow, owner-approved language-binding divergence, not part of this section's own general
+mutability rule. See `PROV-015` immediately below.
+
+## Interaction-type assignability divergence (`PROV-015`, intentional divergence)
+
+Pinned Pi's own TypeScript type system permits BOTH of the following simultaneously for
+`AuthInteraction`/`ProviderAuthInteraction`'s own `signal` field: (1) `ProviderAuthInteraction` is
+a genuine SUBTYPE of `AuthInteraction` (usable anywhere the wider, optional-`signal` type is
+expected -- the relationship `PROV-014`'s own `AuthInteraction`/`ProviderAuthInteraction` section
+above states normatively); and (2) `signal` is a plain, non-`readonly` property on BOTH types,
+assignable through either.
+
+A sound static type system cannot express both properties simultaneously when the two interfaces'
+own `signal` type genuinely differs (optional vs. required) -- this is a real, unavoidable
+consequence of TypeScript's own well-documented UNSOUNDNESS for exactly this mutable-property-
+variance combination, not an implementation gap any amount of cleverer code closes. Owner
+governance (recorded verbatim as the `GOVERNANCE_SOURCE` at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5664609556`) explicitly chose to
+preserve property (1) -- the subtyping relationship, and the guarantee that a provider's own
+`login()` always receives a present `signal` -- over property (2), after confirming that no actual
+pinned-Pi call site anywhere ever reassigns an interaction's own `signal` after construction; the
+sacrificed capability is a static permission Pi's own real code never exercises.
+
+**Scope, exactly:** a value statically typed as `AuthInteraction`/`ProviderAuthInteraction`
+specifically cannot have `.signal` assigned through that reference in an implementation choosing
+this trade-off. This divergence does NOT extend to runtime behavior or to any concrete
+implementation backing either interface: a concrete provider's own object remains free to expose
+its own mutable `signal` field or setter through its OWN concrete type, matching Pi's own real
+object behavior exactly -- only what a generic, vocabulary-consuming caller can do THROUGH the
+widened interface type is affected. No runtime immutability is introduced anywhere by this
+divergence, and it must not be used to justify one.
+
+**For a future Rust implementation:** this divergence is NOT itself a mechanism to replicate.
+Rust must preserve the language-neutral semantic contract -- `ProviderAuthInteraction` specializes
+`AuthInteraction`; a provider's own `login()` receives a guaranteed-present `signal` -- using
+whatever mutability representation is idiomatic and sound for Rust's own type system. That
+representation is reviewed independently when Rust implements this row; this document does not
+prescribe Rust mechanics.
+
 ## Deferred generic auth/provider orchestration surface (`PROV-013`)
 
-Pinned Pi's public auth vocabulary extends well beyond what Pass 1 builds: `AuthPrompt`,
-`AuthInfoLink`, `AuthEvent`, `AuthInteraction`, `ProviderAuthInteraction` (the login-interaction/
-prompt/notification vocabulary a provider's own login flow uses), `ApiKeyAuth`, `OAuthAuth`,
-`ProviderAuth` (the per-provider auth-METHOD vocabulary -- `login`/`resolve`/`check`/`refresh`/
-`toAuth` callables a concrete provider registers), and the `Models` collection's own orchestration
-entry points (`checkAuth`, `getAuth`, `login`, `logout`) built on top of `resolveProviderAuth`
-(`L11-R005`).
+The real dispatcher/orchestration built ON TOP of `PROV-014`'s own vocabulary: `resolveProviderAuth`
+(stored-OAuth vs. api-key vs. ambient-env dispatch) and the `Models` collection's own orchestration
+entry points (`checkAuth`, `getAuth`, `login`, `logout`, `getAvailable`) (`L11-R005`, originally
+discovered bundled with the vocabulary now split into `PROV-014` above).
 
-This is EXPLICITLY NOT a demand to implement any of this in Pass 1 -- interactive login flows,
-provider-method registration, and top-level auth orchestration are real provider-integration
-concerns with no generic-seam content of their own until a concrete provider exists to exercise
-them. It IS a demand not to silently lose track of this discovered Pi surface: without an explicit
-disposition, two independent future implementers could reasonably make incompatible choices (one
-building the vocabulary extensible for login interactions now, one omitting it entirely), each
-individually consistent with Pass 1's own artifacts but incompatible with each other.
+This is EXPLICITLY NOT a demand to implement any of this in Pass 2 either -- extending `LlmService`
+or inventing a replacement orchestration service is explicitly out of scope (owner-approved,
+2026-09-14, same durable record as the split above). It requires a real
+`Provider{id, auth: ProviderAuth, getModels()}`-shaped registry Minion's own `LlmService`
+(`register`/`models`/`stream` only, confirmed absent during the Pass-2 restart audit) does not have
+yet. `Models.login`'s own commit-race-safety semantics (an abort-vs-mutation-started race) will
+additionally need their own careful design when this row is eventually closed, not a trivial
+wire-up.
 
-Closure criterion (binding on whichever future pass closes this row): a future Layer-11 pass
-integrating a real provider's own login flow (Codex OAuth network integration, slice 11B, or a
-later provider) must audit this exact Pi vocabulary and either adopt it directly or document a
-deliberate, disclosed divergence -- it must not invent an unrelated ad hoc login/prompt shape
-without first comparing it against Pi's own `AuthPrompt`/`AuthEvent`/`AuthInteraction` vocabulary.
+Closure criterion (binding on whichever future pass closes this row, unchanged from the original
+`L11-R005` discovery other than the vocabulary split above): a future pass that introduces the
+provider/auth composition surface actually needing `Models`-equivalent orchestration must design
+the integration contract-first against pinned Pi, consuming `PROV-014`'s own already-adopted
+vocabulary directly rather than inventing an ad hoc replacement shape.
 
 ## Codex account-id projection (`PROV-011`, Pass 2 Slice A, adopted)
 
