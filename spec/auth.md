@@ -458,22 +458,48 @@ AuthEventDeviceCode{user_code,verification_uri,interval_seconds?,expires_in_seco
 AuthEventProgress{message}
 AuthEvent = AuthEventInfo|AuthEventUrl|AuthEventDeviceCode|AuthEventProgress
 
-AuthInteraction{signal?, prompt(AuthPrompt)->string, notify(AuthEvent)->None}
-ProviderAuthInteraction{signal, prompt(AuthPrompt)->string, notify(AuthEvent)->None}
+AuthInteraction{
+    signal?,
+    prompt(AuthPrompt) -> string (async; raises/rejects on cancel/abort),
+    notify(AuthEvent) -> None (sync, fire-and-forget)
+}
+ProviderAuthInteraction{
+    signal,   # REQUIRED here; SAME two methods as AuthInteraction
+    prompt(AuthPrompt) -> string,
+    notify(AuthEvent) -> None
+}
+# ProviderAuthInteraction IS-A AuthInteraction: any value satisfying the former (signal always
+# present) also satisfies the latter (signal optionally present) -- ordinary structural subtyping,
+# not two unrelated shapes that merely happen to look similar.
 
-ApiKeyAuth{name, resolve, login?, check?}
-OAuthAuth{name, login, refresh, to_auth, is_subscription?, login_label?}
+ApiKeyAuth{
+    name: string,
+    resolve(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthResult|absent,   # REQUIRED, async
+    login(interaction: ProviderAuthInteraction) -> ApiKeyCredential,   # OPTIONAL; async, raises/rejects on failure
+    check(ctx: AuthContext, credential: ApiKeyCredential|absent, signal) -> AuthCheck|absent   # OPTIONAL, async
+}
+OAuthAuth{
+    name: string,
+    login(interaction: ProviderAuthInteraction) -> OAuthCredential,          # REQUIRED; async, raises/rejects on failure
+    refresh(credential: OAuthCredential, signal) -> OAuthCredential,         # REQUIRED; async, raises on failure (invalid_grant etc.), no separate error channel
+    to_auth(credential: OAuthCredential) -> ModelAuth,                      # REQUIRED; async, side-effect-free, not expected to raise for a valid credential
+    is_subscription?: boolean,   # THREE-valued: absent | false | true, all independently observable
+    login_label?: string
+}
 ProviderAuth{api_key?, oauth?}   # at least one of the two REQUIRED
 ```
 
 `AuthPrompt` is the shape of a prompt shown to the user during login: `text`/`secret` are
 free-text/masked entry (identical shape, differing only in display treatment); `select` presents a
-fixed option set, and its OWN resolved value is the CHOSEN OPTION'S `id`, never its `label`;
-`manual_code` is a fallback entry prompt used when an interactive callback (e.g. a local OAuth
-server) is racing this same prompt -- the prompt's own `signal` is what that race cancels it
-through, matching Pi's own doc comment naming exactly this pattern ("a `manual_code` prompt raced
-against a callback server, aborted when the callback wins"). The racing mechanics themselves are a
-concrete login flow's own concern (`PROV-012`), not part of this vocabulary.
+fixed option set, and its OWN resolved value -- once some concrete `AuthInteraction`
+implementation actually resolves a `select` prompt -- is the CHOSEN OPTION'S `id`, never its
+`label` (this vocabulary itself defines no such implementation; the behavioral claim belongs to
+whichever slice first supplies one); `manual_code` is a fallback entry prompt used when an
+interactive callback (e.g. a local OAuth server) is racing this same prompt -- the prompt's own
+`signal` is what that race cancels it through, matching Pi's own doc comment naming exactly this
+pattern ("a `manual_code` prompt raced against a callback server, aborted when the callback
+wins"). The racing mechanics themselves are a concrete login flow's own concern (`PROV-012`), not
+part of this vocabulary.
 
 `AuthEvent` is the shape of a notification a login flow may emit: `info` (optionally with
 supporting links), `auth_url` (a URL the user should open to continue login -- emitting this is
@@ -487,18 +513,45 @@ poll state machine's own outcomes), and `progress` (a free-text update with no f
 the WHOLE login flow (distinct from a specific `AuthPrompt`'s own per-prompt `signal`).
 `ProviderAuthInteraction` is the identical shape with `signal` REQUIRED rather than optional -- the
 normalized interaction a concrete provider's own login implementation actually receives, by the
-time a caller has already normalized an absent top-level signal into a real one.
+time a caller has already normalized an absent top-level signal into a real one. Because a value
+with `signal` always present trivially satisfies "`signal` optionally present," `ProviderAuthInteraction`
+is a genuine SUBTYPE of `AuthInteraction`: anywhere `AuthInteraction` is accepted, a
+`ProviderAuthInteraction` value must also be usable -- an implementation that cannot statically
+express this relationship (e.g. two unrelated shapes a checker treats as merely coincidentally
+similar) diverges from Pi's own intersection-type semantics, even if every individual field type
+is otherwise correct.
 
-`ApiKeyAuth`/`OAuthAuth` are the per-provider auth-METHOD vocabulary a concrete provider registers.
-`ApiKeyAuth.login` is optional (absent means ambient-only, no interactive setup); `check` is an
-optional side-effect-free availability probe (used when `resolve` itself may perform request-time
-work); `resolve` is required. `OAuthAuth.login`/`refresh`/`to_auth` are all required -- the
+`ApiKeyAuth`/`OAuthAuth` are the per-provider auth-METHOD vocabulary a concrete provider registers,
+and every one of their own callables has a FULLY SPECIFIED input bundle and result shape (not left
+to be inferred from the field-level summary above): `ApiKeyAuth.check`/`resolve` each take Pi's own
+same three logical inputs (`ctx`, an OPTIONAL stored `credential`, and a REQUIRED `signal`) and
+return an async, optional result (`AuthCheck`/`AuthResult`, `absent` meaning "not configured"); a
+language MAY represent these three inputs as one structured bundle or as separate parameters
+however is idiomatic for it (a disclosed MAPPING -- see `PROV-014`'s own row in the parity
+manifest for the exact language used), but must change no input's own optionality, requiredness,
+or the result's own shape in doing so. `ApiKeyAuth.login` is OPTIONAL (absent means ambient-only,
+no interactive setup) and takes the normalized interaction, returning a new credential or
+raising/rejecting. `OAuthAuth.login`/`refresh`/`to_auth` are all REQUIRED, each with ONE
+unambiguous argument list (no bundling question, unlike `ApiKeyAuth.check`/`resolve`) -- the
 `refresh`/`to_auth` split lets an orchestration layer own the locked-refresh pattern: `refresh`
-produces a credential, `to_auth` derives request auth from whatever credential ends up stored
-(already-certified `PROV-011`'s own Codex `credentials_from_token`/`to_auth` is a concrete instance
-of exactly this split). `ProviderAuth` MUST carry at least one of `api_key`/`oauth` -- a real,
-enforced constraint, not merely a convention: even an ambient-credential or keyless provider
-supplies `api_key` auth whose own `resolve()` reports configuration status.
+produces a credential (raising on failure, e.g. `invalid_grant`, with no separate error channel),
+`to_auth` derives request auth from whatever credential ends up stored, side-effect-free and not
+expected to raise for a valid credential (already-certified `PROV-011`'s own Codex
+`credentials_from_token`/`to_auth` is a concrete instance of exactly this split). `is_subscription`
+is GENUINELY three-valued (absent / `false` / `true`), matching Pi's own optional-boolean field
+exactly -- an implementation collapsing "absent" into "`false`" narrows this contract observably.
+`ProviderAuth` MUST carry at least one of `api_key`/`oauth` -- a real, enforced constraint, not
+merely a convention: even an ambient-credential or keyless provider supplies `api_key` auth whose
+own `resolve()` reports configuration status.
+
+**Mutability.** Every field on every type in this section is ORDINARILY ASSIGNABLE after
+construction, matching pinned Pi's own public object/interface shapes, none of which are
+`readonly` -- ONLY the two collection fields (`AuthPromptSelect.options`, `AuthEventInfo.links`)
+are `readonly` in Pi, a narrower restriction on replacing a collection's own elements, distinct
+from an ordinary field being freely reassignable. An implementation that makes any OTHER field of
+these types immutable (e.g. a frozen/read-only value object) introduces an unapproved observable
+divergence from Pi's own assignable-property semantics, the same question this project already
+resolved for Layer-11 credentials (`PROV-006`) by adopting Pi's assignable fields in full.
 
 ## Deferred generic auth/provider orchestration surface (`PROV-013`)
 
