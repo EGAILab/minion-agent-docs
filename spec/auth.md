@@ -732,21 +732,816 @@ keeps it under the OPEN `extra` escape hatch (`extra["account_id"]`), rather tha
 shared credential shape every other provider's own OAuth flow also uses, for one Codex-specific
 field. This is a disclosed architectural mapping, not a claimed direct-parity field placement.
 
-## Deferred Codex network integration (`PROV-012`)
+## Codex OAuth network integration (`PROV-012`, Pass 2 Slice C, contract)
 
-Pinned Pi's Codex OAuth NETWORK behavior remains deferred to a later Pass-2 slice:
+Pinned Pi's Codex OAuth NETWORK half (`packages/ai/src/auth/oauth/openai-codex.ts`,
+`packages/ai/src/auth/oauth/pkce.ts`, `packages/ai/src/auth/oauth/device-code.ts` (already certified
+as `PROV-009`/`PROV-010`), `packages/ai/src/utils/abort.ts`) -- consuming the interaction/auth-method
+vocabulary (`PROV-014`) and the Codex account-id projection (`PROV-011`) already adopted above.
 
-- Browser callback state validation, including a documented exception: a user pasting a bare
-  authorization code (rather than a full callback URL) is a recognized quirk Pi's own flow
-  accommodates, not an error condition.
-- The browser/PKCE callback flow (local OAuth callback HTTP server, authorization-URL construction
-  and the `auth_url` notification event -- browser LAUNCHING itself remains out of scope; this
-  layer only emits the notification, matching Pi exactly) and device-code Codex endpoint
-  integration (consuming the already-certified `PROV-010` poller), plus token exchange/refresh
-  against `auth.openai.com` (consuming the already-certified `PROV-008` refresh authority).
+This section is the SHARED CONTRACT for this slice, produced contract-first per the owner's own
+Pass-2 scope decision (`GOVERNANCE_SOURCE`,
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5659001629`): "Slice C: PROV-012,
+Codex OAuth network integration consuming Slice B vocabulary." Python implementation, tests, and
+gates for this contract are a separate, following pass; this section alone is not itself a claim
+that Python or Rust code implementing it yet exists.
 
-This is recorded as `deferred parity` in `pi-parity-manifest.yaml`, with its own closure criterion,
-not as `adopted` and not silently omitted. The pass implementing it must audit pinned Pi source for
-each of these before writing any code, must use only synthetic (never real-account) fixtures for
-any JWT-shaped test data, and must not perform any live network call or use any real secret in the
-committed test suite, per this project's own security constraint.
+### Fixed identity/endpoint constants
+
+These are literal values sent to or compared against a real third-party OAuth server -- part of the
+OBSERVABLE contract, not implementation mechanics, and MUST be reproduced exactly, not merely
+"some client id"/"some URL":
+
+```text
+CLIENT_ID                  = "app_EMoamEEZ73f0CkXaXp7hrann"
+AUTH_BASE_URL               = "https://auth.openai.com"
+AUTHORIZE_URL                = AUTH_BASE_URL + "/oauth/authorize"
+TOKEN_URL                     = AUTH_BASE_URL + "/oauth/token"
+REDIRECT_URI (browser flow)    = "http://localhost:1455/auth/callback"
+DEVICE_USER_CODE_URL             = AUTH_BASE_URL + "/api/accounts/deviceauth/usercode"
+DEVICE_TOKEN_URL                  = AUTH_BASE_URL + "/api/accounts/deviceauth/token"
+DEVICE_VERIFICATION_URI            = AUTH_BASE_URL + "/codex/device"
+DEVICE_REDIRECT_URI (device flow)   = AUTH_BASE_URL + "/deviceauth/callback"
+DEVICE_CODE_TIMEOUT_SECONDS          = 900        # 15 minutes, fixed
+SCOPE                                 = "openid profile email offline_access"
+LOGIN_METHOD_BROWSER                   = "browser"       # select-prompt option id, default
+LOGIN_METHOD_DEVICE_CODE                = "device_code"   # select-prompt option id
+```
+
+The local callback server always LISTENS on port `1455` (not configurable) at a HOST that IS
+configurable (`PI_OAUTH_CALLBACK_HOST` environment variable) -- read directly from the process
+environment, NOT through the `AuthContext` seam `ApiKeyCheck`/`ApiKeyResolve` use (Pi's own
+`OAuthLogin`/`OAuthRefresh`/`OAuthToAuth` callables never receive an `AuthContext` parameter at all;
+this is a genuine, disclosed asymmetry in Pi's own design, not an omission to correct).
+
+**The default-fallback rule is a JAVASCRIPT-TRUTHINESS check, NOT a "blank normalizes to absent"
+rule** (`L11-SC-R006`, independent review -- corrects an earlier revision's own inaccurate "absent
+or blank" wording): pinned Pi's own `getCallbackHost()` is `getProviderEnvValue(...) ||
+"127.0.0.1"`, and `getProviderEnvValue` itself (`utils/provider-env.ts`) performs NO trimming or
+blank-normalization of any kind at any point in its own lookup chain -- confirmed by reading it in
+full. Only a LITERALLY EMPTY string (or a genuinely absent/undefined value) is falsy and falls back
+to the default; a WHITESPACE-ONLY value (e.g. `"   "`) is TRUTHY in JavaScript and is used VERBATIM,
+unstripped, as the actual bind host. This is a DIFFERENT rule from this same codebase's own
+`DefaultAuthContext.env()` (`PROV-006`), which DOES treat a whitespace-only value as absent -- the
+two functions are genuinely different Pi call sites with genuinely different behavior, and this row
+must NOT reuse `DefaultAuthContext`'s own blank-normalization convention merely because both happen
+to read an environment variable.
+
+`REDIRECT_URI`'s own HOSTNAME is always the literal string `"localhost"` regardless of the
+configured callback host -- it is the value sent to the remote authorize/token endpoints, distinct
+from the local socket's own bind address.
+
+### Login method selection
+
+`OAuthAuth.login` first prompts a `select` (`PROV-014`'s own `AuthPromptSelect`) with message
+`"Select OpenAI Codex login method:"` and exactly two options, in this order:
+
+```text
+{id: "browser", label: "Browser login (default)"}
+{id: "device_code", label: "Device code login (headless)"}
+```
+
+**This specific `select` prompt carries NO `signal`** (`L11-SC-R006`, independent review) -- unlike
+the browser flow's own `manual_code` prompt (which explicitly sets `signal` to its own dedicated
+abort controller), pinned Pi's own real call site constructs this `select` prompt with no `signal`
+member at all, so `AuthPromptSelect.signal` is absent/`None` here specifically. Cancelling the whole
+login flow does NOT cancel this specific pending prompt through any signal wired to it by this row
+-- whatever cancellation (if any) applies is entirely the concrete `AuthInteraction`
+implementation's own concern for an un-signalled prompt, not something this row's own contract
+provides. An implementation that attaches the whole-flow `signal` to this prompt "for consistency"
+diverges observably from Pi and MUST NOT do so.
+
+then dispatches to the browser flow or the device-code flow by the returned id (`PROV-014`'s own
+select-returns-`id` rule). Any OTHER returned id raises/rejects with EXACTLY the message
+`"Unknown OpenAI Codex login method: {method}"` (`L11-SC-R006`, independent review -- the prior
+"raise/reject" wording did not pin the exact text, unlike every other error message this contract
+otherwise specifies verbatim) -- a contract violation by the `AuthInteraction` implementation, not a
+recognized login method; do not silently fall back to either flow.
+
+### Browser/PKCE flow
+
+1. Generate a PKCE pair (`PROV-009`'s own `generate_pkce()`) and a random state: 16 cryptographically
+   random bytes, hex-encoded (32 lowercase hex characters) -- Pi's own `randomBytes(16).toString
+   ("hex")`.
+2. Build the authorization URL from `AUTHORIZE_URL` with these EXACT query parameters, in this
+   order, all always present:
+
+   ```text
+   response_type=code
+   client_id=<CLIENT_ID>
+   redirect_uri=<REDIRECT_URI>
+   scope=<SCOPE>
+   code_challenge=<PKCE challenge>
+   code_challenge_method=S256
+   state=<generated state>
+   id_token_add_organizations=true
+   codex_cli_simplified_flow=true
+   originator=pi
+   ```
+
+   `originator` is a FIXED literal `"pi"` -- pinned Pi's own single real call site never varies it;
+   this is not a configurable per-provider value.
+3. Start a local HTTP callback server bound to the configured callback host (see above) on port
+   `1455`. Binding is NOT infallible: if the port is already in use (or any other bind error
+   occurs), the server MUST NOT raise/crash the login flow -- it silently becomes a permanently-empty
+   source (its own "wait for code" outcome resolves to absent immediately and forever), so the
+   flow falls through entirely to the manual-code path below. This is a real, easily-missed Pi
+   behavior (`startLocalOAuthServer`'s own `.on("error", ...)` handler), not a hypothetical edge
+   case -- a discriminating test MUST exercise it (e.g. by first occupying the port).
+
+   Immediately after the server is started, register the flow-level abort listener that step 6's own
+   race table relies on: attach a handler to the WHOLE login flow's own `signal` that, on abort,
+   cancels ONLY the server's own wait (the exact mechanism step 6 already describes). Then check
+   whether `signal` is ALREADY aborted AT THIS EXACT POINT -- and if so, invoke that SAME handler
+   immediately, synchronously, before proceeding to step 4 (in code terms, before the server's own
+   HTTP handler ever matters and before step 5's notification).
+
+   **A login flow that begins with its own `signal` already aborted does NOT short-circuit before
+   notifying/prompting** (`L11-SC-R009`, independent review, third complete review -- the race table
+   in step 6 previously covered only an abort occurring WHILE both sources are pending, never the
+   already-aborted-at-entry case, which a reader could reasonably assume skips straight to failure):
+   this immediate pre-check has EXACTLY the same effect as the abort event firing later -- it
+   cancels ONLY the server's own wait, exactly like the mid-flow case step 6 already describes. It
+   does NOT prevent step 5's own `auth_url` notification from firing, and does NOT prevent step 6's
+   own `manual_code` prompt from being created and waited on -- both still happen, unconditionally,
+   regardless of whether `signal` was already aborted before this function was even called. The
+   manual prompt's own SEPARATE per-prompt signal is, as step 6 already states, aborted ONLY during
+   final cleanup, so an already-aborted whole-flow signal at entry still leaves this operation
+   waiting on the manual prompt's own eventual settlement, exactly like the mid-flow abort case. An
+   implementation that treats an already-aborted `signal` as a reason to return/raise immediately,
+   before notifying or prompting, diverges observably from Pi.
+4. The server handles exactly one route, `/auth/callback`, with these EXACT response rules (every
+   other route is `404`):
+
+   ```text
+   path != "/auth/callback"                        -> 404, error page ("Callback route not found.")
+   query "state" != the state generated in step 1   -> 400, error page ("State mismatch.")
+   query "code" ABSENT OR PRESENT-BUT-EMPTY (`""`)  -> 400, error page ("Missing authorization code.")
+   query "code" present and non-empty                -> 200, success page; yields {code} to the flow
+   ```
+
+   **An empty `code=` is REJECTED, not accepted** (`L11-SC-R007`, independent review, third
+   complete review -- corrects an earlier revision's own "code absent" wording, which a reader could
+   reasonably read as excluding a present-but-empty value from rejection): pinned Pi's own real
+   handler extracts `code` via `url.searchParams.get("code")` (which returns `""`, not `null`, for
+   `?code=`) and then tests it with a bare `if (!code)` -- JavaScript truthiness, under which an
+   EMPTY STRING is exactly as falsy as `null`/absent. A callback request for
+   `/auth/callback?state=<valid>&code=` therefore receives 400 with `"Missing authorization code."`,
+   identical to an entirely absent `code`, NOT the 200 success path. A permanent implementation
+   witness MUST distinguish an entirely-absent `code` from a present-but-empty one, proving BOTH
+   independently take the 400 path (an implementation that only tests presence, not truthiness,
+   could otherwise pass a witness covering only the absent case).
+
+   **Every response from this route, on EVERY branch including an internal failure, shares two
+   further observable properties** (`L11-SC-R008`, independent review, third complete review -- the
+   prior "body content is presentation, not part of this contract's own observable surface" wording
+   incorrectly extended past the HTML body itself to also exclude these two, genuinely observable,
+   non-presentational properties):
+
+   - **`Content-Type: text/html; charset=utf-8`** is set on EVERY response this route ever sends --
+     the `404`, both `400`s, the `200`, and the `500` below all set the IDENTICAL header value before
+     writing their own (HTML-content, still out of scope) body. This header value IS part of this
+     contract's own observable surface, distinct from the HTML body content itself, which remains
+     out of scope.
+   - **Any exception raised while parsing the request URL or handling the route is CAUGHT and
+     produces a CONTAINED `500` response** (`Content-Type` as above, an internal-error HTML body,
+     still out of scope) -- pinned Pi's own handler wraps its ENTIRE route-handling body (URL
+     parsing, state comparison, code extraction, and every response write) in one `try`/`catch`, so a
+     malformed request or an internal error during handling never escapes as an unhandled exception
+     or crashes the server; it always resolves to this specific, contained `500` outcome. This is a
+     FIFTH row of the route table above, not merely an implementation detail:
+
+     ```text
+     request handling itself raises (malformed URL,
+       or any other internal failure during parsing/handling)   -> 500, error page (contained, never
+                                                                     escapes/crashes the server)
+     ```
+
+   The response BODY content itself (the HTML success/error/internal-error pages) remains
+   presentation, out of this contract's own observable surface -- only the status code, the
+   `Content-Type` header value, the `500`-containment guarantee, and the SAME `code`/`state`
+   query-parameter extraction and validation order above are part of it.
+5. Emit an `auth_url` notification (`PROV-014`'s own `AuthEventUrl`) carrying the built URL and the
+   fixed instructions text `"A browser window should open. Complete login to finish."` -- emitting
+   this event is NOT the same as opening a browser (browser LAUNCHING remains explicitly OUT OF
+   SCOPE for this row, confirmed by the owner's own Pass-2 scope decision; this layer only emits the
+   notification, matching Pi's own `packages/ai` boundary exactly, since Pi's own browser-opening
+   utility lives entirely in a separate CLI-layer package).
+
+   **This notification happens BEFORE the flow's own cleanup boundary begins, not inside it**
+   (`L11-SC-R001`, independent review): pinned Pi's own `interaction.notify({type: "auth_url", ...})`
+   call (`openai-codex.ts:456-460`) executes strictly BEFORE the surrounding `try`/`finally` block
+   (`openai-codex.ts:462-505`) is ever entered -- the abort-listener registration (step 3 above), the
+   server, and the manual-prompt abort controller are all set up earlier still, but the CLEANUP
+   itself (listener removal, `manualAbort.abort()`, `server.close()`) lives ONLY inside that
+   `finally`. `notify()` is a DIRECT SYNCHRONOUS call whose throw propagates immediately
+   (`PROV-014`'s own established rule) -- if it throws HERE, execution never reaches the `try` at
+   all, so the local server is left listening, the flow-level abort listener is left registered, and
+   the manual-prompt abort controller is never aborted. This is a genuine, confirmed Pi behavior, not
+   a defect to silently harden away: an implementation must reproduce this EXACT boundary (no cleanup
+   on a `notify()` failure at this specific point) unless the owner explicitly approves an
+   intentional, disclosed hardening divergence instead. A discriminating test MUST exercise a
+   `notify()` failure at this exact point and assert that cleanup does NOT occur, not merely that
+   the flow's own call raises.
+6. Concurrently with waiting for the server's own callback, prompt a `manual_code` prompt
+   (`PROV-014`'s own `AuthPromptManualCode`) with message `"Complete login in your browser, or paste
+   the authorization code / redirect URL here:"` and `placeholder` set to `REDIRECT_URI`, racing it
+   against the server callback with this EXACT precedence, discriminating every combination
+   explicitly (this is a genuinely concurrent, multi-source race -- not one happy-path example;
+   extended per `L11-SC-R002`, independent review, to cover three cases the first contract pass
+   omitted):
+
+   ```text
+   server yields a code FIRST                                  -> use the server's code; cancel the
+                                                                    still-pending manual prompt
+   manual entry resolves with a NON-EMPTY value FIRST           -> stop waiting on the server;
+                                                                    parse the manual input (below);
+                                                                    use its own code
+   manual entry resolves with an EMPTY/WHITESPACE-ONLY value
+     FIRST (`L11-SC-R002` point 1)                              -> stop waiting on the server (the
+                                                                    empty resolution itself cancels
+                                                                    it, exactly like a non-empty one
+                                                                    does); the empty value is then
+                                                                    treated as ABSENT by the SAME
+                                                                    truthiness check step 7's own
+                                                                    "otherwise" case relies on, so no
+                                                                    code is extracted from it -- the
+                                                                    server is NOT waited on any
+                                                                    further after being cancelled, so
+                                                                    this combination raises/rejects
+                                                                    `"Missing authorization code"`
+                                                                    even if the server would have
+                                                                    legitimately yielded a real code
+                                                                    moments later; this is a real,
+                                                                    confirmed Pi behavior (the empty
+                                                                    manual resolution's own
+                                                                    cancel-the-server side effect is
+                                                                    unconditional, not gated on the
+                                                                    value being non-empty), not a
+                                                                    hypothetical edge case
+   manual entry itself raises/rejects (e.g. its own signal
+     aborts) BEFORE the server yields anything                  -> propagate that error; do not fall
+                                                                    back to the server
+   the WHOLE login flow's own `signal` aborts while BOTH the
+     server and the manual prompt are still pending
+     (`L11-SC-R002` point 2)                                    -> this cancels ONLY the server's own
+                                                                    wait (resolving it absent,
+                                                                    functionally identical to a
+                                                                    bind-failure); it does NOT abort
+                                                                    the manual prompt's own SEPARATE
+                                                                    per-prompt signal at this point --
+                                                                    that only happens in the flow's own
+                                                                    final cleanup (step 6's own
+                                                                    unconditional-cleanup note below),
+                                                                    which is not reached until the
+                                                                    manual prompt itself settles. A
+                                                                    flow-level abort therefore does
+                                                                    NOT promptly resolve this operation
+                                                                    while a manual prompt remains
+                                                                    outstanding -- the operation keeps
+                                                                    waiting on the manual prompt's own
+                                                                    eventual settlement (whatever the
+                                                                    concrete `AuthInteraction`
+                                                                    implementation's own `prompt()`
+                                                                    does when its OWN, separate
+                                                                    per-prompt signal is never fired),
+                                                                    exactly like the fallback rule
+                                                                    below. An implementation must NOT
+                                                                    assume a flow-level abort settles
+                                                                    this operation promptly merely
+                                                                    because a signal fired.
+   the server's own "wait for code" resolves ABSENT (bind
+     failure, or the flow-level `signal` aborted per above)
+     with no manual code yet either                             -> wait for the still-pending manual
+                                                                    prompt to settle rather than
+                                                                    failing immediately; only if THAT
+                                                                    also yields no usable (non-empty)
+                                                                    code is `"Missing authorization
+                                                                    code"` raised
+   neither source ever yields a usable code                     -> raise/reject
+     ("Missing authorization code")
+   ```
+
+   **Manual state validation is a TRUTHINESS check, not a presence check** (`L11-SC-R002` point 3):
+   if the parsed `state` is a non-empty (truthy) string AND it does not equal the state generated in
+   step 1, raise/reject `"State mismatch"` before ever attempting a token exchange. An EMPTY parsed
+   `state` (e.g. the manual input `"code#"`, which step 7's own `"#"`-split rule below parses to
+   `{code: "code", state: ""}`) is treated EXACTLY like an absent one -- validation is SKIPPED, not
+   triggered as a mismatch -- because Pi's own `parsed.state && parsed.state !== state` check is
+   short-circuited by the falsy empty string before the inequality is ever evaluated. An
+   implementation that instead treats "parsed `state` is not `None`/undefined" as sufficient to
+   REQUIRE a match diverges observably for exactly this input shape and MUST NOT do so.
+
+   The manual prompt is always cancelled (its own per-prompt signal aborted) once the server yields
+   a code, and the server is always closed and the flow-level abort listener always detached, once
+   the flow's own cleanup boundary is reached and concludes by ANY path (success, error, or
+   cancellation) WITHIN that boundary -- see step 5's own note above for the one case (a `notify()`
+   failure) that never reaches this boundary at all, and is NOT covered by this cleanup guarantee.
+7. **Manual input parsing** (`parse_authorization_input`) accepts three shapes, tried in this exact
+   order, and is a documented, intentional accommodation, not an error condition:
+
+   ```text
+   empty/whitespace-only input                        -> {code: absent, state: absent}
+   parses as an absolute URL                           -> {code, state} from its own query string
+                                                           (either may be absent)
+   contains "#"                                        -> split on the FIRST "#" into exactly two
+                                                           parts: code = everything before it,
+                                                           state = everything STRICTLY BETWEEN the
+                                                           first "#" and a SECOND "#" if one exists,
+                                                           or the whole remainder if it does not --
+                                                           a Pi-observable split-with-limit-2
+                                                           behavior (content after a SECOND "#", if
+                                                           present, is DISCARDED, never appended to
+                                                           `state`); an implementation using a plain
+                                                           "keep everything after the first split
+                                                           point" split (a common host-language
+                                                           default, unlike Pi's own limited split)
+                                                           diverges observably for an input
+                                                           containing two or more "#" characters and
+                                                           MUST be corrected to match Pi's own
+                                                           discard-the-remainder behavior exactly
+   contains "code="                                    -> parsed as a bare query string (no leading
+                                                           "?" required) -> {code, state} from it
+   otherwise                                           -> {code: the whole trimmed input, state:
+                                                           absent} -- a bare pasted authorization
+                                                           code with no URL/query wrapper at all
+   ```
+
+   State validation for this parsed result is the SAME truthiness-based rule step 6 already states
+   in full (see its own "Manual state validation" note above) -- not restated here to avoid two
+   sources of truth for the identical rule.
+8. Exchange the resolved authorization code for tokens (below), using the ORIGINAL `REDIRECT_URI`
+   (not the device-flow's own redirect URI) and the PKCE verifier from step 1.
+
+### Device-code flow
+
+1. POST `DEVICE_USER_CODE_URL` with a JSON body `{client_id: CLIENT_ID}`, using the SAME
+   cancellation-translation transport behavior as token exchange (see "Token exchange and refresh"
+   below -- `L11-SC-R004`, independent review: this request shares that exact translation, not a
+   rule scoped only to exchange). On a non-`2xx` response: a `404` status raises EXACTLY the fixed
+   message `"OpenAI Codex device code login is not enabled for this server. Use browser login or
+   verify the server URL."`; any OTHER non-`2xx` status raises EXACTLY
+   `"OpenAI Codex device code request failed with status {status}"` with a CONDITIONAL suffix
+   (`L11-SC-R006`, independent review -- the prior "generic status+body message" wording did not pin
+   this exact, easily-missed format): `": {body}"` is appended ONLY when the response body is
+   non-empty (read with the SAME empty-string-on-failure fallback token exchange itself uses below);
+   when the body is empty/unreadable, there is NO trailing colon at all -- not even an empty one --
+   the message ends immediately after the status code. This differs from token exchange's OWN
+   non-`2xx` message (below), which falls back to the response's own status-text reason phrase
+   instead of omitting the suffix entirely -- the two messages are NOT the same template reused.
+
+   On a `2xx` response, the body is first parsed as JSON; **a JSON-parse failure itself propagates
+   as that raw parse error, UNCHANGED** -- it is never converted into this step's own "invalid
+   response" message below (`L11-SC-R004`; see "Token exchange and refresh" for the identical rule
+   restated once for all four outbound calls in this row). Only once the body successfully parses as
+   JSON does field-level validation apply. **`device_auth_id` and `user_code` MUST be actual JSON
+   STRINGS, not merely JS-truthy values of any type** (`L11-SC-R005`, owner-approved intentional
+   divergence -- see "Provider-response field-type validation divergence (`PROV-016`)" below for the
+   full disclosure, Pi baseline, and rationale; this REPLACES an earlier revision of this paragraph,
+   which required reproducing pinned Pi's own truthy-of-any-type acceptance before the owner decided
+   otherwise). A present-but-non-string value for either field is treated identically to an
+   absent/falsy one -- rejected via the SAME "invalid response" path below, not admitted into the
+   typed Minion domain.
+
+   `interval` uses a THIRD validation rule, distinct from both fields above: `typeof intervalSeconds
+   !== "number" || !Number.isFinite(intervalSeconds) || intervalSeconds < 0` is the actual guard,
+   where `intervalSeconds` is EITHER the raw JSON value of `interval` (when it is not itself a JSON
+   string -- ANY non-string JSON type reaching this point, including a boolean or object, simply
+   fails the `typeof ... !== "number"` check and is rejected) OR, when `interval` IS a JSON string,
+   the result of JavaScript's own `Number(interval.trim())` coercion -- EMPIRICALLY CONFIRMED live
+   against Node (matching this project's own established `L11-SA-R001` discipline of verifying
+   assumed JS coercion behavior rather than assuming it), this coercion is NOT equivalent to a naive
+   `float(trimmed)` parse:
+
+   - an EMPTY string (after trimming) coerces to `0`, a valid, ACCEPTED interval -- NOT rejected,
+     and NOT the same as an absent/`None` interval; a Python `float("")`, by contrast, raises,
+     making a naive port incorrectly REJECT a whitespace-only `interval` value Pi's own real code
+     silently accepts as zero.
+   - ordinary decimal notation (optional leading sign, optional fractional part, optional exponent,
+     e.g. `"5"`, `"-5"`, `".5"`, `"5."`, `"1e3"`) parses as the equivalent number.
+   - a HEXADECIMAL (`0x`/`0X`), OCTAL (`0o`/`0O`), or BINARY (`0b`/`0B`) integer-literal PREFIX is
+     also recognized and parsed in that base (e.g. `"0x1A"` coerces to `26`) -- a naive decimal-only
+     parser diverges observably for this input shape.
+   - the literal tokens `"Infinity"`/`"+Infinity"`/`"-Infinity"` coerce to the corresponding
+     infinite value, which then FAILS the surrounding `Number.isFinite` check (so these are
+     ultimately rejected, but via the finiteness check, not the coercion step itself).
+   - any other content (trailing garbage, non-numeric characters, e.g. `"5abc"`) coerces to `NaN`,
+     which also fails the `typeof ... !== "number"` check (`typeof NaN === "number"` is TRUE in
+     JavaScript, so `NaN` is rejected by the SEPARATE `Number.isFinite(NaN)` check instead, not the
+     `typeof` check -- both checks matter, for different reasons, and an implementation must
+     reproduce both, not collapse them into one "is it a valid positive number" test that happens to
+     reject `NaN` for the wrong stated reason).
+
+   A permanent implementation witness MUST cover, at minimum: an empty/whitespace-only interval
+   string (accepted as `0`), a hex/octal/binary-prefixed string (accepted, parsed in that base), and
+   a garbage string (rejected).
+
+   **On field-level validation failure (either the `PROV-016` string requirement above or the
+   `interval` rule above), raise/reject EXACTLY** `"Invalid OpenAI Codex device code response:
+   {rendered json}"` (`L11-SC-R010`, independent review, fourth complete review -- an earlier
+   revision left this message entirely unstated), where `{rendered json}` is the SAME ECMAScript
+   `JSON.stringify`-equivalent rendering of the successfully-parsed response body that governs all
+   three of this row's own "invalid response" messages -- see the "Exact error-message JSON
+   rendering (`L11-SC-R010`)" subsection immediately following this "Device-code flow" section for
+   the shared, fully-specified rendering rule (compact separators, key order, `null`/array handling,
+   and a number-formatting subtlety independently found while fixing this finding).
+2. Emit a `device_code` notification (`PROV-014`'s own `AuthEventDeviceCode`) carrying the returned
+   `user_code`, the FIXED `DEVICE_VERIFICATION_URI`, the returned interval as `interval_seconds`,
+   and the FIXED `DEVICE_CODE_TIMEOUT_SECONDS` as `expires_in_seconds`.
+3. Poll `DEVICE_TOKEN_URL` through the already-certified `PROV-010` device-authorization poll state
+   machine, with the server-returned interval as the initial interval, `DEVICE_CODE_TIMEOUT_SECONDS`
+   as the deadline, and NO initial pre-poll wait (polling begins immediately). Each poll attempt POSTs
+   a JSON body `{device_auth_id, user_code}`, using the SAME cancellation-translation transport
+   behavior as token exchange (`L11-SC-R004`; see "Token exchange and refresh" below -- this request
+   ALSO shares that exact translation), and maps the HTTP response to `PROV-010`'s own poll outcomes
+   EXACTLY as follows -- no other mapping is conforming:
+
+   ```text
+   2xx, body FAILS to parse as JSON                          -> that raw JSON-parse error propagates
+                                                                 UNCHANGED (`L11-SC-R004`) -- it is
+                                                                 NOT converted into either the
+                                                                 FAILED-outcome message below or a
+                                                                 PENDING/SLOW_DOWN outcome
+   2xx, body parses as JSON, has BOTH authorization_code and
+     code_verifier as ACTUAL JSON STRINGS (`L11-SC-R005`,
+     owner-approved intentional divergence -- NOT the JS-truthy-
+     any-type rule step 1's own device_auth_id/user_code fields
+     were ALSO narrowed to strings by that same decision; see
+     `PROV-016` below)                                         -> COMPLETE, value = {authorization_code,
+                                                                    code_verifier}
+   2xx, body parses as JSON but either field is falsy, absent,
+     OR present-but-non-string                                 -> FAILED, message EXACTLY
+                                                                    "Invalid OpenAI Codex device
+                                                                    auth token response:
+                                                                    {rendered json}" (`L11-SC-R010`
+                                                                    -- see the shared rendering rule
+                                                                    stated right after this section)
+   403 or 404                                                  -> PENDING
+   other status, error body FAILS to parse as JSON             -> FAILED (status+body message) -- an
+                                                                    unparseable error body is folded
+                                                                    into the generic FAILED case, NOT
+                                                                    propagated as a raw parse error
+                                                                    (unlike the 2xx success-path parse
+                                                                    failure above, which propagates
+                                                                    unchanged -- the two are genuinely
+                                                                    different Pi behaviors, not the
+                                                                    same rule applied twice)
+   other status, error body parses as JSON with
+     error === "deviceauth_authorization_pending"
+     (or error.code === that string)                           -> PENDING
+   other status, error body parses as JSON with
+     error === "slow_down" (or error.code === that string)      -> SLOW_DOWN, with NO server-provided
+                                                                    interval override -- this
+                                                                    endpoint never supplies one, so
+                                                                    `PROV-010`'s own fixed +5-second
+                                                                    increment ALWAYS applies here,
+                                                                    never the server-interval branch
+   other status, error body parses as JSON but matches
+     neither error code above                                   -> FAILED (status+body message)
+   ```
+
+4. Exchange the returned `authorization_code`/`code_verifier` for tokens (below), using
+   `DEVICE_REDIRECT_URI` (NOT the browser flow's own `REDIRECT_URI`) and the RETURNED
+   `code_verifier` (NOT a locally-generated PKCE verifier -- the device flow's own verifier is
+   server-issued, unlike the browser flow's own client-generated one).
+
+### Exact error-message JSON rendering (`L11-SC-R010`)
+
+Three of this row's own public failure messages embed the successfully-parsed response body
+verbatim: the device-start "invalid response" message above, the device-poll "invalid ... token
+response" message above, and the token exchange/refresh "response missing fields" message below.
+An earlier revision of this contract left all three either entirely unstated or abbreviated as
+`<body>`/`{the parsed body}` -- independent review (`L11-SC-R010`, fourth complete review) correctly
+found this insufficient for independent implementation: Python's ordinary object stringification,
+`json.dumps` with its own default (spaced) separators, and Rust's own `serde_json::Value` debug
+formatting can all differ from each other and from Pi's own real output, while each could plausibly
+be described as "the parsed body."
+
+**The rendering is ECMAScript `JSON.stringify` applied to the successfully-parsed JSON value --
+NOT the original response bytes, and NOT any host language's own default debug/repr formatting.**
+An earlier revision of this section additionally claimed that compact `json.dumps(value,
+separators=(",", ":"))` reproduces `JSON.stringify` exactly except for a whole-valued-float `.0`
+suffix -- INDEPENDENT REVIEW DISPROVED THIS CLAIM with direct Node/Python probes (`L11-SC-R010`,
+fifth complete review), and it is WITHDRAWN entirely, not merely narrowed: `JSON.stringify` is a
+FULL ECMAScript algorithm with its own string-escaping rule, its own `Number::toString` algorithm,
+and its own property-enumeration order, none of which a stdlib `json.dumps` call reproduces merely
+by tweaking separators. A future Python implementation MUST use a DEDICATED renderer built to the
+rules below, not `json.dumps` with adjusted options.
+
+**ECMAScript `JSON.stringify` itself remains the COMPLETE normative authority for this rendering --
+the bullets below are CONFIRMED, DISCRIMINATING constraints a conforming implementation must
+satisfy, not a claimed exhaustive reimplementation of the algorithm** (`L11-SC-R010`, sixth complete
+review -- an earlier revision of this paragraph read as implicitly claiming the bullet list WAS a
+complete substitute algorithm, which the review correctly flagged: two of the bullets' own prose
+were themselves incomplete/inaccurate, exactly the risk of treating a prose paraphrase as the
+authority instead of the actual standard). Every rule below was independently confirmed live against
+Node 22 (not assumed from memory), matching this row's own established `L11-SA-R001` verification
+discipline -- and a future implementation pass MUST independently re-verify each one live again
+before relying on it, rather than treating this list as sufficient on its own:
+
+- **String escaping.** `JSON.stringify` escapes `"` -> `\"`, `\` -> `\\`, and every control
+  character in `U+0000`-`U+001F`, using the named escapes JSON itself defines where one exists
+  (`\b` `U+0008`, `\t` `U+0009`, `\n` `U+000A`, `\f` `U+000C`, `\r` `U+000D`) and the generic
+  `\uXXXX` form for every other control character in that range -- ALWAYS exactly FOUR lowercase hex
+  digits total, zero-padded (`U+0001` renders as the six-character sequence backslash, lowercase
+  `u`, `0`, `0`, `0`, `1` -- NOT a two-digit form; an earlier revision of this bullet described this
+  ambiguously, corrected per independent review, sixth complete review). A properly-paired UTF-16
+  surrogate pair forming a valid astral character (confirmed with an emoji, `U+1F600`) passes
+  through completely UNESCAPED, literally -- but this is NOT true of every non-ASCII value, contrary
+  to an earlier revision of this bullet's own blanket claim (corrected per independent review,
+  sixth complete review): **`JSON.stringify` ALSO escapes an UNPAIRED (lone) UTF-16 surrogate code
+  unit** (`U+D800`-`U+DFFF` not forming a valid pair with an adjacent surrogate) as its OWN generic
+  `\uXXXX` escape, rather than emitting the invalid/unpaired code unit literally -- confirmed live:
+  parsing the valid JSON string literal `"\ud800"` (a lone high surrogate, expressible in JSON even
+  though it is not valid standalone UTF-16) and re-stringifying it produces `"\ud800"` again, NOT a
+  literal, ill-formed code unit. This is ECMAScript's own "well-formed `JSON.stringify`" behavior
+  (an ES2019 addition specifically to avoid producing lone-surrogate output that cannot round-trip
+  through UTF-8). A future implementation MUST detect an unpaired surrogate specifically and escape
+  it via the SAME generic 4-hex-digit form, not merely pass every code point above U+007F through
+  unescaped. Separately, this whole rule is the OPPOSITE of Python's own `json.dumps` default
+  (`ensure_ascii=True`), which escapes every non-ASCII character (not merely control characters and
+  unpaired surrogates) as `\uXXXX`; a future implementation MUST pass `ensure_ascii=False` (or an
+  equivalent dedicated encoder) AND independently implement BOTH the control-character escaping rule
+  AND the unpaired-surrogate escaping rule above, since disabling `ensure_ascii` alone pins neither.
+- **Negative zero collapses to `0`.** `JSON.stringify(-0)` and `JSON.stringify` applied to any
+  value that IS negative zero both render the bare digit `0`, with NO minus sign -- confirmed live.
+  Python's own default float rendering preserves the sign of a negative-zero `float` (`repr(-0.0)`
+  is `'-0.0'`); a future implementation must specifically suppress that sign for this one value.
+- **Number formatting follows ECMAScript's own `Number::toString` notation choice, not Python's.**
+  Both languages compute the mathematically-identical SHORTEST decimal digit sequence that
+  round-trips to the same IEEE-754 double value (Python's own `repr(float)` has used a
+  correctly-rounded shortest-round-trip algorithm since Python 3.1, the SAME property JS's own
+  algorithm guarantees, so the DIGITS themselves generally agree) -- the divergence is in HOW those
+  digits are formatted into fixed-point vs. exponential notation, which follows JS's OWN distinct
+  threshold, confirmed by testing the exact boundaries live: fixed (plain decimal) notation is used
+  for a value whose magnitude is `>= 1e-6` and `< 1e21` (confirmed: `1e-6` renders fixed as
+  `0.000001`, `1e-7` renders exponential as `1e-7`; `1e20` renders fixed as the full 21-digit
+  integer, `1e21` renders exponential as `1e+21`); exponential notation (`d.ddd...e+NN` or
+  `e-NN`, lowercase `e`, an explicit `+` for a non-negative exponent, no leading zero-padding on the
+  exponent digits) is used outside that range. A future implementation needing genuinely
+  spec-faithful number formatting MUST implement this notation-choice logic explicitly (formatting
+  the correctly-rounded shortest digit string into fixed or exponential form per the confirmed
+  thresholds above), NOT rely on Python's own `repr`/`str`/`json.dumps` float formatting, which
+  chooses its own, different notation thresholds (confirmed independently: Python's own compact
+  `json.dumps` already renders `1e19` in exponential notation, `1e+19`, where JS still uses fixed
+  notation at that magnitude -- a divergence not even confined to the boundary values the review's
+  own probes named).
+- **Property enumeration order is NOT source/insertion order for array-index-like keys.** An
+  earlier revision of this section incorrectly claimed `JSON.parse`/`json.loads` "preserve source
+  key order" identically -- DISPROVED live: ECMAScript's own own-property enumeration order places
+  every "array index" key (a string that is the canonical decimal representation of an integer in
+  `[0, 2**32 - 2]`, no leading zeros) FIRST, in ASCENDING NUMERIC order, regardless of the source
+  JSON's own key order, followed by every other (non-array-index) string key in the source's own
+  original insertion order (confirmed: parsing `{"2":"b","1":"a","x":0}` and re-stringifying
+  produces `{"1":"a","2":"b","x":0}` -- `"1"`/`"2"` reordered numerically ahead of `"x"` even though
+  the source put `"2"` first). Python's own `json.loads`/`dict`/`json.dumps` pipeline preserves
+  PURE source insertion order unconditionally, with no such numeric-key reordering -- a future
+  implementation rendering an object with any integer-string-shaped key MUST apply this reordering
+  explicitly; it is not something ordinary dict iteration provides.
+
+Using the exact three message templates (unaffected by this correction -- only the rendering RULE
+was wrong, not the templates or the `JSON.stringify` authority itself), which remain:
+
+```text
+device-start (step 1 above):
+    "Invalid OpenAI Codex device code response: {rendered json}"
+device-poll (step 3 above):
+    "Invalid OpenAI Codex device auth token response: {rendered json}"
+token exchange/refresh (below):
+    "OpenAI Codex token {exchange|refresh} response missing fields: {rendered json}"
+```
+
+A permanent implementation witness MUST cover, at minimum, for at least one of these three
+templates (the same rendering logic governs all three, so one shared rendering test plus one
+template-text test per message is sufficient, not repeating full coverage nine times): a `null`
+response body; an array-shaped response body; an object containing a NON-ASCII string value formed
+from a PROPERLY-PAIRED astral character (confirming it renders literally, unescaped); an object
+containing a string value formed from an UNPAIRED (lone) UTF-16 surrogate code unit (confirming it
+IS escaped via the generic 4-hex-digit form, NOT passed through literally -- this witness is
+required specifically because it is the one case an otherwise-correct "non-ASCII passes through
+unescaped" implementation would get wrong); an object containing a value that is negative zero
+(confirming the sign is dropped); a value requiring the small-exponent notation boundary (e.g. a
+value at or just past `1e-6`/`1e-7`) and the large-exponent boundary (e.g. at or just past
+`1e20`/`1e21`); and an object with at least one integer-string-shaped key alongside a non-numeric
+key in an order that would distinguish correct ECMAScript-style reordering from plain source-order
+preservation. A future implementation pass MUST re-verify every one of these rules live against a
+current Node process before relying on this section alone, exactly as this section's own rules were
+derived -- this section documents CONFIRMED behavior as of the probes performed here, not a
+guarantee that no further edge case exists, and ECMAScript `JSON.stringify` itself -- not this
+bulleted paraphrase -- remains the complete normative authority a future implementation is ultimately
+answerable to.
+
+### Token exchange and refresh
+
+Both POST `TOKEN_URL` with `Content-Type: application/x-www-form-urlencoded`:
+
+```text
+exchange: grant_type=authorization_code, client_id, code, code_verifier, redirect_uri
+refresh:  grant_type=refresh_token, refresh_token, client_id
+```
+
+The response is parsed identically for both operations: a non-`2xx` status raises
+`"OpenAI Codex token {exchange|refresh} failed ({status}): {body text, or the status's own reason
+phrase if the body is empty/unreadable}"`. On a `2xx` response, the body is first parsed as JSON;
+**a JSON-parse failure itself propagates as that raw parse error, UNCHANGED** (`L11-SC-R004`,
+independent review -- this exact rule, stated once here, also governs the device-flow start and
+poll requests above: `response.json()`'s own rejection on a `2xx`/success-path response is never
+caught anywhere in pinned Pi's own code for ANY of these three success-path parses, and so is never
+converted into a field-validation message; contrast the device-poll's own SEPARATE, deliberately
+DIFFERENT rule for an UNPARSEABLE ERROR body on its non-2xx path, which IS caught and folded into a
+generic failure, not propagated raw -- these are two different Pi behaviors for two different
+response paths, not the same rule restated). Only once the body successfully parses as JSON does
+field-level validation apply: a `2xx` body MUST supply an ACTUAL JSON STRING (`L11-SC-R005`,
+owner-approved intentional divergence -- NOT the JS-truthy-any-type rule an earlier revision of this
+paragraph required; see "Provider-response field-type validation divergence (`PROV-016`)" below) for
+`access_token` and for `refresh_token`, PLUS an `expires_in` that passes an EXPLICIT
+`typeof expires_in !== "number"` check -- pinned Pi's OWN guard is `!json?.access_token ||
+!json.refresh_token || typeof json.expires_in !== "number"`, purely truthiness for the first two and
+a real runtime type check for the third; this row's own DIVERGENCE (per `PROV-016`) narrows the
+first two from Pi's own truthy-any-type acceptance down to an actual-string requirement, while
+`expires_in`'s OWN rule is UNCHANGED from Pi (it was already a real type check, not a truthiness
+check, so no divergence applies to it). Any failing field (by ITS OWN applicable rule -- a
+present-but-non-string `access_token`/`refresh_token` fails by this row's own divergence, not by
+Pi's own baseline rule) raises EXACTLY `"OpenAI Codex token {exchange|refresh} response missing
+fields: {rendered json}"` (`L11-SC-R010` -- `{rendered json}` is the SAME shared ECMAScript
+`JSON.stringify`-equivalent rendering the "Exact error-message JSON rendering" subsection above
+fully specifies, not a raw/abbreviated stand-in). On success, the resulting token's own `expires`
+is the CURRENT wall-clock time
+in Unix-epoch milliseconds PLUS `expires_in * 1000` (matching `OAuthCredential.expires`'s own
+existing epoch-milliseconds contract, `PROV-006`) -- computed at response-parse time, not at
+request-send time.
+
+**Cancellation and error-wrapping differ between exchange/device-start/device-poll as one group and
+refresh alone, and this asymmetry is itself part of the contract, not an oversight to harmonize**
+(`L11-SC-R004`, independent review -- the grouping below CORRECTS an earlier revision of this
+section, which incorrectly assigned the FIRST rule only to exchange):
+
+- **Exchange, device-start, and device-poll** (all three of this row's own OUTBOUND requests other
+  than refresh) share the IDENTICAL transport-level cancellation translation, via pinned Pi's own
+  shared `fetchWithLoginCancellation` helper each of the three real call sites uses: a network
+  failure caused by the caller's OWN cancellation is distinguished from every other network failure
+  -- if the underlying request fails WHILE the given signal is already aborted, the operation raises
+  the FIXED message `"Login cancelled"`, discarding the underlying transport error entirely; any
+  OTHER network failure (the signal not aborted) propagates the underlying error unchanged. This
+  rule governs a request-LEVEL failure (the request never completed at all), a materially different
+  concern from either JSON-parse-failure rule above, which governs a response body that DID arrive.
+- **Refresh alone** applies NO such translation: ANY network-level failure (not a non-2xx HTTP
+  response, which is handled by the shared response-parsing rule above, but a failure to complete
+  the request at all) is wrapped as `"OpenAI Codex token refresh error: {the underlying error's own
+  message}"`, with no cancellation-specific message, regardless of whether the signal was the cause.
+  This asymmetry is NOT because refresh's own caller supplies "a fixed time budget, not a
+  user-driven cancellation" -- an earlier revision of this section stated that, and it is
+  INACCURATE (`L11-SC-R004`): the already-certified `PROV-008`'s own `refresh_if_expiring` supplies
+  refresh with a `CombinedSignal` that combines BOTH an optional caller-supplied signal AND a fixed
+  timeout budget (`signal.py`'s own `CombinedSignal`, aborting when EITHER the caller's own signal
+  aborts OR the budget elapses) -- a genuine user-driven cancellation CAN reach refresh through that
+  caller-supplied half, contrary to "not user-driven." The OBSERVABLE rule itself (refresh wraps
+  every request-level failure UNIFORMLY, with no cancellation-specific carve-out, regardless of
+  cause) remains correct and unchanged; only the STATED REASON for it was wrong, and must not be
+  repeated as a rationale for reproducing this behavior.
+
+**Cancellation mechanism -- disclosed mapping, not a new observable behavior.** Pinned Pi's own
+`fetch` natively aborts its own underlying connection when the SAME `AbortSignal` object passed to
+it fires (push-based, no polling). This project's own established `Abortable`/`RunSignal`
+abstraction (Layer 09) is POLL-BASED BY CERTIFIED DESIGN and has no push/event mechanism -- exactly
+the same already-disclosed constraint `abortable_sleep` (`PROV-010`) works within for timers. An
+HTTP transport implementation MUST reproduce the same OBSERVABLE effect (an in-flight request that
+is genuinely torn down, not merely "stopped being awaited while it keeps running unobserved in the
+background," and whose caller sees an error promptly after the signal aborts, not only after the
+request would have finished or timed out on its own) using this project's own poll-based
+primitives -- e.g. running the request as a cancellable task and polling the signal at a short,
+fixed interval, the same idiom `abortable_sleep` already establishes for a different primitive.
+This is a disclosed, narrow language/architecture mapping (poll-based cancellation reproducing a
+push-based primitive's observable effect), not new behavior invented for this contract, and MUST
+NOT be confused with `Models`-level `raceWithAbortSignal`'s own, materially DIFFERENT and NARROWER
+behavior (`PROV-013`, deferred, out of scope for this row): pinned Pi's own `raceWithAbortSignal`
+(`packages/ai/src/utils/abort.ts:17-50`) does NOT cancel the underlying operation at all -- it only
+stops WAITING for it while continuing to observe the abandoned promise in the background, a
+narrower guarantee this row's own transport-level cancellation must not be conflated with.
+
+### Injectable HTTP transport (implementation mechanics, owner-approved)
+
+Per the owner's own Pass-2 scope decision, `httpx` is approved as the Python implementation
+mechanism for every network call in this row, subject to these constraints, none of which are
+optional:
+
+- the language-neutral contract above describes HTTP behavior (status codes, body shapes, header
+  content-type, cancellation semantics), never `httpx`-specific behavior;
+- provider/auth code depends on an INJECTABLE transport seam -- a concrete `httpx`-backed
+  implementation is one conforming implementation of that seam, never the only one a caller can
+  supply;
+- every test in the committed suite uses a deterministic fake/scripted transport; no test performs
+  a live network call or depends on a real `auth.openai.com` response;
+- no live secret (a real Codex access/refresh token, a real device/authorization code) appears
+  anywhere in the committed test suite -- synthetic fixtures only, matching `PROV-011`'s own
+  established constraint;
+- `httpx`'s own request/response/client types do not appear in any shared, language-neutral type
+  (the transport seam's own request/response shapes are this project's own minimal types, not
+  `httpx.Request`/`httpx.Response` re-exported);
+- cancellation and timeout map through this project's own existing `Abortable`/`RunSignal` contract
+  (see above), never becoming `httpx`-defined timeout/cancellation semantics a caller must learn
+  separately.
+
+The local OAuth callback HTTP server (browser flow, step 3 above) is a SEPARATE concern from the
+outbound-request transport seam above -- it is an inbound listener, not a client, and Pi's own
+equivalent uses Node's raw `http` module directly with no injectable-transport abstraction of its
+own; a Python implementation MAY use `httpx`, the standard library, or any other mechanism for this
+inbound listener, subject to the same testability constraint (no test binds a real, non-loopback
+port or depends on an externally-reachable server).
+
+### `OAuthAuth` composite
+
+```text
+name             = "OpenAI (ChatGPT Plus/Pro)"
+is_subscription  = true
+login(interaction)      -> select method, then dispatch (above)
+refresh(credential, signal) -> exchange credential.refresh via the refresh operation above, then
+                                project through the ALREADY-ADOPTED `PROV-011` `credentials_from_token`
+to_auth(credential)      -> the ALREADY-ADOPTED `PROV-011` `to_auth`, reused unchanged, not
+                             reimplemented for this row
+```
+
+### Out of scope for this row (owner-confirmed, restated)
+
+- Browser LAUNCHING itself (this row only emits the `auth_url` notification).
+- The `codex-responses` LLM wire adapter.
+- `PROV-013` generic `Models`-level orchestration (`resolveProviderAuth`, `Models.checkAuth`/
+  `getAuth`/`login`/`logout`, provider-registry race semantics) -- this row's own `login`/`refresh`/
+  `to_auth` are the PER-PROVIDER auth-method vocabulary `PROV-013`'s own deferred orchestration
+  would eventually CONSUME, not that orchestration itself.
+- A Codex CLI credential-file loader (reading an existing `~/.codex/...`-shaped file directly) --
+  explicitly out of scope per the owner's own Pass-2 scope decision.
+
+If implementation discovers that this contract cannot be expressed through the already-certified
+`PROV-008`/`PROV-009`/`PROV-010` seams without changing their own observable semantics, that is an
+`IMPLEMENTATION_DISCOVERED_CONTRACT_DEFECT` requiring owner governance before proceeding -- those
+seams' own certified contracts are not silently widened to accommodate this row.
+
+## Provider-response field-type validation divergence (`PROV-016`, intentional divergence)
+
+Pinned Pi's own runtime validation for six `PROV-012` network-response fields --
+`device_auth_id`, `user_code`, `authorization_code`, `code_verifier`, `access_token`,
+`refresh_token` -- is JAVASCRIPT TRUTHINESS ONLY, accepting ANY truthy value of ANY JSON type, not
+merely a non-empty string: pinned TypeScript field annotations for these six (e.g.
+`device_auth_id?: string`) are ERASED at runtime, and the actual guards (`openai-codex.ts:219-224,
+254,138`) never perform a `typeof value === "string"` check on any of them -- confirmed directly
+against pinned Pi (`L11-SC-R003`/`L11-SC-R005`, independent review). A truthy JSON number, boolean,
+or object for any of these six fields is NOT rejected by Pi's own real code, even though it would
+violate the field's own DECLARED type.
+
+Pi's own downstream handling of such a value is not undefined, either -- a non-string
+`code`/`code_verifier` reaching `exchangeAuthorizationCode`'s own `new URLSearchParams({...})` call
+is coerced via JavaScript's own implicit `String()` conversion (empirically confirmed live:
+`new URLSearchParams({code_verifier: 123})` produces the query-string fragment
+`code_verifier=123`), and a non-string `user_code` reaching `AuthEventDeviceCode` would simply be
+stored and later forwarded as whatever value it is.
+
+**Minion's own decision, owner-approved (`GOVERNANCE_SOURCE`, verbatim at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5676459844`, per
+`agent-workflow.md` §11.10): this project does NOT reproduce Pi's own truthy-any-type acceptance for
+these six fields.** At `PROV-012`'s own provider-network response-validation boundary, all six
+fields MUST be actual JSON strings; a present-but-non-string (truthy) value is rejected via the SAME
+"invalid response" path an absent/falsy value already takes, not admitted into the typed Minion
+domain. This is classified an INTENTIONAL, NARROW, owner-approved Pi divergence, not a Pi-parity
+defect and not a claim that Pi itself performs this rejection.
+
+**Rationale (per the owner's own decision).** Pi's own broader acceptance is an artifact of erased
+JavaScript runtime typing at an external-data boundary, not a documented, load-bearing part of the
+Codex OAuth API contract -- no confirmed real `auth.openai.com` response or real Pi call site has
+ever been observed exercising it. Reproducing it faithfully would require widening TWO
+already-certified shared types (`PROV-006`'s own `OAuthCredential.refresh: str`, `PROV-014`'s own
+`AuthEventDeviceCode.user_code: str`) to an open `JsonValue`, and then specifying JavaScript
+`String()`/`URLSearchParams` coercion semantics at every downstream point such a widened value could
+reach -- disproportionate cost for an edge case with no confirmed real trigger. Strict validation at
+this row's own ingress instead preserves every already-certified typed surface unchanged and
+localizes the entire divergence to `PROV-012`'s own provider-response decoder.
+
+**Scope, exactly (per the owner's own decision -- do not generalize beyond this).** This approval
+covers ONLY the six named fields' own type validation at `PROV-012`'s own response-decoding
+boundary. It does NOT authorize: generalized stricter validation elsewhere in this row (e.g. the
+`interval` field's own validation rule, and every other rule this row's own sections state, are
+UNCHANGED Pi-faithful behavior, not covered by this divergence); changing any OTHER Pi-compatible
+truthiness rule; changing `PROV-006`'s own credential semantics; changing `PROV-014`'s own
+interaction semantics; or silently "cleaning up" any other Pi runtime quirk this or a future audit
+might find.
+
+**Required test coverage (binding on the implementation pass that closes `PROV-012`, not yet
+performed -- no Python code for this row exists yet).** For each of the six named fields, a
+permanent, discriminating witness MUST cover:
+
+```text
+a valid, actual string value            -> accepted, exactly as Pi accepts it
+an absent/falsy value                   -> rejected via the existing Pi-compatible
+                                            invalid-response path (unchanged from Pi)
+a present, JAVASCRIPT-TRUTHY, non-string
+  value (e.g. a JSON number or object)   -> rejected -- Minion's OWN intentional
+                                            divergence from Pi's own real acceptance,
+                                            not a Pi-compatible outcome
+```
+
+**For a future Rust implementation:** this divergence is a general instruction, not a Python
+mechanism to replicate. Rust's own typed request/response surfaces are expected to enforce this
+same string requirement naturally as part of ordinary strict deserialization; no special-cased
+"accept then reject a non-string" step should be needed the way Python's own dynamic JSON parsing
+requires. Any Rust-specific representation choice is reviewed independently when Rust implements
+this row.
