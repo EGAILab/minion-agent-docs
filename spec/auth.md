@@ -1226,22 +1226,43 @@ fifth complete review), and it is WITHDRAWN entirely, not merely narrowed: `JSON
 FULL ECMAScript algorithm with its own string-escaping rule, its own `Number::toString` algorithm,
 and its own property-enumeration order, none of which a stdlib `json.dumps` call reproduces merely
 by tweaking separators. A future Python implementation MUST use a DEDICATED renderer built to the
-rules below, not `json.dumps` with adjusted options. Every rule below was independently confirmed
-live against Node 22 (not assumed from memory), matching this row's own established `L11-SA-R001`
-verification discipline:
+rules below, not `json.dumps` with adjusted options.
 
-- **String escaping.** `JSON.stringify` escapes ONLY three things inside a string: `"` -> `\"`,
-  `\` -> `\\`, and every control character in `U+0000`-`U+001F`, using the named escapes JSON
-  itself defines where one exists (`\b` `U+0008`, `\t` `U+0009`, `\n` `U+000A`, `\f` `U+000C`,
-  `\r` `U+000D`) and the generic `\u00XX` form (lowercase hex, zero-padded to 2 digits) for every
-  other control character in that range (confirmed: `U+0001` renders as the six-character generic escape sequence -- backslash, lowercase u, then the four hex digits 0001). EVERY other
-  character -- every printable ASCII character, and EVERY non-ASCII Unicode character, whether in
-  the Basic Multilingual Plane or requiring a UTF-16 surrogate pair (confirmed with an astral emoji,
-  `U+1F600`) -- passes through completely UNESCAPED, literally. This is the OPPOSITE of Python's own
-  `json.dumps` default (`ensure_ascii=True`), which escapes every non-ASCII character as `\uXXXX`; a
-  future implementation MUST pass `ensure_ascii=False` (or an equivalent dedicated encoder) AND
-  independently implement the control-character-only escaping rule above, since disabling
-  `ensure_ascii` alone does not itself pin the exact control-character escape set.
+**ECMAScript `JSON.stringify` itself remains the COMPLETE normative authority for this rendering --
+the bullets below are CONFIRMED, DISCRIMINATING constraints a conforming implementation must
+satisfy, not a claimed exhaustive reimplementation of the algorithm** (`L11-SC-R010`, sixth complete
+review -- an earlier revision of this paragraph read as implicitly claiming the bullet list WAS a
+complete substitute algorithm, which the review correctly flagged: two of the bullets' own prose
+were themselves incomplete/inaccurate, exactly the risk of treating a prose paraphrase as the
+authority instead of the actual standard). Every rule below was independently confirmed live against
+Node 22 (not assumed from memory), matching this row's own established `L11-SA-R001` verification
+discipline -- and a future implementation pass MUST independently re-verify each one live again
+before relying on it, rather than treating this list as sufficient on its own:
+
+- **String escaping.** `JSON.stringify` escapes `"` -> `\"`, `\` -> `\\`, and every control
+  character in `U+0000`-`U+001F`, using the named escapes JSON itself defines where one exists
+  (`\b` `U+0008`, `\t` `U+0009`, `\n` `U+000A`, `\f` `U+000C`, `\r` `U+000D`) and the generic
+  `\uXXXX` form for every other control character in that range -- ALWAYS exactly FOUR lowercase hex
+  digits total, zero-padded (`U+0001` renders as the six-character sequence backslash, lowercase
+  `u`, `0`, `0`, `0`, `1` -- NOT a two-digit form; an earlier revision of this bullet described this
+  ambiguously, corrected per independent review, sixth complete review). A properly-paired UTF-16
+  surrogate pair forming a valid astral character (confirmed with an emoji, `U+1F600`) passes
+  through completely UNESCAPED, literally -- but this is NOT true of every non-ASCII value, contrary
+  to an earlier revision of this bullet's own blanket claim (corrected per independent review,
+  sixth complete review): **`JSON.stringify` ALSO escapes an UNPAIRED (lone) UTF-16 surrogate code
+  unit** (`U+D800`-`U+DFFF` not forming a valid pair with an adjacent surrogate) as its OWN generic
+  `\uXXXX` escape, rather than emitting the invalid/unpaired code unit literally -- confirmed live:
+  parsing the valid JSON string literal `"\ud800"` (a lone high surrogate, expressible in JSON even
+  though it is not valid standalone UTF-16) and re-stringifying it produces `"\ud800"` again, NOT a
+  literal, ill-formed code unit. This is ECMAScript's own "well-formed `JSON.stringify`" behavior
+  (an ES2019 addition specifically to avoid producing lone-surrogate output that cannot round-trip
+  through UTF-8). A future implementation MUST detect an unpaired surrogate specifically and escape
+  it via the SAME generic 4-hex-digit form, not merely pass every code point above U+007F through
+  unescaped. Separately, this whole rule is the OPPOSITE of Python's own `json.dumps` default
+  (`ensure_ascii=True`), which escapes every non-ASCII character (not merely control characters and
+  unpaired surrogates) as `\uXXXX`; a future implementation MUST pass `ensure_ascii=False` (or an
+  equivalent dedicated encoder) AND independently implement BOTH the control-character escaping rule
+  AND the unpaired-surrogate escaping rule above, since disabling `ensure_ascii` alone pins neither.
 - **Negative zero collapses to `0`.** `JSON.stringify(-0)` and `JSON.stringify` applied to any
   value that IS negative zero both render the bare digit `0`, with NO minus sign -- confirmed live.
   Python's own default float rendering preserves the sign of a negative-zero `float` (`repr(-0.0)`
@@ -1293,8 +1314,12 @@ token exchange/refresh (below):
 A permanent implementation witness MUST cover, at minimum, for at least one of these three
 templates (the same rendering logic governs all three, so one shared rendering test plus one
 template-text test per message is sufficient, not repeating full coverage nine times): a `null`
-response body; an array-shaped response body; an object containing a NON-ASCII string value
-(confirming it renders literally, unescaped); an object containing a value that is negative zero
+response body; an array-shaped response body; an object containing a NON-ASCII string value formed
+from a PROPERLY-PAIRED astral character (confirming it renders literally, unescaped); an object
+containing a string value formed from an UNPAIRED (lone) UTF-16 surrogate code unit (confirming it
+IS escaped via the generic 4-hex-digit form, NOT passed through literally -- this witness is
+required specifically because it is the one case an otherwise-correct "non-ASCII passes through
+unescaped" implementation would get wrong); an object containing a value that is negative zero
 (confirming the sign is dropped); a value requiring the small-exponent notation boundary (e.g. a
 value at or just past `1e-6`/`1e-7`) and the large-exponent boundary (e.g. at or just past
 `1e20`/`1e21`); and an object with at least one integer-string-shaped key alongside a non-numeric
@@ -1302,7 +1327,9 @@ key in an order that would distinguish correct ECMAScript-style reordering from 
 preservation. A future implementation pass MUST re-verify every one of these rules live against a
 current Node process before relying on this section alone, exactly as this section's own rules were
 derived -- this section documents CONFIRMED behavior as of the probes performed here, not a
-guarantee that no further edge case exists.
+guarantee that no further edge case exists, and ECMAScript `JSON.stringify` itself -- not this
+bulleted paraphrase -- remains the complete normative authority a future implementation is ultimately
+answerable to.
 
 ### Token exchange and refresh
 
