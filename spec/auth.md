@@ -1135,6 +1135,16 @@ recognized login method; do not silently fall back to either flow.
    A permanent implementation witness MUST cover, at minimum: an empty/whitespace-only interval
    string (accepted as `0`), a hex/octal/binary-prefixed string (accepted, parsed in that base), and
    a garbage string (rejected).
+
+   **On field-level validation failure (either the `PROV-016` string requirement above or the
+   `interval` rule above), raise/reject EXACTLY** `"Invalid OpenAI Codex device code response:
+   {rendered json}"` (`L11-SC-R010`, independent review, fourth complete review -- an earlier
+   revision left this message entirely unstated), where `{rendered json}` is the SAME ECMAScript
+   `JSON.stringify`-equivalent rendering of the successfully-parsed response body that governs all
+   three of this row's own "invalid response" messages -- see the "Exact error-message JSON
+   rendering (`L11-SC-R010`)" subsection immediately following this "Device-code flow" section for
+   the shared, fully-specified rendering rule (compact separators, key order, `null`/array handling,
+   and a number-formatting subtlety independently found while fixing this finding).
 2. Emit a `device_code` notification (`PROV-014`'s own `AuthEventDeviceCode`) carrying the returned
    `user_code`, the FIXED `DEVICE_VERIFICATION_URI`, the returned interval as `interval_seconds`,
    and the FIXED `DEVICE_CODE_TIMEOUT_SECONDS` as `expires_in_seconds`.
@@ -1160,8 +1170,12 @@ recognized login method; do not silently fall back to either flow.
      `PROV-016` below)                                         -> COMPLETE, value = {authorization_code,
                                                                     code_verifier}
    2xx, body parses as JSON but either field is falsy, absent,
-     OR present-but-non-string                                 -> FAILED ("Invalid ... token response:
-                                                                    <body>")
+     OR present-but-non-string                                 -> FAILED, message EXACTLY
+                                                                    "Invalid OpenAI Codex device
+                                                                    auth token response:
+                                                                    {rendered json}" (`L11-SC-R010`
+                                                                    -- see the shared rendering rule
+                                                                    stated right after this section)
    403 or 404                                                  -> PENDING
    other status, error body FAILS to parse as JSON             -> FAILED (status+body message) -- an
                                                                     unparseable error body is folded
@@ -1190,6 +1204,61 @@ recognized login method; do not silently fall back to either flow.
    `DEVICE_REDIRECT_URI` (NOT the browser flow's own `REDIRECT_URI`) and the RETURNED
    `code_verifier` (NOT a locally-generated PKCE verifier -- the device flow's own verifier is
    server-issued, unlike the browser flow's own client-generated one).
+
+### Exact error-message JSON rendering (`L11-SC-R010`)
+
+Three of this row's own public failure messages embed the successfully-parsed response body
+verbatim: the device-start "invalid response" message above, the device-poll "invalid ... token
+response" message above, and the token exchange/refresh "response missing fields" message below.
+An earlier revision of this contract left all three either entirely unstated or abbreviated as
+`<body>`/`{the parsed body}` -- independent review (`L11-SC-R010`, fourth complete review) correctly
+found this insufficient for independent implementation: Python's ordinary object stringification,
+`json.dumps` with its own default (spaced) separators, and Rust's own `serde_json::Value` debug
+formatting can all differ from each other and from Pi's own real output, while each could plausibly
+be described as "the parsed body."
+
+**The rendering is ECMAScript `JSON.stringify` applied to the successfully-parsed JSON value --
+NOT the original response bytes, and NOT any host language's own default debug/repr formatting.**
+Confirmed live against Node and independently cross-checked against Python's own `json` module,
+`JSON.stringify(value)` is reproduced EXACTLY by `json.dumps(value, separators=(",", ":"))`
+(compact, no space after `:` or `,`) for every ordinary case: `null` renders as the literal `null`;
+an array renders as `[...]` with its own elements recursively rendered the same way; an object
+renders with its OWN KEYS IN THE SAME ORDER `json.loads` originally produced them in (both
+`JSON.parse` and Python's own `json.loads` preserve source key order in the parsed
+object/`dict`, so no additional sorting step is needed or correct).
+
+**Number formatting is the one place a naive port diverges** (independently found while fixing this
+finding, not explicitly named by the review's own three-point request, but a direct consequence of
+its own "not host-language debug output" requirement): JavaScript has ONE numeric type, so
+`JSON.stringify` renders a whole-valued number WITHOUT any trailing `.0` -- `JSON.stringify(5.0)`
+and `JSON.stringify(JSON.parse("5.0"))` both produce the string `5`, not `5.0`. Python's own
+`json.loads` instead parses a JSON literal like `5.0` into a genuine `float`, and `json.dumps`
+renders that float AS `"5.0"` -- confirmed live, a real, observable divergence for any response body
+containing a JSON number with a fractional-looking literal or scientific notation the two languages
+would otherwise treat identically once parsed. Where this row's own response-body JSON parsing
+follows the SAME JS-`Number`-faithful coercion `PROV-011`'s own `decode_jwt` already establishes
+(`parse_int=float`, round-tripping every numeric literal through IEEE-754 double representation),
+the RENDERING step must additionally format a whole-valued float the way JavaScript's own
+`Number.prototype.toString()` does (no trailing `.0`) rather than Python's own default float
+formatting, to keep the two languages' own rendered error messages byte-identical.
+
+Using this shared rendering rule, the three exact templates are:
+
+```text
+device-start (step 1 above):
+    "Invalid OpenAI Codex device code response: {rendered json}"
+device-poll (step 3 above):
+    "Invalid OpenAI Codex device auth token response: {rendered json}"
+token exchange/refresh (below):
+    "OpenAI Codex token {exchange|refresh} response missing fields: {rendered json}"
+```
+
+A permanent implementation witness MUST cover, at minimum, for at least one of these three
+templates (the same rendering logic governs all three, so one shared rendering test plus one
+template-text test per message is sufficient, not nine independent full-message tests): a `null`
+response body; an array-shaped response body; and an ordered, multi-field object whose own key
+order and (if present) any whole-valued numeric field distinguish a correct rendering from a
+plausible-looking but wrong host-language default.
 
 ### Token exchange and refresh
 
@@ -1222,8 +1291,11 @@ first two from Pi's own truthy-any-type acceptance down to an actual-string requ
 `expires_in`'s OWN rule is UNCHANGED from Pi (it was already a real type check, not a truthiness
 check, so no divergence applies to it). Any failing field (by ITS OWN applicable rule -- a
 present-but-non-string `access_token`/`refresh_token` fails by this row's own divergence, not by
-Pi's own baseline rule) raises `"OpenAI Codex token {exchange|refresh} response missing fields:
-{the parsed body}"`. On success, the resulting token's own `expires` is the CURRENT wall-clock time
+Pi's own baseline rule) raises EXACTLY `"OpenAI Codex token {exchange|refresh} response missing
+fields: {rendered json}"` (`L11-SC-R010` -- `{rendered json}` is the SAME shared ECMAScript
+`JSON.stringify`-equivalent rendering the "Exact error-message JSON rendering" subsection above
+fully specifies, not a raw/abbreviated stand-in). On success, the resulting token's own `expires`
+is the CURRENT wall-clock time
 in Unix-epoch milliseconds PLUS `expires_in * 1000` (matching `OAuthCredential.expires`'s own
 existing epoch-milliseconds contract, `PROV-006`) -- computed at response-parse time, not at
 request-send time.
