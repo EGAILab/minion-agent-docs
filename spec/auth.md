@@ -841,47 +841,116 @@ flow.
    SCOPE for this row, confirmed by the owner's own Pass-2 scope decision; this layer only emits the
    notification, matching Pi's own `packages/ai` boundary exactly, since Pi's own browser-opening
    utility lives entirely in a separate CLI-layer package).
+
+   **This notification happens BEFORE the flow's own cleanup boundary begins, not inside it**
+   (`L11-SC-R001`, independent review): pinned Pi's own `interaction.notify({type: "auth_url", ...})`
+   call (`openai-codex.ts:456-460`) executes strictly BEFORE the surrounding `try`/`finally` block
+   (`openai-codex.ts:462-505`) is ever entered -- the abort-listener registration (step 3 above), the
+   server, and the manual-prompt abort controller are all set up earlier still, but the CLEANUP
+   itself (listener removal, `manualAbort.abort()`, `server.close()`) lives ONLY inside that
+   `finally`. `notify()` is a DIRECT SYNCHRONOUS call whose throw propagates immediately
+   (`PROV-014`'s own established rule) -- if it throws HERE, execution never reaches the `try` at
+   all, so the local server is left listening, the flow-level abort listener is left registered, and
+   the manual-prompt abort controller is never aborted. This is a genuine, confirmed Pi behavior, not
+   a defect to silently harden away: an implementation must reproduce this EXACT boundary (no cleanup
+   on a `notify()` failure at this specific point) unless the owner explicitly approves an
+   intentional, disclosed hardening divergence instead. A discriminating test MUST exercise a
+   `notify()` failure at this exact point and assert that cleanup does NOT occur, not merely that
+   the flow's own call raises.
 6. Concurrently with waiting for the server's own callback, prompt a `manual_code` prompt
    (`PROV-014`'s own `AuthPromptManualCode`) with message `"Complete login in your browser, or paste
    the authorization code / redirect URL here:"` and `placeholder` set to `REDIRECT_URI`, racing it
    against the server callback with this EXACT precedence, discriminating every combination
-   explicitly (this is a genuinely concurrent, multi-source race -- not one happy-path example):
+   explicitly (this is a genuinely concurrent, multi-source race -- not one happy-path example;
+   extended per `L11-SC-R002`, independent review, to cover three cases the first contract pass
+   omitted):
 
    ```text
    server yields a code FIRST                                  -> use the server's code; cancel the
                                                                     still-pending manual prompt
-   manual entry resolves FIRST (any non-empty parsed input)     -> stop waiting on the server;
+   manual entry resolves with a NON-EMPTY value FIRST           -> stop waiting on the server;
                                                                     parse the manual input (below);
                                                                     use its own code
+   manual entry resolves with an EMPTY/WHITESPACE-ONLY value
+     FIRST (`L11-SC-R002` point 1)                              -> stop waiting on the server (the
+                                                                    empty resolution itself cancels
+                                                                    it, exactly like a non-empty one
+                                                                    does); the empty value is then
+                                                                    treated as ABSENT by the SAME
+                                                                    truthiness check step 7's own
+                                                                    "otherwise" case relies on, so no
+                                                                    code is extracted from it -- the
+                                                                    server is NOT waited on any
+                                                                    further after being cancelled, so
+                                                                    this combination raises/rejects
+                                                                    `"Missing authorization code"`
+                                                                    even if the server would have
+                                                                    legitimately yielded a real code
+                                                                    moments later; this is a real,
+                                                                    confirmed Pi behavior (the empty
+                                                                    manual resolution's own
+                                                                    cancel-the-server side effect is
+                                                                    unconditional, not gated on the
+                                                                    value being non-empty), not a
+                                                                    hypothetical edge case
    manual entry itself raises/rejects (e.g. its own signal
      aborts) BEFORE the server yields anything                  -> propagate that error; do not fall
                                                                     back to the server
-   BOTH still pending when the WHOLE login flow's own `signal`
-     aborts                                                     -> stop waiting on the server (its
-                                                                    own bind-failure/never-arrives
-                                                                    path, functionally identical);
-                                                                    the manual prompt's own signal is
-                                                                    a SEPARATE, per-prompt signal
-                                                                    (`PROV-014`) the flow cancels
-                                                                    itself when it no longer needs an
-                                                                    answer, not the same object as
-                                                                    the whole-flow `signal`
+   the WHOLE login flow's own `signal` aborts while BOTH the
+     server and the manual prompt are still pending
+     (`L11-SC-R002` point 2)                                    -> this cancels ONLY the server's own
+                                                                    wait (resolving it absent,
+                                                                    functionally identical to a
+                                                                    bind-failure); it does NOT abort
+                                                                    the manual prompt's own SEPARATE
+                                                                    per-prompt signal at this point --
+                                                                    that only happens in the flow's own
+                                                                    final cleanup (step 6's own
+                                                                    unconditional-cleanup note below),
+                                                                    which is not reached until the
+                                                                    manual prompt itself settles. A
+                                                                    flow-level abort therefore does
+                                                                    NOT promptly resolve this operation
+                                                                    while a manual prompt remains
+                                                                    outstanding -- the operation keeps
+                                                                    waiting on the manual prompt's own
+                                                                    eventual settlement (whatever the
+                                                                    concrete `AuthInteraction`
+                                                                    implementation's own `prompt()`
+                                                                    does when its OWN, separate
+                                                                    per-prompt signal is never fired),
+                                                                    exactly like the fallback rule
+                                                                    below. An implementation must NOT
+                                                                    assume a flow-level abort settles
+                                                                    this operation promptly merely
+                                                                    because a signal fired.
    the server's own "wait for code" resolves ABSENT (bind
-     failure, or the flow-level `signal` aborted) with no
-     manual code yet either                                     -> wait for the still-pending manual
+     failure, or the flow-level `signal` aborted per above)
+     with no manual code yet either                             -> wait for the still-pending manual
                                                                     prompt to settle rather than
                                                                     failing immediately; only if THAT
-                                                                    also yields no usable code is
-                                                                    `"Missing authorization code"`
-                                                                    raised
-   neither source ever yields a code                            -> raise/reject
+                                                                    also yields no usable (non-empty)
+                                                                    code is `"Missing authorization
+                                                                    code"` raised
+   neither source ever yields a usable code                     -> raise/reject
      ("Missing authorization code")
    ```
 
+   **Manual state validation is a TRUTHINESS check, not a presence check** (`L11-SC-R002` point 3):
+   if the parsed `state` is a non-empty (truthy) string AND it does not equal the state generated in
+   step 1, raise/reject `"State mismatch"` before ever attempting a token exchange. An EMPTY parsed
+   `state` (e.g. the manual input `"code#"`, which step 7's own `"#"`-split rule below parses to
+   `{code: "code", state: ""}`) is treated EXACTLY like an absent one -- validation is SKIPPED, not
+   triggered as a mismatch -- because Pi's own `parsed.state && parsed.state !== state` check is
+   short-circuited by the falsy empty string before the inequality is ever evaluated. An
+   implementation that instead treats "parsed `state` is not `None`/undefined" as sufficient to
+   REQUIRE a match diverges observably for exactly this input shape and MUST NOT do so.
+
    The manual prompt is always cancelled (its own per-prompt signal aborted) once the server yields
-   a code, and the server is always closed and the flow-level abort listener always detached, when
-   the flow concludes by ANY path (success, error, or cancellation) -- an unconditional cleanup,
-   not merely a success-path one.
+   a code, and the server is always closed and the flow-level abort listener always detached, once
+   the flow's own cleanup boundary is reached and concludes by ANY path (success, error, or
+   cancellation) WITHIN that boundary -- see step 5's own note above for the one case (a `notify()`
+   failure) that never reaches this boundary at all, and is NOT covered by this cleanup guarantee.
 7. **Manual input parsing** (`parse_authorization_input`) accepts three shapes, tried in this exact
    order, and is a documented, intentional accommodation, not an error condition:
 
@@ -912,38 +981,103 @@ flow.
                                                            code with no URL/query wrapper at all
    ```
 
-   If the parsed `state` is present and does not match the state generated in step 1, raise/reject
-   `"State mismatch"` before ever attempting a token exchange.
+   State validation for this parsed result is the SAME truthiness-based rule step 6 already states
+   in full (see its own "Manual state validation" note above) -- not restated here to avoid two
+   sources of truth for the identical rule.
 8. Exchange the resolved authorization code for tokens (below), using the ORIGINAL `REDIRECT_URI`
    (not the device-flow's own redirect URI) and the PKCE verifier from step 1.
 
 ### Device-code flow
 
-1. POST `DEVICE_USER_CODE_URL` with a JSON body `{client_id: CLIENT_ID}`. On a non-`2xx` response:
-   a `404` status raises a SPECIFIC message ("OpenAI Codex device code login is not enabled for this
-   server. Use browser login or verify the server URL."); any OTHER non-`2xx` status raises a
-   generic status+body message. On success, the response body MUST supply a non-empty
-   `device_auth_id` (string), a non-empty `user_code` (string), and an `interval` that is EITHER a
-   number or a string coercible to a finite, non-negative number (a string is trimmed and parsed;
-   an uncoercible/negative/non-finite result -- including the string failing to parse at all -- is a
-   contract violation, raise/reject with the invalid-response message, INCLUDING the case where
-   `interval` is a non-numeric string).
+1. POST `DEVICE_USER_CODE_URL` with a JSON body `{client_id: CLIENT_ID}`, using the SAME
+   cancellation-translation transport behavior as token exchange (see "Token exchange and refresh"
+   below -- `L11-SC-R004`, independent review: this request shares that exact translation, not a
+   rule scoped only to exchange). On a non-`2xx` response: a `404` status raises a SPECIFIC message
+   ("OpenAI Codex device code login is not enabled for this server. Use browser login or verify the
+   server URL."); any OTHER non-`2xx` status raises a generic status+body message.
+
+   On a `2xx` response, the body is first parsed as JSON; **a JSON-parse failure itself propagates
+   as that raw parse error, UNCHANGED** -- it is never converted into this step's own "invalid
+   response" message below (`L11-SC-R004`; see "Token exchange and refresh" for the identical rule
+   restated once for all four outbound calls in this row). Only once the body successfully parses as
+   JSON does field-level validation apply, and that validation is a JAVASCRIPT TRUTHINESS check, NOT
+   a string-type check (`L11-SC-R003`, independent review: pinned Pi's own TypeScript field
+   annotations -- `device_auth_id?: string`, `user_code?: string` -- are ERASED at runtime; the
+   actual guard is `!json?.device_auth_id || !json.user_code`, which accepts ANY truthy value of ANY
+   type, not only a non-empty string -- a truthy JSON number or object for either field is NOT
+   rejected by Pi's own real code, even though it would violate the DECLARED type). A future
+   implementation MUST reproduce this truthy-of-any-type acceptance (representing these two fields
+   as an open `JsonValue`-shaped check rather than a strict string type) UNLESS the owner explicitly
+   approves a stricter, disclosed validation divergence instead (`agent-workflow.md` §11.10) -- do
+   not silently narrow this to "must be a string" and call the row Pi-faithful.
+
+   `interval` uses a THIRD validation rule, distinct from both fields above: `typeof intervalSeconds
+   !== "number" || !Number.isFinite(intervalSeconds) || intervalSeconds < 0` is the actual guard,
+   where `intervalSeconds` is EITHER the raw JSON value of `interval` (when it is not itself a JSON
+   string -- ANY non-string JSON type reaching this point, including a boolean or object, simply
+   fails the `typeof ... !== "number"` check and is rejected) OR, when `interval` IS a JSON string,
+   the result of JavaScript's own `Number(interval.trim())` coercion -- EMPIRICALLY CONFIRMED live
+   against Node (matching this project's own established `L11-SA-R001` discipline of verifying
+   assumed JS coercion behavior rather than assuming it), this coercion is NOT equivalent to a naive
+   `float(trimmed)` parse:
+
+   - an EMPTY string (after trimming) coerces to `0`, a valid, ACCEPTED interval -- NOT rejected,
+     and NOT the same as an absent/`None` interval; a Python `float("")`, by contrast, raises,
+     making a naive port incorrectly REJECT a whitespace-only `interval` value Pi's own real code
+     silently accepts as zero.
+   - ordinary decimal notation (optional leading sign, optional fractional part, optional exponent,
+     e.g. `"5"`, `"-5"`, `".5"`, `"5."`, `"1e3"`) parses as the equivalent number.
+   - a HEXADECIMAL (`0x`/`0X`), OCTAL (`0o`/`0O`), or BINARY (`0b`/`0B`) integer-literal PREFIX is
+     also recognized and parsed in that base (e.g. `"0x1A"` coerces to `26`) -- a naive decimal-only
+     parser diverges observably for this input shape.
+   - the literal tokens `"Infinity"`/`"+Infinity"`/`"-Infinity"` coerce to the corresponding
+     infinite value, which then FAILS the surrounding `Number.isFinite` check (so these are
+     ultimately rejected, but via the finiteness check, not the coercion step itself).
+   - any other content (trailing garbage, non-numeric characters, e.g. `"5abc"`) coerces to `NaN`,
+     which also fails the `typeof ... !== "number"` check (`typeof NaN === "number"` is TRUE in
+     JavaScript, so `NaN` is rejected by the SEPARATE `Number.isFinite(NaN)` check instead, not the
+     `typeof` check -- both checks matter, for different reasons, and an implementation must
+     reproduce both, not collapse them into one "is it a valid positive number" test that happens to
+     reject `NaN` for the wrong stated reason).
+
+   A permanent implementation witness MUST cover, at minimum: an empty/whitespace-only interval
+   string (accepted as `0`), a hex/octal/binary-prefixed string (accepted, parsed in that base), and
+   a garbage string (rejected).
 2. Emit a `device_code` notification (`PROV-014`'s own `AuthEventDeviceCode`) carrying the returned
    `user_code`, the FIXED `DEVICE_VERIFICATION_URI`, the returned interval as `interval_seconds`,
    and the FIXED `DEVICE_CODE_TIMEOUT_SECONDS` as `expires_in_seconds`.
 3. Poll `DEVICE_TOKEN_URL` through the already-certified `PROV-010` device-authorization poll state
    machine, with the server-returned interval as the initial interval, `DEVICE_CODE_TIMEOUT_SECONDS`
    as the deadline, and NO initial pre-poll wait (polling begins immediately). Each poll attempt POSTs
-   a JSON body `{device_auth_id, user_code}` and maps the HTTP response to `PROV-010`'s own poll
-   outcomes EXACTLY as follows -- no other mapping is conforming:
+   a JSON body `{device_auth_id, user_code}`, using the SAME cancellation-translation transport
+   behavior as token exchange (`L11-SC-R004`; see "Token exchange and refresh" below -- this request
+   ALSO shares that exact translation), and maps the HTTP response to `PROV-010`'s own poll outcomes
+   EXACTLY as follows -- no other mapping is conforming:
 
    ```text
-   2xx, body has BOTH authorization_code and code_verifier (non-empty strings)
-                                                             -> COMPLETE, value = {authorization_code,
-                                                                code_verifier}
-   2xx, body missing either field                            -> FAILED ("Invalid ... token response:
-                                                                 <body>")
+   2xx, body FAILS to parse as JSON                          -> that raw JSON-parse error propagates
+                                                                 UNCHANGED (`L11-SC-R004`) -- it is
+                                                                 NOT converted into either the
+                                                                 FAILED-outcome message below or a
+                                                                 PENDING/SLOW_DOWN outcome
+   2xx, body parses as JSON, has BOTH authorization_code and
+     code_verifier (JAVASCRIPT-TRUTHY, any type -- `L11-SC-R003`,
+     same truthiness rule as step 1's own fields, NOT a
+     string-type check)                                       -> COMPLETE, value = {authorization_code,
+                                                                    code_verifier}
+   2xx, body parses as JSON but is missing either field
+     (falsy or absent)                                        -> FAILED ("Invalid ... token response:
+                                                                    <body>")
    403 or 404                                                  -> PENDING
+   other status, error body FAILS to parse as JSON             -> FAILED (status+body message) -- an
+                                                                    unparseable error body is folded
+                                                                    into the generic FAILED case, NOT
+                                                                    propagated as a raw parse error
+                                                                    (unlike the 2xx success-path parse
+                                                                    failure above, which propagates
+                                                                    unchanged -- the two are genuinely
+                                                                    different Pi behaviors, not the
+                                                                    same rule applied twice)
    other status, error body parses as JSON with
      error === "deviceauth_authorization_pending"
      (or error.code === that string)                           -> PENDING
@@ -954,8 +1088,8 @@ flow.
                                                                     `PROV-010`'s own fixed +5-second
                                                                     increment ALWAYS applies here,
                                                                     never the server-interval branch
-   any other status/body (including an unparseable
-     error body)                                                -> FAILED (status+body message)
+   other status, error body parses as JSON but matches
+     neither error code above                                   -> FAILED (status+body message)
    ```
 
 4. Exchange the returned `authorization_code`/`code_verifier` for tokens (below), using
@@ -974,30 +1108,56 @@ refresh:  grant_type=refresh_token, refresh_token, client_id
 
 The response is parsed identically for both operations: a non-`2xx` status raises
 `"OpenAI Codex token {exchange|refresh} failed ({status}): {body text, or the status's own reason
-phrase if the body is empty/unreadable}"`. A `2xx` response body MUST supply a non-empty
-`access_token` (string), a non-empty `refresh_token` (string), and a numeric `expires_in` -- any
-missing/wrong-typed field raises `"OpenAI Codex token {exchange|refresh} response missing fields:
+phrase if the body is empty/unreadable}"`. On a `2xx` response, the body is first parsed as JSON;
+**a JSON-parse failure itself propagates as that raw parse error, UNCHANGED** (`L11-SC-R004`,
+independent review -- this exact rule, stated once here, also governs the device-flow start and
+poll requests above: `response.json()`'s own rejection on a `2xx`/success-path response is never
+caught anywhere in pinned Pi's own code for ANY of these three success-path parses, and so is never
+converted into a field-validation message; contrast the device-poll's own SEPARATE, deliberately
+DIFFERENT rule for an UNPARSEABLE ERROR body on its non-2xx path, which IS caught and folded into a
+generic failure, not propagated raw -- these are two different Pi behaviors for two different
+response paths, not the same rule restated). Only once the body successfully parses as JSON does
+field-level validation apply: a `2xx` body MUST supply a JAVASCRIPT-TRUTHY (any type, NOT
+necessarily a string -- `L11-SC-R003`, same erased-runtime-type-annotation rule as the device-flow
+fields above) `access_token` and a JAVASCRIPT-TRUTHY `refresh_token`, PLUS an `expires_in` that
+passes an EXPLICIT `typeof expires_in !== "number"` check -- this THIRD field is validated
+differently from the first two: pinned Pi's own guard is `!json?.access_token || !json.refresh_token
+|| typeof json.expires_in !== "number"`, a genuine MIX of two truthiness checks and one real
+runtime type check within the SAME validation, not three checks of the same kind. Any failing field
+(by ITS OWN applicable rule) raises `"OpenAI Codex token {exchange|refresh} response missing fields:
 {the parsed body}"`. On success, the resulting token's own `expires` is the CURRENT wall-clock time
 in Unix-epoch milliseconds PLUS `expires_in * 1000` (matching `OAuthCredential.expires`'s own
 existing epoch-milliseconds contract, `PROV-006`) -- computed at response-parse time, not at
 request-send time.
 
-**Cancellation and error-wrapping differ between the two operations, and this asymmetry is itself
-part of the contract, not an oversight to harmonize:**
+**Cancellation and error-wrapping differ between exchange/device-start/device-poll as one group and
+refresh alone, and this asymmetry is itself part of the contract, not an oversight to harmonize**
+(`L11-SC-R004`, independent review -- the grouping below CORRECTS an earlier revision of this
+section, which incorrectly assigned the FIRST rule only to exchange):
 
-- **Exchange** distinguishes a network failure caused by the caller's OWN cancellation from every
-  other network failure: if the underlying request fails WHILE the given signal is already aborted,
-  the operation raises the FIXED message `"Login cancelled"`, discarding the underlying transport
-  error entirely; any OTHER network failure (the signal not aborted) propagates the underlying
-  error unchanged.
-- **Refresh** applies NO such translation: ANY network-level failure (not a non-2xx HTTP response,
-  which is handled by the shared response-parsing rule above, but a failure to complete the request
-  at all -- e.g. the connection itself was aborted) is wrapped as `"OpenAI Codex token refresh
-  error: {the underlying error's own message}"`, with no cancellation-specific message, regardless
-  of whether the signal was the cause. This asymmetry exists because refresh's own caller
-  (`PROV-008`'s own `refresh_if_expiring`, already certified) supplies a `CombinedSignal` -- a fixed
-  time budget, not a user-driven "I cancelled this login," so a "Login cancelled" message would be
-  actively misleading there.
+- **Exchange, device-start, and device-poll** (all three of this row's own OUTBOUND requests other
+  than refresh) share the IDENTICAL transport-level cancellation translation, via pinned Pi's own
+  shared `fetchWithLoginCancellation` helper each of the three real call sites uses: a network
+  failure caused by the caller's OWN cancellation is distinguished from every other network failure
+  -- if the underlying request fails WHILE the given signal is already aborted, the operation raises
+  the FIXED message `"Login cancelled"`, discarding the underlying transport error entirely; any
+  OTHER network failure (the signal not aborted) propagates the underlying error unchanged. This
+  rule governs a request-LEVEL failure (the request never completed at all), a materially different
+  concern from either JSON-parse-failure rule above, which governs a response body that DID arrive.
+- **Refresh alone** applies NO such translation: ANY network-level failure (not a non-2xx HTTP
+  response, which is handled by the shared response-parsing rule above, but a failure to complete
+  the request at all) is wrapped as `"OpenAI Codex token refresh error: {the underlying error's own
+  message}"`, with no cancellation-specific message, regardless of whether the signal was the cause.
+  This asymmetry is NOT because refresh's own caller supplies "a fixed time budget, not a
+  user-driven cancellation" -- an earlier revision of this section stated that, and it is
+  INACCURATE (`L11-SC-R004`): the already-certified `PROV-008`'s own `refresh_if_expiring` supplies
+  refresh with a `CombinedSignal` that combines BOTH an optional caller-supplied signal AND a fixed
+  timeout budget (`signal.py`'s own `CombinedSignal`, aborting when EITHER the caller's own signal
+  aborts OR the budget elapses) -- a genuine user-driven cancellation CAN reach refresh through that
+  caller-supplied half, contrary to "not user-driven." The OBSERVABLE rule itself (refresh wraps
+  every request-level failure UNIFORMLY, with no cancellation-specific carve-out, regardless of
+  cause) remains correct and unchanged; only the STATED REASON for it was wrong, and must not be
+  repeated as a rationale for reproducing this behavior.
 
 **Cancellation mechanism -- disclosed mapping, not a new observable behavior.** Pinned Pi's own
 `fetch` natively aborts its own underlying connection when the SAME `AbortSignal` object passed to
