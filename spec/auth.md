@@ -1219,30 +1219,67 @@ be described as "the parsed body."
 
 **The rendering is ECMAScript `JSON.stringify` applied to the successfully-parsed JSON value --
 NOT the original response bytes, and NOT any host language's own default debug/repr formatting.**
-Confirmed live against Node and independently cross-checked against Python's own `json` module,
-`JSON.stringify(value)` is reproduced EXACTLY by `json.dumps(value, separators=(",", ":"))`
-(compact, no space after `:` or `,`) for every ordinary case: `null` renders as the literal `null`;
-an array renders as `[...]` with its own elements recursively rendered the same way; an object
-renders with its OWN KEYS IN THE SAME ORDER `json.loads` originally produced them in (both
-`JSON.parse` and Python's own `json.loads` preserve source key order in the parsed
-object/`dict`, so no additional sorting step is needed or correct).
+An earlier revision of this section additionally claimed that compact `json.dumps(value,
+separators=(",", ":"))` reproduces `JSON.stringify` exactly except for a whole-valued-float `.0`
+suffix -- INDEPENDENT REVIEW DISPROVED THIS CLAIM with direct Node/Python probes (`L11-SC-R010`,
+fifth complete review), and it is WITHDRAWN entirely, not merely narrowed: `JSON.stringify` is a
+FULL ECMAScript algorithm with its own string-escaping rule, its own `Number::toString` algorithm,
+and its own property-enumeration order, none of which a stdlib `json.dumps` call reproduces merely
+by tweaking separators. A future Python implementation MUST use a DEDICATED renderer built to the
+rules below, not `json.dumps` with adjusted options. Every rule below was independently confirmed
+live against Node 22 (not assumed from memory), matching this row's own established `L11-SA-R001`
+verification discipline:
 
-**Number formatting is the one place a naive port diverges** (independently found while fixing this
-finding, not explicitly named by the review's own three-point request, but a direct consequence of
-its own "not host-language debug output" requirement): JavaScript has ONE numeric type, so
-`JSON.stringify` renders a whole-valued number WITHOUT any trailing `.0` -- `JSON.stringify(5.0)`
-and `JSON.stringify(JSON.parse("5.0"))` both produce the string `5`, not `5.0`. Python's own
-`json.loads` instead parses a JSON literal like `5.0` into a genuine `float`, and `json.dumps`
-renders that float AS `"5.0"` -- confirmed live, a real, observable divergence for any response body
-containing a JSON number with a fractional-looking literal or scientific notation the two languages
-would otherwise treat identically once parsed. Where this row's own response-body JSON parsing
-follows the SAME JS-`Number`-faithful coercion `PROV-011`'s own `decode_jwt` already establishes
-(`parse_int=float`, round-tripping every numeric literal through IEEE-754 double representation),
-the RENDERING step must additionally format a whole-valued float the way JavaScript's own
-`Number.prototype.toString()` does (no trailing `.0`) rather than Python's own default float
-formatting, to keep the two languages' own rendered error messages byte-identical.
+- **String escaping.** `JSON.stringify` escapes ONLY three things inside a string: `"` -> `\"`,
+  `\` -> `\\`, and every control character in `U+0000`-`U+001F`, using the named escapes JSON
+  itself defines where one exists (`\b` `U+0008`, `\t` `U+0009`, `\n` `U+000A`, `\f` `U+000C`,
+  `\r` `U+000D`) and the generic `\u00XX` form (lowercase hex, zero-padded to 2 digits) for every
+  other control character in that range (confirmed: `U+0001` renders as the six-character generic escape sequence -- backslash, lowercase u, then the four hex digits 0001). EVERY other
+  character -- every printable ASCII character, and EVERY non-ASCII Unicode character, whether in
+  the Basic Multilingual Plane or requiring a UTF-16 surrogate pair (confirmed with an astral emoji,
+  `U+1F600`) -- passes through completely UNESCAPED, literally. This is the OPPOSITE of Python's own
+  `json.dumps` default (`ensure_ascii=True`), which escapes every non-ASCII character as `\uXXXX`; a
+  future implementation MUST pass `ensure_ascii=False` (or an equivalent dedicated encoder) AND
+  independently implement the control-character-only escaping rule above, since disabling
+  `ensure_ascii` alone does not itself pin the exact control-character escape set.
+- **Negative zero collapses to `0`.** `JSON.stringify(-0)` and `JSON.stringify` applied to any
+  value that IS negative zero both render the bare digit `0`, with NO minus sign -- confirmed live.
+  Python's own default float rendering preserves the sign of a negative-zero `float` (`repr(-0.0)`
+  is `'-0.0'`); a future implementation must specifically suppress that sign for this one value.
+- **Number formatting follows ECMAScript's own `Number::toString` notation choice, not Python's.**
+  Both languages compute the mathematically-identical SHORTEST decimal digit sequence that
+  round-trips to the same IEEE-754 double value (Python's own `repr(float)` has used a
+  correctly-rounded shortest-round-trip algorithm since Python 3.1, the SAME property JS's own
+  algorithm guarantees, so the DIGITS themselves generally agree) -- the divergence is in HOW those
+  digits are formatted into fixed-point vs. exponential notation, which follows JS's OWN distinct
+  threshold, confirmed by testing the exact boundaries live: fixed (plain decimal) notation is used
+  for a value whose magnitude is `>= 1e-6` and `< 1e21` (confirmed: `1e-6` renders fixed as
+  `0.000001`, `1e-7` renders exponential as `1e-7`; `1e20` renders fixed as the full 21-digit
+  integer, `1e21` renders exponential as `1e+21`); exponential notation (`d.ddd...e+NN` or
+  `e-NN`, lowercase `e`, an explicit `+` for a non-negative exponent, no leading zero-padding on the
+  exponent digits) is used outside that range. A future implementation needing genuinely
+  spec-faithful number formatting MUST implement this notation-choice logic explicitly (formatting
+  the correctly-rounded shortest digit string into fixed or exponential form per the confirmed
+  thresholds above), NOT rely on Python's own `repr`/`str`/`json.dumps` float formatting, which
+  chooses its own, different notation thresholds (confirmed independently: Python's own compact
+  `json.dumps` already renders `1e19` in exponential notation, `1e+19`, where JS still uses fixed
+  notation at that magnitude -- a divergence not even confined to the boundary values the review's
+  own probes named).
+- **Property enumeration order is NOT source/insertion order for array-index-like keys.** An
+  earlier revision of this section incorrectly claimed `JSON.parse`/`json.loads` "preserve source
+  key order" identically -- DISPROVED live: ECMAScript's own own-property enumeration order places
+  every "array index" key (a string that is the canonical decimal representation of an integer in
+  `[0, 2**32 - 2]`, no leading zeros) FIRST, in ASCENDING NUMERIC order, regardless of the source
+  JSON's own key order, followed by every other (non-array-index) string key in the source's own
+  original insertion order (confirmed: parsing `{"2":"b","1":"a","x":0}` and re-stringifying
+  produces `{"1":"a","2":"b","x":0}` -- `"1"`/`"2"` reordered numerically ahead of `"x"` even though
+  the source put `"2"` first). Python's own `json.loads`/`dict`/`json.dumps` pipeline preserves
+  PURE source insertion order unconditionally, with no such numeric-key reordering -- a future
+  implementation rendering an object with any integer-string-shaped key MUST apply this reordering
+  explicitly; it is not something ordinary dict iteration provides.
 
-Using this shared rendering rule, the three exact templates are:
+Using the exact three message templates (unaffected by this correction -- only the rendering RULE
+was wrong, not the templates or the `JSON.stringify` authority itself), which remain:
 
 ```text
 device-start (step 1 above):
@@ -1255,10 +1292,17 @@ token exchange/refresh (below):
 
 A permanent implementation witness MUST cover, at minimum, for at least one of these three
 templates (the same rendering logic governs all three, so one shared rendering test plus one
-template-text test per message is sufficient, not nine independent full-message tests): a `null`
-response body; an array-shaped response body; and an ordered, multi-field object whose own key
-order and (if present) any whole-valued numeric field distinguish a correct rendering from a
-plausible-looking but wrong host-language default.
+template-text test per message is sufficient, not repeating full coverage nine times): a `null`
+response body; an array-shaped response body; an object containing a NON-ASCII string value
+(confirming it renders literally, unescaped); an object containing a value that is negative zero
+(confirming the sign is dropped); a value requiring the small-exponent notation boundary (e.g. a
+value at or just past `1e-6`/`1e-7`) and the large-exponent boundary (e.g. at or just past
+`1e20`/`1e21`); and an object with at least one integer-string-shaped key alongside a non-numeric
+key in an order that would distinguish correct ECMAScript-style reordering from plain source-order
+preservation. A future implementation pass MUST re-verify every one of these rules live against a
+current Node process before relying on this section alone, exactly as this section's own rules were
+derived -- this section documents CONFIRMED behavior as of the probes performed here, not a
+guarantee that no further edge case exists.
 
 ### Token exchange and refresh
 
