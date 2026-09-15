@@ -1034,16 +1034,14 @@ recognized login method; do not silently fall back to either flow.
    as that raw parse error, UNCHANGED** -- it is never converted into this step's own "invalid
    response" message below (`L11-SC-R004`; see "Token exchange and refresh" for the identical rule
    restated once for all four outbound calls in this row). Only once the body successfully parses as
-   JSON does field-level validation apply, and that validation is a JAVASCRIPT TRUTHINESS check, NOT
-   a string-type check (`L11-SC-R003`, independent review: pinned Pi's own TypeScript field
-   annotations -- `device_auth_id?: string`, `user_code?: string` -- are ERASED at runtime; the
-   actual guard is `!json?.device_auth_id || !json.user_code`, which accepts ANY truthy value of ANY
-   type, not only a non-empty string -- a truthy JSON number or object for either field is NOT
-   rejected by Pi's own real code, even though it would violate the DECLARED type). A future
-   implementation MUST reproduce this truthy-of-any-type acceptance (representing these two fields
-   as an open `JsonValue`-shaped check rather than a strict string type) UNLESS the owner explicitly
-   approves a stricter, disclosed validation divergence instead (`agent-workflow.md` §11.10) -- do
-   not silently narrow this to "must be a string" and call the row Pi-faithful.
+   JSON does field-level validation apply. **`device_auth_id` and `user_code` MUST be actual JSON
+   STRINGS, not merely JS-truthy values of any type** (`L11-SC-R005`, owner-approved intentional
+   divergence -- see "Provider-response field-type validation divergence (`PROV-016`)" below for the
+   full disclosure, Pi baseline, and rationale; this REPLACES an earlier revision of this paragraph,
+   which required reproducing pinned Pi's own truthy-of-any-type acceptance before the owner decided
+   otherwise). A present-but-non-string value for either field is treated identically to an
+   absent/falsy one -- rejected via the SAME "invalid response" path below, not admitted into the
+   typed Minion domain.
 
    `interval` uses a THIRD validation rule, distinct from both fields above: `typeof intervalSeconds
    !== "number" || !Number.isFinite(intervalSeconds) || intervalSeconds < 0` is the actual guard,
@@ -1095,12 +1093,14 @@ recognized login method; do not silently fall back to either flow.
                                                                  FAILED-outcome message below or a
                                                                  PENDING/SLOW_DOWN outcome
    2xx, body parses as JSON, has BOTH authorization_code and
-     code_verifier (JAVASCRIPT-TRUTHY, any type -- `L11-SC-R003`,
-     same truthiness rule as step 1's own fields, NOT a
-     string-type check)                                       -> COMPLETE, value = {authorization_code,
+     code_verifier as ACTUAL JSON STRINGS (`L11-SC-R005`,
+     owner-approved intentional divergence -- NOT the JS-truthy-
+     any-type rule step 1's own device_auth_id/user_code fields
+     were ALSO narrowed to strings by that same decision; see
+     `PROV-016` below)                                         -> COMPLETE, value = {authorization_code,
                                                                     code_verifier}
-   2xx, body parses as JSON but is missing either field
-     (falsy or absent)                                        -> FAILED ("Invalid ... token response:
+   2xx, body parses as JSON but either field is falsy, absent,
+     OR present-but-non-string                                 -> FAILED ("Invalid ... token response:
                                                                     <body>")
    403 or 404                                                  -> PENDING
    other status, error body FAILS to parse as JSON             -> FAILED (status+body message) -- an
@@ -1151,14 +1151,18 @@ converted into a field-validation message; contrast the device-poll's own SEPARA
 DIFFERENT rule for an UNPARSEABLE ERROR body on its non-2xx path, which IS caught and folded into a
 generic failure, not propagated raw -- these are two different Pi behaviors for two different
 response paths, not the same rule restated). Only once the body successfully parses as JSON does
-field-level validation apply: a `2xx` body MUST supply a JAVASCRIPT-TRUTHY (any type, NOT
-necessarily a string -- `L11-SC-R003`, same erased-runtime-type-annotation rule as the device-flow
-fields above) `access_token` and a JAVASCRIPT-TRUTHY `refresh_token`, PLUS an `expires_in` that
-passes an EXPLICIT `typeof expires_in !== "number"` check -- this THIRD field is validated
-differently from the first two: pinned Pi's own guard is `!json?.access_token || !json.refresh_token
-|| typeof json.expires_in !== "number"`, a genuine MIX of two truthiness checks and one real
-runtime type check within the SAME validation, not three checks of the same kind. Any failing field
-(by ITS OWN applicable rule) raises `"OpenAI Codex token {exchange|refresh} response missing fields:
+field-level validation apply: a `2xx` body MUST supply an ACTUAL JSON STRING (`L11-SC-R005`,
+owner-approved intentional divergence -- NOT the JS-truthy-any-type rule an earlier revision of this
+paragraph required; see "Provider-response field-type validation divergence (`PROV-016`)" below) for
+`access_token` and for `refresh_token`, PLUS an `expires_in` that passes an EXPLICIT
+`typeof expires_in !== "number"` check -- pinned Pi's OWN guard is `!json?.access_token ||
+!json.refresh_token || typeof json.expires_in !== "number"`, purely truthiness for the first two and
+a real runtime type check for the third; this row's own DIVERGENCE (per `PROV-016`) narrows the
+first two from Pi's own truthy-any-type acceptance down to an actual-string requirement, while
+`expires_in`'s OWN rule is UNCHANGED from Pi (it was already a real type check, not a truthiness
+check, so no divergence applies to it). Any failing field (by ITS OWN applicable rule -- a
+present-but-non-string `access_token`/`refresh_token` fails by this row's own divergence, not by
+Pi's own baseline rule) raises `"OpenAI Codex token {exchange|refresh} response missing fields:
 {the parsed body}"`. On success, the resulting token's own `expires` is the CURRENT wall-clock time
 in Unix-epoch milliseconds PLUS `expires_in * 1000` (matching `OAuthCredential.expires`'s own
 existing epoch-milliseconds contract, `PROV-006`) -- computed at response-parse time, not at
@@ -1269,3 +1273,72 @@ If implementation discovers that this contract cannot be expressed through the a
 `PROV-008`/`PROV-009`/`PROV-010` seams without changing their own observable semantics, that is an
 `IMPLEMENTATION_DISCOVERED_CONTRACT_DEFECT` requiring owner governance before proceeding -- those
 seams' own certified contracts are not silently widened to accommodate this row.
+
+## Provider-response field-type validation divergence (`PROV-016`, intentional divergence)
+
+Pinned Pi's own runtime validation for six `PROV-012` network-response fields --
+`device_auth_id`, `user_code`, `authorization_code`, `code_verifier`, `access_token`,
+`refresh_token` -- is JAVASCRIPT TRUTHINESS ONLY, accepting ANY truthy value of ANY JSON type, not
+merely a non-empty string: pinned TypeScript field annotations for these six (e.g.
+`device_auth_id?: string`) are ERASED at runtime, and the actual guards (`openai-codex.ts:219-224,
+254,138`) never perform a `typeof value === "string"` check on any of them -- confirmed directly
+against pinned Pi (`L11-SC-R003`/`L11-SC-R005`, independent review). A truthy JSON number, boolean,
+or object for any of these six fields is NOT rejected by Pi's own real code, even though it would
+violate the field's own DECLARED type.
+
+Pi's own downstream handling of such a value is not undefined, either -- a non-string
+`code`/`code_verifier` reaching `exchangeAuthorizationCode`'s own `new URLSearchParams({...})` call
+is coerced via JavaScript's own implicit `String()` conversion (empirically confirmed live:
+`new URLSearchParams({code_verifier: 123})` produces the query-string fragment
+`code_verifier=123`), and a non-string `user_code` reaching `AuthEventDeviceCode` would simply be
+stored and later forwarded as whatever value it is.
+
+**Minion's own decision, owner-approved (`GOVERNANCE_SOURCE`, verbatim at
+`https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5676459844`, per
+`agent-workflow.md` §11.10): this project does NOT reproduce Pi's own truthy-any-type acceptance for
+these six fields.** At `PROV-012`'s own provider-network response-validation boundary, all six
+fields MUST be actual JSON strings; a present-but-non-string (truthy) value is rejected via the SAME
+"invalid response" path an absent/falsy value already takes, not admitted into the typed Minion
+domain. This is classified an INTENTIONAL, NARROW, owner-approved Pi divergence, not a Pi-parity
+defect and not a claim that Pi itself performs this rejection.
+
+**Rationale (per the owner's own decision).** Pi's own broader acceptance is an artifact of erased
+JavaScript runtime typing at an external-data boundary, not a documented, load-bearing part of the
+Codex OAuth API contract -- no confirmed real `auth.openai.com` response or real Pi call site has
+ever been observed exercising it. Reproducing it faithfully would require widening TWO
+already-certified shared types (`PROV-006`'s own `OAuthCredential.refresh: str`, `PROV-014`'s own
+`AuthEventDeviceCode.user_code: str`) to an open `JsonValue`, and then specifying JavaScript
+`String()`/`URLSearchParams` coercion semantics at every downstream point such a widened value could
+reach -- disproportionate cost for an edge case with no confirmed real trigger. Strict validation at
+this row's own ingress instead preserves every already-certified typed surface unchanged and
+localizes the entire divergence to `PROV-012`'s own provider-response decoder.
+
+**Scope, exactly (per the owner's own decision -- do not generalize beyond this).** This approval
+covers ONLY the six named fields' own type validation at `PROV-012`'s own response-decoding
+boundary. It does NOT authorize: generalized stricter validation elsewhere in this row (e.g. the
+`interval` field's own validation rule, and every other rule this row's own sections state, are
+UNCHANGED Pi-faithful behavior, not covered by this divergence); changing any OTHER Pi-compatible
+truthiness rule; changing `PROV-006`'s own credential semantics; changing `PROV-014`'s own
+interaction semantics; or silently "cleaning up" any other Pi runtime quirk this or a future audit
+might find.
+
+**Required test coverage (binding on the implementation pass that closes `PROV-012`, not yet
+performed -- no Python code for this row exists yet).** For each of the six named fields, a
+permanent, discriminating witness MUST cover:
+
+```text
+a valid, actual string value            -> accepted, exactly as Pi accepts it
+an absent/falsy value                   -> rejected via the existing Pi-compatible
+                                            invalid-response path (unchanged from Pi)
+a present, JAVASCRIPT-TRUTHY, non-string
+  value (e.g. a JSON number or object)   -> rejected -- Minion's OWN intentional
+                                            divergence from Pi's own real acceptance,
+                                            not a Pi-compatible outcome
+```
+
+**For a future Rust implementation:** this divergence is a general instruction, not a Python
+mechanism to replicate. Rust's own typed request/response surfaces are expected to enforce this
+same string requirement naturally as part of ordinary strict deserialization; no special-cased
+"accept then reject a non-string" step should be needed the way Python's own dynamic JSON parsing
+requires. Any Rust-specific representation choice is reviewed independently when Rust implements
+this row.
