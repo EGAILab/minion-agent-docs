@@ -769,13 +769,27 @@ LOGIN_METHOD_DEVICE_CODE                = "device_code"   # select-prompt option
 ```
 
 The local callback server always LISTENS on port `1455` (not configurable) at a HOST that IS
-configurable (`PI_OAUTH_CALLBACK_HOST` environment variable, default `"127.0.0.1"` when absent or
-blank) -- read directly from the process environment, NOT through the `AuthContext` seam
-`ApiKeyCheck`/`ApiKeyResolve` use (Pi's own `OAuthLogin`/`OAuthRefresh`/`OAuthToAuth` callables never
-receive an `AuthContext` parameter at all; this is a genuine, disclosed asymmetry in Pi's own
-design, not an omission to correct). `REDIRECT_URI`'s own HOSTNAME is always the literal string
-`"localhost"` regardless of the configured callback host -- it is the value sent to the remote
-authorize/token endpoints, distinct from the local socket's own bind address.
+configurable (`PI_OAUTH_CALLBACK_HOST` environment variable) -- read directly from the process
+environment, NOT through the `AuthContext` seam `ApiKeyCheck`/`ApiKeyResolve` use (Pi's own
+`OAuthLogin`/`OAuthRefresh`/`OAuthToAuth` callables never receive an `AuthContext` parameter at all;
+this is a genuine, disclosed asymmetry in Pi's own design, not an omission to correct).
+
+**The default-fallback rule is a JAVASCRIPT-TRUTHINESS check, NOT a "blank normalizes to absent"
+rule** (`L11-SC-R006`, independent review -- corrects an earlier revision's own inaccurate "absent
+or blank" wording): pinned Pi's own `getCallbackHost()` is `getProviderEnvValue(...) ||
+"127.0.0.1"`, and `getProviderEnvValue` itself (`utils/provider-env.ts`) performs NO trimming or
+blank-normalization of any kind at any point in its own lookup chain -- confirmed by reading it in
+full. Only a LITERALLY EMPTY string (or a genuinely absent/undefined value) is falsy and falls back
+to the default; a WHITESPACE-ONLY value (e.g. `"   "`) is TRUTHY in JavaScript and is used VERBATIM,
+unstripped, as the actual bind host. This is a DIFFERENT rule from this same codebase's own
+`DefaultAuthContext.env()` (`PROV-006`), which DOES treat a whitespace-only value as absent -- the
+two functions are genuinely different Pi call sites with genuinely different behavior, and this row
+must NOT reuse `DefaultAuthContext`'s own blank-normalization convention merely because both happen
+to read an environment variable.
+
+`REDIRECT_URI`'s own HOSTNAME is always the literal string `"localhost"` regardless of the
+configured callback host -- it is the value sent to the remote authorize/token endpoints, distinct
+from the local socket's own bind address.
 
 ### Login method selection
 
@@ -787,10 +801,22 @@ authorize/token endpoints, distinct from the local socket's own bind address.
 {id: "device_code", label: "Device code login (headless)"}
 ```
 
+**This specific `select` prompt carries NO `signal`** (`L11-SC-R006`, independent review) -- unlike
+the browser flow's own `manual_code` prompt (which explicitly sets `signal` to its own dedicated
+abort controller), pinned Pi's own real call site constructs this `select` prompt with no `signal`
+member at all, so `AuthPromptSelect.signal` is absent/`None` here specifically. Cancelling the whole
+login flow does NOT cancel this specific pending prompt through any signal wired to it by this row
+-- whatever cancellation (if any) applies is entirely the concrete `AuthInteraction`
+implementation's own concern for an un-signalled prompt, not something this row's own contract
+provides. An implementation that attaches the whole-flow `signal` to this prompt "for consistency"
+diverges observably from Pi and MUST NOT do so.
+
 then dispatches to the browser flow or the device-code flow by the returned id (`PROV-014`'s own
-select-returns-`id` rule). Any OTHER returned id is a contract violation by the `AuthInteraction`
-implementation, not a recognized login method -- raise/reject, do not silently fall back to either
-flow.
+select-returns-`id` rule). Any OTHER returned id raises/rejects with EXACTLY the message
+`"Unknown OpenAI Codex login method: {method}"` (`L11-SC-R006`, independent review -- the prior
+"raise/reject" wording did not pin the exact text, unlike every other error message this contract
+otherwise specifies verbatim) -- a contract violation by the `AuthInteraction` implementation, not a
+recognized login method; do not silently fall back to either flow.
 
 ### Browser/PKCE flow
 
@@ -992,9 +1018,17 @@ flow.
 1. POST `DEVICE_USER_CODE_URL` with a JSON body `{client_id: CLIENT_ID}`, using the SAME
    cancellation-translation transport behavior as token exchange (see "Token exchange and refresh"
    below -- `L11-SC-R004`, independent review: this request shares that exact translation, not a
-   rule scoped only to exchange). On a non-`2xx` response: a `404` status raises a SPECIFIC message
-   ("OpenAI Codex device code login is not enabled for this server. Use browser login or verify the
-   server URL."); any OTHER non-`2xx` status raises a generic status+body message.
+   rule scoped only to exchange). On a non-`2xx` response: a `404` status raises EXACTLY the fixed
+   message `"OpenAI Codex device code login is not enabled for this server. Use browser login or
+   verify the server URL."`; any OTHER non-`2xx` status raises EXACTLY
+   `"OpenAI Codex device code request failed with status {status}"` with a CONDITIONAL suffix
+   (`L11-SC-R006`, independent review -- the prior "generic status+body message" wording did not pin
+   this exact, easily-missed format): `": {body}"` is appended ONLY when the response body is
+   non-empty (read with the SAME empty-string-on-failure fallback token exchange itself uses below);
+   when the body is empty/unreadable, there is NO trailing colon at all -- not even an empty one --
+   the message ends immediately after the status code. This differs from token exchange's OWN
+   non-`2xx` message (below), which falls back to the response's own status-text reason phrase
+   instead of omitting the suffix entirely -- the two messages are NOT the same template reused.
 
    On a `2xx` response, the body is first parsed as JSON; **a JSON-parse failure itself propagates
    as that raw parse error, UNCHANGED** -- it is never converted into this step's own "invalid
