@@ -848,19 +848,79 @@ recognized login method; do not silently fall back to either flow.
    flow falls through entirely to the manual-code path below. This is a real, easily-missed Pi
    behavior (`startLocalOAuthServer`'s own `.on("error", ...)` handler), not a hypothetical edge
    case -- a discriminating test MUST exercise it (e.g. by first occupying the port).
+
+   Immediately after the server is started, register the flow-level abort listener that step 6's own
+   race table relies on: attach a handler to the WHOLE login flow's own `signal` that, on abort,
+   cancels ONLY the server's own wait (the exact mechanism step 6 already describes). Then check
+   whether `signal` is ALREADY aborted AT THIS EXACT POINT -- and if so, invoke that SAME handler
+   immediately, synchronously, before proceeding to step 4 (in code terms, before the server's own
+   HTTP handler ever matters and before step 5's notification).
+
+   **A login flow that begins with its own `signal` already aborted does NOT short-circuit before
+   notifying/prompting** (`L11-SC-R009`, independent review, third complete review -- the race table
+   in step 6 previously covered only an abort occurring WHILE both sources are pending, never the
+   already-aborted-at-entry case, which a reader could reasonably assume skips straight to failure):
+   this immediate pre-check has EXACTLY the same effect as the abort event firing later -- it
+   cancels ONLY the server's own wait, exactly like the mid-flow case step 6 already describes. It
+   does NOT prevent step 5's own `auth_url` notification from firing, and does NOT prevent step 6's
+   own `manual_code` prompt from being created and waited on -- both still happen, unconditionally,
+   regardless of whether `signal` was already aborted before this function was even called. The
+   manual prompt's own SEPARATE per-prompt signal is, as step 6 already states, aborted ONLY during
+   final cleanup, so an already-aborted whole-flow signal at entry still leaves this operation
+   waiting on the manual prompt's own eventual settlement, exactly like the mid-flow abort case. An
+   implementation that treats an already-aborted `signal` as a reason to return/raise immediately,
+   before notifying or prompting, diverges observably from Pi.
 4. The server handles exactly one route, `/auth/callback`, with these EXACT response rules (every
    other route is `404`):
 
    ```text
    path != "/auth/callback"                        -> 404, error page ("Callback route not found.")
    query "state" != the state generated in step 1   -> 400, error page ("State mismatch.")
-   query "code" absent                              -> 400, error page ("Missing authorization code.")
-   otherwise                                         -> 200, success page; yields {code} to the flow
+   query "code" ABSENT OR PRESENT-BUT-EMPTY (`""`)  -> 400, error page ("Missing authorization code.")
+   query "code" present and non-empty                -> 200, success page; yields {code} to the flow
    ```
 
-   The response body content itself (the HTML success/error pages) is presentation, not part of
-   this contract's own observable surface -- what matters is the status code and that the SAME
-   `code`/`state` query-parameter extraction and validation order above is followed exactly.
+   **An empty `code=` is REJECTED, not accepted** (`L11-SC-R007`, independent review, third
+   complete review -- corrects an earlier revision's own "code absent" wording, which a reader could
+   reasonably read as excluding a present-but-empty value from rejection): pinned Pi's own real
+   handler extracts `code` via `url.searchParams.get("code")` (which returns `""`, not `null`, for
+   `?code=`) and then tests it with a bare `if (!code)` -- JavaScript truthiness, under which an
+   EMPTY STRING is exactly as falsy as `null`/absent. A callback request for
+   `/auth/callback?state=<valid>&code=` therefore receives 400 with `"Missing authorization code."`,
+   identical to an entirely absent `code`, NOT the 200 success path. A permanent implementation
+   witness MUST distinguish an entirely-absent `code` from a present-but-empty one, proving BOTH
+   independently take the 400 path (an implementation that only tests presence, not truthiness,
+   could otherwise pass a witness covering only the absent case).
+
+   **Every response from this route, on EVERY branch including an internal failure, shares two
+   further observable properties** (`L11-SC-R008`, independent review, third complete review -- the
+   prior "body content is presentation, not part of this contract's own observable surface" wording
+   incorrectly extended past the HTML body itself to also exclude these two, genuinely observable,
+   non-presentational properties):
+
+   - **`Content-Type: text/html; charset=utf-8`** is set on EVERY response this route ever sends --
+     the `404`, both `400`s, the `200`, and the `500` below all set the IDENTICAL header value before
+     writing their own (HTML-content, still out of scope) body. This header value IS part of this
+     contract's own observable surface, distinct from the HTML body content itself, which remains
+     out of scope.
+   - **Any exception raised while parsing the request URL or handling the route is CAUGHT and
+     produces a CONTAINED `500` response** (`Content-Type` as above, an internal-error HTML body,
+     still out of scope) -- pinned Pi's own handler wraps its ENTIRE route-handling body (URL
+     parsing, state comparison, code extraction, and every response write) in one `try`/`catch`, so a
+     malformed request or an internal error during handling never escapes as an unhandled exception
+     or crashes the server; it always resolves to this specific, contained `500` outcome. This is a
+     FIFTH row of the route table above, not merely an implementation detail:
+
+     ```text
+     request handling itself raises (malformed URL,
+       or any other internal failure during parsing/handling)   -> 500, error page (contained, never
+                                                                     escapes/crashes the server)
+     ```
+
+   The response BODY content itself (the HTML success/error/internal-error pages) remains
+   presentation, out of this contract's own observable surface -- only the status code, the
+   `Content-Type` header value, the `500`-containment guarantee, and the SAME `code`/`state`
+   query-parameter extraction and validation order above are part of it.
 5. Emit an `auth_url` notification (`PROV-014`'s own `AuthEventUrl`) carrying the built URL and the
    fixed instructions text `"A browser window should open. Complete login to finish."` -- emitting
    this event is NOT the same as opening a browser (browser LAUNCHING remains explicitly OUT OF
