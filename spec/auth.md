@@ -1086,17 +1086,28 @@ recognized login method; do not silently fall back to either flow.
      fallback) -- the fallback strategies then parse the ORIGINAL untouched input string, not any
      partial/attempted URL decomposition;
    - the value handed to URL construction is first converted per the Web IDL `USVString`
-     conversion algorithm (`L11-SC-R011`, third round -- `new URL(value)`'s own operand is
-     `USVString`-typed): an UNPAIRED UTF-16 surrogate code unit in the value is replaced with
-     `U+FFFD` (the replacement character) BEFORE construction is attempted, NOT left as-is and NOT
-     treated as a construction failure in its own right -- confirmed live, a lone surrogate inside
-     an otherwise-valid URL's own query string becomes `U+FFFD` in the successfully-parsed
-     `code`/`state`. This `USVString` conversion applies ONLY to the value fed to the URL
-     constructor itself -- the ORIGINAL, unconverted value (lone surrogate intact) is what the
-     fallback strategies above operate on when construction fails for any reason, including when
-     the value is not itself convertible into a valid URL at all (e.g. a bare lone surrogate,
-     which has no recognized scheme and so falls through to the bare-code fallback carrying the
-     original surrogate verbatim, not `U+FFFD`).
+     conversion algorithm (`L11-SC-R011`, third and fourth rounds -- `new URL(value)`'s own
+     operand is `USVString`-typed): the value is scanned one UTF-16 code unit at a time; a HIGH
+     surrogate immediately followed by a LOW surrogate is a VALID PAIR and is COMBINED into the
+     single astral Unicode scalar value it represents, exactly as the standard UTF-16
+     surrogate-pair decoding formula defines -- this is NOT optional or a rare edge case to skip:
+     an implementation whose input representation can carry an explicit adjacent high+low pair as
+     two separate units (as opposed to already having combined it into one native scalar value)
+     MUST perform this combination, or a valid pair (e.g. many emoji) renders as two SEPARATE
+     replacement characters instead of the one correct astral character it actually represents.
+     Any OTHER surrogate-range code unit -- one with no partner at all, or paired in the WRONG
+     order (a low surrogate not immediately preceded by a high one) -- is genuinely UNPAIRED and
+     is replaced with `U+FFFD` (the replacement character) INDIVIDUALLY, BEFORE construction is
+     attempted, NOT left as-is and NOT treated as a construction failure in its own right --
+     confirmed live, a lone surrogate inside an otherwise-valid URL's own query string becomes
+     `U+FFFD` in the successfully-parsed `code`/`state`, while a valid adjacent pair in the same
+     position becomes the single combined character. This `USVString` conversion applies ONLY to
+     the value fed to the URL constructor itself -- the ORIGINAL, unconverted value (any lone
+     surrogate or adjacent pair intact, uncombined) is what the fallback strategies above operate
+     on when construction fails for any reason, including when the value is not itself
+     convertible into a valid URL at all (e.g. a bare lone surrogate, which has no recognized
+     scheme and so falls through to the bare-code fallback carrying the original surrogate
+     verbatim, not `U+FFFD`).
 
    An implementation MUST reproduce this exact success/failure boundary, not a partial proxy for
    it (a scheme-presence-only check, or an unvalidated host/port check, both diverge observably --
@@ -1112,10 +1123,15 @@ recognized login method; do not silently fall back to either flow.
    A permanent implementation witness MUST cover, at minimum: an ordinary authority-bearing
    absolute URL; a no-authority scheme (`mailto:`/`file:`-shaped); a malformed host that must fail
    construction (an unterminated IPv6 host shape and a forbidden host character both included, not
-   only one); the invalid-port fallthrough case above; and the unpaired-surrogate pair (a lone
+   only one); the invalid-port fallthrough case above; the unpaired-surrogate pair (a lone
    surrogate inside an otherwise-valid URL's query string, replaced with `U+FFFD`; a bare lone
    surrogate whose own construction fails entirely, falling through with the original surrogate
-   intact).
+   intact); and the EXPLICIT-ADJACENT-PAIR case (`L11-SC-R011`, fourth round -- distinct from the
+   unpaired case above, and NOT satisfied by only testing an already-combined astral scalar
+   value): a high surrogate immediately followed by a low surrogate combines into its own single
+   astral character inside an otherwise-valid URL's query string, NOT two separate `U+FFFD`
+   characters; a companion negative-control pair (surrogates present but in the wrong order, or a
+   high surrogate with no low-surrogate partner at all) confirms those remain genuinely unpaired.
 
    State validation for this parsed result is the SAME truthiness-based rule step 6 already states
    in full (see its own "Manual state validation" note above) -- not restated here to avoid two
