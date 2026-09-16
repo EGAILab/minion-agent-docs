@@ -818,6 +818,24 @@ select-returns-`id` rule). Any OTHER returned id raises/rejects with EXACTLY the
 otherwise specifies verbatim) -- a contract violation by the `AuthInteraction` implementation, not a
 recognized login method; do not silently fall back to either flow.
 
+### Response body text decoding (`L11-SC-R023`, mandatory final-complete review)
+
+Stated ONCE here, applicable to EVERY place this row's own sections below read a response body as
+text (device-start, device-poll, token exchange/refresh) -- not restated per section, to avoid two
+sources of truth for the identical rule. Pinned Pi reads a response body via `Response.text()`/
+`.json()`, WHATWG Fetch APIs whose own UTF-8 body-text decoding strips exactly ONE LEADING UTF-8
+byte-order mark (`EF BB BF`) before exposing the decoded text -- confirmed live (`TextDecoder`,
+the algorithm Fetch's own decoding uses). An INTERIOR `U+FEFF` (anywhere other than the very start
+of the body) is left untouched -- only the leading occurrence is special. An implementation whose
+own text-decoding step does not perform this stripping diverges observably: a real server response
+beginning with a UTF-8 BOM would otherwise fail JSON parsing entirely (many JSON parsers,
+including Python's own `json.loads`, explicitly reject a leading BOM as invalid JSON syntax) or
+leave a stray character in a non-JSON text body, neither of which pinned Pi's own decoding
+produces. A permanent implementation witness MUST cover both a leading-BOM-prefixed body (stripped,
+parses/reads correctly) and an interior-`U+FEFF` body (left untouched) as two DISTINCT cases -- an
+implementation that strips every `U+FEFF` occurrence, not only a leading one, also diverges
+observably and is ruled out by the second case.
+
 ### Browser/PKCE flow
 
 1. Generate a PKCE pair (`PROV-009`'s own `generate_pkce()`) and a random state: 16 cryptographically
@@ -1146,7 +1164,12 @@ recognized login method; do not silently fall back to either flow.
    below -- `L11-SC-R004`, independent review: this request shares that exact translation, not a
    rule scoped only to exchange). On a non-`2xx` response: a `404` status raises EXACTLY the fixed
    message `"OpenAI Codex device code login is not enabled for this server. Use browser login or
-   verify the server URL."`; any OTHER non-`2xx` status raises EXACTLY
+   verify the server URL."`, and the response body is NEVER READ AT ALL for this specific branch
+   (`L11-SC-R022`, mandatory final-complete review -- pinned Pi's own code never calls `.text()`/
+   `.json()` here; an implementation whose transport seam eagerly buffers the ENTIRE body before a
+   caller can even inspect `status` diverges observably: a slow or never-completing body on this
+   exact response must not delay or block raising this fixed message at all); any OTHER non-`2xx`
+   status raises EXACTLY
    `"OpenAI Codex device code request failed with status {status}"` with a CONDITIONAL suffix
    (`L11-SC-R006`, independent review -- the prior "generic status+body message" wording did not pin
    this exact, easily-missed format): `": {body}"` is appended ONLY when the response body is
@@ -1266,7 +1289,15 @@ recognized login method; do not silently fall back to either flow.
                                                                     {rendered json}" (`L11-SC-R010`
                                                                     -- see the shared rendering rule
                                                                     stated right after this section)
-   403 or 404                                                  -> PENDING
+   403 or 404                                                  -> PENDING, and the response body is
+                                                                    NEVER READ AT ALL for this branch
+                                                                    (`L11-SC-R022`, mandatory
+                                                                    final-complete review -- same
+                                                                    rule as device-start's own `404`
+                                                                    branch above: a slow or
+                                                                    never-completing body on this
+                                                                    exact response must not delay or
+                                                                    block the PENDING outcome at all)
    other status, error body FAILS to parse as JSON             -> FAILED (status+body message) -- an
                                                                     unparseable error body is folded
                                                                     into the generic FAILED case, NOT
@@ -1376,6 +1407,24 @@ before relying on it, rather than treating this list as sufficient on its own:
   `json.dumps` already renders `1e19` in exponential notation, `1e+19`, where JS still uses fixed
   notation at that magnitude -- a divergence not even confined to the boundary values the review's
   own probes named).
+- **A non-finite number renders as the JSON literal `null`, at ANY nesting depth** (`L11-SC-R024`,
+  mandatory final-complete review): `JSON.stringify`'s own `SerializeJSONProperty` step checks
+  `Number::isFinite` BEFORE attempting `Number::toString` at all, returning the literal `null`
+  immediately for `Infinity`/`-Infinity`/`NaN` -- confirmed live this applies UNIFORMLY whether the
+  value is nested (`JSON.stringify({x: Infinity})` renders `{"x":null}`) or at the very top level
+  (`JSON.stringify(Infinity)` ALSO renders the STRING `"null"`, not JavaScript `undefined` -- that
+  is the DIFFERENT, unrelated result of `JSON.stringify(undefined)`, a value this row's own JSON
+  domain never contains, since every value reaching this renderer already parsed successfully as
+  ordinary JSON). This is REACHABLE through a real call site here: a JSON number literal with a
+  large exponent (e.g. `1e400`) is syntactically valid JSON number syntax and parses to
+  `Infinity`/`-Infinity` -- this is DISTINCT from the bare invalid token `Infinity` appearing
+  directly in JSON text (which `JSON.parse` itself rejects with a `SyntaxError`, a genuinely
+  different, unparseable input shape, not a valid number literal at all) -- such a value can reach
+  this renderer when it fails a finite-value field guard (e.g. device-start's own `interval`) and
+  gets embedded in the resulting "invalid response" message. A future
+  implementation MUST guard its own number-formatting step against non-finite input explicitly
+  (e.g. checking finiteness before any decimal decomposition), NOT assume every number reaching
+  the renderer is already finite.
 - **Property enumeration order is NOT source/insertion order for array-index-like keys.** An
   earlier revision of this section incorrectly claimed `JSON.parse`/`json.loads` "preserve source
   key order" identically -- DISPROVED live: ECMAScript's own own-property enumeration order places
@@ -1497,8 +1546,18 @@ section, which incorrectly assigned the FIRST rule only to exchange):
   concern from either JSON-parse-failure rule above, which governs a response body that DID arrive.
 - **Refresh alone** applies NO such translation: ANY network-level failure (not a non-2xx HTTP
   response, which is handled by the shared response-parsing rule above, but a failure to complete
-  the request at all) is wrapped as `"OpenAI Codex token refresh error: {the underlying error's own
-  message}"`, with no cancellation-specific message, regardless of whether the signal was the cause.
+  the request at all -- i.e. status/headers themselves never arrived) is wrapped as `"OpenAI Codex
+  token refresh error: {the underlying error's own message}"`, with no cancellation-specific
+  message, regardless of whether the signal was the cause. This wrapping is scoped EXACTLY to that
+  request-level failure and nothing later (`L11-SC-R022`, mandatory final-complete review): pinned
+  Pi's own `readTokenResponse(response, "refresh")` call happens OUTSIDE `refreshAccessToken`'s own
+  `try`/`catch`, so a failure to READ the body of an already-successfully-arrived `2xx` response
+  (not merely a JSON-syntax-parse failure on bytes that already arrived, but the underlying
+  byte-level read itself failing, e.g. a connection reset mid-body) is NOT wrapped by this rule --
+  it propagates as that raw underlying error, exactly like the shared 2xx body-read/parse-failure
+  rule above already states; an implementation whose transport seam eagerly reads the body as part
+  of the SAME operation that performs the request diverges observably here, mis-wrapping a body-read
+  failure as this refresh-specific message instead of letting it propagate raw.
   This asymmetry is NOT because refresh's own caller supplies "a fixed time budget, not a
   user-driven cancellation" -- an earlier revision of this section stated that, and it is
   INACCURATE (`L11-SC-R004`): the already-certified `PROV-008`'s own `refresh_if_expiring` supplies
