@@ -739,12 +739,18 @@ Pinned Pi's Codex OAuth NETWORK half (`packages/ai/src/auth/oauth/openai-codex.t
 as `PROV-009`/`PROV-010`), `packages/ai/src/utils/abort.ts`) -- consuming the interaction/auth-method
 vocabulary (`PROV-014`) and the Codex account-id projection (`PROV-011`) already adopted above.
 
-This section is the SHARED CONTRACT for this slice, produced contract-first per the owner's own
-Pass-2 scope decision (`GOVERNANCE_SOURCE`,
+This section is the SHARED CONTRACT for this slice, originally produced contract-first per the
+owner's own Pass-2 scope decision (`GOVERNANCE_SOURCE`,
 `https://github.com/EGAILab/minion-agent/issues/29#issuecomment-5659001629`): "Slice C: PROV-012,
-Codex OAuth network integration consuming Slice B vocabulary." Python implementation, tests, and
-gates for this contract are a separate, following pass; this section alone is not itself a claim
-that Python or Rust code implementing it yet exists.
+Codex OAuth network integration consuming Slice B vocabulary." **Current state (`L11-SC-R026`,
+mandatory final-complete review, corrected from an earlier revision of this paragraph that stated
+Python implementation was "a separate, following pass" not yet begun): a Python implementation of
+this exact contract EXISTS** (`minion-agent-python/src/minion_agent/auth/openai_codex_oauth.py`,
+`http_transport.py`, `js_json.py`; the manifest's own `PROV-012` row is `adopted`, not
+`deferred parity`) -- this section remains the language-neutral, implementation-independent
+normative authority an implementation in ANY language is answerable to, not a description of what
+does or does not exist yet. Rust implementation of this exact contract has NOT begun and remains
+blocked pending independent Rust-side review approval of the Python/shared candidate.
 
 ### Fixed identity/endpoint constants
 
@@ -1694,9 +1700,11 @@ truthiness rule; changing `PROV-006`'s own credential semantics; changing `PROV-
 interaction semantics; or silently "cleaning up" any other Pi runtime quirk this or a future audit
 might find.
 
-**Required test coverage (binding on the implementation pass that closes `PROV-012`, not yet
-performed -- no Python code for this row exists yet).** For each of the six named fields, a
-permanent, discriminating witness MUST cover:
+**Required test coverage (binding on any implementation of `PROV-012`; the Python implementation
+pass has already PERFORMED this for `minion-agent-python`, per its own `PROV-012` manifest
+evidence -- `L11-SC-R026`, mandatory final-complete review, corrected from an earlier revision of
+this paragraph that stated no Python code for this row existed yet).** For each of the six named
+fields, a permanent, discriminating witness MUST cover:
 
 ```text
 a valid, actual string value            -> accepted, exactly as Pi accepts it
