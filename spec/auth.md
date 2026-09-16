@@ -1084,7 +1084,19 @@ recognized login method; do not silently fall back to either flow.
    - when construction fails for ANY reason, parsing falls through to the next strategy in the
      table above (the `"#"`-containing shape, then the bare-query-string shape, then the bare-code
      fallback) -- the fallback strategies then parse the ORIGINAL untouched input string, not any
-     partial/attempted URL decomposition.
+     partial/attempted URL decomposition;
+   - the value handed to URL construction is first converted per the Web IDL `USVString`
+     conversion algorithm (`L11-SC-R011`, third round -- `new URL(value)`'s own operand is
+     `USVString`-typed): an UNPAIRED UTF-16 surrogate code unit in the value is replaced with
+     `U+FFFD` (the replacement character) BEFORE construction is attempted, NOT left as-is and NOT
+     treated as a construction failure in its own right -- confirmed live, a lone surrogate inside
+     an otherwise-valid URL's own query string becomes `U+FFFD` in the successfully-parsed
+     `code`/`state`. This `USVString` conversion applies ONLY to the value fed to the URL
+     constructor itself -- the ORIGINAL, unconverted value (lone surrogate intact) is what the
+     fallback strategies above operate on when construction fails for any reason, including when
+     the value is not itself convertible into a valid URL at all (e.g. a bare lone surrogate,
+     which has no recognized scheme and so falls through to the bare-code fallback carrying the
+     original surrogate verbatim, not `U+FFFD`).
 
    An implementation MUST reproduce this exact success/failure boundary, not a partial proxy for
    it (a scheme-presence-only check, or an unvalidated host/port check, both diverge observably --
@@ -1093,10 +1105,17 @@ recognized login method; do not silently fall back to either flow.
    "s"}`; the correct boundary rejects construction and falls through to the bare-query-string
    strategy, which parses the WHOLE original string as one query string and yields `{code: absent,
    state: "s"}`, since everything up to and including `"?code"` becomes a single non-matching key).
+   An implementation whose URL-construction mechanism itself requires a valid Unicode-scalar-value
+   string as input (e.g. because it must encode the value to UTF-8 before parsing) MUST perform
+   the `USVString` conversion itself first, rather than letting an unpaired surrogate raise an
+   uncaught encoding error out of this whole function.
    A permanent implementation witness MUST cover, at minimum: an ordinary authority-bearing
    absolute URL; a no-authority scheme (`mailto:`/`file:`-shaped); a malformed host that must fail
    construction (an unterminated IPv6 host shape and a forbidden host character both included, not
-   only one); and the invalid-port fallthrough case above.
+   only one); the invalid-port fallthrough case above; and the unpaired-surrogate pair (a lone
+   surrogate inside an otherwise-valid URL's query string, replaced with `U+FFFD`; a bare lone
+   surrogate whose own construction fails entirely, falling through with the original surrogate
+   intact).
 
    State validation for this parsed result is the SAME truthiness-based rule step 6 already states
    in full (see its own "Manual state validation" note above) -- not restated here to avoid two
@@ -1417,8 +1436,15 @@ path, which IS caught and folded into a generic failure, not propagated raw -- t
 different Pi behaviors for different response paths, not the same rule restated, and an
 implementation's own transport seam MUST distinguish a `2xx` status from a non-`2xx` status when
 deciding whether a body-read failure specifically is swallowed or propagated, not apply one
-uniform rule to a body-read failure regardless of status). Only once the body successfully parses
-as JSON does
+uniform rule to a body-read failure regardless of status). On the non-`2xx` path, "a body-read
+failure" means ANY failure of the underlying read operation, of WHATEVER kind -- `L11-SC-R018`,
+third round: pinned Pi's own `.text().catch(() => "")` catches every promise rejection the
+body-read operation can produce, not a rejection restricted to one particular error type or
+library-specific hierarchy, so an implementation's own non-`2xx` catch MUST be similarly
+unscoped by exception/error TYPE (scoped only by WHICH call-site branch -- 2xx vs non-2xx -- the
+read happens in, never by what kind of error a particular read failure happens to raise). A
+genuine operation-cancellation signal is not itself "a body-read failure" in this sense and is
+not swallowed by this rule. Only once the body successfully parses as JSON does
 field-level validation apply: a `2xx` body MUST supply an ACTUAL JSON STRING (`L11-SC-R005`,
 owner-approved intentional divergence -- NOT the JS-truthy-any-type rule an earlier revision of this
 paragraph required; see "Provider-response field-type validation divergence (`PROV-016`)" below) for
