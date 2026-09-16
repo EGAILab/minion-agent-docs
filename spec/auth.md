@@ -1067,6 +1067,37 @@ recognized login method; do not silently fall back to either flow.
                                                            code with no URL/query wrapper at all
    ```
 
+   **"Parses as an absolute URL" is exact WHATWG URL Standard `new URL(value)` construction
+   success/failure, not a looser or stricter approximation** (`L11-SC-R011`, converged after two
+   independent reviews). Concretely, at minimum:
+
+   - a value with a recognized scheme succeeds even with NO authority component at all (e.g.
+     `mailto:...`, `file:...` with an empty host) -- scheme presence alone does not, by itself,
+     determine success or failure for schemes that DO require an authority (see the next point);
+   - for a scheme requiring an authority (`http`, `https`, `ws`, `wss`, `ftp`), the host MUST be
+     non-empty and contain only characters that resolve to a valid domain/IPv4/IPv6 host, and any
+     explicit port MUST be a numeric string in `[0, 65535]` -- an otherwise well-formed URL with an
+     empty host, a forbidden host character, or a non-numeric or out-of-range port FAILS
+     construction just as surely as syntactic garbage does (e.g. `http://example.com:bad?code=x`
+     and `http://` both fail; only a scheme-presence check, without validating the host/port
+     themselves, incorrectly treats both as successful absolute URLs);
+   - when construction fails for ANY reason, parsing falls through to the next strategy in the
+     table above (the `"#"`-containing shape, then the bare-query-string shape, then the bare-code
+     fallback) -- the fallback strategies then parse the ORIGINAL untouched input string, not any
+     partial/attempted URL decomposition.
+
+   An implementation MUST reproduce this exact success/failure boundary, not a partial proxy for
+   it (a scheme-presence-only check, or an unvalidated host/port check, both diverge observably --
+   confirmed live, `http://example.com:bad?code=x&state=s` is the minimal discriminating case: a
+   proxy that only checks scheme presence takes the URL branch and yields `{code: "x", state:
+   "s"}`; the correct boundary rejects construction and falls through to the bare-query-string
+   strategy, which parses the WHOLE original string as one query string and yields `{code: absent,
+   state: "s"}`, since everything up to and including `"?code"` becomes a single non-matching key).
+   A permanent implementation witness MUST cover, at minimum: an ordinary authority-bearing
+   absolute URL; a no-authority scheme (`mailto:`/`file:`-shaped); a malformed host that must fail
+   construction (an unterminated IPv6 host shape and a forbidden host character both included, not
+   only one); and the invalid-port fallthrough case above.
+
    State validation for this parsed result is the SAME truthiness-based rule step 6 already states
    in full (see its own "Manual state validation" note above) -- not restated here to avoid two
    sources of truth for the identical rule.
@@ -1113,6 +1144,14 @@ recognized login method; do not silently fall back to either flow.
    assumed JS coercion behavior rather than assuming it), this coercion is NOT equivalent to a naive
    `float(trimmed)` parse:
 
+   - `trim()` here is ECMA-262 `String.prototype.trim`'s own exact fixed set of `WhiteSpace`/
+     `LineTerminator` code points (`L11-SC-R012`, converged after two independent reviews) -- this
+     INCLUDES `U+FEFF` (the byte-order mark), which a host language's own default "strip visible
+     whitespace" notion commonly does NOT include (confirmed live: Python's own `str.strip()`
+     leaves `U+FEFF` in place, so a BOM-prefixed numeric string that should coerce to a finite
+     number instead incorrectly coerces to `NaN` under a naive port). An implementation MUST trim
+     against the exact ECMA-262 code-point set, not a host-language whitespace predicate assumed to
+     be equivalent.
    - an EMPTY string (after trimming) coerces to `0`, a valid, ACCEPTED interval -- NOT rejected,
      and NOT the same as an absent/`None` interval; a Python `float("")`, by contrast, raises,
      making a naive port incorrectly REJECT a whitespace-only `interval` value Pi's own real code
@@ -1121,7 +1160,20 @@ recognized login method; do not silently fall back to either flow.
      e.g. `"5"`, `"-5"`, `".5"`, `"5."`, `"1e3"`) parses as the equivalent number.
    - a HEXADECIMAL (`0x`/`0X`), OCTAL (`0o`/`0O`), or BINARY (`0b`/`0B`) integer-literal PREFIX is
      also recognized and parsed in that base (e.g. `"0x1A"` coerces to `26`) -- a naive decimal-only
-     parser diverges observably for this input shape.
+     parser diverges observably for this input shape. These non-decimal literals are UNSIGNED
+     ONLY -- unlike the decimal grammar above, ECMA-262's own `NonDecimalIntegerLiteral`
+     productions have no leading-sign alternative at all, so a SIGNED non-decimal string (e.g.
+     `"+0x1"`, `"-0x1"`) coerces to `NaN`, NOT the signed magnitude (confirmed live). Every digit in
+     this ENTIRE grammar (decimal and non-decimal alike) is ASCII `0`-`9` ONLY -- a Unicode decimal
+     digit (e.g. Arabic-Indic digit one, `U+0661`) coerces to `NaN`, including mixed with an ASCII
+     digit, unlike a host language's own Unicode-aware digit-matching primitives, which commonly
+     accept it.
+   - a hexadecimal/octal/binary literal whose magnitude OVERFLOWS IEEE-754 double range (e.g. `"0x"`
+     followed by 1000 `"f"` digits) coerces to `Infinity` -- JavaScript's own silent-overflow
+     behavior for `Number` -- which then FAILS the surrounding `Number.isFinite` check the same way
+     the `"Infinity"` literal tokens below do; an implementation MUST NOT raise/crash for this
+     magnitude (an arbitrary-precision integer conversion followed by a narrowing float conversion,
+     performed naively, commonly raises an overflow error instead of producing `Infinity`).
    - the literal tokens `"Infinity"`/`"+Infinity"`/`"-Infinity"` coerce to the corresponding
      infinite value, which then FAILS the surrounding `Number.isFinite` check (so these are
      ultimately rejected, but via the finiteness check, not the coercion step itself).
@@ -1133,8 +1185,11 @@ recognized login method; do not silently fall back to either flow.
      reject `NaN` for the wrong stated reason).
 
    A permanent implementation witness MUST cover, at minimum: an empty/whitespace-only interval
-   string (accepted as `0`), a hex/octal/binary-prefixed string (accepted, parsed in that base), and
-   a garbage string (rejected).
+   string (accepted as `0`), a hex/octal/binary-prefixed string (accepted, parsed in that base), a
+   garbage string (rejected), a byte-order-mark-prefixed numeric string (accepted, matching the
+   trimmed value), a SIGNED non-decimal-prefixed string (rejected, `NaN`), a Unicode-decimal-digit
+   string (rejected, `NaN`), and an overflowing non-decimal literal (accepted as `Infinity`, then
+   rejected by the finiteness check, never a raised error).
 
    **On field-level validation failure (either the `PROV-016` string requirement above or the
    `interval` rule above), raise/reject EXACTLY** `"Invalid OpenAI Codex device code response:
@@ -1342,15 +1397,28 @@ refresh:  grant_type=refresh_token, refresh_token, client_id
 
 The response is parsed identically for both operations: a non-`2xx` status raises
 `"OpenAI Codex token {exchange|refresh} failed ({status}): {body text, or the status's own reason
-phrase if the body is empty/unreadable}"`. On a `2xx` response, the body is first parsed as JSON;
-**a JSON-parse failure itself propagates as that raw parse error, UNCHANGED** (`L11-SC-R004`,
-independent review -- this exact rule, stated once here, also governs the device-flow start and
-poll requests above: `response.json()`'s own rejection on a `2xx`/success-path response is never
-caught anywhere in pinned Pi's own code for ANY of these three success-path parses, and so is never
-converted into a field-validation message; contrast the device-poll's own SEPARATE, deliberately
-DIFFERENT rule for an UNPARSEABLE ERROR body on its non-2xx path, which IS caught and folded into a
-generic failure, not propagated raw -- these are two different Pi behaviors for two different
-response paths, not the same rule restated). Only once the body successfully parses as JSON does
+phrase if the body is empty/unreadable}"` -- the reason-phrase fallback is the response's own REAL
+HTTP reason phrase (whatever the server actually sent, or the transport's own standard mapping for
+the status code), not a small fixed lookup table scoped to some other, unrelated response set
+(`L11-SC-R018`, converged after two independent reviews: a fixed few-entry table, however large,
+can never cover every status a real server might send). On a `2xx` response, the body is first
+parsed as JSON; **ANY failure of that read-and-parse step -- whether the body fails to be read at
+all (e.g. a connection reset mid-body, AFTER the `2xx` status itself already arrived successfully)
+or the body reads successfully but is not valid JSON -- propagates as that raw underlying error,
+UNCHANGED** (`L11-SC-R004`/`L11-SC-R018`, independent review -- this exact rule, stated once here,
+also governs the device-flow start and poll requests above: `response.json()`'s own rejection on a
+`2xx`/success-path response is never caught anywhere in pinned Pi's own code for ANY of these three
+success-path parses, whatever the underlying cause, and so is never converted into a field-validation
+message or silently treated as an empty/absent body; contrast the SAME three requests' own non-`2xx`
+path immediately above, whose body-read-failure handling is the OPPOSITE -- collapsed into an empty
+string, per the reason-phrase fallback rule stated first in this section -- and contrast the
+device-poll's own SEPARATE, deliberately DIFFERENT rule for an UNPARSEABLE ERROR body on its non-2xx
+path, which IS caught and folded into a generic failure, not propagated raw -- these are genuinely
+different Pi behaviors for different response paths, not the same rule restated, and an
+implementation's own transport seam MUST distinguish a `2xx` status from a non-`2xx` status when
+deciding whether a body-read failure specifically is swallowed or propagated, not apply one
+uniform rule to a body-read failure regardless of status). Only once the body successfully parses
+as JSON does
 field-level validation apply: a `2xx` body MUST supply an ACTUAL JSON STRING (`L11-SC-R005`,
 owner-approved intentional divergence -- NOT the JS-truthy-any-type rule an earlier revision of this
 paragraph required; see "Provider-response field-type validation divergence (`PROV-016`)" below) for
