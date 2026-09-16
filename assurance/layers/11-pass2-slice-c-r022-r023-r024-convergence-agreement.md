@@ -22,14 +22,23 @@ production was changed by writing this document.
 
 ## Trigger check (agent-workflow.md §11.8, mandatory)
 
-All three findings are FIRST-OCCURRENCE: none has yet survived a repeat review, and Slice C's
-running review count is well past three rejections in total, but these three specific finding
-IDs are new. Neither strict §11.8 trigger condition is independently met per-ID. The final
-review's own text recommends treating them together where they are genuinely coupled ("R022 and
-R023 are coupled at the HTTP response/body boundary; R024 is a separate renderer surface"), and
-the coordination issue's own `NEXT_ACTION` explicitly requests a challenge/checkpoint pass before
-remediation given R022's architectural weight (a real seam redesign, not a point patch). This
-document treats R022+R023 as one coupled characterization (both touch
+§11.8's own second trigger condition ("layer accumulates three rejected contract reviews") is
+stated at LAYER/SLICE scope, not per finding ID -- and Slice C's own running review count is
+already well past three rejections in total (this review round alone follows several prior
+rejected rounds), so that trigger was ALREADY met before these three findings ever appeared;
+CONTRACT_CONVERGENCE for Slice C is already in force, not newly entered here. This document's own
+job is therefore not to decide WHETHER to enter convergence (already decided) but how to
+CHARACTERIZE this new, first-occurrence surface within it (correction to an earlier, ambiguously
+worded version of this paragraph, which incorrectly implied per-finding-ID trigger evaluation was
+still open at this point -- flagged as a process-quality note by the R022/R023/R024 targeted
+re-review). Individually, R022/R023/R024 are each FIRST-OCCURRENCE findings (none has yet
+survived a repeat review on its own), which is why this document performs full characterization
+for each rather than treating any of them as an already-converged, repeat-witness-only case. The
+final review's own text recommends treating them together where they are genuinely coupled ("R022
+and R023 are coupled at the HTTP response/body boundary; R024 is a separate renderer surface"),
+and the coordination issue's own `NEXT_ACTION` explicitly requests a challenge/checkpoint pass
+before remediation given R022's architectural weight (a real seam redesign, not a point patch).
+This document treats R022+R023 as one coupled characterization (both touch
 `HttpResponse`/`HttpxTransport`'s own response/body boundary) and R024 as a separate, narrower,
 self-contained fix bundled into the same implementation pass -- not because either has met the
 numeric trigger, but because the coordination explicitly asked for this pass before remediation
