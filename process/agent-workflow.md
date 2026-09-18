@@ -368,25 +368,48 @@ WP-11.4 — Codex OAuth Network Integration    # operational issue
 WP-11.D1 — Generic Auth Orchestration        # deferred tracking
 ```
 
-The operational issue contains one machine-readable current-state block, using the schema defined in `process/coordination-state.md`:
+The operational issue contains one machine-readable current-state block, using the **exact canonical schema** defined in `process/coordination-state.md` -- there is only one normative current-state shape; do not use a flattened or otherwise divergent variant:
 
 ```yaml
 workflow:
   schema_version: 1
   layer: "11"
   work_package: "WP-11.4"
+  title: "Codex OAuth Network Integration"
   status: CONTRACT_CONVERGENCE
-  code_pr: 33
-  code_sha: "<remote SHA>"
-  docs_pr: 92
-  docs_sha: "<remote SHA>"
-  open_findings:
-    - L11-SC-R025
-    - L11-SC-R027
+
+  requirements:
+    - PROV-012
+    - PROV-016
+
+  code:
+    pr: 33
+    sha: "<remote SHA>"
+    base: "main"
+
+  docs:
+    pr: 92
+    sha: "<remote SHA>"
+    base: "master"
+
+  pinned_pi: "<pinned Pi SHA>"
+
+  convergence:
+    episode: "CE-L11-04-02"
+    open_findings:
+      - L11-SC-R025
+      - L11-SC-R027
+
   next_owner: Claude
-  next_action: "Implement the agreed acceptance matrix and return for targeted closure."
+  next_action: >
+    Implement the agreed convergence surface and return the exact
+    candidate for targeted closure review.
+
   governance_source: null
   deferred_trigger: null
+
+  quarantine:
+    derived_from_quarantined_artifact: false
 ```
 
 This block is the **current control state**.
@@ -626,6 +649,24 @@ IMPLEMENTATION_REVIEW
 ```
 
 If an ordinary `IMPLEMENTATION_REVIEW` re-review still finds blocking issues, return to `REMEDIATION` and re-check triggers A, B, and C again against the finding's now-larger review history before starting another remediation pass; do not merge from a re-review that still has blocking findings, and do not treat a still-open re-review as itself a `FINAL_CONTRACT_REVIEW`.
+
+After ordinary `REMEDIATION`, the following `IMPLEMENTATION_REVIEW` is normally a **targeted finding-closure review**, scoped to:
+
+- the blocking findings being remediated;
+- semantic dependencies touched by the fix;
+- previously-closed high-risk regressions affected by the change.
+
+It SHOULD NOT repeat a complete work-package review unless the reviewer records a concrete semantic blast-radius reason requiring one. Once the remediation findings are closed, `FINAL_CONTRACT_REVIEW` performs the one complete independent exact-SHA review of the changed candidate. The intended pattern is therefore:
+
+```text
+initial complete review
+    -> findings
+    -> remediation
+    -> targeted closure
+    -> one final complete review
+```
+
+Convergence's own stricter mandatory targeted-closure rules (§11.8.7) are unchanged by this -- this section only extends the same targeted-scope discipline to ORDINARY, non-convergence remediation. Neither path weakens independent review or the exact-SHA approval requirement (§11.3).
 
 Rust implementation starts from the merged approved shared contract, never from an unapproved Python candidate branch.
 
@@ -1203,7 +1244,7 @@ At minimum, automation should reject:
 - changed candidate SHA paired with a stale final approval;
 - governance-dependent decisions without `governance_source`;
 - a candidate derived from a quarantined artifact;
-- transition to `FINAL_CONTRACT_REVIEW` while convergence findings remain open;
+- transition to `FINAL_CONTRACT_REVIEW` for a candidate that did not change since the original `IMPLEMENTATION_REVIEW` (§11.4) -- via EITHER valid route: an active convergence episode with open findings, or an ordinary remediation candidate whose preceding targeted `IMPLEMENTATION_REVIEW` did not close its blocking findings. A candidate reaching `FINAL_CONTRACT_REVIEW` through ordinary remediation is not required to carry a `convergence` object at all;
 - transition to Rust implementation before shared/Python contract approval/merge;
 - a claimed provisional closure without required discriminating negative-control evidence (§11.8.7.1).
 

@@ -438,8 +438,20 @@ if status == CONTRACT_CONVERGENCE:
         unless transition is immediately being made to FINAL_CONTRACT_REVIEW
 
 if transition_to == FINAL_CONTRACT_REVIEW:
-    require convergence.open_findings.length == 0
-    require all convergence findings == PROVISIONALLY_CLOSED
+    require candidate changed since the original clean/failed
+        IMPLEMENTATION_REVIEW candidate
+    # FINAL_CONTRACT_REVIEW is reachable via TWO valid routes -- ordinary
+    # remediation (no convergence object at all) and a settled convergence
+    # episode -- so the check branches on which route this candidate took;
+    # a normal remediation candidate is not required to carry a
+    # `convergence` object merely to satisfy this rule.
+    if an active convergence episode exists:
+        require convergence.open_findings.length == 0
+        require all convergence findings == PROVISIONALLY_CLOSED
+    else:
+        require the preceding IMPLEMENTATION_REVIEW was a valid
+            remediation finding-closure review
+        require no blocking remediation findings remain
 
 if governance-dependent fields changed:
     require governance_source
@@ -502,6 +514,18 @@ work_packages:
       description: >
         A real provider/auth composition surface exists that requires
         Models-equivalent orchestration.
+
+  - id: WP-11.D2
+    title: Provider Streaming Extensions
+    requirements: [AI-031, AI-032]
+    status: WAITING_FOR_TRIGGER
+    source_coordination: "issue #37"
+    deferred_trigger:
+      type: architecture_event
+      description: >
+        A concrete wire-protocol LLM/model adapter exists with a real
+        ProviderStreams-equivalent caller-facing streaming surface capable
+        of exposing streamSimple and/or deferred operations.
 
 incidents:
   - issue: 27
