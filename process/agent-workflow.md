@@ -1244,7 +1244,15 @@ At minimum, automation should reject:
 - changed candidate SHA paired with a stale final approval;
 - governance-dependent decisions without `governance_source`;
 - a candidate derived from a quarantined artifact;
-- transition to `FINAL_CONTRACT_REVIEW` for a candidate that did not change since the original `IMPLEMENTATION_REVIEW` (§11.4) -- via EITHER valid route: an active convergence episode with open findings, or an ordinary remediation candidate whose preceding targeted `IMPLEMENTATION_REVIEW` did not close its blocking findings. A candidate reaching `FINAL_CONTRACT_REVIEW` through ordinary remediation is not required to carry a `convergence` object at all;
+- reject transition to `FINAL_CONTRACT_REVIEW` if any of the following is true:
+
+  - the candidate did not change since the original `IMPLEMENTATION_REVIEW` (§11.4);
+  - the candidate carries convergence provenance and the convergence episode still has open findings;
+  - the candidate carries convergence provenance and any finding in that episode has not reached `PROVISIONALLY_CLOSED`;
+  - the candidate follows the ordinary-remediation route and the preceding targeted `IMPLEMENTATION_REVIEW` still has blocking findings;
+  - the candidate follows neither a valid settled-convergence route nor a valid ordinary-remediation route.
+
+  These are invalid states that must reject the transition -- not, as an earlier revision of this section stated, alternative "valid routes" in their own right. A candidate reaching `FINAL_CONTRACT_REVIEW` through ordinary remediation is not required to carry a `convergence` object. A candidate reaching `FINAL_CONTRACT_REVIEW` through convergence retains its settled convergence record (`coordination-state.md` §6) so the validator can verify that targeted closure completed before final review -- route detection uses whether that record exists, never whether the episode is still "active" (`coordination-state.md` §11);
 - transition to Rust implementation before shared/Python contract approval/merge;
 - a claimed provisional closure without required discriminating negative-control evidence (§11.8.7.1).
 

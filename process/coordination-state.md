@@ -275,6 +275,24 @@ CONTRACT_CONVERGENCE
     -> FINAL_CONTRACT_REVIEW
 ```
 
+### Convergence provenance is retained into `FINAL_CONTRACT_REVIEW`
+
+The `convergence` object does **not** disappear merely because `open_findings` reaches zero. On this transition, the settled record stays attached to the current-state block, for example:
+
+```yaml
+convergence:
+  episode: "CE-L12-01-01"
+  open_findings: []
+  provisionally_closed:
+    - finding: L12-R001
+      sha: "<candidate SHA>"
+      review_evidence: "<review artifact>"
+```
+
+This is what lets `FINAL_CONTRACT_REVIEW`'s own route-detection distinguish "final review after convergence" from "final review after ordinary remediation" from the candidate's own recorded state, rather than from historical comments or from whether the episode is still "active" -- by the time a candidate reaches `FINAL_CONTRACT_REVIEW`, its convergence episode (if it has one) is always already settled, never "active," so "active convergence episode exists" is never the right test; "a convergence record exists for this candidate" is (§11).
+
+An ordinary-remediation candidate that never entered convergence still carries no `convergence` object at all -- this section does not require one to be synthesized for that route.
+
 ---
 
 ## 7. Discriminating witness record
@@ -438,20 +456,29 @@ if status == CONTRACT_CONVERGENCE:
         unless transition is immediately being made to FINAL_CONTRACT_REVIEW
 
 if transition_to == FINAL_CONTRACT_REVIEW:
-    require candidate changed since the original clean/failed
+    require candidate changed since the original
         IMPLEMENTATION_REVIEW candidate
     # FINAL_CONTRACT_REVIEW is reachable via TWO valid routes -- ordinary
-    # remediation (no convergence object at all) and a settled convergence
-    # episode -- so the check branches on which route this candidate took;
-    # a normal remediation candidate is not required to carry a
-    # `convergence` object merely to satisfy this rule.
-    if an active convergence episode exists:
+    # remediation (no convergence record at all) and settled convergence
+    # (a convergence record is retained, not discarded, once its open
+    # findings reach zero -- see section 6) -- so the check branches on
+    # which route this candidate took. The route is detected from whether
+    # a convergence RECORD/PROVENANCE exists for this candidate, never
+    # from whether the episode is still "active": a candidate is not
+    # "active" convergence by the time it reaches FINAL_CONTRACT_REVIEW at
+    # all (the episode is already settled), so "active convergence
+    # episode exists" would incorrectly evaluate false for every genuine
+    # convergence-derived candidate and misroute it into the ordinary-
+    # remediation branch below.
+    if convergence record exists for this candidate:
         require convergence.open_findings.length == 0
         require all convergence findings == PROVISIONALLY_CLOSED
     else:
-        require the preceding IMPLEMENTATION_REVIEW was a valid
-            remediation finding-closure review
-        require no blocking remediation findings remain
+        require candidate came through ordinary REMEDIATION
+        require the preceding targeted IMPLEMENTATION_REVIEW
+            closed all blocking remediation findings
+    # A normal remediation candidate is not required to carry a synthetic
+    # or empty `convergence` object merely to satisfy this rule.
 
 if governance-dependent fields changed:
     require governance_source
