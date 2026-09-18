@@ -373,7 +373,11 @@ PYTHON_IMPLEMENTATION
   -> IMPLEMENTATION_REVIEW
 
 IMPLEMENTATION_REVIEW
-  -> FINAL_CONTRACT_REVIEW
+  -> RUST_IMPLEMENTATION       # clean first review, no blocking findings; merge happens
+                                # as part of this transition, not as a separate state
+  -> FINAL_CONTRACT_REVIEW     # this instance is itself a re-review of a remediated
+                                # candidate (ordinary REMEDIATION or convergence TARGETED
+                                # REVIEW); see agent-workflow.md §11.4
   -> REMEDIATION
   -> CONTRACT_CONVERGENCE
 
@@ -407,6 +411,8 @@ BLOCKED_FOR_OWNER
 ```
 
 `INCIDENT` and `INVALID_UNAUTHORIZED` are terminal/non-actionable for candidate workflow purposes.
+
+`FINAL_CONTRACT_REVIEW` is not a mandatory second complete review of every candidate. A clean first `IMPLEMENTATION_REVIEW` (no blocking findings) transitions directly to `RUST_IMPLEMENTATION` — the merge happens as part of that transition, not as a separate reviewed step. `FINAL_CONTRACT_REVIEW` exists for candidates that CHANGED after the first `IMPLEMENTATION_REVIEW`: an ordinary `REMEDIATION` re-review, or a `CONTRACT_CONVERGENCE` episode whose findings are all provisionally closed. Reaching `FINAL_CONTRACT_REVIEW` from `IMPLEMENTATION_REVIEW` therefore always means that `IMPLEMENTATION_REVIEW` instance was itself a re-review of a remediated candidate, not the first pass.
 
 ---
 

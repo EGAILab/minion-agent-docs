@@ -4,6 +4,94 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layer 11 retrospective: work-package coordination model — adopted 2026-09-18/19
+
+Layer 11's own Pass 2 exposed three scaling problems in the pre-existing coordination model that
+had held up cleanly through Layers 08-10: a single assurance layer can contain several
+independently certifiable bodies of work (Layer 11 Pass 2 alone had Slices A/B/C, each its own
+certifiable surface, all sharing one coordination issue); repeated review/remediation cycles could
+fall back into full reviews even after entering `CONTRACT_CONVERGENCE`, producing more complete
+release-level reviews than the convergence protocol was meant to prevent; and GitHub issue bodies
+were being used simultaneously as current state and historical event log, so a stale issue body
+and a later superseding comment could disagree about what was actually authorized, with no rule
+saying which one governed.
+
+**Fix (`minion-agent-docs` PR #107):** adopted the work-package coordination model end to end --
+
+- **work packages** (`agent-workflow.md` §4.2) as the operational/certification unit inside a
+  layer, each with its own bounded semantic surface, requirement-ID set, and coordination state;
+- **machine-readable current state** (new `process/coordination-state.md`, referenced from
+  `agent-workflow.md` §11.1) replacing the old freeform `STATUS`/`NEXT_OWNER`/`NEXT_ACTION` text
+  block with a YAML schema that has explicit state invariants (active states require both
+  `next_owner` and `next_action`; deferred states forbid both);
+- an explicit **`WAITING_FOR_TRIGGER`** state (§11.13) for deferred-parity rows whose real
+  integration seam does not exist yet, with a required, non-date-based `deferred_trigger`
+  description and an explicit re-audit-on-fire rule (don't resume implementation directly from the
+  historical deferred audit);
+- **convergence episode tracking** (§11.8.1) with a stable episode ID accumulating the full
+  behavior-matrix/witness record across successor findings on the same root-cause surface, instead
+  of re-deriving it per finding;
+- **mandatory targeted closure during convergence** (§11.8.7): a complete release-level review can
+  no longer be substituted for the required targeted-finding-closure review merely because the
+  candidate SHA changed;
+- a **negative-control witness requirement** (new §11.8.7.1): a blocking executable finding cannot
+  be marked `PROVISIONALLY CLOSED` unless its permanent witness demonstrates BOTH that known-bad
+  behavior fails and candidate behavior passes -- closing a real gap this project's own Layer 11
+  Pass 2 Slice C hit twice in the `L11-SC-R025`/`L11-SC-R027` remediation, where a witness that only
+  proved the fix didn't crash the outcome (without proving the fix caused the pass) was twice
+  accepted as closure evidence before this rule existed;
+- **reduced redundant full-review loops**: a truly clean first `IMPLEMENTATION_REVIEW` (no blocking
+  findings) now merges directly instead of ALSO requiring a second complete `FINAL_CONTRACT_REVIEW`
+  of the same unchanged candidate; `FINAL_CONTRACT_REVIEW` is reserved for a candidate that actually
+  changed after the first review (ordinary remediation requiring re-review, or a convergence
+  episode whose findings are all provisionally closed);
+- **current-state/history separation** (§11.14): the issue body is current state and must be kept
+  current; comments, PR timelines, and assurance records are append-only history and must never be
+  read as silently superseding a stale current-state block.
+
+The original proposal is preserved verbatim, marked `ADOPTED`, at
+`process/agent-workflow-revision-proposal.md`, per this project's own established precedent
+(`process/shared-contract-reviewer-policy-proposal.md`) of keeping proposal documents rather than
+deleting them after application.
+
+### Follow-up correction (this entry's own second pass)
+
+The initial adoption pass left three internal inconsistencies, found on review rather than by a
+new incident:
+
+1. §11.8's own worked example of the trigger-check rule said a finding with "2 prior rejections"
+   was "below trigger A's 2-repeat threshold" -- directly contradicting trigger A's own definition
+   ("the same material finding survives two independent reviews" fires AT two, not below it).
+   Corrected, and the check now explicitly names triggers A, B, and C (not just A and B).
+2. The §11.4 state-flow diagram still routed every implementation review, including a clean one
+   with zero findings, through `FINAL_CONTRACT_REVIEW` before merge -- exactly the redundant
+   second-review pattern the model was meant to remove, left uncorrected in the diagram despite
+   being described correctly in the "reduced redundant full-review loops" bullet above. Redrawn so
+   a clean first review merges directly, and both `coordination-state.md`'s legal-transition sketch
+   and `agent-workflow.md`'s own `FINAL_CONTRACT_REVIEW` state description were updated to match.
+3. §11.8.2 (convergence coordination-state update) and §11.8.8's Case A (narrow final-review
+   blocker) still referenced the pre-work-package free-form issue format and a pseudo-state
+   ("targeted remediation") not in the actual state vocabulary. Both now use only the real
+   `process/coordination-state.md` schema and existing states (`REMEDIATION` ->
+   `IMPLEMENTATION_REVIEW` -> `FINAL_CONTRACT_REVIEW`).
+
+Also disposed the two remaining Layer-11-adjacent deferred manifest rows (`AI-031`/`streamSimple`,
+`AI-032`/`fetchDeferred`/`cancelDeferred`) and `PROV-013` explicitly under the new model: all three
+still said "deferred to Layer 11" / "future Layer-11 implementation" in their own `python:`/
+`rust:` fields, which now misleadingly implies Layer 11 itself is incomplete since its own Pass
+1/Pass 2 work packages are independently closed. Re-pointed at two new deferred work packages
+(`WP-11.D1` -- `PROV-013`, tracked at `minion-agent` issue #35; `WP-11.D2` -- `AI-031`/`AI-032`,
+sharing one trigger since both are gated on the same "a real provider adapter exists" event) with
+`STATUS: WAITING_FOR_TRIGGER`, migrated issue #35's own body to the new current-state schema, and
+left every behavioral rule, closure criterion, and disposition value unchanged -- this is a
+coordination/traceability correction, not a semantic reopening of any certified Layer 11 work.
+
+### Not promoted to persistent guidance
+
+The `WP-11.D1`/`WP-11.D2` deferred-ownership formalization is an application of the already-
+adopted `WAITING_FOR_TRIGGER` state (§11.13) to two specific manifest rows, not a new workflow
+rule; no further `agent-workflow.md` change was needed to perform it.
+
 ## Incident: unauthorized Layer 11 Pass 2 agent action — contained 2026-09-13
 
 **Classification:** process / authorization-control failure, not a semantic defect in `PROV-011`/
