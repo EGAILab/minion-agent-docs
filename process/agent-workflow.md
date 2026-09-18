@@ -34,10 +34,11 @@ Always use the current repository contents, not remembered state.
 
 1. `minion-agent-docs/design/2026-08-20-minion-agent-design.md`
 2. `minion-agent-docs/process/implementation-conformance-workflow.md`
-3. the current layer's `spec/**` and `assurance/layers/**` artifacts
-4. `/pi-parity-manifest.yaml`
-5. the applicable canonical scenarios under `/conformance/**`
-6. the adopted Pi source for the symbols being implemented or reviewed
+3. `minion-agent-docs/process/coordination-state.md` — the machine-checkable coordination-state schema referenced throughout §11
+4. the current work package's `spec/**` and `assurance/layers/**` artifacts
+5. `/pi-parity-manifest.yaml`
+6. the applicable canonical scenarios under `/conformance/**`
+7. the adopted Pi source for the symbols being implemented or reviewed
 
 Do not assume old prompt SHAs, test counts, scenario counts, file names, or layer status are still current. Fetch first and record actual HEADs.
 
@@ -101,23 +102,34 @@ A contract checkpoint SHOULD be used when any of the following is true:
 - the same rule would be expensive to repeatedly rewrite after implementation;
 - a reviewer cannot state a finite discriminating behavior matrix before implementation.
 
-### 4.2 Semantic slicing
+### 4.2 Work-package slicing
 
-A large assurance layer may be implemented and reviewed in smaller semantic slices without changing the layer boundary.
+A large assurance layer MAY be divided into smaller **work packages** without changing the architectural layer boundary.
+
+A work package is the smallest unit that has all of the following:
+
+- a bounded semantic surface;
+- an explicit set of parity-manifest requirement IDs;
+- a coherent contract/evidence set;
+- a single coordination state;
+- a clear certification or deferred-parity outcome.
 
 Example:
 
 ```text
-Layer 08
-    slice A: run/turn boundaries
-    slice B: queue continuation
-    slice C: streaming/runtime state
-    slice D: AgentEvent/failure semantics
+Layer 11 — Real Providers
+    WP-11.1 Auth Foundation
+    WP-11.2 Codex Account Projection
+    WP-11.3 Provider/Auth Interaction Vocabulary
+    WP-11.4 Codex OAuth Network Integration
+    WP-11.D1 Generic Auth Orchestration — DEFERRED
 ```
 
-A slice is not independently certified as the whole layer. Slicing is a work-management technique that lets the shared contract and evidence for one tightly-coupled behavior settle before unrelated behavior is added.
+A work package SHOULD be organized around observable semantic ownership, not implementation modules.
 
-Prefer slices whose observable contracts can be characterized independently. Avoid slices that merely mirror implementation modules.
+A work package is not independently certified as the whole layer. Slicing a layer into work packages is a work-management technique that lets the shared contract and evidence for one tightly-coupled behavior settle before unrelated behavior is added; a layer is complete for the current baseline only when every in-scope requirement is `CERTIFIED`/`ADOPTED`, `DEFERRED PARITY` with an explicit closure trigger, or `INTENTIONAL DIVERGENCE` with valid governance provenance (see §11.1 and §11.13).
+
+Do not use "Pass" as a semantic or certification level. Review rounds are events within a work package, not additional project hierarchy.
 
 ## 5. Scope discipline
 
@@ -340,36 +352,141 @@ Default branches        = latest accepted project milestone
 
 Assurance artifacts explain why a milestone is accepted. Chat/local working state must not substitute for these remote objects.
 
-### 11.1 One coordination issue per layer
+### 11.1 Coordination issue per active work package
 
-Create one coordination issue in `minion-agent` for each active layer, for example `Layer 08 — Agent Loop`.
+Create one coordination issue in `minion-agent` for each **active work package** (§4.2), not necessarily one issue for the entire architectural layer.
 
-Keep this state block current:
+A layer MAY also have one umbrella/index issue whose only purpose is to summarize work-package disposition.
+
+Examples:
 
 ```text
-STATUS
-    PYTHON_SHARED | RUST_CONTRACT_REVIEW | PYTHON_REMEDIATION |
-    CONTRACT_CONVERGENCE | RUST_IMPLEMENTATION |
-    CLOSURE_REVIEW | CLOSED
-
-CODE PR
-    #N @ <remote head SHA> | none
-
-DOCS PR
-    #N @ <remote head SHA> | none
-
-NEXT_OWNER
-    Claude | Codex | Owner | none
-
-NEXT_ACTION
-    exactly one concrete next process step
+Layer 11 — Real Providers                    # umbrella/index
+WP-11.1 — Auth Foundation                    # operational issue
+WP-11.2 — Codex Account Projection           # operational issue
+WP-11.4 — Codex OAuth Network Integration    # operational issue
+WP-11.D1 — Generic Auth Orchestration        # deferred tracking
 ```
 
-There must be exactly one `NEXT_OWNER` and one `NEXT_ACTION` while a layer is active. Do not rely on chat history to determine ownership or progress.
+The operational issue contains one machine-readable current-state block, using the schema defined in `process/coordination-state.md`:
+
+```yaml
+workflow:
+  schema_version: 1
+  layer: "11"
+  work_package: "WP-11.4"
+  status: CONTRACT_CONVERGENCE
+  code_pr: 33
+  code_sha: "<remote SHA>"
+  docs_pr: 92
+  docs_sha: "<remote SHA>"
+  open_findings:
+    - L11-SC-R025
+    - L11-SC-R027
+  next_owner: Claude
+  next_action: "Implement the agreed acceptance matrix and return for targeted closure."
+  governance_source: null
+  deferred_trigger: null
+```
+
+This block is the **current control state**.
+
+Comments and assurance records are historical event/evidence records. They MUST NOT be treated as the primary source of current ownership/status when the state block exists.
 
 The coding agents SHOULD hand off directly through this GitHub control plane. The repository owner or an external coordinator does not need to translate routine review feedback between agents.
 
 A receiving agent is expected to fetch the coordination issue, candidate PRs, review comments, and review assurance artifact directly.
+
+#### 11.1.1 Current-state update rule
+
+Whenever any of the following changes:
+
+- `status`;
+- current code/docs candidate SHA;
+- open finding set;
+- `next_owner`;
+- `next_action`;
+- governance dependency;
+- deferred closure trigger;
+
+the coordination issue's current-state block MUST be updated.
+
+Do not leave a stale issue body and rely on a later comment to override it.
+
+#### 11.1.2 Exactly one active owner
+
+For active states, there must be exactly one `next_owner` and one concrete `next_action`. Do not rely on chat history to determine ownership or progress.
+
+For the passive deferred state `WAITING_FOR_TRIGGER`, `next_owner` and `next_action` MAY be `none`; `deferred_trigger` MUST be present and binding (§11.13).
+
+#### 11.1.3 Work-package states
+
+Allowed `status` values:
+
+```text
+SCOPING
+CONTRACT_DRAFT
+CONTRACT_REVIEW
+PYTHON_IMPLEMENTATION
+IMPLEMENTATION_REVIEW
+REMEDIATION
+CONTRACT_CONVERGENCE
+FINAL_CONTRACT_REVIEW
+RUST_IMPLEMENTATION
+CLOSURE_REVIEW
+WAITING_FOR_TRIGGER
+CLOSED
+INCIDENT
+INVALID_UNAUTHORIZED
+BLOCKED_FOR_OWNER
+```
+
+State intent:
+
+`SCOPING`
+: Read-only audit and boundary definition. No implementation authorization is implied.
+
+`CONTRACT_DRAFT`
+: Shared contract/evidence is being authored before implementation.
+
+`CONTRACT_REVIEW`
+: Independent review of the proposed semantic contract.
+
+`PYTHON_IMPLEMENTATION`
+: The shared/Python owner is implementing an approved/checkpointed contract.
+
+`IMPLEMENTATION_REVIEW`
+: Independent review of implementation plus permanent evidence.
+
+`REMEDIATION`
+: Narrow correction of review findings before convergence has triggered.
+
+`CONTRACT_CONVERGENCE`
+: Repeated/coupled semantic defects are being characterized and closed through the convergence protocol (§11.8).
+
+`FINAL_CONTRACT_REVIEW`
+: All known blockers are provisionally closed; one complete exact-SHA review is pending.
+
+`RUST_IMPLEMENTATION`
+: Rust implementation against the merged approved shared contract.
+
+`CLOSURE_REVIEW`
+: Cross-language closure verification.
+
+`WAITING_FOR_TRIGGER`
+: Deferred parity is valid and no implementation is authorized until a named event occurs (§11.13).
+
+`CLOSED`
+: The work package is durably complete for its disposition.
+
+`INCIDENT`
+: Coordination object is retained for process/forensic history and is not actionable implementation state.
+
+`INVALID_UNAUTHORIZED`
+: Artifact was created or mutated outside valid authorization and is governed by quarantine semantics (§11.12).
+
+`BLOCKED_FOR_OWNER`
+: A governance decision is required before work may proceed (§11.7, §11.10).
 
 ### 11.2 PRs are candidate and handoff objects
 
@@ -390,6 +507,46 @@ When a layer changes both repositories, use paired PRs and cross-link them. Each
 
 Work-in-progress implementation/remediation PRs SHOULD remain Draft. Mark them Ready for Review when ownership transfers to an independent reviewer.
 
+#### 11.2.1 Review evidence packaging
+
+A separate docs PR is **not required for every review event**.
+
+A work package SHOULD prefer:
+
+```text
+one candidate PR pair
++
+one durable review ledger / assurance record
++
+coordination issue event comments
+```
+
+over creating a new branch/PR solely to store each individual review round.
+
+Create a separate assurance PR when at least one of the following is true:
+
+- normative/process/assurance source files are intentionally changed;
+- the review artifact itself must become part of the accepted default-branch milestone;
+- a convergence agreement/checkpoint needs durable repository content before implementation;
+- repository policy requires the evidence to be merged as a file.
+
+Otherwise, a SHA-bound review record attached to the coordination issue/PR is sufficient intermediate evidence, provided it contains:
+
+```text
+reviewer role
+candidate code/docs SHA
+pinned Pi revision
+scope
+findings
+discriminating witness links/details
+verdict
+next transition
+```
+
+At certification, material intermediate evidence SHOULD be summarized into the final assurance record rather than requiring every review event to remain a standalone merged document.
+
+Do not reduce evidence quality; reduce redundant repository objects.
+
 ### 11.3 Exact-SHA review invariant
 
 An independent **final approval** approves the exact remote candidate SHA(s) it reviewed.
@@ -404,44 +561,73 @@ A reviewer must fetch and verify the referenced remote SHA before starting. Do n
 
 Intermediate targeted finding closure is allowed under the convergence protocol in §11.8. It is not final layer approval and does not waive the exact-SHA invariant for the final complete review.
 
-### 11.4 Standard ownership flow
+### 11.4 Standard work-package ownership flow
 
 ```text
-Claude
-    audit + shared contract + Python candidate
-        ↓
-Codex
-    independent Rust contract review
-        ↓
-Claude
-    shared/Python remediation if rejected
-        ↓
-Codex
-    targeted or complete re-review as appropriate
-        ↓
-if repeated rejection threshold reached:
-    CONTRACT_CONVERGENCE (§11.8)
-        ↓
-all blockers provisionally closed
-        ↓
-ONE final complete independent contract review
-        ↓
-merge approved shared/Python candidate
-        ↓
-Codex
-    Rust implementation + certification candidate
-        ↓
-Claude
-    final cross-language/closure verification
-        ↓
-merge closure state
-        ↓
-Layer CLOSED
-        ↓
-workflow retrospective
+SCOPING
+   ↓
+CONTRACT_DRAFT
+   ↓
+independent CONTRACT_REVIEW
+   ↓
+checkpoint / approval for implementation
+   ↓
+PYTHON_IMPLEMENTATION
+   ↓
+IMPLEMENTATION_REVIEW
+   ↓
+┌───────────────────────────────┐
+│ no blocking findings          │
+│     ↓                         │
+│ FINAL_CONTRACT_REVIEW         │
+│     ↓                         │
+│ merge approved shared/Python  │
+└───────────────────────────────┘
+              │
+              └── blocking findings
+                         ↓
+                    REMEDIATION
+                         ↓
+              targeted or complete review
+                         ↓
+                 trigger §11.8?
+                   /          \
+                 no            yes
+                 ↓              ↓
+            REMEDIATION   CONTRACT_CONVERGENCE
+                                ↓
+                       characterize + challenge
+                                ↓
+                            checkpoint
+                                ↓
+                         coherent fix pass
+                                ↓
+                    negative-control witness gate
+                                ↓
+                         TARGETED REVIEW
+                                ↓
+                     all blockers provisionally
+                              closed
+                                ↓
+                       FINAL_CONTRACT_REVIEW
+                                ↓
+                       ONE complete exact-SHA
+                           independent review
+                                ↓
+                              merge
+                                ↓
+                       RUST_IMPLEMENTATION
+                                ↓
+                         CLOSURE_REVIEW
+                                ↓
+                              CLOSED
+                                ↓
+                       workflow retrospective
 ```
 
-Rust implementation starts from the merged approved shared contract, not from an unapproved Python candidate branch.
+Rust implementation starts from the merged approved shared contract, never from an unapproved Python candidate branch.
+
+A work package MUST NOT transition directly from `CONTRACT_CONVERGENCE` to a complete final review while a known convergence finding remains open.
 
 ### 11.5 Default branches are accepted milestones
 
@@ -465,23 +651,37 @@ Routine review/remediation handoff SHOULD proceed agent-to-agent through GitHub 
 
 ### 11.8 Contract convergence protocol
 
-The normal remediation/re-review loop is intentionally strict, but it must not become an unbounded semantic-discovery loop.
+The normal remediation/re-review loop is intentionally strict, but it MUST NOT become an unbounded semantic-discovery loop.
 
-Enter `CONTRACT_CONVERGENCE` automatically when either condition is met:
+Enter `CONTRACT_CONVERGENCE` automatically when **any** of the following occurs:
 
 ```text
-same material finding survives two independent reviews
-OR
-layer accumulates three rejected contract reviews
+A. the same material finding survives two independent reviews;
+
+B. the same semantic root-cause surface produces two successor findings
+   after remediation, even when the finding IDs differ;
+
+C. the work package accumulates three rejected complete contract reviews;
+
+D. the reviewer and implementation owner agree that the remaining blockers
+   form one tightly-coupled semantic surface that is more efficiently
+   characterized together.
 ```
 
-A reviewer may also recommend convergence earlier when the remaining blockers clearly form one tightly-coupled semantic surface.
+These triggers are evaluated separately:
+
+- trigger A is finding-specific;
+- trigger B is root-cause/surface-specific;
+- trigger C is work-package-wide;
+- trigger D is an early opt-in.
+
+Do not reinterpret a work-package-wide trigger as finding-specific or vice versa.
 
 Entering convergence is a workflow/process decision. It does not weaken Pi fidelity, reopen certified semantics by itself, or change the finding taxonomy.
 
-**Trigger check is mandatory, not advisory.** Before starting a new remediation pass on a named finding ID, the remediation owner MUST explicitly check both trigger conditions above against that finding ID's own review history (not the layer's history in general) and state the result -- e.g. "L08-R0NN: 2 prior rejections on this exact finding, below the 3-rejection/2-repeat threshold, proceeding as a normal point-fix." If a trigger condition is already met, entering convergence is the default; proceeding with another ordinary point-fix pass instead requires stating why (e.g. the reviewer's own evidence already narrowed the remaining surface to something a single targeted fix can close, as opposed to genuine unresolved semantic breadth). A Layer-08 remediation cycle went through three full rejection/re-review rounds on the same finding ID before this check was applied retroactively, and a separate finding on the same layer reached the two-repeat threshold without the check being applied at all -- in both cases the trigger was real and simply was not checked, not judged and declined. Do not rely on writing a retrospective note after the fact to substitute for checking the trigger before the fact.
+**Trigger check is mandatory, not advisory.** Before starting a new remediation pass on a named finding ID, the remediation owner MUST explicitly check triggers A and B against that finding ID's own review history and root-cause surface (not the work package's history in general) and state the result -- e.g. "L08-R0NN: 2 prior rejections on this exact finding, below trigger A's 2-repeat threshold, and no second successor finding yet on the same root-cause surface under trigger B, proceeding as a normal point-fix." If a trigger condition is already met, entering convergence is the default; proceeding with another ordinary point-fix pass instead requires stating why (e.g. the reviewer's own evidence already narrowed the remaining surface to something a single targeted fix can close, as opposed to genuine unresolved semantic breadth). A Layer-08 remediation cycle went through three full rejection/re-review rounds on the same finding ID before this check was applied retroactively, and a separate finding on the same layer reached the two-repeat threshold without the check being applied at all -- in both cases the trigger was real and simply was not checked, not judged and declined. Do not rely on writing a retrospective note after the fact to substitute for checking the trigger before the fact.
 
-#### 11.8.1 Convergence objective
+#### 11.8.1 Convergence objective and episode tracking
 
 The objective is to stop discovering one semantic edge per implementation pass.
 
@@ -493,6 +693,30 @@ During convergence:
 - agree the contract/evidence before another large implementation pass;
 - use targeted finding closure until all blockers are provisionally closed;
 - then perform one final complete exact-SHA contract review.
+
+Each convergence episode receives a stable ID, for example:
+
+```text
+CE-L11-04-01
+```
+
+The episode record accumulates, across the episode's full lifetime (including any successor findings folded in under trigger B):
+
+```text
+OPEN FINDINGS
+ROOT-CAUSE SURFACE
+PI SYMBOLS / TESTS AUDITED
+OBSERVABLE RULES
+BEHAVIOR MATRIX
+MINIMAL EXECUTABLE WITNESSES
+NEGATIVE CONTROLS
+CURRENT CANDIDATE FAILURES
+SPEC / MANIFEST / CONFORMANCE DELTAS
+IMPLEMENTATION CONSTRAINTS
+OUT-OF-SCOPE / DEFERRED BEHAVIOR
+```
+
+New findings discovered inside the same root-cause surface are added to the existing episode instead of automatically starting another complete-review loop. §11.8.3 describes how the first characterization pass populates this record; this episode record is the accumulating artifact, not a one-time snapshot.
 
 #### 11.8.2 Coordination state
 
@@ -592,19 +816,23 @@ Requirements:
 - avoid unrelated cleanup unless necessary for correctness;
 - push the candidate and update exact remote SHAs.
 
-#### 11.8.7 Targeted finding-closure review
+#### 11.8.7 Targeted convergence closure is mandatory
 
-After a convergence implementation pass, the reviewer SHOULD perform a targeted review rather than another full release-level layer audit.
+After a convergence implementation pass, the independent reviewer MUST perform a targeted finding-closure review.
 
-Review:
+The review scope is:
 
 ```text
-open finding(s)
+open convergence finding(s)
 +
 semantic dependencies touched by the fix
 +
 previously-closed high-risk regressions affected by the change
 ```
+
+A complete release-level work-package review MUST NOT be substituted for this targeted closure step merely because the candidate SHA changed.
+
+A complete review is permitted before all convergence findings are provisionally closed only when the reviewer records a concrete reason that the remediation changed semantic surface outside the convergence checkpoint.
 
 A successful targeted review records:
 
@@ -613,21 +841,75 @@ Lxx-Ryyy
     PROVISIONALLY CLOSED @ <candidate SHA>
 ```
 
-`PROVISIONALLY CLOSED` means the specific finding has discriminating evidence at that candidate. It is not final layer approval.
+`PROVISIONALLY CLOSED` means the specific finding has discriminating evidence at that candidate, per §11.8.7.1. It is not final layer approval.
 
-If the finding remains open, the review MUST provide a new or refined discriminating witness. Do not simply restate the previous finding.
+If a finding remains open, the reviewer MUST provide a new/refined discriminating witness. Do not simply restate the prior finding.
 
-#### 11.8.8 Final complete review
+##### 11.8.7.1 Negative-control gate for discriminating witnesses
 
-Once every blocking finding is provisionally closed:
+Before a blocking executable finding can be marked `PROVISIONALLY CLOSED`, its permanent witness must demonstrate both:
 
-1. update the candidate to one exact remote code/docs SHA pair;
-2. run the complete gates;
-3. perform ONE complete independent contract review of that exact candidate;
-4. apply the normal certification gate;
-5. if approved, merge using the normal exact-SHA policy.
+```text
+known-bad behavior -> FAIL
+candidate behavior -> PASS
+```
 
-A final complete review may discover a genuinely new blocker. If so, classify it normally. Re-enter convergence only if the convergence trigger is again met for the new/open surface.
+The negative control MAY be established by:
+
+- reverting the specific fix in a temporary worktree;
+- executing the witness against a known-bad prior SHA;
+- substituting a deliberately incorrect implementation at the relevant seam;
+- another deterministic mutation that reproduces the reported defect.
+
+The evidence record MUST state:
+
+```text
+finding ID
+negative-control method
+known-bad mutation/SHA
+expected failure
+observed failure
+candidate SHA
+observed pass
+```
+
+A test that passes only on the candidate but has not been shown to fail against a realistic incorrect implementation is supporting evidence, not a discriminating closure witness.
+
+For documentary-only findings where no executable distinction exists, record:
+
+```text
+NEGATIVE_CONTROL
+    NOT_APPLICABLE — documentary/traceability-only
+```
+
+with the reason.
+
+#### 11.8.8 One final complete review per settled convergence episode
+
+Once every blocking finding in the active convergence episode is provisionally closed:
+
+1. freeze the candidate to one exact remote code/docs SHA pair;
+2. run all complete gates;
+3. transition to `FINAL_CONTRACT_REVIEW`;
+4. perform **one** complete independent contract review of that exact candidate;
+5. if approved, apply the normal exact-SHA merge gate.
+
+If the final complete review discovers a new blocker:
+
+**Case A — narrow, independent blocker.** If the blocker is demonstrably outside the settled convergence root-cause surface and can be closed without changing the wider contract:
+
+```text
+FINAL_CONTRACT_REVIEW
+    -> targeted remediation
+    -> targeted closure review
+    -> FINAL_CONTRACT_REVIEW
+```
+
+Do not automatically re-run the entire convergence characterization.
+
+**Case B — coupled/new semantic surface.** If the blocker exposes another coupled semantic surface or invalidates the prior convergence matrix, open a new convergence episode with a new episode ID.
+
+The existence of a changed candidate SHA alone is **not** sufficient reason to perform a complete review before targeted closure is finished.
 
 #### 11.8.9 No weakening of independence
 
@@ -735,6 +1017,73 @@ Mark a quarantined issue/PR's title and body with an explicit governance-correct
 
 If a quarantined artifact appears to contain a genuinely useful factual observation, it must be RE-DERIVED independently from authoritative sources (pinned Pi, the accepted default branches, current project artifacts) before being relied on for anything. Do not assume prose or code inside a quarantined artifact is correct merely because it reads as well-reasoned.
 
+### 11.13 Deferred parity and trigger-based work
+
+A parity row may legitimately remain deferred when its real integration seam does not yet exist.
+
+Use:
+
+```text
+STATUS
+    WAITING_FOR_TRIGGER
+```
+
+when all of the following are true:
+
+- the row has an explicit `deferred parity` disposition;
+- the reason for deferral is architectural/integration readiness, not unresolved semantic uncertainty;
+- a concrete closure trigger is recorded;
+- no production implementation is currently authorized.
+
+Required state:
+
+```yaml
+status: WAITING_FOR_TRIGGER
+next_owner: null
+next_action: null
+deferred_trigger:
+  type: architecture_event
+  description: >
+    A real provider/auth composition surface exists that requires
+    Models-equivalent orchestration.
+```
+
+`WAITING_FOR_TRIGGER` is not active implementation work and is excluded from the active-state rule requiring a next owner/action (§11.1.2).
+
+When the trigger fires:
+
+1. create or reactivate a normal active work package;
+2. fetch current default-branch reality;
+3. perform a fresh contract-first Pi audit;
+4. do not resume implementation directly from the historical deferred audit;
+5. consume already-certified lower/vocabulary requirements normally.
+
+### 11.14 Current state versus historical event log
+
+GitHub coordination has two distinct data classes:
+
+```text
+CURRENT STATE
+    issue state block / machine-readable coordination record
+
+HISTORY / EVIDENCE
+    comments
+    review records
+    assurance artifacts
+    PR timeline
+    commits
+```
+
+Rules:
+
+- Current state is mutable and MUST be kept current.
+- Historical evidence is append-only; do not rewrite prior rejection into approval.
+- A later comment MUST NOT silently supersede a stale current-state block.
+- Automation and receiving agents MUST read current state first, then use the history to validate it.
+- Historical assurance remains durable evidence even after the current-state block advances.
+
+This separation prevents a coordination issue from becoming an event log pretending to be a state store.
+
 ## 12. Repository and remote-state discipline
 
 ### 12.1 GitHub remote is the durable project state
@@ -814,6 +1163,27 @@ Shared semantic changes should be coordinated explicitly. Evidence-only updates 
 
 Historical rejection/remediation/re-review evidence must remain reachable from remote history.
 
+### 12.6 Machine validation of coordination state
+
+The coordination state defined by `process/coordination-state.md` SHOULD be validated automatically.
+
+At minimum, automation should reject:
+
+- unknown workflow states;
+- active states with no `next_owner`;
+- active states with no `next_action`;
+- `WAITING_FOR_TRIGGER` without `deferred_trigger`;
+- `INVALID_UNAUTHORIZED` or `INCIDENT` states attempting a handoff;
+- candidate SHAs that are not remote-reachable;
+- changed candidate SHA paired with a stale final approval;
+- governance-dependent decisions without `governance_source`;
+- a candidate derived from a quarantined artifact;
+- transition to `FINAL_CONTRACT_REVIEW` while convergence findings remain open;
+- transition to Rust implementation before shared/Python contract approval/merge;
+- a claimed provisional closure without required discriminating negative-control evidence (§11.8.7.1).
+
+The validator enforces workflow structure only. It does not decide semantics.
+
 ## 13. Certification gate
 
 Do not certify a layer merely because tests pass.
@@ -874,6 +1244,13 @@ Ask:
 - Did the reviewer provide a discriminating witness that the remediation owner could directly turn into a regression test?
 - Should semantic characterization have happened before implementation?
 - Did repeated full re-reviews add assurance value, or would targeted provisional closure plus one final full review have been stronger and cheaper?
+- Did the chosen work-package boundary match the actual independently certifiable semantic surface?
+- Did the work package create more coordination/review artifacts than the assurance value justified?
+- After convergence fired, were targeted closure reviews used until every blocker was provisionally closed?
+- Did any final review re-open a previously settled root-cause surface because the convergence matrix was incomplete?
+- Did every executable closure witness demonstrate a realistic negative control?
+- Did the current-state block remain synchronized with comments/PR state?
+- Should any deferred work have been represented as `WAITING_FOR_TRIGGER` instead of active/open workflow?
 
 ### 14.3 Improvement rule
 
