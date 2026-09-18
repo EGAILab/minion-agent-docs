@@ -465,7 +465,7 @@ State intent:
 : Repeated/coupled semantic defects are being characterized and closed through the convergence protocol (§11.8).
 
 `FINAL_CONTRACT_REVIEW`
-: All known blockers are provisionally closed; one complete exact-SHA review is pending.
+: The candidate changed since the first `IMPLEMENTATION_REVIEW` (an ordinary remediation re-review, or a convergence episode whose findings are all provisionally closed); one complete exact-SHA review of that changed candidate is pending. Not used for a clean first review with no blocking findings (§11.4).
 
 `RUST_IMPLEMENTATION`
 : Rust implementation against the merged approved shared contract.
@@ -576,58 +576,62 @@ PYTHON_IMPLEMENTATION
    ↓
 IMPLEMENTATION_REVIEW
    ↓
-┌───────────────────────────────┐
-│ no blocking findings          │
-│     ↓                         │
-│ FINAL_CONTRACT_REVIEW         │
-│     ↓                         │
-│ merge approved shared/Python  │
-└───────────────────────────────┘
+┌────────────────────────────────────┐
+│ no blocking findings                │
+│     ↓                               │
+│ approved clean exact-SHA candidate  │
+│     ↓                               │
+│ merge approved shared/Python        │
+└────────────────────────────────────┘
               │
               └── blocking findings
                          ↓
                     REMEDIATION
                          ↓
-              targeted or complete review
-                         ↓
-                 trigger §11.8?
+                 trigger §11.8 (A/B/C)?
                    /          \
                  no            yes
                  ↓              ↓
-            REMEDIATION   CONTRACT_CONVERGENCE
-                                ↓
-                       characterize + challenge
-                                ↓
-                            checkpoint
-                                ↓
-                         coherent fix pass
-                                ↓
-                    negative-control witness gate
-                                ↓
-                         TARGETED REVIEW
-                                ↓
-                     all blockers provisionally
-                              closed
-                                ↓
+       IMPLEMENTATION_REVIEW   CONTRACT_CONVERGENCE
+          (re-review)                ↓
+                 │           characterize + challenge
+                 │                    ↓
+                 │                checkpoint
+                 │                    ↓
+                 │            coherent fix pass
+                 │                    ↓
+                 │       negative-control witness gate
+                 │                    ↓
+                 │              TARGETED REVIEW
+                 │                    ↓
+                 │        all blockers provisionally
+                 │                  closed
+                 ↓                    ↓
+                 └──── targeted closure reached ────┘
+                                 ↓
                        FINAL_CONTRACT_REVIEW
-                                ↓
+                                 ↓
                        ONE complete exact-SHA
                            independent review
-                                ↓
-                              merge
-                                ↓
+                                 ↓
+                               merge
+                                 ↓
                        RUST_IMPLEMENTATION
-                                ↓
+                                 ↓
                          CLOSURE_REVIEW
-                                ↓
-                              CLOSED
-                                ↓
+                                 ↓
+                               CLOSED
+                                 ↓
                        workflow retrospective
 ```
+
+If an ordinary `IMPLEMENTATION_REVIEW` re-review still finds blocking issues, return to `REMEDIATION` and re-check triggers A, B, and C again against the finding's now-larger review history before starting another remediation pass; do not merge from a re-review that still has blocking findings, and do not treat a still-open re-review as itself a `FINAL_CONTRACT_REVIEW`.
 
 Rust implementation starts from the merged approved shared contract, never from an unapproved Python candidate branch.
 
 A work package MUST NOT transition directly from `CONTRACT_CONVERGENCE` to a complete final review while a known convergence finding remains open.
+
+`FINAL_CONTRACT_REVIEW` is the final complete review of a candidate that CHANGED after the first `IMPLEMENTATION_REVIEW` -- either through ordinary remediation requiring re-review, or through a convergence episode whose findings have all been provisionally closed. It is not a second complete review of an unchanged clean candidate: a truly clean first `IMPLEMENTATION_REVIEW` (no blocking findings at all) merges directly, without a second full review of the same content.
 
 ### 11.5 Default branches are accepted milestones
 
@@ -679,7 +683,24 @@ Do not reinterpret a work-package-wide trigger as finding-specific or vice versa
 
 Entering convergence is a workflow/process decision. It does not weaken Pi fidelity, reopen certified semantics by itself, or change the finding taxonomy.
 
-**Trigger check is mandatory, not advisory.** Before starting a new remediation pass on a named finding ID, the remediation owner MUST explicitly check triggers A and B against that finding ID's own review history and root-cause surface (not the work package's history in general) and state the result -- e.g. "L08-R0NN: 2 prior rejections on this exact finding, below trigger A's 2-repeat threshold, and no second successor finding yet on the same root-cause surface under trigger B, proceeding as a normal point-fix." If a trigger condition is already met, entering convergence is the default; proceeding with another ordinary point-fix pass instead requires stating why (e.g. the reviewer's own evidence already narrowed the remaining surface to something a single targeted fix can close, as opposed to genuine unresolved semantic breadth). A Layer-08 remediation cycle went through three full rejection/re-review rounds on the same finding ID before this check was applied retroactively, and a separate finding on the same layer reached the two-repeat threshold without the check being applied at all -- in both cases the trigger was real and simply was not checked, not judged and declined. Do not rely on writing a retrospective note after the fact to substitute for checking the trigger before the fact.
+**Trigger check is mandatory, not advisory.** Before starting a new ordinary remediation pass, the remediation owner MUST explicitly check triggers A, B, and C against the finding's own review history, its root-cause surface, and the work package's own rejected-review count (not general impressions) and state the result, for example:
+
+```text
+L12-R003 has survived one independent review, so trigger A has not fired.
+No successor finding has yet appeared on the same root-cause surface, so B
+has not fired.
+The work package has one rejected complete review, so C has not fired.
+Proceeding with ordinary remediation.
+```
+
+Trigger A fires as soon as the SAME material finding has survived two independent reviews -- being at two is already fired, not "approaching" a threshold:
+
+```text
+If the same material finding has survived two independent reviews,
+trigger A HAS fired.
+```
+
+If a trigger condition is already met, entering convergence is the default; proceeding with another ordinary point-fix pass instead requires stating why (e.g. the reviewer's own evidence already narrowed the remaining surface to something a single targeted fix can close, as opposed to genuine unresolved semantic breadth). A Layer-08 remediation cycle went through three full rejection/re-review rounds on the same finding ID before this check was applied retroactively, and a separate finding on the same layer reached the two-repeat threshold without the check being applied at all -- in both cases the trigger was real and simply was not checked, not judged and declined. Do not rely on writing a retrospective note after the fact to substitute for checking the trigger before the fact. Do not weaken these thresholds to make an ordinary point-fix pass easier to justify.
 
 #### 11.8.1 Convergence objective and episode tracking
 
@@ -720,23 +741,27 @@ New findings discovered inside the same root-cause surface are added to the exis
 
 #### 11.8.2 Coordination state
 
-Update the layer issue to something like:
+Update the active **work-package coordination issue** (§11.1) using the machine-readable state defined by `process/coordination-state.md`, not a separate free-form format:
 
-```text
-STATUS
-    CONTRACT_CONVERGENCE
+```yaml
+workflow:
+  status: CONTRACT_CONVERGENCE
 
-OPEN_SURFACE
-    <finding IDs / semantic slice>
+  convergence:
+    episode: CE-L12-01-01
+    root_cause_surface: "<semantic surface>"
+    open_findings:
+      - L12-R001
 
-NEXT_OWNER
-    Codex | Claude
-
-NEXT_ACTION
-    <one concrete characterization / challenge / implementation step>
+  next_owner: Claude
+  next_action: >
+    Perform the agreed convergence implementation and return the
+    exact candidate for targeted closure review.
 ```
 
-The existing `CODE PR` and `DOCS PR` fields remain current.
+The existing `code`/`docs` PR and SHA fields remain current.
+
+Do not introduce a second competing coordination format for convergence; the `convergence.episode`/`convergence.open_findings` fields of the same current-state block carry this information.
 
 Exactly one owner acts at a time. Convergence is collaboration through durable artifacts, not simultaneous editing of the same shared files.
 
@@ -896,12 +921,12 @@ Once every blocking finding in the active convergence episode is provisionally c
 
 If the final complete review discovers a new blocker:
 
-**Case A — narrow, independent blocker.** If the blocker is demonstrably outside the settled convergence root-cause surface and can be closed without changing the wider contract:
+**Case A — narrow, independent blocker.** If the blocker is demonstrably outside the settled convergence root-cause surface and can be closed without changing the wider contract, use only existing states:
 
 ```text
 FINAL_CONTRACT_REVIEW
-    -> targeted remediation
-    -> targeted closure review
+    -> REMEDIATION
+    -> IMPLEMENTATION_REVIEW      # targeted closure scope only
     -> FINAL_CONTRACT_REVIEW
 ```
 
