@@ -127,3 +127,63 @@ Shared validation:
 
 The next owner independently verifies the exact remote Rust candidate and this evidence. This pass
 does not authorize Layer 13.
+
+## Closure-review remediation
+
+The first independent closure review rejected Rust candidate
+`60ba230785e65d322e4170c0fa3841779d127d30`. It found two shared-contract defects and one
+Rust-only implementation gap:
+
+- `L12-R020`: the prior `EXEC-005` rule discarded an OS-reported exit code after explicit
+  `terminate()`, contradicting `EXEC-004`'s required shell-cleanup settlement;
+- `L12-R021`: the binding spec had not stated whether `process_path` returns the canonical or
+  lexical form already used by the target's identity derivation;
+- Rust resolved subprocess/shell `cwd` with a bare join rather than the filesystem provider's
+  already-certified lexical path rule.
+
+Codex independently reviewed the exact shared correction candidates, code
+`73d4e2dd4e4a83b01f4b4b9424ea7b3b8e6f9ed9` and docs
+`4a1ccae4ff750a333280b293e0d677d19e2db38e`, and approved them. They were squash-merged as
+minion-agent/main `70c2443b85f4c1e80b7e47ffecce59712f13ff83` and
+minion-agent-docs/master `899ed7185e7e2e34118b4a96c45ccd0f3fcba96d` before Rust remediation.
+
+Updated Rust candidate: `429368cd91ba8c3c9857d44b4d9807bb3269206f`.
+
+The remediation:
+
+- preserves the actual `std::process::ExitStatus::code()` for explicit termination while retaining
+  the distinct aborted-error classification for spawn-signal termination;
+- factors filesystem lexical resolution into one `resolve_local_path` authority and reuses it for
+  both subprocess and shell cwd handling, including `file://`, `~`, and parent-component
+  normalization;
+- makes an existing target's `process_path` the same canonical string stored as its `target_key`,
+  while a missing target retains the same lexical-absolute fallback for both values.
+
+Permanent regression evidence includes a production-classification unit witness for both
+`Some(K)` and `None`, real subprocess and shell `file://` cwd witnesses, the missing-target lexical
+path witness, and the Unix symlink canonical-path witness.
+
+Fresh gates on the updated candidate:
+
+    cargo fmt --all -- --check
+        PASS
+    cargo clippy --workspace --all-targets --all-features -- -D warnings
+        PASS
+    cargo test --workspace --all-features
+        PASS -- 358 passed, 0 failed
+    RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+        PASS
+    cargo run -p xtask -- conformance verify
+        PASS
+    cargo run -p xtask -- layering
+        PASS
+    cargo run -p xtask -- coverage
+        PASS
+    shared manifest/schema validation
+        PASS -- 213 passed
+    git diff --check
+        PASS
+
+Candidate status remains Rust Layer 12 `CERTIFICATION CANDIDATE`; Python Layer 12 is not
+implemented, Layer 12 cross-language is not closed, and Layer 13 has not started. The next owner
+must independently verify this exact updated candidate before merge.
