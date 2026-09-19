@@ -428,12 +428,20 @@ deliberate Minion-specific hardening, but that would be a new, separately-dispos
 
 ### 3.8 Cleanup
 
-**DIRECT_PI_PARITY**, narrowly scoped. `cleanup()` releases the filesystem provider's OWN tracked
-resources (matching pinned Pi's own `NodeExecutionEnv.cleanup()`, which tracks and kills active
-child-process PIDs -- itself really a `ctx.subprocess`-owned concern this filesystem-facing method
-happens to also expose, `nodejs.ts:691-694`) and MUST be best-effort -- it must never raise/reject
-regardless of what it fails to clean up. It does NOT track or remove temporary files/directories
-created via §3.7 (no pinned Pi evidence that it does).
+**Correction record (refined at `L12-R017`, second final complete review, `minion-agent-docs#114`,
+CE-L12-01-03):** an earlier revision of this section attributed pinned Pi's own combined
+`NodeExecutionEnv.cleanup()` child-process-killing behavior to `ctx.fs`'s own `cleanup()`. That
+misattributes Pi's COMBINED environment's behavior to the wrong split provider: in Pi's own
+unsplit `ExecutionEnv`, `cleanup()` kills active children because `exec()`'s own spawned child
+shares the SAME `activeChildPids` tracking set that `cleanup()` iterates (`nodejs.ts:429,691-694`)
+-- a `ctx.shell`-owned concern, not a `ctx.fs`-owned one. Corrected: `ctx.fs.cleanup()` makes NO
+child-process claim at all. `ctx.shell`'s own active-command cleanup is specified in §5.
+
+**DIRECT_PI_PARITY**, narrowly scoped. `cleanup()` MUST be best-effort -- it must never raise/
+reject regardless of what it fails to clean up. It currently has no OTHER observable effect: it
+does NOT track or remove temporary files/directories created via §3.7 (no pinned Pi evidence that
+it does), and it does NOT track or kill child processes (that is `ctx.shell`'s own concern, §5) --
+a conforming `ctx.fs.cleanup()` MAY be a true no-op.
 
 ---
 
@@ -487,6 +495,21 @@ renamed file's old and new paths as unrelated queue keys, and that is safe, not 
 resolve(path) -> target_key = canonical_path(path) if it exists, else absolute_path(path)
     -- mirrors Pi's own getMutationQueueKey exactly, including the not-yet-existing fallback
 ```
+
+**Exact fallback condition (refined at `L12-R016`, second final complete review,
+`minion-agent-docs#114`, CE-L12-01-03 -- the prose above ("if it exists" / "when canonicalization
+fails") does not commit to a precise condition, permitting mutually different Rust
+implementations).** `absolute_path` is used ONLY when `canonical_path` fails with error code
+`not_found` or `not_supported`. Any OTHER `canonical_path` failure (`permission_denied`,
+`invalid`, `not_directory`, `is_directory`, `unknown`) PROPAGATES as `resolve()`'s own `FsError` --
+`resolve()` does NOT silently fall back to `absolute_path` for those cases. This is
+`DIRECT_PI_PARITY`: pinned Pi's own `getMutationQueueKey` (`file-mutation-queue.ts:20-26`) falls
+back for exactly these two codes and re-throws (propagates) for any other.
+
+**`resolve()`'s own cancellation classification (refined at `L12-R016`, CE-L12-01-03).**
+`resolve(path, signal?)` is in the accepts-but-does-not-inspect group (§3.1) -- a direct
+consequence of composing two operations (`absolute_path`, `canonical_path`) that are BOTH already
+in that group; a pre-aborted or live `signal` has no effect on `resolve()`'s own outcome.
 
 Binding requirements:
 
@@ -736,6 +759,25 @@ at all (§6 below states `wait()` settles on process exit alone, independent of 
 caller wanting `ctx.shell`-like idle-grace behavior directly on `ctx.subprocess` composes it itself
 from `wait()` plus its own timer around `read_chunk()` calls).
 
+### 5.7 Cleanup
+
+**DIRECT_PI_PARITY (refined at `L12-R017`, second final complete review, `minion-agent-docs#114`,
+CE-L12-01-03 -- reassigned here from `ctx.fs`'s own §3.8, which misattributed this behavior to the
+wrong split provider).** `cleanup()` MUST kill the process tree of every command THIS provider
+instance currently has in flight (tracked internally, independent of `ctx.subprocess`'s own
+per-`Process` disposal model, an unrelated, already-settled concern from `CE-L12-01-01`) and clear
+its own tracking; like every `cleanup()` in this contract, it is best-effort and MUST NOT raise.
+This matches pinned Pi's own combined `NodeExecutionEnv.cleanup()`, whose `activeChildPids` set is
+shared with `exec()`'s own spawned children (`nodejs.ts:429,691-694`).
+
+**Settlement of a cleanup-killed in-flight command (`DIRECT_PI_PARITY`).** A command killed by
+`cleanup()` does NOT go through the `aborted`/`timeout` classification machinery (§5.4) at all --
+no signal fired, no timeout elapsed. Its own `exec()` call settles through the ORDINARY exit-
+handling path: `exitCode: code ?? 0` (`nodejs.ts:495`) normalizes a killed (signal-terminated,
+null-exit-code) process to `0`. The caller observes `Ok({stdout, stderr, exit_code: 0})`, NOT an
+error of any kind -- a `cleanup()`-triggered kill is observably indistinguishable from the command
+having exited normally with status `0`, from the caller's own perspective.
+
 ---
 
 ## 6. `ctx.subprocess`
@@ -950,9 +992,20 @@ validate(providers: list[(name: str, identity: ExecutionWorldIdentity)]) ->
 
 ## 8. Local providers
 
-**DIRECT_PI_PARITY** for observable behavior (§3-§6 above, each already citing the harness-tier
-reference implementation as its concrete source), **MINION_ARCHITECTURAL_MAPPING** for the fact
-that they are three separate local providers rather than one combined local `ExecutionEnv`.
+**Correction record (refined at `L12-R017`, second final complete review, `minion-agent-docs#114`,
+CE-L12-01-03):** an earlier revision of this section blanketed ALL THREE local providers'
+observable behavior as `DIRECT_PI_PARITY`, including `ctx.subprocess` (§6) -- directly
+contradicting §6's own text and `EXEC-005`'s own disposition, both of which correctly state
+`ctx.subprocess` is `MINION_EXTENSION` with NO direct Pi seam at all. A local subprocess provider
+does not acquire direct-Pi status merely because its primitive set was informed by Pi's combined
+shell implementation's own process-management internals. Corrected, per-seam-accurate:
+
+**`DIRECT_PI_PARITY`** for the `ctx.fs` (§3) and `ctx.shell` (§5) local providers' observable
+behavior -- both genuinely sourced from pinned Pi's own harness-tier reference implementation.
+**`MINION_EXTENSION`** for the `ctx.subprocess` (§6) local provider, matching `EXEC-005`'s own
+disposition (`intentional divergence`) -- no Pi seam exists for it to be direct parity with.
+**`MINION_ARCHITECTURAL_MAPPING`** for the fact that these are three separate local providers
+rather than one combined local `ExecutionEnv`, unchanged.
 
 The basic local filesystem, shell, and subprocess providers needed to exercise and certify §2-§7
 are in scope for this row. Each MUST satisfy the exact same shared contracts (§2-§7) as any future
@@ -1202,6 +1255,47 @@ re-confirmation that `L12-R009`-`R012` and the `CE-L12-01-01` findings remain un
 pass touched neither). If both close, `CE-L12-01-02` is settled and another §11.8.8 final complete
 review becomes available. No Python or Rust implementation is authorized by this document alone.
 
+That candidate closed `L12-R013`/`R014` (`CE-L12-01-02` targeted closure review,
+`minion-agent-docs#114`), settling all six `CE-L12-01-02` findings on top of the eight already-
+settled `CE-L12-01-01` findings. The resulting exact candidate (code
+`88cf0b4564262cddf2aa5fe1a2de66cbe5dfa99e`, docs `a4eb07c764ea8006c867f574475779c9fcfa78ae`) then
+received a SECOND mandatory §11.8.8 final complete review (`minion-agent-docs#114` @ `2b5f333`)
+and was REJECTED: three NEW findings, `L12-R015` through `L12-R017`. Per §11.8.8 Case B, this
+opened a THIRD convergence episode, `CE-L12-01-03` (`L12-R001` through `L12-R014` remain
+historically/provisionally closed for the exact issues they addressed). The §11.8.4 challenge pass
+and §11.8.5 `AGREED FOR IMPLEMENTATION` checkpoint for `CE-L12-01-03` are recorded in
+`minion-agent-docs#116`, `assurance/layers/12-execution-seams-r015-r017-convergence-agreement.md`.
+This section documents the resulting coherent fix pass:
+
+```text
+L12-R015  synced EXEC-001's own copy of the result/exception boundary with the scoping already
+    settled elsewhere (design.md section 7's L12-R004 fix, spec/execution.md section 2, both
+    unchanged and already correct) -- EXEC-001's own independent copy of the identical claim was
+    never checked during that earlier fix. An unexpected OPERATIONAL failure still normalizes
+    (to unknown when unmapped); a broken invariant/programming bug remains an exception, even
+    from within a seam provider.
+
+L12-R016  aligned the frozen design's own FsTarget bridge bullets with the settled location-key
+    model (resolved-location framing, not "the same file... same key" / "canonical path"),
+    preserving the owner-approved bridge mechanism unchanged -- section 4's target_key fallback
+    narrowed to the exact Pi condition (not_found/not_supported only, confirmed against
+    file-mutation-queue.ts); resolve()'s own cancellation classification stated explicitly
+    (accepts-but-does-not-inspect, following from its own constituent operations).
+
+L12-R017  split section 8's blanket DIRECT_PI_PARITY claim per seam (fs/shell direct-parity,
+    subprocess Minion extension, matching EXEC-005's own already-correct disposition); reassigned
+    active-process-tracking cleanup from ctx.fs (section 3.8, corrected to make no such claim) to
+    ctx.shell (new section 5.7), matching Pi's own combined cleanup() behavior exactly, including
+    the exact non-error settlement a cleanup-killed in-flight command produces
+    (Ok(exit_code: 0), confirmed against nodejs.ts's own code ?? 0 normalization).
+```
+
+Per `agent-workflow.md` §11.8.7: this coherent-fix-pass candidate is ready for the MANDATORY
+targeted closure review scoped to `L12-R015` through `L12-R017` and their acceptance witnesses
+(§10 below), plus re-confirmation that all previously-settled areas remain undisturbed (this pass
+touched none of their settled rules). No Python or Rust implementation is authorized by this
+document alone.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1438,4 +1532,47 @@ PROCESS_PATH SCOPED TO THE PRODUCING PROVIDER ONLY (§4, convergence `CE-L12-01-
               a detecting provider MUST return FsError(invalid) is ALSO wrong -- both would
               contradict the single "uniformly undefined, optional best-effort diagnostic only"
               rule this agreement settles on
+
+ERROR/EXCEPTION BOUNDARY CONSISTENT ACROSS EXEC-001/DESIGN/SPEC (§2, convergence `CE-L12-01-03`)
+    setup:    read EXEC-001's own text, design.md section 7's Error style paragraph, and
+              spec/execution.md section 2 side by side, for a provider invariant violation that
+              throws/panics before producing an operational error
+    expected: all three now state the SAME distinction -- operational (however unexpected)
+              normalizes to a typed Result error; invariant/programming failures remain
+              exceptions, including from within a provider's own implementation
+    negative control: a candidate where EXEC-001's own prose still reads as an unscoped "every
+              failure becomes Result" claim fails this witness even if the other two are correct
+
+FSTARGET RESOLVED-LOCATION FRAMING MATCHES ACROSS DESIGN/SPEC (§4, convergence `CE-L12-01-03`)
+    setup:    file.txt and hardlink.txt, two hard links to the SAME underlying inode; resolve both
+    expected: DIFFERENT target_key values (different canonical paths) -- confirming design.md's
+              own corrected bridge bullet ("different LOCATIONS... even when... the same
+              resource") and NOT the pre-correction "same file... same key" claim
+    second setup: canonical_path(missing/path) failing with permission_denied (not
+              not_found/not_supported)
+    expected: resolve() returns Err(FsError(permission_denied)) -- it does NOT silently fall back
+              to absolute_path for this error code
+    third setup: resolve(path, signal) with a pre-aborted signal, on an EXISTING path
+    expected: Ok(FsTarget{...}) -- resolve() accepts signal but does not inspect it
+    negative control: a candidate falling back to absolute_path on ANY canonicalization error
+              (not just not_found/not_supported) fails the second case; a candidate returning
+              Err(aborted) on the third case fails that one
+
+CTX.SHELL CLEANUP KILLS ACTIVE COMMANDS; SETTLEMENT IS SUCCESS (§5.7, convergence `CE-L12-01-03`)
+    setup:    shell.exec() in flight (no timeout, no external abort signal fired); caller calls
+              shell.cleanup() while it is still running
+    expected: the in-flight process tree is killed; the exec() call itself settles
+              Ok({stdout, stderr, exit_code: 0}) -- NOT Err(aborted), NOT Err(timeout), because
+              cleanup-triggered termination never sets the abort signal or fires the timeout
+    negative control: an implementation whose shell.cleanup() is a true no-op leaves the command
+              running, failing this witness; an implementation classifying the settlement as
+              Err(aborted) also fails, since no abort signal was ever involved
+
+LOCAL-PROVIDER PARITY IS PER-SEAM, NOT BLANKET (§8, convergence `CE-L12-01-03`)
+    setup:    read section 8's own parity claim for ctx.subprocess (section 6) side by side with
+              EXEC-005's own disposition
+    expected: both now say MINION_EXTENSION/intentional divergence -- no remaining blanket
+              DIRECT_PI_PARITY claim covering ctx.subprocess
+    negative control: a candidate still claiming DIRECT_PI_PARITY for section 6 in section 8's own
+              text fails this witness
 ```
