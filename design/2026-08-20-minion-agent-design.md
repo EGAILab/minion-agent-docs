@@ -1298,21 +1298,36 @@ over JSON-RPC, browser automation — need raw streams and process lifetime, not
 command execution. Routing them through a shell would mean shell-interpreting
 argv for a structured transport, wrong on correctness and safety alike.
 
-Pi defines `FileSystem` and `Shell` as separate interfaces but also defines
-`ExecutionEnv extends FileSystem, Shell`, and every consumer depends on the
-intersection (`ExecutionToolContext.env: ExecutionEnv`; no consumer takes
-`FileSystem` or `Shell` alone). So pi split the interfaces but not the
-dependency: a local filesystem cannot be paired with a remote shell.
+Pi defines `FileSystem` and `Shell` as separate interfaces. Pi's own built-in
+execution tools depend on their combination — `ExecutionEnv extends
+FileSystem, Shell`, consumed as `ExecutionToolContext.env: ExecutionEnv` by
+every built-in execution tool (`bash`/`read`/`write`/`edit`) — so those
+consumers cannot pair a local filesystem with a remote shell. That is
+narrower than a blanket rule: pi's own session-persistence layer
+(`JsonlSessionRepoFileSystem`, a `Pick<FileSystem, ...>` with no `Shell`
+dependency at all) is a real, `FileSystem`-only pi consumer. So pi's own
+execution tools split the interfaces but not the dependency; pi's own
+non-tool consumers show that dependency is execution-tool-specific, not
+fundamental to the split interfaces themselves.
 
 We split the dependency. Consumers take the capability they use.
 
 **The fs/shell bridge.** DSH's `ctx.fs` is not pi's shape, and its difference
 is the mechanism that makes separate seams coherent:
 
-- `resolve(path) -> FsTarget` returns an opaque `target_key`. The same file
-  reached by different paths yields the same key.
-- `process_path(target)` returns the canonical path *a subprocess in this
-  provider's execution world can open*.
+- `resolve(path) -> FsTarget` returns an opaque `target_key`. For a
+  canonicalization-capable provider, the same resolved location yields the
+  same key — two syntactically different paths that resolve to the same
+  location (a relative path and its absolute form; a symlink and its target)
+  share a key, but a rename or a hard link is a different location even when
+  a POSIX filesystem considers the underlying file the same resource. A
+  provider that cannot canonicalize a path is not required to alias-unify a
+  symlink with its target — a documented provider limitation, not a broken
+  guarantee.
+- `process_path(target)` returns the path *a subprocess in this provider's
+  execution world can open* to reach the target's own resolved location —
+  canonical once the resource exists, lexical-absolute for a not-yet-existing
+  target's own future location.
 
 That indirection is how filesystem and shell stay independently swappable while
 still describing one execution world. It also gives read-before-edit checks and
@@ -1356,9 +1371,14 @@ error into a boot-time one, while a global rule would have banned compositions
 that are perfectly sound.
 
 **Error style.** Pi's contract holds and is current: execution-seam operations
-**never raise**; every failure, including unexpected backend failures, returns a
-typed error value. In Python that means `Result[T, E]` at these three seams and
-ordinary exceptions everywhere above them.
+**never raise** for an expected operational or environmental failure — that
+returns a typed error value instead. Framework/provider invariant violations
+and programming errors remain exceptions, including within a seam provider
+itself (see the boundary below) — an execution seam narrows WHICH failures are
+typed; it does not claim every possible failure becomes one. In Python that
+means `Result[T, E]` at these three seams for the typed cases and ordinary
+exceptions everywhere else, above them and within a provider's own invariant
+violations alike.
 
 Separate error domains per seam, as pi has (`FileError` and `ExecutionError`
 are distinct types with distinct code enums):
@@ -1377,7 +1397,7 @@ The boundary between the two mechanisms is normative:
 
 | | |
 |---|---|
-| **Values** — expected operational and environmental failures | not found · permission denied · invalid path · stale version · timeout · abort · non-zero process exit · I/O failure · remote unavailable |
+| **Values** — expected operational and environmental failures | not found · permission denied · invalid path · timeout · abort · I/O failure |
 | **Exceptions** — framework and provider invariant violations | invalid internal state · impossible state transition · broken provider implementation · assertion failure · programming error |
 
 Stated as one rule: **an execution seam normalizes operational and environmental
