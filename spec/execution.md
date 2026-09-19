@@ -770,13 +770,19 @@ its own tracking; like every `cleanup()` in this contract, it is best-effort and
 This matches pinned Pi's own combined `NodeExecutionEnv.cleanup()`, whose `activeChildPids` set is
 shared with `exec()`'s own spawned children (`nodejs.ts:429,691-694`).
 
-**Settlement of a cleanup-killed in-flight command (`DIRECT_PI_PARITY`).** A command killed by
-`cleanup()` does NOT go through the `aborted`/`timeout` classification machinery (§5.4) at all --
-no signal fired, no timeout elapsed. Its own `exec()` call settles through the ORDINARY exit-
-handling path: `exitCode: code ?? 0` (`nodejs.ts:495`) normalizes a killed (signal-terminated,
-null-exit-code) process to `0`. The caller observes `Ok({stdout, stderr, exit_code: 0})`, NOT an
-error of any kind -- a `cleanup()`-triggered kill is observably indistinguishable from the command
-having exited normally with status `0`, from the caller's own perspective.
+**Settlement of a cleanup-killed in-flight command (`DIRECT_PI_PARITY` -- refined, targeted closure
+review, `minion-agent-docs#114`, CE-L12-01-03: an earlier revision overgeneralized this to
+"unconditionally settles with `exit_code: 0`," which pinned Pi does NOT state).** A command killed
+by `cleanup()` does NOT go through the `aborted`/`timeout` classification machinery (§5.4) at all
+-- no signal fired, no timeout elapsed. Its own `exec()` call settles through the ORDINARY
+exit-handling path: `exitCode: code ?? 0` (`nodejs.ts:495`), where `code` is whatever numeric exit
+code the child process's own `exit` event reports (`number | null`). This is CONDITIONAL, not a
+blanket zero: if the child reports a numeric exit code `K` (a real possibility -- a process being
+killed does not guarantee a null/signal-terminated exit code on every platform or in every timing
+window), the caller observes `Ok({stdout, stderr, exit_code: K})`, preserving `K` exactly; `0` is
+substituted ONLY when `code` is absent/null. Either way the result is a SUCCESS, never `aborted` or
+`timeout` -- a `cleanup()`-triggered kill never sets the abort signal or fires the timeout, so
+those classifications never apply regardless of which exit-code case occurs.
 
 ---
 
@@ -1296,6 +1302,14 @@ targeted closure review scoped to `L12-R015` through `L12-R017` and their accept
 touched none of their settled rules). No Python or Rust implementation is authorized by this
 document alone.
 
+That candidate's targeted closure review (`minion-agent-docs#114` @
+`cb3cb3ea9adf70003a1d1ba3c110a450905cb549`) closed `L12-R015`/`R016`; `L12-R017` remained open in
+refined form: the settlement rule above overgeneralized "cleanup-killed commands settle with
+`exit_code: 0`" as unconditional, when pinned Pi's own `code ?? 0` is CONDITIONAL -- a real numeric
+exit code `K`, when the killed child reports one, is preserved, not overwritten to `0`. This is
+the narrow fix: §5.7's settlement rule and its §10 witness now state both cases (numeric code `K`
+preserved; `0` substituted ONLY when absent/null), matching `EXEC-004`.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1558,15 +1572,25 @@ FSTARGET RESOLVED-LOCATION FRAMING MATCHES ACROSS DESIGN/SPEC (§4, convergence 
               (not just not_found/not_supported) fails the second case; a candidate returning
               Err(aborted) on the third case fails that one
 
-CTX.SHELL CLEANUP KILLS ACTIVE COMMANDS; SETTLEMENT IS SUCCESS (§5.7, convergence `CE-L12-01-03`)
-    setup:    shell.exec() in flight (no timeout, no external abort signal fired); caller calls
-              shell.cleanup() while it is still running
-    expected: the in-flight process tree is killed; the exec() call itself settles
-              Ok({stdout, stderr, exit_code: 0}) -- NOT Err(aborted), NOT Err(timeout), because
-              cleanup-triggered termination never sets the abort signal or fires the timeout
+CTX.SHELL CLEANUP KILLS ACTIVE COMMANDS; SETTLEMENT PRESERVES A REAL EXIT CODE (§5.7, targeted
+    closure review, `minion-agent-docs#114` -- refined `L12-R017`, CE-L12-01-03: an earlier version
+    of this witness claimed an unconditional exit_code: 0, which pinned Pi does not guarantee)
+    setup A:  shell.exec() in flight (no timeout, no external abort signal fired); caller calls
+              shell.cleanup() while it is still running; the killed child reports NO numeric exit
+              code (null/absent, the common signal-terminated case)
+    expected A: the in-flight process tree is killed; exec() settles Ok({stdout, stderr,
+              exit_code: 0}) -- 0 substituted because the code was absent/null
+    setup B:  identical, except the killed child DOES report a numeric exit code K (e.g. 137)
+              before/as part of settling
+    expected B: exec() settles Ok({stdout, stderr, exit_code: K}) -- K is PRESERVED, not
+              overwritten to 0
+    both cases: NOT Err(aborted), NOT Err(timeout) -- cleanup-triggered termination never sets the
+              abort signal or fires the timeout, regardless of which exit-code case occurs
     negative control: an implementation whose shell.cleanup() is a true no-op leaves the command
-              running, failing this witness; an implementation classifying the settlement as
-              Err(aborted) also fails, since no abort signal was ever involved
+              running, failing this witness; an implementation classifying either settlement as
+              Err(aborted) fails, since no abort signal was ever involved; an implementation that
+              unconditionally returns exit_code: 0 regardless of a real observed code K fails
+              case B specifically
 
 LOCAL-PROVIDER PARITY IS PER-SEAM, NOT BLANKET (§8, convergence `CE-L12-01-03`)
     setup:    read section 8's own parity claim for ctx.subprocess (section 6) side by side with
