@@ -513,11 +513,27 @@ in that group; a pre-aborted or live `signal` has no effect on `resolve()`'s own
 
 Binding requirements:
 
-- **Symlink identity is fixed, not provider-discretionary.** `resolve(path)` identifies the
-  resource a `canonical_path`-equivalent resolution of `path` would reach (§3.2) -- a symlink and
-  its target therefore always share one `target_key`, for every provider, with no per-provider
-  choice. This falls out of the `canonical_path`-based derivation above for free (§3.2 already
-  fully resolves symlinks through `canonical_path`); it is not a separate rule layered on top.
+- **Symlink identity is fixed when canonicalization succeeds -- not provider-discretionary, but not
+  unconditional either (refined at `L12-R018`, third final complete review,
+  `minion-agent-docs#114`, convergence episode `CE-L12-01-04`; narrowed per the `agent-workflow.md`
+  §11.10 governance decision recorded in `minion-agent-docs#117`).** An earlier revision of this
+  bullet claimed the symlink/target key-sharing guarantee holds UNCONDITIONALLY, for every
+  provider, with no exception. That contradicts the exact fallback condition (§4 above,
+  `not_found`/`not_supported` only): a provider whose `canonical_path` returns `not_supported` for
+  every path falls back to LEXICAL `absolute_path` for both a symlink and its target -- two
+  different lexical paths, hence two DIFFERENT `target_key` values, even though the symlink
+  addresses the target. Corrected: `resolve(path)` identifies the resource a
+  `canonical_path`-equivalent resolution of `path` would reach (§3.2) WHEN `canonical_path`
+  succeeds -- a symlink and its target therefore share one `target_key` for every
+  canonicalization-CAPABLE provider (every provider this row currently certifies; pinned Pi's own
+  local reference implementation's `toFileError` never produces `not_supported` at all,
+  `nodejs.ts:97-121`, so this narrowing has no effect on any current provider). A provider whose
+  `canonical_path` is unsupported is explicitly NOT required to alias-unify a symlink with its
+  target -- a documented provider limitation, not a contract violation; a future Layer 13 consumer
+  relying on alias unification for correctness must not depend on it when paired with such a
+  provider. This is still not a separate rule layered on top of §3.2's own resolution -- it falls
+  out of the SAME `canonical_path`-based derivation, conditioned on that derivation actually
+  succeeding.
 - **Location, not resource, is the identity.** `target_key` identifies a PATH's resolved location,
   not an underlying inode/resource. Content mutation in place leaves `target_key` unchanged (same
   path, same canonicalization). Renaming `a` to `b` CHANGES the `target_key` (`a` and `b` are
@@ -992,6 +1008,31 @@ validate(providers: list[(name: str, identity: ExecutionWorldIdentity)]) ->
        Providers not passed to a given validate() call are never implicated -- mounting
        incompatible capabilities that no consumer ever asks to be validated together remains
        legal, matching the "mixed worlds are a legitimate deployment" rule above unchanged.
+
+ExecutionWorldError
+    incompatible_pairs: ordered list of {left: str, right: str}
+```
+
+**Concrete `ExecutionWorldError` payload (refined at `L12-R019`, third final complete review,
+`minion-agent-docs#114`, CE-L12-01-04 -- an earlier revision required only that the error "name
+every pairwise-incompatible provider," with no stated field shape, ordering, or duplicate-label
+handling; two conforming implementations could expose incompatible public APIs).**
+`MINION_EXTENSION`, no Pi source:
+
+```text
+incompatible_pairs: one entry per pairwise-incompatible combination found among the providers
+    passed to validate(), enumerated in the SAME relative order the caller supplied them -- for
+    input index i < j, an incompatible pair appears as {left: name[i], right: name[j]} (never the
+    reversed order), deterministic and independent of implementation choice beyond the caller's
+    own input order.
+
+Caller-supplied labels (the "name" in each (name, identity) tuple) MUST be unique within one
+    validate() call; a duplicate label is a caller precondition violation (undefined behavior for
+    this primitive), not a case ExecutionWorldError itself needs to represent.
+
+Any human-readable message text a provider or runtime attaches is NON-NORMATIVE -- implementations
+    MAY include one for diagnostics, but callers and canonical normalization MUST NOT depend on
+    its exact wording; incompatible_pairs is the sole normative payload.
 ```
 
 ---
@@ -1310,6 +1351,40 @@ exit code `K`, when the killed child reports one, is preserved, not overwritten 
 the narrow fix: §5.7's settlement rule and its §10 witness now state both cases (numeric code `K`
 preserved; `0` substituted ONLY when absent/null), matching `EXEC-004`.
 
+That candidate's second targeted closure review closed `L12-R017`, settling all seventeen findings
+across `CE-L12-01-01` through `CE-L12-01-03`. The resulting exact candidate (code
+`997d22ba52b2040cf190fa3e9515c6db738aad1b`, docs `d0ab7b53cf16d3da17360ea5faa633a235ee8e7a`) then
+received a THIRD mandatory §11.8.8 final complete review (`minion-agent-docs#114` @
+`aee3912fef830b42e60f301a51213a6c97d2bd1e`) and was REJECTED: two NEW findings, `L12-R018`
+(the exact `not_found`/`not_supported` fallback condition, settled at `L12-R016`, was never
+re-checked against the ALSO-settled unconditional symlink/target identity guarantee -- the two
+contradict for a hypothetical non-canonicalizing provider) and `L12-R019` (`ExecutionWorldError`'s
+own public payload shape was never defined). Per §11.8.8 Case B, this opened a FOURTH convergence
+episode, `CE-L12-01-04`. Because narrowing the symlink/target guarantee touches the frozen design's
+own bridge invariant, the §11.10 governance-decision provenance requirement applied: the owner was
+asked directly and approved narrowing it (Pi's own real mutation-queue mechanism was never
+unconditional either). The §11.8.4 challenge pass, the §11.10 governance record, and the §11.8.5
+`AGREED FOR IMPLEMENTATION` checkpoint for `CE-L12-01-04` are recorded in `minion-agent-docs#117`,
+`assurance/layers/12-execution-seams-r018-r019-convergence-agreement.md`. This section documents
+the resulting coherent fix pass:
+
+```text
+L12-R018  narrowed the symlink/target target_key identity guarantee (section 4) to hold when
+    canonicalization succeeds -- every provider this row currently certifies, since pinned Pi's
+    own local reference implementation never produces not_supported at all. A provider whose
+    canonical_path is unsupported is explicitly not required to alias-unify a symlink with its
+    target; design.md section 7's own bridge bullet gained the same one-clause clarification.
+
+L12-R019  defined ExecutionWorldError's own concrete payload (section 7): an ordered
+    incompatible_pairs list of {left, right} labels, enumerated by input index with i < j;
+    unique caller-supplied labels as a precondition; human-readable text explicitly non-normative.
+```
+
+Per `agent-workflow.md` §11.8.7: this coherent-fix-pass candidate is ready for the MANDATORY
+targeted closure review scoped to `L12-R018`/`L12-R019` and their acceptance witnesses (§10 below),
+plus re-confirmation that all previously-settled areas remain undisturbed (this pass touched none
+of their settled rules). No Python or Rust implementation is authorized by this document alone.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1599,4 +1674,33 @@ LOCAL-PROVIDER PARITY IS PER-SEAM, NOT BLANKET (§8, convergence `CE-L12-01-03`)
               DIRECT_PI_PARITY claim covering ctx.subprocess
     negative control: a candidate still claiming DIRECT_PI_PARITY for section 6 in section 8's own
               text fails this witness
+
+SYMLINK/TARGET IDENTITY HOLDS ONLY WHEN CANONICALIZATION SUCCEEDS (§4, targeted closure review,
+    `minion-agent-docs#114` -- refined `L12-R018`, CE-L12-01-04, governance decision recorded in
+    `minion-agent-docs#117`)
+    setup:    a stub provider whose canonical_path returns Err(not_supported) for every path;
+              resolve("link") and resolve("target") (link a symlink to target, by the provider's
+              own semantics, though it cannot canonicalize to prove it)
+    expected: target_key("link") != target_key("target") -- UNEQUAL, an explicitly documented
+              limitation of this provider, not a contract violation
+    second setup: the SAME stub provider; resolve("link") called twice for the identical path
+    expected: EQUAL target_key both times -- stability for repeated resolution of the SAME path
+              still holds even without canonicalization
+    negative control: a candidate asserting target_key("link") == target_key("target") for a
+              not_supported provider is WRONG under this agreement; a candidate asserting a
+              canonicalization-CAPABLE provider's own symlink/target keys may legitimately differ
+              is ALSO wrong -- the guarantee still holds unconditionally for every provider this
+              row currently certifies (none of which ever produces not_supported)
+
+EXECUTIONWORLDERROR HAS A CONCRETE, ORDERED PAYLOAD (§7, targeted closure review,
+    `minion-agent-docs#114` -- refined `L12-R019`, CE-L12-01-04)
+    setup:    validate([("fs", A), ("shell", B), ("subprocess", C)]) with A/B incompatible, A/C
+              incompatible, B/C compatible
+    expected: Err(ExecutionWorldError{incompatible_pairs: [{left:"fs",right:"shell"},
+              {left:"fs",right:"subprocess"}]}) -- exactly these two entries, in input-index order
+    second setup: validate([("a", X), ("a", Y)]) -- duplicate label "a"
+    expected: undefined behavior (caller precondition violation) -- not a case this primitive is
+              required to represent in its own Result
+    negative control: an implementation returning only a human-readable string, an unordered set,
+              or pairs in a different order than input-index i<j fails this witness
 ```

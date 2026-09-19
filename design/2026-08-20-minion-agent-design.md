@@ -1315,12 +1315,15 @@ We split the dependency. Consumers take the capability they use.
 **The fs/shell bridge.** DSH's `ctx.fs` is not pi's shape, and its difference
 is the mechanism that makes separate seams coherent:
 
-- `resolve(path) -> FsTarget` returns an opaque `target_key`. The same
-  resolved location yields the same key — two syntactically different paths
-  that resolve to the same location (a relative path and its absolute form;
-  a symlink and its target) share a key, but a rename or a hard link is a
-  different location even when a POSIX filesystem considers the underlying
-  file the same resource.
+- `resolve(path) -> FsTarget` returns an opaque `target_key`. For a
+  canonicalization-capable provider, the same resolved location yields the
+  same key — two syntactically different paths that resolve to the same
+  location (a relative path and its absolute form; a symlink and its target)
+  share a key, but a rename or a hard link is a different location even when
+  a POSIX filesystem considers the underlying file the same resource. A
+  provider that cannot canonicalize a path is not required to alias-unify a
+  symlink with its target — a documented provider limitation, not a broken
+  guarantee.
 - `process_path(target)` returns the path *a subprocess in this provider's
   execution world can open* to reach the target's own resolved location —
   canonical once the resource exists, lexical-absolute for a not-yet-existing
