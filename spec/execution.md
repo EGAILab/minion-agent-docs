@@ -462,8 +462,23 @@ FsTarget
        infer backend identity/location from its shape
 
 process_path(target: FsTarget) -> Result[str, FsError]
-    -- returns the path usable by a process running in the target's own execution world
+    -- returns the path usable by a process running in the target's own execution world:
+       CANONICAL once the resource exists, LEXICAL-ABSOLUTE for a not-yet-existing target's own
+       future location -- the SAME string used to derive that target's own target_key in the
+       first place (the canonical-if-exists/absolute-if-missing derivation, above), not a
+       separately-computed path
 ```
+
+**`process_path`'s canonical-vs-lexical form (documented post-closure, discovered during the first
+independent Rust closure review of the merged Layer 12 contract, `minion-agent#41`/
+`minion-agent-docs#118`; `L12-R021`).** An earlier revision left this binding text silent on
+whether `process_path` returns a canonical or lexical path, while
+`design/2026-08-20-minion-agent-design.md` §7's own bridge bullet (added during `CE-L12-01-03`'s
+`L12-R016` fix) already stated the canonical-once-exists/lexical-if-missing distinction -- an
+unintentional desync between the design doc and this binding spec text, not a design change. This
+document is now the SOLE source of the binding rule (matching `target_key`'s own already-settled
+derivation exactly, §4 above): `process_path(target)` returns the SAME string that was used to
+compute `target`'s own `target_key`, so a caller never needs a separate canonicalization step.
 
 **Correction record (independent review, `L12-R005`):** an earlier revision of this section left
 the same-resource-identity rule underspecified enough that it was not implementable as a portable
@@ -795,10 +810,16 @@ exit-handling path: `exitCode: code ?? 0` (`nodejs.ts:495`), where `code` is wha
 code the child process's own `exit` event reports (`number | null`). This is CONDITIONAL, not a
 blanket zero: if the child reports a numeric exit code `K` (a real possibility -- a process being
 killed does not guarantee a null/signal-terminated exit code on every platform or in every timing
-window), the caller observes `Ok({stdout, stderr, exit_code: K})`, preserving `K` exactly; `0` is
-substituted ONLY when `code` is absent/null. Either way the result is a SUCCESS, never `aborted` or
-`timeout` -- a `cleanup()`-triggered kill never sets the abort signal or fires the timeout, so
-those classifications never apply regardless of which exit-code case occurs.
+window), the CALLER observes `exit_code: K`, preserved -- `0` is substituted ONLY when `code` is
+absent/null. Since `ctx.shell`'s own local provider spawns through `ctx.subprocess` (§1, §6),
+`cleanup()` is architecturally implemented by calling `ctx.subprocess`'s own `terminate()` on each
+tracked command -- this settlement rule is therefore the SAME code-preserving rule `terminate()`
+itself now uses (§6, `L12-R020`, post-closure finding), not an independently-specified duplicate:
+`ctx.subprocess`'s `None`-vs-real-code result flows through unchanged, and `ctx.shell` maps a
+`None` code to `0` (its own `exec()` convention) while passing a real `K` straight through. Either
+way the result is a SUCCESS, never `aborted` or `timeout` -- a `cleanup()`-triggered kill never
+sets the abort signal or fires the timeout, so those classifications never apply regardless of
+which exit-code case occurs.
 
 ---
 
@@ -904,12 +925,31 @@ Binding requirements:
   second, independently-abortable `wait(signal)` call to reconcile against the first.
 - **`wait()` classification.** `wait()` returns `Err(aborted)` when the process was killed because
   the spawn-supplied `signal` fired (at any point, before or after the `wait()` call itself); it
-  returns `Ok(ExitStatus{exit_code: None})` when the process was killed via an explicit
-  `terminate()` call with no spawn-signal involved -- the caller asked for this outcome, so it is
-  not reported as an error. If both occur (the spawn signal fires and the caller also calls
-  `terminate()`), whichever caused the actual kill first determines the classification; a
-  `terminate()` racing a signal that already fired is a no-op (idempotence, below) and does not
-  change the classification the signal already established.
+  returns `Ok(ExitStatus{exit_code})` when the process was killed via an explicit `terminate()`
+  call with no spawn-signal involved -- the caller asked for this outcome, so it is not reported
+  as an error. If both occur (the spawn signal fires and the caller also calls `terminate()`),
+  whichever caused the actual kill first determines the classification; a `terminate()` racing a
+  signal that already fired is a no-op (idempotence, below) and does not change the classification
+  the signal already established.
+
+  **`exit_code` after an explicit `terminate()` is CONDITIONAL, not unconditionally `None`
+  (refined post-closure, discovered during the first independent Rust closure review of the merged
+  Layer 12 contract, `minion-agent#41`/`minion-agent-docs#118`; documented as `L12-R020`).** An
+  earlier revision of this bullet (settled `L12-R006`, `CE-L12-01-01`) said `terminate()`-caused
+  kills ALWAYS settle with `exit_code: None`. That is structurally incompatible with the LATER
+  `L12-R017` (`CE-L12-01-03`) rule that `ctx.shell.cleanup()` must PRESERVE a real numeric exit
+  code when the killed child reports one: `ctx.shell.cleanup()` is architecturally built on TOP of
+  `ctx.subprocess.terminate()` (§1, §6's own architecture rationale) -- there is no other sanctioned
+  kill mechanism at the `ctx.subprocess` level for it to use. If `terminate()`'s own `wait()`
+  unconditionally discards the real code, `ctx.shell.cleanup()` can NEVER satisfy `L12-R017`'s own
+  settled requirement, no matter how it is implemented -- the two previously-settled rules were
+  jointly unsatisfiable as written. Corrected: `exit_code` after an explicit `terminate()` reflects
+  whatever the OS actually reports for the process's own termination -- a REAL numeric code `K`
+  when the OS provides one (a killed process is not guaranteed to lack a numeric code; this is
+  platform- and timing-dependent), `None` ONLY when the OS genuinely reports no code (the common
+  signal-terminated case). This is the SAME code-preserving rule `ctx.shell`'s own
+  cleanup()-triggered settlement already uses (§5.7) -- deliberately UNIFIED, not two different
+  rules for what is architecturally the same underlying kill mechanism.
 - **`wait()` is independent of stdio state.** `wait()` settles on the PROCESS's own exit alone --
   it does not wait for, and is not affected by, the state of `stdout`/`stderr`/`stdin`. A caller
   wanting BOTH "the process exited" and "I have drained all output" does both explicitly (`wait()`
@@ -1385,6 +1425,47 @@ targeted closure review scoped to `L12-R018`/`L12-R019` and their acceptance wit
 plus re-confirmation that all previously-settled areas remain undisturbed (this pass touched none
 of their settled rules). No Python or Rust implementation is authorized by this document alone.
 
+That candidate's `CE-L12-01-04` targeted closure review closed `L12-R018`/`L12-R019`; the exact
+settled candidate (code `997d22ba52b2040cf190fa3e9515c6db738aad1b`, docs
+`d0ab7b53cf16d3da17360ea5faa633a235ee8e7a`) then passed a fourth §11.8.8 final complete review,
+was approved, and MERGED (code baseline `c772938f70d1932b8d27a44aab956f3d338cde74`, docs baseline
+`554a0750fcbdc5346f6f0407af621339d65a79f8`). Rust implementation (`minion-agent#41`,
+`minion-agent-docs#118`) then began against that merged baseline and requested independent
+closure verification. The FIRST independent closure review of that Rust candidate found two
+genuine shared-contract defects (not merely Rust bugs), both fixed here, POST-CLOSURE, directly
+against the merged baseline:
+
+```text
+L12-R020  ctx.subprocess's own terminate()-caused wait() settlement was specified (L12-R006,
+    CE-L12-01-01) to ALWAYS return exit_code: None, discarding any real code the OS reports. This
+    is structurally incompatible with L12-R017 (CE-L12-01-03), which requires ctx.shell.cleanup()
+    -- architecturally built ON TOP OF ctx.subprocess.terminate(), with no other sanctioned kill
+    mechanism -- to PRESERVE a real exit code when one is reported. The two previously-settled
+    rules were jointly unsatisfiable as written; no Rust implementation could have satisfied both.
+    Corrected: terminate()'s own settlement now uses the SAME conditional code-preserving rule
+    (real code K preserved; None only when genuinely absent) that L12-R017 already established for
+    ctx.shell -- unifying what was architecturally always one mechanism, section 6, cross-
+    referenced from section 5.7.
+
+L12-R021  process_path's own canonical-vs-lexical form was left unstated in this binding spec
+    text, even though design.md's own bridge bullet (added during CE-L12-01-03's L12-R016 fix)
+    already stated it -- an unintentional design/spec desync, not a design change. Corrected:
+    process_path(target) returns the exact same string already used to derive that target's own
+    target_key (canonical once the resource exists, lexical-absolute if not) -- section 4.
+```
+
+Per `agent-workflow.md` §11.8.7 (applied to a post-closure remediation the same way): this
+candidate requires a fresh targeted closure review scoped to `L12-R020`/`L12-R021` before either
+language's implementation can be considered conformant, and the Rust candidate specifically
+requires remediation for `L12-R020` (its `terminate()` unconditionally discards a real exit code)
+plus one additional, independently-confirmed Rust-only defect the same review found:
+`ctx.subprocess`/`ctx.shell`'s own relative-`cwd` resolution does not perform the same lexical
+normalization (`~`, `..`, `file://`) `ctx.fs`'s own `absolute_path` does, contradicting this
+document's own existing §6 requirement that it use "the identical lexical resolution rule
+`ctx.fs`'s own `absolute_path` uses -- not a separately re-implemented mechanism." That defect is
+a Rust implementation gap against an ALREADY-correct, unchanged spec requirement, not a new
+shared-contract finding.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1475,6 +1556,22 @@ PROCESS WAIT, ONE SIGNAL (§6, convergence `CE-L12-01-01`)
     second setup: drop a running Process without calling wait() or terminate()
     expected: documented as undefined/caller-error, not required to be leak-safe
 
+PROCESS TERMINATE() SETTLEMENT PRESERVES A REAL EXIT CODE (§6, post-closure finding `L12-R020`,
+    discovered during the first independent Rust closure review -- supersedes the unconditional
+    exit_code: None claim in "PROCESS WAIT VS. TERMINATE" below)
+    setup A:  a running process; caller calls terminate() with no spawn-time signal involved; the
+              OS reports NO numeric exit code for the killed process (null/absent, the common
+              signal-terminated case)
+    expected A: wait() returns Ok(ExitStatus{exit_code: None}) -- None substituted because the
+              code was absent
+    setup B:  identical, except the OS DOES report a numeric exit code K for the killed process
+    expected B: wait() returns Ok(ExitStatus{exit_code: Some(K)}) -- K is PRESERVED, not
+              overwritten to None
+    negative control: an implementation that unconditionally returns exit_code: None regardless of
+              a real observed code K fails case B specifically -- this was the exact defect that
+              made ctx.shell.cleanup() (§5.7, L12-R017) structurally unable to preserve a real
+              code, since it is built on this same terminate() primitive
+
 SHELL IDLE-GRACE, EXACT RESET CONSTANT (§5.6, convergence `CE-L12-01-01`)
     setup:    a direct child exits; its own stdout emits one more chunk at +80ms; nothing else
               happens
@@ -1493,12 +1590,15 @@ SHELL COMPLETION (§5.6)
               period elapses with no further data -- not once the detached descendant's own pipe
               reaches EOF
 
-PROCESS WAIT VS. TERMINATE (§6)
+PROCESS WAIT VS. TERMINATE (§6 -- classification unchanged; the exit_code VALUE inside the Ok is
+    now conditional, per "PROCESS TERMINATE() SETTLEMENT PRESERVES A REAL EXIT CODE" above)
     setup:    a running process; caller calls terminate() with no spawn-time signal involved
-    expected: wait() returns Ok(ExitStatus{exit_code: None})
+    expected: wait() returns Ok(ExitStatus{...}) -- a SUCCESS classification, not an error; the
+              exit_code within it is None or a real code K depending on what the OS reports (see
+              above)
     contrast: same process, but the ORIGINAL spawn-time signal (not terminate()) triggers the kill
     expected: wait() returns Err(SubprocessError(aborted)) -- same underlying kill mechanism,
-              deliberately different classification depending on WHO initiated it; see also
+              deliberately different CLASSIFICATION depending on WHO initiated it; see also
               "PROCESS WAIT, ONE SIGNAL" above, which is this same witness restated to make
               explicit that wait() itself takes no signal argument
 
@@ -1703,4 +1803,16 @@ EXECUTIONWORLDERROR HAS A CONCRETE, ORDERED PAYLOAD (§7, targeted closure revie
               required to represent in its own Result
     negative control: an implementation returning only a human-readable string, an unordered set,
               or pairs in a different order than input-index i<j fails this witness
+
+PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-closure finding
+    `L12-R021`)
+    setup A:  an EXISTING path; resolve(path) -> target with target_key = canonical_path(path)
+    expected A: process_path(target) returns that SAME canonical string
+    setup B:  a NOT-YET-EXISTING path; resolve(path) -> target with target_key = absolute_path(path)
+              (the not-yet-existing fallback)
+    expected B: process_path(target) returns that SAME lexical-absolute string, NOT a canonical
+              one (there is nothing to canonicalize yet)
+    negative control: an implementation returning a freshly-recomputed canonical path for case B
+              (rather than the lexical string target_key was actually derived from) fails this
+              witness, since the resource still does not exist and canonicalization would fail
 ```
