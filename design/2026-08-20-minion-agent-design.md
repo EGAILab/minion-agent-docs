@@ -1298,11 +1298,17 @@ over JSON-RPC, browser automation — need raw streams and process lifetime, not
 command execution. Routing them through a shell would mean shell-interpreting
 argv for a structured transport, wrong on correctness and safety alike.
 
-Pi defines `FileSystem` and `Shell` as separate interfaces but also defines
-`ExecutionEnv extends FileSystem, Shell`, and every consumer depends on the
-intersection (`ExecutionToolContext.env: ExecutionEnv`; no consumer takes
-`FileSystem` or `Shell` alone). So pi split the interfaces but not the
-dependency: a local filesystem cannot be paired with a remote shell.
+Pi defines `FileSystem` and `Shell` as separate interfaces. Pi's own built-in
+execution tools depend on their combination — `ExecutionEnv extends
+FileSystem, Shell`, consumed as `ExecutionToolContext.env: ExecutionEnv` by
+every built-in execution tool (`bash`/`read`/`write`/`edit`) — so those
+consumers cannot pair a local filesystem with a remote shell. That is
+narrower than a blanket rule: pi's own session-persistence layer
+(`JsonlSessionRepoFileSystem`, a `Pick<FileSystem, ...>` with no `Shell`
+dependency at all) is a real, `FileSystem`-only pi consumer. So pi's own
+execution tools split the interfaces but not the dependency; pi's own
+non-tool consumers show that dependency is execution-tool-specific, not
+fundamental to the split interfaces themselves.
 
 We split the dependency. Consumers take the capability they use.
 
@@ -1377,7 +1383,7 @@ The boundary between the two mechanisms is normative:
 
 | | |
 |---|---|
-| **Values** — expected operational and environmental failures | not found · permission denied · invalid path · stale version · timeout · abort · non-zero process exit · I/O failure · remote unavailable |
+| **Values** — expected operational and environmental failures | not found · permission denied · invalid path · timeout · abort · I/O failure |
 | **Exceptions** — framework and provider invariant violations | invalid internal state · impossible state transition · broken provider implementation · assertion failure · programming error |
 
 Stated as one rule: **an execution seam normalizes operational and environmental
