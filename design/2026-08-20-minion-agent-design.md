@@ -1362,9 +1362,14 @@ error into a boot-time one, while a global rule would have banned compositions
 that are perfectly sound.
 
 **Error style.** Pi's contract holds and is current: execution-seam operations
-**never raise**; every failure, including unexpected backend failures, returns a
-typed error value. In Python that means `Result[T, E]` at these three seams and
-ordinary exceptions everywhere above them.
+**never raise** for an expected operational or environmental failure — that
+returns a typed error value instead. Framework/provider invariant violations
+and programming errors remain exceptions, including within a seam provider
+itself (see the boundary below) — an execution seam narrows WHICH failures are
+typed; it does not claim every possible failure becomes one. In Python that
+means `Result[T, E]` at these three seams for the typed cases and ordinary
+exceptions everywhere else, above them and within a provider's own invariant
+violations alike.
 
 Separate error domains per seam, as pi has (`FileError` and `ExecutionError`
 are distinct types with distinct code enums):

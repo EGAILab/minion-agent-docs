@@ -244,6 +244,21 @@ incompleteness, as **DIRECT_PI_PARITY** -- not the fuller interface promise. Cho
 interface instead would itself have been the divergence requiring its own owner escalation
 (`agent-workflow.md` §11.7) that no governance record grants.
 
+**Public API shape (refined at `L12-R001`, targeted closure review, `minion-agent-docs#114`):** the
+operation inventory (§3 above) declares `signal?` on EVERY operation, including the ten listed
+below -- matching pinned Pi's own `FileSystem` INTERFACE shape exactly (`types.ts:222-283`, which
+also declares `signal?` uniformly). This is a single, explicit, DELIBERATE decision about the
+PUBLIC TYPED API surface, kept separate from the decision about OBSERVABLE BEHAVIOR below: every
+`ctx.fs` operation ACCEPTS an optional `signal` argument (a uniform seam-wide signature, easy for a
+caller to use consistently without checking which operations happen to support it); whether that
+argument is INSPECTED is a separate, per-operation fact, stated in the table below. For the ten
+operations in the "does not inspect" group, `signal` is accepted (the call compiles/type-checks
+and is a normal, successful call) but has NO effect on that operation's own behavior -- there is no
+operation in this contract whose typed signature omits the parameter; there is no operation that
+raises or errors merely for being passed one it does not inspect. A Rust implementation exposes
+this as an ordinary `Option<&CancelToken>` (or equivalent) parameter on every trait method, unused
+in the body for the ten listed operations -- not a second, narrower trait shape.
+
 **Binding per-operation table** (firm requirement, matching pinned Pi's own reference
 implementation exactly -- no "SHOULD" advisory language, no Minion-added cancellation checkpoint
 beyond what Pi itself observably performs):
@@ -260,7 +275,9 @@ checks pre-aborted AND re-checks at each loop iteration:
 checks pre-aborted only, no mid-operation checkpoint (a single fast syscall):
     rename_file
 
-does not accept or check a signal at all -- MATCHES Pi exactly, not a Minion gap:
+accepts signal (uniform typed API, per above) but does NOT inspect it -- a pre-aborted or
+live signal has no effect; the call always proceeds normally -- MATCHES Pi exactly, not a
+Minion gap:
     absolute_path, join_path, append_file, file_info, canonical_path, exists, create_dir,
     remove, create_temp_dir, create_temp_file
 ```
@@ -468,13 +485,15 @@ Binding requirements:
   path, same canonicalization). Renaming `a` to `b` CHANGES the `target_key` (`a` and `b` are
   different canonical paths) -- this is CORRECT, not a defect: Pi's own real queue does the same.
   Deleting `a` and creating a new, unrelated file also named `a` REUSES the same `target_key` as
-  the old `a` -- also correct and safe: serializing the new file's own operations against the same
-  queue key the old file used is conservative, never wrong. A mechanism whose output depends on
-  content (a content hash) or on a device+inode-equivalent pair is explicitly EXCLUDED, not merely
-  unspecified -- a content hash fails the content-mutation-stability case above and collides across
-  distinct files with identical bytes; a device+inode pair cannot satisfy the not-yet-existing-path
-  case below. Canonical-path-string (falling back to absolute-path) is the ONE specified mechanism,
-  not one option among several.
+  the old `a`, PROVIDED no ancestor directory component of `a`'s path is or becomes a symlink in
+  between (see the not-yet-existing-target bullet below for the case where it is) -- when it holds,
+  this reuse is correct and safe: serializing the new file's own operations against the same queue
+  key the old file used is conservative, never wrong. A mechanism whose output depends on content (a
+  content hash) or on a device+inode-equivalent pair is explicitly EXCLUDED, not merely unspecified
+  -- a content hash fails the content-mutation-stability case above and collides across distinct
+  files with identical bytes; a device+inode pair cannot satisfy the not-yet-existing-path case
+  below. Canonical-path-string (falling back to absolute-path) is the ONE specified mechanism, not
+  one option among several.
 - **Provider/world scoping.** A `target_key` is meaningful only for comparison against other
   `target_key` values produced by the SAME provider instance. Two `target_key` values from
   DIFFERENT provider instances (even if by coincidence their opaque values happen to be equal, or
@@ -485,19 +504,40 @@ Binding requirements:
   space into another's.
 - **Stability and comparability.** Within one provider instance, `target_key` MUST support stable
   equality comparison for the resource's entire lifetime under the location-based rule above (two
-  `resolve()` calls for the same still-unrenamed path produce equal keys; two `resolve()` calls for
-  different paths produce unequal keys, even if their content happens to be byte-identical) and
-  MUST be usable as a hash-map/set key (stable hash consistent with equality).
-- **Not-yet-existing targets.** `resolve()` MUST succeed for a path that does not yet exist (a
-  write/create operation's own future target) -- the mutation-serialization use case this bridge
-  exists for explicitly requires serializing concurrent CREATE operations at the same not-yet-
-  existing path, not only operations on already-existing resources. Per the derivation above, a
-  not-yet-existing path's `target_key` is its `absolute_path` (the canonicalization fallback). A
-  later `resolve()` call for the SAME path, once the resource exists, produces the equal
-  `canonical_path`-derived `target_key` (assuming no symlink was introduced at that location in the
-  meantime, and assuming the absolute and canonical forms coincide, which they do for a path with
-  no symlinked ancestor) -- creation does not invalidate the identity a pre-creation `resolve()`
-  already established.
+  `resolve()` calls that reach the SAME resolved location, per the derivation above, produce equal
+  keys -- this is how a symlink and its target correctly share one key despite being syntactically
+  different paths, per the symlink-identity bullet above; two `resolve()` calls that reach
+  DIFFERENT resolved locations produce unequal keys, even if their content happens to be
+  byte-identical) and MUST be usable as a hash-map/set key (stable hash consistent with equality).
+  ("Different paths" alone is not the right test -- two DIFFERENT syntactic paths can resolve to
+  the SAME location, as the symlink case shows; it is the RESOLVED LOCATION that must match for
+  keys to be equal.)
+- **Not-yet-existing targets, and the symlinked-ancestor exception (refined at `L12-R005`,
+  targeted closure review, `minion-agent-docs#114`).** `resolve()` MUST succeed for a path that does
+  not yet exist (a write/create operation's own future target) -- the mutation-serialization use
+  case this bridge exists for explicitly requires serializing concurrent CREATE operations at the
+  same not-yet-existing path, not only operations on already-existing resources. Per the derivation
+  above, a not-yet-existing path's `target_key` is its `absolute_path` (the canonicalization
+  fallback) -- a PURELY LEXICAL value that does NOT resolve any symlink, including one in an
+  ANCESTOR directory component of the path. A later `resolve()` call for the SAME path, once the
+  resource exists, uses `canonical_path`, which DOES resolve every symlink component, ancestors
+  included (`realpath`-equivalent, confirmed against `nodejs.ts:635-642`). For an ordinary path
+  with no symlinked ancestor, these two forms coincide, so the `target_key` is stable across
+  creation. **For a path whose ancestor directory is (or becomes) a symlink, they do NOT coincide,
+  and `target_key` CHANGES across creation** -- confirmed by direct reasoning about `realpath`
+  semantics and reproduced with an executable witness (§10): `resolve("link/new.txt")` before
+  `new.txt` exists (`link` a symlink to `real`) yields the lexical `.../link/new.txt`; after
+  creating the file through `link`, `resolve("link/new.txt")` yields the canonicalized
+  `.../real/new.txt` -- unequal. This is NOT a Minion-introduced defect: pinned Pi's own real
+  `getMutationQueueKey` calls the exact same `absolutePath`/`canonicalPath` pair in the exact same
+  fallback order (`file-mutation-queue.ts:20-26`), so Pi's own real mutation queue has this
+  identical property. `target_key` adopts Pi's OBSERVABLE behavior here exactly, including this
+  instability, rather than inventing a stronger cross-creation guarantee Pi's own real mechanism
+  does not provide -- consistent with this document's own cancellation sourcing decision (§3.1):
+  Minion does not silently strengthen an incomplete Pi mechanism into an idealized promise. A
+  caller that needs stability through creation under a symlinked ancestor must not create through
+  a symlinked ancestor, or must re-`resolve()` after creation and treat the two keys as
+  potentially different.
 - **Opacity.** `target_key` carries no promised syntax beyond the equality/hash contract above. A
   caller must not attempt to derive a filesystem path, a backend type, or any other structured
   meaning from it.
@@ -937,6 +977,49 @@ requires -- not a fresh full release-level review, unless the reviewer records a
 this remediation changed semantic surface outside the convergence checkpoint. No Python or Rust
 implementation is authorized by this document alone.
 
+That candidate (code `2e925792b0ff4ccd54e538c42917561974e2d2ce`, docs
+`e202076fc0c78471b96aa3838f18545ac66b0b95`) received its §11.8.7 targeted closure review
+(`minion-agent-docs#114`, review commit `1644536aa70c53d26d1f47d3292cd4d99f9e2755`) and was
+REJECTED again: `L12-R002`, `L12-R003`, `L12-R006`, `L12-R007`, `L12-R008` were PROVISIONALLY
+CLOSED; `L12-R001`, `L12-R004`, `L12-R005` survived in further-refined, narrower form. Every
+refined claim was independently re-verified before acceptance (the `file_info(path, signal?)`
+signature vs. §3.1's own "does not accept" prose was directly re-read and confirmed
+self-contradictory; the design document's "every failure... returns a typed error value" sentence
+was directly re-read alongside its own adjacent exceptions table and confirmed self-contradictory;
+the `target_key` missing-to-create instability under a symlinked ancestor was independently
+re-derived from `realpath`/`canonical_path` semantics and confirmed to be a property pinned Pi's
+own real `getMutationQueueKey` shares exactly, not a Minion-introduced defect). This narrowly
+targeted remediation resolves all three:
+
+```text
+L12-R001  settled the public-API-shape question left implicit by the prior remediation: every
+    operation's typed signature keeps signal? uniformly (matching Pi's own interface shape); for
+    the ten operations that do not inspect it, the parameter is explicitly ACCEPTED-BUT-IGNORED,
+    not omitted -- section 3.1, new "Public API shape" subsection, plus two witnesses (section 10).
+
+L12-R004  narrowed design/2026-08-20-minion-agent-design.md section 7's "every failure, including
+    unexpected backend failures, returns a typed error value" to scope explicitly to EXPECTED
+    operational/environmental failures, matching its own adjacent exceptions table and matching
+    spec/execution.md section 2 (which was already correctly scoped and required no change) --
+    design.md section 7, plus a documentary witness (section 10).
+
+L12-R005  documented the symlinked-ancestor exception to missing-then-create target_key stability:
+    the key CAN change across creation when an ancestor directory component is/becomes a symlink,
+    because canonical_path resolves every ancestor symlink while the pre-creation absolute_path
+    fallback resolves none -- confirmed to be a property pinned Pi's own real getMutationQueueKey
+    shares exactly (same absolutePath/canonicalPath fallback pair), not engineered away, per this
+    document's own established practice of adopting Pi's observable behavior over an idealized
+    promise (section 3.1). Also fixed "different paths produce unequal keys" to say "different
+    RESOLVED LOCATIONS," removing the apparent contradiction with the symlink/target equal-key
+    rule -- section 4, plus an executable witness (section 10).
+```
+
+Per `agent-workflow.md` §11.8.7: this narrowly-scoped remediation candidate is ready for another
+targeted closure review of exactly `L12-R001`, `L12-R004`, `L12-R005` and their semantic
+dependencies, plus re-confirmation that the five already-provisionally-closed findings remain
+undisturbed (this pass touched none of their settled rules). No Python or Rust implementation is
+authorized by this document alone.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -947,13 +1030,30 @@ supersede the prior version of the same witness where one existed (`L12-R001`, `
 
 ```text
 CANCELLATION (§3.1, convergence `CE-L12-01-01` -- supersedes the prior version of this witness)
-    setup:    an existing file; a pre-aborted signal
+    setup:    an existing file; a pre-aborted signal; file_info called through the Minion typed
+              seam (which accepts signal? on every operation, per §3.1's public-API-shape rule)
     call:     file_info(path, signal)
-    expected: Ok(FileInfo{...}) -- matches pinned Pi's own observed behavior exactly (fileInfo
-              accepts no signal and never checks one)
+    expected: the call compiles/type-checks and returns Ok(FileInfo{...}) -- the signal argument
+              is accepted but has no effect, matching pinned Pi's own observed behavior exactly
+              (Pi's own NodeExecutionEnv.fileInfo has no such parameter in its reference
+              implementation at all, but Minion's typed seam accepts one uniformly per operation
+              and simply does not inspect it here)
     negative control: a candidate requiring Err(aborted) here is WRONG under this agreement -- the
               opposite of the earlier (now-reversed) draft's own requirement, which chose the
-              fuller interface promise over Pi's actual observed behavior
+              fuller interface promise over Pi's actual observed behavior; a candidate that OMITS
+              the signal parameter from file_info's own typed signature is ALSO wrong under this
+              agreement -- the parameter is part of the uniform public API shape (§3.1), only its
+              inspection is per-operation
+
+CANCELLATION SIGNATURE UNIFORMITY (§3.1, targeted closure review, `minion-agent-docs#114`)
+    setup:    the full ctx.fs operation inventory (§3)
+    expected: every operation's typed signature includes an optional signal parameter, with no
+              exceptions -- the ten operations in section 3.1's "accepts but does not inspect"
+              group keep the parameter in their signature; they differ from the other six only in
+              whether the parameter has any effect, never in whether it is present at all
+    negative control: an implementation that drops the signal parameter from, e.g., file_info's
+              own typed signature (rather than accepting and ignoring it) fails this witness even
+              if file_info's own observable behavior is otherwise correct
 
 SYMLINK FOLLOWING, CONTENT I/O (§3.2)
     setup:    target.txt with content "X"; link.txt symlinked to target.txt
@@ -976,12 +1076,31 @@ TARGET IDENTITY IS LOCATION-BASED, NOT RESOURCE-BASED (§4, convergence `CE-L12-
     setup:    a.txt and b.txt, distinct files, identical content "same"; resolve both
     expected: distinct target_key values (never collide on content, matching the existing
               "does not collide" witness below); rename a.txt to c.txt CHANGES a's own target_key
-              (correct, not a defect); deleting a.txt and creating a new a.txt REUSES the same
-              target_key the old a.txt had (correct and safe, not a defect)
+              (correct, not a defect); deleting a.txt and creating a new a.txt (with NO symlinked
+              ancestor directory) REUSES the same target_key the old a.txt had (correct and safe,
+              not a defect)
     negative control: a device+inode-based implementation fails the missing-then-create case (it
               cannot predict a future inode for a path that does not exist yet); a content-hash
               implementation fails both the content-mutation-stability case and the distinct-
               identical-files case
+
+TARGET IDENTITY CHANGES ACROSS CREATION UNDER A SYMLINKED ANCESTOR (§4, targeted closure review,
+    `minion-agent-docs#114` -- refined `L12-R005`; this is the DOCUMENTED EXCEPTION to the
+    previous witness's missing-then-create stability, not a contradiction of it)
+    setup:    directory real/; symlink link -> real; path link/new.txt (does not yet exist)
+    call A:   resolve("link/new.txt") before new.txt exists
+    expected: canonicalization fails (not_found -- the final component does not exist yet), so
+              target_key falls back to the purely lexical absolute_path, ".../link/new.txt"
+              (unresolved -- absolute_path never touches the filesystem, so it does not resolve
+              the "link" ancestor either)
+    call B:   create new.txt through link/new.txt, then resolve("link/new.txt") again
+    expected: canonicalization now succeeds and resolves EVERY symlink component including the
+              ancestor, producing ".../real/new.txt" -- a DIFFERENT string than call A's key
+    negative control: an implementation asserting these two keys are equal is WRONG under this
+              agreement -- pinned Pi's own real getMutationQueueKey has this identical property
+              (file-mutation-queue.ts:20-26, calling the same absolutePath/canonicalPath fallback
+              pair in the same order), so this instability is DIRECT_PI_PARITY, not a Minion defect
+              to engineer away
 
 PROCESS WAIT, ONE SIGNAL (§6, convergence `CE-L12-01-01`)
     setup:    spawn a process with a signal; abort that ORIGINAL spawn signal; call wait() with no
@@ -1043,4 +1162,17 @@ EXECUTION-WORLD COMPATIBILITY (§7)
     expected: the consumer's own activation-time validation fails with a diagnostic naming the
               incompatible providers; a DIFFERENT synthetic consumer needing only one of the two
               capabilities activates successfully alongside the same mismatched pairing
+
+ERROR-STYLE SCOPE IS "EXPECTED FAILURES," NOT "EVERY FAILURE" (§2, targeted closure review,
+    `minion-agent-docs#114` -- refined `L12-R004`, corrected in
+    design/2026-08-20-minion-agent-design.md section 7, not in this section, which was already
+    correctly scoped)
+    setup:    a seam provider's own internal invariant is violated (a genuine provider bug), and it
+              throws/panics before producing an operational FsError/ShellError/SubprocessError
+    reader A: follows a literal "every failure, including unexpected backend failures, becomes a
+              typed Result" reading
+    reader B: follows this section's own boundary table (§2) -- an unnormalized backend exception
+              escaping a seam is itself a provider bug, an EXCEPTION, not a Result
+    expected: only reader B matches this document's own stated rule; the design document's
+              equivalent prose (section 7) is corrected to match, so both documents now agree
 ```
