@@ -372,8 +372,9 @@ recursively before writing (`nodejs.ts:564, 577`) -- a caller never needs a sepa
 `write_file` creates-or-overwrites; `append_file` creates-or-appends. Neither copies across
 filesystems -- both operate on one resolved path within the SAME `ctx.fs` provider.
 
-**Cancellation:** `append_file` does not accept or check `signal` at all -- it matches pinned Pi's
-own reference implementation exactly (§3.1's table), not a Minion gap.
+**Cancellation:** `append_file` accepts `signal` (the uniform typed API, §3.1) but does not
+inspect it -- it matches pinned Pi's own reference implementation exactly (§3.1's table), not a
+Minion gap.
 
 ### 3.5 Rename
 
