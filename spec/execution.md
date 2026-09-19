@@ -557,26 +557,39 @@ Binding requirements:
   caller must not attempt to derive a filesystem path, a backend type, or any other structured
   meaning from it.
 - **`process_path` scoped to the producing provider only (refined at `L12-R014`, final complete
-  review, `minion-agent-docs#114`, CE-L12-01-02).** An earlier revision of this bullet permitted
+  review, `minion-agent-docs#114`, CE-L12-01-02; second correction, targeted closure review,
+  `minion-agent-docs#114`, CE-L12-01-02).** An earlier revision of this bullet permitted
   `process_path(target)` to be called on the producing provider "or one the caller has
   independently validated as execution-world-compatible via §7." That contradicted this section's
   own provider/world-scoping rule above (`target_key` is meaningful only within the producing
   provider instance): execution-world compatibility (§7) is a statement about whether a RESULTING
   PATH STRING is meaningful across providers, not a grant of authority for a SECOND provider to
   decode the FIRST provider's own opaque `target_key`. Corrected: `process_path(target)` MUST be
-  called on the SAME provider instance that produced `target` -- no exception. Calling it on any
-  other provider instance is OUTSIDE this contract (undefined), not a case with its own defined
-  error code. The cross-seam workflow this bridge exists for is: `resolve()` and `process_path()`
-  both happen on the ORIGINATING `ctx.fs` provider; the resulting PATH STRING (never the
-  `FsTarget`, never the `target_key` itself) is what gets handed to a `ctx.shell`/`ctx.subprocess`
-  provider independently validated as execution-world-compatible (§7) with that SAME `ctx.fs`
-  provider -- world compatibility justifies trusting the resulting STRING is meaningful to that
-  shell/subprocess provider; it never grants decode authority over another provider's own key. A
-  provider that detects it did not itself produce `target` MUST return a specific `FsError`
-  (`invalid`) rather than fabricating a syntactically-plausible but meaningless path; a provider
-  that cannot detect this (an opaque foreign key that happens to parse) is not required to detect
-  it, but MUST NOT silently produce a path known to be wrong. This is the mechanism `bash`/
-  edit-via-process (Layer 13's own future consumers) will use to hand a resolved target to a
+  called on the SAME provider instance that produced `target` -- no exception.
+
+  A first fix then stated calling it on any other provider is "OUTSIDE this contract (undefined)"
+  while, two sentences later, ALSO requiring a detecting provider to "return a specific `FsError`
+  (`invalid`)" -- two incompatible classifications for the identical call (one implementation
+  could type/provenance-gate the call as unrepresentable; another could accept the call and return
+  `invalid`; both cannot be the one contract). Corrected to ONE rule: calling `process_path` on any
+  provider instance other than the one that produced `target` is UNIFORMLY undefined -- a caller
+  bug, not a case with its own required `Result`. A provider MAY, as a best-effort diagnostic,
+  detect foreign provenance and return `FsError(invalid)` rather than fabricating a wrong path, but
+  this is explicitly NOT required -- a provider that cannot detect it (an opaque foreign key that
+  happens to parse) is free to do anything, including producing a meaningless path, since the
+  caller has already violated the contract by calling on the wrong provider instance in the first
+  place. There is no longer a MUST anywhere in this bullet for the foreign-provider case; the
+  return-invalid behavior is optional, best-effort hardening a provider MAY choose to implement,
+  never a normative requirement a caller may rely on.
+
+  The cross-seam workflow this bridge exists for is: `resolve()` and `process_path()` both happen
+  on the ORIGINATING `ctx.fs` provider; the resulting PATH STRING (never the `FsTarget`, never the
+  `target_key` itself) is what gets handed to a `ctx.shell`/`ctx.subprocess` provider independently
+  validated as execution-world-compatible (§7) with that SAME `ctx.fs` provider -- world
+  compatibility justifies trusting the resulting STRING is meaningful to that shell/subprocess
+  provider; it never grants decode authority over another provider's own key. This is the
+  mechanism `bash`/edit-via-process (Layer 13's own future consumers) will use to hand a resolved
+  target to a
   shell/subprocess command without re-resolving the path themselves and without the filesystem and
   process capabilities needing to agree on path syntax ahead of time.
 
@@ -912,11 +925,15 @@ source:
 ExecutionWorldIdentity: opaque, provider-declared value; supports equality comparison
 
 compatible(a: ExecutionWorldIdentity, b: ExecutionWorldIdentity) -> bool
-    -- the compatibility relation. Identity EQUALITY is always sufficient: two providers with
-       equal execution-world identity values are always compatible. A provider MAY additionally
-       declare itself compatible with specific OTHER identity values (e.g. a documented family of
-       interoperable remote backends) -- compatibility is not required to be equality alone, but
-       equality is always the minimum baseline every provider must honor.
+    -- the compatibility relation. EQUALITY-ONLY (refined at L12-R013, targeted closure review,
+       minion-agent-docs#114, CE-L12-01-02): compatible(a, b) := (a == b), full stop. An earlier
+       revision additionally permitted a provider to declare itself compatible with specific OTHER
+       identity values without defining whether that declaration must be mutual/symmetric or how
+       one-sided declarations combine -- observably ambiguous (validate() could depend on provider
+       order). No deployment this row certifies needs broader-than-equality compatibility, so the
+       simplest and only defensible rule is adopted: compatible() is equality, which is inherently
+       symmetric (compatible(a, b) always equals compatible(b, a)) and therefore order-independent
+       by construction, with no separate declaration model to specify or get wrong.
 
 validate(providers: list[(name: str, identity: ExecutionWorldIdentity)]) ->
     Result[None, ExecutionWorldError]
@@ -1159,6 +1176,32 @@ targeted closure review scoped to `L12-R009` through `L12-R014` and their accept
 rechecked remain undisturbed (this pass touched none of their settled rules). No Python or Rust
 implementation is authorized by this document alone.
 
+That candidate (code `8201e611a01d5849da4afdb612ef1134452be313`, docs
+`f12b7e2f58983905248ff4a4411db35913ce3d44`) received its `CE-L12-01-02` targeted closure review
+(`minion-agent-docs#114` @ `ed5a5a6eda2cf3daab9bcf6e1dd49810aba3bb2a`): `L12-R009`-`R012`
+PROVISIONALLY CLOSED; `L12-R013`/`R014` STILL OPEN in refined form. This is the narrowly-scoped
+remediation of exactly those two:
+
+```text
+L12-R013  compatibility narrowed to EQUALITY-ONLY, removing the prior "a provider MAY declare
+    itself compatible with specific other identities" allowance, which left symmetry and
+    declaration combination undefined (validate() could observably depend on provider order).
+    Equality is inherently symmetric, closing the gap without inventing a new declaration model
+    -- section 7, plus a new symmetry/order-independence witness (section 10).
+
+L12-R014  collapsed the two incompatible classifications (uniformly undefined vs. a detecting
+    provider MUST return FsError(invalid)) into ONE rule: calling process_path on a
+    non-producing provider is uniformly undefined; returning FsError(invalid) is now an
+    OPTIONAL best-effort diagnostic a provider MAY implement, never a MUST a caller can rely on
+    -- section 4, witness updated (section 10).
+```
+
+Per `agent-workflow.md` §11.8.7: this narrowly-scoped remediation candidate is ready for another
+targeted closure review of exactly `L12-R013`/`L12-R014` and their semantic dependencies, plus
+re-confirmation that `L12-R009`-`R012` and the `CE-L12-01-01` findings remain undisturbed (this
+pass touched neither). If both close, `CE-L12-01-02` is settled and another §11.8.8 final complete
+review becomes available. No Python or Rust implementation is authorized by this document alone.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1364,19 +1407,35 @@ EXECUTION-WORLD COMPATIBILITY, CONCRETE PRIMITIVE (§7, convergence `CE-L12-01-0
     setup:    two synthetic providers, A and B, declaring EQUAL execution-world identities; a
               synthetic consumer calling validate([("a", A.identity), ("b", B.identity)])
     expected: Ok(None) -- equal identities are always compatible
-    second setup: A and B declaring UNEQUAL, non-family identities; same validate() call
+    second setup: A and B declaring UNEQUAL identities; same validate() call
     expected: Err(ExecutionWorldError) naming both "a" and "b"
     negative control: an implementation with no concrete validate()/ExecutionWorldError shape
               cannot even express this witness, which is itself the finding
 
-PROCESS_PATH SCOPED TO THE PRODUCING PROVIDER ONLY (§4, convergence `CE-L12-01-02`)
+EXECUTION-WORLD COMPATIBILITY IS SYMMETRIC AND ORDER-INDEPENDENT (§7, targeted closure review,
+    `minion-agent-docs#114` -- refined `L12-R013`, CE-L12-01-02)
+    setup:    two unequal identities A and B
+    expect:   compatible(A, B) == compatible(B, A) (both false, since compatibility is
+              equality-only and A != B); validate([("a",A),("b",B)]) and
+              validate([("b",B),("a",A)]) produce the SAME outcome (both Err, naming both
+              providers regardless of which order they were passed in)
+    negative control: a candidate permitting one-sided/asymmetric compatibility declarations (the
+              now-removed "broader relation" option) could make these two validate() calls
+              disagree depending on provider order -- this witness would catch that regression
+
+PROCESS_PATH SCOPED TO THE PRODUCING PROVIDER ONLY (§4, convergence `CE-L12-01-02` -- refined
+    `L12-R014`, targeted closure review, `minion-agent-docs#114`: ONE rule, not two)
     setup:    FsTarget resolved on provider A; process_path(target) called on provider B, a
               DIFFERENT provider instance independently validated as execution-world-compatible
               with A
-    expected: this call is OUTSIDE the contract entirely (undefined) -- the correct workflow
-              calls process_path on provider A itself, then hands the resulting STRING to a
-              shell/subprocess provider compatible with A
-    negative control: a candidate asserting this call MUST succeed, or MUST return a specific
-              FsError, is WRONG under this agreement -- the contract no longer permits calling
-              process_path on any provider other than the one that produced the target at all
+    expected: this call is UNIFORMLY undefined (a caller bug) -- the correct workflow calls
+              process_path on provider A itself, then hands the resulting STRING to a
+              shell/subprocess provider compatible with A. A conforming provider B MAY, as
+              best-effort hardening, detect the foreign provenance and return FsError(invalid)
+              instead of a fabricated path, but this is NOT required -- a caller must not rely on
+              receiving any particular Result from this out-of-contract call
+    negative control: a candidate asserting this call MUST succeed is WRONG; a candidate asserting
+              a detecting provider MUST return FsError(invalid) is ALSO wrong -- both would
+              contradict the single "uniformly undefined, optional best-effort diagnostic only"
+              rule this agreement settles on
 ```
