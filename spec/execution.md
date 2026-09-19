@@ -261,19 +261,33 @@ in the body for the ten listed operations -- not a second, narrower trait shape.
 
 **Binding per-operation table** (firm requirement, matching pinned Pi's own reference
 implementation exactly -- no "SHOULD" advisory language, no Minion-added cancellation checkpoint
-beyond what Pi itself observably performs):
+beyond what Pi itself observably performs; refined at `L12-R009`, final complete review,
+`minion-agent-docs#114`, CE-L12-01-02 -- the checkpoint COUNT and ORDER per operation, not merely a
+pre-aborted/mid-operation binary):
 
 ```text
-checks pre-aborted AND honors mid-operation cancellation (signal threaded to the underlying I/O):
-    read_text_file, read_binary_file, write_file       (signal passed through to the underlying
-                                                          Node read/write call, nodejs.ts:502-511
-                                                          and neighboring writes)
+read_text_file, read_binary_file:
+    checks pre-aborted; signal threaded into the single underlying read call (nodejs.ts:502-511,
+    544-553) -- a single-phase operation, no separate checkpoint beyond that.
 
-checks pre-aborted AND re-checks at each loop iteration:
-    read_text_lines, list_dir                          (re-checked at each loop iteration)
+write_file:
+    checks pre-aborted; awaits recursive parent mkdir (itself NOT abort-checked); checks AGAIN
+    immediately after mkdir completes, before the write begins; signal also threaded into the
+    underlying write call (nodejs.ts:555-572) -- THREE checkpoints, not one.
 
-checks pre-aborted only, no mid-operation checkpoint (a single fast syscall):
-    rename_file
+read_text_lines:
+    checks pre-aborted (before opening the read stream); signal passed to the underlying stream;
+    re-checks at EACH loop iteration (once per yielded line); checks ONCE MORE after the loop
+    completes, before returning success (nodejs.ts:513-542) -- FOUR checkpoints.
+
+list_dir:
+    checks pre-aborted; re-checks at each loop iteration (once per directory entry); NO check
+    after the loop completes (nodejs.ts:611-633) -- genuinely FEWER checkpoints than
+    read_text_lines, despite both superficially "looping over entries."
+
+rename_file:
+    checks pre-aborted only; the underlying rename() call accepts no signal option at all
+    (nodejs.ts:585-600) -- no mid-operation checkpoint of any kind.
 
 accepts signal (uniform typed API, per above) but does NOT inspect it -- a pre-aborted or
 live signal has no effect; the call always proceeds normally -- MATCHES Pi exactly, not a
@@ -542,18 +556,29 @@ Binding requirements:
 - **Opacity.** `target_key` carries no promised syntax beyond the equality/hash contract above. A
   caller must not attempt to derive a filesystem path, a backend type, or any other structured
   meaning from it.
-- **`process_path` ownership and foreign targets.** `process_path(target)` returns the path a
-  process spawned in the CORRESPONDING execution world can open to reach the same resource. It
-  MUST be called on the SAME provider instance that produced `target` (or one the caller has
-  independently validated as execution-world-compatible via §7 -- that validation is the CALLER's
-  responsibility, not this primitive's). A provider that can detect the target did not originate
-  from itself or a compatible world MUST return a specific `FsError` (`invalid`) rather than
-  fabricating a syntactically-plausible but meaningless path; a provider that cannot detect this
-  (an opaque foreign key that happens to parse) is not required to detect it, but MUST NOT silently
-  produce a path known to be wrong. This is the mechanism `bash`/edit-via-process (Layer 13's own
-  future consumers) will use to hand a resolved target to a shell/subprocess command without
-  re-resolving the path themselves and without the filesystem and process capabilities needing to
-  agree on path syntax ahead of time.
+- **`process_path` scoped to the producing provider only (refined at `L12-R014`, final complete
+  review, `minion-agent-docs#114`, CE-L12-01-02).** An earlier revision of this bullet permitted
+  `process_path(target)` to be called on the producing provider "or one the caller has
+  independently validated as execution-world-compatible via §7." That contradicted this section's
+  own provider/world-scoping rule above (`target_key` is meaningful only within the producing
+  provider instance): execution-world compatibility (§7) is a statement about whether a RESULTING
+  PATH STRING is meaningful across providers, not a grant of authority for a SECOND provider to
+  decode the FIRST provider's own opaque `target_key`. Corrected: `process_path(target)` MUST be
+  called on the SAME provider instance that produced `target` -- no exception. Calling it on any
+  other provider instance is OUTSIDE this contract (undefined), not a case with its own defined
+  error code. The cross-seam workflow this bridge exists for is: `resolve()` and `process_path()`
+  both happen on the ORIGINATING `ctx.fs` provider; the resulting PATH STRING (never the
+  `FsTarget`, never the `target_key` itself) is what gets handed to a `ctx.shell`/`ctx.subprocess`
+  provider independently validated as execution-world-compatible (§7) with that SAME `ctx.fs`
+  provider -- world compatibility justifies trusting the resulting STRING is meaningful to that
+  shell/subprocess provider; it never grants decode authority over another provider's own key. A
+  provider that detects it did not itself produce `target` MUST return a specific `FsError`
+  (`invalid`) rather than fabricating a syntactically-plausible but meaningless path; a provider
+  that cannot detect this (an opaque foreign key that happens to parse) is not required to detect
+  it, but MUST NOT silently produce a path known to be wrong. This is the mechanism `bash`/
+  edit-via-process (Layer 13's own future consumers) will use to hand a resolved target to a
+  shell/subprocess command without re-resolving the path themselves and without the filesystem and
+  process capabilities needing to agree on path syntax ahead of time.
 
 ---
 
@@ -587,6 +612,8 @@ no silently-acceptable fallback shell the way POSIX has `sh`.
 exists BEFORE attempting to spawn anything, failing early with `spawn_error` and a specific
 diagnostic naming the missing directory if it does not (`nodejs.ts:379-390`) -- this is not merely
 an incidental OS spawn failure surfacing generically; it is checked and reported specifically.
+This check happens AFTER shell discovery (§5.1), not before -- see §5.4's exact six-step
+pre-spawn order for the full, exact sequence.
 
 ### 5.3 Environment
 
@@ -598,9 +625,19 @@ else -- no inherited variables leak through (`nodejs.ts:240-251`, `getShellEnv`)
 ### 5.4 Timeout, abort, and their precedence
 
 **DIRECT_PI_PARITY.** `timeout` is in seconds; there is no default timeout. An invalid timeout
-(non-finite, non-positive, or exceeding roughly `2^31/1000` seconds -- the underlying platform
-timer's own representable range) is a `Result` failure at call time, before any process is spawned,
-never a validation exception (`nodejs.ts:38-49`). Killing a command, on either abort or timeout,
+(non-finite or non-positive) is a `Result` failure at call time, before any process is spawned,
+never a validation exception (`nodejs.ts:38-49`).
+
+**Exact timeout ceiling (refined at `L12-R011`, final complete review, `minion-agent-docs#114`,
+CE-L12-01-02 -- an earlier revision of this section said "roughly `2^31/1000` seconds," which is
+`2147483.648`, not the actual boundary):** pinned Pi's own constant is `MAX_TIMEOUT_MS =
+2_147_483_647` (`2^31 - 1`, `nodejs.ts:34`). A timeout is rejected (`timeout` error code) when
+`timeout * 1000 > 2_147_483_647`. The largest ACCEPTED value is therefore `2147483.647` seconds
+EXACTLY (`2147483.647 * 1000 = 2147483647.0`, not greater than the ceiling); `2147483.648` seconds
+is rejected. A typed cross-language contract cannot use an approximation at this exact
+accept/reject boundary.
+
+Killing a command, on either abort or timeout,
 terminates its ENTIRE process tree/group, not merely the directly-spawned process -- a command
 that itself backgrounds a child process does not leave that child running after the parent command
 is killed (`nodejs.ts:253-276`, process-group kill on POSIX via a negative PID targeting the whole
@@ -609,19 +646,26 @@ Windows).
 
 **Complete failure-precedence matrix (independent review, `L12-R007` -- an earlier revision of
 this section stated only the mid-flight timeout-vs-abort ordering, not the full pre-spawn and
-post-spawn sequence pinned Pi actually uses). Confirmed against `nodejs.ts:371-497`, checked in
-this EXACT order:**
+post-spawn sequence pinned Pi actually uses; refined at `L12-R010`, final complete review,
+`minion-agent-docs#114`, CE-L12-01-02 -- the combined "cwd/shell resolution" step split into its
+own exact two-step order). Confirmed against `nodejs.ts:371-497`, checked in this EXACT order:**
 
 ```text
 1. Pre-aborted signal        -- checked FIRST, before timeout is even validated, before cwd is
                                  resolved, before a shell is resolved. A signal already aborted at
                                  call time short-circuits everything below.
-2. Invalid timeout            -- validated next (finite, positive, within range); a validation
-                                 failure here means no process is ever spawned.
-3. cwd/shell resolution       -- the working directory existence check (§5.2) and shell resolution
-                                 (§5.1) happen after 1-2 but before spawn.
-4. [process runs]
-5. On completion/interruption, exactly one of, in this precedence order:
+2. Invalid timeout            -- validated next (finite, positive, within the exact boundary
+                                 above); a validation failure here means no process is ever spawned.
+3. Lexical cwd resolution     -- options.cwd resolved against the provider's own cwd, or the
+                                 provider's own cwd used as-is; a pure string operation, no
+                                 filesystem touch yet.
+4. Shell discovery            -- getShellConfig(); MAY fail shell_unavailable. Happens BEFORE the
+                                 cwd existence check below, not after -- a configured-nonexistent
+                                 shell together with a nonexistent cwd observably returns
+                                 shell_unavailable, never spawn_error.
+5. cwd existence check        -- access(cwd); MAY fail spawn_error. Happens AFTER shell discovery.
+6. [process runs]
+7. On completion/interruption, exactly one of, in this precedence order:
        a. callback_error      -- a throwing onStdout/onStderr callback (§5.5) wins over everything
                                   below, even if a timeout or abort ALSO applies to the same call.
        b. timeout              -- if the timeout fired, classified `timeout` even if the signal
@@ -630,9 +674,11 @@ this EXACT order:**
        d. success              -- `{stdout, stderr, exit_code}`, regardless of exit_code (§5.6).
 ```
 
-An independent implementation MUST NOT guess any step of this ordering -- steps 1-3 determine
-whether a process is ever spawned at all, and step 5's own ordering determines which single
-classification a caller observes when multiple failure conditions are simultaneously true.
+An independent implementation MUST NOT guess any step of this ordering -- steps 1-5 determine
+whether a process is ever spawned at all and which specific error a caller observes when more than
+one pre-spawn condition is simultaneously invalid, and step 7's own ordering determines which
+single classification a caller observes when multiple post-spawn failure conditions are
+simultaneously true.
 
 ### 5.5 Streaming callbacks and callback-error propagation
 
@@ -760,6 +806,19 @@ Binding requirements:
   higher-level `exec()` (which returns decoded text since it is explicitly a shell-command-output
   primitive), `ctx.subprocess` is the lower-level, protocol-agnostic primitive; a caller speaking a
   binary/framed protocol (MCP over stdio, an LSP's own JSON-RPC framing) owns its own decoding.
+- **`cwd`/environment defaults (refined at `L12-R012`, final complete review,
+  `minion-agent-docs#114`, CE-L12-01-02).** `MINION_EXTENSION` -- `ctx.subprocess` has no Pi seam
+  to source these from, but the frozen design's own statement that `ctx.shell`'s local provider
+  spawns THROUGH `ctx.subprocess` requires this seam's own cwd/environment rule to be well-defined,
+  so it mirrors `ctx.shell`'s own already-specified rule (§5.2, §5.3) exactly rather than inventing
+  a second, independent one. `cwd`, when omitted, defaults to the provider's own current working
+  directory (the same concept `ctx.fs`'s own `cwd` and `ctx.shell`'s own default cwd use); when
+  supplied and relative, it resolves against that same provider cwd, using the identical lexical
+  resolution rule `ctx.fs`'s own `absolute_path` (§3.2) uses -- not a separately re-implemented
+  mechanism. `inherit_env=true` (default): the effective environment is the provider's own
+  base/inherited environment overlaid by any per-call `env` -- identical to `ctx.shell`'s own §5.3
+  rule. `inherit_env=false`: the effective environment is EXACTLY the per-call `env` and nothing
+  else -- no inherited variables leak through, identical to `ctx.shell`'s own rule.
 - **One signal, not two (convergence `CE-L12-01-01`).** `spawn()` accepts `options.signal`;
   `wait()` takes NO signal parameter of its own. Cancellation flows ONLY through the ORIGINAL
   spawn-time signal. A pre-aborted `signal` supplied to `spawn()` MUST short-circuit before any
@@ -842,6 +901,33 @@ need cross-seam resource identity mounts happily beside an incompatible pairing 
 type, the comparison/validation primitive a consumer calls) and proves the mechanism itself works
 correctly, using synthetic/test consumers -- it does NOT implement any real Layer 13 consumer
 (`bash`, etc.) to prove this, and does not need to.
+
+**Concrete primitive (refined at `L12-R013`, final complete review, `minion-agent-docs#114`,
+CE-L12-01-02 -- an earlier revision of this section stated only the governing rule in prose, with
+no type shape, comparison operation, compatibility relation, or typed failure result; this left
+"the compatibility VOCABULARY" above as an unfulfilled promise).** `MINION_EXTENSION`, no Pi
+source:
+
+```text
+ExecutionWorldIdentity: opaque, provider-declared value; supports equality comparison
+
+compatible(a: ExecutionWorldIdentity, b: ExecutionWorldIdentity) -> bool
+    -- the compatibility relation. Identity EQUALITY is always sufficient: two providers with
+       equal execution-world identity values are always compatible. A provider MAY additionally
+       declare itself compatible with specific OTHER identity values (e.g. a documented family of
+       interoperable remote backends) -- compatibility is not required to be equality alone, but
+       equality is always the minimum baseline every provider must honor.
+
+validate(providers: list[(name: str, identity: ExecutionWorldIdentity)]) ->
+    Result[None, ExecutionWorldError]
+    -- called by a CONSUMER (never the runtime) at its own activation, over the specific set of
+       providers it needs to address the SAME resource through. Returns Err(ExecutionWorldError)
+       naming (by the caller-supplied name/diagnostic label) every pairwise-incompatible provider
+       if any pair among the given providers fails compatible(); returns Ok(None) otherwise.
+       Providers not passed to a given validate() call are never implicated -- mounting
+       incompatible capabilities that no consumer ever asks to be validated together remains
+       legal, matching the "mixed worlds are a legitimate deployment" rule above unchanged.
+```
 
 ---
 
@@ -1021,6 +1107,58 @@ dependencies, plus re-confirmation that the five already-provisionally-closed fi
 undisturbed (this pass touched none of their settled rules). No Python or Rust implementation is
 authorized by this document alone.
 
+That candidate (code `71a341802349e0c6f706d599648f8566153318eb`, docs
+`1279c0287d03a3ba42fa32d3ee6b25fc42b04e8a`) closed `L12-R001`/`R004`/`R005` (second targeted
+closure review, `minion-agent-docs#114` @ `6bb5222158dace4f4b24bb7cea5d06a515aa12ae`, then a final
+one-sentence fix at docs `1279c02` itself closed the remaining `L12-R001` wording gap), settling
+all eight `CE-L12-01-01` findings. The exact candidate then received its MANDATORY `agent-workflow.md`
+§11.8.8 final complete review (`minion-agent-docs#114` @ `c36a2ee22c990b1f829933f6b785ba7813e33210`)
+and was REJECTED: six NEW findings, `L12-R009` through `L12-R014`, coupled to and in places
+invalidating the settled matrices for filesystem cancellation, shell precedence, subprocess
+defaults, execution-world compatibility, and the `FsTarget` bridge. Per §11.8.8 Case B, this opened
+a NEW convergence episode, `CE-L12-01-02` (`L12-R001` through `L12-R008` remain
+historically/provisionally closed for the exact issues they addressed). The §11.8.4 challenge pass
+and §11.8.5 `AGREED FOR IMPLEMENTATION` checkpoint for `CE-L12-01-02` are recorded in
+`minion-agent-docs#115`, `assurance/layers/12-execution-seams-r009-r014-convergence-agreement.md`
+@ `9c1171e6e427c0b709fceae00b82f04d04bbb697`. This section documents the resulting coherent fix
+pass (§11.8.6), applying the agreed design decisions:
+
+```text
+L12-R009  replaced the three-bucket cancellation grouping with the complete, checkpoint-accurate
+    table: read_text_file/read_binary_file (single mid-operation checkpoint); write_file (THREE
+    checkpoints -- pre, after-mkdir, mid-write); read_text_lines (FOUR checkpoints -- pre,
+    mid-stream, each loop iteration, and a post-loop check); list_dir (pre and each loop
+    iteration only, no post-loop check -- genuinely fewer than read_text_lines); rename_file
+    (pre-check only, no mid-operation option exists on the underlying call) -- section 3.1.
+
+L12-R010  split the prior combined "cwd/shell resolution" step into its own exact two-step order
+    (lexical cwd resolution, then shell discovery, then the cwd existence check) -- confirmed
+    shell discovery completes BEFORE the cwd existence check, giving a combined-invalidity
+    input a deterministic single classification -- section 5.4 (also cross-referenced from 5.2).
+
+L12-R011  replaced "roughly 2^31/1000 seconds" with the exact boundary: 2147483.647 seconds is
+    the largest accepted value; 2147483.648 seconds is rejected -- section 5.4.
+
+L12-R012  defined ctx.subprocess's own SpawnOptions cwd/environment defaults, mirroring
+    ctx.shell's own already-specified rule exactly (coherent with the design's own stated
+    ctx.shell-spawns-through-ctx.subprocess relationship) -- section 6.
+
+L12-R013  defined a concrete ExecutionWorldIdentity/compatible()/validate() shape, replacing
+    prose-only governance language with a typed identity value, an explicit compatibility
+    relation (equality always sufficient, broader relations permitted), and a typed failure
+    result naming the incompatible providers -- section 7.
+
+L12-R014  narrowed process_path to the producing provider only, removing the "or a compatible
+    provider" allowance that contradicted target_key's own existing provider-scoping rule --
+    section 4.
+```
+
+Per `agent-workflow.md` §11.8.7: this coherent-fix-pass candidate is ready for the MANDATORY
+targeted closure review scoped to `L12-R009` through `L12-R014` and their acceptance witnesses
+(§10 below), plus re-confirmation that the whole-contract audit areas the final review already
+rechecked remain undisturbed (this pass touched none of their settled rules). No Python or Rust
+implementation is authorized by this document alone.
+
 ## 10. Discriminating behavior/witness matrix
 
 Per the review's own required correction ("add the checkpoint behavior/witness matrix"). No
@@ -1176,4 +1314,69 @@ ERROR-STYLE SCOPE IS "EXPECTED FAILURES," NOT "EVERY FAILURE" (§2, targeted clo
               escaping a seam is itself a provider bug, an EXCEPTION, not a Result
     expected: only reader B matches this document's own stated rule; the design document's
               equivalent prose (section 7) is corrected to match, so both documents now agree
+
+CANCELLATION CHECKPOINT COUNT DIFFERS BY OPERATION (§3.1, convergence `CE-L12-01-02`)
+    setup:    read_text_lines whose signal aborts AFTER the last line has been yielded to the
+              caller's loop but BEFORE the operation itself returns
+    expected: Err(aborted) -- the post-loop checkpoint catches this window
+    negative control: an implementation checking only pre-aborted-and-each-loop-iteration (no
+              post-loop check) returns Ok(lines) here, failing this witness
+    second setup: the identical timing, but on list_dir instead of read_text_lines (signal aborts
+              after the last entry has been yielded but before the operation returns)
+    expected: Ok(entries) -- list_dir has NO post-loop checkpoint, unlike read_text_lines
+    negative control: an implementation treating list_dir and read_text_lines as identical (both
+              Err(aborted) or both Ok here) fails one half of this witness
+    third setup: write_file whose signal aborts AFTER parent-directory mkdir completes but BEFORE
+              the write call begins
+    expected: Err(aborted); no content write may have started
+    negative control: an implementation checking only pre-aborted (no after-mkdir check) proceeds
+              to write, failing this witness
+
+SHELL PRE-SPAWN ORDER, COMBINED INVALIDITY (§5.4, convergence `CE-L12-01-02`)
+    setup:    shell.exec() called with a configured, nonexistent custom shell path AND a
+              nonexistent cwd
+    expected: Err(ShellError(shell_unavailable)) -- shell discovery fails first
+    negative control: an implementation checking cwd existence before shell discovery returns
+              Err(ShellError(spawn_error)) instead, failing this witness
+
+SHELL TIMEOUT EXACT BOUNDARY (§5.4, convergence `CE-L12-01-02`)
+    setup:    timeout = 2147483.647 seconds; separately, timeout = 2147483.648 seconds
+    expected: 2147483.647 is Ok (accepted, spawns normally); 2147483.648 is
+              Err(ShellError(timeout)) before any process is spawned
+    negative control: an implementation using "roughly 2^31/1000" (2147483.648) as its own accept
+              boundary accepts the second case, failing this witness
+
+SUBPROCESS CWD/ENVIRONMENT DEFAULTS (§6, convergence `CE-L12-01-02`)
+    setup:    spawn() with cwd omitted, in a provider whose own cwd is /work
+    expected: the child process's own observable cwd is /work
+    second setup: spawn() with inherit_env=true and env={"X":"1"}, in a provider whose base
+              environment includes Y=2
+    expected: the child observes both X=1 and Y=2
+    third setup: spawn() with inherit_env=false and env={"X":"1"}
+    expected: the child observes ONLY X=1 -- no inherited variable leaks through
+    negative control: an implementation defaulting cwd to the OS process cwd rather than the
+              provider's own cwd, or dropping the base environment under inherit_env=true, fails
+              these witnesses
+
+EXECUTION-WORLD COMPATIBILITY, CONCRETE PRIMITIVE (§7, convergence `CE-L12-01-02` -- supersedes
+    the "EXECUTION-WORLD COMPATIBILITY (§7)" witness above by exercising the concrete
+    compatible()/validate() shape rather than only the governing rule in prose)
+    setup:    two synthetic providers, A and B, declaring EQUAL execution-world identities; a
+              synthetic consumer calling validate([("a", A.identity), ("b", B.identity)])
+    expected: Ok(None) -- equal identities are always compatible
+    second setup: A and B declaring UNEQUAL, non-family identities; same validate() call
+    expected: Err(ExecutionWorldError) naming both "a" and "b"
+    negative control: an implementation with no concrete validate()/ExecutionWorldError shape
+              cannot even express this witness, which is itself the finding
+
+PROCESS_PATH SCOPED TO THE PRODUCING PROVIDER ONLY (§4, convergence `CE-L12-01-02`)
+    setup:    FsTarget resolved on provider A; process_path(target) called on provider B, a
+              DIFFERENT provider instance independently validated as execution-world-compatible
+              with A
+    expected: this call is OUTSIDE the contract entirely (undefined) -- the correct workflow
+              calls process_path on provider A itself, then hands the resulting STRING to a
+              shell/subprocess provider compatible with A
+    negative control: a candidate asserting this call MUST succeed, or MUST return a specific
+              FsError, is WRONG under this agreement -- the contract no longer permits calling
+              process_path on any provider other than the one that produced the target at all
 ```
