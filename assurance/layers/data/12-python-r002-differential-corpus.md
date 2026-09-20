@@ -27,6 +27,11 @@ cwd for every case: `C:\cwd`. Three cases are excluded as platform-dependent/not
 
 **Result: Python matches Node/Pi on 61/65 cases (93.8%). Rust matches Node/Pi on 48/65 cases (73.8%).**
 
+Reproducible: `12-python-r002-scripts/` (same directory as this file) contains the exact probe
+scripts (`node_probe.mjs`, `python_probe.py`, `rust_oracle_probe/`, `build_matrix.py`) and their
+raw output, so this table and the version-drift comparison above can be regenerated
+mechanically -- see `12-python-r002-scripts/README.md`.
+
 | # | input | node/pi (oracle) | python (frozen) | rust (certified) | py match | rust match |
 |---|---|---|---|---|---|---|
 | 1 | `file:///C:/%ZZ` | `C:\cwd\file:\C:\%ZZ` | `C:\cwd\file:\C:\%ZZ` | `C:\%ZZ` | match | **MISMATCH** |

@@ -1043,12 +1043,20 @@ The convergence contract checkpoint (§11.8.5) is a genuine two-party barrier, n
 
 Also discovered during `CE-L12-PY-01-01`: characterizing `L12-PY-R002` against a wider differential corpus than any single review round had used surfaced that the certified Rust implementation of the SAME requirement pairing (`EXEC-002`/`EXEC-003`) diverges from the shared Pi/Node oracle in categories no prior Rust review had tested; and characterizing `L12-PY-R004` against Rust's own source revealed the Python-side causal-classification interpretation had drifted stricter than Rust's own already-certified behavior across successive review rounds.
 
+**Corrected** (Layer 12 WP-12.1's own checkpoint-reset independent review, `C12-RESET-R002`): an earlier revision of this rule listed only two triggers — a NEW shared semantic requirement, or an EXISTING shared requirement being materially mischaracterized — and omitted a third, genuinely distinct case the R002 finding above actually is: the shared requirement was already characterized CORRECTLY (Node's own `fileURLToPath` was always the direct-parity oracle; nothing about that characterization was wrong), and new discriminating evidence simply shows that an already-certified implementation does not satisfy it. Applying the two-trigger rule to that case, as the prior revision did, was an unauthorized stretch of the rule's own text.
+
 ```text
 CROSS-LANGUAGE REVALIDATION RULE
 
-If implementation or review of language B discovers a new shared semantic requirement, or
-reveals that an existing shared requirement was materially mischaracterized, an
-already-certified language A does NOT remain automatically certified for the AFFECTED
+If implementation or review of language B:
+
+  (a) discovers a new shared semantic requirement; or
+  (b) reveals that an existing shared requirement was materially mischaracterized; or
+  (c) produces new discriminating evidence that an already-certified implementation does NOT
+      satisfy an existing shared requirement, even though the requirement itself was
+      characterized correctly —
+
+an already-certified language A does NOT remain automatically certified for the AFFECTED
 semantic surface.
 
 The affected certification becomes:
@@ -1058,6 +1066,8 @@ The affected certification becomes:
 until the already-certified implementation is checked against the revised shared contract
 and new discriminating witnesses, by that implementation's own owner.
 ```
+
+Trigger (c) does NOT license treating an already-certified implementation's own current behavior as a competing semantic authority — the existing, correctly-characterized shared contract text remains the retained rule; a certified implementation's divergence from it is evidence of an implementation defect to revalidate/remediate, not evidence that the contract itself is now open for renegotiation. Reopening the CONTRACT (as opposed to revalidating an implementation against it) still requires the governance path in §11.10.
 
 Revalidation is scoped **narrowly** to the affected semantic surface — do not automatically reopen unrelated requirements in the same layer or work package merely because one requirement pairing needs revalidation. Record the exact requirement ID(s) and the exact reason (new witnesses, corrected reference-oracle reading, or a corrected shared-contract clause) when marking `REVALIDATE_REQUIRED`.
 

@@ -494,11 +494,17 @@ design's own eager-claim shape -- the opposite direction from where the last two
 question below, which is unresolved and affects how this classification model interacts with
 `wait()`'s own contract.
 
-## R004-B -- wait() settlement timing (unresolved discrepancy, NOT decided here)
+## R004-B -- wait() settlement timing (Rust implementation defect against the RETAINED contract)
 
-Documented exactly, from Rust's own source, with no attempt to resolve the inconsistency below
-by rewriting the shared contract to match Rust, and no attempt to decide the policy question in
-this characterization pass:
+**Corrected per independent checkpoint review** (`minion-agent-docs#120` @
+`ca91006402ecf952f5e73691eca684d60ee3edaa`, finding `C12-RESET-R001`): an earlier revision of
+this section presented "process-exit-only settlement" and "settlement may await termination
+machinery" as two co-equal, currently-undecided policy options. That was wrong. The current
+authority chain ALREADY resolves this question -- `spec/execution.md` §6 explicitly states
+that `wait()` settles on the process's own exit alone. An implementation contradicting that
+text does not make the normative rule undecided, and certified Rust source is not itself a
+semantic authority that can implicitly reopen an already-settled contract clause. Documented
+exactly, from Rust's own source:
 
 ```text
 Rust's actual settlement sequence (subprocess.rs:372-411), when a cause is claimed:
@@ -518,29 +524,31 @@ process) can therefore delay, or in the hung case indefinitely block, wait() -- 
 target process may have already exited on its own by then.
 ```
 
-Contrast with the existing shared contract text (`spec/execution.md` §6): "`wait()` is
-independent of stdio state ... `wait()` settles on the PROCESS's own exit alone." Rust's actual
-settlement sequence above is **inconsistent** with that text as literally written, for the
-specific case of a slow/hung external kill-helper process.
+**Retained current contract**: `wait()` settles on the target process's own exit alone,
+independent of any kill-helper's own completion, matching `spec/execution.md` §6's existing,
+already-agreed literal text.
 
-**This inconsistency is recorded, not resolved, in this pass.** Two coherent resolutions exist
-and neither is chosen here:
+**Rust's settlement sequence above is a narrowly-scoped IMPLEMENTATION DEFECT against that
+retained contract**, requiring Rust-side revalidation/remediation by Rust's own owner -- it is
+NOT a competing policy option available merely because it matches Rust's current behavior.
+Observable failure mode:
 
 ```text
-Policy A: wait() must settle strictly on process exit, independent of any kill-helper's own
-          completion (matches the shared contract's existing literal text; Rust would then be
-          NON-CONFORMING pending its own remediation).
+target process has exited
+external kill/taskkill helper remains pending indefinitely
 
-Policy B: wait() may remain blocked until best-effort termination machinery completes (matches
-          Rust's actual current behavior; the shared contract's existing text would then need
-          to be revised through the normal shared-contract/governance process, not inferred
-          silently from what one language's implementation happens to do).
+normative contract
+    wait() settles from the target exit
+
+certified Rust implementation
+    wait() remains pending because monitor_child awaits kill_process_tree first
 ```
 
-Choosing between Policy A and Policy B is a shared-contract decision, not something this
-characterization pass decides by fiat. **No implementation is authorized until this is
-resolved** by whichever process (owner governance, or a subsequent explicitly-scoped
-convergence checkpoint) the reviewer determines is appropriate.
+A future revision of the shared contract toward "settlement may await termination machinery"
+remains theoretically possible, but **only through an explicit shared-contract/governance
+reopen** (`agent-workflow.md` §11.10) -- it is not available as a silent alternative merely
+because it happens to match what one language's certified implementation currently does, and
+this artifact does not propose or request that reopen.
 
 ## R004 state-transition matrix
 
@@ -559,14 +567,14 @@ modifying `minion-agent-rust/**`).
 |---|---|---|---|---|---|---|---|
 | 1 | natural exit before signal | NONE | `Ok` | no | immediate | none | Rust: `Ok`. Python: `Ok`. Both consistent with R004-A; no settlement-timing question arises (nothing was ever claimed). |
 | 2 | natural exit before explicit terminate | NONE | `Ok` | no | immediate | none | Rust: `Ok`. Python: `Ok`. Same as state 1. |
-| 3 | signal observed while live; kill succeeds; process exits | SIGNAL | `Err(aborted)` | yes | after kill takes effect | **Rust: YES** (`wait()` awaits `kill_process_tree()` before `child.wait()`) -- **Python: NO** (`_confirm_kill` decoupled) | Classification: both `Err(aborted)`, R004-A-consistent. Settlement: Rust's `wait()` is coupled to the external kill command's own completion here (R004-B discrepancy applies, though benign in the common case where the command returns promptly); Python's is not. |
-| 4 | explicit terminate while live; kill succeeds; process exits | EXPLICIT | `Ok` | yes | after kill takes effect | Rust: YES. Python: NO (`terminate()` itself awaits confirmation by design, since its OWN caller explicitly awaits it -- but `wait()` does not) | Classification: both `Ok`, R004-A-consistent. Settlement: same discrepancy shape as state 3. |
+| 3 | signal observed while live; kill succeeds; process exits | SIGNAL | `Err(aborted)` | yes | after kill takes effect | **Rust: YES** (`wait()` awaits `kill_process_tree()` before `child.wait()`) -- **Python: NO** (`_confirm_kill` decoupled) | Classification: both `Err(aborted)`, R004-A-consistent. Settlement: Rust's `wait()` is coupled to the external kill command's own completion here -- the SAME R004-B defect as state 10, merely not exposed by a hung helper in this particular state (the command returns promptly in the ordinary case); Python already conforms to the retained contract. |
+| 4 | explicit terminate while live; kill succeeds; process exits | EXPLICIT | `Ok` | yes | after kill takes effect | Rust: YES. Python: NO (`terminate()` itself awaits confirmation by design, since its OWN caller explicitly awaits it -- but `wait()` does not) | Classification: both `Ok`, R004-A-consistent. Settlement: same R004-B defect shape as state 3. |
 | 5 | signal wins claim, then explicit terminate arrives | SIGNAL (unchanged) | `Err(aborted)` | yes (signal's attempt only) | after kill takes effect | as state 3 | Classification: both preserve `Err(aborted)`, first-wins confirmed in both (`subprocess.rs:284-293` CAS fails; Python's `if ... and self._kill_cause is None` check). |
 | 6 | explicit terminate wins claim, then signal fires | EXPLICIT (unchanged) | `Ok` | yes (terminate's attempt only) | after kill takes effect | as state 4 | Classification: both preserve `Ok`, first-wins confirmed in both. |
 | 7 | signal and natural exit race (does classification require the kill to be CONFIRMED effective?) | SIGNAL, deterministically, IF the poll loop observed `aborted()` at a liveness-check that preceded the natural-exit observation -- purely an OBSERVATION-ORDERING question, not a physical-causality one, per R004-A | `Err(aborted)` under that ordering | best-effort, outcome irrelevant to classification per R004-A | varies | Rust: kill_process_tree awaited regardless. Python: decoupled | **Classification: Rust matches R004-A by construction (no existing test exercises this exact interleaving -- source-derived, not test-confirmed). Python FAILS R004-A** -- `d44ea0e`'s `issue.issued` gate makes classification depend on the kill mechanism's own outcome, which R004-A forbids. |
 | 8 | explicit terminate and natural exit race | non-deterministic tie-break in Rust's own `tokio::select!` (multiple-ready-branches ordering not documented as deterministic); benign since both `{EXPLICIT, NONE}` classify as `Ok` | `Ok` regardless of which of `{EXPLICIT, NONE}` wins | best-effort | varies | n/a to the benign outcome | Classification: both effectively `Ok` regardless of internal tie-break (benign). Not a settlement-timing case (no kill was necessarily issued if NONE won). |
 | 9 | kill helper invocation FAILS before a kill request is issued (e.g. Windows `taskkill.exe` missing, `Popen` raises `OSError`) | Per R004-A: SIGNAL/EXPLICIT already claimed BEFORE the failed issuance attempt -- a failed issuance has NO bearing on the already-recorded cause | classification UNCHANGED from whatever was already claimed (i.e. still `Err(aborted)` if signal-claimed) | attempted, fails to issue | n/a (target process's own fate is independent of this failed attempt) | n/a (nothing to await -- the attempt itself failed) | **Classification: Rust matches R004-A by construction. Python FAILS R004-A -- this is the EXACT scenario `d44ea0e`'s round-6 fix targeted, and it produces the OPPOSITE of R004-A's answer.** `d44ea0e`'s own test (`test_wait_classifies_ok_when_taskkill_itself_fails_to_spawn`) asserts `Ok(exit_code=0)` here -- correct under the round-5 review's own (stricter-than-Rust) demand, wrong under R004-A. |
-| 10 | kill request successfully issued but OS/process outcome delayed | already claimed, unaffected by delay | `Err(aborted)` once settled, per R004-A | in flight | delayed | **Rust: YES, unconditionally** (`wait()` cannot return until `kill_process_tree()`'s own await completes -- if the delay is in the EXTERNAL KILL-HELPER PROCESS itself hanging, not the target, Rust's `wait()` hangs too). **Python: NO** (`_confirm_kill` fully decoupled, fire-and-forget; confirmed via this round's own negative-control test) | **Classification consistent with R004-A in both. Settlement timing: REVALIDATE_REQUIRED / contract discrepancy for Rust** -- this state is exactly where R004-B's unresolved Policy-A-vs-Policy-B question is observable: under Policy A (process-exit-only settlement, matching the shared contract's existing literal text), Rust is NON-CONFORMING here; under Policy B (settlement may wait for best-effort termination machinery), Rust conforms and Python's own decoupling would need to be reconsidered instead. NOT decided in this pass. |
+| 10 | kill request successfully issued but OS/process outcome delayed | already claimed, unaffected by delay | `Err(aborted)` once settled, per R004-A | in flight | delayed | **Rust: YES, unconditionally** (`wait()` cannot return until `kill_process_tree()`'s own await completes -- if the delay is in the EXTERNAL KILL-HELPER PROCESS itself hanging, not the target, Rust's `wait()` hangs too). **Python: NO** (`_confirm_kill` fully decoupled, fire-and-forget; confirmed via this round's own negative-control test) | **Classification consistent with R004-A in both. Settlement timing: Rust is NON-CONFORMING against the RETAINED contract** (`spec/execution.md` §6, "settles on process exit alone") -- this is the state where R004-B's implementation defect is directly observable: Rust's `wait()` remains pending on the external kill-helper even after the target process has already exited. This is a Rust-side defect requiring revalidation/remediation, not an open policy question. Python's own decoupled design already conforms to the retained contract here. |
 | 11 | repeated `terminate()` | unchanged after first call | idempotent | first call only (subsequent calls no-op) | n/a | n/a | Both idempotent (Rust: `compare_exchange` fails on repeat; Python: `self._terminate_called` explicit guard). Not a settlement-timing case. |
 | 12 | signal already aborted before spawn | n/a -- rejected at `spawn()`, no `Process` ever created | `spawn()` returns `Err(aborted)` | n/a | n/a | n/a | Both consistent (pre-existing, non-controversial, not part of the open findings). |
 | 13 | `wait()` called before any cause event | n/a | ordinary blocking wait | n/a | whenever it occurs | n/a until a cause is claimed | Both block naturally, no special handling needed. |
@@ -581,18 +589,19 @@ states (by source construction; states 7-8's exact tie-break timing not independ
 test-confirmed). Python satisfies 13/15, failing states 7 (partially) and 9 -- both traceable
 to round 6's own issue.issued gate, which needs to be REMOVED, not extended, to reach parity.
 
-SETTLEMENT TIMING (R004-B) -- Rust's wait() is coupled to kill_process_tree()'s own completion
-in every state where a cause is claimed (states 3-7, 9-10) -- this is INCONSISTENT with the
-shared contract's existing literal "settles on process exit alone" text, most sharply exposed
-in state 10 (a hung external kill-helper process). Python's wait() is decoupled in all states.
-This inconsistency is NOT resolved in this pass -- see R004-B above.
+SETTLEMENT TIMING (R004-B) -- the RETAINED contract (spec/execution.md §6) already states
+wait() settles on the process's own exit alone. Rust's wait() is coupled to
+kill_process_tree()'s own completion in every state where a cause is claimed (states 3-7,
+9-10) -- this is a narrowly-scoped Rust IMPLEMENTATION DEFECT against that retained contract,
+most sharply exposed in state 10 (a hung external kill-helper process), not an open policy
+question. Python's wait() is decoupled in all states and already conforms. See R004-B above.
 ```
 
 **Classification-only correction for the frozen candidate**: removing `_KillIssue.issued`'s
 gating of `_kill_cause` (reverting toward the round-4/5 design's eager-claim shape) would bring
 Python's CLASSIFICATION behavior to parity with R004-A and with Rust. This is characterized,
-not authorized -- see the settlement-timing question below, which affects how any such change
-should be specified before implementation resumes.
+not authorized -- implementation on either finding remains gated on independent checkpoint
+approval.
 
 ## Rust revalidation result -- CORRECTED
 
@@ -604,10 +613,11 @@ R004 CLASSIFICATION (R004-A)
     current suite) -- source-reading is strong evidence, not the same as confirmed evidence.
 
 R004 SETTLEMENT TIMING (R004-B)
-    Rust's wait() currently awaits kill_process_tree() before publishing its outcome, which
-    APPEARS inconsistent with the existing shared "process-exit-only settlement" contract text.
-    This has not been resolved as either an intentional Rust behavior needing a contract change,
-    or a genuine Rust non-conformance needing remediation.
+    Rust's wait() currently awaits kill_process_tree() before publishing its outcome. The
+    RETAINED contract (spec/execution.md §6, "wait() settles on the process's own exit alone")
+    already resolves what the correct behavior is -- Rust's own current behavior does NOT
+    reopen that question merely by existing. This is a narrowly-scoped Rust implementation
+    defect requiring revalidation/remediation by Rust's own owner.
 
 R004 RUST REVALIDATION RESULT
     REVALIDATE_REQUIRED (corrected from an earlier "PASS" verdict, which improperly treated
@@ -617,8 +627,9 @@ reason:
     the shared cause-classification semantics are being materially clarified (R004-A); Rust
     source strongly indicates first-claim classification behavior, but new discriminating
     witnesses have not yet revalidated that behavior; additionally, Rust's wait() settlement
-    currently awaits kill_process_tree(), which appears inconsistent with the existing
-    process-exit-only settlement rule (R004-B), and this inconsistency has not been resolved.
+    currently awaits kill_process_tree(), a narrowly-scoped implementation defect against the
+    already-retained process-exit-only settlement rule (R004-B, spec/execution.md §6), pending
+    revalidation/remediation by Rust's own owner.
 ```
 
 No Rust code change is performed or authorized in this pass. This REVALIDATE_REQUIRED finding
@@ -677,16 +688,27 @@ See the diff to `process/agent-workflow.md` in this same commit for the exact in
 
 ---
 
-# PART D -- CHECKPOINT SUMMARY -- REVISION
+# PART D -- CHECKPOINT SUMMARY -- REVISION 2
 
-This revision corrects a prior version of this artifact after independent feedback identified:
-an unverified Node oracle version (now regenerated against the pinned floor plus a drift
-check), a category miscount (corrected, total unaffected), and -- most substantively -- an
-R004 model that improperly combined cause-classification with settlement-timing semantics and
-asserted Rust satisfied a 15-state model it does not, by construction, fully satisfy.
+Revision 1 corrected an unverified Node oracle version (regenerated against the pinned floor
+plus a drift check), a category miscount (total unaffected), and separated R004 cause-
+classification from settlement-timing semantics after an earlier version improperly asserted
+Rust satisfied a combined 15-state model it does not, by construction, fully satisfy.
+
+**Revision 2** (this one) corrects Revision 1's OWN independent review findings
+(`minion-agent-docs#120` @ `ca91006402ecf952f5e73691eca684d60ee3edaa`, `C12-RESET-R001`/
+`C12-RESET-R002`): Revision 1 still incorrectly presented R004-B's settlement-timing
+discrepancy as an unresolved, co-equal choice between two policies, when the shared contract
+already resolves it (`spec/execution.md` §6's existing "process-exit-only" text is the
+RETAINED rule; Rust's contrary behavior is a narrowly-scoped implementation defect, not a
+competing policy) -- corrected throughout this document. Also added a third
+`§11.8.11` cross-language-revalidation trigger (in `agent-workflow.md`) covering the case R002
+actually is: new evidence that an already-certified implementation fails an existing,
+CORRECTLY characterized requirement, distinct from the "requirement was mischaracterized"
+trigger R004-A's own clarification fits.
 
 ```text
-CE-L12-PY-01-01 CHECKPOINT RESET -- REVISION
+CE-L12-PY-01-01 CHECKPOINT RESET -- REVISION 2
 
 R002 ROOT CAUSE
     Partial hand-written implementation of delegated Node/WHATWG semantics Pi itself contains
@@ -747,23 +769,24 @@ R004 PHYSICAL CAUSALITY REQUIREMENT
     question, in both the proposed model and Rust's own actual certified source
 
 R004 SETTLEMENT-TIMING STATUS (R004-B)
-    SHARED CONTRACT / RUST IMPLEMENTATION DISCREPANCY -- UNRESOLVED in this characterization
-    pass. Rust's wait() currently awaits kill_process_tree() (the external kill-helper
-    process's own completion, no timeout) before publishing its outcome, in every state where
-    a cause is claimed -- this APPEARS inconsistent with the shared contract's existing literal
-    "wait() settles on the process's own exit alone" text. Two coherent resolutions (Policy A:
-    process-exit-only, Rust becomes non-conforming pending remediation; Policy B: settlement
-    may await best-effort termination machinery, the shared contract text needs revision
-    through governance) are recorded; NEITHER is chosen here. No implementation is authorized
-    until this is resolved through the appropriate process.
+    RETAINED CONTRACT: wait() settles on the process's own exit alone (spec/execution.md §6,
+    already-agreed, not reopened by this pass). Rust's wait() currently awaits
+    kill_process_tree() (the external kill-helper process's own completion, no timeout) before
+    publishing its outcome, in every state where a cause is claimed -- this is a NARROWLY-
+    SCOPED RUST IMPLEMENTATION DEFECT against that retained contract, not an open or
+    co-equal policy question. A revision toward "settlement may await termination machinery"
+    remains theoretically possible only through an explicit shared-contract/governance reopen
+    (§11.10) -- not proposed here, and not available merely because it matches Rust's current
+    behavior.
 
 R004 RUST STATUS
     REVALIDATE_REQUIRED (corrected from an earlier "PASS" verdict, which improperly combined
     the classification and settlement-timing concerns into one satisfied model). Rust source
     strongly indicates first-claim classification behavior (R004-A), but this has not been
     revalidated with NEW discriminating witnesses targeting states 7/9/10 specifically (no such
-    Rust test currently exists); additionally, R004-B's settlement-timing discrepancy is
-    unresolved.
+    Rust test currently exists); additionally, R004-B's settlement-timing behavior is a
+    narrowly-scoped defect against the retained contract, requiring Rust-side
+    revalidation/remediation.
 
 PROCESS
     checkpoint invalidation rule retained (§11.8.10, agent-workflow.md)
@@ -786,7 +809,8 @@ Requesting review of EXACTLY:
 R002 differential oracle (now regenerated at Node >=22.19.0 + drift check) and the corrected
     normative-oracle-vs-corpus-role boundary
 R004-A deterministic classification state machine
-R004-B settlement-timing discrepancy (recorded, not resolved -- Policy A vs Policy B)
+R004-B settlement-timing defect (Rust against the RETAINED contract -- not an open policy
+    question)
 Rust revalidation implications for BOTH R002's file:// surface and R004's
     classification/settlement surface
 process checkpoint proposal/approval lifecycle correction (§11.8.5/§11.8.10)
