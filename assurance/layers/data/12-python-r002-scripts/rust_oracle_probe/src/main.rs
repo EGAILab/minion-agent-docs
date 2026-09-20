@@ -139,6 +139,8 @@ fn main() {
         "not-a-file-url-at-all",
         "file:not-even-slashes",
         "file:/one/slash",
+        "file://%E2%98%83.com/share",   // snowman emoji host
+        "file://%F0%9F%92%A9.com/share", // pile-of-poo emoji host
     ];
 
     for case in cases {

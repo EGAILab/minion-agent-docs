@@ -32,6 +32,7 @@ cases = [
     "file://1.2.3.4.5/share", "file://[::ffff:192.168.1.1]/share",
     "file://%E2%80%8B/share", "not-a-file-url-at-all", "file:not-even-slashes",
     "file:/one/slash",
+    "file://%E2%98%83.com/share", "file://%F0%9F%92%A9.com/share",
 ]
 
 for c in cases:

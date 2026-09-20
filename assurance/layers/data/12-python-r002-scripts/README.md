@@ -10,8 +10,9 @@ reproduced mechanically, rather than only by re-reading this artifact's own pros
 - Node.js `v22.19.0` (Pi's exact declared `engines.node` floor) and, for the drift check, the
   latest available Node `v22.x` -- both downloaded from `https://nodejs.org/dist/<version>/`
   and checksum-verified against that version's own published `SHASUMS256.txt` before use.
-- A checkout of `minion-agent#44` (Python) at the exact frozen SHA
-  `d44ea0e2b46e18997a425e514c7ab8f458642f7d`.
+- A checkout of `minion-agent#44` (Python) at the current remediated SHA (see
+  `../12-python-r002-differential-corpus.md`'s own "Python candidate" line for the exact commit
+  this corpus was last regenerated against).
 - Rust (`cargo`) -- the `rust_oracle_probe/` subdirectory here is a self-contained scratch
   Cargo project pinning `url = "=2.5.8"` (which pins `idna = "1.1.0"`) from
   `minion-agent-rust`'s own `Cargo.lock` at the certified commit `2b309ee8`, reproducing
@@ -26,7 +27,7 @@ reproduced mechanically, rather than only by re-reading this artifact's own pros
 <path-to-node-v22.19.0>/node node_probe.mjs > node_corpus_results_22.19.0.txt
 
 # 2. Python candidate -- edit python_probe.py's sys.path.insert(...) to point at your checkout
-#    of minion-agent#44 @ d44ea0e2b46e18997a425e514c7ab8f458642f7d, then:
+#    of minion-agent#44 at its current remediated SHA, then:
 <python-in-that-checkout's-venv> python_probe.py > python_corpus_results.txt
 
 # 3. Rust candidate

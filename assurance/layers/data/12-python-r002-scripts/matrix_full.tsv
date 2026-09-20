@@ -64,3 +64,5 @@ file://%E2%80%8B/share	C:\cwd\file:\%E2%80%8B\share	C:\cwd\file:\%E2%80%8B\share
 not-a-file-url-at-all	C:\cwd\not-a-file-url-at-all	C:\cwd\not-a-file-url-at-all	C:\cwd\not-a-file-url-at-all	True	True
 file:not-even-slashes	C:\cwd\file:not-even-slashes	C:\cwd\file:not-even-slashes	C:\cwd\file:not-even-slashes	True	True
 file:/one/slash	C:\cwd\file:\one\slash	C:\cwd\file:\one\slash	C:\cwd\file:\one\slash	True	True
+file://%E2%98%83.com/share	\\☃.com\share\	\\☃.com\share\	\\xn--n3h.com\share\	True	False
+file://%F0%9F%92%A9.com/share	\\💩.com\share\	\\💩.com\share\	\\xn--ls8h.com\share\	True	False
