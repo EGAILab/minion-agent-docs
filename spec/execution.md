@@ -923,14 +923,20 @@ Binding requirements:
   process is started, returning `aborted` -- matching `ctx.shell`'s own §5.4 step-1 precedent. A
   signal that aborts AFTER the process has started triggers termination; there is no longer a
   second, independently-abortable `wait(signal)` call to reconcile against the first.
-- **`wait()` classification.** `wait()` returns `Err(aborted)` when the process was killed because
-  the spawn-supplied `signal` fired (at any point, before or after the `wait()` call itself); it
-  returns `Ok(ExitStatus{exit_code})` when the process was killed via an explicit `terminate()`
-  call with no spawn-signal involved -- the caller asked for this outcome, so it is not reported
-  as an error. If both occur (the spawn signal fires and the caller also calls `terminate()`),
-  whichever caused the actual kill first determines the classification; a `terminate()` racing a
-  signal that already fired is a no-op (idempotence, below) and does not change the classification
-  the signal already established.
+- **`wait()` classification -- deterministic first-claim state machine (refined at the
+  `CE-L12-PY-01-01` checkpoint, `minion-agent-docs#121` @
+  `2db656c01126bfb775d1fe453241e191ed78b2f0`, replacing this bullet's own earlier "whichever
+  caused the actual kill first" phrasing).** The cause is one of `{NONE, SIGNAL, EXPLICIT}`,
+  starting at `NONE`. The FIRST of the spawn-supplied `signal` firing (while the process is still
+  believed running) or an explicit `terminate()` call to observe/claim the cause WINS -- a
+  first-successful-claim rule, not a physical-causality one: classification MUST NOT depend on
+  proving which kill request physically caused OS-level termination, and the kill mechanism's own
+  subsequent success, failure to find a live target, or failure to even be issued MUST NOT
+  retroactively change an already-claimed cause. `wait()` returns `Err(aborted)` when the claimed
+  cause is `SIGNAL`; it returns `Ok(ExitStatus{exit_code})` when the claimed cause is `EXPLICIT`
+  or `NONE` -- the caller asked for an explicit `terminate()`'s outcome, so it is not reported as
+  an error. A `terminate()` racing a signal that already claimed the cause is a no-op (idempotence,
+  below) and does not change the classification the signal already established, and vice versa.
 
   **`exit_code` after an explicit `terminate()` is CONDITIONAL, not unconditionally `None`
   (refined post-closure, discovered during the first independent Rust closure review of the merged

@@ -56,10 +56,10 @@ file://trailinghyphen-.example/share	\\trailinghyphen-.example\share\
 file://a..b/share	\\a..b\share\
 file://a.b.c.d.e.f/share	\\a.b.c.d.e.f\share\
 file://0.0.0.0/share	\\0.0.0.0\share\
-file://256.256.256.256/share	\\256.256.256.256\share\
-file://1.2.3.4.5/share	\\1.2.3.4.5\share\
-file://[::ffff:192.168.1.1]/share	\\[::ffff:192.168.1.1]\share\
-file://%E2%80%8B/share	\\​\share\
+file://256.256.256.256/share	C:\cwd\file:\256.256.256.256\share
+file://1.2.3.4.5/share	C:\cwd\file:\1.2.3.4.5\share
+file://[::ffff:192.168.1.1]/share	\\[::ffff:c0a8:101]\share\
+file://%E2%80%8B/share	C:\cwd\file:\%E2%80%8B\share
 not-a-file-url-at-all	C:\cwd\not-a-file-url-at-all
 file:not-even-slashes	C:\cwd\file:not-even-slashes
 file:/one/slash	C:\cwd\file:\one\slash

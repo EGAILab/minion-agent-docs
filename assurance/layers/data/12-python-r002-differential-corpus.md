@@ -19,20 +19,20 @@ Node's OWN executable `fileURLToPath`/path-resolution behavior, at the Node runt
 
 This 65-case (68 generated, 3 platform-dependent excluded) corpus is **discriminating regression evidence and a representative acceptance suite** -- it is NOT an exhaustive definition of Node's own WHATWG URL/`fileURLToPath` algorithm. Additional differential/property probes against the SAME oracle (Node's own executable behavior at the pinned version) remain legitimate at any time without requiring a new semantic decision; they extend this corpus, they do not replace or redefine it.
 
-Python candidate: frozen diagnostic candidate `d44ea0e2b46e18997a425e514c7ab8f458642f7d` (`minion-agent#44`), via `resolve_local_path` in `filesystem.py`.
+Python candidate: remediated per the `CE-L12-PY-01-01` checkpoint (`minion-agent-docs#121` @ `2db656c01126bfb775d1fe453241e191ed78b2f0`, `AGREED FOR IMPLEMENTATION: YES`) -- `ada_url` + `idna`-as-gate + hand-written `fileURLToPath`-specific layer, `resolve_local_path`/`_file_url_to_path` in `filesystem.py`, `minion-agent#44`. Superseded the frozen diagnostic candidate `d44ea0e2b46e18997a425e514c7ab8f458642f7d` this corpus originally characterized (61/65).
 
-Rust candidate: certified `2b309ee8` (`minion-agent-rust/crates/minion-agent/src/execution/filesystem.rs:534-589`), `resolve_local_path`/`expand_path`/`lexical_normalize`, reproduced VERBATIM (read-only, no modification to `minion-agent-rust/**`) in an isolated scratch Cargo project pinning the SAME `url = "=2.5.8"` (which pins `idna = "1.1.0"`) from `Cargo.lock`, to obtain a real differential result without touching the protected directory.
+Rust candidate: certified `2b309ee8` (`minion-agent-rust/crates/minion-agent/src/execution/filesystem.rs:534-589`), `resolve_local_path`/`expand_path`/`lexical_normalize`, reproduced VERBATIM (read-only, no modification to `minion-agent-rust/**`) in an isolated scratch Cargo project pinning the SAME `url = "=2.5.8"` (which pins `idna = "1.1.0"`) from `Cargo.lock`, to obtain a real differential result without touching the protected directory. UNCHANGED and UNTOUCHED by this Python-side remediation pass -- remains `REVALIDATE_REQUIRED`, a Rust-owned follow-up.
 
 cwd for every case: `C:\cwd`. Three cases are excluded as platform-dependent/not meaningful for cross-implementation comparison: `/already/absolute.txt` (depends on the actual OS process cwd's drive letter), `~`, `~/x.txt` (depend on the actual `USERPROFILE`).
 
-**Result: Python matches Node/Pi on 61/65 cases (93.8%). Rust matches Node/Pi on 48/65 cases (73.8%).**
+**Result: Python matches Node/Pi on 65/65 cases (100%), reverified after the `CE-L12-PY-01-01` R002 remediation. Rust matches Node/Pi on 48/65 cases (73.8%, unchanged).**
 
 Reproducible: `12-python-r002-scripts/` (same directory as this file) contains the exact probe
 scripts (`node_probe.mjs`, `python_probe.py`, `rust_oracle_probe/`, `build_matrix.py`) and their
 raw output, so this table and the version-drift comparison above can be regenerated
 mechanically -- see `12-python-r002-scripts/README.md`.
 
-| # | input | node/pi (oracle) | python (frozen) | rust (certified) | py match | rust match |
+| # | input | node/pi (oracle) | python (remediated) | rust (certified) | py match | rust match |
 |---|---|---|---|---|---|---|
 | 1 | `file:///C:/%ZZ` | `C:\cwd\file:\C:\%ZZ` | `C:\cwd\file:\C:\%ZZ` | `C:\%ZZ` | match | **MISMATCH** |
 | 2 | `file:///C:/a%2Fb` | `C:\cwd\file:\C:\a%2Fb` | `C:\cwd\file:\C:\a%2Fb` | `C:\a\b` | match | **MISMATCH** |
@@ -92,10 +92,10 @@ mechanically -- see `12-python-r002-scripts/README.md`.
 | 56 | `file://a..b/share` | `\\a..b\share\` | `\\a..b\share\` | `\\a..b\share\` | match | match |
 | 57 | `file://a.b.c.d.e.f/share` | `\\a.b.c.d.e.f\share\` | `\\a.b.c.d.e.f\share\` | `\\a.b.c.d.e.f\share\` | match | match |
 | 58 | `file://0.0.0.0/share` | `\\0.0.0.0\share\` | `\\0.0.0.0\share\` | `\\0.0.0.0\share\` | match | match |
-| 59 | `file://256.256.256.256/share` | `C:\cwd\file:\256.256.256.256\share` | `\\256.256.256.256\share\` | `C:\cwd\file:\256.256.256.256\share` | **MISMATCH** | match |
-| 60 | `file://1.2.3.4.5/share` | `C:\cwd\file:\1.2.3.4.5\share` | `\\1.2.3.4.5\share\` | `C:\cwd\file:\1.2.3.4.5\share` | **MISMATCH** | match |
-| 61 | `file://[::ffff:192.168.1.1]/share` | `\\[::ffff:c0a8:101]\share\` | `\\[::ffff:192.168.1.1]\share\` | `\\[::ffff:c0a8:101]\share\` | **MISMATCH** | match |
-| 62 | `file://%E2%80%8B/share` | `C:\cwd\file:\%E2%80%8B\share` | `\\​\share\` | `C:\cwd\file:\%E2%80%8B\share` | **MISMATCH** | match |
+| 59 | `file://256.256.256.256/share` | `C:\cwd\file:\256.256.256.256\share` | `C:\cwd\file:\256.256.256.256\share` | `C:\cwd\file:\256.256.256.256\share` | match | match |
+| 60 | `file://1.2.3.4.5/share` | `C:\cwd\file:\1.2.3.4.5\share` | `C:\cwd\file:\1.2.3.4.5\share` | `C:\cwd\file:\1.2.3.4.5\share` | match | match |
+| 61 | `file://[::ffff:192.168.1.1]/share` | `\\[::ffff:c0a8:101]\share\` | `\\[::ffff:c0a8:101]\share\` | `\\[::ffff:c0a8:101]\share\` | match | match |
+| 62 | `file://%E2%80%8B/share` | `C:\cwd\file:\%E2%80%8B\share` | `C:\cwd\file:\%E2%80%8B\share` | `C:\cwd\file:\%E2%80%8B\share` | match | match |
 | 63 | `not-a-file-url-at-all` | `C:\cwd\not-a-file-url-at-all` | `C:\cwd\not-a-file-url-at-all` | `C:\cwd\not-a-file-url-at-all` | match | match |
 | 64 | `file:not-even-slashes` | `C:\cwd\file:not-even-slashes` | `C:\cwd\file:not-even-slashes` | `C:\cwd\file:not-even-slashes` | match | match |
 | 65 | `file:/one/slash` | `C:\cwd\file:\one\slash` | `C:\cwd\file:\one\slash` | `C:\cwd\file:\one\slash` | match | match |
