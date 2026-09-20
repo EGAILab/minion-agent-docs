@@ -990,6 +990,55 @@ Convergence does not mean one agent dictates semantics to the other.
 
 The improvement is that semantic characterization happens before repeated implementation attempts, not that review strictness is reduced.
 
+#### 11.8.10 Checkpoint invalidation on repeated targeted-closure failure
+
+Discovered during Layer 12 WP-12.1's own `CE-L12-PY-01-01` episode, where `L12-PY-R002` and `L12-PY-R004` each survived five targeted closure reviews in a row: an `AGREED FOR IMPLEMENTATION` checkpoint (§11.8.5) is not permanently valid once approved. Repeated failure of the SAME material finding is evidence that the checkpoint itself under-characterized the semantic surface, not merely that the latest implementation attempt was imperfect.
+
+```text
+CHECKPOINT INVALIDATION RULE
+
+If the same material finding fails TWO targeted convergence-closure reviews (§11.8.7) after
+an AGREED FOR IMPLEMENTATION checkpoint (§11.8.5), implementation must stop.
+
+The convergence checkpoint is presumed inadequate.
+
+Before a third implementation attempt:
+    - return to characterization/challenge (§11.8.3/§11.8.4);
+    - identify the unmodeled semantic dimension/root abstraction the prior checkpoint missed;
+    - independently re-review the revised checkpoint;
+    - obtain a new, explicit AGREED FOR IMPLEMENTATION approval before writing more code.
+```
+
+The count is **per material/root finding**, not per renamed finding ID — refining a finding's own characterization language across review rounds does not reset the count, and does not require minting a new finding ID either (§11.8.1 already prohibits treating refined characterization as a new finding).
+
+This rule applies only once convergence already exists and a finding repeatedly survives targeted closure. It does not turn every ordinary remediation finding into another review stage — the happy paths in §11.4 (ordinary remediation) and §11.8 (convergence) remain unchanged for a finding that closes within the normal cycle.
+
+The convergence contract checkpoint (§11.8.5) is a genuine two-party barrier, not a self-approved formality: the implementation owner records `AGREED FOR IMPLEMENTATION` and the independent reviewer approves it as its OWN, separate step (§11.8.4's challenge pass is not the same act as the reviewer's own targeted-closure approval that follows implementation). An agent MUST NOT write `AGREED FOR IMPLEMENTATION` and then implement in the same uninterrupted, self-approved pass when this rule has fired — an explicit independent checkpoint approval is required first.
+
+#### 11.8.11 Cross-language revalidation on shared-semantics discovery
+
+Also discovered during `CE-L12-PY-01-01`: characterizing `L12-PY-R002` against a wider differential corpus than any single review round had used surfaced that the certified Rust implementation of the SAME requirement pairing (`EXEC-002`/`EXEC-003`) diverges from the shared Pi/Node oracle in categories no prior Rust review had tested; and characterizing `L12-PY-R004` against Rust's own source revealed the Python-side causal-classification interpretation had drifted stricter than Rust's own already-certified behavior across successive review rounds.
+
+```text
+CROSS-LANGUAGE REVALIDATION RULE
+
+If implementation or review of language B discovers a new shared semantic requirement, or
+reveals that an existing shared requirement was materially mischaracterized, an
+already-certified language A does NOT remain automatically certified for the AFFECTED
+semantic surface.
+
+The affected certification becomes:
+
+    REVALIDATE_REQUIRED
+
+until the already-certified implementation is checked against the revised shared contract
+and new discriminating witnesses, by that implementation's own owner.
+```
+
+Revalidation is scoped **narrowly** to the affected semantic surface — do not automatically reopen unrelated requirements in the same layer or work package merely because one requirement pairing needs revalidation. Record the exact requirement ID(s) and the exact reason (new witnesses, corrected reference-oracle reading, or a corrected shared-contract clause) when marking `REVALIDATE_REQUIRED`.
+
+`REVALIDATE_REQUIRED` is not itself a rejection of the existing certification's history — the certifying review and its evidence remain valid as a historical record (§11.14) — it is a statement that the certification's CURRENT validity against the now-better-understood shared contract is unconfirmed until checked.
+
 ### 11.9 Subagent and background-agent capability boundary
 
 `READ_ONLY AGENT MEANS READ_ONLY CAPABILITY.`
