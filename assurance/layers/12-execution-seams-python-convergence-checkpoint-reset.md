@@ -490,9 +490,12 @@ targeted closure review's own counterexample (a failed Windows `taskkill` spawn 
 classify `Err(aborted)`) demanded behavior STRICTER than what is actually certified in Rust.**
 Aligning Python with R004-A means REMOVING the `issued` gate, reverting toward the round-4/5
 design's own eager-claim shape -- the opposite direction from where the last two rounds moved.
-**This part of the correction is NOT authorized for implementation yet** -- see the settlement
-question below, which is unresolved and affects how this classification model interacts with
-`wait()`'s own contract.
+**This part of the correction is NOT authorized for implementation yet** -- R004-A itself
+remains characterized-but-not-implemented pending independent checkpoint approval of this
+artifact as a whole (this classification correction is a proposed implementation change against
+frozen `minion-agent#44`, which stays frozen until `AGREED FOR IMPLEMENTATION`). R004-B, below,
+is NOT an open question -- it is ALREADY resolved by the retained contract; it requires narrow
+Rust-side revalidation/remediation, not a Python-side implementation decision.
 
 ## R004-B -- wait() settlement timing (Rust implementation defect against the RETAINED contract)
 
