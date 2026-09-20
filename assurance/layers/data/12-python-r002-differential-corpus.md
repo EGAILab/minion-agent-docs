@@ -1,6 +1,23 @@
 # Layer 12 R002 differential corpus -- Node/Pi vs Python vs Rust
 
-Reference oracle: pinned Pi (`b7bb00b936dbe21b8e160b3e89efdec361846699`), which delegates `file://` conversion ENTIRELY to Node 22's own built-in `url.fileURLToPath` (`nodejs.ts:51-65`, imported at `nodejs.ts:20`) -- Node IS the oracle for this surface, not a proxy for it. Generated against locally available Node v22.15.1 (Pi's own `engines.node` pins `>=22.19.0`; the core WHATWG URL host-parsing algorithm has been stable across this range, but this is a disclosed, unverified version-gap limitation, not a confirmed non-issue).
+## Normative oracle
+
+```text
+pinned Pi (b7bb00b936dbe21b8e160b3e89efdec361846699)
+    -> Pi resolvePath (nodejs.ts:51-65)
+    -> Node url.fileURLToPath (nodejs.ts:20)
+    -> Node path.isAbsolute / path.resolve
+```
+
+Node's OWN executable `fileURLToPath`/path-resolution behavior, at the Node runtime version pinned Pi actually declares support for, IS the normative oracle for this surface -- not a proxy for it, and not this corpus. Pi's own `engines.node` field pins `>=22.19.0`.
+
+**Primary oracle version: Node v22.19.0** (the exact declared floor). Every value in the table below was generated against this exact version.
+
+**Drift check: Node v22.23.2** (latest available 22.x as of this artifact). The full 68-case probe script was re-run verbatim against this version; the output was BYTE-FOR-BYTE IDENTICAL to v22.19.0 for every case, with no differences at all (`diff node_corpus_results_22.19.0.txt node_corpus_results_22.23.2.txt` -- empty). Also cross-checked against locally-available v22.15.1 (below Pi's declared floor) -- also byte-for-byte identical to both v22.19.0 and v22.23.2. **This is now an empirically confirmed non-issue across the entire 22.15.1-22.23.2 range, not an assumption.** Both downloads (`node-v22.19.0-win-x64.zip`, `node-v22.23.2-win-x64.zip`) were checksum-verified against Node's own published `SHASUMS256.txt` before use.
+
+## Corpus role
+
+This 65-case (68 generated, 3 platform-dependent excluded) corpus is **discriminating regression evidence and a representative acceptance suite** -- it is NOT an exhaustive definition of Node's own WHATWG URL/`fileURLToPath` algorithm. Additional differential/property probes against the SAME oracle (Node's own executable behavior at the pinned version) remain legitimate at any time without requiring a new semantic decision; they extend this corpus, they do not replace or redefine it.
 
 Python candidate: frozen diagnostic candidate `d44ea0e2b46e18997a425e514c7ab8f458642f7d` (`minion-agent#44`), via `resolve_local_path` in `filesystem.py`.
 

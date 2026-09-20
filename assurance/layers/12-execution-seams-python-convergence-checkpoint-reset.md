@@ -23,6 +23,11 @@ d44ea0e2b46e18997a425e514c7ab8f458642f7d
 Not modified by this artifact. `minion-agent-rust/**` also not modified (inspected read-only
 throughout, per the standing Python/shared-owner boundary).
 
+```text
+Layer 13
+    NOT STARTED
+```
+
 ## Why the existing checkpoint is invalid
 
 `CE-L12-PY-01-01`'s prior checkpoints for `R002`/`R004` are INADEQUATE. Both findings survived
@@ -107,16 +112,52 @@ finding new gaps: the true reference surface is Node's ENTIRE WHATWG URL impleme
 parsing, IPv4/IPv6, IDNA/Punycode with full UTS46 validation, encoding-guard rules, backslash
 normalization), not a bounded set of Pi-specific rules.
 
-**Version-gap caveat** (disclosed, not resolved by this artifact): Pi's own `engines.node` pins
-`>=22.19.0`; every live probe in this artifact ran against locally available Node `v22.15.1`.
-The core WHATWG URL host-parsing algorithm has been stable across this range and no known
-breaking change to `fileURLToPath`/IDNA/IPv6-canonicalization exists between these two
-versions, but this has not been independently verified against the exact pinned floor version.
+**Oracle version -- corrected, empirically verified** (an earlier revision of this artifact
+generated its corpus against locally available Node `v22.15.1`, BELOW Pi's own declared
+`engines.node` floor of `>=22.19.0`, and only asserted stability across the gap rather than
+checking it -- not acceptable for a normative acceptance oracle, corrected here): every value
+in the differential corpus was REGENERATED against a checksum-verified portable Node
+`v22.19.0` (the exact declared floor -- `SHASUMS256.txt` match confirmed before use), used as
+the **primary oracle**. A **drift check** against the latest available Node `v22.23.2` (also
+checksum-verified) was then run over the identical 68-case probe script: the output was
+BYTE-FOR-BYTE IDENTICAL to `v22.19.0` for every single case, zero differences. The original
+`v22.15.1` run was also diffed against both and is likewise byte-for-byte identical. **The
+WHATWG URL host-parsing algorithm's stability across this entire `22.15.1`-`22.23.2` range is
+now an empirically confirmed fact, not an assumption or a disclosed-but-unresolved gap.**
+
+## Normative oracle vs. corpus role -- corrected distinction
+
+An earlier revision of this artifact's `Model A` wording risked treating the committed 65-case
+corpus itself as the semantic DEFINITION of the delegated behavior. That would recreate the
+same witness-chasing problem this reset exists to stop -- a corpus, however large, is always
+finite; treating it as exhaustive invites exactly the "patch the named witness, miss the next
+one" pattern that produced five failed review rounds. The hierarchy is corrected here
+explicitly:
+
+```text
+NORMATIVE SOURCE
+    pinned Pi behavior
+        -> Pi resolvePath (nodejs.ts:51-65)
+        -> Node url.fileURLToPath (nodejs.ts:20)
+        -> Node path.isAbsolute / path.resolve
+
+Therefore: Node's EXECUTABLE fileURLToPath/path-resolution behavior, at the Node runtime
+version pinned Pi actually declares support for, is the normative oracle -- not this corpus,
+not any finite list of examples.
+
+CORPUS ROLE
+    The committed 65-case corpus is discriminating regression evidence AND a representative
+    acceptance suite. It is NOT an exhaustive definition of the delegated WHATWG/Node
+    algorithm. Additional differential/property probes against the SAME oracle (Node's own
+    executable behavior at the pinned version) remain legitimate at any time and do not
+    require a new semantic decision -- they extend the corpus, they do not replace or
+    redefine the normative source.
+```
 
 ## Differential oracle corpus
 
 Full corpus (65 comparable cases, 3 platform-dependent cases excluded) with all three
-implementations' actual output:
+implementations' actual output, plus the full primary-oracle/drift-check version methodology:
 
 `assurance/layers/data/12-python-r002-differential-corpus.md`
 
@@ -164,7 +205,9 @@ Categories, with exact source citation for the Rust primitive responsible
 `expand_path`, delegating to the `url` crate's `Url::parse(...).to_file_path()`):
 
 1. **Invalid/truncated percent-escapes are silently tolerated, not rejected** (`%ZZ`, bare `%`,
-   `%2` truncated, `%e2%98` truncated UTF-8, `%ff%fe` invalid UTF-8) -- 6 mismatches. Node
+   `%2` truncated, `%e2%98` truncated UTF-8, `%ff%fe` invalid UTF-8) -- 5 mismatches (corrected;
+   an earlier revision of this artifact miscounted this category as 6 -- the list above has
+   exactly 5 items and the corpus data file confirms 5 rows). Node
    throws `URIError`/rejects the whole URL and Pi's own catch-and-fallback produces the literal
    string; the Rust `url` crate's percent-decoder is lenient and leaves an unrecognized escape
    in the output unchanged, so `to_file_path()` still succeeds where Node would have failed.
@@ -189,6 +232,16 @@ Categories, with exact source citation for the Rust primitive responsible
    `C:\cwd`) -- 2 mismatches. Rust's own `expand_path`/`resolve_local_path`/`lexical_normalize`
    chain does not apply the SAME "is this actually absolute, else join against cwd" logic Node's
    `path.isAbsolute`/`path.resolve` apply to a drive-relative (colon, no separator) path shape.
+
+```text
+5 (invalid percent-escapes) + 4 (encoded separators) + 1 (IPv6-to-UNC) + 5 (Punycode output)
++ 2 (drive-relative) = 17 total mismatches -- matches 65 - 48 = 17 exactly.
+```
+
+The overall `48/65` result is unchanged by this count correction (it was already computed
+directly from the corpus data, not from the category labels) and is unchanged by the
+Node-oracle-version correction above (byte-for-byte identical output confirmed across
+`v22.15.1`/`v22.19.0`/`v22.23.2`).
 
 ### What this means for Rust's certification
 
@@ -374,218 +427,352 @@ termination" reading, and the certified Rust implementation does NOT implement t
 reading -- Rust's own `cause` is claimed BEFORE the kill is even attempted, based purely on
 poll-loop observation ordering, exactly as characterized above.
 
-## Proposed shared state machine (Option A -- deterministic event-order/claim model)
+## Two independent concerns, corrected
 
-Selected over Option B (literal physical causality) because Option B would require reopening
-Rust's own already-certified implementation and building a stronger acknowledgement/termination
-model in BOTH languages -- a scope well beyond a Python-only remediation, and not something this
-artifact escalates to the owner absent a concrete reason to prefer it. Option A is, by
-construction, what Rust ALREADY does.
+An earlier revision of this artifact combined two genuinely SEPARATE concerns into one "Option
+A" proposal:
+
+```text
+A. which cause classification wins           (a claim/state-machine question)
+B. when wait() is allowed to settle            (a settlement-timing question)
+```
+
+The classification model (A) is useful and IS what Rust's own certified source demonstrates.
+The settlement rule the earlier revision attached to it (B: "wait() never awaits kill-helper
+confirmation") is NOT what Rust's own certified source does, and asserting Rust "satisfies"
+that combined model was WRONG. These are corrected as two separate subsections below,
+R004-A and R004-B, and the earlier revision's claim that "Rust satisfies Option A 15/15" is
+withdrawn.
+
+## R004-A -- cause classification (deterministic first-claim model)
+
+This part of the model is retained, defined independently of kill-helper completion:
 
 ```text
 state: cause ∈ {NONE, SIGNAL, EXPLICIT}, initially NONE.
-       An atomic compare-and-swap-style CLAIM: the FIRST of the two trigger conditions below to
-       occur wins; the loser is a permanent no-op for classification purposes (idempotent,
-       first-wins).
 
-Rule 1 (claim):
-  (a) SIGNAL claim: the poll loop observes the spawn-signal aborted() at a moment it still
-      believes the process to be running (its own most recent liveness check said so) --
-      claims cause = SIGNAL, if cause is still NONE.
-  (b) EXPLICIT claim: terminate() is called while cause is still NONE -- claims
-      cause = EXPLICIT.
-  Both (a) and (b) are ATOMIC, NON-BLOCKING claims -- neither involves awaiting the kill
-  mechanism itself.
+Signal claim:
+    If the process monitor observes the spawn-time signal as aborted() while its LATEST
+    process-liveness observation says the process is still live:
+        CAS NONE -> SIGNAL
 
-Rule 2 (best-effort termination, decoupled from classification):
-  Once a cause is claimed (by EITHER path), a best-effort kill-the-tree attempt is issued.
-  This attempt's own success, failure to find a live target, or failure to even ISSUE (e.g. the
-  platform kill helper fails to spawn) has NO EFFECT on the classification already recorded by
-  Rule 1. The attempt MAY be confirmed/cleaned-up asynchronously, but that confirmation is
-  never awaited by wait().
+Explicit termination claim:
+    terminate():
+        CAS NONE -> EXPLICIT
 
-Rule 3 (settlement):
-  wait() settles the moment the underlying OS process is OBSERVED to have exited -- by whatever
-  means -- and reads whichever `cause` value has been claimed AT THAT MOMENT:
-      cause == SIGNAL              -> Err(aborted)
-      cause == EXPLICIT or NONE    -> Ok(ExitStatus{exit_code})
-  wait() NEVER awaits Rule 2's own confirmation/cleanup step.
+First claim wins:
+    Once cause != NONE, later SIGNAL or EXPLICIT claims do not replace it.
 
-Rule 4 (idempotence):
-  wait() is safe to call repeatedly/concurrently, always returning the same settled result once
-  settled. terminate() is safe to call repeatedly; every call after the first that loses the
-  Rule-1 claim is a no-op for classification purposes.
+Classification, at final process outcome:
+    cause == SIGNAL     -> Err(aborted)
+    cause == EXPLICIT   -> Ok(ExitStatus)
+    cause == NONE       -> Ok(ExitStatus)
 ```
+
+The classification MUST NOT depend on proving which kill request physically caused the OS
+process to terminate. The success or failure of the kill mechanism itself MUST NOT
+retroactively change a cause already claimed. This is the corrected reading of the shared
+contract's own ambiguous phrase "whichever caused the actual kill first" (`spec/execution.md`
+§6, lines 926-933) -- replaced here with deterministic, observable state-machine language
+rather than a phrase that can be (and was, across five review rounds) read progressively more
+strictly.
+
+**Rust's own source (`subprocess.rs:197-199, 266-294, 372-411`) matches R004-A exactly**: the
+CAS happens the instant the poll loop observes `signal.aborted()` at a still-believed-running
+liveness check, BEFORE `kill_process_tree` is even called; that function's own success/failure
+is never read back for classification (verified above, unchanged from the prior revision).
 
 **Consequence for the frozen Python candidate**: `d44ea0e`'s `L12-PY-R004` design (round 6)
 gates `_kill_cause` recording on `_KillIssue.issued` (whether the OS-level kill command was
-successfully ISSUED, not merely decided upon) -- this is a Rule-2-level check being used to gate
-a Rule-1-level claim, which Option A / Rust's own certified behavior does NOT do. **The round-5
+successfully ISSUED) -- this makes classification depend on the KILL MECHANISM's own outcome,
+which R004-A (and Rust's own certified behavior) explicitly says MUST NOT happen. **The round-5
 targeted closure review's own counterexample (a failed Windows `taskkill` spawn must not
 classify `Err(aborted)`) demanded behavior STRICTER than what is actually certified in Rust.**
-Aligning Python with Option A means REMOVING the `issued` gate, reverting toward the round-4/5
+Aligning Python with R004-A means REMOVING the `issued` gate, reverting toward the round-4/5
 design's own eager-claim shape -- the opposite direction from where the last two rounds moved.
+**This part of the correction is NOT authorized for implementation yet** -- see the settlement
+question below, which is unresolved and affects how this classification model interacts with
+`wait()`'s own contract.
+
+## R004-B -- wait() settlement timing (unresolved discrepancy, NOT decided here)
+
+Documented exactly, from Rust's own source, with no attempt to resolve the inconsistency below
+by rewriting the shared contract to match Rust, and no attempt to decide the policy question in
+this characterization pass:
+
+```text
+Rust's actual settlement sequence (subprocess.rs:372-411), when a cause is claimed:
+
+    monitor_child() loop:
+        cause claimed (by either path)
+        -> kill_process_tree(&mut child).await     (AWAITED, no timeout on the external
+                                                       kill/taskkill command itself)
+        -> break child.wait().await                 (then, only after that, awaits the real
+                                                       process exit)
+        -> outcome.send_replace(Some(result))        (Process::wait() awaits ONLY this)
+
+Therefore: Process::wait() CANNOT return before the monitor task has finished awaiting
+kill_process_tree() AND the process's own exit AND published the outcome. A delayed or hung
+EXTERNAL kill-helper process (not the target process itself -- the "kill"/"taskkill" command
+process) can therefore delay, or in the hung case indefinitely block, wait() -- even though the
+target process may have already exited on its own by then.
+```
+
+Contrast with the existing shared contract text (`spec/execution.md` §6): "`wait()` is
+independent of stdio state ... `wait()` settles on the PROCESS's own exit alone." Rust's actual
+settlement sequence above is **inconsistent** with that text as literally written, for the
+specific case of a slow/hung external kill-helper process.
+
+**This inconsistency is recorded, not resolved, in this pass.** Two coherent resolutions exist
+and neither is chosen here:
+
+```text
+Policy A: wait() must settle strictly on process exit, independent of any kill-helper's own
+          completion (matches the shared contract's existing literal text; Rust would then be
+          NON-CONFORMING pending its own remediation).
+
+Policy B: wait() may remain blocked until best-effort termination machinery completes (matches
+          Rust's actual current behavior; the shared contract's existing text would then need
+          to be revised through the normal shared-contract/governance process, not inferred
+          silently from what one language's implementation happens to do).
+```
+
+Choosing between Policy A and Policy B is a shared-contract decision, not something this
+characterization pass decides by fiat. **No implementation is authorized until this is
+resolved** by whichever process (owner governance, or a subsequent explicitly-scoped
+convergence checkpoint) the reviewer determines is appropriate.
 
 ## R004 state-transition matrix
 
 All 15 states below were evaluated against BOTH the frozen Python candidate (`d44ea0e`, read
 from `subprocess.py`, functions `_issue_kill`/`_confirm_kill`/`_watch_signal`/`wait`/
 `terminate`, lines 130-422 per `git show d44ea0e:./src/minion_agent/execution/subprocess.py`)
-and the certified Rust implementation (`subprocess.rs`, cited above), against the Option A
-contract. Rust's classification is source-derived for every state EXCEPT the exact tie-break
-timing in states 7-8 (genuine race conditions whose PRECISE outcome ordering is architecturally
-guaranteed by source structure but not independently confirmed by a new test, since writing one
-would require modifying `minion-agent-rust/**`).
+and the certified Rust implementation (`subprocess.rs`, cited above). **Classification** (R004-A)
+and **settlement timing** (R004-B) are recorded in SEPARATE columns throughout, precisely to
+avoid the earlier revision's mistake of collapsing them into one PASS/FAIL verdict. Rust's
+classification behavior is source-derived for every state except the exact tie-break timing in
+states 7-8 (genuine race conditions whose interleaving is architecturally constrained by source
+structure but not independently confirmed by a new test, since writing one would require
+modifying `minion-agent-rust/**`).
 
-| # | state | cause | termination attempted | wait() blocks on | Option A result | Rust (`2b309ee8`) | Python (`d44ea0e`) |
+| # | state | cause claim (R004-A) | classification | termination attempted | process-exit observation | helper-completion dependency (R004-B) | final Result |
 |---|---|---|---|---|---|---|---|
-| 1 | natural exit before signal | NONE | no | process exit only | `Ok(exit_code)` | PASS (`try_wait` breaks before any cause-check, `subprocess.rs:380-381`) | PASS (`_kill_cause` never touched, watcher loop exits on `returncode != None`) |
-| 2 | natural exit before explicit terminate | NONE | no | process exit only | `Ok(exit_code)` | PASS (terminate() never called, trivial) | PASS (trivial, same reasoning) |
-| 3 | signal observed while live; kill succeeds; process exits | SIGNAL | yes | process exit only | `Err(aborted)` | PASS (`subprocess.rs:385-396`) | PASS (normal case: `_issue_kill` succeeds, `issued=True`, `_kill_cause="signal"` set) |
-| 4 | explicit terminate while live; kill succeeds; process exits | EXPLICIT | yes | process exit only | `Ok(exit_code)` | PASS | PASS (normal case) |
-| 5 | signal wins claim, then explicit terminate arrives | SIGNAL (unchanged) | yes (signal's own attempt only) | process exit only | `Err(aborted)` | PASS (`terminate()`'s own CAS fails against already-SIGNAL `cause`, `subprocess.rs:284-293`, no-op) | PASS (`if issue.issued and self._kill_cause is None` -- already `"signal"`, not overwritten) |
-| 6 | explicit terminate wins claim, then signal fires | EXPLICIT (unchanged) | yes (terminate's own attempt only) | process exit only | `Ok(exit_code)` | PASS (monitor loop's own signal-branch CAS also fails against already-EXPLICIT `cause`) | PASS (same first-wins guard) |
-| 7 | signal and natural exit race (kill attempt does not need to be CONFIRMED effective for classification) | SIGNAL, IF the poll loop observed `aborted()` at a liveness-check moment that preceded the natural-exit observation; NONE otherwise -- deterministic given the SAME poll loop's own discrete check ordering, not a physical-causality question | best-effort, outcome irrelevant to classification | process exit only | `Err(aborted)` in the "loop saw it first" ordering; `Ok` otherwise | PASS by construction (CAS happens before `kill_process_tree` is even called; the function's own success/failure is never read for classification) -- **no existing test exercises this exact interleaving; source-derived, not test-confirmed** | **FAIL relative to Option A** -- `d44ea0e`'s `issue.issued` gate (added in round 6) makes classification depend on Rule 2 (whether `_issue_kill` succeeds), not purely on Rule 1's observation ordering; a genuinely no-effect-but-successfully-ISSUED kill still passes (matches), but see state 9 for where this diverges concretely |
-| 8 | explicit terminate and natural exit race | non-deterministic tie-break in Rust specifically (see note below); benign either way | best-effort | process exit only | `Ok(exit_code)` regardless of which of {EXPLICIT, NONE} wins, since both map to `Ok` | Rust's `terminate()` CAS is fully decoupled from the monitor's own `tokio::select!` polling cadence -- if the real process exits at nearly the same instant `terminate()` is called, `tokio::select!`'s own multi-ready-branch tie-break is used (not deterministically documented as ordered); OBSERVABLE result is unaffected either way (PASS, benign) | PASS (Python's `await`-point-yielding `terminate()` has an analogous internal race between "did `_kill_cause` get set to `explicit` before `wait()` reads it", but since both `explicit` and `None` classify identically via `Ok`, the observable result is unaffected -- benign) |
-| 9 | kill helper invocation fails before a kill request is issued (e.g. Windows `taskkill.exe` missing, `Popen` raises `OSError`) | Per Option A: SIGNAL/EXPLICIT already claimed by Rule 1 BEFORE Rule 2 runs -- a Rule-2 failure has NO bearing on the ALREADY-recorded cause | attempted, fails to issue | process exit only | classification UNCHANGED from whatever Rule 1 already claimed (i.e. still `Err(aborted)` if signal-claimed) | PASS by construction -- `kill_process_tree`'s own internal fallback-to-`child.start_kill()` logic is entirely about attempting an alternate kill mechanism, NEVER about reporting back to `cause` | **FAIL relative to Option A -- this is the EXACT scenario `d44ea0e`'s round-6 fix targeted, and it produces the OPPOSITE of Option A's answer.** `d44ea0e`'s own test (`test_wait_classifies_ok_when_taskkill_itself_fails_to_spawn`) asserts `Ok(exit_code=0)` for this exact scenario -- CORRECT under the round-5 review's own (stricter-than-Rust) demand, but WRONG under Option A / Rust's actual certified behavior, which would classify `Err(aborted)` here since the cause was already claimed before the failed issuance attempt |
-| 10 | kill request successfully issued but OS/process outcome delayed | already claimed (Rule 1), unaffected by delay | in flight | process exit only, NEVER the kill's own confirmation | `Err(aborted)` once the process eventually exits, whenever that is | Rust's `wait()` blocks on `kill_process_tree`'s own await too (see the disclosed asymmetry above) -- if the delay is in the TARGET PROCESS itself (still exiting eventually), PASS; if the delay is in the KILL COMMAND helper process itself hanging, Rust's `wait()` would ALSO hang (a genuine, narrower gap, not part of Option A's own text) | PASS -- `d44ea0e`'s `_confirm_kill` dispatch is fully decoupled (fire-and-forget background task), `wait()` never awaits it regardless of how long confirmation takes, confirmed via this round's own negative-control test |
-| 11 | repeated `terminate()` | unchanged after first call | first call only (subsequent calls no-op) | n/a | idempotent | PASS (`compare_exchange` fails on subsequent calls, `notify_one()` not re-sent) | PASS (`self._terminate_called` explicit guard, even more directly idempotent) |
-| 12 | signal already aborted before spawn | n/a -- rejected at `spawn()`, no `Process` ever created | n/a | n/a | `spawn()` itself returns `Err(aborted)` | PASS (`subprocess.rs`, spawn's own pre-check) | PASS (`spawn()`'s own pre-check) -- both already-established, non-controversial, not part of the open findings |
-| 13 | `wait()` called before any cause event | n/a | n/a | ordinary blocking wait | blocks until settled, no special handling needed | PASS (trivial -- `watch::Receiver::changed()` blocks naturally) | PASS (trivial -- `self._proc.wait()` blocks naturally) |
-| 14 | `wait()` called after process has already settled | unchanged (cached) | n/a | none -- returns cached result immediately | idempotent, no re-blocking | PASS (`watch::Receiver::borrow()` returns the last-sent value without re-blocking) | PASS (`self._wait_result is not None` short-circuit, double-checked under the lock) |
-| 15 | repeated/concurrent `wait()` | unchanged | n/a | none for callers after the first settles | idempotent, safe for concurrent callers | PASS (`tokio::sync::watch` is inherently safe for multiple concurrent receivers) | PASS (`self._wait_lock` serializes; existing test `test_wait_is_safe_when_called_concurrently` already covers this) |
+| 1 | natural exit before signal | NONE | `Ok` | no | immediate | none | Rust: `Ok`. Python: `Ok`. Both consistent with R004-A; no settlement-timing question arises (nothing was ever claimed). |
+| 2 | natural exit before explicit terminate | NONE | `Ok` | no | immediate | none | Rust: `Ok`. Python: `Ok`. Same as state 1. |
+| 3 | signal observed while live; kill succeeds; process exits | SIGNAL | `Err(aborted)` | yes | after kill takes effect | **Rust: YES** (`wait()` awaits `kill_process_tree()` before `child.wait()`) -- **Python: NO** (`_confirm_kill` decoupled) | Classification: both `Err(aborted)`, R004-A-consistent. Settlement: Rust's `wait()` is coupled to the external kill command's own completion here (R004-B discrepancy applies, though benign in the common case where the command returns promptly); Python's is not. |
+| 4 | explicit terminate while live; kill succeeds; process exits | EXPLICIT | `Ok` | yes | after kill takes effect | Rust: YES. Python: NO (`terminate()` itself awaits confirmation by design, since its OWN caller explicitly awaits it -- but `wait()` does not) | Classification: both `Ok`, R004-A-consistent. Settlement: same discrepancy shape as state 3. |
+| 5 | signal wins claim, then explicit terminate arrives | SIGNAL (unchanged) | `Err(aborted)` | yes (signal's attempt only) | after kill takes effect | as state 3 | Classification: both preserve `Err(aborted)`, first-wins confirmed in both (`subprocess.rs:284-293` CAS fails; Python's `if ... and self._kill_cause is None` check). |
+| 6 | explicit terminate wins claim, then signal fires | EXPLICIT (unchanged) | `Ok` | yes (terminate's attempt only) | after kill takes effect | as state 4 | Classification: both preserve `Ok`, first-wins confirmed in both. |
+| 7 | signal and natural exit race (does classification require the kill to be CONFIRMED effective?) | SIGNAL, deterministically, IF the poll loop observed `aborted()` at a liveness-check that preceded the natural-exit observation -- purely an OBSERVATION-ORDERING question, not a physical-causality one, per R004-A | `Err(aborted)` under that ordering | best-effort, outcome irrelevant to classification per R004-A | varies | Rust: kill_process_tree awaited regardless. Python: decoupled | **Classification: Rust matches R004-A by construction (no existing test exercises this exact interleaving -- source-derived, not test-confirmed). Python FAILS R004-A** -- `d44ea0e`'s `issue.issued` gate makes classification depend on the kill mechanism's own outcome, which R004-A forbids. |
+| 8 | explicit terminate and natural exit race | non-deterministic tie-break in Rust's own `tokio::select!` (multiple-ready-branches ordering not documented as deterministic); benign since both `{EXPLICIT, NONE}` classify as `Ok` | `Ok` regardless of which of `{EXPLICIT, NONE}` wins | best-effort | varies | n/a to the benign outcome | Classification: both effectively `Ok` regardless of internal tie-break (benign). Not a settlement-timing case (no kill was necessarily issued if NONE won). |
+| 9 | kill helper invocation FAILS before a kill request is issued (e.g. Windows `taskkill.exe` missing, `Popen` raises `OSError`) | Per R004-A: SIGNAL/EXPLICIT already claimed BEFORE the failed issuance attempt -- a failed issuance has NO bearing on the already-recorded cause | classification UNCHANGED from whatever was already claimed (i.e. still `Err(aborted)` if signal-claimed) | attempted, fails to issue | n/a (target process's own fate is independent of this failed attempt) | n/a (nothing to await -- the attempt itself failed) | **Classification: Rust matches R004-A by construction. Python FAILS R004-A -- this is the EXACT scenario `d44ea0e`'s round-6 fix targeted, and it produces the OPPOSITE of R004-A's answer.** `d44ea0e`'s own test (`test_wait_classifies_ok_when_taskkill_itself_fails_to_spawn`) asserts `Ok(exit_code=0)` here -- correct under the round-5 review's own (stricter-than-Rust) demand, wrong under R004-A. |
+| 10 | kill request successfully issued but OS/process outcome delayed | already claimed, unaffected by delay | `Err(aborted)` once settled, per R004-A | in flight | delayed | **Rust: YES, unconditionally** (`wait()` cannot return until `kill_process_tree()`'s own await completes -- if the delay is in the EXTERNAL KILL-HELPER PROCESS itself hanging, not the target, Rust's `wait()` hangs too). **Python: NO** (`_confirm_kill` fully decoupled, fire-and-forget; confirmed via this round's own negative-control test) | **Classification consistent with R004-A in both. Settlement timing: REVALIDATE_REQUIRED / contract discrepancy for Rust** -- this state is exactly where R004-B's unresolved Policy-A-vs-Policy-B question is observable: under Policy A (process-exit-only settlement, matching the shared contract's existing literal text), Rust is NON-CONFORMING here; under Policy B (settlement may wait for best-effort termination machinery), Rust conforms and Python's own decoupling would need to be reconsidered instead. NOT decided in this pass. |
+| 11 | repeated `terminate()` | unchanged after first call | idempotent | first call only (subsequent calls no-op) | n/a | n/a | Both idempotent (Rust: `compare_exchange` fails on repeat; Python: `self._terminate_called` explicit guard). Not a settlement-timing case. |
+| 12 | signal already aborted before spawn | n/a -- rejected at `spawn()`, no `Process` ever created | `spawn()` returns `Err(aborted)` | n/a | n/a | n/a | Both consistent (pre-existing, non-controversial, not part of the open findings). |
+| 13 | `wait()` called before any cause event | n/a | ordinary blocking wait | n/a | whenever it occurs | n/a until a cause is claimed | Both block naturally, no special handling needed. |
+| 14 | `wait()` called after process has already settled | unchanged (cached) | idempotent, no re-blocking | n/a | already observed | n/a (already resolved) | Both return the cached result immediately (Rust: `watch::Receiver::borrow()`; Python: `self._wait_result is not None` short-circuit). |
+| 15 | repeated/concurrent `wait()` | unchanged | idempotent, safe for concurrent callers | n/a | shared | n/a | Both safe for concurrent callers (Rust: `tokio::sync::watch`; Python: `self._wait_lock`, existing test `test_wait_is_safe_when_called_concurrently`). |
 
 ### Summary
 
 ```text
-States where Rust (2b309ee8) satisfies Option A:      15 / 15 (by source construction;
-                                                         states 7-8's exact tie-break timing
-                                                         not independently test-confirmed)
-States where Python (d44ea0e) satisfies Option A:      13 / 15
-Python's 2 Option-A violations:                        states 7 (partially -- see note) and 9
-                                                        (the round-6 `issue.issued` gate)
+CLASSIFICATION (R004-A) -- Rust satisfies the deterministic first-claim model for all 15
+states (by source construction; states 7-8's exact tie-break timing not independently
+test-confirmed). Python satisfies 13/15, failing states 7 (partially) and 9 -- both traceable
+to round 6's own issue.issued gate, which needs to be REMOVED, not extended, to reach parity.
+
+SETTLEMENT TIMING (R004-B) -- Rust's wait() is coupled to kill_process_tree()'s own completion
+in every state where a cause is claimed (states 3-7, 9-10) -- this is INCONSISTENT with the
+shared contract's existing literal "settles on process exit alone" text, most sharply exposed
+in state 10 (a hung external kill-helper process). Python's wait() is decoupled in all states.
+This inconsistency is NOT resolved in this pass -- see R004-B above.
 ```
 
-**The frozen candidate's OWN R004 fix (round 6) is the thing that needs to be reverted**, not
-extended, to reach Option A parity with Rust. The correct next Python implementation pass
-should remove `_KillIssue.issued`'s gating of `_kill_cause`, returning to an eager,
-observation-ordering-based claim -- closer to the round-4/5 design than to round 6 -- while
-KEEPING round 5's genuinely-good fix (the `_issue_kill`/`_confirm_kill` SPLIT itself, which
-correctly decoupled confirmation from `wait()`'s own settlement timing, state 10 above).
+**Classification-only correction for the frozen candidate**: removing `_KillIssue.issued`'s
+gating of `_kill_cause` (reverting toward the round-4/5 design's eager-claim shape) would bring
+Python's CLASSIFICATION behavior to parity with R004-A and with Rust. This is characterized,
+not authorized -- see the settlement-timing question below, which affects how any such change
+should be specified before implementation resumes.
 
-## Rust revalidation result
+## Rust revalidation result -- CORRECTED
 
 ```text
-R004 state machine (Option A)
-    PASS (source-verified for all 15 states; states 7 and 8's precise tie-break ordering is
-          architecturally guaranteed by the source structure -- CAS-before-kill-attempt,
-          decoupled classification -- but not independently confirmed by a NEW discriminating
-          test, since adding one would require modifying minion-agent-rust/**, out of scope
-          for this Python-owned characterization pass)
+R004 CLASSIFICATION (R004-A)
+    Rust source strongly indicates first-claim classification behavior consistent with the
+    deterministic model above, but this has NOT been revalidated with NEW discriminating
+    witnesses specifically targeting states 7, 9, and 10 (no such test exists in Rust's
+    current suite) -- source-reading is strong evidence, not the same as confirmed evidence.
 
-Existing Rust test coverage for the discriminating states (7, 9, 10)
-    NONE -- a genuine, pre-existing gap in Rust's own certification evidence, disclosed here,
-    not remediated here (Rust-owner scope)
+R004 SETTLEMENT TIMING (R004-B)
+    Rust's wait() currently awaits kill_process_tree() before publishing its outcome, which
+    APPEARS inconsistent with the existing shared "process-exit-only settlement" contract text.
+    This has not been resolved as either an intentional Rust behavior needing a contract change,
+    or a genuine Rust non-conformance needing remediation.
+
+R004 RUST REVALIDATION RESULT
+    REVALIDATE_REQUIRED (corrected from an earlier "PASS" verdict, which improperly treated
+    classification and settlement timing as one satisfied model)
+
+reason:
+    the shared cause-classification semantics are being materially clarified (R004-A); Rust
+    source strongly indicates first-claim classification behavior, but new discriminating
+    witnesses have not yet revalidated that behavior; additionally, Rust's wait() settlement
+    currently awaits kill_process_tree(), which appears inconsistent with the existing
+    process-exit-only settlement rule (R004-B), and this inconsistency has not been resolved.
 ```
 
-No Rust code change is implied by adopting Option A -- Rust already implements it. The
-CLARIFICATION aligns the shared contract's prose with Rust's own already-certified behavior; it
-is Python that needs to move.
+No Rust code change is performed or authorized in this pass. This REVALIDATE_REQUIRED finding
+is scoped to the subprocess causal-classification/settlement surface specifically
+(`subprocess.rs`'s `monitor_child`/`classify_exit`/`kill_process_tree`/`Process::wait`/
+`Process::terminate`), applying the SAME cross-language revalidation rule (§14/§15 below, added
+to `agent-workflow.md`) already applied to R002's Rust file:// surface above.
 
 ---
 
 # PART C -- PROCESS CORRECTION
 
-Both of the following are added to `process/agent-workflow.md` as durable process rules in this
-same pass (process documentation, not implementation code):
+Three durable process rules, all added to `process/agent-workflow.md` in this same pass
+(process documentation, not implementation code):
 
-1. **Checkpoint invalidation rule** -- if the same material finding fails TWO targeted
-   convergence-closure reviews after an `AGREED FOR IMPLEMENTATION` checkpoint, implementation
-   must stop; the checkpoint is presumed inadequate; before a third implementation attempt,
-   return to characterization, identify the unmodeled semantic dimension, and obtain a NEW,
-   independently-reviewed `AGREED FOR IMPLEMENTATION` approval. The count is per material/root
-   finding, not per renamed finding ID.
-2. **Cross-language revalidation rule** -- if implementation/review of one language discovers a
-   new shared semantic requirement, or reveals an existing shared requirement was materially
-   mischaracterized, an already-certified OTHER language does not remain automatically
-   certified for the AFFECTED semantic surface; it becomes `REVALIDATE_REQUIRED` until checked
-   against the revised shared contract and new discriminating witnesses. Scoped narrowly to the
-   affected surface, not a blanket reopening.
+1. **Checkpoint invalidation rule** (retained, unchanged) -- if the same material finding fails
+   TWO targeted convergence-closure reviews after an approved convergence checkpoint,
+   implementation must stop; the checkpoint is presumed inadequate; before a third
+   implementation attempt, return to characterization, identify the unmodeled semantic
+   dimension, and require fresh approval before another implementation attempt. The count is
+   per material/root finding, not per renamed finding ID. Does not apply to ordinary
+   remediation outside convergence.
+2. **Cross-language revalidation rule** (retained, unchanged) -- if implementation/review of one
+   language reveals that a shared semantic requirement was materially mischaracterized, the
+   OTHER language's affected certification becomes `REVALIDATE_REQUIRED` until tested against
+   the revised shared contract and new discriminating witnesses. Scoped narrowly -- do not
+   reopen unrelated layers or requirements. Applied in THIS pass to both R002's Rust `file://`
+   conversion surface AND R004's Rust subprocess classification/settlement surface.
+3. **Checkpoint proposal/approval terminology -- corrected in this pass.** An earlier revision
+   of the checkpoint-invalidation rule permitted the implementation/shared-contract owner to
+   write `AGREED FOR IMPLEMENTATION` directly. That is a self-approval, not a two-party barrier
+   -- exactly the process defect this whole reset exists to correct. The checkpoint lifecycle is
+   now:
+
+   ```text
+   characterization/implementation owner authors:
+       CONVERGENCE CHECKPOINT
+           PROPOSED FOR IMPLEMENTATION
+
+   independent reviewer performs checkpoint review and returns:
+       APPROVED  (or REJECTED, with the missing semantic dimension identified)
+
+   only on APPROVED does the control record become:
+       CONVERGENCE CONTRACT
+           AGREED FOR IMPLEMENTATION
+   ```
+
+   No new workflow status is required -- this is checkpoint/evidence metadata within the
+   existing `CONTRACT_CONVERGENCE` state, per §11.8.5's own existing shape. This artifact
+   itself uses `PROPOSED FOR IMPLEMENTATION` terminology nowhere, because it is NOT proposing
+   implementation yet -- it remains a pure characterization pass with `IMPLEMENTATION
+   AUTHORIZED: NO`; the corrected terminology applies to the NEXT pass, once this
+   characterization itself is approved and a bounded implementation plan is proposed against it.
 
 See the diff to `process/agent-workflow.md` in this same commit for the exact inserted text.
 
 ---
 
-# PART D -- CHECKPOINT SUMMARY
+# PART D -- CHECKPOINT SUMMARY -- REVISION
+
+This revision corrects a prior version of this artifact after independent feedback identified:
+an unverified Node oracle version (now regenerated against the pinned floor plus a drift
+check), a category miscount (corrected, total unaffected), and -- most substantively -- an
+R004 model that improperly combined cause-classification with settlement-timing semantics and
+asserted Rust satisfied a 15-state model it does not, by construction, fully satisfy.
 
 ```text
-CE-L12-PY-01-01 CHECKPOINT RESET
+CE-L12-PY-01-01 CHECKPOINT RESET -- REVISION
 
 R002 ROOT CAUSE
-    Hand-written, partial, witness-driven emulation of a delegated WHATWG/Node algorithm
-    Pi itself contains zero custom logic for -- each remediation round closed the immediately
-    prior witness while a new, independently-discoverable dimension of the same delegated
-    surface (IDNA2003-vs-UTS46, bidi/combining-mark validation, IPv4/IPv6 host validation and
-    canonicalization, general forbidden-Unicode-code-point rejection) kept surfacing.
+    Partial hand-written implementation of delegated Node/WHATWG semantics Pi itself contains
+    zero custom logic for -- each remediation round closed the immediately prior witness while
+    a new, independently-discoverable dimension of the same delegated surface kept surfacing.
 
-R002 REFERENCE ORACLE
-    Pinned Pi (b7bb00b936dbe21b8e160b3e89efdec361846699) via Node 22's own url.fileURLToPath
-    (nodejs.ts:51-65/20) -- Node IS the oracle, not a proxy for it.
+R002 NORMATIVE ORACLE
+    pinned Pi -> supported Node fileURLToPath/path semantics (Node's own EXECUTABLE behavior,
+    not this corpus, not any finite list of examples -- see "Normative oracle vs. corpus role"
+    above)
+
+R002 PRIMARY ORACLE VERSION
+    Node >= 22.19.0
+    exact version used: v22.19.0 (Pi's exact declared floor), checksum-verified against
+    Node's own published SHASUMS256.txt before use
+    drift check: v22.23.2 (latest available 22.x), also checksum-verified -- output
+    BYTE-FOR-BYTE IDENTICAL to v22.19.0 across all 68 generated cases, zero differences;
+    the originally-used v22.15.1 is also byte-for-byte identical to both
 
 R002 CORPUS
-    assurance/layers/data/12-python-r002-differential-corpus.md (65 cases)
+    65-case (68 generated, 3 platform-dependent excluded) regression/seed corpus
+    (assurance/layers/data/12-python-r002-differential-corpus.md) -- NOT an exhaustive
+    semantic definition; additional probes against the same oracle remain legitimate at any
+    time without a new semantic decision
 
 R002 PYTHON RESULT
-    61/65 (93.8%) match against the frozen candidate d44ea0e; 4 NEW mismatches discovered by
-    this pass's own wider corpus (IPv4 octet-range, multi-numeric-dot host, IPv6
-    canonicalization, zero-width-space forbidden-char rejection)
+    61/65 (93.8%) match against the frozen candidate d44ea0e -- unchanged by the oracle-version
+    correction (byte-for-byte identical output confirmed across the whole 22.15.1-22.23.2
+    range); 4 NEW mismatches this pass's own wider corpus discovered (IPv4 octet-range,
+    multi-numeric-dot host, IPv6 canonicalization, zero-width-space forbidden-char rejection)
 
-R002 RUST REVALIDATION RESULT
-    48/65 (73.8%) match; REVALIDATE_REQUIRED for EXEC-002/EXEC-003's file:// URL conversion
-    surface specifically (17 mismatches across 5 categories, zero pre-existing Rust test
-    coverage for any file:// edge case)
+R002 RUST RESULT
+    48/65 (73.8%) match -- likewise unchanged by the oracle-version correction; 17 mismatches
+    across 5 categories (5 invalid-percent-escape leniency + 4 encoded-separator non-rejection
+    + 1 IPv6-to-UNC construction + 5 Punycode-to-Unicode-output + 2 drive-relative-path
+    divergence = 17, corrected from an earlier miscounted "6" in the first category); zero
+    pre-existing Rust test coverage for any file:// edge case
 
-R002 PROPOSED CONTRACT
-    Model A (delegated WHATWG compatibility) against the corpus above as acceptance oracle;
-    Model B (narrower divergence) explicitly NOT selected absent owner governance
+R002 RUST STATUS
+    REVALIDATE_REQUIRED (unchanged) -- scoped narrowly to EXEC-002/EXEC-003's file://
+    conversion branch specifically (expand_path's Url::parse(...).to_file_path() call); does
+    not reopen unrelated filesystem behavior
 
-R004 ROOT CAUSE
-    Successive Python review rounds progressively strengthened "actual kill causation" from an
-    event-ordering/claim model into a confirmed-physical-effect model that the already-
-    certified Rust implementation does not itself provide -- each round's fix satisfied its own
-    review's counterexample while silently diverging further from the shared, certified
-    baseline.
+R002 CONTRACT
+    Model A -- delegated Node/Pi compatibility (retained; NOT switched to Model B -- this
+    investigation has shown implementation DIFFICULTY, not infeasibility; any intentional
+    narrowing from Pi behavior still requires owner governance per §11.10)
 
-R004 CURRENT RUST BEHAVIOR
-    Atomic CAS-based first-wins claim (CAUSE_NONE/SIGNAL/EXPLICIT), claimed the instant the
-    poll loop observes signal.aborted() at a still-believed-running liveness check, BEFORE the
-    kill is even attempted; the kill attempt's own success/failure has zero effect on the
-    already-claimed cause (subprocess.rs:197-199, 266-294, 372-422)
+R004 CLASSIFICATION MODEL (R004-A)
+    deterministic first-claim state machine: cause in {NONE, SIGNAL, EXPLICIT}, first
+    successful CAS claim wins, classification MUST NOT depend on proving which kill request
+    physically caused OS termination, and the kill mechanism's own success/failure MUST NOT
+    retroactively change an already-claimed cause. Replaces the ambiguous shared-contract
+    phrase "whichever caused the actual kill first" with this deterministic language.
 
-R004 PROPOSED SHARED STATE MACHINE
-    Option A (deterministic event-order/claim model) -- full 15-state matrix above; Rust
-    already satisfies all 15 states by source construction; the frozen Python candidate
-    satisfies 13/15, failing states 7 (partially) and 9, both traceable to round 6's own
-    issue.issued gate, which needs to be REMOVED, not extended, to reach parity
+R004 PHYSICAL CAUSALITY REQUIREMENT
+    NONE -- classification is an observable-state-machine question, not a physical-causality
+    question, in both the proposed model and Rust's own actual certified source
 
-R004 RUST REVALIDATION RESULT
-    PASS (source-verified against all 15 states; states 7/8's exact tie-break timing not
-    independently test-confirmed, since confirming it would require new Rust-side tests,
-    out of this Python-owned pass's scope)
+R004 SETTLEMENT-TIMING STATUS (R004-B)
+    SHARED CONTRACT / RUST IMPLEMENTATION DISCREPANCY -- UNRESOLVED in this characterization
+    pass. Rust's wait() currently awaits kill_process_tree() (the external kill-helper
+    process's own completion, no timeout) before publishing its outcome, in every state where
+    a cause is claimed -- this APPEARS inconsistent with the shared contract's existing literal
+    "wait() settles on the process's own exit alone" text. Two coherent resolutions (Policy A:
+    process-exit-only, Rust becomes non-conforming pending remediation; Policy B: settlement
+    may await best-effort termination machinery, the shared contract text needs revision
+    through governance) are recorded; NEITHER is chosen here. No implementation is authorized
+    until this is resolved through the appropriate process.
 
-PROCESS DEFECT
-    The convergence checkpoint after CE-L12-PY-01-01's original trigger (§11.8) was not
-    independently re-challenged against the ALREADY-certified Rust behavior at each subsequent
-    review round -- each round's own refined counterexample was accepted and implemented
-    without cross-checking whether the resulting stricter interpretation remained consistent
-    with what was actually shared/certified, letting Python's own interpretation drift
-    progressively further from Rust's real behavior across five review rounds.
+R004 RUST STATUS
+    REVALIDATE_REQUIRED (corrected from an earlier "PASS" verdict, which improperly combined
+    the classification and settlement-timing concerns into one satisfied model). Rust source
+    strongly indicates first-claim classification behavior (R004-A), but this has not been
+    revalidated with NEW discriminating witnesses targeting states 7/9/10 specifically (no such
+    Rust test currently exists); additionally, R004-B's settlement-timing discrepancy is
+    unresolved.
 
-PROPOSED PROCESS FIX
-    Two failed targeted closures against the SAME material finding, after an AGREED FOR
-    IMPLEMENTATION checkpoint, invalidate that checkpoint and require a fresh, independently-
-    reviewed checkpoint before a third implementation attempt (added to agent-workflow.md,
-    this same pass). Cross-language revalidation rule added alongside it.
+PROCESS
+    checkpoint invalidation rule retained (§11.8.10, agent-workflow.md)
+    cross-language revalidation rule retained (§11.8.11, agent-workflow.md), applied in THIS
+        pass to BOTH R002's Rust file:// surface and R004's Rust subprocess
+        classification/settlement surface
+    checkpoint author proposes (PROPOSED FOR IMPLEMENTATION); independent reviewer makes it
+        agreed (APPROVED -> AGREED FOR IMPLEMENTATION) -- corrected in §11.8.5/§11.8.10,
+        agent-workflow.md; no new workflow status required
 
 IMPLEMENTATION AUTHORIZED
     NO
@@ -593,13 +780,16 @@ IMPLEMENTATION AUTHORIZED
 
 ## Requested independent checkpoint review
 
-Per the reset instruction's own §18, requesting review of EXACTLY:
+Requesting review of EXACTLY:
 
 ```text
-R002 differential oracle + adopted behavior boundary
-R004 deterministic state machine
-Rust revalidation implications
-process checkpoint-invalidation rule
+R002 differential oracle (now regenerated at Node >=22.19.0 + drift check) and the corrected
+    normative-oracle-vs-corpus-role boundary
+R004-A deterministic classification state machine
+R004-B settlement-timing discrepancy (recorded, not resolved -- Policy A vs Policy B)
+Rust revalidation implications for BOTH R002's file:// surface and R004's
+    classification/settlement surface
+process checkpoint proposal/approval lifecycle correction (§11.8.5/§11.8.10)
 ```
 
 Expected response shape:

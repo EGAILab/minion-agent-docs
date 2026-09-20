@@ -848,11 +848,16 @@ Disagreements should be resolved against pinned Pi and the existing semantic-aut
 
 #### 11.8.5 Convergence contract checkpoint
 
-Before implementation resumes, record an explicit checkpoint:
+Before implementation resumes, record an explicit checkpoint, as a genuine two-party barrier —
+**corrected** (Layer 12 WP-12.1's own `CE-L12-PY-01-01` episode showed the implementation/
+characterization owner writing `AGREED FOR IMPLEMENTATION` directly, in the same uninterrupted
+pass as its own challenge, which is a self-approval, not independent agreement):
 
 ```text
-CONVERGENCE CONTRACT
-    AGREED FOR IMPLEMENTATION
+STEP 1 — the characterization/implementation owner authors:
+
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION
 
 OPEN FINDINGS
     <IDs>
@@ -864,8 +869,27 @@ NORMATIVE DELTAS
     <spec/manifest/conformance paths>
 
 NEXT_OWNER
-    <implementation owner>
+    <independent reviewer>
+
+STEP 2 — the independent reviewer performs checkpoint review of EXACTLY that proposal and
+returns:
+
+CHECKPOINT REVIEW
+    APPROVED
+        or
+    REJECTED, with the missing semantic dimension identified
+
+STEP 3 — only on APPROVED does the control record become:
+
+CONVERGENCE CONTRACT
+    AGREED FOR IMPLEMENTATION
 ```
+
+No new `status` value is required — this is checkpoint/evidence metadata within the existing
+`CONTRACT_CONVERGENCE` state, not a new workflow state. An agent MUST NOT write `AGREED FOR
+IMPLEMENTATION` itself; it may only write `PROPOSED FOR IMPLEMENTATION`, and the control record
+advances to `AGREED FOR IMPLEMENTATION` only after the independent reviewer's own, separate
+`APPROVED` verdict is recorded.
 
 This is not final contract approval. It means both agents agree that the remaining observable surface is sufficiently characterized for another implementation attempt.
 
@@ -1013,7 +1037,7 @@ The count is **per material/root finding**, not per renamed finding ID — refin
 
 This rule applies only once convergence already exists and a finding repeatedly survives targeted closure. It does not turn every ordinary remediation finding into another review stage — the happy paths in §11.4 (ordinary remediation) and §11.8 (convergence) remain unchanged for a finding that closes within the normal cycle.
 
-The convergence contract checkpoint (§11.8.5) is a genuine two-party barrier, not a self-approved formality: the implementation owner records `AGREED FOR IMPLEMENTATION` and the independent reviewer approves it as its OWN, separate step (§11.8.4's challenge pass is not the same act as the reviewer's own targeted-closure approval that follows implementation). An agent MUST NOT write `AGREED FOR IMPLEMENTATION` and then implement in the same uninterrupted, self-approved pass when this rule has fired — an explicit independent checkpoint approval is required first.
+The convergence contract checkpoint (§11.8.5) is a genuine two-party barrier, not a self-approved formality: the implementation/characterization owner records `PROPOSED FOR IMPLEMENTATION`, and only the independent reviewer's own, separate `APPROVED` verdict advances the record to `AGREED FOR IMPLEMENTATION` (§11.8.4's challenge pass is not the same act as this approval, nor is it the same act as the reviewer's own later targeted-closure approval that follows implementation). An agent MUST NOT write `AGREED FOR IMPLEMENTATION` itself, and MUST NOT implement in the same uninterrupted, self-approved pass as its own `PROPOSED FOR IMPLEMENTATION` — independent approval is required first, always, and especially when this checkpoint-invalidation rule has fired.
 
 #### 11.8.11 Cross-language revalidation on shared-semantics discovery
 
