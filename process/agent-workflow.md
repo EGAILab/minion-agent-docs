@@ -848,11 +848,16 @@ Disagreements should be resolved against pinned Pi and the existing semantic-aut
 
 #### 11.8.5 Convergence contract checkpoint
 
-Before implementation resumes, record an explicit checkpoint:
+Before implementation resumes, record an explicit checkpoint, as a genuine two-party barrier —
+**corrected** (Layer 12 WP-12.1's own `CE-L12-PY-01-01` episode showed the implementation/
+characterization owner writing `AGREED FOR IMPLEMENTATION` directly, in the same uninterrupted
+pass as its own challenge, which is a self-approval, not independent agreement):
 
 ```text
-CONVERGENCE CONTRACT
-    AGREED FOR IMPLEMENTATION
+STEP 1 — the characterization/implementation owner authors:
+
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION
 
 OPEN FINDINGS
     <IDs>
@@ -864,8 +869,27 @@ NORMATIVE DELTAS
     <spec/manifest/conformance paths>
 
 NEXT_OWNER
-    <implementation owner>
+    <independent reviewer>
+
+STEP 2 — the independent reviewer performs checkpoint review of EXACTLY that proposal and
+returns:
+
+CHECKPOINT REVIEW
+    APPROVED
+        or
+    REJECTED, with the missing semantic dimension identified
+
+STEP 3 — only on APPROVED does the control record become:
+
+CONVERGENCE CONTRACT
+    AGREED FOR IMPLEMENTATION
 ```
+
+No new `status` value is required — this is checkpoint/evidence metadata within the existing
+`CONTRACT_CONVERGENCE` state, not a new workflow state. An agent MUST NOT write `AGREED FOR
+IMPLEMENTATION` itself; it may only write `PROPOSED FOR IMPLEMENTATION`, and the control record
+advances to `AGREED FOR IMPLEMENTATION` only after the independent reviewer's own, separate
+`APPROVED` verdict is recorded.
 
 This is not final contract approval. It means both agents agree that the remaining observable surface is sufficiently characterized for another implementation attempt.
 
@@ -989,6 +1013,65 @@ Convergence does not mean one agent dictates semantics to the other.
 - Rust implementation still begins only after the shared/Python contract is approved and merged.
 
 The improvement is that semantic characterization happens before repeated implementation attempts, not that review strictness is reduced.
+
+#### 11.8.10 Checkpoint invalidation on repeated targeted-closure failure
+
+Discovered during Layer 12 WP-12.1's own `CE-L12-PY-01-01` episode, where `L12-PY-R002` and `L12-PY-R004` each survived five targeted closure reviews in a row: an `AGREED FOR IMPLEMENTATION` checkpoint (§11.8.5) is not permanently valid once approved. Repeated failure of the SAME material finding is evidence that the checkpoint itself under-characterized the semantic surface, not merely that the latest implementation attempt was imperfect.
+
+```text
+CHECKPOINT INVALIDATION RULE
+
+If the same material finding fails TWO targeted convergence-closure reviews (§11.8.7) after
+an AGREED FOR IMPLEMENTATION checkpoint (§11.8.5), implementation must stop.
+
+The convergence checkpoint is presumed inadequate.
+
+Before a third implementation attempt:
+    - return to characterization/challenge (§11.8.3/§11.8.4);
+    - identify the unmodeled semantic dimension/root abstraction the prior checkpoint missed;
+    - independently re-review the revised checkpoint;
+    - obtain a new, explicit AGREED FOR IMPLEMENTATION approval before writing more code.
+```
+
+The count is **per material/root finding**, not per renamed finding ID — refining a finding's own characterization language across review rounds does not reset the count, and does not require minting a new finding ID either (§11.8.1 already prohibits treating refined characterization as a new finding).
+
+This rule applies only once convergence already exists and a finding repeatedly survives targeted closure. It does not turn every ordinary remediation finding into another review stage — the happy paths in §11.4 (ordinary remediation) and §11.8 (convergence) remain unchanged for a finding that closes within the normal cycle.
+
+The convergence contract checkpoint (§11.8.5) is a genuine two-party barrier, not a self-approved formality: the implementation/characterization owner records `PROPOSED FOR IMPLEMENTATION`, and only the independent reviewer's own, separate `APPROVED` verdict advances the record to `AGREED FOR IMPLEMENTATION` (§11.8.4's challenge pass is not the same act as this approval, nor is it the same act as the reviewer's own later targeted-closure approval that follows implementation). An agent MUST NOT write `AGREED FOR IMPLEMENTATION` itself, and MUST NOT implement in the same uninterrupted, self-approved pass as its own `PROPOSED FOR IMPLEMENTATION` — independent approval is required first, always, and especially when this checkpoint-invalidation rule has fired.
+
+#### 11.8.11 Cross-language revalidation on shared-semantics discovery
+
+Also discovered during `CE-L12-PY-01-01`: characterizing `L12-PY-R002` against a wider differential corpus than any single review round had used surfaced that the certified Rust implementation of the SAME requirement pairing (`EXEC-002`/`EXEC-003`) diverges from the shared Pi/Node oracle in categories no prior Rust review had tested; and characterizing `L12-PY-R004` against Rust's own source revealed the Python-side causal-classification interpretation had drifted stricter than Rust's own already-certified behavior across successive review rounds.
+
+**Corrected** (Layer 12 WP-12.1's own checkpoint-reset independent review, `C12-RESET-R002`): an earlier revision of this rule listed only two triggers — a NEW shared semantic requirement, or an EXISTING shared requirement being materially mischaracterized — and omitted a third, genuinely distinct case the R002 finding above actually is: the shared requirement was already characterized CORRECTLY (Node's own `fileURLToPath` was always the direct-parity oracle; nothing about that characterization was wrong), and new discriminating evidence simply shows that an already-certified implementation does not satisfy it. Applying the two-trigger rule to that case, as the prior revision did, was an unauthorized stretch of the rule's own text.
+
+```text
+CROSS-LANGUAGE REVALIDATION RULE
+
+If implementation or review of language B:
+
+  (a) discovers a new shared semantic requirement; or
+  (b) reveals that an existing shared requirement was materially mischaracterized; or
+  (c) produces new discriminating evidence that an already-certified implementation does NOT
+      satisfy an existing shared requirement, even though the requirement itself was
+      characterized correctly —
+
+an already-certified language A does NOT remain automatically certified for the AFFECTED
+semantic surface.
+
+The affected certification becomes:
+
+    REVALIDATE_REQUIRED
+
+until the already-certified implementation is checked against the revised shared contract
+and new discriminating witnesses, by that implementation's own owner.
+```
+
+Trigger (c) does NOT license treating an already-certified implementation's own current behavior as a competing semantic authority — the existing, correctly-characterized shared contract text remains the retained rule; a certified implementation's divergence from it is evidence of an implementation defect to revalidate/remediate, not evidence that the contract itself is now open for renegotiation. Reopening the CONTRACT (as opposed to revalidating an implementation against it) still requires the governance path in §11.10.
+
+Revalidation is scoped **narrowly** to the affected semantic surface — do not automatically reopen unrelated requirements in the same layer or work package merely because one requirement pairing needs revalidation. Record the exact requirement ID(s) and the exact reason (new witnesses, corrected reference-oracle reading, or a corrected shared-contract clause) when marking `REVALIDATE_REQUIRED`.
+
+`REVALIDATE_REQUIRED` is not itself a rejection of the existing certification's history — the certifying review and its evidence remain valid as a historical record (§11.14) — it is a statement that the certification's CURRENT validity against the now-better-understood shared contract is unconfirmed until checked.
 
 ### 11.9 Subagent and background-agent capability boundary
 

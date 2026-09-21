@@ -1,0 +1,27 @@
+file://xn--n3h/share	"\\\\☃\\share"
+file://xn--ls8h/share	"\\\\💩\\share"
+file://xn--lzg/share	"\\\\€\\share"
+file://xn--59g/share	"\\\\∞\\share"
+file://xn--a/share	ERROR: Invalid URL
+file://xn--0y0c/share	ERROR: Invalid URL
+file://xn--zva/share	ERROR: Invalid URL
+file://xn--abc-ppe/share	ERROR: Invalid URL
+file://xn--abc-jdc/share	ERROR: Invalid URL
+file://xn---bbk/share	"\\\\ま\\share"
+file://xn--/share	ERROR: Invalid URL
+file://xn--a-/share	"\\\\a\\share"
+file://xn--zzzz/share	ERROR: Invalid URL
+file://xn---abc-/share	"\\\\-abc\\share"
+file://xn--abc--/share	"\\\\abc-\\share"
+file://xn--e-xbb/share	ERROR: Invalid URL
+file://xn--ll-0ea/share	"\\\\l·l\\share"
+file://xn--aa-0ea/share	"\\\\a·a\\share"
+file://xn--11b6iy14e/share	"\\\\क्‍\\share"
+file://xn--a-ugn/share	ERROR: Invalid URL
+file://xn--a-4ba/share	ERROR: Invalid URL
+file://xn--a-vca/share	ERROR: Invalid URL
+file://xn--a-0gn/share	"\\\\a‐\\share"
+file://xn--a-jv3s/share	"\\\\a😀\\share"
+file://xn--fa-hia/share	"\\\\faß\\share"
+file://xn--bcher-kva/share	"\\\\bücher\\share"
+file://xn--zca/share	"\\\\ß\\share"
