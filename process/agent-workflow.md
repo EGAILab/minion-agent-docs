@@ -436,6 +436,14 @@ the coordination issue's current-state block MUST be updated.
 
 Do not leave a stale issue body and rely on a later comment to override it.
 
+Treat the issue body as one multiline document when reading and writing it. Shell and CLI tooling
+MUST NOT round-trip the body through an implicit line array, whitespace join, or other transform
+that can flatten the fenced YAML or alter scalar content. After every issue-body mutation, re-fetch
+the remote body, extract the current-state block, parse it using the canonical coordination-state
+schema, and verify the intended `status`, candidate SHA(s), `next_owner`, and `next_action` before
+claiming the transition or handoff is complete. A successful CLI exit by itself is not sufficient
+evidence that the remote control state survived the write intact.
+
 #### 11.1.2 Exactly one active owner
 
 For active states, there must be exactly one `next_owner` and one concrete `next_action`. Do not rely on chat history to determine ownership or progress.
@@ -1340,6 +1348,11 @@ At minimum, automation should reject:
 - a claimed provisional closure without required discriminating negative-control evidence (§11.8.7.1).
 
 The validator enforces workflow structure only. It does not decide semantics.
+
+An issue-body update path SHOULD exercise the same validator against the body re-fetched from
+GitHub after the write, not only against the local pre-write text. This catches transport and shell
+round-trip corruption (for example, a multiline body silently flattened into one line) that local
+validation cannot observe.
 
 ## 13. Certification gate
 

@@ -4,6 +4,27 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layer 12 retrospective: remote coordination-body round-trip integrity — adopted 2026-09-21
+
+During Layer 12 closure, a PowerShell command captured the multiline GitHub coordination-issue
+body through native-command output and then wrote the resulting line array back through the CLI.
+The write succeeded, but PowerShell's argument conversion flattened the body and destroyed the
+canonical fenced-YAML shape. The current state was repaired immediately from authoritative remote
+history, and no Layer 12 semantic or certification artifact was affected.
+
+The workflow already required one canonical machine-readable state block and prohibited flattened
+variants, but it did not state how an agent must preserve that invariant across shell/CLI transport
+or verify the result after a successful write.
+
+**Fix:** `process/agent-workflow.md` sections 11.1.1 and 12.6 now require agents to treat an issue
+body as one multiline document, prohibit implicit line-array/whitespace-join round trips, and
+re-fetch and parse the remote body after every mutation before reporting a transition or handoff
+complete. Post-write validation must confirm the intended status, exact candidate SHA(s), owner,
+and action; a zero CLI exit is not enough. Automation is encouraged to validate the remotely
+re-fetched body so transport corruption cannot evade a local pre-write check.
+
+This is process-only hardening. It does not reopen Layer 12 or change any semantic contract.
+
 ## Layer 11 retrospective: work-package coordination model — adopted 2026-09-18/19
 
 Layer 11's own Pass 2 exposed three scaling problems in the pre-existing coordination model that
