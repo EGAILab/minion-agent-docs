@@ -13,7 +13,11 @@ Regenerate any of these by following README.md's own reproduction steps, then re
 
     python compare_oracles.py
 
-Never modifies any file; read-only over the files listed above.
+Never modifies any file; read-only over the files listed above. Reconfigures stdout to UTF-8
+unconditionally on import of `__main__` (see the bottom of this file) -- this script prints
+literal non-ASCII example output (decoded Unicode hostnames), which a default Windows console
+(commonly a legacy codepage such as cp1252) cannot represent; without this the script previously
+crashed with `UnicodeEncodeError` partway through, before completing its own integrity checks.
 """
 
 from __future__ import annotations
@@ -21,19 +25,36 @@ from __future__ import annotations
 import io
 import json
 import os
+import sys
 import unicodedata
 
+try:
+    from generate_corpus import EXPECTED_CASE_COUNT, generate_urls
+except ImportError:  # pragma: no cover -- only if run from outside this directory
+    EXPECTED_CASE_COUNT = None
+    generate_urls = None
+
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
+
+DATA_FILES = [
+    "systematic_node_22190.txt",
+    "systematic_node_22232.txt",
+    "systematic_ada292.txt",
+    "systematic_pyada_400.txt",
+    "systematic_pyada_1153.txt",
+]
 
 
 def load_node(path: str) -> dict[str, str | None]:
     d: dict[str, str | None] = {}
     with io.open(path, encoding="utf-8") as f:
-        for line in f:
+        for line_no, line in enumerate(f, 1):
             line = line.rstrip("\n").rstrip("\r")
             if "\t" not in line:
                 continue
             url, val = line.split("\t", 1)
+            if url in d:
+                raise AssertionError(f"{path}:{line_no}: duplicate key {url!r}")
             if val == "PARSE_ERROR":
                 d[url] = None
                 continue
@@ -47,16 +68,75 @@ def load_node(path: str) -> dict[str, str | None]:
 def load_bare(path: str) -> dict[str, str | None]:
     d: dict[str, str | None] = {}
     with io.open(path, encoding="utf-8") as f:
-        for line in f:
+        for line_no, line in enumerate(f, 1):
             line = line.rstrip("\n").rstrip("\r")
             if "\t" not in line:
                 continue
             url, val = line.split("\t", 1)
+            if url in d:
+                raise AssertionError(f"{path}:{line_no}: duplicate key {url!r}")
             d[url] = None if val == "PARSE_ERROR" else val
     return d
 
 
-def compare(a: dict, b: dict, urls: list[str], name: str) -> list[tuple[str, str | None, str | None]]:
+def check_corpus_integrity(datasets: dict[str, dict[str, str | None]]) -> list[str]:
+    """Verifies every loaded dataset has the SAME key set, of the expected size, matching
+    generate_corpus.py's own committed corpus exactly -- catches a truncated/stale/mismatched
+    oracle output file that `compare(...)` alone would silently under-report (a dict-based
+    comparison only ever iterates ONE dataset's own key set, so a dataset missing rows never
+    surfaces as a mismatch count on its own)."""
+    sizes = {name: len(d) for name, d in datasets.items()}
+    print("--- corpus integrity ---")
+    for name, size in sizes.items():
+        print(f"  {name}: {size} keys")
+
+    if generate_urls is not None:
+        expected_urls = set(generate_urls())
+        if EXPECTED_CASE_COUNT is not None and len(expected_urls) != EXPECTED_CASE_COUNT:
+            raise AssertionError(
+                f"generate_corpus.py's own generate_urls() returned {len(expected_urls)} "
+                f"cases, not its own EXPECTED_CASE_COUNT={EXPECTED_CASE_COUNT}"
+            )
+    else:
+        expected_urls = None
+
+    reference_name, reference_keys = next(iter(datasets.items()))
+    reference_keys = set(reference_keys)
+    problems = []
+    for name, d in datasets.items():
+        keys = set(d.keys())
+        if keys != reference_keys:
+            missing = reference_keys - keys
+            extra = keys - reference_keys
+            problems.append(
+                f"{name}: key set differs from {reference_name} "
+                f"(missing {len(missing)}, extra {len(extra)})"
+            )
+        if expected_urls is not None and keys != expected_urls:
+            missing = expected_urls - keys
+            extra = keys - expected_urls
+            problems.append(
+                f"{name}: key set differs from generate_corpus.py's own generate_urls() "
+                f"(missing {len(missing)}, extra {len(extra)})"
+            )
+    if problems:
+        print("INTEGRITY FAILURES:")
+        for p in problems:
+            print(f"  {p}")
+        raise AssertionError(
+            "corpus integrity check failed -- see INTEGRITY FAILURES above; refusing to "
+            "report comparison counts computed over inconsistent key sets"
+        )
+    print(f"  all {len(datasets)} datasets share an identical {len(reference_keys)}-key set")
+    if expected_urls is not None:
+        print("  matches generate_corpus.py's own generate_urls() exactly")
+    print()
+    return sorted(reference_keys)
+
+
+def compare(
+    a: dict, b: dict, urls: list[str], name: str
+) -> list[tuple[str, str | None, str | None]]:
     accept_mismatch = 0
     output_mismatch = 0
     examples: list[tuple[str, str | None, str | None]] = []
@@ -131,14 +211,54 @@ def classify_ada292_vs_ada400_mismatches(
     return group_a, group_b
 
 
-def main() -> None:
-    node19 = load_node(os.path.join(SCRATCH, "systematic_node_22190.txt"))
-    node23 = load_node(os.path.join(SCRATCH, "systematic_node_22232.txt"))
-    ada292 = load_bare(os.path.join(SCRATCH, "systematic_ada292.txt"))
-    pyada400 = load_bare(os.path.join(SCRATCH, "systematic_pyada_400.txt"))
-    pyada1153 = load_bare(os.path.join(SCRATCH, "systematic_pyada_1153.txt"))
+def check_ada_url_1153_reproduces_group_a_bug(
+    group_a: list, ada292: dict, pyada1153: dict
+) -> None:
+    """Positive evidence, not merely an absence of mismatches: for every Group-A witness (a
+    case Ada 2.9.2 wrongly ACCEPTS due to its own verified LTR-bidi off-by-one bug),
+    `ada-url==1.15.3` must ALSO accept it, with the SAME decoded output -- i.e. `ada-url==1.15.3`
+    reproduces Ada 2.9.2's bug, rather than happening to avoid triggering it. This is the
+    opposite of an earlier (incorrect) claim that `ada-url==1.15.3` "postdates the fix": it
+    reproduces Ada 2.9.2's behavior EXACTLY, bug included, which is REQUIRED for -- and is
+    direct evidence of -- its exact parity with the pinned Node/Ada 2.9.2 oracle. The fix was
+    made LATER, sometime between `ada-url==1.15.3`'s release and `ada-url==4.0.0`'s."""
+    mismatches = []
+    for u, swept, cp_hex, bidi, va, _vb400 in group_a:
+        got = pyada1153.get(u)
+        if got != va:
+            mismatches.append((u, va, got))
+    print(f"--- ada-url==1.15.3 reproduces Ada 2.9.2's own Group-A bidi bug ---")
+    print(f"  Group A witnesses checked: {len(group_a)}")
+    if mismatches:
+        print(f"  MISMATCHES (ada-url==1.15.3 does NOT reproduce the bug for these): {len(mismatches)}")
+        for u, va, got in mismatches[:20]:
+            print(f"    {u}\tada292={va!r}\tpyada1153={got!r}")
+        raise AssertionError(
+            "ada-url==1.15.3 does not reproduce all of Ada 2.9.2's own Group-A bidi-bug "
+            "witnesses identically -- the 'exact match' claim would be false"
+        )
+    print(f"  CONFIRMED: ada-url==1.15.3 reproduces all {len(group_a)} Group-A witnesses "
+          f"identically to Ada 2.9.2 (same bug, same output) -- required for, and direct "
+          f"evidence of, exact parity.")
+    print()
 
-    urls = list(node19.keys())
+
+def main() -> None:
+    datasets_raw = {
+        "systematic_node_22190.txt": load_node(os.path.join(SCRATCH, "systematic_node_22190.txt")),
+        "systematic_node_22232.txt": load_node(os.path.join(SCRATCH, "systematic_node_22232.txt")),
+        "systematic_ada292.txt": load_bare(os.path.join(SCRATCH, "systematic_ada292.txt")),
+        "systematic_pyada_400.txt": load_bare(os.path.join(SCRATCH, "systematic_pyada_400.txt")),
+        "systematic_pyada_1153.txt": load_bare(os.path.join(SCRATCH, "systematic_pyada_1153.txt")),
+    }
+    urls = check_corpus_integrity(datasets_raw)
+
+    node19 = datasets_raw["systematic_node_22190.txt"]
+    node23 = datasets_raw["systematic_node_22232.txt"]
+    ada292 = datasets_raw["systematic_ada292.txt"]
+    pyada400 = datasets_raw["systematic_pyada_400.txt"]
+    pyada1153 = datasets_raw["systematic_pyada_1153.txt"]
+
     print("total cases:", len(urls))
 
     compare(node19, node23, urls, "node19 vs node23 (drift check)")
@@ -150,18 +270,24 @@ def main() -> None:
 
     group_a, group_b = classify_ada292_vs_ada400_mismatches(ada292, pyada400, urls)
     print()
-    print(f"--- ada-url==4.0.0 mismatch reclassification ---")
+    print("--- ada-url==4.0.0 mismatch reclassification ---")
     print(f"Group A (Ada 2.9.2 LTR-bidi off-by-one bug, fixed in 4.0.0): {len(group_a)}")
     print(f"Group B (genuine Unicode-assignment-boundary difference): {len(group_b)}")
     print(f"Total: {len(group_a) + len(group_b)}")
+    print()
 
     if mism_1153:
-        print()
         print(f"WARNING: ada-url==1.15.3 mismatches against the direct oracle: {len(mism_1153)}")
     else:
-        print()
         print("CONFIRMED: ada-url==1.15.3 matches the direct Ada 2.9.2 oracle on every case.")
+    print()
+
+    check_ada_url_1153_reproduces_group_a_bug(group_a, ada292, pyada1153)
 
 
 if __name__ == "__main__":
+    # See module docstring: forces UTF-8 stdout regardless of the host console's own active
+    # codepage, so this script's own non-ASCII example output cannot crash it before the
+    # integrity checks above even get a chance to run.
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

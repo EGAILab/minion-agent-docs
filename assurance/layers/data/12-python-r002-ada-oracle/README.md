@@ -8,11 +8,18 @@ oracle built from the exact Ada C++ library Node v22.19.0 vendors, so Python/Rus
 be differentially tested against the real reference implementation, not a standards description
 of it.
 
-**Revision 2** (this version): corrects three assurance defects the independent checkpoint
-re-review found in the first committed version (`minion-agent-docs#120` @
+**Revision 3** (this version): corrects two further assurance defects an independent checkpoint
+re-review found in revision 2 (`minion-agent-docs#120` @
+`93a44820695d4ec6ce413230cfa0dac1b31d2663`) -- see "What changed in revision 3" below. That
+review independently confirmed the exact witnesses, all 8,246 key sets, a fresh
+`ada-url==1.15.3` exact match, the Ada LTR-bidi source bug, and the 55/61 taxonomy -- none of
+that is revisited here; only the two defects it found are fixed.
+
+**Revision 2**: corrected three assurance defects an earlier independent checkpoint re-review
+found in the first committed version (`minion-agent-docs#120` @
 `8c1469c1de13cf0a70dab9f6d4bcfd8abcd8e32e`) -- see "What changed in revision 2" below. The
 central Strategy A result (`ada-url==1.15.3` matches the direct Ada 2.9.2 oracle exactly) was
-independently reproduced by that review and is UNCHANGED here.
+independently reproduced by that review and remains unchanged.
 
 ## Provenance
 
@@ -62,9 +69,14 @@ directly comparable to `oracle.cpp`'s own output via `compare_oracles.py`.
 
 ## `generate_corpus.py` -- the actual, committed, deterministic corpus generator
 
-Run `python generate_corpus.py > systematic_corpus.txt` to regenerate `systematic_corpus.txt`
-from scratch (read-only over the installed `idna` package's own `idna.uts46data` interval
-table; writes nothing except the corpus file itself when run this way).
+Requires `idna` installed (a `minion-agent-python` project dependency) -- run it with THAT
+project's own interpreter, e.g. from a `minion-agent-python` checkout:
+`uv run python <path-to-this-file>/generate_corpus.py > systematic_corpus.txt`. A bare system
+Python without `idna` installed fails with `ModuleNotFoundError`, not a script defect -- this is
+a missing prerequisite, not a harness bug. Read-only
+over the installed `idna` package's own `idna.uts46data` interval table; writes nothing except
+the corpus file itself when run this way. Re-verified byte-for-byte identical to the committed
+`systematic_corpus.txt` before this revision was written.
 
 Produces **8,246 cases**:
 
@@ -121,6 +133,39 @@ python compare_oracles.py
 
 (run from this directory; expects every `systematic_*.txt` file alongside it, all committed).
 
+## What changed in revision 3
+
+The independent checkpoint re-review of revision 2 (`minion-agent-docs#120` @
+`93a44820695d4ec6ce413230cfa0dac1b31d2663`) independently confirmed the exact witnesses, all
+8,246 keys across every dataset, a fresh isolated `ada-url==1.15.3` run, the Ada LTR-bidi source
+bug and its Node controls, and the 55/61 taxonomy against official Unicode assignment data.
+Agreement was withheld on two further, narrower defects, both fixed here:
+
+1. **`compare_oracles.py` crashed on a default Windows console** and did not enforce corpus
+   counts, key-set uniqueness, or key-set equality across the five loaded datasets. Fixed: the
+   script now calls `sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")` before
+   printing anything (verified under a forced cp1252 console codepage -- completes with exit
+   code 0, where it previously raised `UnicodeEncodeError` partway through); `load_node`/
+   `load_bare` now reject a duplicate key within a single file; a new `check_corpus_integrity`
+   function verifies all five datasets share an IDENTICAL key set, of the exact size
+   `generate_corpus.py`'s own `EXPECTED_CASE_COUNT` produces, before any comparison count is
+   trusted or printed -- a dataset silently missing or gaining rows (e.g. a stale/truncated
+   regeneration) now fails loudly instead of silently under-reporting mismatches. `generate_corpus.py`
+   itself now refuses to run against a different `idna` package version than the one this corpus
+   was reviewed against (`EXPECTED_IDNA_VERSION`), so an `idna` upgrade cannot silently redefine
+   what the corpus samples.
+
+2. **The claim that `ada-url==1.15.3` "has neither defect" -- including the Group A bidi bug --
+   was backwards.** Exact parity with the pinned Ada 2.9.2 oracle REQUIRES reproducing Group A's
+   bug, not avoiding it; the prior wording ("it postdates the fix") was the opposite of what the
+   evidence shows. Fixed: `compare_oracles.py` now includes
+   `check_ada_url_1153_reproduces_group_a_bug`, which explicitly confirms, as POSITIVE evidence
+   (not merely an absence of mismatches), that `ada-url==1.15.3` gives the exact same (buggy)
+   output Ada 2.9.2 does for every one of the 55 Group-A witnesses -- e.g. it silently accepts
+   `xn--ab-wld` exactly as Ada 2.9.2 does, not the `ada-url==4.0.0` fixed behavior. `ada-url`'s
+   own fix was made LATER, between `1.15.3`'s release and `4.0.0`'s -- `1.15.3` PREDATES the fix,
+   not postdates it.
+
 ## What changed in revision 2
 
 The independent checkpoint re-review (`minion-agent-docs#120` @
@@ -169,10 +214,18 @@ agreement on three narrow assurance defects, all corrected here:
      `xn--8g0n` itself and its `"a"`-prefixed sibling `xn--a-8n62a`, both now in this group since
      they are permanent witnesses added to the corpus).
 
-   Neither group affects the Strategy A recommendation: `ada-url==1.15.3` (Ada 2.9.2's own
-   contemporary release) has NEITHER defect -- it neither has the LTR-bidi bug (it postdates the
-   fix, per this same investigation) nor the assignment-boundary gap (it shares Ada 2.9.2's own
-   Unicode-data snapshot almost exactly, confirmed by the 0/8246 result below).
+   Neither group affects the Strategy A recommendation, but NOT because `ada-url==1.15.3` avoids
+   either defect -- the opposite: exact parity with the pinned oracle REQUIRES reproducing Group
+   A's bug too, not avoiding it. `compare_oracles.py`'s own
+   `check_ada_url_1153_reproduces_group_a_bug` confirms this directly, not merely by the absence
+   of a mismatch count: for every one of the 55 Group-A witnesses, `ada-url==1.15.3` gives the
+   EXACT SAME (buggy) output Ada 2.9.2 does -- it silently accepts `xn--ab-wld` (`"ab" + HEBREW
+   LETTER ALEF`) exactly as Ada 2.9.2 does, not the `ada-url==4.0.0` fixed behavior. `ada-url`'s
+   own fix for this bug was made LATER, sometime between `1.15.3`'s release and `4.0.0`'s --
+   `1.15.3` PREDATES it, not postdates it. Group B (assignment-boundary) is a genuinely
+   version-boundary-sensitive gap `ada-url==1.15.3` also avoids, but for the ordinary reason
+   that it shares Ada 2.9.2's own Unicode-data snapshot almost exactly (confirmed by the
+   0/8246 result below), not because of anything specific to Group A's own bug.
 
 ## Headline results (this corpus, 8,246 cases)
 
@@ -180,10 +233,16 @@ agreement on three narrow assurance defects, all corrected here:
 Node v22.19.0  vs  Node v22.23.2        : 0 mismatches (drift check)
 Node v22.19.0  vs  direct Ada 2.9.2     : 0 mismatches  <- Strategy A's premise, PROVEN
 direct Ada 2.9.2  vs  ada-url==1.15.3   : 0 mismatches  <- exact-parity PyPI release,
-    INDEPENDENTLY REPRODUCED by the checkpoint re-review (docs PR #120 @ 8c1469c1)
+    INDEPENDENTLY REPRODUCED TWICE by checkpoint re-reviews (docs PR #120 @ 8c1469c1, @ 93a4482)
+ada-url==1.15.3 reproduces all 55 Group-A (Ada 2.9.2 bidi-bug) witnesses IDENTICALLY -- positive
+    evidence the exact match includes the bug, not evidence the bug was avoided
 direct Ada 2.9.2  vs  ada-url==4.0.0    : 116 accept mismatches, 0 output mismatches
     Group A (Ada 2.9.2's own LTR-bidi off-by-one bug, verified in source, fixed in 4.0.0): 55
     Group B (genuine Unicode-codepoint-assignment-boundary difference): 61
 direct Ada 2.9.2  vs  rejected prototype (idna.uts46data-driven): 61 mismatches
     (historical evidence from the prior characterization round; not re-litigated here)
+
+corpus integrity: all 5 oracle-output datasets share an identical 8,246-key set, matching
+    generate_corpus.py's own generate_urls() exactly (compare_oracles.py's own
+    check_corpus_integrity, verified to run and exit 0 under a forced cp1252 console codepage)
 ```
