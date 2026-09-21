@@ -538,3 +538,169 @@ Providers, assurance Layer 11), and everything the master's own agent run loop o
 `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
 `shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
 condition actually suppresses/continues the next model turn.
+
+---
+
+## Layer 13 — Built-in tools
+
+**Status: `CONTRACT_DRAFT`.** Not yet independently reviewed; not certified. Owns the concrete
+built-in tools themselves -- their argument schemas, path-argument handling, output/truncation
+shapes, and same-target mutation serialization -- as opposed to Layer 05/06's generic
+tool-definition/execution framework above, which any tool (built-in or extension-registered) goes
+through uniformly. Scoping history, independent review chain, and owner governance decisions live
+in `minion-agent#47` (`WP-13.SCOPE`, CLOSED) and its four downstream per-work-package coordination
+issues (`minion-agent#48`-`#51`); this section is filled in per work package as each is drafted.
+
+Mirrors pinned Pi's `packages/coding-agent/src/core/tools/` (the full product-level tool set:
+`read`, `bash`, `edit`, `write`, `grep`, `find`, `ls` -- `index.ts`'s `allToolNames`), not the
+smaller `packages/agent/src/harness/tools/` SDK subset (`bash`/`edit`/`read`/`write` only, built
+directly on `ExecutionEnv`). Pi's own `coding-agent` tools do not route through that harness
+`ExecutionEnv` abstraction at all -- they call `node:fs/promises` directly, with their own separate
+path-resolution pipeline (`utils/paths.ts`), distinct from the harness/`nodejs.ts` resolver Layer
+12's `resolve_local_path` already mirrors. Minion's built-in tools intentionally diverge here
+(`MINION_ARCHITECTURAL_MAPPING`, not `DIRECT_PI_PARITY`): every built-in tool that touches the
+filesystem goes through `ctx.fs` (the certified Layer 12 seam), never a direct local-filesystem
+call, because Minion's local/remote/virtual/swappable provider model makes that seam load-bearing
+in a way Pi's own single-environment CLI never needed it to be. This is a deliberate design
+choice, not an oversight or an incomplete port of Pi's own (itself inconsistent) two-tier
+structure.
+
+### WP-13.1 — Native filesystem query tools (`read`, `ls`)
+
+Requirements `TOOL-025`-`TOOL-028` (`minion-agent#48`). No mutation-queue participation, no
+`ctx.subprocess` dependency, no external-binary dependency -- the lowest-risk, most independently
+certifiable Layer 13 surface (`assurance/layers/13-built-in-tools-scoping-v4.md`).
+
+#### Shared path-argument pipeline (`TOOL-026`)
+
+Every `read`/`ls` `path` argument is resolved through one pipeline before reaching `ctx.fs`:
+
+```text
+1. Trim leading/trailing whitespace.
+2. Normalize Unicode space variants (NBSP, en/em space family, narrow NBSP,
+   ideographic space, ...) to ASCII space (U+0020).
+3. Strip a single leading "@", if present.
+4. On Windows only: rewrite a Git-Bash/MSYS/Cygwin/WSL-style POSIX drive path
+   ("/c/...", "/mnt/c/...", "/cygdrive/c/...") to its native Windows form
+   ("C:\...").
+5. Pass the result to ctx.fs.resolve(path) (Layer 12, EXEC-003). Tilde
+   expansion, `file://` URL conversion, absolute-path normalization, and
+   cwd-relative resolution all happen INSIDE that call -- this pipeline does
+   not reimplement any part of it a second time.
+```
+
+Steps 1-4 are new Layer 13 logic (`MINION_ARCHITECTURAL_MAPPING`, mirroring pinned Pi's
+`utils/paths.ts:normalizePath`'s `trim`/`normalizeUnicodeSpaces`/`stripAtPrefix`/
+`normalizeWindowsShellPath` options exactly, in that order); step 5 is Layer 12's already-certified
+`resolve_local_path`/`FileSystem.resolve()`, consumed rather than reimplemented (`EXEC-003`,
+`L12-R016`, `L12-R021`; the `file://` conversion specifically is `L12-PY-R002`'s certified, Ada
+2.9.2-oracle-verified seam). A tool implementation MUST NOT perform its own tilde expansion,
+`file://` parsing, or absolute/relative resolution -- that is `ctx.fs`'s job, and duplicating it
+was the exact class of defect `L12-R012` already found and rejected in this same seam family
+(`ctx.shell`/`ctx.subprocess` cwd resolution duplicating `resolve_local_path` with a bare path
+join).
+
+`@`-prefix stripping happens unconditionally on any leading `@`, matching Pi's CLI `@file`
+convention exactly -- a path whose caller genuinely intends a literal leading `@` character has no
+way to express that through this pipeline, matching Pi's own behavior (`PI_SOURCE_ALGORITHM`, no
+narrower Minion-specific carve-out).
+
+#### `read` (`TOOL-025`)
+
+```text
+Input
+    path      string, REQUIRED
+    offset?   integer, 1-indexed starting line
+    limit?    integer, maximum lines to return
+
+Output (text)
+    content            the selected, possibly-truncated text
+    truncated          bool
+    truncated_by?      "lines" | "bytes" -- present only when truncated
+    total_lines        integer -- line count of the file's SELECTED range
+                        (post-offset, pre-limit/truncation), matching Pi's
+                        own totalFileLines/allLines.length semantics
+    first_line_exceeds_limit?  bool -- true only when a single line alone
+                        exceeds the byte limit; content is empty in that case
+
+Output (image)
+    mime_type          string
+    data               the (possibly auto-resized) image bytes
+    hints?              list of string -- non-fatal processing notes
+    non_vision_note?    string -- present when the requesting model does not
+                        support image input; the image content is still
+                        returned regardless (see below)
+```
+
+- `offset`/`limit` are 1-indexed line semantics, applied BEFORE truncation: `offset` selects the
+  starting line (an out-of-bounds `offset` is a distinguishable input error citing the file's total
+  line count, not a truncated/empty read); `limit`, if given, caps the selected range first; the
+  shared truncation ceiling (below) then applies on top of whatever `limit` already selected, so a
+  caller-supplied `limit` can never bypass it (`DIRECT_PI_PARITY`, `read.ts:277-322`).
+- Truncation is from the **head** (keep the first N lines/bytes, never a partial line except the
+  single-line-exceeds-limit case above), using the same two-limit-whichever-first ceiling as every
+  other Layer 13 tool: `DEFAULT_MAX_LINES = 2000`, `DEFAULT_MAX_BYTES = 51200` (50 KiB), both
+  measured UTF-8-byte-accurate, not UTF-16-code-unit-accurate (`DIRECT_PI_PARITY`, `truncate.ts`).
+  These two constants are shared Layer 13 constants, not `read`-specific -- restated once here,
+  referenced by `TOOL-028`/(bash `TOOL-034`/`TOOL-035`) rather than redefined per tool.
+- Image detection is MIME-sniffed from file contents, not the file extension. A successfully
+  processed image's result ALWAYS includes the image content, regardless of whether the requesting
+  model supports vision input -- a non-vision model gets an additional text note alongside the
+  image, never a substitution (`DIRECT_PI_PARITY`, verified directly against `read.ts:250-270`,
+  correcting an earlier scoping-pass draft error that had claimed substitution; if image omission
+  for non-vision models happens at all, it happens in a later request-projection step outside this
+  tool's own boundary, out of Layer 13's scope). Auto-resize (2000x2000 max) is on by default.
+- `path` not resolving to an existing, readable file is a distinguishable error, separate from any
+  truncation/offset outcome (`DIRECT_PI_PARITY`).
+
+`TOOL-027` -- Pi's macOS-specific filename-fallback heuristics (narrow-no-break-space AM/PM
+substitution, NFD normalization, straight-to-curly-apostrophe substitution, and their
+combination, tried in that order only when the initially resolved path does not exist) -- carry
+**owner disposition `NOT_ADOPTED_CORE`** (`minion-agent#47`, `minion-agent#48`): they are
+`MINION_EXTENSION`/optional UX behavior, not part of this certified contract. `read` MUST NOT
+perform these fallback probes as part of its core behavior. The identifier is reserved, not
+implemented, so a future optional local-macOS provider extension can reference it without an ID
+collision; it imposes no obligation on this contract's `ctx.fs`-based implementation, which has no
+inherent concept of "the local machine's own filename-encoding quirks" for an arbitrary provider.
+
+#### `ls` (`TOOL-028`)
+
+```text
+Input
+    path?     string, default: cwd
+    limit?    integer, default: 500 entries
+
+Output
+    entries             list of string -- see formatting below
+    truncated           bool
+    truncated_by?       "bytes" -- ls has no separate line-count ceiling;
+                        entry count (limit) is the other cap
+    entry_limit_reached?  integer -- present only when the entry-count cap
+                        (not the byte cap) was hit
+```
+
+- `path` must resolve to an existing directory; a nonexistent path and an existing non-directory
+  path are two distinguishable input errors (`DIRECT_PI_PARITY`).
+- Entries are sorted case-insensitively (`DIRECT_PI_PARITY`, `a.toLowerCase().localeCompare
+  (b.toLowerCase())`); a directory entry gets a trailing `/` in its formatted name.
+- Each entry requires its own `stat` (to determine the `/` suffix) after the initial directory
+  listing; an entry whose individual `stat` fails is silently **omitted** from the result -- not
+  surfaced as a partial error, not included without its suffix (`DIRECT_PI_PARITY`, `ls.ts:166-176`).
+- The `limit` entry-count cap is applied only against entries that survived the per-entry `stat`
+  step above -- a skipped entry does not consume a slot against the limit (`DIRECT_PI_PARITY`).
+- Zero surviving entries (an empty directory, or every entry failing `stat`) is the single
+  distinguishable "no entries" outcome, not an error and not indistinguishable from "not truncated,
+  zero results" (`DIRECT_PI_PARITY`, Pi's literal `"(empty directory)"` text is a rendering
+  concern, not part of this structured-output contract).
+- Byte truncation uses the same `DEFAULT_MAX_BYTES` ceiling as `read`, with no separate line-count
+  ceiling (`DIRECT_PI_PARITY`, `truncateHead` called with an effectively unbounded line limit in
+  `ls.ts`).
+
+### Explicitly not certified by WP-13.1
+
+`write`, `edit`, and the shared mutation queue (`WP-13.2`, `minion-agent#49`); `bash` and its
+`ctx.subprocess`-based kill/wait lifecycle (`WP-13.3`, `minion-agent#50`); `find`/`grep` and the
+owner-decided exact-pinned-engine strategy (`WP-13.4`, `minion-agent#51`, `TOOL-038`); and every
+Layer 06 concern (tool registration/visibility, the per-call pipeline, hook ordering) a built-in
+tool participates in identically to any other registered tool, already certified above and not
+restated here.
