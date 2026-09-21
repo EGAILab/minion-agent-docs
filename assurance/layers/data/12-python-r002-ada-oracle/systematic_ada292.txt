@@ -1,3 +1,7 @@
+file://xn--3pc/share	఼
+file://xn--8g0n/share	PARSE_ERROR
+file://xn--a-y5e/share	a఼
+file://xn--a-8n62a/share	PARSE_ERROR
 file://xn--a-ba/share	PARSE_ERROR
 file://xn--a-da/share	PARSE_ERROR
 file://xn--a-fa/share	PARSE_ERROR
@@ -1071,7 +1075,6 @@ file://xn--a-k3e/share	aఒ
 file://xn--a-v4e/share	PARSE_ERROR
 file://xn--a-x4e/share	aప
 file://xn--a-u5e/share	PARSE_ERROR
-file://xn--a-y5e/share	a఼
 file://xn--a-h6e/share	PARSE_ERROR
 file://xn--a-j6e/share	aె
 file://xn--a-p6e/share	PARSE_ERROR
@@ -7701,7 +7704,6 @@ file://xn--a-b040a/share	a𫠠
 file://xn--a-8f41a/share	PARSE_ERROR
 file://xn--a-dg41a/share	a𬺰
 file://xn--a-en62a/share	PARSE_ERROR
-file://xn--a-8n62a/share	PARSE_ERROR
 file://xn--a-so72a/share	PARSE_ERROR
 file://xn--a-pp13a/share	PARSE_ERROR
 file://xn--a-rp13a/share	PARSE_ERROR

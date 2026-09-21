@@ -8,6 +8,12 @@ oracle built from the exact Ada C++ library Node v22.19.0 vendors, so Python/Rus
 be differentially tested against the real reference implementation, not a standards description
 of it.
 
+**Revision 2** (this version): corrects three assurance defects the independent checkpoint
+re-review found in the first committed version (`minion-agent-docs#120` @
+`8c1469c1de13cf0a70dab9f6d4bcfd8abcd8e32e`) -- see "What changed in revision 2" below. The
+central Strategy A result (`ada-url==1.15.3` matches the direct Ada 2.9.2 oracle exactly) was
+independently reproduced by that review and is UNCHANGED here.
+
 ## Provenance
 
 - `ada-2.9.2.h` / `ada-2.9.2.cpp`: the official single-header amalgamation of the Ada URL C++
@@ -54,23 +60,38 @@ runs each through `node:url`'s own `fileURLToPath(url, {windows: true})`, writin
 `<url>\t<result-or-PARSE_ERROR>` shape (JSON-quoted Windows path on success) so its output is
 directly comparable to `oracle.cpp`'s own output via `compare_oracles.py`.
 
-## `systematic_corpus.txt`
+## `generate_corpus.py` -- the actual, committed, deterministic corpus generator
 
-8,244 cases: one representative codepoint per non-ASCII interval in `idna.uts46data`'s own
-interval table (`idna==3.19`, 8,372 total intervals; ASCII and surrogate-range intervals
-excluded), each placed in a Punycode-encoded single-label host as `a<codepoint>` (a leading `a`
-avoids conflating the "leading combining mark" structural rule with the specific codepoint being
-swept), formatted as `file://xn--.../share`. This mirrors the independent review's own stated
-methodology ("one or more representative codepoints from every interval in `idna.uts46data`")
-so results are comparable. Generation is mechanical and reproducible from `idna`'s own installed
-data; regenerate with the snippet in `compare_oracles.py`'s own header comment if `idna` is
-upgraded.
+Run `python generate_corpus.py > systematic_corpus.txt` to regenerate `systematic_corpus.txt`
+from scratch (read-only over the installed `idna` package's own `idna.uts46data` interval
+table; writes nothing except the corpus file itself when run this way).
+
+Produces **8,246 cases**:
+
+- **4 permanent named regression witnesses**, always present verbatim regardless of how the
+  interval-sweep portion changes as `idna`'s own data is upgraded:
+  - `file://xn--3pc/share` -- the exact bare A-label from independent review evidence
+    (`minion-agent-docs#120` @ `2a99d49371b740f0a4a01862383143478672b660`) that Node/Ada 2.9.2
+    ACCEPTS (decodes to U+0C3C TELUGU SIGN NUKTA).
+  - `file://xn--8g0n/share` -- the same evidence's REJECTED witness (U+2EBF0 CJK UNIFIED
+    IDEOGRAPH-2EBF0, unassigned in Ada 2.9.2's own ~2024 Unicode snapshot).
+  - `file://xn--a-y5e/share` / `file://xn--a-8n62a/share` -- the SAME two codepoints in the
+    leading-`"a"`-prefixed shape the interval sweep below uses, so the permanent-witness set and
+    the sweep-derived set overlap in a checkable way rather than silently testing disjoint
+    things.
+- **8,242 interval-sweep cases**: one representative codepoint per non-ASCII, non-surrogate
+  interval in `idna.uts46data`'s own interval table (`idna==3.19`, 8,372 total intervals), each
+  placed in a Punycode-encoded single-label host as `a<codepoint>` (a leading `a` avoids
+  conflating the "leading combining mark" structural rule with the specific codepoint being
+  swept), formatted as `file://xn--.../share`. This mirrors the independent review's own stated
+  methodology ("one or more representative codepoints from every interval in `idna.uts46data`")
+  so results are comparable.
 
 ## Raw oracle outputs (committed for reproducibility, not just summarized)
 
 - `systematic_node_22190.txt` / `systematic_node_22232.txt`: `systematic_node_probe.mjs` run
   against checksum-verified Node v22.19.0 (Pi's declared floor) and v22.23.2 (drift check).
-  **Zero differences between the two** (every one of the 8,244 rows identical).
+  **Zero differences between the two** (every one of the 8,246 rows identical).
 - `systematic_ada292.txt`: `oracle.cpp` (this directory's own compiled binary) run against the
   same corpus.
 - `systematic_pyada_1153.txt`: Python `ada-url==1.15.3` (installed in an isolated scratch venv),
@@ -81,31 +102,88 @@ upgraded.
 - `systematic_prototype_rejected.txt`: the checkpoint-rejected `idna.uts46data`-driven decode
   prototype (`minion-agent-docs#121` @ `854f5c1097b9aa2aee2494bd378753961d478314`) run against
   the same corpus, for direct root-cause reclassification.
-- `prototype_mismatches_all.txt`: every one of the rejected prototype's mismatches against the
-  direct Ada 2.9.2 oracle, uncapped (59 rows over this corpus).
+- `prototype_mismatches_all.txt`: every one of that rejected prototype's mismatches against the
+  direct Ada 2.9.2 oracle, uncapped (61 rows over this corpus).
 
 ## `compare_oracles.py`
 
-Loads all of the above, reports `accept_mismatch`/`output_mismatch` counts for each pairing, and
-prints example rows. Reproduce with:
+Loads all of the above BY THEIR ACTUAL COMMITTED FILENAMES (this revision's own fix -- the prior
+version referenced filenames that did not match what was actually committed), reports
+`accept_mismatch`/`output_mismatch` counts for each pairing including the DECISIVE Ada-2.9.2-vs-
+`ada-url==1.15.3` comparison (the prior version omitted this from the script itself, computing it
+only in an uncommitted one-off check), and additionally splits the Ada-2.9.2-vs-`ada-url==4.0.0`
+mismatches into two evidence-supported root-cause groups (see below) rather than a single
+generic count. Reproduce with:
 
 ```sh
 python compare_oracles.py
 ```
 
-(run from this directory; expects the `systematic_*.txt` files alongside it).
+(run from this directory; expects every `systematic_*.txt` file alongside it, all committed).
 
-## Headline results (this corpus, 8,244 cases)
+## What changed in revision 2
+
+The independent checkpoint re-review (`minion-agent-docs#120` @
+`8c1469c1de13cf0a70dab9f6d4bcfd8abcd8e32e`) reproduced the central Strategy A result but withheld
+agreement on three narrow assurance defects, all corrected here:
+
+1. **Exact witnesses now literally present.** `xn--3pc`/`xn--8g0n` are now committed verbatim in
+   `systematic_corpus.txt` (via `generate_corpus.py`'s own `PERMANENT_WITNESSES` list), not
+   merely represented by a differently-shaped (`"a"`-prefixed) proxy case.
+2. **Reproduction tooling now actually works as committed.** `compare_oracles.py` was previously
+   an ad-hoc scratch script whose filenames didn't match what got committed, and never included
+   the decisive `ada-url==1.15.3` comparison at all (that number came from an UNCOMMITTED
+   one-off check). `generate_corpus.py` -- the actual corpus generator -- did not exist as a
+   committed file; the corpus's own provenance was described only in prose. Both are now real,
+   committed, runnable, and were re-verified end to end from a clean directory before this
+   revision was written.
+3. **The `ada-url==4.0.0` mismatch taxonomy is now evidence-supported, not asserted.** The prior
+   revision claimed "all [mismatches] are ... assignment-boundary differences" and then cited
+   `U+05D0 HEBREW LETTER ALEF` -- a codepoint assigned since Unicode 1.0 -- as an example,
+   directly contradicting its own claim. Investigating that specific contradiction found a
+   REAL, verified-in-source bug: `ada-2.9.2.cpp`'s own `is_label_valid` function validates an
+   LTR-classified label's bidi properties with the loop `for (i = 0; i < last_non_nsm_char; i++)`
+   -- strictly less than, so the label's own LAST non-NSM character is NEVER evaluated against
+   the LTR-allowed bidi-property set. A 2-character label like `"a" + <RTL codepoint>` has that
+   RTL codepoint AS its last (and only non-initial) character, so it is silently never checked;
+   Ada 2.9.2 wrongly ACCEPTS it. Reproduced independently with constructed witnesses
+   `xn--ab-wld` (decodes to `"ab" + HEBREW ALEF`, accepted -- same bug, confirmed against both
+   the direct oracle and live Node v22.19.0) versus `xn--ab-uld` (`HEBREW ALEF + "ab"`, an
+   RTL-INITIAL label taking the OTHER code branch, correctly rejected by both). `ada-url==4.0.0`
+   does not reproduce this bug (it correctly rejects these cases) -- a genuine ALGORITHM/bugfix
+   difference between Ada versions, not a Unicode-data-table version difference.
+
+   The corrected classification, computed mechanically by `compare_oracles.py` itself (see
+   `classify_ada292_vs_ada400_mismatches`), splits all 116 mismatches (was reported as 115 before
+   the two bare-form permanent witnesses were added to the corpus) into:
+
+   - **Group A -- Ada 2.9.2's own LTR-bidi off-by-one bug, fixed in `ada-url==4.0.0`: 55/116.**
+     Every member's swept codepoint has a Unicode bidirectional category outside
+     `{L,EN,ES,CS,ET,ON,BN,NSM}` (i.e. is itself R/AL/AN or similarly RTL-restricted), Ada 2.9.2
+     accepted it, and `ada-url==4.0.0` correctly rejected it -- matching the bug's own exact
+     verified shape. `U+05D0` (the contradicting example from the prior revision) is in this
+     group, not the assignment-boundary group.
+   - **Group B -- genuine Unicode-codepoint-assignment-boundary difference: 61/116.** The swept
+     codepoint was unassigned in Ada 2.9.2's own (~Unicode-16-era) data but has since been
+     assigned -- matches the `xn--8g0n`/U+2EBF0 witness's own shape exactly (including
+     `xn--8g0n` itself and its `"a"`-prefixed sibling `xn--a-8n62a`, both now in this group since
+     they are permanent witnesses added to the corpus).
+
+   Neither group affects the Strategy A recommendation: `ada-url==1.15.3` (Ada 2.9.2's own
+   contemporary release) has NEITHER defect -- it neither has the LTR-bidi bug (it postdates the
+   fix, per this same investigation) nor the assignment-boundary gap (it shares Ada 2.9.2's own
+   Unicode-data snapshot almost exactly, confirmed by the 0/8246 result below).
+
+## Headline results (this corpus, 8,246 cases)
 
 ```text
-Node v22.19.0  vs  Node v22.23.2        : 0 mismatches (drift check, as established elsewhere)
+Node v22.19.0  vs  Node v22.23.2        : 0 mismatches (drift check)
 Node v22.19.0  vs  direct Ada 2.9.2     : 0 mismatches  <- Strategy A's premise, PROVEN
-direct Ada 2.9.2  vs  ada-url==1.15.3   : 0 mismatches  <- exact-parity PyPI release identified
-direct Ada 2.9.2  vs  ada-url==4.0.0    : 115 accept mismatches, 0 output mismatches
-    (Unicode-codepoint-assignment-boundary differences -- codepoints newly assigned between
-    Ada 2.9.2's and Ada 4.0.0's respective data-generation snapshots; NOT an algorithm difference)
-direct Ada 2.9.2  vs  rejected prototype: 59 mismatches, 58/59 in ONE direction (Ada accepts,
-    prototype rejects) -- NOT explained by Unicode-version alignment alone; idna.uts46data's own
-    VALID/DEVIATION table is not a faithful proxy for Ada's actual (differently-structured)
-    validity gate, independent of which Unicode version that table targets
+direct Ada 2.9.2  vs  ada-url==1.15.3   : 0 mismatches  <- exact-parity PyPI release,
+    INDEPENDENTLY REPRODUCED by the checkpoint re-review (docs PR #120 @ 8c1469c1)
+direct Ada 2.9.2  vs  ada-url==4.0.0    : 116 accept mismatches, 0 output mismatches
+    Group A (Ada 2.9.2's own LTR-bidi off-by-one bug, verified in source, fixed in 4.0.0): 55
+    Group B (genuine Unicode-codepoint-assignment-boundary difference): 61
+direct Ada 2.9.2  vs  rejected prototype (idna.uts46data-driven): 61 mismatches
+    (historical evidence from the prior characterization round; not re-litigated here)
 ```

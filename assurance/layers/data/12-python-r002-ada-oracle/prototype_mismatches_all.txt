@@ -1,3 +1,6 @@
+file://xn--3pc/share	'఼'	None
+file://xn--8g0n/share	None	'𮯰'
+file://xn--a-8n62a/share	None	'a𮯰'
 file://xn--a-0hc/share	'aא'	None
 file://xn--a-sjc/share	'aׯ'	None
 file://xn--a-fmc/share	'a؝'	None
@@ -56,4 +59,3 @@ file://xn--a-xk8r/share	'a𞥐'	None
 file://xn--a-ql8r/share	'a𞥞'	None
 file://xn--a-pv9r/share	'a𞱱'	None
 file://xn--a-x39r/share	'a𞴁'	None
-file://xn--a-8n62a/share	None	'a𮯰'

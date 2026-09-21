@@ -1,3 +1,7 @@
+file://xn--3pc/share
+file://xn--8g0n/share
+file://xn--a-y5e/share
+file://xn--a-8n62a/share
 file://xn--a-ba/share
 file://xn--a-da/share
 file://xn--a-fa/share
@@ -1071,7 +1075,6 @@ file://xn--a-k3e/share
 file://xn--a-v4e/share
 file://xn--a-x4e/share
 file://xn--a-u5e/share
-file://xn--a-y5e/share
 file://xn--a-h6e/share
 file://xn--a-j6e/share
 file://xn--a-p6e/share
@@ -7701,7 +7704,6 @@ file://xn--a-b040a/share
 file://xn--a-8f41a/share
 file://xn--a-dg41a/share
 file://xn--a-en62a/share
-file://xn--a-8n62a/share
 file://xn--a-so72a/share
 file://xn--a-pp13a/share
 file://xn--a-rp13a/share
