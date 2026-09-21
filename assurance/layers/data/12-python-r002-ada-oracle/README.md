@@ -8,12 +8,19 @@ oracle built from the exact Ada C++ library Node v22.19.0 vendors, so Python/Rus
 be differentially tested against the real reference implementation, not a standards description
 of it.
 
-**Revision 3** (this version): corrects two further assurance defects an independent checkpoint
-re-review found in revision 2 (`minion-agent-docs#120` @
-`93a44820695d4ec6ce413230cfa0dac1b31d2663`) -- see "What changed in revision 3" below. That
-review independently confirmed the exact witnesses, all 8,246 key sets, a fresh
-`ada-url==1.15.3` exact match, the Ada LTR-bidi source bug, and the 55/61 taxonomy -- none of
-that is revisited here; only the two defects it found are fixed.
+**Revision 4** (this version): corrects two further, purely mechanical defects an independent
+checkpoint re-review found in revision 3 (`minion-agent-docs#120` @
+`e38eb25d2b1e6872e368a0dd6c99669da7f9411b`) -- see "What changed in revision 4" below. That
+review independently reconfirmed Windows/cp1252 execution, the `idna` version guard, the raw
+dataset duplicate/key-set checks, explicit validation of all 55 Group-A cases, and Strategy A's
+own substantive evidence -- none of that is revisited here; only the two defects it found are
+fixed.
+
+**Revision 3**: corrected two further assurance defects an independent checkpoint re-review
+found in revision 2 (`minion-agent-docs#120` @ `93a44820695d4ec6ce413230cfa0dac1b31d2663`) -- see
+"What changed in revision 3" below. That review independently confirmed the exact witnesses, all
+8,246 key sets, a fresh `ada-url==1.15.3` exact match, the Ada LTR-bidi source bug, and the 55/61
+taxonomy -- none of that was revisited then, and remains unrevisited here.
 
 **Revision 2**: corrected three assurance defects an earlier independent checkpoint re-review
 found in the first committed version (`minion-agent-docs#120` @
@@ -133,6 +140,33 @@ python compare_oracles.py
 
 (run from this directory; expects every `systematic_*.txt` file alongside it, all committed).
 
+## What changed in revision 4
+
+The independent checkpoint re-review of revision 3 (`minion-agent-docs#120` @
+`e38eb25d2b1e6872e368a0dd6c99669da7f9411b`) independently reconfirmed Windows/cp1252 execution,
+the `idna` version guard, the raw dataset duplicate/key-set checks, explicit validation of all 55
+Group-A cases, and Strategy A's own substantive evidence. It withheld agreement on two further,
+purely mechanical defects, both fixed here:
+
+1. **`check_corpus_integrity` never actually validated the committed `systematic_corpus.txt`
+   file.** It cross-checked the five oracle-OUTPUT datasets against each other and against a
+   freshly in-memory-regenerated corpus, but never loaded the committed FILE itself -- so an edit
+   to that file (the one artifact a reviewer would actually read) had no effect on the script's
+   own verdict. The review demonstrated this concretely: removing the `xn--3pc` witness line
+   from the committed file and rerunning `compare_oracles.py` still produced exit code `0`,
+   since none of the five already-generated oracle-output `.txt` files were affected. Fixed: a
+   new `load_corpus_file` function reads `systematic_corpus.txt` directly, and
+   `check_corpus_integrity` now includes it as a SIXTH source in its cross-dataset key-set check.
+   Re-verified: removing `xn--3pc` from the committed file now makes the script exit `1` with an
+   explicit `INTEGRITY FAILURES` report naming the file and the exact discrepancy; restoring the
+   file returns it to exit `0`.
+2. **One residual sentence still contradicted the already-corrected Group-A finding.** Revision 3
+   fixed the "has neither defect"/"postdates the fix" claim in this README and in the main
+   characterization artifact's own section 8 -- but missed a SEPARATE sentence in the artifact's
+   section 6 (written before section 8's own correction), which still read `ada-url==1.15.3` "has
+   neither defect." Fixed: that sentence now correctly states `ada-url==1.15.3` avoids Group B
+   but REPRODUCES Group A, consistent with section 8's own finding.
+
 ## What changed in revision 3
 
 The independent checkpoint re-review of revision 2 (`minion-agent-docs#120` @
@@ -242,7 +276,10 @@ direct Ada 2.9.2  vs  ada-url==4.0.0    : 116 accept mismatches, 0 output mismat
 direct Ada 2.9.2  vs  rejected prototype (idna.uts46data-driven): 61 mismatches
     (historical evidence from the prior characterization round; not re-litigated here)
 
-corpus integrity: all 5 oracle-output datasets share an identical 8,246-key set, matching
+corpus integrity: all 5 oracle-output datasets AND the committed systematic_corpus.txt file
+    itself (read directly, not merely assumed) share an identical 8,246-key set, matching
     generate_corpus.py's own generate_urls() exactly (compare_oracles.py's own
-    check_corpus_integrity, verified to run and exit 0 under a forced cp1252 console codepage)
+    check_corpus_integrity, verified to run and exit 0 under a forced cp1252 console codepage;
+    verified to correctly FAIL -- exit 1, explicit INTEGRITY FAILURES report -- when xn--3pc is
+    removed from the committed file, and to recover on restoring it)
 ```
