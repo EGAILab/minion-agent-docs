@@ -437,12 +437,55 @@ the coordination issue's current-state block MUST be updated.
 Do not leave a stale issue body and rely on a later comment to override it.
 
 Treat the issue body as one multiline document when reading and writing it. Shell and CLI tooling
-MUST NOT round-trip the body through an implicit line array, whitespace join, or other transform
-that can flatten the fenced YAML or alter scalar content. After every issue-body mutation, re-fetch
-the remote body, extract the current-state block, parse it using the canonical coordination-state
-schema, and verify the intended `status`, candidate SHA(s), `next_owner`, and `next_action` before
-claiming the transition or handoff is complete. A successful CLI exit by itself is not sufficient
-evidence that the remote control state survived the write intact.
+MUST NOT round-trip the body through an implicit line array, whitespace join, argument expansion,
+or other transform that can flatten the fenced YAML or alter scalar content. The PowerShell/
+native-command flattening incident recorded in `assurance/process-history.md` is the motivating
+example, not the only prohibited failure mechanism; this rule is transport/tool-agnostic.
+
+**Coordination state commit rule.** A coordination issue-body mutation is not committed merely
+because the write command succeeds. It becomes authoritative only after, in this order:
+
+1. constructing the intended next canonical workflow object;
+2. validating that intended state locally against the coordination-state schema;
+3. writing the issue body;
+4. re-fetching the issue body from GitHub;
+5. extracting the current-state block and parsing it using the canonical coordination-state
+   schema;
+6. verifying that the complete re-fetched, parsed workflow object is semantically equivalent to
+   the intended object -- not merely equal on a subset of fields;
+7. only then treating the mutation as committed workflow state and performing any dependent
+   handoff, merge, close, or certification action.
+
+Do not write the state, perform a dependent downstream action, and verify afterward. The
+post-write remote check is part of committing the workflow transition, not an audit that follows
+it.
+
+The equivalence check in step 6 is semantic/schema-aware, not byte-for-byte Markdown equality:
+formatting differences that preserve the same parsed YAML object are acceptable, but a difference
+anywhere in control-critical state is not -- including but not limited to `status`, candidate
+SHA(s), `requirements`, the open-finding set, `provisionally_closed`, convergence/checkpoint data,
+`governance_source`, `deferred_trigger`, quarantine state, closure/final-disposition metadata,
+`updated_by`, `updated_reason`, `next_owner`, and `next_action`. A successful CLI exit by itself is
+not sufficient evidence that the remote control state survived the write intact.
+
+Named diagnostics SHOULD still be surfaced explicitly for readability, at minimum: `status`,
+candidate SHA(s), the open-finding set, `next_owner`, `next_action`, `governance_source`/
+governance dependency, `deferred_trigger`, and quarantine state; where applicable, also surface
+convergence/checkpoint state and closure/final-disposition. These named diagnostics summarize the
+step-6 equivalence check -- they do not replace it.
+
+**A failed post-write check is a failed state commit, not a warning.** If step 6 fails:
+
+1. treat the issue-body mutation as FAILED;
+2. do not perform or authorize any downstream action whose authority depends on the failed state
+   mutation -- in particular, do not hand off ownership, begin implementation/review, merge, close
+   a work package, certify a layer, authorize a later layer, or report the state transition
+   complete;
+3. repair the remote coordination body from the last known-good remote canonical state plus the
+   intended state delta;
+4. re-fetch the repaired body;
+5. re-parse and re-run the full semantic-equivalence verification (step 6 above);
+6. proceed only after the remote state passes.
 
 #### 11.1.2 Exactly one active owner
 
@@ -1349,10 +1392,17 @@ At minimum, automation should reject:
 
 The validator enforces workflow structure only. It does not decide semantics.
 
-An issue-body update path SHOULD exercise the same validator against the body re-fetched from
-GitHub after the write, not only against the local pre-write text. This catches transport and shell
-round-trip corruption (for example, a multiline body silently flattened into one line) that local
-validation cannot observe.
+Any automated coordination issue-body mutation path MUST perform the post-write remote re-fetch
+and full semantic-equivalence check defined in §11.1.1's coordination state commit rule -- not
+merely check the four named diagnostic fields. This catches transport and shell round-trip
+corruption (for example, a multiline body silently flattened into one line) that local validation
+cannot observe.
+
+If and when an executable coordination-state validator exists, the re-fetched remote state MUST
+also pass that validator. This section does not itself require building one; a reusable
+helper/validator implementation may be separate follow-up work. Until it exists, "parse using the
+canonical coordination-state schema" in §11.1.1 means an agent parsing and comparing against that
+schema directly, not invoking a concrete validator command.
 
 ## 13. Certification gate
 
