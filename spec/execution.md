@@ -1834,15 +1834,27 @@ PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-c
 `https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5771291305`), coordinated as its
 own isolated work package (`minion-agent#53`, `WP-12.E1`), tracked as manifest requirement
 `EXEC-007`. **No Python or Rust implementation performed or authorized by this section.** `§3`'s
-operation inventory now lists `list_dir_raw`/`probe_dir_entry` (added THIS revision, marked
-additive and `CONTRACT_DRAFT`, per the independent review at `minion-agent-docs#148` -- WP12E1-R001
--- which correctly found deferring this integration to implementation would have left two
-simultaneous, disagreeing contracts). Every EXISTING `§3` line -- `list_dir`, `file_info`,
-`FileInfo`, `FileKind`, and everything else -- is unchanged in both wording and semantics; their
-own historical certification and every witness in §10 remains valid exactly as written. This is
-integration of the NEW operations' public signature into the authoritative inventory, not
-implementation: no Python/Rust code exists yet, and the inventory addition alone does not
-constitute or authorize implementation of either operation.
+operation inventory now lists `list_dir_raw`/`probe_dir_entry` (marked additive and
+`CONTRACT_DRAFT`, per the independent review at `minion-agent-docs#148` -- WP12E1-R001 -- which
+correctly found deferring this integration to implementation would have left two simultaneous,
+disagreeing contracts). Every EXISTING `§3` line -- `list_dir`, `file_info`, `FileInfo`, `FileKind`,
+and everything else -- is unchanged in both wording and semantics; their own historical
+certification and every witness in §10 remains valid exactly as written. This is integration of the
+NEW operations' public signature into the authoritative inventory, not implementation: no
+Python/Rust code exists yet, and the inventory addition alone does not constitute or authorize
+implementation of either operation.
+
+**Revision 3 of §11.4's `DirEntryProbe.name`/`.path` paragraph.** A second independent review round
+(`minion-agent-docs#148`'s refined `WP12E1-R003`) found revision 2's claim -- that `path` is "the
+EXACT path string the caller passed, never re-resolved" and that this is "identical convention to
+`FileInfo`" -- self-contradictory: certified `file_info(path)` resolves `path` via
+`resolve_local_path` BEFORE building its result (confirmed directly, `filesystem.py:703`), so
+`FileInfo.path` is the RESOLVED path, never the caller's raw lexical input. §11.4's paragraph below
+now genuinely reuses `file_info`'s convention (resolve first, then classify) rather than merely
+claiming to. This correction was applied directly by the shared-contract owner after Codex's own
+review session reached its usage limit mid-turn, before it could durably record this finding on
+GitHub; the underlying finding was independently re-verified against the certified Python source
+before this fix was applied, and formal re-review is still pending once Codex is available again.
 
 ### 11.1 Motivation (full characterization: `minion-agent-docs/assurance/layers/13-wp131-ce-l13-wp131-01-r007-ls-enumeration.md`)
 
@@ -1932,19 +1944,27 @@ in two respects, both required to reproduce Pi's `ls` tool:
   §11.5) or surface it -- Layer 12 makes no skip/fail policy decision here, unlike `list_dir`'s own
   whole-call-abort-on-any-per-entry-error behavior (§3, unchanged).
 
-**`DirEntryProbe.name`/`.path` identity (added this revision, independent review `minion-agent-docs#148`,
-WP12E1-R003 -- the prior draft left these two fields normatively undefined):** identical convention
-to `FileInfo.name`/`.path` (§3, unchanged) -- `path` is the EXACT path string the caller passed to
-`probe_dir_entry`, never re-resolved, canonicalized, or substituted; `name` is that path's basename.
+**`DirEntryProbe.name`/`.path` identity (revision 3 of this paragraph, independent review
+`minion-agent-docs#148`'s refined `WP12E1-R003` -- revision 2's version of this paragraph claimed
+"identical convention to `FileInfo`" while simultaneously requiring the caller's UNRESOLVED lexical
+string, a genuine self-contradiction: certified `file_info(path)` calls `resolve_local_path(cwd,
+path)` BEFORE building its result (`filesystem.py:703`, confirmed directly this revision), so
+`FileInfo.path` is the RESOLVED path -- tilde-expanded, `file://`-parsed, made absolute -- never the
+caller's raw lexical input):** `probe_dir_entry` now GENUINELY reuses `file_info`'s own convention,
+not merely a claim of one: it resolves `path` via the SAME already-certified `resolve_local_path`
+(§3.2) BEFORE performing its own symlink-following classification, exactly as `file_info` does.
+`DirEntryProbe.path` is that RESOLVED path; `DirEntryProbe.name` is that resolved path's basename.
+This reuses the general resolver's own already-certified `~`/`file://`/relative-path handling (§3.2)
+rather than duplicating it -- no new path-parsing machinery is introduced by this extension.
+
 **Both fields describe the ADDRESSED entry -- the link itself, when the entry is a symlink -- never
-the resolved target.** Probing a symlink to classify it (via the following `stat` above) does not
-silently replace the addressed entry's own identity with its target's: a symlink named `link` whose
-target is `/elsewhere/real_file` still reports `name: "link"`, `path: <the path the caller passed>`,
-regardless of `kind` being `symlink_to_file`. This mirrors `file_info`'s own established behavior
-exactly (§3: `file_info`'s `lstat`-based `FileInfo.path` is likewise always the addressed path, never
-a resolved one) and is the only coherent choice given `probe_dir_entry` is called, per §11.5, with
-names Layer 13 itself already has from `list_dir_raw` -- a caller-substituted identity would silently
-break that correspondence.
+the resolved TARGET.** This part of revision 2's claim was correct and is unchanged: probing a
+symlink to classify it (via the following `stat` above) does not silently replace the addressed
+entry's own identity with its target's -- a symlink at resolved path `/workspace/link` whose target
+is `/elsewhere/real_file` still reports `name: "link"`, `path: "/workspace/link"`, regardless of
+`kind` being `symlink_to_file`. The distinction the correction addresses is RESOLUTION (lexical
+input vs. resolved path -- now resolved, matching `file_info`), not TARGET SUBSTITUTION (addressed
+entry vs. its target -- always the addressed entry, in both this and the prior revision).
 
 **Cancellation (classification corrected this revision, independent review `minion-agent-docs#148`,
 WP12E1-R004 -- the prior draft described this operation-by-operation as merely resembling two
@@ -2046,13 +2066,27 @@ LIST_DIR_RAW PERFORMS ZERO PROBES, RETURNS RAW PROVIDER ORDER (§11.3; added ind
                are both explicitly Layer 13's own responsibility (§11.5, steps 2/3), not this
                operation's
 
+`DirEntryProbe.path` IS THE RESOLVED PATH, MATCHING `file_info` -- NOT THE RAW CALLER STRING
+    (§11.4, independent review `minion-agent-docs#148`'s refined WP12E1-R003)
+    setup:     cwd = "/workspace"; an existing entry reachable via the relative lexical string
+               "sub/item"
+    call:      probe_dir_entry("sub/item")
+    expected:  Ok(DirEntryProbe{path: "/workspace/sub/item", name: "item", ...}) -- resolved via
+               the same resolve_local_path §3.2 already-certified rules file_info itself uses, NOT
+               the literal unresolved string "sub/item"
+    negative control: an implementation returning path: "sub/item" (the unresolved lexical input)
+               fails this witness -- this was revision 2's own defect, corrected here; an
+               implementation whose resolved path disagrees with what file_info("sub/item") would
+               itself produce for the SAME cwd/input also fails, since the entire point of this
+               correction is genuine (not merely claimed) convention reuse
+
 PLAIN FILE / PLAIN DIRECTORY CLASSIFICATION (§11.4)
     setup:     a directory containing e1 (a regular file, not a symlink) and e2 (a regular
                subdirectory, not a symlink)
     call:      probe_dir_entry(e1), probe_dir_entry(e2)
-    expected:  Ok(DirEntryProbe{kind: file, name: "e1", path: <e1's addressed path>, ...}) and
-               Ok(DirEntryProbe{kind: directory, name: "e2", path: <e2's addressed path>, ...})
-               respectively -- no symlink indirection, no error
+    expected:  Ok(DirEntryProbe{kind: file, name: "e1", path: <e1's RESOLVED addressed path>, ...})
+               and Ok(DirEntryProbe{kind: directory, name: "e2", path: <e2's RESOLVED addressed
+               path>, ...}) respectively -- no symlink indirection, no error
     negative control: an implementation returning symlink_to_file/symlink_to_directory for a
                non-symlink entry, or omitting name/path, fails this witness
 
@@ -2060,9 +2094,10 @@ SYMLINK_TO_FILE / SYMLINK_TO_DIRECTORY CLASSIFICATION (§11.4, characterization 
     setup:     e1 = a symlink named "link_to_file" whose target is an existing regular file; e2 =
                a symlink named "link_to_dir" whose target is an existing directory
     call:      probe_dir_entry(e1), probe_dir_entry(e2)
-    expected:  Ok(DirEntryProbe{kind: symlink_to_file, name: "link_to_file", path: <e1's addressed
-               path, NOT the target's path>, ...}) and Ok(DirEntryProbe{kind: symlink_to_directory,
-               name: "link_to_dir", path: <e2's addressed path, NOT the target's path>, ...})
+    expected:  Ok(DirEntryProbe{kind: symlink_to_file, name: "link_to_file", path: <e1's RESOLVED
+               addressed path, NOT the target's path>, ...}) and
+               Ok(DirEntryProbe{kind: symlink_to_directory, name: "link_to_dir", path: <e2's
+               RESOLVED addressed path, NOT the target's path>, ...})
     negative control: an implementation returning plain file/directory (losing the symlink fact),
                or substituting the resolved target's own name/path for the addressed link's, fails
                this witness -- both are distinct, disclosed requirements (§11.4)
