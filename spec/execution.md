@@ -1844,17 +1844,16 @@ NEW operations' public signature into the authoritative inventory, not implement
 Python/Rust code exists yet, and the inventory addition alone does not constitute or authorize
 implementation of either operation.
 
-**Revision 3 of §11.4's `DirEntryProbe.name`/`.path` paragraph.** A second independent review round
-(`minion-agent-docs#148`'s refined `WP12E1-R003`) found revision 2's claim -- that `path` is "the
-EXACT path string the caller passed, never re-resolved" and that this is "identical convention to
-`FileInfo`" -- self-contradictory: certified `file_info(path)` resolves `path` via
-`resolve_local_path` BEFORE building its result (confirmed directly, `filesystem.py:703`), so
-`FileInfo.path` is the RESOLVED path, never the caller's raw lexical input. §11.4's paragraph below
-now genuinely reuses `file_info`'s convention (resolve first, then classify) rather than merely
-claiming to. This correction was applied directly by the shared-contract owner after Codex's own
-review session reached its usage limit mid-turn, before it could durably record this finding on
-GitHub; the underlying finding was independently re-verified against the certified Python source
-before this fix was applied, and formal re-review is still pending once Codex is available again.
+**Revision 3 of §11.4's `DirEntryProbe.name`/`.path` paragraph** (corrected provenance/authority
+citations, independent re-review `minion-agent-docs#150`, `WP12E1-R006`). A second independent
+review round (`minion-agent-docs#149`'s refined `WP12E1-R003`) found revision 2's claim -- that
+`path` is "the EXACT path string the caller passed, never re-resolved" and that this is "identical
+convention to `FileInfo`" -- self-contradictory: certified `file_info(path)` applies the
+already-certified path resolution rules (§3.2) BEFORE building its result, so `FileInfo.path` is the
+RESOLVED path, never the caller's raw lexical input. §11.4's paragraph below now genuinely applies
+that same §3.2 resolution before classifying (resolve first, then classify) rather than merely
+claiming to. `WP12E1-R003` is `RESOLVED`, independently confirmed at `minion-agent-docs#150` @
+`eb01d9acc67142eeabf086c7278fc9078ebbf0ad`.
 
 ### 11.1 Motivation (full characterization: `minion-agent-docs/assurance/layers/13-wp131-ce-l13-wp131-01-r007-ls-enumeration.md`)
 
@@ -1945,17 +1944,21 @@ in two respects, both required to reproduce Pi's `ls` tool:
   whole-call-abort-on-any-per-entry-error behavior (§3, unchanged).
 
 **`DirEntryProbe.name`/`.path` identity (revision 3 of this paragraph, independent review
-`minion-agent-docs#148`'s refined `WP12E1-R003` -- revision 2's version of this paragraph claimed
-"identical convention to `FileInfo`" while simultaneously requiring the caller's UNRESOLVED lexical
-string, a genuine self-contradiction: certified `file_info(path)` calls `resolve_local_path(cwd,
-path)` BEFORE building its result (`filesystem.py:703`, confirmed directly this revision), so
-`FileInfo.path` is the RESOLVED path -- tilde-expanded, `file://`-parsed, made absolute -- never the
-caller's raw lexical input):** `probe_dir_entry` now GENUINELY reuses `file_info`'s own convention,
-not merely a claim of one: it resolves `path` via the SAME already-certified `resolve_local_path`
-(§3.2) BEFORE performing its own symlink-following classification, exactly as `file_info` does.
+`minion-agent-docs#149`'s refined `WP12E1-R003`, `RESOLVED` -- revision 2's version of this
+paragraph claimed "identical convention to `FileInfo`" while simultaneously requiring the caller's
+UNRESOLVED lexical string, a genuine self-contradiction: certified `file_info(path)` applies §3.2's
+already-certified path resolution rules BEFORE building its result, so `FileInfo.path` is the
+RESOLVED path -- tilde-expanded, `file://`-parsed, made absolute -- never the caller's raw lexical
+input):** `probe_dir_entry` now GENUINELY reuses `file_info`'s own convention, not merely a claim of
+one: it applies the SAME §3.2 path-resolution rules BEFORE performing its own symlink-following
+classification, exactly as `file_info` does -- this is the NORMATIVE, language-neutral requirement,
+binding on both Python and Rust equally. (Python's certified implementation currently applies this
+via its own `resolve_local_path` helper, `filesystem.py:703` -- cited here only as illustrative
+implementation evidence, not as the shared mechanism a Rust implementation is required to name or
+reuse; Rust applies the same §3.2 rules through its own already-certified resolution path.)
 `DirEntryProbe.path` is that RESOLVED path; `DirEntryProbe.name` is that resolved path's basename.
-This reuses the general resolver's own already-certified `~`/`file://`/relative-path handling (§3.2)
-rather than duplicating it -- no new path-parsing machinery is introduced by this extension.
+This reuses §3.2's own already-certified `~`/`file://`/relative-path handling rather than
+duplicating it -- no new path-parsing machinery is introduced by this extension.
 
 **Both fields describe the ADDRESSED entry -- the link itself, when the entry is a symlink -- never
 the resolved TARGET.** This part of revision 2's claim was correct and is unchanged: probing a
@@ -2067,12 +2070,13 @@ LIST_DIR_RAW PERFORMS ZERO PROBES, RETURNS RAW PROVIDER ORDER (§11.3; added ind
                operation's
 
 `DirEntryProbe.path` IS THE RESOLVED PATH, MATCHING `file_info` -- NOT THE RAW CALLER STRING
-    (§11.4, independent review `minion-agent-docs#148`'s refined WP12E1-R003)
+    (§11.4, independent review `minion-agent-docs#149`'s refined WP12E1-R003, RESOLVED at
+    `minion-agent-docs#150`)
     setup:     cwd = "/workspace"; an existing entry reachable via the relative lexical string
                "sub/item"
     call:      probe_dir_entry("sub/item")
     expected:  Ok(DirEntryProbe{path: "/workspace/sub/item", name: "item", ...}) -- resolved via
-               the same resolve_local_path §3.2 already-certified rules file_info itself uses, NOT
+               the SAME §3.2 already-certified path-resolution rules file_info itself applies, NOT
                the literal unresolved string "sub/item"
     negative control: an implementation returning path: "sub/item" (the unresolved lexical input)
                fails this witness -- this was revision 2's own defect, corrected here; an
