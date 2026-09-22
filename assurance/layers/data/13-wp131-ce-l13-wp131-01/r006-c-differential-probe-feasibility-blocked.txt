@@ -1,0 +1,98 @@
+CE-L13-WP131-01 -- R006-C Correction 3c differential-proof construction attempt
+Status: FEASIBILITY_BLOCKED (no comparison ran; the candidate tuple could not be constructed)
+Date: 2026-09-22
+Scope: throwaway Rust project + throwaway Python venv, both under this session's scratchpad
+directory, outside minion-agent-python/** and minion-agent-rust/**. No production tree touched.
+No global/system-level developer tooling installed on the Windows host or in WSL.
+
+Target candidate under test (per Lane C revision 4, Correction 3a/3b):
+  Engine (Python): PyICU 2.16.2
+  Engine (Rust):   rust_icu_ucol 5.8.0
+  ICU4C target:    78.3, exact artifact icu4c-78.3-sources.tgz
+                   (unicode-org/icu, release tag release-78.3)
+  Requirement:     both bindings must link against the SAME built ICU4C 78.3
+
+== Attempt 1: native Windows build ==
+
+Environment checked:
+  rustc 1.97.1, host x86_64-pc-windows-msvc, LLVM 22.1.6 -- present, working
+    (confirmed: `cargo new` + `cargo build` produced and ran a working .exe)
+  MSVC linker -- present and discoverable by cargo/rustc (not on bare PATH, but
+    cargo's own toolchain discovery found it; trivial build/link succeeded)
+  pkg-config -- NOT FOUND (`where pkg-config` / direct invocation: command not found)
+  vcpkg, choco, scoop -- NOT FOUND
+  winget -- present, but installing global tooling with it was judged out of scope
+    for a throwaway probe and not attempted
+  System32 icu.dll / icuin.dll / icuuc.dll -- present (OS-bundled ICU runtime only;
+    no headers, no import libs, no pkg-config/.pc metadata, no version pin to 78.3)
+
+Attempt: `cargo add rust_icu_ucol@5.8.0` in a scratch crate, then `cargo build`.
+
+Result: build failed in `rust_icu_sys`'s build script:
+  Error: while copying features
+    0: while getting ICU version
+    1: while getting ICU version
+    2: while getting ICU version; is pkg-config in $PATH?
+    3: while getting stdout
+    4: could not execute command: pkg-config
+    5: program not found
+
+Attempt: `pip install PyICU==2.16.2` in a scratch venv (created via the `py` launcher,
+Python 3.13.5; the bare `python`/`pip` commands on this host resolve to the non-functional
+Microsoft Store stub, not a real interpreter -- `py` was required to reach the actual
+installed Python).
+
+Result: build failed in PyICU's setup.py:
+  (running 'icu-config --version')
+  (running 'pkg-config --modversion icu-i18n')
+  KeyError: 'ICU_VERSION'
+  ...
+  RuntimeError:
+  Please install pkg-config on your system or set the ICU_VERSION environment
+  variable to the version of ICU you have installed.
+
+Conclusion (Windows): both PyICU and rust_icu_ucol build-configure themselves via
+pkg-config (PyICU has a documented ICU_VERSION env-var escape hatch, but even with
+that set, compiling would still require real ICU4C headers/import libs, which this
+host does not have -- only the OS runtime DLLs). Closing this gap requires either
+building ICU4C 78.3 from source with a full MSVC toolchain, or installing a package
+manager (vcpkg) plus pkg-config -- both are host-level developer-tooling changes,
+judged out of scope for a throwaway probe per the owner's explicit instruction not to
+mutate the developer workstation for this.
+
+== Attempt 2: WSL (Ubuntu) ==
+
+Environment checked (`wsl.exe -d Ubuntu -- bash -lc ...`):
+  python3 -- present
+  pip3, cargo, rustc -- NOT present
+  pkg-config -- NOT present
+  ICU package installed: libicu70 (version 70.1-2) -- RUNTIME package only, no
+    libicu-dev, and 70.1 is not the target 78.3 in any case
+  sudo -- requires an interactive password (`sudo -n true` failed: "a password is
+    required"); no passwordless sudo available to this session
+
+Conclusion (WSL): closing the gap (installing pkg-config, libicu-dev, a Rust
+toolchain) requires `apt` operations gated behind a password this session does not
+have and was not given. Per the owner's explicit instruction, this was not pursued
+by prompting for or otherwise obtaining that password.
+
+== Owner decision on this evidence (2026-09-22) ==
+
+Recorded verbatim disposition:
+  - This is NOT a failed differential comparison; no comparison of the candidate
+    ever ran, because the exact candidate tuple (PyICU 2.16.2 + rust_icu_ucol 5.8.0,
+    both linked against the same vendored ICU4C 78.3 build) could not be
+    constructed in either available environment without host-level tooling changes
+    that were explicitly not authorized.
+  - WSL's available ICU 70.1 was explicitly NOT substituted as a stand-in for the
+    78.3 candidate -- doing so would test a different semantic artifact and was
+    explicitly disallowed.
+  - The candidate's own pass criterion ("any differential disagreement blocks
+    selection") is NOT weakened or bypassed by this result.
+  - R006-C status: FEASIBILITY_BLOCKED. R006-C remains NOT owner-selectable until
+    an isolated environment (e.g. a disposable CI/container/VM) capable of
+    constructing the exact pinned tuple becomes available and the comparison
+    actually runs.
+  - No further host-level changes (global tooling installs, WSL package installs)
+    are to be made to close this gap absent a new owner decision providing such an
+    environment or explicit authorization.
