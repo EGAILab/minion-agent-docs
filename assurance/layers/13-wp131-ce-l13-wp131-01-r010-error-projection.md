@@ -84,10 +84,12 @@ Confirms directly: Node's raw `fs` error messages embed the syscall name (`acces
 
 ## 2. Mapping onto Layer 12's `FsErrorCode` (already-certified, closed set)
 
-**Revision 2 of this section** (independent review `minion-agent-docs#152`, `L13-WP131-R010-B`):
-revision 1's table collapsed `ls`'s raw `stat` and hybrid `readdir` branches to only
-`permission_denied`/`unknown`, omitting reachable certified codes. Corrected below with the
-general rule the review itself proposed, plus its full enumeration.
+**Revision 3 of this section** (independent review `minion-agent-docs#152` then `#153`,
+`L13-WP131-R010-B` then `L13-WP131-R010-D`): revision 1's table collapsed `ls`'s raw `stat` and
+hybrid `readdir` branches to only `permission_denied`/`unknown` (fixed in revision 2); revision 2's
+"full taxonomy" claim then still omitted `not_supported` from every row, including the
+whole-operation `list_dir_raw -> not_supported` outcome the already-approved `R007-b`/`WP-12.E1`
+contract explicitly permits (fixed here).
 
 ```text
 FsErrorCode: aborted, not_found, permission_denied, not_directory,
@@ -100,22 +102,29 @@ FsErrorCode: aborted, not_found, permission_denied, not_directory,
 rule):** for every Pi error site that is HAND-AUTHORED (a fixed, stable string Pi always produces
 for that specific branch, regardless of platform), the classification is the SPECIFIC certified
 code that branch's own condition represents -- exactly one code per hand-authored site, never a
-range. For every Pi error site that is RAW or HYBRID (the underlying OS/provider error reaches the
-caller unmodified, or wrapped with the raw message still embedded), the classification is the
-EXACT underlying certified `FsErrorCode` Layer 12 already computes for that failure, drawn from the
-FULL §2.1 taxonomy -- never collapsed to a narrower subset merely because the site is "the stat
-call" or "the readdir call." A raw/hybrid site's reachable code set depends on which underlying
-syscall it wraps, not on which Pi tool it happens to sit inside.
+range. For every Pi error site that is RAW, HYBRID, or a WHOLE-OPERATION outcome of a Layer-12
+operation Layer 13 consumes (the underlying OS/provider error reaches the caller unmodified,
+wrapped with the raw message still embedded, or reported as a whole-call `Result` error by the
+Layer-12 operation itself), the classification is the EXACT underlying certified `FsErrorCode`
+Layer 12 already computes for that failure, drawn from the FULL §2.1 taxonomy -- never collapsed
+to a narrower subset merely because the site is "the stat call," "the readdir call," or "a local
+filesystem, so `not_supported` doesn't apply here." `not_supported` is reachable at EVERY site in
+this table whenever the underlying provider cannot supply the certified operation being called --
+this is a property of the PROVIDER, not of any specific local-filesystem errno, and is therefore
+never excludable from a site's reachable set purely because a Node-local reference implementation
+happens not to trigger it.
 
 | Scenario | Pi's own text | Site kind | Reachable `FsErrorCode`(s) |
 |---|---|---|---|
 | `ls`: path missing (`!ops.exists()`) | hand-authored `"Path not found: <path>"` | hand-authored | `not_found` (exactly one; this is what the check itself represents) |
 | `ls`: not a directory (`!stat.isDirectory()`) | hand-authored `"Not a directory: <path>"` | hand-authored | `not_directory` (exactly one) |
 | any tool: aborted mid-operation | hand-authored `"Operation aborted"` (uniform across both tools) | hand-authored | `aborted` (exactly one) |
-| `ls`: `stat` fails after `exists` (the unwrapped call, §1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT -- the exists-then-stat TOCTOU race); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component stopped being a directory between checks); `invalid` (EINVAL); `unknown` (any other errno). `is_directory`/`not_supported`/`aborted` are NOT reachable from this specific call (a `stat` failure cannot itself represent "is a directory," and this call passes no cancellation signal). |
-| `ls`: `readdir` fails (hybrid wrapper, §1) | hand-authored PREFIX `"Cannot read directory: "` + raw embedded underlying message | hybrid | Same reachable set as the `stat` branch above (`not_found`, `permission_denied`, `not_directory`, `invalid`, `unknown`) -- the WRAPPER text is fixed and hand-authored, but the classification is still driven by the embedded raw cause, not the wrapper's own fixed prefix. |
-| `read`: `ops.access` fails (§1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component is not a directory); `invalid` (EINVAL); `unknown` (any other errno). `is_directory` is NOT reachable here: `access()` succeeds on a directory (it checks permission bits, not entry kind) -- the directory case surfaces later, below. |
+| `ls`: `stat` fails after `exists` (the unwrapped call, §1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT -- the exists-then-stat TOCTOU race); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component stopped being a directory between checks); `invalid` (EINVAL); `not_supported` (a provider that cannot supply this classification step at all); `unknown` (any other errno). `is_directory`/`aborted` are NOT reachable from this specific call (a `stat` failure cannot itself represent "is a directory," and this call passes no cancellation signal). |
+| `ls`: `readdir` fails (hybrid wrapper, §1) | hand-authored PREFIX `"Cannot read directory: "` + raw embedded underlying message | hybrid | Same reachable set as the `stat` branch above (`not_found`, `permission_denied`, `not_directory`, `invalid`, `not_supported`, `unknown`) -- the WRAPPER text is fixed and hand-authored, but the classification is still driven by the embedded raw cause, not the wrapper's own fixed prefix. |
+| `read`: `ops.access` fails (§1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component is not a directory); `invalid` (EINVAL); `not_supported` (a provider that cannot supply this check); `unknown` (any other errno). `is_directory` is NOT reachable here: `access()` succeeds on a directory (it checks permission bits, not entry kind) -- the directory case surfaces later, below. |
 | `read`: path is a directory (`access` succeeds, the LATER content-read step fails) | raw `EISDIR`-class error from that later read, not from `access` itself | raw | `is_directory` (exactly one for this specific later step; distinct from the `access`-step reachable set immediately above) |
+| `ls`, built on the approved `R007-b`/`WP-12.E1` extension: `list_dir_raw(path)` itself returns an error `Result` (`spec/execution.md` §11.3, §11.6's `not_supported` witness) | no Pi-authored text exists for this outcome -- it is a Minion-specific enumeration entry point Pi's own `ls.ts` has no equivalent call site for | whole-operation | `not_found`, `permission_denied`, `not_directory`, `invalid`, `not_supported` (the case the approved contract's own witness names explicitly), `unknown` -- same taxonomy as any other raw/hybrid site, drawn from the SAME `list_dir_raw` error mapping §11.3 already certifies. **This is a WHOLE-OPERATION failure**: enumeration cannot begin at all, so `ls`'s entire tool call fails -- R010 MUST project this as tool-level error text, exactly like the `stat`/`readdir` raw/hybrid rows above, not as a silently-skipped per-entry outcome (contrast the next row). |
+| `ls`, built on `R007-b`/`WP-12.E1`: an individual `probe_dir_entry(name)` call (§11.5's required consumption loop) returns an error `Result` for ONE entry | no Pi-authored text (Pi's OWN `ls.ts` per-entry `catch { continue }` is likewise silent for the analogous case, §1) | per-entry, SKIPPED | **Not applicable -- this NEVER becomes tool-level error text at all.** The already-approved `R007-b` consumption pattern (`spec/execution.md` §11.5, step 3b) requires the CALLER to skip a `probe_dir_entry` error and continue to the next name, exactly reproducing Pi's own per-entry silent-skip. `R010`'s error-PROJECTION question (this document) does not apply to this row at all -- there is no message to select a template for, because no tool-level error is ever produced by this specific outcome. Listed here only to make the contrast with the row above explicit, not because it needs its own `FsErrorCode` mapping. |
 
 ## 3. Characterization conclusion
 
@@ -123,7 +132,9 @@ Pi's own text is **not** a single, coherent, literally-reproducible contract -- 
 hand-authored strings, raw OS-errno text, and one hybrid (custom-prefix-plus-embedded-raw-suffix)
 across just two tools, with at least one internally undocumented gap (`ls`'s unwrapped `stat`
 call). But **"mixed" does not mean "non-contractual"** (independent review `minion-agent-docs#152`,
-correcting revision 1's own framing): Pi's THREE hand-authored sites are stable, deterministic,
+correcting revision 1's own framing, count corrected this revision per `minion-agent-docs#153`,
+`L13-WP131-R010-E`): Pi's FOUR hand-authored sites (three `ls`-specific plus the abort template
+shared by both tools) are stable, deterministic,
 platform-independent strings -- coherent, specified behavior, not merely incidental. Layer 12's
 `FsErrorCode` vocabulary is already a clean, closed, already-certified classification that every
 one of Pi's scenarios maps onto without loss of the *distinguishing information* (§2's corrected,
@@ -141,12 +152,12 @@ as a single automatic resolution)
 Revision 1 proposed a single resolution and argued no owner decision was needed, reasoning that
 `FsErrorCode` was already Layer 12's own settled answer. The independent review correctly rejected
 this: `FsErrorCode` is an internal Layer-12 capability-seam classification; it does not by itself
-authorize Layer 13 to change what TEXT a model observes when a tool call fails. Pi's three
+authorize Layer 13 to change what TEXT a model observes when a tool call fails. Pi's four
 hand-authored strings are themselves stable, specified, model-visible behavior -- replacing them is
 an observable divergence requiring the same owner governance `R006`/`R007` required, not something
 `TOOL-025`/`TOOL-026`/`TOOL-028`'s own `adopted` disposition already covers by implication.
 
-**`R010-A` -- preserve Pi's exact structure.** Layer 13 reproduces Pi's three hand-authored
+**`R010-A` -- preserve Pi's exact structure.** Layer 13 reproduces Pi's four hand-authored
 templates VERBATIM, citing the addressed path the same way Pi does (`"Path not found: <path>"`,
 `"Not a directory: <path>"`, `"Cannot read directory: <underlying message>"`, `"Operation
 aborted"`), and on every raw/hybrid site, surfaces the underlying provider's own raw message text
@@ -160,20 +171,42 @@ under this option, only that the classification (§2) is correct and the wrapper
 (where one exists) is present.
 
 **`R010-B` -- closed Layer-13 vocabulary on raw/hybrid sites only, Pi's exact wording preserved on
-hand-authored sites.** Layer 13 reproduces Pi's three hand-authored templates VERBATIM (identical
-to `R010-A` there -- there is no portability cost to preserving them, since they are already
+hand-authored sites (corrected this revision, independent review `minion-agent-docs#153`,
+`L13-WP131-R010-C`).** Layer 13 reproduces Pi's four hand-authored templates VERBATIM (identical to
+`R010-A` there -- there is no portability cost to preserving them, since they are already
 platform-independent), but on raw/hybrid sites, replaces the embedded raw provider text with a
 closed, Layer-13-authored, deterministic template per `FsErrorCode` value (e.g. `"Cannot access
 <path>: permission denied"` for `permission_denied`, regardless of the underlying OS's exact
-wording). **Each template SUPPLEMENTS, not REPLACES, the underlying cause** (the review's own
-explicit requirement): the tool-level error result carries both the Layer-13-authored message text
-AND the exact underlying certified `FsErrorCode` as structured data -- no information is discarded,
-only the raw OS string's exact wording is normalized away. This is an explicit, disclosed,
-**`MINION_ARCHITECTURAL_MAPPING` / intentional divergence**, model-visible on the raw/hybrid sites
-specifically, requiring the SAME owner sign-off `R006`/`R007` required -- not auto-adopted merely
-because it consumes an already-adopted lower-layer code. **Fidelity**: full on hand-authored sites;
-disclosed divergence on raw/hybrid sites. **Benefit**: fully deterministic, portable,
-canonical-scenario-testable text on every site, including the ones `R010-A` cannot pin down.
+wording).
+
+**Corrected architecture (revision 3 of this claim):** the certified cross-language tool-error seam
+has NO structured-data channel at the FINAL tool-result level to carry alongside a generated
+failure -- confirmed directly, `spec/tools.md:512`: pinned Pi's `createErrorToolResult` sets
+`details: {}` (empty, not absent) UNCONDITIONALLY for any generated execution error, and Python's
+`text_result(..., is_error=True)` and Rust's `ToolCapabilityError`/`immediate_error` all preserve
+that same empty-`details` shape -- there is no field in the certified, already-established result
+type either language could attach a structured `FsErrorCode` to. Revision 2's claim that each
+template "supplements, not replaces" the underlying cause by carrying it as structured OUTPUT data
+was therefore architecturally wrong: it promised a channel the certified seam does not have, and
+closing that gap would itself require a separate, explicitly-scoped lower-layer tool-result delta
+-- not something this lane is authorized to open, and not necessary to resolve `R010` itself.
+
+**`R010-B`'s actual, implementable mechanism**: the underlying certified `FsErrorCode` is used
+PURELY INTERNALLY, as Layer 13's own dispatch key for SELECTING which fixed, closed-vocabulary
+message template to emit -- it is never itself attached to, or recoverable from, the final
+tool-level result as separate structured data. The final result's `details` remains the SAME
+certified `{}` shape every generated tool error already uses, under both `R010-A` and `R010-B`
+alike; the two options differ only in which STRING gets selected for that result's message content
+on raw/hybrid sites, never in the result's own shape. No information is claimed to be preserved
+beyond what the message string itself conveys -- this is an explicit, disclosed LOSS of the exact
+raw OS wording (though not of the CLASSIFICATION, since a caller's fixed knowledge of which
+template maps to which code is itself the "structure," carried by convention/documentation, not by
+a runtime field). This is still an explicit, disclosed, **`MINION_ARCHITECTURAL_MAPPING` /
+intentional divergence**, model-visible on the raw/hybrid sites specifically, requiring the SAME
+owner sign-off `R006`/`R007` required -- not auto-adopted merely because it consumes an
+already-adopted lower-layer code. **Fidelity**: full on hand-authored sites; disclosed divergence
+on raw/hybrid sites. **Benefit**: fully deterministic, portable, canonical-scenario-testable text
+on every site, including the ones `R010-A` cannot pin down.
 
 Neither option is selected here. `TOOL-025`/`TOOL-026`/`TOOL-028` cannot encode a specific
 error-text disposition for this dimension until the owner chooses.
@@ -182,16 +215,22 @@ error-text disposition for this dimension until the owner chooses.
 
 ```text
 R010 source citations: re-verified directly (ls.ts:132-152, read.ts:243-249), live-verified
-      raw-error-text shapes (WSL, Node v24.14.0) -- unchanged since revision 1, both confirmed
-      accurate by independent review
-R010 FsErrorCode mapping (§2): corrected this revision -- general rule plus full enumeration for
-      every raw/hybrid site, replacing revision 1's incomplete two-code collapse
-      (L13-WP131-R010-B)
-R010 owner decision (§4): restructured this revision into a genuine two-option matrix (R010-A:
-      preserve Pi's exact structure and raw/hybrid platform-dependent text; R010-B: preserve Pi's
-      hand-authored templates verbatim, replace only raw/hybrid text with a closed, portable,
-      cause-preserving Layer-13 vocabulary), replacing revision 1's single-resolution framing,
-      which the independent review correctly rejected as ungoverned (L13-WP131-R010-A)
+      raw-error-text shapes (WSL, Node v24.14.0) -- unchanged since revision 1, confirmed accurate
+      by both independent review rounds
+R010-A / R010-B (owner decision structure, minion-agent-docs#152's L13-WP131-R010-A): RESOLVED --
+      genuine two-option matrix in place since revision 2, unchanged this revision
+R010 FsErrorCode mapping (§2, minion-agent-docs#152's L13-WP131-R010-B): RESOLVED at revision 2
+R010-C (minion-agent-docs#153): FIXED this revision -- R010-B's "supplements, not replaces" claim
+      was architecturally wrong (the certified tool-error seam has no structured-data channel,
+      spec/tools.md:512); corrected to use FsErrorCode purely as Layer 13's own internal template-
+      selection key, never as recoverable structured output
+R010-D (minion-agent-docs#153): FIXED this revision -- added list_dir_raw -> not_supported as a
+      whole-operation outcome R010 must project, added not_supported to every other raw/hybrid
+      site's reachable set, and explicitly distinguished it from probe_dir_entry's own per-entry
+      errors, which the approved R007-b consumption loop skips and which therefore never become
+      tool-level error text at all
+R010-E (minion-agent-docs#153): FIXED this revision -- corrected "three hand-authored templates" to
+      "four" (three ls-specific plus the shared abort template) everywhere it appeared inconsistent
 R010 overall: OWNER_DECISION_REQUIRED (R010-A vs. R010-B)
 ```
 
