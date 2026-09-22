@@ -84,12 +84,15 @@ Confirms directly: Node's raw `fs` error messages embed the syscall name (`acces
 
 ## 2. Mapping onto Layer 12's `FsErrorCode` (already-certified, closed set)
 
-**Revision 3 of this section** (independent review `minion-agent-docs#152` then `#153`,
-`L13-WP131-R010-B` then `L13-WP131-R010-D`): revision 1's table collapsed `ls`'s raw `stat` and
-hybrid `readdir` branches to only `permission_denied`/`unknown` (fixed in revision 2); revision 2's
-"full taxonomy" claim then still omitted `not_supported` from every row, including the
+**Revision 4 of this section** (independent review `minion-agent-docs#152`, `#153`, then `#154`,
+`L13-WP131-R010-B` then `L13-WP131-R010-D` twice): revision 1's table collapsed `ls`'s raw `stat`
+and hybrid `readdir` branches to only `permission_denied`/`unknown` (fixed in revision 2);
+revision 2's "full taxonomy" claim then still omitted `not_supported` from every row, including the
 whole-operation `list_dir_raw -> not_supported` outcome the already-approved `R007-b`/`WP-12.E1`
-contract explicitly permits (fixed here).
+contract explicitly permits (fixed in revision 3); revision 3's own newly-added general rule was
+then applied everywhere EXCEPT the later `read_text_file`/`read_binary_file` content-read site,
+which remained collapsed to `is_directory` alone (fixed here -- split into the specific
+is-a-directory subcase and the general later-read-failure site).
 
 ```text
 FsErrorCode: aborted, not_found, permission_denied, not_directory,
@@ -122,7 +125,8 @@ happens not to trigger it.
 | `ls`: `stat` fails after `exists` (the unwrapped call, §1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT -- the exists-then-stat TOCTOU race); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component stopped being a directory between checks); `invalid` (EINVAL); `not_supported` (a provider that cannot supply this classification step at all); `unknown` (any other errno). `is_directory`/`aborted` are NOT reachable from this specific call (a `stat` failure cannot itself represent "is a directory," and this call passes no cancellation signal). |
 | `ls`: `readdir` fails (hybrid wrapper, §1) | hand-authored PREFIX `"Cannot read directory: "` + raw embedded underlying message | hybrid | Same reachable set as the `stat` branch above (`not_found`, `permission_denied`, `not_directory`, `invalid`, `not_supported`, `unknown`) -- the WRAPPER text is fixed and hand-authored, but the classification is still driven by the embedded raw cause, not the wrapper's own fixed prefix. |
 | `read`: `ops.access` fails (§1) | raw, unwrapped exception, Node's own message/code | raw | `not_found` (ENOENT); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR -- a path component is not a directory); `invalid` (EINVAL); `not_supported` (a provider that cannot supply this check); `unknown` (any other errno). `is_directory` is NOT reachable here: `access()` succeeds on a directory (it checks permission bits, not entry kind) -- the directory case surfaces later, below. |
-| `read`: path is a directory (`access` succeeds, the LATER content-read step fails) | raw `EISDIR`-class error from that later read, not from `access` itself | raw | `is_directory` (exactly one for this specific later step; distinct from the `access`-step reachable set immediately above) |
+| `read`: path is a directory, specifically (`access` succeeds, the LATER content-read step fails because the addressed path IS a directory) | raw `EISDIR`-class error from that later read, not from `access` itself | raw, specific subcase | `is_directory` (exactly one for THIS specific subcase -- the addressed-path-is-a-directory condition, and only that condition, maps here) |
+| `read`: the LATER `read_text_file`/`read_binary_file` operation fails for any OTHER reason (`access` succeeds; corrected this revision, independent review `minion-agent-docs#154`, `L13-WP131-R010-D`) | raw, unwrapped exception/`FsError` from the certified, provider-neutral `read_text_file(path, signal?)`/`read_binary_file(path, signal?)` operations (`spec/execution.md` §3) -- NOT restricted to Node-local `readFile` errno examples | raw | `not_found` (ENOENT -- TOCTOU removal between `access` and the read); `permission_denied` (EACCES/EPERM); `not_directory` (ENOTDIR); `invalid` (EINVAL); `not_supported` (a provider that supports the earlier access/existence check but cannot supply content reading itself -- a real, certified-interface-permitted case, not merely a Node-local hypothetical); `unknown` (any other errno/provider error). This is the GENERAL later-read-failure site; the `is_directory` row immediately above is its own narrower, specific subcase, not a substitute for this general enumeration. |
 | `ls`, built on the approved `R007-b`/`WP-12.E1` extension: `list_dir_raw(path)` itself returns an error `Result` (`spec/execution.md` §11.3, §11.6's `not_supported` witness) | no Pi-authored text exists for this outcome -- it is a Minion-specific enumeration entry point Pi's own `ls.ts` has no equivalent call site for | whole-operation | `not_found`, `permission_denied`, `not_directory`, `invalid`, `not_supported` (the case the approved contract's own witness names explicitly), `unknown` -- same taxonomy as any other raw/hybrid site, drawn from the SAME `list_dir_raw` error mapping §11.3 already certifies. **This is a WHOLE-OPERATION failure**: enumeration cannot begin at all, so `ls`'s entire tool call fails -- R010 MUST project this as tool-level error text, exactly like the `stat`/`readdir` raw/hybrid rows above, not as a silently-skipped per-entry outcome (contrast the next row). |
 | `ls`, built on `R007-b`/`WP-12.E1`: an individual `probe_dir_entry(name)` call (§11.5's required consumption loop) returns an error `Result` for ONE entry | no Pi-authored text (Pi's OWN `ls.ts` per-entry `catch { continue }` is likewise silent for the analogous case, §1) | per-entry, SKIPPED | **Not applicable -- this NEVER becomes tool-level error text at all.** The already-approved `R007-b` consumption pattern (`spec/execution.md` §11.5, step 3b) requires the CALLER to skip a `probe_dir_entry` error and continue to the next name, exactly reproducing Pi's own per-entry silent-skip. `R010`'s error-PROJECTION question (this document) does not apply to this row at all -- there is no message to select a template for, because no tool-level error is ever produced by this specific outcome. Listed here only to make the contrast with the row above explicit, not because it needs its own `FsErrorCode` mapping. |
 
@@ -216,21 +220,21 @@ error-text disposition for this dimension until the owner chooses.
 ```text
 R010 source citations: re-verified directly (ls.ts:132-152, read.ts:243-249), live-verified
       raw-error-text shapes (WSL, Node v24.14.0) -- unchanged since revision 1, confirmed accurate
-      by both independent review rounds
+      by all independent review rounds to date
 R010-A / R010-B (owner decision structure, minion-agent-docs#152's L13-WP131-R010-A): RESOLVED --
       genuine two-option matrix in place since revision 2, unchanged this revision
 R010 FsErrorCode mapping (§2, minion-agent-docs#152's L13-WP131-R010-B): RESOLVED at revision 2
-R010-C (minion-agent-docs#153): FIXED this revision -- R010-B's "supplements, not replaces" claim
-      was architecturally wrong (the certified tool-error seam has no structured-data channel,
-      spec/tools.md:512); corrected to use FsErrorCode purely as Layer 13's own internal template-
-      selection key, never as recoverable structured output
-R010-D (minion-agent-docs#153): FIXED this revision -- added list_dir_raw -> not_supported as a
-      whole-operation outcome R010 must project, added not_supported to every other raw/hybrid
-      site's reachable set, and explicitly distinguished it from probe_dir_entry's own per-entry
-      errors, which the approved R007-b consumption loop skips and which therefore never become
-      tool-level error text at all
-R010-E (minion-agent-docs#153): FIXED this revision -- corrected "three hand-authored templates" to
-      "four" (three ls-specific plus the shared abort template) everywhere it appeared inconsistent
+R010-C (minion-agent-docs#153): RESOLVED at revision 3, confirmed by minion-agent-docs#154 -- R010-B
+      now uses FsErrorCode purely as Layer 13's own internal template-selection key, never as
+      recoverable structured output; details remains {} under both options
+R010-D (minion-agent-docs#153, then minion-agent-docs#154): RESOLVED for list_dir_raw ->
+      not_supported and the whole-operation-vs-skipped-probe distinction at revision 3; the later
+      read_text_file/read_binary_file content-read site remained collapsed to is_directory alone
+      (PARTIALLY_RESOLVED_BLOCKING per minion-agent-docs#154) -- FIXED this revision by splitting
+      that site into its specific is_directory subcase and a general later-read-failure row
+      covering not_found/permission_denied/not_directory/invalid/not_supported/unknown
+R010-E (minion-agent-docs#153): RESOLVED at revision 3, confirmed by minion-agent-docs#154 -- the
+      template count is consistently four throughout
 R010 overall: OWNER_DECISION_REQUIRED (R010-A vs. R010-B)
 ```
 
