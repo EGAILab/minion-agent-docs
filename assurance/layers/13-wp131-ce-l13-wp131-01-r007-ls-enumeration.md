@@ -8,6 +8,18 @@ change.** `R003`/`R004`/`R008` remain frozen `CHECKPOINT-READY`; `R002`/`R005` r
 `OWNER_DECISION_RESOLVED`; `R006-A`/`R006-B` remain `RESOLVED`; `R006-C` remains
 `FEASIBILITY_BLOCKED` (paused, not reopened here). This lane does not discuss or re-review `R006`.
 
+**Revision 2 of this document.** Independent review (`minion-agent-docs#144` @
+`3804d93b5b71562c7f550a35293f8ac0652eea03`) confirmed revision 1's core finding (the `ls.ts`-
+versus-harness-`listDir` mapping, and Divergences 4a/4b/4c below) but rejected owner readiness on
+three blocking points, all addressed in this revision: (1) symlink-to-directory and broken-symlink
+behavior were missing from the divergence matrix and both owner options -- added as Divergences
+4d/4e, live-verified, in Section 4 and folded into Section 7's options; (2) the `R007-b` options
+did not name one concrete, implementable, provider-neutral additive surface -- Section 7 is
+rewritten around a single consolidated proposal; (3) the paired TOCTOU witness (Divergence 4b)
+used two different, one undocumented, directory paths for its Node and Python runs -- rerun in
+Section 5's companion evidence against one shared, identically-recreated directory, with a
+negative control added.
+
 ## 0. Why this is a fresh characterization, not a resubmission of the original `R007` text
 
 The original combined checkpoint (`minion-agent-docs#132`, the pre-lane-decomposition
@@ -138,7 +150,7 @@ has no cap concept at all, matching Layer 12). `WP-13.1`'s draft, which builds t
 directly on `list_dir()`, is therefore built on the wrong Pi reference function for `TOOL-028`'s
 actual target behavior.
 
-## 4. Three live-verified divergences (not hand-traced -- see Section 5 for full transcripts)
+## 4. Five live-verified divergences (not hand-traced -- see Section 5 for full transcripts)
 
 ### 4a. Kind-inclusion (cap-independent): Pi includes FIFO/socket/device entries; Minion omits them
 
@@ -214,12 +226,62 @@ before the cap boundary that make the final output differ. `R007` is therefore b
 interacts with that mismatch to also corrupt content, not just a truncation signal" -- not as an
 isolated cap-arithmetic quirk.
 
+### 4d. Directory-symlinks: Pi classifies by the RESOLVED target; Minion classifies the link itself
+
+`ops.stat`'s default (`node:fs/promises`' `stat`) FOLLOWS symlinks; Layer 12's `_file_info_sync`
+uses `os.lstat`, which does NOT. Live-verified on a real symlink pointing at a real directory:
+
+```text
+Node fs.statSync(dir_symlink):        isDirectory() = true   (resolves through the link)
+Python os.lstat(dir_symlink)
+  + _file_kind_from_stat:             kind = SYMLINK          (does not resolve the link)
+```
+
+End-to-end (directory containing `e1_file.txt`, `e2_dirlink` -> `real_target_dir`, limit=500):
+
+```text
+Pi ls.ts loop:              results = ["e1_file.txt", "e2_dirlink/", "real_target_dir/"]
+                             (e2_dirlink shown WITH a trailing slash -- treated as a directory)
+Minion list_dir() survivors: e2_dirlink classified kind=SYMLINK, not DIRECTORY
+```
+
+A caller cannot tell, from Minion's classification alone, that `e2_dirlink` resolves to a
+directory the way Pi's own output implies.
+
+### 4e. Broken symlinks: Pi OMITS them (the inverse direction from 4a); Minion INCLUDES them
+
+Live-verified on a real symlink pointing at a non-existent target:
+
+```text
+Node fs.statSync(broken_symlink):     THROWS (ENOENT) -- following the dead link fails
+Python os.lstat(broken_symlink)
+  + _file_kind_from_stat:             succeeds, kind = SYMLINK (lstat never resolves the target,
+                                       so a missing target does not matter to it at all)
+```
+
+In the same end-to-end run as 4d (`e3_brokenlink` -> `does_not_exist`):
+
+```text
+Pi ls.ts loop:               e3_brokenlink is ABSENT from results entirely -- ops.stat's ENOENT
+                              is caught by the per-entry catch-all, silently skipped
+Minion list_dir() survivors: e3_brokenlink IS present, kind=SYMLINK
+```
+
+This is the exact inverse of Divergence 4a: there, Pi included an entry (a FIFO) that Minion
+silently dropped. Here, Pi silently drops an entry (a broken symlink) that Minion includes. Both
+directions stem from the same root cause: Pi's `ls` tool classifies via symlink-following `stat`
+with a blanket per-entry catch, while Layer 12's `list_dir()` classifies via non-following `lstat`
+with a kind-specific catch -- two independently different policies that happen to agree only on
+regular files, directories, and (for classification purposes, though not for broken-target
+purposes) live symlinks to regular files.
+
 ## 5. Companion evidence
 
 Raw, live-executed transcripts (real Node.js running `ls.ts`'s exact loop; a faithful Python port
 of `_list_dir_sync`/`_file_info_sync`/`_file_kind_from_stat`'s exact logic; run in WSL Ubuntu,
-Node v24.14.0, Python 3.10.12) for all three cases above, plus the raw `mkfifo`/`stat`/`lstat`
-classification checks that grounded them, are recorded at
+Node v24.14.0, Python 3.10.12) for all five cases above (4a-4e), including the corrected,
+shared-directory-plus-negative-control rerun of Divergence 4b, plus the raw `mkfifo`/`ln -s`/
+`stat`/`lstat` classification checks that grounded them, are recorded at
 `assurance/layers/data/13-wp131-ce-l13-wp131-01/r007-ls-enumeration-live-witness.txt`.
 
 ## 6. Falsification attempt: can existing certified Layer-12 operations be composed to reproduce
@@ -231,11 +293,9 @@ scan, survivors-or-whole-call-error, `lstat`-based, skips only kind-unclassifiab
 
 - exposes raw, unclassified entry NAMES prior to per-entry stat (needed to reproduce Pi's
   cap-before-stat structure, Section 1 property in isolation);
-- follows symlinks the way `ops.stat`'s default (`node:fs/promises`' `stat`) does (`list_dir`/
-  `file_info` are `lstat`-based throughout -- this is a further, DISTINCT divergence from the `ls`
-  tool's own default operations, noted here for completeness but not sized or resolved in this
-  pass; it does not affect the FIFO/vanished-entry cases above, which are `lstat`-vs-`stat`
-  invariant for non-symlink entries);
+- follows symlinks the way `ops.stat`'s default (`node:fs/promises`' `stat`) does -- `list_dir`/
+  `file_info` are `lstat`-based throughout, which is precisely what produces Divergences 4d/4e
+  (Section 4), not merely an incidental footnote as revision 1 treated it;
 - includes kind-unclassifiable entries the way `ops.stat`'s success-on-FIFO/socket/device behavior
   does (Section 4a);
 - allows one per-entry failure to be silently skipped without failing the whole call for any
@@ -243,85 +303,111 @@ scan, survivors-or-whole-call-error, `lstat`-based, skips only kind-unclassifiab
 
 **Confirmed, not merely asserted**: given the currently certified Layer-12 `FileSystem` Protocol
 exactly as defined, Layer 13 cannot reproduce Pi's `ls` tool's actual behavior via any composition
-of existing operations. This is a structural property of the certified interface (built to mirror
-a *different* Pi function), not an implementation gap in a particular provider.
+of existing operations, on any of five independently live-verified points (4a-4e). This is a
+structural property of the certified interface (built to mirror a *different* Pi function), not an
+implementation gap in a particular provider.
 
 ## 7. Additive-capability options (characterization only; none implemented or selected here)
 
 **`R007-a` -- accept the observable divergences, governed.** Record `TOOL-028` as an intentional,
-disclosed divergence from Pi on three specific points: (1) FIFO/socket/device entries are omitted
-from Layer-13 `ls` output rather than listed as plain entries; (2) a single per-entry failure
-(permission-denied, TOCTOU-vanished) fails the WHOLE listing rather than omitting just that entry;
-(3) `entry_limit_reached` reflects Layer-12-visible-survivor-count-exceeds-limit (a definitive,
-post-hoc claim) rather than Pi's cap-before-stat "iteration was cut short" (a conservative,
-in-flight claim), and content at the cap boundary can differ when (1) or (2) apply near it. No
-Layer 12 change. Lowest implementation cost -- `WP-13.1` as already drafted (using `list_dir()`
-directly) already produces this behavior without modification; this option only requires a
-governance record.
+disclosed divergence from Pi on five specific points: (1) FIFO/socket/device entries are omitted
+from Layer-13 `ls` output rather than listed as plain entries (4a); (2) a single per-entry failure
+(permission-denied, TOCTOU-vanished) fails the WHOLE listing rather than omitting just that entry
+(4b); (3) content at the cap boundary can differ, not just the truncation signal, when (1) or (2)
+apply near it (4c); (4) a symlink to a directory is classified `SYMLINK`, not shown as a directory
+the way Pi's resolved-target view would (4d); (5) a broken symlink is included (as `SYMLINK`)
+rather than silently omitted the way Pi's resolved-target view would (4e). No Layer 12 change.
+Lowest implementation cost -- `WP-13.1` as already drafted (using `list_dir()` directly) already
+produces this behavior without modification; this option only requires a governance record.
 
-**`R007-b` -- additive Layer-12 capability, sized against the CORRECTED understanding above.**
-Closing all three divergences (not just cap-timing) requires more than the raw-names-only
-`list_dir_raw()` candidate previously proposed, because that candidate alone does not address
-kind-inclusion (4a) or per-entry-failure-severity (4b) -- both are properties of `file_info()`'s own
-classification, which `list_dir_raw()` would still have to call per-entry, inheriting the same
-narrow-catch behavior unless `file_info()` itself is also revisited. Candidates:
+**`R007-b` -- ONE consolidated additive Layer-12 operation, sized against all five divergences.**
+Revision 1's two-candidate proposal (a raw-names operation plus a separate "permissive" per-entry
+wrapper) was rejected: a Layer-13-local wrapper around the EXISTING `file_info()` cannot recover
+kind information `file_info()` has already discarded before returning (the unsupported-kind case
+is a `raise`/discarded-Result *inside* `_file_info_sync`, never reaching any caller-side wrapper to
+reinterpret), and giving that wrapper's result type a new `OTHER` kind would only work by mutating
+the EXISTING, widely-relied-upon `FileKind` enum `file_info()`/`list_dir()` already use --
+precisely what "purely additive, nothing existing changes" rules out.
+
+**Corrected, single, concrete proposal:**
 
 ```text
-(i)   list_dir_raw(path) -> Result[list[str], FsError]
-      Raw entry NAMES in provider enumeration order, unclassified. Closes the cap-TIMING gap in
-      isolation (Layer 13 could then loop cap-before-stat, mirroring ls.ts's structure exactly) --
-      but Layer 13 would still need a per-entry classification call that (a) does not raise
-      _UnsupportedFileType as a distinct case Layer 13 cannot choose to include, and (b) does not
-      raise a WHOLE-CALL-style exception when Layer 13 is fine with skipping a per-entry failure
-      itself. This candidate ALONE is INSUFFICIENT for 4a/4b -- it only fixes the cap-timing
-      amplifier's mechanism, not the two underlying content divergences.
-
-(ii)  file_info_permissive(path) -> Result[FileInfo, FsError]  (a Layer-13-local wrapper, not
-      necessarily a new certified Layer-12 operation) that: classifies FIFO/socket/device as a
-      new, explicit "OTHER" FileKind rather than raising _UnsupportedFileType (closes 4a for
-      callers that choose to opt in), and lets Layer 13 catch and skip ANY per-entry exception
-      itself, entry-by-entry, rather than delegating that decision to Layer 12 (closes 4b). This
-      is a NARROWER, WP-13.1-SCOPED alternative to modifying Layer 12's certified FileKind enum or
-      list_dir()'s existing behavior at all -- everything existing stays unchanged; a new,
-      additive capability is what WP-13.1 would consume.
-
-(iii) Modify list_dir()'s existing skip/fail behavior directly -- REJECTED as a candidate outright:
-      this would be a backward-incompatible change to an already-certified Layer-12 operation
-      (every existing caller's observed behavior would change), not a narrow additive extension,
-      and is explicitly out of this lane's (and this Layer's) authority to propose as anything
-      other than "ruled out."
+list_dir_entries(path) -> Result[list[DirEntryProbe], FsError]
 ```
 
-If `(i)`+`(ii)` together are chosen, the correct process framing is a **narrow, backward-compatible
-Layer-12 extension** (new operations added to the Protocol; every existing certified operation,
-caller, and `EXEC-*` requirement unchanged) requiring its own narrow revalidation on both
-languages -- NOT a reopening or invalidation of Layer 12's existing historical certification. This
-pass does not create, implement, or certify any such extension; it only characterizes it as a
-candidate.
+- **Entirely new operation, entirely new result type** (`DirEntryProbe`) -- NOT a reuse or
+  extension of `FileInfo`/`FileKind`. The existing `file_info()` and `list_dir()`, their result
+  types, and every existing caller are completely unchanged; this is additive in the strict sense
+  the process requires, not a rename or reinterpretation of anything certified today.
+- Internally enumerates the directory (like `list_dir()`), but for EACH raw entry performs its OWN
+  symlink-FOLLOWING stat (mirroring `ops.stat`'s default, i.e. Python's `os.stat`, not `os.lstat`)
+  rather than reusing `_file_info_sync`'s `lstat`-based classification. This is what closes 4d
+  (a directory-symlink's resolved target is what gets classified, matching Pi) and 4e (a broken
+  symlink's stat-follow failure becomes a per-entry outcome, not a silent lstat-success).
+- **Never aborts the whole call for one bad entry.** Each element of the returned list is itself a
+  per-entry outcome -- either a successful classification (carrying a kind field whose value set is
+  `FILE | DIRECTORY | SYMLINK_TO_FILE | SYMLINK_TO_DIRECTORY | OTHER | FAILED`, where `OTHER` is
+  used for FIFO/socket/device -- closing 4a -- and `FAILED` carries the raw per-entry error, e.g.
+  the permission-denied or TOCTOU case) or that per-entry failure marker. This closes 4b: Layer 13
+  decides, per entry, whether to skip a `FAILED` marker (reproducing Pi's blanket catch-and-continue
+  exactly) or surface it -- Layer 12 no longer makes that policy choice centrally.
+- Returned in **provider/raw enumeration order, unsorted, with NO cap applied** -- Layer 13 sorts
+  the full list itself (as it already must, to match `R006`'s ordering rules) and then applies its
+  own cap. Because nothing is silently dropped and nothing aborts the whole call anymore (4a/4b/4d/
+  4e all closed), a post-hoc cap over this operation's COMPLETE, corrected per-entry list is now
+  provably equivalent in content to Pi's cap-before-stat loop: Pi's `entryLimitReached` is true
+  exactly when at least one more raw entry (of any eventual fate) exists after the position of the
+  `effectiveLimit`-th entry Pi would have counted as a success (`FILE`/`DIRECTORY`/`SYMLINK_*`/
+  `OTHER`, not `FAILED`) -- a rule Layer 13 can now compute exactly from this operation's complete
+  output, closing 4c as a direct consequence of closing 4a/4b/4d/4e, not as a separate mechanism.
+
+This is deliberately ONE operation with ONE new result type, not a pair of loosely-related
+candidates -- addressing the independent review's specific objection that revision 1's proposal did
+not name a single implementable, provider-neutral surface.
+
+**Ruled out outright**: modifying `list_dir()`'s or `file_info()`'s existing skip/fail/classify
+behavior directly. Either would be a backward-incompatible change to an already-certified Layer-12
+operation (every existing caller's observed behavior would change), not a narrow additive
+extension, and is out of this lane's (and this Layer's) authority to propose as anything other than
+"ruled out."
+
+If `R007-b` is chosen, the correct process framing is a **narrow, backward-compatible Layer-12
+extension** (one new operation and one new result type added to the Protocol; every existing
+certified operation, type, caller, and `EXEC-*` requirement unchanged) requiring its own narrow
+revalidation on both languages -- NOT a reopening or invalidation of Layer 12's existing historical
+certification. This pass does not create, implement, or certify this operation; it only
+characterizes it as a candidate.
 
 **Consequences summary (neutral, for owner decision):**
 
 ```text
-                       R007-a (accept)     R007-b (i)+(ii) (additive)
-Layer 12 change        none                additive only, existing ops unchanged
-Python impact          none beyond WP-13.1 two new operations/wrapper + WP-13.1 consumes them
-Rust impact             none beyond WP-13.1 two new operations/wrapper + WP-13.1 consumes them
-Fidelity to Pi's        LOW on all three    HIGH on all three (structural reproduction of ls.ts's
-  `ls` tool specifically  divergences        own loop becomes possible)
-Implementation cost      lowest              moderate -- new Layer-12 surface + its own
-                                             revalidation, not merely a WP-13.1-local change
+                          R007-a (accept)      R007-b (list_dir_entries)
+Layer 12 change           none                 additive only -- one new operation, one new
+                                               result type; every existing operation/type/
+                                               caller unchanged
+Python impact              none beyond WP-13.1  one new operation + WP-13.1 consumes it
+Rust impact                 none beyond WP-13.1  one new operation + WP-13.1 consumes it
+Fidelity to Pi's `ls`        LOW on all five      HIGH on all five (structural reproduction of
+  tool specifically           divergences          ls.ts's own loop becomes possible, including
+                                                    the cap-boundary content match)
+Implementation cost           lowest               moderate -- new Layer-12 surface + its own
+                                                    revalidation, not merely a WP-13.1-local change
 ```
 
 ## 8. Status (this revision)
 
 ```text
 R007-4a (kind-inclusion):             live-verified, characterized
-R007-4b (whole-call vs per-entry):    live-verified, characterized (corrected replacement for the
-                                       original, invalidated witness)
-R007-4c (combined/cap-boundary):      live-verified, characterized (new; not present in the
-                                       original characterization)
-R007 overall:                         OWNER_DECISION_REQUIRED (R007-a vs. R007-b, and if R007-b,
-                                       whether (i)+(ii) together or a different additive shape)
+R007-4b (whole-call vs per-entry):    live-verified, characterized; witness corrected this
+                                       revision (shared directory + negative control, replacing
+                                       the independently-flagged mismatched-path transcript)
+R007-4c (combined/cap-boundary):      live-verified, characterized
+R007-4d (directory-symlink):          live-verified, characterized (new this revision)
+R007-4e (broken symlink):             live-verified, characterized (new this revision)
+R007-b:                               revised to one consolidated, concrete, provider-neutral
+                                       operation (list_dir_entries), replacing the rejected
+                                       two-candidate proposal
+R007 overall:                         OWNER_DECISION_REQUIRED (R007-a vs. R007-b)
 ```
 
 No option is selected. `TOOL-028` cannot proceed to contract-review-ready status until the owner

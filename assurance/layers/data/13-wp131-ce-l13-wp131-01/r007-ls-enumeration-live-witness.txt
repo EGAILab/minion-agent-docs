@@ -111,15 +111,28 @@ divergence, no cap involved.
 
 == Case B: one entry vanishes between the initial scan and its own per-entry stat (limit=500) ==
 
-$ mkdir /tmp/r007_caseB2
-$ touch /tmp/r007_caseB2/e1_file.txt /tmp/r007_caseB2/e2_file.txt /tmp/r007_caseB2/e4_vanishing.txt
+CORRECTION (this revision): the first pass of this case used two DIFFERENT directory paths for
+the Node run (/tmp/r007_caseB2) and the Python run (an undocumented /tmp/r007_caseB left over
+from an earlier exploratory command in this same session, never explicitly created in that case's
+own transcript). Both runs happened to still produce the correct qualitative result, because the
+undocumented directory coincidentally had the same layout, but the witness as originally written
+did not actually demonstrate a controlled, paired comparison. Rerun below against ONE shared
+directory path, recreated identically before each side's run (the two engines cannot literally
+share a single live directory mid-run without cross-process race artifacts, so "same path, same
+setup, sequential runs" is the correct controlled-comparison method), plus a negative control
+proving the divergence is caused specifically by the injected vanish.
 
-Pi (real ls.ts loop, with the vanish injected between readdir and the per-entry stat loop):
+-- POSITIVE CONTROL: one shared directory, e4 vanishes before its own per-entry check --
+
+$ rm -rf /tmp/r007_caseB_shared && mkdir -p /tmp/r007_caseB_shared
+$ touch /tmp/r007_caseB_shared/e1_file.txt /tmp/r007_caseB_shared/e2_file.txt /tmp/r007_caseB_shared/e4_vanishing.txt
+
+Pi (real ls.ts loop against /tmp/r007_caseB_shared, with e4 removed mid-run):
 $ node -e '
 const fs = require("fs/promises");
 const nodePath = require("path");
 (async () => {
-  const dirPath = "/tmp/r007_caseB2";
+  const dirPath = "/tmp/r007_caseB_shared";
   const entries = await fs.readdir(dirPath);
   entries.sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
   await fs.unlink(nodePath.join(dirPath, "e4_vanishing.txt"));
@@ -139,11 +152,15 @@ const nodePath = require("path");
 })();'
 {"results":["e1_file.txt","e2_file.txt"],"entryLimitReached":false}
 
-Minion (faithful _file_info_sync port, same vanish-before-per-entry-lstat injection):
+$ rm -rf /tmp/r007_caseB_shared && mkdir -p /tmp/r007_caseB_shared
+$ touch /tmp/r007_caseB_shared/e1_file.txt /tmp/r007_caseB_shared/e2_file.txt /tmp/r007_caseB_shared/e4_vanishing.txt
+-- (SAME path, SAME setup, recreated identically -- now run Minion's side against it) --
+
+Minion (faithful _file_info_sync port, against /tmp/r007_caseB_shared, same vanish injection):
 $ python3 -c '
 import sys, os; sys.path.insert(0, "/tmp")
 from l12_lib import _file_info_sync, _UnsupportedFileType
-target = "/tmp/r007_caseB"
+target = "/tmp/r007_caseB_shared"
 with os.scandir(target) as entries:
     entries = list(entries)
 os.remove(os.path.join(target, "e4_vanishing.txt"))
@@ -158,12 +175,31 @@ try:
 except Exception as e:
     print("WHOLE-CALL FAILURE:", type(e).__name__, str(e))'
 WHOLE-CALL FAILURE: FileNotFoundError [Errno 2] No such file or directory:
-'/tmp/r007_caseB/e4_vanishing.txt'
+'/tmp/r007_caseB_shared/e4_vanishing.txt'
 
 RESULT: Pi succeeds, silently omitting the vanished entry, returning [e1, e2]. Minion's
 reproduction fails the ENTIRE call -- no survivors at all, even though e1/e2 both still exist.
 Confirmed divergence, no cap involved, and more severe than "information loss": a total failure
 where Pi succeeds.
+
+-- NEGATIVE CONTROL: identical directory shape, NOTHING vanishes --
+
+$ rm -rf /tmp/r007_caseB_negctrl && mkdir -p /tmp/r007_caseB_negctrl
+$ touch /tmp/r007_caseB_negctrl/e1_file.txt /tmp/r007_caseB_negctrl/e2_file.txt /tmp/r007_caseB_negctrl/e4_present.txt
+
+Pi (real ls.ts loop), nothing removed:
+$ node /tmp/ls_repro.js /tmp/r007_caseB_negctrl 500
+{"results":["e1_file.txt","e2_file.txt","e4_present.txt"],"entryLimitReached":false}
+
+Minion (faithful _list_dir_sync port), nothing removed:
+$ python3 -c 'import sys; sys.path.insert(0,"/tmp"); from l12_lib import _list_dir_sync
+print("OK survivors:", _list_dir_sync("/tmp/r007_caseB_negctrl"))'
+OK survivors: [{'name': 'e2_file.txt', ...}, {'name': 'e4_present.txt', ...}, {'name': 'e1_file.txt', ...}]
+(all three names present, kind FILE, path omitted here for brevity -- full dicts in session output)
+
+RESULT (negative control): with nothing vanishing, BOTH sides return all three entries
+successfully -- confirming the whole-call failure above is caused specifically by the injected
+vanish, not by some artifact of the two different test harnesses or directory setups.
 
 == Case C: a kind-unsupported entry positioned within Pi's pre-cap window (limit=2) ==
 
@@ -203,3 +239,83 @@ differs: Pi's 2nd entry is e2_fifo; Minion-based Layer-13's 2nd entry is e3_file
 Pi's ls never even reaches in this call, since Pi's cap fires immediately after e2_fifo (which Pi
 counts as a successfully-listed entry, unlike Minion which drops it before the cap is even
 applied). Confirmed combined divergence.
+
+== Case D: directory-symlink and broken-symlink behavior (no cap involved, limit=500) ==
+
+-- preliminary: raw stat/lstat classification on a real directory-symlink and a real broken
+symlink --
+
+$ mkdir -p /tmp/r007_symlinks/real_target_dir && cd /tmp/r007_symlinks
+$ ln -s real_target_dir dir_symlink
+$ ln -s does_not_exist broken_symlink
+$ ls -la
+total 52
+drwxr-xr-x  3 user user  4096 Sep 22 13:54 .
+drwxrwxrwt 14 root root 40960 Sep 22 13:54 ..
+lrwxrwxrwx  1 user user    14 Sep 22 13:54 broken_symlink -> does_not_exist
+lrwxrwxrwx  1 user user    15 Sep 22 13:54 dir_symlink -> real_target_dir
+drwxr-xr-x  2 user user  4096 Sep 22 13:54 real_target_dir
+
+$ node -e '
+const fs = require("fs");
+try {
+  const st = fs.statSync("dir_symlink");
+  console.log("dir_symlink stat: isDirectory=" + st.isDirectory());
+} catch (e) { console.log("dir_symlink stat THREW:", e.code); }
+try {
+  const st = fs.statSync("broken_symlink");
+  console.log("broken_symlink stat: isDirectory=" + st.isDirectory());
+} catch (e) { console.log("broken_symlink stat THREW:", e.code); }
+'
+dir_symlink stat: isDirectory=true
+broken_symlink stat THREW: ENOENT
+
+$ python3 -c '
+import os, stat as _stat
+def kind_of(path):
+    st = os.lstat(path)
+    if _stat.S_ISREG(st.st_mode): return "FILE"
+    if _stat.S_ISDIR(st.st_mode): return "DIRECTORY"
+    if _stat.S_ISLNK(st.st_mode): return "SYMLINK"
+    return None
+print("dir_symlink kind:", kind_of("dir_symlink"))
+print("broken_symlink kind:", kind_of("broken_symlink"))'
+dir_symlink kind: SYMLINK
+broken_symlink kind: SYMLINK
+
+-- end-to-end: both real pipelines against one shared directory --
+
+$ rm -rf /tmp/r007_caseD && mkdir -p /tmp/r007_caseD/real_target_dir
+$ cd /tmp/r007_caseD
+$ touch e1_file.txt
+$ ln -s real_target_dir e2_dirlink
+$ ln -s does_not_exist e3_brokenlink
+$ ls -la
+total 52
+drwxr-xr-x  3 user user  4096 Sep 22 13:54 .
+drwxrwxrwt 15 root root 40960 Sep 22 13:54 ..
+-rw-r--r--  1 user user     0 Sep 22 13:54 e1_file.txt
+lrwxrwxrwx  1 user user    15 Sep 22 13:54 e2_dirlink -> real_target_dir
+lrwxrwxrwx  1 user user    14 Sep 22 13:54 e3_brokenlink -> does_not_exist
+drwxr-xr-x  2 user user  4096 Sep 22 13:54 real_target_dir
+
+Pi (real ls.ts loop), limit=500:
+$ node /tmp/ls_repro.js /tmp/r007_caseD 500
+{"results":["e1_file.txt","e2_dirlink/","real_target_dir/"],"entryLimitReached":false}
+
+Minion (faithful _list_dir_sync port):
+$ python3 -c '
+import sys; sys.path.insert(0, "/tmp")
+from l12_lib import _list_dir_sync
+survivors = _list_dir_sync("/tmp/r007_caseD")
+print("survivors:", [(i["name"], i["kind"]) for i in survivors])'
+survivors: [('e3_brokenlink', 'SYMLINK'), ('real_target_dir', 'DIRECTORY'), ('e2_dirlink', 'SYMLINK'), ('e1_file.txt', 'FILE')]
+
+RESULT: Pi shows e2_dirlink WITH a trailing slash (treated as a directory, since fs.stat follows
+the link) and OMITS e3_brokenlink entirely (fs.stat throws ENOENT following the dead link, caught
+by the per-entry catch-all, silently skipped). Minion classifies e2_dirlink as kind=SYMLINK (NOT
+DIRECTORY, since os.lstat does not follow the link) and INCLUDES e3_brokenlink as kind=SYMLINK
+(os.lstat succeeds on a symlink regardless of whether its target exists). Two confirmed
+divergences: directory-symlink kind/suffix mismatch, and the inverse-direction inclusion mismatch
+for broken symlinks (here Pi omits what Minion includes -- the opposite direction from Case A's
+FIFO, where Pi included what Minion omitted).
