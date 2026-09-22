@@ -8,17 +8,22 @@ change.** `R003`/`R004`/`R008` remain frozen `CHECKPOINT-READY`; `R002`/`R005` r
 `OWNER_DECISION_RESOLVED`; `R006-A`/`R006-B` remain `RESOLVED`; `R006-C` remains
 `FEASIBILITY_BLOCKED` (paused, not reopened here). This lane does not discuss or re-review `R006`.
 
-**Revision 2 of this document.** Independent review (`minion-agent-docs#144` @
-`3804d93b5b71562c7f550a35293f8ac0652eea03`) confirmed revision 1's core finding (the `ls.ts`-
-versus-harness-`listDir` mapping, and Divergences 4a/4b/4c below) but rejected owner readiness on
-three blocking points, all addressed in this revision: (1) symlink-to-directory and broken-symlink
-behavior were missing from the divergence matrix and both owner options -- added as Divergences
-4d/4e, live-verified, in Section 4 and folded into Section 7's options; (2) the `R007-b` options
-did not name one concrete, implementable, provider-neutral additive surface -- Section 7 is
-rewritten around a single consolidated proposal; (3) the paired TOCTOU witness (Divergence 4b)
-used two different, one undocumented, directory paths for its Node and Python runs -- rerun in
-Section 5's companion evidence against one shared, identically-recreated directory, with a
-negative control added.
+**Revision 3 of this document.** Revision 1 was reviewed at `minion-agent-docs#144` @
+`3804d93b5b71562c7f550a35293f8ac0652eea03`, which confirmed the core finding (the `ls.ts`-versus-
+harness-`listDir` mapping, and Divergences 4a/4b/4c) but rejected owner readiness on three
+blocking points, fixed in revision 2: (1) symlink-to-directory and broken-symlink behavior were
+missing -- added as live-verified Divergences 4d/4e; (2) `R007-b` did not name one concrete
+provider-neutral additive surface -- consolidated into one proposal; (3) the paired TOCTOU witness
+used two different, one undocumented, directory paths -- rerun against one shared,
+identically-recreated directory with a negative control. Revision 2 was then reviewed at
+`minion-agent-docs#145` @ `d203451f189b438eaaf441d3701386c8d1f42e50`, which confirmed the symlink
+matrix and corrected TOCTOU path but rejected owner readiness on two further points, fixed in this
+revision: (4) revision 2's consolidated `list_dir_entries()` operation computed a fully EAGER
+per-entry probe of every raw entry before returning, unlike Pi's own lazy sort-then-stop-at-cap
+loop -- Section 7's `R007-b` is rewritten around two operations (`list_dir_raw()` +
+`probe_dir_entry()`) that Layer 13 itself calls lazily, one name at a time, stopping exactly where
+Pi would; (5) the negative-control transcript substituted `...` placeholders for actual raw output
+-- corrected in the companion evidence file with the complete, unabbreviated command output.
 
 ## 0. Why this is a fresh characterization, not a resubmission of the original `R007` text
 
@@ -320,50 +325,68 @@ rather than silently omitted the way Pi's resolved-target view would (4e). No La
 Lowest implementation cost -- `WP-13.1` as already drafted (using `list_dir()` directly) already
 produces this behavior without modification; this option only requires a governance record.
 
-**`R007-b` -- ONE consolidated additive Layer-12 operation, sized against all five divergences.**
-Revision 1's two-candidate proposal (a raw-names operation plus a separate "permissive" per-entry
-wrapper) was rejected: a Layer-13-local wrapper around the EXISTING `file_info()` cannot recover
-kind information `file_info()` has already discarded before returning (the unsupported-kind case
-is a `raise`/discarded-Result *inside* `_file_info_sync`, never reaching any caller-side wrapper to
-reinterpret), and giving that wrapper's result type a new `OTHER` kind would only work by mutating
-the EXISTING, widely-relied-upon `FileKind` enum `file_info()`/`list_dir()` already use --
-precisely what "purely additive, nothing existing changes" rules out.
+**`R007-b` -- two purpose-built additive Layer-12 operations, called LAZILY by Layer 13 in its own
+sort-then-cap-before-probe loop, sized against all five divergences.**
 
-**Corrected, single, concrete proposal:**
+Two prior shapes for this option were tried and rejected:
+
+- Revision 1's two-candidate proposal (a raw-names operation plus a "permissive" wrapper around
+  the EXISTING `file_info()`) was rejected because the wrapper could not recover kind information
+  `file_info()` had already discarded before returning, and giving it a new `OTHER` kind would mean
+  mutating the existing, widely-relied-upon `FileKind` enum.
+- Revision 2's single consolidated `list_dir_entries()` operation (own new result type, fixing the
+  vocabulary problem) was ALSO rejected: it computed a FULLY EAGER per-entry probe of every raw
+  entry, unconditionally, before returning anything -- but Pi sorts FIRST, then probes entries ONE
+  AT A TIME, stopping the INSTANT the cap is satisfied, and NEVER probes an entry beyond that point.
+  The independent review's discriminating case makes this concrete: raw/provider order
+  `[z_slow, a_ok]`, sorted order `[a_ok, z_slow]`, `limit=1`. Pi sorts to `[a_ok, z_slow]`, probes
+  only `a_ok`, satisfies the cap, and returns -- `z_slow` is never touched. An eager
+  `list_dir_entries()` that computes a complete per-entry result set before returning would probe
+  `z_slow` regardless (it does not know, and cannot know, where the cap will fall until AFTER every
+  entry is already probed) -- changing cancellation behavior, latency, the window of TOCTOU
+  exposure, and (for a remote/virtual provider) the number of provider round-trips made, all
+  observable properties Pi's own laziness deliberately avoids paying for.
+
+**Corrected proposal: two new operations, with Layer 13 -- not Layer 12 -- controlling when
+probing stops:**
 
 ```text
-list_dir_entries(path) -> Result[list[DirEntryProbe], FsError]
+list_dir_raw(path) -> Result[list[str], FsError]
+probe_dir_entry(path) -> Result[DirEntryProbe, FsError]
 ```
 
-- **Entirely new operation, entirely new result type** (`DirEntryProbe`) -- NOT a reuse or
-  extension of `FileInfo`/`FileKind`. The existing `file_info()` and `list_dir()`, their result
-  types, and every existing caller are completely unchanged; this is additive in the strict sense
-  the process requires, not a rename or reinterpretation of anything certified today.
-- Internally enumerates the directory (like `list_dir()`), but for EACH raw entry performs its OWN
-  symlink-FOLLOWING stat (mirroring `ops.stat`'s default, i.e. Python's `os.stat`, not `os.lstat`)
-  rather than reusing `_file_info_sync`'s `lstat`-based classification. This is what closes 4d
-  (a directory-symlink's resolved target is what gets classified, matching Pi) and 4e (a broken
-  symlink's stat-follow failure becomes a per-entry outcome, not a silent lstat-success).
-- **Never aborts the whole call for one bad entry.** Each element of the returned list is itself a
-  per-entry outcome -- either a successful classification (carrying a kind field whose value set is
-  `FILE | DIRECTORY | SYMLINK_TO_FILE | SYMLINK_TO_DIRECTORY | OTHER | FAILED`, where `OTHER` is
-  used for FIFO/socket/device -- closing 4a -- and `FAILED` carries the raw per-entry error, e.g.
-  the permission-denied or TOCTOU case) or that per-entry failure marker. This closes 4b: Layer 13
-  decides, per entry, whether to skip a `FAILED` marker (reproducing Pi's blanket catch-and-continue
-  exactly) or surface it -- Layer 12 no longer makes that policy choice centrally.
-- Returned in **provider/raw enumeration order, unsorted, with NO cap applied** -- Layer 13 sorts
-  the full list itself (as it already must, to match `R006`'s ordering rules) and then applies its
-  own cap. Because nothing is silently dropped and nothing aborts the whole call anymore (4a/4b/4d/
-  4e all closed), a post-hoc cap over this operation's COMPLETE, corrected per-entry list is now
-  provably equivalent in content to Pi's cap-before-stat loop: Pi's `entryLimitReached` is true
-  exactly when at least one more raw entry (of any eventual fate) exists after the position of the
-  `effectiveLimit`-th entry Pi would have counted as a success (`FILE`/`DIRECTORY`/`SYMLINK_*`/
-  `OTHER`, not `FAILED`) -- a rule Layer 13 can now compute exactly from this operation's complete
-  output, closing 4c as a direct consequence of closing 4a/4b/4d/4e, not as a separate mechanism.
+- `list_dir_raw()`: raw entry NAMES only, provider/OS enumeration order, UNCLASSIFIED -- no stat of
+  any kind is performed. This alone is cheap and matches `ops.readdir`'s own role in `ls.ts` (step
+  1, Section 1) exactly.
+- `probe_dir_entry()`: single-path, entirely new result type `DirEntryProbe` (kind ∈
+  `FILE | DIRECTORY | SYMLINK_TO_FILE | SYMLINK_TO_DIRECTORY | OTHER`) -- NOT a reuse or extension
+  of `FileInfo`/`FileKind`; the existing `file_info()`/`list_dir()`, their result types, and every
+  existing caller are completely unchanged. Performs its OWN symlink-FOLLOWING stat (mirroring
+  `ops.stat`'s default, i.e. Python's `os.stat`, not `os.lstat`), closing 4d (a directory-symlink's
+  resolved target is what gets classified) and 4e (a broken symlink's stat-follow failure becomes
+  this call's own `FsError` Result, never a silently-succeeding `lstat`). `OTHER` is used for
+  FIFO/socket/device, closing 4a. Returns a `Result`, never raises -- so a per-entry failure of ANY
+  kind (permission-denied, TOCTOU-vanished, broken symlink) is this ONE call's own error, not a
+  whole-call abort, closing 4b.
+- **Layer 13 controls the loop, not Layer 12**: call `list_dir_raw()` once, sort the names itself
+  (as it already must, to match `R006`'s ordering rules), then iterate the SORTED list calling
+  `probe_dir_entry()` ONE NAME AT A TIME, checking its own cap BEFORE each call -- exactly
+  mirroring `ls.ts`'s own structure (Section 1, steps 3a/3b) name-for-name, not just in aggregate
+  result. On an error Result from `probe_dir_entry()`, Layer 13 skips that one entry and continues
+  (reproducing Pi's blanket catch-and-continue) without ever calling `probe_dir_entry()` on any
+  name beyond where the cap is satisfied. Against the review's own discriminating case: with
+  `limit=1` and sorted order `[a_ok, z_slow]`, Layer 13 probes `a_ok`, is satisfied, and never
+  calls `probe_dir_entry("z_slow")` at all -- `z_slow` is genuinely never touched, exactly matching
+  Pi, not merely producing the same final content while doing strictly more work to get there.
+- This closes 4c (cap-boundary content correctness) as a direct, mechanical consequence of
+  reproducing Pi's own loop structure name-for-name, not as a post-hoc computation over an
+  already-fully-known list.
 
-This is deliberately ONE operation with ONE new result type, not a pair of loosely-related
-candidates -- addressing the independent review's specific objection that revision 1's proposal did
-not name a single implementable, provider-neutral surface.
+This is two narrowly-scoped operations, not one, because Pi's own algorithm is itself two-phase
+(cheap raw enumeration, then lazy per-entry probing under caller control) -- collapsing them into a
+single call, as revision 2 attempted, is precisely what reintroduces eager over-work relative to
+Pi. Each operation is independently simple, provider-neutral, and does not touch any existing
+certified operation or type.
 
 **Ruled out outright**: modifying `list_dir()`'s or `file_info()`'s existing skip/fail/classify
 behavior directly. Either would be a backward-incompatible change to an already-certified Layer-12
@@ -372,24 +395,28 @@ extension, and is out of this lane's (and this Layer's) authority to propose as 
 "ruled out."
 
 If `R007-b` is chosen, the correct process framing is a **narrow, backward-compatible Layer-12
-extension** (one new operation and one new result type added to the Protocol; every existing
+extension** (two new operations and one new result type added to the Protocol; every existing
 certified operation, type, caller, and `EXEC-*` requirement unchanged) requiring its own narrow
 revalidation on both languages -- NOT a reopening or invalidation of Layer 12's existing historical
-certification. This pass does not create, implement, or certify this operation; it only
-characterizes it as a candidate.
+certification. This pass does not create, implement, or certify these operations; it only
+characterizes them as a candidate.
 
 **Consequences summary (neutral, for owner decision):**
 
 ```text
-                          R007-a (accept)      R007-b (list_dir_entries)
-Layer 12 change           none                 additive only -- one new operation, one new
+                          R007-a (accept)      R007-b (list_dir_raw + probe_dir_entry, Layer-13-
+                                               controlled lazy loop)
+Layer 12 change           none                 additive only -- two new operations, one new
                                                result type; every existing operation/type/
                                                caller unchanged
-Python impact              none beyond WP-13.1  one new operation + WP-13.1 consumes it
-Rust impact                 none beyond WP-13.1  one new operation + WP-13.1 consumes it
-Fidelity to Pi's `ls`        LOW on all five      HIGH on all five (structural reproduction of
-  tool specifically           divergences          ls.ts's own loop becomes possible, including
-                                                    the cap-boundary content match)
+Python impact              none beyond WP-13.1  two new operations + WP-13.1 consumes them in its
+                                               own sort-then-lazy-probe loop
+Rust impact                 none beyond WP-13.1  two new operations + WP-13.1 consumes them
+                                               identically
+Fidelity to Pi's `ls`        LOW on all five      HIGH on all five, AND matches Pi's own laziness --
+  tool specifically           divergences          Layer 13 probes only as many entries as Pi would,
+                                                    never more, per the review's own discriminating
+                                                    case
 Implementation cost           lowest               moderate -- new Layer-12 surface + its own
                                                     revalidation, not merely a WP-13.1-local change
 ```
@@ -397,16 +424,18 @@ Implementation cost           lowest               moderate -- new Layer-12 surf
 ## 8. Status (this revision)
 
 ```text
-R007-4a (kind-inclusion):             live-verified, characterized
-R007-4b (whole-call vs per-entry):    live-verified, characterized; witness corrected this
-                                       revision (shared directory + negative control, replacing
-                                       the independently-flagged mismatched-path transcript)
-R007-4c (combined/cap-boundary):      live-verified, characterized
-R007-4d (directory-symlink):          live-verified, characterized (new this revision)
-R007-4e (broken symlink):             live-verified, characterized (new this revision)
-R007-b:                               revised to one consolidated, concrete, provider-neutral
-                                       operation (list_dir_entries), replacing the rejected
-                                       two-candidate proposal
+R007-4a (kind-inclusion):             live-verified, characterized (unchanged since revision 1)
+R007-4b (whole-call vs per-entry):    live-verified, characterized; witness's negative control
+                                       corrected THIS revision (full unabbreviated raw output,
+                                       replacing a "..." placeholder transcript)
+R007-4c (combined/cap-boundary):      live-verified, characterized (unchanged since revision 1)
+R007-4d (directory-symlink):          live-verified, characterized (unchanged since revision 2)
+R007-4e (broken symlink):             live-verified, characterized (unchanged since revision 2)
+R007-b:                               revised THIS revision to two Layer-13-controlled, lazily-
+                                       called operations (list_dir_raw + probe_dir_entry),
+                                       replacing revision 2's rejected eager list_dir_entries()
+                                       (which probed every entry before Layer 13 could apply its
+                                       cap, unlike Pi's own lazy stop-at-cap loop)
 R007 overall:                         OWNER_DECISION_REQUIRED (R007-a vs. R007-b)
 ```
 

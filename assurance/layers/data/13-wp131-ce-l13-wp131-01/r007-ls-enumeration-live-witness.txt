@@ -194,8 +194,9 @@ $ node /tmp/ls_repro.js /tmp/r007_caseB_negctrl 500
 Minion (faithful _list_dir_sync port), nothing removed:
 $ python3 -c 'import sys; sys.path.insert(0,"/tmp"); from l12_lib import _list_dir_sync
 print("OK survivors:", _list_dir_sync("/tmp/r007_caseB_negctrl"))'
-OK survivors: [{'name': 'e2_file.txt', ...}, {'name': 'e4_present.txt', ...}, {'name': 'e1_file.txt', ...}]
-(all three names present, kind FILE, path omitted here for brevity -- full dicts in session output)
+OK survivors: [{'name': 'e2_file.txt', 'path': '/tmp/r007_caseB_negctrl/e2_file.txt', 'kind': 'FILE'}, {'name': 'e4_present.txt', 'path': '/tmp/r007_caseB_negctrl/e4_present.txt', 'kind': 'FILE'}, {'name': 'e1_file.txt', 'path': '/tmp/r007_caseB_negctrl/e1_file.txt', 'kind': 'FILE'}]
+(this is the complete, unabbreviated raw command output -- corrected this revision, replacing a
+prior version of this transcript that substituted "..." placeholders for the actual dict contents)
 
 RESULT (negative control): with nothing vanishing, BOTH sides return all three entries
 successfully -- confirming the whole-call failure above is caused specifically by the injected
