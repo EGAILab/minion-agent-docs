@@ -1,0 +1,205 @@
+CE-L13-WP131-01 -- Lane D / R007 live-witness transcripts
+Environment: WSL Ubuntu, Node v24.14.0, Python 3.10.12
+Date: 2026-09-22
+All commands and full raw output below are exactly as executed; nothing paraphrased.
+
+== Setup: faithful reproduction scripts ==
+
+/tmp/ls_repro.js -- a literal port of ls.ts's core loop (ls.ts:145-176):
+
+  const fs = require("fs/promises");
+  const nodePath = require("path");
+
+  async function lsRepro(dirPath, effectiveLimit) {
+    const entries = await fs.readdir(dirPath);
+    entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    const results = [];
+    let entryLimitReached = false;
+    for (const entry of entries) {
+      if (results.length >= effectiveLimit) {
+        entryLimitReached = true;
+        break;
+      }
+      const fullPath = nodePath.join(dirPath, entry);
+      let suffix = "";
+      try {
+        const entryStat = await fs.stat(fullPath);
+        if (entryStat.isDirectory()) suffix = "/";
+      } catch {
+        continue;
+      }
+      results.push(entry + suffix);
+    }
+    return { results, entryLimitReached };
+  }
+
+/tmp/l12_lib.py -- a literal port of _list_dir_sync/_file_info_sync/_file_kind_from_stat
+(filesystem.py:368-461):
+
+  import os, stat as _stat
+
+  class _UnsupportedFileType(Exception):
+      pass
+
+  def _file_kind_from_stat(st):
+      if _stat.S_ISREG(st.st_mode): return "FILE"
+      if _stat.S_ISDIR(st.st_mode): return "DIRECTORY"
+      if _stat.S_ISLNK(st.st_mode): return "SYMLINK"
+      return None
+
+  def _file_info_sync(path):
+      st = os.lstat(path)
+      kind = _file_kind_from_stat(st)
+      if kind is None:
+          raise _UnsupportedFileType
+      return {"name": os.path.basename(path), "path": path, "kind": kind}
+
+  def _list_dir_sync(path):
+      infos = []
+      with os.scandir(path) as entries:
+          for entry in entries:
+              try:
+                  infos.append(_file_info_sync(entry.path))
+              except _UnsupportedFileType:
+                  continue
+      return infos
+
+== Preliminary: does fs.stat throw on a FIFO? does os.lstat-based classification recognize one? ==
+
+$ mkdir /tmp/r007_witness && cd /tmp/r007_witness
+$ touch e1_file.txt e2_file.txt && mkfifo e3_fifo
+$ ls -la
+total 48
+drwxr-xr-x 2 user user  4096 Sep 22 13:42 .
+drwxrwxrwt 7 root root 40960 Sep 22 13:42 ..
+-rw-r--r-- 1 user user     0 Sep 22 13:42 e1_file.txt
+-rw-r--r-- 1 user user     0 Sep 22 13:42 e2_file.txt
+prw-r--r-- 1 user user     0 Sep 22 13:42 e3_fifo
+
+$ node -e 'const fs=require("fs"); const st=fs.statSync("e3_fifo");
+  console.log(JSON.stringify({isDirectory: st.isDirectory(), isFile: st.isFile(), isFIFO: st.isFIFO()}));'
+{"isDirectory":false,"isFile":false,"isFIFO":true}
+-> fs.statSync does NOT throw on a FIFO.
+
+$ python3 -c 'import os, stat as _stat
+st = os.lstat("e3_fifo")
+is_reg=_stat.S_ISREG(st.st_mode); is_dir=_stat.S_ISDIR(st.st_mode); is_lnk=_stat.S_ISLNK(st.st_mode)
+kind = "FILE" if is_reg else "DIRECTORY" if is_dir else "SYMLINK" if is_lnk else None
+print({"is_reg":is_reg,"is_dir":is_dir,"is_lnk":is_lnk,"kind":kind,"unsupported":kind is None})'
+{'is_reg': False, 'is_dir': False, 'is_lnk': False, 'kind': None, 'unsupported': True}
+-> Minion's kind classifier returns None (unsupported) for a FIFO -> _UnsupportedFileType.
+
+== Case A: directory with a FIFO among regular files (no cap involved, limit=500) ==
+
+$ mkdir /tmp/r007_caseA
+$ touch /tmp/r007_caseA/e1_file.txt /tmp/r007_caseA/e2_file.txt
+$ mkfifo /tmp/r007_caseA/e3_fifo
+
+Pi (real ls.ts loop):
+$ node /tmp/ls_repro.js /tmp/r007_caseA 500
+{"results":["e1_file.txt","e2_file.txt","e3_fifo"],"entryLimitReached":false}
+
+Minion (faithful _list_dir_sync port):
+$ python3 -c 'import sys; sys.path.insert(0,"/tmp"); from l12_lib import _list_dir_sync
+try: print("OK survivors:", _list_dir_sync("/tmp/r007_caseA"))
+except Exception as e: print("WHOLE-CALL FAILURE:", type(e).__name__, str(e))'
+OK survivors: [{'name': 'e2_file.txt', 'path': '/tmp/r007_caseA/e2_file.txt', 'kind': 'FILE'},
+{'name': 'e1_file.txt', 'path': '/tmp/r007_caseA/e1_file.txt', 'kind': 'FILE'}]
+
+RESULT: Pi includes e3_fifo (3 entries). Minion's survivors omit it (2 entries). Confirmed
+divergence, no cap involved.
+
+== Case B: one entry vanishes between the initial scan and its own per-entry stat (limit=500) ==
+
+$ mkdir /tmp/r007_caseB2
+$ touch /tmp/r007_caseB2/e1_file.txt /tmp/r007_caseB2/e2_file.txt /tmp/r007_caseB2/e4_vanishing.txt
+
+Pi (real ls.ts loop, with the vanish injected between readdir and the per-entry stat loop):
+$ node -e '
+const fs = require("fs/promises");
+const nodePath = require("path");
+(async () => {
+  const dirPath = "/tmp/r007_caseB2";
+  const entries = await fs.readdir(dirPath);
+  entries.sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+  await fs.unlink(nodePath.join(dirPath, "e4_vanishing.txt"));
+  const results = [];
+  let entryLimitReached = false;
+  for (const entry of entries) {
+    if (results.length >= 500) { entryLimitReached = true; break; }
+    const fullPath = nodePath.join(dirPath, entry);
+    let suffix = "";
+    try {
+      const st = await fs.stat(fullPath);
+      if (st.isDirectory()) suffix = "/";
+    } catch { continue; }
+    results.push(entry + suffix);
+  }
+  console.log(JSON.stringify({results, entryLimitReached}));
+})();'
+{"results":["e1_file.txt","e2_file.txt"],"entryLimitReached":false}
+
+Minion (faithful _file_info_sync port, same vanish-before-per-entry-lstat injection):
+$ python3 -c '
+import sys, os; sys.path.insert(0, "/tmp")
+from l12_lib import _file_info_sync, _UnsupportedFileType
+target = "/tmp/r007_caseB"
+with os.scandir(target) as entries:
+    entries = list(entries)
+os.remove(os.path.join(target, "e4_vanishing.txt"))
+infos = []
+try:
+    for entry in entries:
+        try:
+            infos.append(_file_info_sync(entry.path))
+        except _UnsupportedFileType:
+            continue
+    print("OK survivors:", infos)
+except Exception as e:
+    print("WHOLE-CALL FAILURE:", type(e).__name__, str(e))'
+WHOLE-CALL FAILURE: FileNotFoundError [Errno 2] No such file or directory:
+'/tmp/r007_caseB/e4_vanishing.txt'
+
+RESULT: Pi succeeds, silently omitting the vanished entry, returning [e1, e2]. Minion's
+reproduction fails the ENTIRE call -- no survivors at all, even though e1/e2 both still exist.
+Confirmed divergence, no cap involved, and more severe than "information loss": a total failure
+where Pi succeeds.
+
+== Case C: a kind-unsupported entry positioned within Pi's pre-cap window (limit=2) ==
+
+$ mkdir /tmp/r007_caseC
+$ touch /tmp/r007_caseC/e1_file.txt
+$ mkfifo /tmp/r007_caseC/e2_fifo
+$ touch /tmp/r007_caseC/e3_file.txt
+$ touch /tmp/r007_caseC/e4_file.txt
+$ ls -la /tmp/r007_caseC
+total 48
+drwxr-xr-x  2 user user  4096 Sep 22 13:44 .
+drwxrwxrwt 13 root root 40960 Sep 22 13:44 ..
+-rw-r--r--  1 user user     0 Sep 22 13:44 e1_file.txt
+prw-r--r--  1 user user     0 Sep 22 13:44 e2_fifo
+-rw-r--r--  1 user user     0 Sep 22 13:44 e3_file.txt
+-rw-r--r--  1 user user     0 Sep 22 13:44 e4_file.txt
+
+Pi (real ls.ts loop), limit=2:
+$ node /tmp/ls_repro.js /tmp/r007_caseC 2
+{"results":["e1_file.txt","e2_fifo"],"entryLimitReached":true}
+
+Minion list_dir() full survivors, then Layer-13-style post-hoc cap=2:
+$ python3 -c '
+import sys; sys.path.insert(0, "/tmp")
+from l12_lib import _list_dir_sync
+survivors = _list_dir_sync("/tmp/r007_caseC")
+names = sorted((i["name"] for i in survivors), key=lambda s: s.lower())
+limit = 2
+capped = names[:limit]
+print("full survivors (sorted):", names)
+print("capped to limit=2:", capped, "entry_limit_reached:", len(names) > limit)'
+full survivors (sorted): ['e1_file.txt', 'e3_file.txt', 'e4_file.txt']
+capped to limit=2: ['e1_file.txt', 'e3_file.txt'] entry_limit_reached: True
+
+RESULT: entryLimitReached/entry_limit_reached agree (both True), but the displayed CONTENT
+differs: Pi's 2nd entry is e2_fifo; Minion-based Layer-13's 2nd entry is e3_file.txt -- a file
+Pi's ls never even reaches in this call, since Pi's cap fires immediately after e2_fifo (which Pi
+counts as a successfully-listed entry, unlike Minion which drops it before the cap is even
+applied). Confirmed combined divergence.
