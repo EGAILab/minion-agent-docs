@@ -1822,3 +1822,180 @@ PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-c
               (rather than the lexical string target_key was actually derived from) fails this
               witness, since the resource still does not exist and canonicalization would fail
 ```
+
+## 11. Layer-12 additive extension `WP-12.E1` -- `list_dir_raw` / `probe_dir_entry`
+
+**Status: CONTRACT_DRAFT.** Owner-approved as `R007-b` (`minion-agent#48`, governance record
+`https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5771291305`), coordinated as its
+own isolated work package (`minion-agent#53`, `WP-12.E1`). **No Python or Rust implementation
+performed or authorized by this section.** This section is purely additive: `list_dir` (§3,
+operation inventory line 207), `file_info` (§3, line 206), `FileInfo`, and `FileKind` (§3, lines
+217-220) are unchanged by everything below, and their own historical certification and every
+witness in §10 remains valid exactly as written. This section does not itself edit §3's operation
+inventory table; integrating these two new lines into that table is deferred to this work
+package's own implementation/certification pass, once contract review completes.
+
+### 11.1 Motivation (full characterization: `minion-agent-docs/assurance/layers/13-wp131-ce-l13-wp131-01-r007-ls-enumeration.md`)
+
+Pinned Pi's `ls` TOOL (`coding-agent/src/core/tools/ls.ts:145-176`) does not use the harness
+`FileSystemEnv.listDir()` that `list_dir` (§3) mirrors -- it has its own, separate inline loop:
+raw `readdir()`, a caller-side sort, then a lazy per-entry `stat()` (symlink-FOLLOWING, unlike
+`list_dir`'s `lstat`-based classification) with a cap check evaluated BEFORE each probe and a
+blanket per-entry catch (any thrown error silently skips just that one entry; the call itself
+still succeeds). `list_dir`'s full-scan, kind-filtered, whole-call-fails-on-any-per-entry-error
+shape cannot reproduce this: five independently live-verified divergences (kind-inclusion,
+whole-call-failure-vs-per-entry-skip, cap-boundary content, directory-symlink classification,
+broken-symlink inclusion) are detailed in the cited characterization. The owner selected `R007-b`:
+add a narrow, additive capability that lets Layer 13's future `ls` implementation reproduce Pi's
+actual two-phase, lazy structure, rather than accept those divergences as governed.
+
+### 11.2 Operation signatures
+
+```text
+list_dir_raw(path, signal?) -> Result[list[str], FsError]
+probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
+```
+
+```text
+DirEntryProbe{name, path, kind}
+DirEntryProbeKind = file | directory | symlink_to_file | symlink_to_directory | other
+```
+
+Both operations use the SAME `FsError`/`FsErrorCode` taxonomy already defined at §2.1 -- no new
+error type. A provider that cannot supply either operation returns `not_supported` (the existing
+code, §2.1) rather than silently falling back to `list_dir`'s own different behavior; a caller
+observing `not_supported` from either operation must not interpret it as "the directory doesn't
+support listing" (that is `list_dir`'s own, unrelated failure mode).
+
+### 11.3 `list_dir_raw` semantics
+
+Returns the directory's raw entry NAMES only, in PROVIDER/OS enumeration order -- explicitly
+**unsorted**; the caller (Layer 13) applies its own ordering (per `R006`'s eventual collation
+decision) before doing anything else with the result. No classification of any kind is attempted;
+no per-entry stat, lstat, or kind check occurs -- this mirrors `ops.readdir(dirPath)`, the FIRST
+step of Pi's `ls.ts` loop (Part 1 of the cited characterization), exactly, before that tool's own
+sort step. This is a single, non-looping directory-read operation, analogous in shape to `list_dir`
+itself minus its own per-entry classification loop.
+
+**Error mapping**: identical to `list_dir`'s own whole-directory-read failure (§2.1's taxonomy,
+same `ENOENT -> not_found`, `EACCES`/`EPERM -> permission_denied`, `ENOTDIR -> not_directory`,
+`EINVAL -> invalid` mapping already established for that operation) -- `list_dir_raw` never
+produces a per-entry error, since it performs no per-entry work at all.
+
+**Cancellation**: checks pre-aborted before the read; the underlying directory-read primitive
+accepts no native cancellation hook (matching `rename_file`'s established single-phase pattern,
+§3.1) -- ONE checkpoint, no per-entry checkpoint (there is no per-entry loop to checkpoint within).
+
+### 11.4 `probe_dir_entry` semantics
+
+Single-path classification, structurally analogous to `file_info` (§3) but deliberately DIFFERENT
+in two respects, both required to reproduce Pi's `ls` tool:
+
+- **Symlink-following for kind resolution.** Where `file_info` uses `lstat` (non-following,
+  §3.2), `probe_dir_entry` first `lstat`s the addressed path to determine whether it is ITSELF a
+  symlink; if not, classifies directly (`file`/`directory`/`other`, `other` covering FIFO/socket/
+  device -- any kind `file_info`'s own kind-classifier does not recognize as file/directory/
+  symlink). If the entry IS a symlink, `probe_dir_entry` additionally `stat`s (following) the
+  resolved target and classifies as `symlink_to_file` or `symlink_to_directory` accordingly --
+  preserving BOTH the fact that the entry is a symlink AND what it resolves to, which is strictly
+  MORE information than pinned Pi's `ls.ts` itself ever inspects (that tool's own single following
+  `stat()` call only ever asks `isDirectory()`, never "was this a symlink"). This is a deliberate
+  design choice, not an oversight: `probe_dir_entry` is a general Layer-12 primitive, not an
+  `ls`-only mirror, and a caller with a reason to distinguish a real subdirectory from a
+  symlinked one (for example, traversal-safety logic) can do so; §11.5 states exactly how Layer
+  13's OWN `ls` consumption collapses this richer information back down to Pi's coarser,
+  suffix-only distinction.
+- **Disclosed asymmetry**: a symlink whose resolved target is itself kind-unclassifiable (for
+  example, a symlink to a FIFO) classifies as plain `other`, WITHOUT preserving the fact that it
+  was a symlink -- there is no `symlink_to_other` value. This mirrors a genuine limit in Pi's own
+  `ls.ts`, which never distinguishes a symlink-to-FIFO from a plain FIFO in its own output either
+  (both simply fail its `isDirectory()` check the same way); the richer symlink-tracking above is
+  provided ONLY for the file/directory split, where Pi's own output at least depends on the
+  resolved kind (via the `/` suffix), not for the catch-all `other` bucket, where no currently
+  identified caller needs it.
+- **Broken symlinks and any other per-entry stat failure are this call's OWN `Result` error**, not
+  a raised exception and not a whole-call abort of anything else -- there is nothing else in scope
+  for a single-path operation to abort. A broken symlink's target-resolution `stat` failing maps to
+  `not_found` (§2.1's existing `ENOENT -> not_found`); a permission-denied `lstat`/`stat` maps to
+  `permission_denied`; a `TOCTOU`-vanished path (removed between the caller obtaining its name from
+  `list_dir_raw` and calling `probe_dir_entry`) also maps to `not_found`. The caller decides,
+  per-call, whether to skip an error Result (reproducing Pi's blanket per-entry catch-and-continue,
+  §11.5) or surface it -- Layer 12 makes no skip/fail policy decision here, unlike `list_dir`'s own
+  whole-call-abort-on-any-per-entry-error behavior (§3, unchanged).
+
+**Cancellation**: accepts `signal` (uniform typed API, §3.1's shape) but does not inspect it --
+matching `file_info`'s own established "accepts but does not inspect" behavior (§3.1) exactly,
+since this is the same structural class of operation (single-path, at most two underlying stat
+calls, no loop).
+
+### 11.5 Required Layer-13 consumption pattern (normative for any `ls`-equivalent tool built on
+this extension; not itself implemented or authorized here)
+
+```text
+1. raw = list_dir_raw(path)                        -- one call, cheap, no probing
+2. sorted = apply R006's collation decision to raw  -- Layer 13's own responsibility, unrelated to
+                                                        this extension
+3. for each name in sorted, IN ORDER:
+   3a. if results.length >= effective_limit: set
+       entry_limit_reached=true, STOP -- do NOT call
+       probe_dir_entry for this name or any later one
+   3b. else: result = probe_dir_entry(join(path, name))
+       - Err(_): skip (continue to next name; does not
+         count toward results or the cap) -- reproduces
+         Pi's blanket per-entry catch exactly
+       - Ok(probe): append probe to results, mapping
+         symlink_to_directory -> "shown as a directory"
+         and symlink_to_file -> "shown as a file", i.e.
+         collapsing probe.kind's five-way distinction
+         back to Pi's own two-way (isDirectory() true/
+         false) rendering rule
+4. loop ends (sorted exhausted OR step 3a fired)
+```
+
+This is name-for-name structurally identical to Pi's `ls.ts` loop (characterization Part 1): the
+cap check happens BEFORE each probe, so `probe_dir_entry` is never called for a name beyond the
+point where the cap is already satisfied by earlier successes -- against the independent review's
+own discriminating case (raw order `[z_slow, a_ok]`, sorted `[a_ok, z_slow]`, `limit=1`):
+`probe_dir_entry("a_ok")` is called, satisfies the cap, and `probe_dir_entry("z_slow")` is never
+called at all, matching Pi exactly (not merely producing the same final content via strictly more
+underlying work).
+
+### 11.6 Discriminating behavior/witness matrix (predicted; no executable implementation exists yet,
+per §10's own convention)
+
+```text
+LAZY CAP BOUNDARY (§11.5, owner governance record, `minion-agent#48`
+    issuecomment-5771291305)
+    setup:     a directory whose PROVIDER/raw enumeration order is [z_slow, a_ok] (z_slow
+               deliberately slow/blocking to probe), whose SORTED order is [a_ok, z_slow];
+               effective_limit = 1
+    call:      the §11.5 consumption pattern: list_dir_raw, sort, then the lazy per-name loop
+    expected:  probe_dir_entry("a_ok") is called and succeeds; results.length (1) >= limit (1)
+               fires the cap check BEFORE any call to probe_dir_entry("z_slow") is made --
+               z_slow's own probe is never invoked, never blocks, never contributes latency
+    negative control: an implementation that calls probe_dir_entry (or any equivalent per-entry
+               classification) on EVERY raw name before applying the cap -- as a rejected earlier
+               draft of this same contract did -- fails this witness: it would invoke
+               probe_dir_entry("z_slow") unconditionally, changing cancellation, latency, and
+               TOCTOU-exposure behavior relative to pinned Pi
+
+KIND-UNSUPPORTED ENTRY INCLUSION (§11.4, characterization Part 4a)
+    setup:     a directory containing a FIFO among regular files; effective_limit large enough
+               that no cap interaction occurs
+    call:      probe_dir_entry on the FIFO's path
+    expected:  Ok(DirEntryProbe{kind: other, ...}) -- included, not a Result error and not
+               silently dropped
+    negative control: an implementation raising or returning an error Result for a FIFO fails
+               this witness -- `other` is a SUCCESS classification, not a failure
+
+BROKEN SYMLINK IS A PER-CALL ERROR, NOT A WHOLE-CALL ABORT (§11.4, characterization Part 4e)
+    setup:     a directory containing e1 (regular), e2 (a symlink to a non-existent target),
+               e3 (regular); the §11.5 consumption pattern with a limit large enough to reach e3
+    call:      probe_dir_entry on e2's path, within the §11.5 loop
+    expected:  probe_dir_entry(e2) returns an error Result (not_found); the LOOP continues to e3,
+               which succeeds normally -- e1 and e3 both appear in the final results
+    negative control: an implementation where probe_dir_entry(e2)'s failure aborts the entire
+               §11.5 loop (rather than being caught and skipped by the CALLER per step 3b) fails
+               this witness -- this is precisely the whole-call-failure behavior `list_dir` has
+               and this extension exists to avoid
+```
