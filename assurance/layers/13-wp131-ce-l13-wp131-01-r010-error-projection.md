@@ -212,8 +212,11 @@ already-adopted lower-layer code. **Fidelity**: full on hand-authored sites; dis
 on raw/hybrid sites. **Benefit**: fully deterministic, portable, canonical-scenario-testable text
 on every site, including the ones `R010-A` cannot pin down.
 
-Neither option is selected here. `TOOL-025`/`TOOL-026`/`TOOL-028` cannot encode a specific
-error-text disposition for this dimension until the owner chooses.
+**Owner decision (2026-09-23): `R010-B` approved, `R010-A` not adopted** -- see §5 for the full,
+durably-recorded disposition. `TOOL-025`/`TOOL-026` may now encode this error-text disposition
+directly; `TOOL-028`'s own disposition still additionally depends on `R006-C`, which remains
+`FEASIBILITY_BLOCKED` and unresolved as of this revision -- integrating `R010-B` into `spec/
+tools.md`/the manifest is deferred to a separate remediation pass, not performed by this document.
 
 ## 5. Status (this revision)
 
@@ -235,7 +238,14 @@ R010-D (minion-agent-docs#153, then minion-agent-docs#154): RESOLVED for list_di
       covering not_found/permission_denied/not_directory/invalid/not_supported/unknown
 R010-E (minion-agent-docs#153): RESOLVED at revision 3, confirmed by minion-agent-docs#154 -- the
       template count is consistently four throughout
-R010 overall: OWNER_DECISION_REQUIRED (R010-A vs. R010-B)
+R010 owner decision: RESOLVED -- R010-B approved (owner decision, 2026-09-23; governance record
+      minion-agent/issues/48#issuecomment-5785874487; independent approval this characterization
+      received at minion-agent-docs#155 @ 198aed33d48e7da5af903f359126d5a47ea675bc). R010-A NOT
+      ADOPTED. Pi's four stable hand-authored templates preserved verbatim; raw/hybrid sites use
+      the deterministic, closed Layer-13 vocabulary selected from FsErrorCode; generated-error
+      details remains {}; FsErrorCode used only internally as the template-selection key; the
+      list_dir_raw-whole-failure-vs-probe_dir_entry-skipped-error distinction preserved exactly.
+R010 overall: OWNER_DECISION_RESOLVED (R010-B)
 ```
 
 No Layer 12 change. No `minion-agent-python`/`minion-agent-rust` code touched. `R006`/`R007` not
