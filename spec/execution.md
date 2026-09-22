@@ -212,6 +212,11 @@ remove(path, recursive=False, force=False, signal?) -> Result[None, FsError]
 create_temp_dir(prefix="tmp-", signal?) -> Result[str, FsError]
 create_temp_file(prefix="", suffix="", signal?) -> Result[str, FsError]
 cleanup() -> None   # best-effort, must not raise
+
+-- ADDITIVE, §11 (WP-12.E1, EXEC-007, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- above; see §11 for full semantics, error mapping, and cancellation classification):
+list_dir_raw(path, signal?) -> Result[list[str], FsError]
+probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
 ```
 
 ```text
@@ -1827,13 +1832,17 @@ PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-c
 
 **Status: CONTRACT_DRAFT.** Owner-approved as `R007-b` (`minion-agent#48`, governance record
 `https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5771291305`), coordinated as its
-own isolated work package (`minion-agent#53`, `WP-12.E1`). **No Python or Rust implementation
-performed or authorized by this section.** This section is purely additive: `list_dir` (§3,
-operation inventory line 207), `file_info` (§3, line 206), `FileInfo`, and `FileKind` (§3, lines
-217-220) are unchanged by everything below, and their own historical certification and every
-witness in §10 remains valid exactly as written. This section does not itself edit §3's operation
-inventory table; integrating these two new lines into that table is deferred to this work
-package's own implementation/certification pass, once contract review completes.
+own isolated work package (`minion-agent#53`, `WP-12.E1`), tracked as manifest requirement
+`EXEC-007`. **No Python or Rust implementation performed or authorized by this section.** `§3`'s
+operation inventory now lists `list_dir_raw`/`probe_dir_entry` (added THIS revision, marked
+additive and `CONTRACT_DRAFT`, per the independent review at `minion-agent-docs#148` -- WP12E1-R001
+-- which correctly found deferring this integration to implementation would have left two
+simultaneous, disagreeing contracts). Every EXISTING `§3` line -- `list_dir`, `file_info`,
+`FileInfo`, `FileKind`, and everything else -- is unchanged in both wording and semantics; their
+own historical certification and every witness in §10 remains valid exactly as written. This is
+integration of the NEW operations' public signature into the authoritative inventory, not
+implementation: no Python/Rust code exists yet, and the inventory addition alone does not
+constitute or authorize implementation of either operation.
 
 ### 11.1 Motivation (full characterization: `minion-agent-docs/assurance/layers/13-wp131-ce-l13-wp131-01-r007-ls-enumeration.md`)
 
@@ -1923,10 +1932,35 @@ in two respects, both required to reproduce Pi's `ls` tool:
   §11.5) or surface it -- Layer 12 makes no skip/fail policy decision here, unlike `list_dir`'s own
   whole-call-abort-on-any-per-entry-error behavior (§3, unchanged).
 
-**Cancellation**: accepts `signal` (uniform typed API, §3.1's shape) but does not inspect it --
-matching `file_info`'s own established "accepts but does not inspect" behavior (§3.1) exactly,
-since this is the same structural class of operation (single-path, at most two underlying stat
-calls, no loop).
+**`DirEntryProbe.name`/`.path` identity (added this revision, independent review `minion-agent-docs#148`,
+WP12E1-R003 -- the prior draft left these two fields normatively undefined):** identical convention
+to `FileInfo.name`/`.path` (§3, unchanged) -- `path` is the EXACT path string the caller passed to
+`probe_dir_entry`, never re-resolved, canonicalized, or substituted; `name` is that path's basename.
+**Both fields describe the ADDRESSED entry -- the link itself, when the entry is a symlink -- never
+the resolved target.** Probing a symlink to classify it (via the following `stat` above) does not
+silently replace the addressed entry's own identity with its target's: a symlink named `link` whose
+target is `/elsewhere/real_file` still reports `name: "link"`, `path: <the path the caller passed>`,
+regardless of `kind` being `symlink_to_file`. This mirrors `file_info`'s own established behavior
+exactly (§3: `file_info`'s `lstat`-based `FileInfo.path` is likewise always the addressed path, never
+a resolved one) and is the only coherent choice given `probe_dir_entry` is called, per §11.5, with
+names Layer 13 itself already has from `list_dir_raw` -- a caller-substituted identity would silently
+break that correspondence.
+
+**Cancellation (classification corrected this revision, independent review `minion-agent-docs#148`,
+WP12E1-R004 -- the prior draft described this operation-by-operation as merely resembling two
+DIFFERENT existing Pi surfaces, without stating which Minion mapping actually governs it):** this is
+its own explicit `MINION_ARCHITECTURAL_MAPPING`, not a reuse of any single existing precedent by
+analogy. `probe_dir_entry` accepts `signal` (uniform typed API, §3.1's shape) but does NOT inspect
+it -- neither `list_dir_raw` nor `probe_dir_entry` provides native in-flight cancellation of any
+kind; there is no checkpoint mid-call for either operation beyond `list_dir_raw`'s own single
+pre-aborted check (§11.3). Layer 13's own tool-level cancellation contract (`R008`, already settled
+independently of this extension) owns any outer abort race or additional checkpoint a future
+`ls`-equivalent tool needs around its §11.5 loop -- for example, checking an abort signal between
+successive `probe_dir_entry` calls is that FUTURE tool's own responsibility, not a guarantee this
+extension itself makes. This extension's two operations are deliberately minimal primitives; they
+do not inherit or reinterpret `ls.ts`'s own tool-level abort-listener behavior, nor the harness
+`listDir`'s per-entry-loop abort check (§3.1) -- both are different Pi surfaces from a different
+layer of Pi's own architecture, and neither is the source this mapping is modeled on.
 
 ### 11.5 Required Layer-13 consumption pattern (normative for any `ls`-equivalent tool built on
 this extension; not itself implemented or authorized here)
@@ -1998,4 +2032,84 @@ BROKEN SYMLINK IS A PER-CALL ERROR, NOT A WHOLE-CALL ABORT (§11.4, characteriza
                §11.5 loop (rather than being caught and skipped by the CALLER per step 3b) fails
                this witness -- this is precisely the whole-call-failure behavior `list_dir` has
                and this extension exists to avoid
+
+LIST_DIR_RAW PERFORMS ZERO PROBES, RETURNS RAW PROVIDER ORDER (§11.3; added independent review
+    `minion-agent-docs#148`, WP12E1-R005)
+    setup:     a directory whose PROVIDER/raw enumeration order is [z_first, a_second] (neither
+               name pre-sorted); no probe of any kind is performed by list_dir_raw itself
+    call:      list_dir_raw(path)
+    expected:  Ok(["z_first", "a_second"]) -- exactly the raw names, in PROVIDER order, unsorted;
+               zero calls to probe_dir_entry, lstat, or stat of any kind occur as a side effect of
+               this call alone
+    negative control: an implementation that sorts before returning, or that eagerly classifies
+               any entry as part of this call, fails this witness -- ordering and classification
+               are both explicitly Layer 13's own responsibility (§11.5, steps 2/3), not this
+               operation's
+
+PLAIN FILE / PLAIN DIRECTORY CLASSIFICATION (§11.4)
+    setup:     a directory containing e1 (a regular file, not a symlink) and e2 (a regular
+               subdirectory, not a symlink)
+    call:      probe_dir_entry(e1), probe_dir_entry(e2)
+    expected:  Ok(DirEntryProbe{kind: file, name: "e1", path: <e1's addressed path>, ...}) and
+               Ok(DirEntryProbe{kind: directory, name: "e2", path: <e2's addressed path>, ...})
+               respectively -- no symlink indirection, no error
+    negative control: an implementation returning symlink_to_file/symlink_to_directory for a
+               non-symlink entry, or omitting name/path, fails this witness
+
+SYMLINK_TO_FILE / SYMLINK_TO_DIRECTORY CLASSIFICATION (§11.4, characterization Part 4d)
+    setup:     e1 = a symlink named "link_to_file" whose target is an existing regular file; e2 =
+               a symlink named "link_to_dir" whose target is an existing directory
+    call:      probe_dir_entry(e1), probe_dir_entry(e2)
+    expected:  Ok(DirEntryProbe{kind: symlink_to_file, name: "link_to_file", path: <e1's addressed
+               path, NOT the target's path>, ...}) and Ok(DirEntryProbe{kind: symlink_to_directory,
+               name: "link_to_dir", path: <e2's addressed path, NOT the target's path>, ...})
+    negative control: an implementation returning plain file/directory (losing the symlink fact),
+               or substituting the resolved target's own name/path for the addressed link's, fails
+               this witness -- both are distinct, disclosed requirements (§11.4)
+
+SYMLINK-TO-OTHER COLLAPSES TO `other`, DISCLOSED (§11.4's disclosed asymmetry)
+    setup:     a symlink whose target is a FIFO (kind-unclassifiable even after following)
+    call:      probe_dir_entry on the symlink's own path
+    expected:  Ok(DirEntryProbe{kind: other, ...}) -- the symlink-ness is NOT preserved here (there
+               is no symlink_to_other value); this is the one disclosed exception to the
+               symlink-tracking behavior above
+    negative control: an implementation inventing a symlink_to_other value, or instead returning an
+               error Result for this case, fails this witness -- `other` is the correct, and only,
+               classification
+
+PROVIDER `not_supported` IS DISTINGUISHABLE FROM `list_dir`'s OWN FAILURE MODES (§11.2)
+    setup:     a provider that cannot implement list_dir_raw or probe_dir_entry at all (for
+               example, a remote/virtual filesystem backend with no raw-enumeration primitive)
+    call:      list_dir_raw(path) or probe_dir_entry(path) against that provider
+    expected:  Err(not_supported) -- the existing §2.1 code, not a silent fallback to `list_dir`'s
+               own different (kind-filtered, whole-call-fails-on-any-error) behavior
+    negative control: a provider that silently delegates to its own `list_dir` implementation
+               instead of returning not_supported fails this witness -- a caller receiving
+               not_supported must be able to tell this extension specifically is unavailable, not
+               that the directory itself is unlistable
+
+DIRECT-OPERATION CANCELLATION RULES (§11.3, §11.4; added independent review
+    `minion-agent-docs#148`, WP12E1-R004)
+    setup A:   a pre-aborted signal, list_dir_raw called through it
+    expected A: Err(aborted) -- list_dir_raw's own single pre-aborted checkpoint (§11.3) fires
+    setup B:   a pre-aborted (or live) signal, probe_dir_entry called through it on an existing,
+               classifiable path
+    expected B: Ok(DirEntryProbe{...}) -- the call succeeds normally; probe_dir_entry accepts but
+               does NOT inspect signal (§11.4), matching file_info's own established behavior
+    negative control: an implementation returning Err(aborted) for probe_dir_entry under a
+               pre-aborted signal, or NOT checking pre-aborted for list_dir_raw, fails this witness
+               -- the two operations are deliberately asymmetric here, each matching its own
+               established precedent (§11.3/§11.4), not a single uniform rule
+
+EXISTING `list_dir`/`file_info` BEHAVIOR IS UNCHANGED BY THIS EXTENSION (regression witness;
+    added independent review `minion-agent-docs#148`, WP12E1-R001/R005)
+    setup:     any directory/path combination already covered by an existing §10 witness (for
+               example CANCELLATION, or any §3.2 symlink-behavior case)
+    call:      list_dir(path) / file_info(path), exactly as before this section existed
+    expected:  IDENTICAL outcome to the pre-WP-12.E1 contract, in every respect -- this section
+               adds two NEW operations to §3's inventory; it does not alter any existing
+               operation's signature, error mapping, cancellation behavior, or classification rule
+    negative control: any observable difference in list_dir's or file_info's own behavior,
+               traceable to this section's existence, is itself a defect in this section, not an
+               acceptable side effect of introducing it
 ```
