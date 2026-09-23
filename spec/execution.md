@@ -213,7 +213,7 @@ create_temp_dir(prefix="tmp-", signal?) -> Result[str, FsError]
 create_temp_file(prefix="", suffix="", signal?) -> Result[str, FsError]
 cleanup() -> None   # best-effort, must not raise
 
--- ADDITIVE, §11 (WP-12.E1, EXEC-007, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- ADDITIVE, §11 (WP-12.E1, EXEC-007, CERTIFIED -- NOT part of the DIRECT_PI_PARITY set
 -- above; see §11 for full semantics, error mapping, and cancellation classification):
 list_dir_raw(path, signal?) -> Result[list[str], FsError]
 probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
@@ -1830,10 +1830,19 @@ PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-c
 
 ## 11. Layer-12 additive extension `WP-12.E1` -- `list_dir_raw` / `probe_dir_entry`
 
-**Status: CONTRACT_DRAFT.** Owner-approved as `R007-b` (`minion-agent#48`, governance record
+**Status: CERTIFIED in both languages; cross-language closure recorded in `minion-agent#53`.**
+The contract below is unchanged in substance from its approved revision 4
+(`minion-agent-docs#151`). Accepted implementations: Python at `minion-agent/main`
+`a7a5ca723f73730957141553b2502dfa91a108a9` (`minion-agent#55`), Rust at `minion-agent/main`
+`0b1dd8a870c11087f8414e831a5f86003c8c489a` (`minion-agent#56`), Rust assurance at
+`minion-agent-docs/master` `6c807fd92d9876610b14f2a523715069a43bb004` (`minion-agent-docs#157`).
+Each was independently reviewed at its exact SHA before merge. The paragraph below is the original
+contract-draft status note, kept for the record.
+
+*Contract-draft status (historical):* Owner-approved as `R007-b` (`minion-agent#48`, governance record
 `https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5771291305`), coordinated as its
 own isolated work package (`minion-agent#53`, `WP-12.E1`), tracked as manifest requirement
-`EXEC-007`. **No Python or Rust implementation performed or authorized by this section.** `§3`'s
+`EXEC-007`. At that stage no Python or Rust implementation was performed or authorized by this section. `§3`'s
 operation inventory now lists `list_dir_raw`/`probe_dir_entry` (marked additive and
 `CONTRACT_DRAFT`, per the independent review at `minion-agent-docs#148` -- WP12E1-R001 -- which
 correctly found deferring this integration to implementation would have left two simultaneous,
@@ -2017,8 +2026,8 @@ own discriminating case (raw order `[z_slow, a_ok]`, sorted `[a_ok, z_slow]`, `l
 called at all, matching Pi exactly (not merely producing the same final content via strictly more
 underlying work).
 
-### 11.6 Discriminating behavior/witness matrix (predicted; no executable implementation exists yet,
-per §10's own convention)
+### 11.6 Discriminating behavior/witness matrix (authored as predicted outcomes before implementation, per §10's own
+convention; now executed as permanent evidence in both languages -- see manifest `EXEC-007`)
 
 ```text
 LAZY CAP BOUNDARY (§11.5, owner governance record, `minion-agent#48`

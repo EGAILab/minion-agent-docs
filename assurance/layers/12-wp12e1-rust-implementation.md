@@ -273,3 +273,104 @@ git diff --check
 `WP12E1-I003` remains pending independent targeted closure at the replacement exact SHA. Rust
 WP-12.E1 remains a `CERTIFICATION CANDIDATE`; cross-language closure remains pending. WP-13.1 and
 Layer 14 remain not started.
+
+## Targeted closure, final review, merge, and cross-language closure verification
+
+Appended by Claude (independent reviewer for the Rust side; Python/shared-contract owner). Earlier
+sections above are preserved unchanged as the historical record.
+
+### Targeted closure of `WP12E1-I003` (candidate `4301816d6ba66f3be1d5f5b4b48fdeb46f939ac0`)
+
+The refined remediation kept the orchestration-level witness and added two complementary witnesses:
+`real_tokio_raw_listing_invokes_zero_probe_operations` (a delegating decorator over the real
+`TokioDirectoryProbeOperations`, run against a real temporary directory containing an ordinary file
+and a broken symlink) and `concrete_tokio_raw_enumerator_has_no_direct_metadata_probe` (a structural
+guard on the concrete `read_dir_names` body).
+
+Independent replay, in an isolated worktree at the exact candidate SHA: the reviewer's original
+mutation (a swallowed `tokio::fs::metadata(entry.path())` call per entry inside
+`TokioDirectoryProbeOperations::read_dir_names`) is not caught by the decorator witness alone,
+because it bypasses the trait dispatch the decorator counts. It is caught by the structural witness
+(FAIL with the mutation, PASS once reverted). The two witnesses together close the finding.
+
+```text
+WP12E1-I003
+    CLOSED
+```
+
+### Final complete review (same candidate)
+
+```text
+verdict
+    APPROVED
+blocking findings
+    none
+cargo test -p minion-agent
+    PASS -- 0 failures
+cargo clippy -p minion-agent --all-targets
+    PASS
+round-2 diff scope
+    filesystem.rs test additions + 2-line manifest evidence addition only
+```
+
+### Merge (owner-authorized, executed by Codex)
+
+```text
+minion-agent-docs#157  631aaabbf07891af7f7d65c1b303f5c440d925a0
+    -> master 6c807fd92d9876610b14f2a523715069a43bb004  (sole parent bf4eacdafbf9f66cb3ec80befb657575813dd46c)
+minion-agent#56        4301816d6ba66f3be1d5f5b4b48fdeb46f939ac0
+    -> main   0b1dd8a870c11087f8414e831a5f86003c8c489a  (sole parent a7a5ca723f73730957141553b2502dfa91a108a9)
+```
+
+Both merged trees were independently confirmed identical to their approved candidate trees.
+
+### Cross-language closure verification (accepted default branches)
+
+Run against `minion-agent/main` `0b1dd8a870c11087f8414e831a5f86003c8c489a` and
+`minion-agent-docs/master` `6c807fd92d9876610b14f2a523715069a43bb004`, in an isolated worktree:
+
+```text
+Python full pytest
+    PASS -- 1740 passed, 4 skipped, 19 xfailed
+Python coverage
+    PASS -- 100.00%
+ruff
+    PASS
+manifest validation
+    PASS -- 8 passed
+Rust cargo test -p minion-agent
+    PASS -- 347 passed, 0 failed
+Rust merge Python-file delta
+    none
+manifest EXEC-007 evidence references
+    29 listed, 29 resolve to existing Python/Rust test functions
+spec section 11 contract text
+    unchanged since approved revision 4 (docs merge added only this assurance record)
+```
+
+Cross-language semantics agree on every surface the contract fixes: the five-value
+`DirEntryProbeKind` vocabulary (`file`, `directory`, `symlink_to_file`, `symlink_to_directory`,
+`other`, verified by a Rust serde witness and the Python enum values); `list_dir_raw` returning raw
+provider-order names with one pre-read abort checkpoint and zero per-entry probes; `probe_dir_entry`
+doing a non-following classification plus a conditional following stat, never inspecting `signal`,
+reporting a broken symlink as a per-call `not_found`, and identifying the addressed entry by the
+resolved path its `file_info` counterpart produces; `not_supported` for incapable providers; and
+unchanged `list_dir`/`file_info`/`FileInfo`/`FileKind`.
+
+One documentary inconsistency was found and is corrected alongside this entry: three current-status
+markers in `spec/execution.md` (the §3 inventory tag, the §11 status banner, the §11.6 heading) and
+the `EXEC-007` manifest status prose still described the pre-implementation state. No semantic
+contract text changed.
+
+```text
+Python WP-12.E1 / EXEC-007
+    CERTIFIED
+Rust WP-12.E1 / EXEC-007
+    CERTIFIED
+cross-language EXEC-007
+    CLOSURE VERIFIED -- coherent (pending the status-only sync and the final issue #53 state write)
+non-blocking WP12E1-OBS-001
+    OPEN, tracked separately as minion-agent#57; not a WP-12.E1 blocker
+WP-13.1 / Layer 14
+    not started
+```
