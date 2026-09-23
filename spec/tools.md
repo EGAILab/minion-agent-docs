@@ -556,7 +556,12 @@ apply to `TOOL-028` only -- neither touches `TOOL-025`/`TOOL-026` at all. `TOOL-
 NOT integrated pending `R006-C`'s resolution, to avoid encoding a guessed outcome (`spec/tools.md`
 is a single evolving specification, not a revision-numbered historical series -- git history is the
 record here, unlike `assurance/layers/` scoping/checkpoint artifacts). `TOOL-025`/`TOOL-026`
-integration itself not yet independently re-reviewed. Owns the concrete
+integration: first independent review (`minion-agent-docs#156`) found the underlying owner
+decisions correctly APPROVED but the normative integration itself REJECTED on four findings
+(`L13-WP131-INT-R001`-`R004`: `R005-A`'s stale pre-decision text left in place, `R002-A`/`R002-B`
+conflation, `R010-B`'s intentional-divergence disposition not distinguished from `adopted`, and a
+normative `TOOL-028` cross-reference) -- remediated in this revision; not yet re-reviewed. Owns the
+concrete
 built-in tools themselves -- their argument schemas, path-argument handling, output/truncation
 shapes, and same-target mutation serialization -- as opposed to Layer 05/06's generic
 tool-definition/execution framework above, which any tool (built-in or extension-registered) goes
@@ -597,13 +602,24 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
 3. On Windows only: rewrite a Git-Bash/MSYS/Cygwin/WSL-style POSIX drive path
    ("/c/...", "/mnt/c/...", "/cygdrive/c/...") to its native Windows form
    ("C:\...").
-4. Pass the result as the `path` argument to the appropriate READ-ONLY
+4. If the result starts with "file://" (`R002-A`, integrated below): call
+   Layer 12's already-certified `_file_url_to_path` conversion DIRECTLY,
+   UNWRAPPED -- no exception-suppressing wrapper. A conversion failure
+   REJECTS THE CALL IMMEDIATELY, right here in the pipeline, BEFORE any
+   `ctx.fs`/provider access is attempted -- it does NOT fall through to
+   step 5 with the literal string. A successful conversion replaces the
+   pipeline's working value with the converted path and continues to
+   step 5 normally.
+5. Pass the result as the `path` argument to the appropriate READ-ONLY
    ctx.fs operation directly -- read_text_file / read_binary_file /
    file_info / list_dir (Layer 12, FileSystem Protocol). Tilde expansion,
-   `file://` URL conversion, absolute-path normalization, and cwd-relative
-   resolution all happen INSIDE that provider call, via the SAME
-   already-certified resolve_local_path logic every other execution-seam
-   operation uses -- this pipeline does not reimplement any part of it.
+   absolute-path normalization, and cwd-relative resolution all happen
+   INSIDE that provider call, via the SAME already-certified
+   resolve_local_path logic every other execution-seam operation uses --
+   this pipeline does not reimplement that part of it. (A non-`file://`
+   input never reaches step 4's conversion at all; `resolve_local_path`'s
+   OWN internal `file://` handling, §3.2, is therefore never exercised by
+   this pipeline for a WP-13.1 caller -- step 4 always intercepts first.)
 ```
 
 **`L13-WP131-R001` correction:** an earlier revision of this pipeline added a mandatory trim step
@@ -632,16 +648,21 @@ with the pipeline's own preprocessed string. `MINION_ARCHITECTURAL_MAPPING`, cor
 named.
 
 **Owner-decided divergence (`TOOL-026`, `R002-A` -- integration of the resolved `CE-L13-WP131-01`
-Lane B decision, `minion-agent#48`):** pinned Pi's own two path-resolution implementations disagree
-on a malformed `file://` URL. The harness-level resolver Layer 12's `resolve_local_path` mirrors
-(`packages/agent/src/harness/env/nodejs.ts:57-62`) catches a `fileURLToPath` failure and falls
-through with the literal string unchanged. The `coding-agent` tool layer's own resolver
-(`utils/paths.ts:95-97`) does **not** catch that failure -- `fileURLToPath(normalized)` is called
-unguarded, so pinned Pi's actual `read`/`ls` tools reject with a raw URL-parsing error for a
-malformed `file://` path.
+Lane B decision, `minion-agent#48`; corrected this revision, independent review
+`minion-agent-docs#156`, `L13-WP131-INT-R002` -- an earlier integration pass conflated `R002-A`
+with the rejected `R002-B` alternative's own outcome):** pinned Pi's own two path-resolution
+implementations disagree on a malformed `file://` URL. The harness-level resolver Layer 12's
+`resolve_local_path` mirrors (`packages/agent/src/harness/env/nodejs.ts:57-62`) catches a
+`fileURLToPath` failure and falls through with the literal string unchanged. The `coding-agent`
+tool layer's own resolver (`utils/paths.ts:95-97`) does **not** catch that failure --
+`fileURLToPath(normalized)` is called unguarded, so pinned Pi's actual `read`/`ls` tools reject
+with a raw URL-parsing error for a malformed `file://` path.
 
-The owner selected `R002-A`: `WP-13.1` preserves a genuinely DISTINGUISHABLE malformed-`file://`
-error, rather than letting it collapse into an ordinary not-found result. **Mechanism**: Layer 12's
+**The owner's exact governance text (`minion-agent#48` comment `5769645809`) selected `R002-A`**:
+"preserve pinned coding-agent behavior by REJECTING malformed `file://` input through the
+already-certified STRICT conversion boundary BEFORE `ctx.fs` filesystem access." This is `R002-A`'s
+defining property: the malformed input is rejected IMMEDIATELY, at the pipeline step (step 4,
+above) -- it never reaches an ordinary provider filesystem lookup at all. **Mechanism**: Layer 12's
 existing, already-certified `_file_url_to_path` conversion function (`filesystem.py:190`, Rust's
 equivalent conversion function) is called DIRECTLY, without the exception-suppressing wrapper
 `resolve_local_path` normally applies around it -- reusing the identical, unmodified,
@@ -649,24 +670,30 @@ already-certified conversion logic, not a new independently-written parser; this
 Layer 12 make the existing function visibility-exposable (e.g. re-exported without its leading
 underscore), not a behavioral change or a reopening of Layer 12's own certified characterization.
 
-**Resulting classification is platform-dependent, confirmed directly on both platforms (not
-reasoned through on only one side)**:
+**Classification**: `_file_url_to_path`'s own failure (a `ValueError`/`OSError` from URL parsing,
+never an OS-level filesystem errno at all, since no filesystem call has been made yet) maps to
+`FsErrorCode.INVALID` -- the malformed-input condition the certified taxonomy's `invalid` code
+exists to represent (`spec/execution.md` §2.1), distinct from a genuine OS-level `not_found`/
+`permission_denied`/etc. outcome. Lane B's own characterization explicitly deferred this exact
+code/text choice to Lane E (`R002-A`'s "error projection: deferred to `L13-WP131-R010`"); this
+integration pass makes that deferred choice concrete now that `R010-B` is decided, rather than
+leaving it unresolved. **Final message text** follows `TOOL-025`'s `R010-B` integration below: the
+existence/permission-check template, `"Cannot access <path>: invalid path"` -- this is the SAME
+"reject before touching `ctx.fs`" checkpoint shape `read`'s own earlier site uses, applied here to
+the pipeline's own step-4 rejection.
 
-```text
-Windows: the malformed literal fall-through path contains a colon outside drive-letter
-         position -- an illegal character at the OS level -- `errno.EINVAL` ->
-         `FsErrorCode.INVALID` (verified directly)
-POSIX:   the identical literal fall-through path is an ordinary, syntactically legal
-         (if nonsensical) path component -- `ENOENT` -> `FsErrorCode.NOT_FOUND`
-         (independently verified on Linux/WSL)
-```
-
-This is NOT the same single "indistinguishable from a missing file" outcome on every platform --
-`WP-13.1` reproduces this exact platform split, not a smoothed-over uniform result. The FINAL
-error-message TEXT for both outcomes follows `TOOL-025`'s `R010-B` integration below (the
-deterministic Layer-13 template for `invalid`/`not_found` respectively) -- this row characterizes
-*that* a distinguishable error exists and *which* certified code each platform produces; it does
-not separately define message text Lane E's own scope already settles.
+**`R002-B` (NOT selected -- the platform-dependent fall-through alternative, disclosed for
+contrast, not part of this contract):** had the owner instead chosen to let a malformed `file://`
+URL fall through to an ordinary provider filesystem lookup (i.e. NOT reject at step 4, matching
+`resolve_local_path`'s own default suppress-and-continue behavior), the resulting classification
+would have been platform-dependent, confirmed directly on both platforms: Windows -- the malformed
+literal fall-through path contains a colon outside drive-letter position, an illegal character at
+the OS level, `errno.EINVAL` -> `FsErrorCode.INVALID` (verified directly); POSIX -- the identical
+literal fall-through path is an ordinary, syntactically legal (if nonsensical) path component,
+`ENOENT` -> `FsErrorCode.NOT_FOUND` (independently verified on Linux/WSL). This platform split is
+`R002-B`'s own disclosed consequence, NOT `R002-A`'s -- `WP-13.1` does not reproduce it, since
+`R002-A` rejects uniformly (as `invalid`) on every platform, before any platform-dependent
+filesystem call would occur.
 
 `@`-prefix stripping happens unconditionally on any leading `@`, matching Pi's CLI `@file`
 convention exactly -- a path whose caller genuinely intends a literal leading `@` character has no
@@ -783,13 +810,33 @@ Image result
     and displayed dimensions and the scale factor needed to map a model-reported coordinate back to
     the original image. A BMP-to-PNG conversion, independently, adds its own hint line
     (`"[Image converted from bmp to png.]"`).
-  - **Scope boundary:** the EXACT resize/re-encode algorithm (a WASM image library run in a worker
-    thread, with a worker-thread-unavailable in-process fallback, JPEG re-encode quality 80) is
-    `MINION_EXTENSION`/implementation-delegated -- this contract does not require byte-identical
-    resized pixel output, only the observable metadata contract above (closed sniff/conversion set,
-    base64 `data` representation, hint text shape and ordering, the 2000x2000/4.5 MiB default
-    thresholds, and the failure-is-still-a-successful-result rule). Reproducing Photon's exact
-    resize algorithm pixel-for-pixel was never a reasonable parity target.
+  - **Semantic authority (`R005-A` -- integration of the resolved `CE-L13-WP131-01` Lane A decision,
+    `minion-agent#48` comment `5760619717`; corrected this revision, independent review
+    `minion-agent-docs#156`, `L13-WP131-INT-R001` -- an earlier integration pass left the OPPOSITE,
+    pre-decision "implementation-delegated" rule in place instead of integrating this one):** the
+    owner selected `R005-A`, `semantic authority: PINNED_PHOTON_COMPATIBLE`, pinned Pi dependency
+    `@silvia-odwyer/photon-node 0.3.4` and its corresponding `photon_rs_bg.wasm` artifact, with the
+    explicit intent of MAXIMUM observable Pi fidelity on `read` image processing -- **NOT**
+    implementation-delegated, and **NOT** satisfied by mere visual equivalence or "produces a valid
+    image." Scope is the COMPLETE Photon-dependent observable surface: decoder acceptance/rejection,
+    EXIF orientation, BMP-to-PNG conversion and its own failure mode, the resize-path's independent
+    re-decode, the no-resize fast-path success boundary, the resize/re-encode candidate search, the
+    success-versus-text-only-failure boundary, MIME, dimensions, `wasResized`, and the encoded data
+    itself -- every one of these is Photon-authoritative, not merely "a reasonable approximation."
+    Python and Rust MAY use different binding mechanics ONLY when each mechanically demonstrates
+    genuine compatibility with the pinned Photon semantics -- ordinary visual similarity is
+    EXPRESSLY insufficient. Before implementation authorization, checkpoint evidence must pin the
+    engine/package and underlying artifact, an integrity hash where applicable, and
+    behavior-affecting wrapper/runtime versions, plus a differential corpus covering PNG/JPEG/GIF/
+    WebP/BMP; boundary dimensions and encoded sizes; EXIF; sniff-positive malformed/rejected inputs;
+    BMP conversion failure; both the no-resize and resize paths; multiple resize candidates; and
+    candidate-search success/exhaustion -- comparing success/failure branch, MIME, dimensions,
+    `wasResized`, and encoded data wherever exact Photon output is authoritative. **If either
+    implementation cannot reproduce pinned Photon semantics maintainably, implementation STOPS and
+    returns to the owner** -- no silent fallback to a looser fidelity standard is authorized without
+    a new governance decision. This decision authorizes contract/checkpoint integration only; it
+    does not itself authorize Python implementation, Rust implementation, Layer-12 changes, or
+    Layer-14 work.
   - A non-vision-model note, when present, is appended as an additional line in
     `content_blocks[0].text` -- it never replaces or suppresses `content_blocks[1]`; a successfully
     processed image is returned to every requesting model regardless of that model's own vision
@@ -805,14 +852,30 @@ Image result
 - `path` not resolving to an existing, readable file is a distinguishable error, separate from any
   truncation/offset outcome (`DIRECT_PI_PARITY`).
 - **Error text (`R010-B` -- integration of the resolved `CE-L13-WP131-01` Lane E decision,
-  `minion-agent#48`):** pinned Pi's `read.ts` authors NO hand-authored error text at all -- every
-  distinguishable `read` failure is a raw or hybrid site under Lane E's own characterization
+  `minion-agent#48`; scope corrected this revision, independent review `minion-agent-docs#156`,
+  `L13-WP131-INT-R004` -- an earlier integration pass normatively cross-referenced `TOOL-028`, which
+  remains frozen/`PENDING_R006` and is NOT integrated by this pass at all):** pinned Pi's `read.ts`
+  authors NO hand-authored error text at all -- every distinguishable `read` failure is a raw or
+  hybrid site under Lane E's own characterization
   (`assurance/layers/13-wp131-ce-l13-wp131-01-r010-error-projection.md`). The owner selected
   `R010-B`: raw/hybrid sites use a deterministic, closed Layer-13 vocabulary selected from the
   certified `FsErrorCode` (`spec/execution.md` §2.1) as an internal dispatch key -- never Pi's own
   raw, platform-dependent OS/provider text, and never exposed as a separate structured field
-  (`details` remains `{}`, per every generated tool error). The closed cause-phrase vocabulary,
-  shared with `TOOL-028` below wherever a raw/hybrid site of the same underlying cause arises:
+  (`details` remains `{}`, per every generated tool error).
+
+  **Disposition clarification (`L13-WP131-INT-R003`):** this error-TEXT normalization on raw/hybrid
+  sites is itself an explicit, owner-recorded, model-visible **`MINION_ARCHITECTURAL_MAPPING` /
+  intentional divergence** -- it is NOT covered by this row's own manifest `disposition: adopted`,
+  which describes `read`'s core Pi-mirroring behavior (schema, truncation, image handling under
+  `R005-A`, cancellation) only. A parity audit checking "does Minion reproduce Pi's error text"
+  must consult this clause, not the row-level disposition alone.
+
+  The closed cause-phrase vocabulary below is scoped to `TOOL-025`/`read` (and, narrowly, to
+  `TOOL-026`'s own `R002-A` step-4 rejection above, which is part of `read`'s/`ls`'s SHARED
+  preprocessing pipeline, already integrated) -- it is NOT applied to `TOOL-028`/`ls`'s own
+  raw/hybrid sites (its `readdir`/`stat` wrapper text, `list_dir_raw`/`probe_dir_entry` outcomes)
+  by this pass; that remains `TOOL-028`'s own, separate, not-yet-integrated decision to make once
+  `R006-C` resolves and `TOOL-028` itself is integrated:
 
   ```text
   FsErrorCode        -> cause phrase
@@ -839,6 +902,11 @@ Image result
   not_supported/unknown for every other cause):
       "Cannot read <path>: <cause phrase>"
   ```
+
+  And to `TOOL-026`'s own step-4 rejection (`R002-A`, above) -- a malformed `file://` URL, reachable
+  code `invalid` only: `"Cannot access <path>: invalid path"` (the SAME template shape as `read`'s
+  existence/permission check, since it is architecturally the same kind of
+  reject-before-`ctx.fs`-access checkpoint).
 
   `"Operation aborted"` (uniform, hand-authored, unchanged -- see the cancellation rule above) is
   the sole exception: it is one of Pi's own four stable templates (Lane E), preserved verbatim, not
