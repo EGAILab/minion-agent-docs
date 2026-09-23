@@ -677,10 +677,11 @@ exists to represent (`spec/execution.md` §2.1), distinct from a genuine OS-leve
 `permission_denied`/etc. outcome. Lane B's own characterization explicitly deferred this exact
 code/text choice to Lane E (`R002-A`'s "error projection: deferred to `L13-WP131-R010`"); this
 integration pass makes that deferred choice concrete now that `R010-B` is decided, rather than
-leaving it unresolved. **Final message text** follows `TOOL-025`'s `R010-B` integration below: the
-existence/permission-check template, `"Cannot access <path>: invalid path"` -- this is the SAME
-"reject before touching `ctx.fs`" checkpoint shape `read`'s own earlier site uses, applied here to
-the pipeline's own step-4 rejection.
+leaving it unresolved. **Final message text** follows `TOOL-025`'s `R010-B` integration below
+(governed by manifest row `TOOL-029`, `disposition: intentional divergence`, not by this row's own
+`adopted` disposition): the existence/permission-check template, `"Cannot access <path>: invalid
+path"` -- this is the SAME "reject before touching `ctx.fs`" checkpoint shape `read`'s own earlier
+site uses, applied here to the pipeline's own step-4 rejection.
 
 **`R002-B` (NOT selected -- the platform-dependent fall-through alternative, disclosed for
 contrast, not part of this contract):** had the owner instead chosen to let a malformed `file://`
@@ -863,12 +864,14 @@ Image result
   raw, platform-dependent OS/provider text, and never exposed as a separate structured field
   (`details` remains `{}`, per every generated tool error).
 
-  **Disposition clarification (`L13-WP131-INT-R003`):** this error-TEXT normalization on raw/hybrid
-  sites is itself an explicit, owner-recorded, model-visible **`MINION_ARCHITECTURAL_MAPPING` /
-  intentional divergence** -- it is NOT covered by this row's own manifest `disposition: adopted`,
-  which describes `read`'s core Pi-mirroring behavior (schema, truncation, image handling under
-  `R005-A`, cancellation) only. A parity audit checking "does Minion reproduce Pi's error text"
-  must consult this clause, not the row-level disposition alone.
+  **Disposition (`L13-WP131-INT-R003`, machine-readable separation -- an earlier revision only
+  disclaimed this in prose within `TOOL-025`'s own row, which independent review correctly found
+  insufficient):** this error-TEXT normalization on raw/hybrid sites is governed by its OWN,
+  SEPARATE manifest row, **`TOOL-029`** (`disposition: intentional divergence`), NOT by
+  `TOOL-025`'s or `TOOL-026`'s own `disposition: adopted`, which describe those tools' core
+  Pi-mirroring behavior (schema, truncation, image handling under `R005-A`, cancellation, path
+  preprocessing/routing) only. A parity audit checking "does Minion reproduce Pi's error text"
+  must consult `TOOL-029`'s own row, not `TOOL-025`/`TOOL-026`'s.
 
   The closed cause-phrase vocabulary below is scoped to `TOOL-025`/`read` (and, narrowly, to
   `TOOL-026`'s own `R002-A` step-4 rejection above, which is part of `read`'s/`ls`'s SHARED
