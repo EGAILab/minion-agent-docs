@@ -139,3 +139,70 @@ Layer 14
 
 The next owner must independently verify PR #56 at the exact candidate SHA. Codex does not merge
 or self-certify this candidate in this pass.
+
+## WP12E1-I003 remediation
+
+The first independent Rust closure review rejected candidate
+`4325072819c3fca5e2ea5e373c379f8b4e54756e` on one assurance-only finding:
+`list_dir_raw`'s no-per-entry-probing rule was true in production but only indirectly evidenced by
+the broken-symlink integration witness.
+
+Updated Rust candidate: `eb9911850c3576188a4a2d2d178c061a5382537f`.
+
+The remediation adds one private, narrow `DirectoryProbeOperations` seam shared by the two new
+EXEC-007 local-provider methods. Production uses the Tokio implementation. A unit witness invokes
+the real public `LocalFileSystem::list_dir_raw` with a counting implementation and requires:
+
+```text
+raw enumeration calls
+    1
+
+symlink_metadata calls
+    0
+
+following metadata calls
+    0
+```
+
+The seam does not change the public API or observable production behavior. It exists so the
+contract's zero-probe invariant is mechanically observable rather than inferred from incidental
+filesystem behavior.
+
+The reviewer's exact negative control was replayed: a swallowed following-`metadata` call was
+inserted once per returned name. The new witness failed with `metadata_calls = 2`; production was
+then restored and the witness passed. The manifest change adds only this evidence pointer.
+
+Fresh gates on the updated candidate:
+
+```text
+cargo fmt --all -- --check
+    PASS
+
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+
+cargo test --workspace --all-features
+    PASS -- 373 tests on Windows, 0 failed
+
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+    PASS
+
+cargo run -p xtask -- conformance verify
+    PASS
+
+cargo run -p xtask -- layering
+    PASS
+
+cargo run -p xtask -- coverage
+    PASS
+
+shared manifest/schema/layering validation
+    PASS -- 218 passed
+
+git diff --check
+    PASS
+```
+
+`WP12E1-I003` is remediated pending independent targeted closure. Candidate status remains Rust
+WP-12.E1 `CERTIFICATION CANDIDATE`; cross-language closure remains pending. WP-13.1 and Layer 14
+remain not started.
