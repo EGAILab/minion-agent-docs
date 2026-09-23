@@ -543,12 +543,20 @@ condition actually suppresses/continues the next model turn.
 
 ## Layer 13 — Built-in tools
 
-**Status: `CONTRACT_DRAFT`.** First independent review (`minion-agent-docs#133`) returned `CHANGES
+**Status: `WP-13.1` `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED`, `TOOL-028` `PENDING_R006` (blocked
+on `R006-C`'s unresolved collation feasibility, `minion-agent#48`), `TOOL-027` `NOT_ADOPTED_CORE`
+(unchanged, see below).** First independent review (`minion-agent-docs#133`) returned `CHANGES
 REQUIRED` -- nine findings, `L13-WP131-R001`-`R009`; Layer 12 boundary confirmed `CLEAR`, no
-reopen required. This revision remediates all nine in place (`spec/tools.md` is a single evolving
-specification, not a revision-numbered historical series -- git history is the record here, unlike
-`assurance/layers/` scoping/checkpoint artifacts). Not yet re-reviewed; not certified. Owns the
-concrete
+reopen required. Remediated across `CE-L13-WP131-01`'s five-lane convergence episode
+(`minion-agent#48`). `R002` (`TOOL-026`, malformed `file://` handling) and `R005` (`TOOL-025`, image
+handling) and `R010` (`TOOL-025`/`TOOL-026`, error text) are now OWNER-DECIDED (`R002-A`, `R005-A`,
+`R010-B`) and integrated below. `R007` (`ls`-specific enumeration/cap semantics, decided `R007-b`)
+and `R006` (`ls`-specific collation; `R006-A`/`R006-B` resolved, `R006-C` `FEASIBILITY_BLOCKED`)
+apply to `TOOL-028` only -- neither touches `TOOL-025`/`TOOL-026` at all. `TOOL-028` is deliberately
+NOT integrated pending `R006-C`'s resolution, to avoid encoding a guessed outcome (`spec/tools.md`
+is a single evolving specification, not a revision-numbered historical series -- git history is the
+record here, unlike `assurance/layers/` scoping/checkpoint artifacts). `TOOL-025`/`TOOL-026`
+integration itself not yet independently re-reviewed. Owns the concrete
 built-in tools themselves -- their argument schemas, path-argument handling, output/truncation
 shapes, and same-target mutation serialization -- as opposed to Layer 05/06's generic
 tool-definition/execution framework above, which any tool (built-in or extension-registered) goes
@@ -623,20 +631,42 @@ with the pipeline's own preprocessed string. `MINION_ARCHITECTURAL_MAPPING`, cor
 12 change required -- the defect was entirely in which already-certified operation this contract
 named.
 
-**Disclosed divergence (new, `TOOL-026`):** pinned Pi's own two path-resolution implementations
-disagree on a malformed `file://` URL. The harness-level resolver Layer 12's `resolve_local_path`
-mirrors (`packages/agent/src/harness/env/nodejs.ts:57-62`) catches a `fileURLToPath` failure and
-falls through with the literal string unchanged. The `coding-agent` tool layer's own resolver
+**Owner-decided divergence (`TOOL-026`, `R002-A` -- integration of the resolved `CE-L13-WP131-01`
+Lane B decision, `minion-agent#48`):** pinned Pi's own two path-resolution implementations disagree
+on a malformed `file://` URL. The harness-level resolver Layer 12's `resolve_local_path` mirrors
+(`packages/agent/src/harness/env/nodejs.ts:57-62`) catches a `fileURLToPath` failure and falls
+through with the literal string unchanged. The `coding-agent` tool layer's own resolver
 (`utils/paths.ts:95-97`) does **not** catch that failure -- `fileURLToPath(normalized)` is called
 unguarded, so pinned Pi's actual `read`/`ls` tools reject with a raw URL-parsing error for a
-malformed `file://` path. Because `WP-13.1` consumes Layer 12's already-certified (harness-derived)
-resolver rather than re-deriving the `coding-agent`-specific (unguarded) one, a malformed `file://`
-path under this contract instead falls through to the literal string and surfaces as an ordinary
-"path not found"-class `FsError`, not a URL-parsing error. This is an intentional, disclosed
-divergence -- reproducing the unguarded behavior would mean either reopening Layer 12 (out of
-scope; its own `L12-PY-R002` characterization deliberately chose the catching form) or duplicating
-resolution logic a second time (the exact defect `L12-R012` already rejected). Not blocking;
-recorded so it is a decision, not a silent gap.
+malformed `file://` path.
+
+The owner selected `R002-A`: `WP-13.1` preserves a genuinely DISTINGUISHABLE malformed-`file://`
+error, rather than letting it collapse into an ordinary not-found result. **Mechanism**: Layer 12's
+existing, already-certified `_file_url_to_path` conversion function (`filesystem.py:190`, Rust's
+equivalent conversion function) is called DIRECTLY, without the exception-suppressing wrapper
+`resolve_local_path` normally applies around it -- reusing the identical, unmodified,
+already-certified conversion logic, not a new independently-written parser; this requires only that
+Layer 12 make the existing function visibility-exposable (e.g. re-exported without its leading
+underscore), not a behavioral change or a reopening of Layer 12's own certified characterization.
+
+**Resulting classification is platform-dependent, confirmed directly on both platforms (not
+reasoned through on only one side)**:
+
+```text
+Windows: the malformed literal fall-through path contains a colon outside drive-letter
+         position -- an illegal character at the OS level -- `errno.EINVAL` ->
+         `FsErrorCode.INVALID` (verified directly)
+POSIX:   the identical literal fall-through path is an ordinary, syntactically legal
+         (if nonsensical) path component -- `ENOENT` -> `FsErrorCode.NOT_FOUND`
+         (independently verified on Linux/WSL)
+```
+
+This is NOT the same single "indistinguishable from a missing file" outcome on every platform --
+`WP-13.1` reproduces this exact platform split, not a smoothed-over uniform result. The FINAL
+error-message TEXT for both outcomes follows `TOOL-025`'s `R010-B` integration below (the
+deterministic Layer-13 template for `invalid`/`not_found` respectively) -- this row characterizes
+*that* a distinguishable error exists and *which* certified code each platform produces; it does
+not separately define message text Lane E's own scope already settles.
 
 `@`-prefix stripping happens unconditionally on any leading `@`, matching Pi's CLI `@file`
 convention exactly -- a path whose caller genuinely intends a literal leading `@` character has no
@@ -774,6 +804,45 @@ Image result
   a settled success.
 - `path` not resolving to an existing, readable file is a distinguishable error, separate from any
   truncation/offset outcome (`DIRECT_PI_PARITY`).
+- **Error text (`R010-B` -- integration of the resolved `CE-L13-WP131-01` Lane E decision,
+  `minion-agent#48`):** pinned Pi's `read.ts` authors NO hand-authored error text at all -- every
+  distinguishable `read` failure is a raw or hybrid site under Lane E's own characterization
+  (`assurance/layers/13-wp131-ce-l13-wp131-01-r010-error-projection.md`). The owner selected
+  `R010-B`: raw/hybrid sites use a deterministic, closed Layer-13 vocabulary selected from the
+  certified `FsErrorCode` (`spec/execution.md` §2.1) as an internal dispatch key -- never Pi's own
+  raw, platform-dependent OS/provider text, and never exposed as a separate structured field
+  (`details` remains `{}`, per every generated tool error). The closed cause-phrase vocabulary,
+  shared with `TOOL-028` below wherever a raw/hybrid site of the same underlying cause arises:
+
+  ```text
+  FsErrorCode        -> cause phrase
+  not_found          -> "no such file or directory"
+  permission_denied  -> "permission denied"
+  not_directory      -> "not a directory"
+  is_directory       -> "is a directory"
+  invalid            -> "invalid path"
+  not_supported      -> "not supported by this provider"
+  unknown            -> "unknown filesystem error"
+  ```
+
+  Applied to `read`'s two raw sites (Lane E's own site split):
+
+  ```text
+  existence/permission check fails (the earlier, `ops.access`-equivalent site;
+  reachable codes: not_found, permission_denied, not_directory, invalid,
+  not_supported, unknown):
+      "Cannot access <path>: <cause phrase>"
+
+  later content-read step fails (`read_text_file`/`read_binary_file` itself;
+  reachable codes: is_directory (the specific addressed-path-is-a-directory
+  subcase), plus not_found/permission_denied/not_directory/invalid/
+  not_supported/unknown for every other cause):
+      "Cannot read <path>: <cause phrase>"
+  ```
+
+  `"Operation aborted"` (uniform, hand-authored, unchanged -- see the cancellation rule above) is
+  the sole exception: it is one of Pi's own four stable templates (Lane E), preserved verbatim, not
+  a raw/hybrid site subject to this vocabulary.
 
 `TOOL-027` -- Pi's macOS-specific filename-fallback heuristics (narrow-no-break-space AM/PM
 substitution, NFD normalization, straight-to-curly-apostrophe substitution, and their
