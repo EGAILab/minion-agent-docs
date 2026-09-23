@@ -212,6 +212,11 @@ remove(path, recursive=False, force=False, signal?) -> Result[None, FsError]
 create_temp_dir(prefix="tmp-", signal?) -> Result[str, FsError]
 create_temp_file(prefix="", suffix="", signal?) -> Result[str, FsError]
 cleanup() -> None   # best-effort, must not raise
+
+-- ADDITIVE, §11 (WP-12.E1, EXEC-007, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- above; see §11 for full semantics, error mapping, and cancellation classification):
+list_dir_raw(path, signal?) -> Result[list[str], FsError]
+probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
 ```
 
 ```text
@@ -1821,4 +1826,329 @@ PROCESS_PATH RETURNS THE SAME STRING AS TARGET_KEY'S OWN DERIVATION (§4, post-c
     negative control: an implementation returning a freshly-recomputed canonical path for case B
               (rather than the lexical string target_key was actually derived from) fails this
               witness, since the resource still does not exist and canonicalization would fail
+```
+
+## 11. Layer-12 additive extension `WP-12.E1` -- `list_dir_raw` / `probe_dir_entry`
+
+**Status: CONTRACT_DRAFT.** Owner-approved as `R007-b` (`minion-agent#48`, governance record
+`https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5771291305`), coordinated as its
+own isolated work package (`minion-agent#53`, `WP-12.E1`), tracked as manifest requirement
+`EXEC-007`. **No Python or Rust implementation performed or authorized by this section.** `§3`'s
+operation inventory now lists `list_dir_raw`/`probe_dir_entry` (marked additive and
+`CONTRACT_DRAFT`, per the independent review at `minion-agent-docs#148` -- WP12E1-R001 -- which
+correctly found deferring this integration to implementation would have left two simultaneous,
+disagreeing contracts). Every EXISTING `§3` line -- `list_dir`, `file_info`, `FileInfo`, `FileKind`,
+and everything else -- is unchanged in both wording and semantics; their own historical
+certification and every witness in §10 remains valid exactly as written. This is integration of the
+NEW operations' public signature into the authoritative inventory, not implementation: no
+Python/Rust code exists yet, and the inventory addition alone does not constitute or authorize
+implementation of either operation.
+
+**Revision 3 of §11.4's `DirEntryProbe.name`/`.path` paragraph** (corrected provenance/authority
+citations, independent re-review `minion-agent-docs#150`, `WP12E1-R006`). A second independent
+review round (`minion-agent-docs#149`'s refined `WP12E1-R003`) found revision 2's claim -- that
+`path` is "the EXACT path string the caller passed, never re-resolved" and that this is "identical
+convention to `FileInfo`" -- self-contradictory: certified `file_info(path)` applies the
+already-certified path resolution rules (§3.2) BEFORE building its result, so `FileInfo.path` is the
+RESOLVED path, never the caller's raw lexical input. §11.4's paragraph below now genuinely applies
+that same §3.2 resolution before classifying (resolve first, then classify) rather than merely
+claiming to. `WP12E1-R003` is `RESOLVED`, independently confirmed at `minion-agent-docs#150` @
+`eb01d9acc67142eeabf086c7278fc9078ebbf0ad`.
+
+### 11.1 Motivation (full characterization: `minion-agent-docs/assurance/layers/13-wp131-ce-l13-wp131-01-r007-ls-enumeration.md`)
+
+Pinned Pi's `ls` TOOL (`coding-agent/src/core/tools/ls.ts:145-176`) does not use the harness
+`FileSystemEnv.listDir()` that `list_dir` (§3) mirrors -- it has its own, separate inline loop:
+raw `readdir()`, a caller-side sort, then a lazy per-entry `stat()` (symlink-FOLLOWING, unlike
+`list_dir`'s `lstat`-based classification) with a cap check evaluated BEFORE each probe and a
+blanket per-entry catch (any thrown error silently skips just that one entry; the call itself
+still succeeds). `list_dir`'s full-scan, kind-filtered, whole-call-fails-on-any-per-entry-error
+shape cannot reproduce this: five independently live-verified divergences (kind-inclusion,
+whole-call-failure-vs-per-entry-skip, cap-boundary content, directory-symlink classification,
+broken-symlink inclusion) are detailed in the cited characterization. The owner selected `R007-b`:
+add a narrow, additive capability that lets Layer 13's future `ls` implementation reproduce Pi's
+actual two-phase, lazy structure, rather than accept those divergences as governed.
+
+### 11.2 Operation signatures
+
+```text
+list_dir_raw(path, signal?) -> Result[list[str], FsError]
+probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
+```
+
+```text
+DirEntryProbe{name, path, kind}
+DirEntryProbeKind = file | directory | symlink_to_file | symlink_to_directory | other
+```
+
+Both operations use the SAME `FsError`/`FsErrorCode` taxonomy already defined at §2.1 -- no new
+error type. A provider that cannot supply either operation returns `not_supported` (the existing
+code, §2.1) rather than silently falling back to `list_dir`'s own different behavior; a caller
+observing `not_supported` from either operation must not interpret it as "the directory doesn't
+support listing" (that is `list_dir`'s own, unrelated failure mode).
+
+### 11.3 `list_dir_raw` semantics
+
+Returns the directory's raw entry NAMES only, in PROVIDER/OS enumeration order -- explicitly
+**unsorted**; the caller (Layer 13) applies its own ordering (per `R006`'s eventual collation
+decision) before doing anything else with the result. No classification of any kind is attempted;
+no per-entry stat, lstat, or kind check occurs -- this mirrors `ops.readdir(dirPath)`, the FIRST
+step of Pi's `ls.ts` loop (Part 1 of the cited characterization), exactly, before that tool's own
+sort step. This is a single, non-looping directory-read operation, analogous in shape to `list_dir`
+itself minus its own per-entry classification loop.
+
+**Error mapping**: identical to `list_dir`'s own whole-directory-read failure (§2.1's taxonomy,
+same `ENOENT -> not_found`, `EACCES`/`EPERM -> permission_denied`, `ENOTDIR -> not_directory`,
+`EINVAL -> invalid` mapping already established for that operation) -- `list_dir_raw` never
+produces a per-entry error, since it performs no per-entry work at all.
+
+**Cancellation**: checks pre-aborted before the read; the underlying directory-read primitive
+accepts no native cancellation hook (matching `rename_file`'s established single-phase pattern,
+§3.1) -- ONE checkpoint, no per-entry checkpoint (there is no per-entry loop to checkpoint within).
+
+### 11.4 `probe_dir_entry` semantics
+
+Single-path classification, structurally analogous to `file_info` (§3) but deliberately DIFFERENT
+in two respects, both required to reproduce Pi's `ls` tool:
+
+- **Symlink-following for kind resolution.** Where `file_info` uses `lstat` (non-following,
+  §3.2), `probe_dir_entry` first `lstat`s the addressed path to determine whether it is ITSELF a
+  symlink; if not, classifies directly (`file`/`directory`/`other`, `other` covering FIFO/socket/
+  device -- any kind `file_info`'s own kind-classifier does not recognize as file/directory/
+  symlink). If the entry IS a symlink, `probe_dir_entry` additionally `stat`s (following) the
+  resolved target and classifies as `symlink_to_file` or `symlink_to_directory` accordingly --
+  preserving BOTH the fact that the entry is a symlink AND what it resolves to, which is strictly
+  MORE information than pinned Pi's `ls.ts` itself ever inspects (that tool's own single following
+  `stat()` call only ever asks `isDirectory()`, never "was this a symlink"). This is a deliberate
+  design choice, not an oversight: `probe_dir_entry` is a general Layer-12 primitive, not an
+  `ls`-only mirror, and a caller with a reason to distinguish a real subdirectory from a
+  symlinked one (for example, traversal-safety logic) can do so; §11.5 states exactly how Layer
+  13's OWN `ls` consumption collapses this richer information back down to Pi's coarser,
+  suffix-only distinction.
+- **Disclosed asymmetry**: a symlink whose resolved target is itself kind-unclassifiable (for
+  example, a symlink to a FIFO) classifies as plain `other`, WITHOUT preserving the fact that it
+  was a symlink -- there is no `symlink_to_other` value. This mirrors a genuine limit in Pi's own
+  `ls.ts`, which never distinguishes a symlink-to-FIFO from a plain FIFO in its own output either
+  (both simply fail its `isDirectory()` check the same way); the richer symlink-tracking above is
+  provided ONLY for the file/directory split, where Pi's own output at least depends on the
+  resolved kind (via the `/` suffix), not for the catch-all `other` bucket, where no currently
+  identified caller needs it.
+- **Broken symlinks and any other per-entry stat failure are this call's OWN `Result` error**, not
+  a raised exception and not a whole-call abort of anything else -- there is nothing else in scope
+  for a single-path operation to abort. A broken symlink's target-resolution `stat` failing maps to
+  `not_found` (§2.1's existing `ENOENT -> not_found`); a permission-denied `lstat`/`stat` maps to
+  `permission_denied`; a `TOCTOU`-vanished path (removed between the caller obtaining its name from
+  `list_dir_raw` and calling `probe_dir_entry`) also maps to `not_found`. The caller decides,
+  per-call, whether to skip an error Result (reproducing Pi's blanket per-entry catch-and-continue,
+  §11.5) or surface it -- Layer 12 makes no skip/fail policy decision here, unlike `list_dir`'s own
+  whole-call-abort-on-any-per-entry-error behavior (§3, unchanged).
+
+**`DirEntryProbe.name`/`.path` identity (revision 3 of this paragraph, independent review
+`minion-agent-docs#149`'s refined `WP12E1-R003`, `RESOLVED` -- revision 2's version of this
+paragraph claimed "identical convention to `FileInfo`" while simultaneously requiring the caller's
+UNRESOLVED lexical string, a genuine self-contradiction: certified `file_info(path)` applies §3.2's
+already-certified path resolution rules BEFORE building its result, so `FileInfo.path` is the
+RESOLVED path -- tilde-expanded, `file://`-parsed, made absolute -- never the caller's raw lexical
+input):** `probe_dir_entry` now GENUINELY reuses `file_info`'s own convention, not merely a claim of
+one: it applies the SAME §3.2 path-resolution rules BEFORE performing its own symlink-following
+classification, exactly as `file_info` does -- this is the NORMATIVE, language-neutral requirement,
+binding on both Python and Rust equally. (Python's certified implementation currently applies this
+via its own `resolve_local_path` helper, `filesystem.py:703` -- cited here only as illustrative
+implementation evidence, not as the shared mechanism a Rust implementation is required to name or
+reuse; Rust applies the same §3.2 rules through its own already-certified resolution path.)
+`DirEntryProbe.path` is that RESOLVED path; `DirEntryProbe.name` is that resolved path's basename.
+This reuses §3.2's own already-certified `~`/`file://`/relative-path handling rather than
+duplicating it -- no new path-parsing machinery is introduced by this extension.
+
+**Both fields describe the ADDRESSED entry -- the link itself, when the entry is a symlink -- never
+the resolved TARGET.** This part of revision 2's claim was correct and is unchanged: probing a
+symlink to classify it (via the following `stat` above) does not silently replace the addressed
+entry's own identity with its target's -- a symlink at resolved path `/workspace/link` whose target
+is `/elsewhere/real_file` still reports `name: "link"`, `path: "/workspace/link"`, regardless of
+`kind` being `symlink_to_file`. The distinction the correction addresses is RESOLUTION (lexical
+input vs. resolved path -- now resolved, matching `file_info`), not TARGET SUBSTITUTION (addressed
+entry vs. its target -- always the addressed entry, in both this and the prior revision).
+
+**Cancellation (classification corrected this revision, independent review `minion-agent-docs#148`,
+WP12E1-R004 -- the prior draft described this operation-by-operation as merely resembling two
+DIFFERENT existing Pi surfaces, without stating which Minion mapping actually governs it):** this is
+its own explicit `MINION_ARCHITECTURAL_MAPPING`, not a reuse of any single existing precedent by
+analogy. `probe_dir_entry` accepts `signal` (uniform typed API, §3.1's shape) but does NOT inspect
+it -- neither `list_dir_raw` nor `probe_dir_entry` provides native in-flight cancellation of any
+kind; there is no checkpoint mid-call for either operation beyond `list_dir_raw`'s own single
+pre-aborted check (§11.3). Layer 13's own tool-level cancellation contract (`R008`, already settled
+independently of this extension) owns any outer abort race or additional checkpoint a future
+`ls`-equivalent tool needs around its §11.5 loop -- for example, checking an abort signal between
+successive `probe_dir_entry` calls is that FUTURE tool's own responsibility, not a guarantee this
+extension itself makes. This extension's two operations are deliberately minimal primitives; they
+do not inherit or reinterpret `ls.ts`'s own tool-level abort-listener behavior, nor the harness
+`listDir`'s per-entry-loop abort check (§3.1) -- both are different Pi surfaces from a different
+layer of Pi's own architecture, and neither is the source this mapping is modeled on.
+
+### 11.5 Required Layer-13 consumption pattern (normative for any `ls`-equivalent tool built on
+this extension; not itself implemented or authorized here)
+
+```text
+1. raw = list_dir_raw(path)                        -- one call, cheap, no probing
+2. sorted = apply R006's collation decision to raw  -- Layer 13's own responsibility, unrelated to
+                                                        this extension
+3. for each name in sorted, IN ORDER:
+   3a. if results.length >= effective_limit: set
+       entry_limit_reached=true, STOP -- do NOT call
+       probe_dir_entry for this name or any later one
+   3b. else: result = probe_dir_entry(join(path, name))
+       - Err(_): skip (continue to next name; does not
+         count toward results or the cap) -- reproduces
+         Pi's blanket per-entry catch exactly
+       - Ok(probe): append probe to results, mapping
+         symlink_to_directory -> "shown as a directory"
+         and symlink_to_file -> "shown as a file", i.e.
+         collapsing probe.kind's five-way distinction
+         back to Pi's own two-way (isDirectory() true/
+         false) rendering rule
+4. loop ends (sorted exhausted OR step 3a fired)
+```
+
+This is name-for-name structurally identical to Pi's `ls.ts` loop (characterization Part 1): the
+cap check happens BEFORE each probe, so `probe_dir_entry` is never called for a name beyond the
+point where the cap is already satisfied by earlier successes -- against the independent review's
+own discriminating case (raw order `[z_slow, a_ok]`, sorted `[a_ok, z_slow]`, `limit=1`):
+`probe_dir_entry("a_ok")` is called, satisfies the cap, and `probe_dir_entry("z_slow")` is never
+called at all, matching Pi exactly (not merely producing the same final content via strictly more
+underlying work).
+
+### 11.6 Discriminating behavior/witness matrix (predicted; no executable implementation exists yet,
+per §10's own convention)
+
+```text
+LAZY CAP BOUNDARY (§11.5, owner governance record, `minion-agent#48`
+    issuecomment-5771291305)
+    setup:     a directory whose PROVIDER/raw enumeration order is [z_slow, a_ok] (z_slow
+               deliberately slow/blocking to probe), whose SORTED order is [a_ok, z_slow];
+               effective_limit = 1
+    call:      the §11.5 consumption pattern: list_dir_raw, sort, then the lazy per-name loop
+    expected:  probe_dir_entry("a_ok") is called and succeeds; results.length (1) >= limit (1)
+               fires the cap check BEFORE any call to probe_dir_entry("z_slow") is made --
+               z_slow's own probe is never invoked, never blocks, never contributes latency
+    negative control: an implementation that calls probe_dir_entry (or any equivalent per-entry
+               classification) on EVERY raw name before applying the cap -- as a rejected earlier
+               draft of this same contract did -- fails this witness: it would invoke
+               probe_dir_entry("z_slow") unconditionally, changing cancellation, latency, and
+               TOCTOU-exposure behavior relative to pinned Pi
+
+KIND-UNSUPPORTED ENTRY INCLUSION (§11.4, characterization Part 4a)
+    setup:     a directory containing a FIFO among regular files; effective_limit large enough
+               that no cap interaction occurs
+    call:      probe_dir_entry on the FIFO's path
+    expected:  Ok(DirEntryProbe{kind: other, ...}) -- included, not a Result error and not
+               silently dropped
+    negative control: an implementation raising or returning an error Result for a FIFO fails
+               this witness -- `other` is a SUCCESS classification, not a failure
+
+BROKEN SYMLINK IS A PER-CALL ERROR, NOT A WHOLE-CALL ABORT (§11.4, characterization Part 4e)
+    setup:     a directory containing e1 (regular), e2 (a symlink to a non-existent target),
+               e3 (regular); the §11.5 consumption pattern with a limit large enough to reach e3
+    call:      probe_dir_entry on e2's path, within the §11.5 loop
+    expected:  probe_dir_entry(e2) returns an error Result (not_found); the LOOP continues to e3,
+               which succeeds normally -- e1 and e3 both appear in the final results
+    negative control: an implementation where probe_dir_entry(e2)'s failure aborts the entire
+               §11.5 loop (rather than being caught and skipped by the CALLER per step 3b) fails
+               this witness -- this is precisely the whole-call-failure behavior `list_dir` has
+               and this extension exists to avoid
+
+LIST_DIR_RAW PERFORMS ZERO PROBES, RETURNS RAW PROVIDER ORDER (§11.3; added independent review
+    `minion-agent-docs#148`, WP12E1-R005)
+    setup:     a directory whose PROVIDER/raw enumeration order is [z_first, a_second] (neither
+               name pre-sorted); no probe of any kind is performed by list_dir_raw itself
+    call:      list_dir_raw(path)
+    expected:  Ok(["z_first", "a_second"]) -- exactly the raw names, in PROVIDER order, unsorted;
+               zero calls to probe_dir_entry, lstat, or stat of any kind occur as a side effect of
+               this call alone
+    negative control: an implementation that sorts before returning, or that eagerly classifies
+               any entry as part of this call, fails this witness -- ordering and classification
+               are both explicitly Layer 13's own responsibility (§11.5, steps 2/3), not this
+               operation's
+
+`DirEntryProbe.path` IS THE RESOLVED PATH, MATCHING `file_info` -- NOT THE RAW CALLER STRING
+    (§11.4, independent review `minion-agent-docs#149`'s refined WP12E1-R003, RESOLVED at
+    `minion-agent-docs#150`)
+    setup:     cwd = "/workspace"; an existing entry reachable via the relative lexical string
+               "sub/item"
+    call:      probe_dir_entry("sub/item")
+    expected:  Ok(DirEntryProbe{path: "/workspace/sub/item", name: "item", ...}) -- resolved via
+               the SAME §3.2 already-certified path-resolution rules file_info itself applies, NOT
+               the literal unresolved string "sub/item"
+    negative control: an implementation returning path: "sub/item" (the unresolved lexical input)
+               fails this witness -- this was revision 2's own defect, corrected here; an
+               implementation whose resolved path disagrees with what file_info("sub/item") would
+               itself produce for the SAME cwd/input also fails, since the entire point of this
+               correction is genuine (not merely claimed) convention reuse
+
+PLAIN FILE / PLAIN DIRECTORY CLASSIFICATION (§11.4)
+    setup:     a directory containing e1 (a regular file, not a symlink) and e2 (a regular
+               subdirectory, not a symlink)
+    call:      probe_dir_entry(e1), probe_dir_entry(e2)
+    expected:  Ok(DirEntryProbe{kind: file, name: "e1", path: <e1's RESOLVED addressed path>, ...})
+               and Ok(DirEntryProbe{kind: directory, name: "e2", path: <e2's RESOLVED addressed
+               path>, ...}) respectively -- no symlink indirection, no error
+    negative control: an implementation returning symlink_to_file/symlink_to_directory for a
+               non-symlink entry, or omitting name/path, fails this witness
+
+SYMLINK_TO_FILE / SYMLINK_TO_DIRECTORY CLASSIFICATION (§11.4, characterization Part 4d)
+    setup:     e1 = a symlink named "link_to_file" whose target is an existing regular file; e2 =
+               a symlink named "link_to_dir" whose target is an existing directory
+    call:      probe_dir_entry(e1), probe_dir_entry(e2)
+    expected:  Ok(DirEntryProbe{kind: symlink_to_file, name: "link_to_file", path: <e1's RESOLVED
+               addressed path, NOT the target's path>, ...}) and
+               Ok(DirEntryProbe{kind: symlink_to_directory, name: "link_to_dir", path: <e2's
+               RESOLVED addressed path, NOT the target's path>, ...})
+    negative control: an implementation returning plain file/directory (losing the symlink fact),
+               or substituting the resolved target's own name/path for the addressed link's, fails
+               this witness -- both are distinct, disclosed requirements (§11.4)
+
+SYMLINK-TO-OTHER COLLAPSES TO `other`, DISCLOSED (§11.4's disclosed asymmetry)
+    setup:     a symlink whose target is a FIFO (kind-unclassifiable even after following)
+    call:      probe_dir_entry on the symlink's own path
+    expected:  Ok(DirEntryProbe{kind: other, ...}) -- the symlink-ness is NOT preserved here (there
+               is no symlink_to_other value); this is the one disclosed exception to the
+               symlink-tracking behavior above
+    negative control: an implementation inventing a symlink_to_other value, or instead returning an
+               error Result for this case, fails this witness -- `other` is the correct, and only,
+               classification
+
+PROVIDER `not_supported` IS DISTINGUISHABLE FROM `list_dir`'s OWN FAILURE MODES (§11.2)
+    setup:     a provider that cannot implement list_dir_raw or probe_dir_entry at all (for
+               example, a remote/virtual filesystem backend with no raw-enumeration primitive)
+    call:      list_dir_raw(path) or probe_dir_entry(path) against that provider
+    expected:  Err(not_supported) -- the existing §2.1 code, not a silent fallback to `list_dir`'s
+               own different (kind-filtered, whole-call-fails-on-any-error) behavior
+    negative control: a provider that silently delegates to its own `list_dir` implementation
+               instead of returning not_supported fails this witness -- a caller receiving
+               not_supported must be able to tell this extension specifically is unavailable, not
+               that the directory itself is unlistable
+
+DIRECT-OPERATION CANCELLATION RULES (§11.3, §11.4; added independent review
+    `minion-agent-docs#148`, WP12E1-R004)
+    setup A:   a pre-aborted signal, list_dir_raw called through it
+    expected A: Err(aborted) -- list_dir_raw's own single pre-aborted checkpoint (§11.3) fires
+    setup B:   a pre-aborted (or live) signal, probe_dir_entry called through it on an existing,
+               classifiable path
+    expected B: Ok(DirEntryProbe{...}) -- the call succeeds normally; probe_dir_entry accepts but
+               does NOT inspect signal (§11.4), matching file_info's own established behavior
+    negative control: an implementation returning Err(aborted) for probe_dir_entry under a
+               pre-aborted signal, or NOT checking pre-aborted for list_dir_raw, fails this witness
+               -- the two operations are deliberately asymmetric here, each matching its own
+               established precedent (§11.3/§11.4), not a single uniform rule
+
+EXISTING `list_dir`/`file_info` BEHAVIOR IS UNCHANGED BY THIS EXTENSION (regression witness;
+    added independent review `minion-agent-docs#148`, WP12E1-R001/R005)
+    setup:     any directory/path combination already covered by an existing §10 witness (for
+               example CANCELLATION, or any §3.2 symlink-behavior case)
+    call:      list_dir(path) / file_info(path), exactly as before this section existed
+    expected:  IDENTICAL outcome to the pre-WP-12.E1 contract, in every respect -- this section
+               adds two NEW operations to §3's inventory; it does not alter any existing
+               operation's signature, error mapping, cancellation behavior, or classification rule
+    negative control: any observable difference in list_dir's or file_info's own behavior,
+               traceable to this section's existence, is itself a defect in this section, not an
+               acceptable side effect of introducing it
 ```
