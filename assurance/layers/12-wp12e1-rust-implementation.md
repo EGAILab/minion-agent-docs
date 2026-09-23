@@ -206,3 +206,70 @@ git diff --check
 `WP12E1-I003` is remediated pending independent targeted closure. Candidate status remains Rust
 WP-12.E1 `CERTIFICATION CANDIDATE`; cross-language closure remains pending. WP-13.1 and Layer 14
 remain not started.
+
+## WP12E1-I003 refined remediation
+
+The targeted review of candidate `eb9911850c3576188a4a2d2d178c061a5382537f` credited the
+orchestration-level witness above but correctly re-opened `WP12E1-I003` at a narrower scope: its
+substitute counting implementation did not execute
+`TokioDirectoryProbeOperations::read_dir_names`, so a direct per-entry Tokio metadata call inside
+that concrete loop remained undetected.
+
+The original orchestration witness remains unchanged. Two complementary witnesses now cover the
+refined risk:
+
+- `real_tokio_raw_listing_invokes_zero_probe_operations` wraps and delegates to the real Tokio
+  implementation, invokes the public `LocalFileSystem::list_dir_raw` against a real temporary
+  directory containing an ordinary file and a broken symlink, and requires one raw enumeration
+  dispatch with zero calls through either probe operation;
+- `concrete_tokio_raw_enumerator_has_no_direct_metadata_probe` guards the concrete Tokio raw-loop
+  implementation itself against direct `metadata` or `symlink_metadata` calls that would bypass
+  the delegating decorator's counters.
+
+This combination distinguishes the two separate regression surfaces: orchestration accidentally
+requesting a probe through the typed seam, and the concrete raw enumerator performing a direct
+per-entry probe internally. No public or observable production semantics changed.
+
+The independent reviewer's exact mutation was replayed inside the real Tokio enumeration loop:
+
+```rust
+let _ = tokio::fs::metadata(entry.path()).await;
+```
+
+With that mutation present, the concrete-loop witness failed. After restoring the correct raw
+enumerator, both complementary witnesses and the retained orchestration witness passed.
+
+Fresh gates on the refined candidate:
+
+```text
+cargo fmt --all -- --check
+    PASS
+
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+
+cargo test --workspace --all-features
+    PASS -- 375 tests on Windows, 0 failed
+
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+    PASS
+
+cargo run -p xtask -- conformance verify
+    PASS
+
+cargo run -p xtask -- layering
+    PASS
+
+cargo run -p xtask -- coverage
+    PASS
+
+shared manifest/schema/layering validation
+    PASS -- 218 passed
+
+git diff --check
+    PASS
+```
+
+`WP12E1-I003` remains pending independent targeted closure at the replacement exact SHA. Rust
+WP-12.E1 remains a `CERTIFICATION CANDIDATE`; cross-language closure remains pending. WP-13.1 and
+Layer 14 remain not started.
