@@ -1,0 +1,7 @@
+node: v22.15.1
+v8: 12.4.254.21-node.24
+cpython: 3.13.5
+rustc: rustc 1.97.1 (8bab26f4f 2026-07-14)
+cargo: cargo 1.97.1 (c980f4866 2026-06-30)
+venv-cpython: 3.13.5
+venv-packages: pillow==12.3.0 wasmtime==49.0.0

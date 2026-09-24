@@ -1,0 +1,314 @@
+[
+ {
+  "file": "png_small_rgb.png",
+  "category": "png",
+  "intent": "no-resize fast path",
+  "bytes": 83
+ },
+ {
+  "file": "png_rgba_alpha.png",
+  "category": "png",
+  "intent": "alpha channel, no-resize",
+  "bytes": 214
+ },
+ {
+  "file": "png_gray.png",
+  "category": "png",
+  "intent": "grayscale decode",
+  "bytes": 201
+ },
+ {
+  "file": "png_palette.png",
+  "category": "png",
+  "intent": "palette decode",
+  "bytes": 299
+ },
+ {
+  "file": "png_gray16.png",
+  "category": "png",
+  "intent": "16-bit grayscale decode",
+  "bytes": 240
+ },
+ {
+  "file": "png_2000x2000.png",
+  "category": "boundary",
+  "intent": "exactly max dimensions: no resize",
+  "bytes": 15149
+ },
+ {
+  "file": "png_2001x40.png",
+  "category": "boundary",
+  "intent": "width 1 over max: resize by width",
+  "bytes": 1296
+ },
+ {
+  "file": "png_40x2001.png",
+  "category": "boundary",
+  "intent": "height 1 over max: resize by height",
+  "bytes": 1729
+ },
+ {
+  "file": "png_4000x1001.png",
+  "category": "js-semantics",
+  "intent": "Math.round(500.5)=501 target height",
+  "bytes": 56038
+ },
+ {
+  "file": "png_8001x2.png",
+  "category": "js-semantics",
+  "intent": "extreme aspect: target height round(0.4998)=0 -> Photon traps on zero dimension -> resize fails",
+  "bytes": 301
+ },
+ {
+  "file": "png_2250x100.png",
+  "category": "js-semantics",
+  "intent": "scale 1.125: toFixed(2) -> 1.13 in the dimension hint",
+  "bytes": 3430
+ },
+ {
+  "file": "png_size_just_below.png",
+  "category": "boundary",
+  "intent": "base64 size just below maxBytes: no resize",
+  "bytes": 3538941
+ },
+ {
+  "file": "png_size_at_limit.png",
+  "category": "boundary",
+  "intent": "base64 size == maxBytes: resize path at same dimensions",
+  "bytes": 3538942
+ },
+ {
+  "file": "png_noise_2600.png",
+  "category": "candidates",
+  "intent": "resize to 2000x2000; PNG candidate too large, JPEG chosen",
+  "bytes": 21397463
+ },
+ {
+  "file": "png_noise_256.png",
+  "category": "candidates",
+  "intent": "core-level candidate-search cases (small maxBytes)",
+  "bytes": 197174
+ },
+ {
+  "file": "jpeg_small.jpg",
+  "category": "jpeg",
+  "intent": "baseline decode, no-resize",
+  "bytes": 756
+ },
+ {
+  "file": "jpeg_progressive.jpg",
+  "category": "jpeg",
+  "intent": "progressive decode",
+  "bytes": 639
+ },
+ {
+  "file": "jpeg_gray.jpg",
+  "category": "jpeg",
+  "intent": "grayscale decode",
+  "bytes": 415
+ },
+ {
+  "file": "jpeg_cmyk.jpg",
+  "category": "jpeg",
+  "intent": "CMYK decode behavior",
+  "bytes": 640
+ },
+ {
+  "file": "jpeg_2600x40.jpg",
+  "category": "jpeg",
+  "intent": "JPEG resize path",
+  "bytes": 27462
+ },
+ {
+  "file": "jpeg_exif_o1.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 1 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o2.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 2 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o3.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 3 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o4.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 4 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o5.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 5 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o6.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 6 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o7.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 7 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o8.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 8 (little-endian TIFF)",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o6_be.jpg",
+  "category": "exif",
+  "intent": "EXIF orientation 6 (big-endian TIFF)",
+  "bytes": 681
+ },
+ {
+  "file": "jpeg_exif_o9.jpg",
+  "category": "exif",
+  "intent": "invalid orientation 9 treated as 1",
+  "bytes": 684
+ },
+ {
+  "file": "jpeg_exif_o6_2600.jpg",
+  "category": "exif",
+  "intent": "rotation before resize",
+  "bytes": 27498
+ },
+ {
+  "file": "webp_lossy.webp",
+  "category": "webp",
+  "intent": "lossy decode",
+  "bytes": 152
+ },
+ {
+  "file": "webp_lossless.webp",
+  "category": "webp",
+  "intent": "lossless decode",
+  "bytes": 58
+ },
+ {
+  "file": "webp_alpha.webp",
+  "category": "webp",
+  "intent": "alpha decode",
+  "bytes": 78
+ },
+ {
+  "file": "webp_exif_o6.webp",
+  "category": "exif",
+  "intent": "WebP EXIF orientation 6",
+  "bytes": 110
+ },
+ {
+  "file": "webp_animated.webp",
+  "category": "webp",
+  "intent": "animated WebP behavior",
+  "bytes": 616
+ },
+ {
+  "file": "webp_2600x40.webp",
+  "category": "webp",
+  "intent": "WebP resize path",
+  "bytes": 9882
+ },
+ {
+  "file": "gif_static.gif",
+  "category": "gif",
+  "intent": "static GIF decode",
+  "bytes": 628
+ },
+ {
+  "file": "gif_animated.gif",
+  "category": "gif",
+  "intent": "animated GIF behavior",
+  "bytes": 565
+ },
+ {
+  "file": "gif_transparent.gif",
+  "category": "gif",
+  "intent": "transparency decode",
+  "bytes": 636
+ },
+ {
+  "file": "bmp_24.bmp",
+  "category": "bmp",
+  "intent": "BMP -> PNG conversion success",
+  "bytes": 1754
+ },
+ {
+  "file": "bmp_32.bmp",
+  "category": "bmp",
+  "intent": "32-bit BMP conversion",
+  "bytes": 2298
+ },
+ {
+  "file": "bmp_8bit.bmp",
+  "category": "bmp",
+  "intent": "palette BMP conversion",
+  "bytes": 1570
+ },
+ {
+  "file": "bmp_2100x20.bmp",
+  "category": "bmp",
+  "intent": "conversion then resize: converted hint + dimension note",
+  "bytes": 126054
+ },
+ {
+  "file": "bmp_truncated.bmp",
+  "category": "bmp-failure",
+  "intent": "truncated pixel data: conversion failure message",
+  "bytes": 877
+ },
+ {
+  "file": "bmp_header_only.bmp",
+  "category": "bmp-failure",
+  "intent": "headers only: conversion failure message",
+  "bytes": 54
+ },
+ {
+  "file": "bad_png_signature_garbage.png",
+  "category": "malformed",
+  "intent": "PNG magic + garbage",
+  "bytes": 208
+ },
+ {
+  "file": "bad_png_truncated.png",
+  "category": "malformed",
+  "intent": "truncated PNG",
+  "bytes": 104
+ },
+ {
+  "file": "bad_jpeg_soi_garbage.jpg",
+  "category": "malformed",
+  "intent": "JPEG SOI + garbage",
+  "bytes": 203
+ },
+ {
+  "file": "bad_jpeg_truncated.jpg",
+  "category": "malformed",
+  "intent": "truncated JPEG",
+  "bytes": 837
+ },
+ {
+  "file": "bad_gif_header_only.gif",
+  "category": "malformed",
+  "intent": "GIF header only",
+  "bytes": 13
+ },
+ {
+  "file": "bad_webp_garbage.webp",
+  "category": "malformed",
+  "intent": "RIFF/WEBP magic + garbage",
+  "bytes": 212
+ }
+]

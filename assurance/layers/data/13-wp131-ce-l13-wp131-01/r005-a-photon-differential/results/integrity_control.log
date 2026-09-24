@@ -1,0 +1,2 @@
+CONTROL tampered_corpus_file: FAILED THE RUN as required — FAIL: corpus differs from SHA256SUMS
+CONTROL tampered_committed_result: FAILED THE RUN as required — FAIL: python.json differs from committed

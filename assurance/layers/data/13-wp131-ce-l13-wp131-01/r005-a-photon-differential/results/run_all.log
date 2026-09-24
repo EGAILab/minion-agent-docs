@@ -1,0 +1,71 @@
+
+== runtime pins (exact)
+node: v22.15.1
+v8: 12.4.254.21-node.24
+cpython: 3.13.5
+rustc: rustc 1.97.1 (8bab26f4f 2026-07-14)
+cargo: cargo 1.97.1 (c980f4866 2026-06-30)
+
+== pinned Pi source
+exif-orientation.ts: OK
+image-convert.ts: OK
+image-process.ts: OK
+image-resize-core.ts: OK
+image-resize-worker.ts: OK
+image-resize.ts: OK
+photon.ts: OK
+mime.ts: OK
+Pi b7bb00b936dbe21b8e160b3e89efdec361846699; lockfile pins photon-node 0.3.4 with sha512-bnly4BKB3KDTFxrUIcgCLbaeVVS8lrAkri1pEzskpmxu9MdfGQTy8b8EgcD83ywD3RPMsIulY8xJH5Awa+t9fA==
+
+== pinned photon-node 0.3.4 artifact
+/c/Users/erick/.claude/jobs/e15f4395/tmp/s_run/pkg/package/photon_rs_bg.wasm: OK
+
+== python venv (pinned)
+venv-cpython: 3.13.5
+venv-packages: pillow==12.3.0 wasmtime==49.0.0
+
+== corpus: committed files + deterministic regeneration, all sha256-verified
+generator reproduces all 53 files bit-identically
+corpus verified
+
+== harness files
+
+== WASM import/export surface
+imports: 41
+  func   __wbindgen_placeholder__.__wbg_new_abda76e883ba8a5f
+  func   __wbindgen_placeholder__.__wbg_stack_658279fe44541cf6
+
+== authority: pinned Pi source + photon-node on node v22.15.1
+authority: 52 read-level, 20 core-level
+
+== python host (wasmtime-py) end-to-end vs authority
+python: 52 read-level, 20 core-level, unexpected imports: []
+trace: 769 events, 12 traps, 50 instances, ops=['fliph', 'flipv', 'free', 'get_bytes', 'get_bytes_jpeg', 'get_height', 'get_raw_pixels', 'get_width', 'instantiate', 'new', 'new_from_byteslice', 'resize']
+python: 52 read-level ({'ok': 43, 'failed': 8, 'not_sniffed': 1}), 20 core-level
+VERDICT python: IDENTICAL to authority
+
+== rust host (wasmtime crate) replay of every Photon call
+rust replay: 50 instances, 719 calls compared, 12 traps reproduced, unexpected imports: []
+VERDICT rust: IDENTICAL to recorded trace
+
+== negative controls
+CONTROL filter_triangle_not_lanczos3: DETECTED — 40 mismatch(es); first:   MISMATCH read png_2001x40.png: data_sha256: authority='a6f7f40b3dcf6e963d71be1a7f4cacec896974f5da0a39e75ef1149ae08a3315' filter_triangle_not_lanczos
+CONTROL filter_catmullrom_not_lanczos3: DETECTED — 39 mismatch(es); first:   MISMATCH read png_2001x40.png: data_sha256: authority='a6f7f40b3dcf6e963d71be1a7f4cacec896974f5da0a39e75ef1149ae08a3315' filter_catmullrom_not_lancz
+CONTROL smallest_candidate_not_first_under_limit: DETECTED — 46 mismatch(es); first:   MISMATCH read png_2001x40.png: mime: authority='image/png' smallest_candidate_not_first_under_limit='image/jpeg'
+CONTROL less_or_equal_not_strict_less: DETECTED — 1 mismatch(es); first:   MISMATCH core strict_less_than_at_equality: authority={'mime': 'image/jpeg', 'originalWidth': 256, 'originalHeight': 256, 'width': 256, 'height': 25
+CONTROL python_round_half_even_not_math_round: DETECTED — 4 mismatch(es); first:   MISMATCH read png_4000x1001.png: hints: authority=['[Image: original 4000x1001, displayed at 2000x501. Multiply coordinates by 2.00 to map to origin
+CONTROL jpeg_quality_option_ignored: DETECTED — 1 mismatch(es); first:   MISMATCH core custom_quality_reorders_steps: authority={'mime': 'image/jpeg', 'originalWidth': 256, 'originalHeight': 256, 'width': 256, 'height': 2
+CONTROL python_format_not_js_toFixed: DETECTED — 1 mismatch(es); first:   MISMATCH read png_2250x100.png: hints: authority=['[Image: original 2250x100, displayed at 2000x89. Multiply coordinates by 1.13 to map to original 
+CONTROL exif_orientation_ignored: DETECTED — 13 mismatch(es); first:   MISMATCH read jpeg_exif_o6_2600.jpg: hints: authority=['[Image: original 40x2600, displayed at 31x2000. Multiply coordinates by 1.29 to map to origi
+CONTROL pillow_encoders_visually_equivalent: DETECTED — 56 mismatch(es); first:   MISMATCH read png_2001x40.png: data_sha256: authority='a6f7f40b3dcf6e963d71be1a7f4cacec896974f5da0a39e75ef1149ae08a3315' pillow_encoders_visually_eq
+CONTROL python_wasm_integrity: DETECTED — RuntimeError: photon_rs_bg.wasm sha256 e4a0f6afeb6973c4de095b1decf154985393bbb8234f7dd12fa7c8f6dc7f2b8f 
+CONTROL rust_wasm_integrity: DETECTED — Error: photon_rs_bg.wasm sha256 e4a0f6afeb6973c4de095b1decf154985393bbb8234f7dd12fa7c8f6dc7f2b8f != pinned 10468181565c5
+CONTROL rust_filter_triangle: DETECTED — VERDICT rust: 191 mismatch(es)
+
+== fresh results == committed results
+authority.json identical to committed
+python.json identical to committed
+trace.json identical to committed
+runtime tuple identical to committed
+
+R005-A REPRODUCTION: PASS

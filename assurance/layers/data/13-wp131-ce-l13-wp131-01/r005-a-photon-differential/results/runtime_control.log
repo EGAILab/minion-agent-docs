@@ -1,0 +1,5 @@
+CONTROL wrong_cpython: REFUSED before differential — RUNTIME_PIN_MISMATCH cpython: expected '3.13.5', got '3.12.8'
+CONTROL wrong_node: REFUSED before differential — RUNTIME_PIN_MISMATCH node: expected 'v22.15.1', got 'v22.15.0'
+CONTROL wrong_v8: REFUSED before differential — RUNTIME_PIN_MISMATCH v8: expected '12.4.254.21-node.24', got '12.4.254.20-node.24'
+CONTROL wrong_rustc: REFUSED before differential — RUNTIME_PIN_MISMATCH rustc: expected 'rustc 1.97.1 (8bab26f4f 2026-07-14)', got 'rustc 1.96.0 (00000000 2026-05-28)'
+CONTROL wrong_cargo: REFUSED before differential — RUNTIME_PIN_MISMATCH cargo: expected 'cargo 1.97.1 (c980f4866 2026-06-30)', got 'cargo 1.96.0 (00000000 2026-05-20)'
