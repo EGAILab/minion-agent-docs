@@ -217,6 +217,10 @@ cleanup() -> None   # best-effort, must not raise
 -- above; see §11 for full semantics, error mapping, and cancellation classification):
 list_dir_raw(path, signal?) -> Result[list[str], FsError]
 probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
+
+-- ADDITIVE, §12 (WP-12.E2, EXEC-008, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- above; see §12 for semantics, host behavior, error mapping and cancellation):
+check_readable(path, signal?) -> Result[None, FsError]
 ```
 
 ```text
@@ -2161,3 +2165,179 @@ EXISTING `list_dir`/`file_info` BEHAVIOR IS UNCHANGED BY THIS EXTENSION (regress
                traceable to this section's existence, is itself a defect in this section, not an
                acceptable side effect of introducing it
 ```
+
+## 12. Layer-12 additive extension `WP-12.E2` -- `check_readable`
+
+**Status: `CONTRACT_DRAFT`, pending independent contract review (`WP-12.E2`, requirement `EXEC-008`).**
+Owner-selected as `G1` in `minion-agent#48` (governance record
+`https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5822609576`) while resolving Layer
+13 finding `L13-WP131-C012` (convergence episode `CE-L13-WP131-02`). No Python or Rust
+implementation is performed or authorized by this section. Like `WP-12.E1` (§11), it is additive:
+every existing operation in §3's inventory (`canonical_path`, `file_info`, `read_binary_file`,
+`list_dir`, `list_dir_raw`, `probe_dir_entry`, and the rest) is unchanged in wording and semantics,
+and no existing certification or §10/§11.6 witness is invalidated.
+
+### 12.1 Motivation (full characterization: `assurance/layers/13-wp131-ce-l13-wp131-02-characterization.md`, revisions 1-4, on minion-agent-docs#162 -- not yet merged)
+
+Pinned Pi's `read` tool (`coding-agent/src/core/tools/read.ts:47-61`, `244-273`) runs three
+independently supplied operations: `access(absolutePath)` -- by default `fs.promises.access(path,
+R_OK)` -- then an optional MIME sniff, then `readFile`. It reports `Cannot access`-class failures
+when `access` fails and `Cannot read`-class failures when a later operation fails. The same error
+condition can arise at either stage (a stable I/O error after a successful access check; a path that
+changes between the calls), so the stage cannot be recovered from an `FsErrorCode`. No composition
+of existing Layer 12 operations performs `access`: `canonical_path`, `file_info` and
+`probe_dir_entry` resolve paths without checking readability, and the content reads check it only by
+reading. This extension adds exactly that missing stage.
+
+### 12.2 Operation signature
+
+```text
+check_readable(path, signal?) -> Result[None, FsError]
+```
+
+It uses §2.1's `FsError`/`FsErrorCode` taxonomy; no new error type. `Ok(None)` means the addressed
+target exists and is readable. A provider that cannot supply this operation returns
+`Err(not_supported)` for every call -- a capability answer, which a caller MUST NOT confuse with a
+failure of the addressed target (§12.5). It is deliberately a single-purpose readability check, not
+a general permission API: there is no mode parameter, and no write/execute variants.
+
+### 12.3 Semantics
+
+- **Path resolution.** The path is resolved with §3.2's rules first, exactly as `file_info` and
+  `probe_dir_entry` resolve theirs (tilde, `file://` via the suppressing wrapper, cwd-relative,
+  lexical normalization).
+- **Symlinks are followed**, including the final component: the question is about the target.
+- **Readable** means:
+  - a non-directory target (regular file, FIFO, device, ...): the calling process may open it for
+    reading;
+  - a directory: the calling process may read (list) it. Search permission on the directory itself
+    is not required -- POSIX `access(R_OK)` on a read-but-not-search directory succeeds -- while
+    every PARENT component needs search permission as for any path.
+  A readable directory is `Ok(None)`. It is not an error here and it is not a successful content
+  read: a later `read_binary_file` of it still fails `is_directory` (§3.3, unchanged).
+- **No content is consumed.** No bytes of a file are read and no directory entries are returned or
+  relied on. In particular a FIFO without a writer MUST NOT block this call.
+- **Errors** (§2.1's host-error mapping, as every Layer 12 operation uses it):
+  - missing target, or a symlink whose target does not exist -> `not_found`;
+  - a non-directory path component -> `not_directory` (as the host reports it; see §12.4);
+  - a target that is not readable, or a parent component without search permission ->
+    `permission_denied`;
+  - a symlink loop and any other host failure -> the §2.1 mapping of that host error (`ELOOP` ->
+    `unknown` on POSIX).
+- **Cancellation.** `check_readable` accepts `signal` (§3.1's uniform shape) but does not inspect
+  it, like `file_info` and `probe_dir_entry`: it is a single metadata-class query with no content
+  phase. A caller wanting an outer abort race owns it (Layer 13's `read` owns its own, `TOOL-025`).
+
+### 12.4 Host semantics and the Windows disposition
+
+**POSIX: `DIRECT_PI_PARITY`.** Readability is POSIX `access(path, R_OK)` -- the call Node's
+`fs.access` makes (libuv 1.49.2, bundled with Node 22.15.1, `src/unix/fs.c:1713`), evaluated with the
+process's real user and group IDs, honouring ACLs where the host applies them to `access`.
+
+**Windows: readability semantics, `MINION_ARCHITECTURAL_MAPPING` (owner decision, governance
+record above).** Node's Windows `access` is libuv's `fs__access` (`src/win/fs.c:2272`): a
+`GetFileAttributesW` call that only checks existence and, for `W_OK`, the read-only attribute. It
+never checks read permission and does not follow a final symlink, so Pi's `access(R_OK)` succeeds on
+Windows for unreadable files and directories, dangling links and link loops. `check_readable` does
+NOT copy that: on Windows it applies the same readability meaning as on POSIX (§12.3) -- a target
+whose ACL denies reading fails `permission_denied`, and a dangling symlink fails `not_found`. The
+difference from Node on Windows is deliberate and deterministic; `ctx.fs` exposes no host identity
+to reproduce it.
+
+Host error classification for path-shape failures follows §2.1 as for every other operation (for
+example, a regular file used as a path component is `ENOTDIR -> not_directory` on POSIX and
+`ENOENT -> not_found` on Windows, measured for `canonical_path`/`read_binary_file` alike).
+
+### 12.5 Required Layer-13 consumption pattern (normative for `read`, `TOOL-025`; not implemented or authorized here)
+
+```text
+1. the TOOL-026 path pipeline
+2. r = check_readable(p)                       -- no signal (Pi passes none to access)
+     Err(not_supported)  -> the provider lacks EXEC-008: go to step 3 in FALLBACK mode
+     Err(c)              -> "Cannot access <path>: <cause(c)>"
+     Ok                  -> abort checkpoint (read.ts:249), then step 3
+3. the content/image pipeline (read_binary_file, sniff, image processing / text)
+     normal mode:   any filesystem failure c -> "Cannot read <path>: <cause(c)>"
+     fallback mode: is_directory | not_supported -> "Cannot read <path>: <cause(c)>";
+                    any other c                  -> "Cannot access <path>: <cause(c)>"
+```
+
+The operation that failed owns the site, whatever the code. The FALLBACK exists only so that `read`
+stays usable on a provider without this extension; it is a provider-capability fallback and an
+intentional approximation (the owner's `G2`), never described as Pi-equivalent. Certified first-party
+local providers (Python and Rust) MUST implement `check_readable`; `not_supported` from them would be
+a defect, not a fallback.
+
+### 12.6 Discriminating behavior/witness matrix (predicted outcomes, authored before implementation)
+
+```text
+READABLE REGULAR FILE, DIRECTLY AND THROUGH A SYMLINK
+    setup:     f (mode 0644 / readable ACL); link -> f
+    expected:  check_readable(f) and check_readable(link) both Ok(None)
+    negative control: an lstat-based check that answers for the link itself still passes this
+               row, so it is paired with the dangling-link row below
+
+UNREADABLE REGULAR FILE, DIRECTLY AND THROUGH A SYMLINK
+    setup:     POSIX: f000 (mode 000); Windows: f000 with a deny-read ACL; link -> f000
+    expected:  Err(permission_denied) for both, on both hosts
+    negative control: existence-only checks (file_info, canonical_path, exists) return success and
+               fail this row; a Node-libuv-emulating Windows implementation (attributes only) fails
+               it on Windows
+
+DANGLING SYMLINK
+    setup:     link -> missing-target
+    expected:  Err(not_found), on both hosts
+    negative control: an lstat-based or attribute-based check (file_info; libuv Windows access)
+               returns success and fails this row
+
+MISSING PATH / NON-DIRECTORY COMPONENT
+    expected:  Err(not_found) for a missing path; for "file/x" the host's §2.1 mapping
+               (POSIX not_directory, Windows not_found)
+
+READABLE DIRECTORY; READ-BUT-NOT-SEARCH DIRECTORY (POSIX)
+    setup:     d (0755); dr (0444)
+    expected:  Ok(None) for both -- a directory is readable, not an error here
+    negative control: an implementation answering is_directory, or one requiring search permission
+               on the target itself, fails this row
+
+UNREADABLE DIRECTORY; SEARCH-ONLY DIRECTORY (POSIX); DENY-READ DIRECTORY (Windows)
+    setup:     d000 (000); dx (0111); Windows: d with a deny-list ACL
+    expected:  Err(permission_denied)
+    negative control: file_info/canonical_path-based checks succeed and fail this row
+
+UNSEARCHABLE PARENT (POSIX)
+    setup:     dr/inner where dr is 0444
+    expected:  Err(permission_denied)
+
+SYMLINK LOOP (POSIX)
+    setup:     a -> b, b -> a
+    expected:  Err(unknown)  (ELOOP, §2.1)
+
+NO CONTENT CONSUMED
+    setup:     a FIFO with no writer (POSIX)
+    expected:  Ok(None) promptly; the call does not block
+    negative control: an implementation that opens-and-reads (e.g. a one-byte read) blocks and
+               fails this row
+
+RELATIVE PATH RESOLUTION
+    setup:     cwd /workspace, existing readable /workspace/sub/f
+    expected:  check_readable("sub/f") answers for /workspace/sub/f (same §3.2 resolution as
+               file_info)
+
+SIGNAL ACCEPTED, NOT INSPECTED
+    setup:     a pre-aborted signal; readable f
+    expected:  Ok(None)
+
+PROVIDER WITHOUT THE EXTENSION
+    setup:     a provider that cannot implement check_readable
+    expected:  Err(not_supported) for every path, including readable ones; never a silent success
+               and never a fallback to file_info/exists
+
+EXISTING OPERATIONS UNCHANGED (regression)
+    expected:  every §10 and §11.6 witness passes exactly as before this section existed
+```
+
+Layer 13's provenance witnesses (`A` fails / `A` ok then the read fails, for each reachable code;
+stable `EIO` after a successful check; target removed after the check; the `G2` fallback; and the
+negative control that swaps the two stages) belong to `TOOL-025`'s integration and are listed in the
+governance record; they are not Layer 12 evidence.
