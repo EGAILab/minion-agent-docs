@@ -162,3 +162,33 @@ R3  Evidence ran on Windows x86-64 only (Node, Python and Rust all on the same h
 Everything is created inside <scratch-dir> (tarball, venv, CARGO_HOME, build); delete it afterwards.
 The script verifies every pin above, rebuilds the corpus, reruns authority, Python, Rust and all
 controls, and requires the fresh authority/python/trace outputs to be byte-identical to results/.
+
+== Remediation 1 -- R005A-E001 (independent review, minion-agent-docs#161 @ 124223fd) ==
+
+Finding (Codex, CONTRACT_ASSURANCE_DEFECT, blocking): this record said every pin was verified by
+run_all.sh on every run, but the script did not check the CPython, rustc or cargo versions. A
+complete rerun under CPython 3.12.8 still ended "R005-A REPRODUCTION: PASS". Accepted as stated.
+
+Fix (evidence harness only; Photon package/WASM, corpus, core cases, compared results, spec and
+manifest unchanged):
+  - run_all.sh now checks the runtime tuple EXACTLY as its first step, before anything else
+    runs: node v22.15.1, V8 12.4.254.21-node.24, CPython 3.13.5 ($PYTHON and the created venv),
+    `rustc 1.97.1 (8bab26f4f 2026-07-14)`, `cargo 1.97.1 (c980f4866 2026-06-30)`, and the venv's
+    exact package set (pillow==12.3.0 wasmtime==49.0.0). A mismatch prints
+    RUNTIME_PIN_MISMATCH and exits 3. The measured tuple is written to results/runtime.txt, and
+    each run must reproduce it exactly.
+  - Wrong-runtime negative controls (harness/runtime_control.sh; results/runtime_control.log):
+    real CPython 3.12.8 (the review's witness), and PATH shims that report a different node, V8,
+    rustc and cargo. Each must be refused with exit 3 and the matching RUNTIME_PIN_MISMATCH line,
+    before the tarball, venv or any differential output exists. All 5 are refused.
+  - Found while fixing, and fixed (same class as E001, disclosed here): the corpus sha256
+    checks and the final byte comparisons against committed results/ were written as
+    `check && echo ok`. Under `set -e` a failing command in an && list does NOT abort the script,
+    so a mismatch there printed an error but could still end in PASS. (It did not happen in any
+    recorded run: every one of those checks printed its "identical"/"verified" line.) Every
+    check now fails the run explicitly. Harness self-check controls (harness/integrity_control.sh;
+    results/integrity_control.log), each run on a scratch copy: one flipped byte in a committed
+    corpus file, and one in committed results/python.json. Each must FAIL the run with the
+    matching message and never reach PASS.
+  - Fresh full reproduction from a clean checkout of the remediation commit:
+    results/run_all.log.
