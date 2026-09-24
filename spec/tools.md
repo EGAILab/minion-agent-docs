@@ -543,24 +543,17 @@ condition actually suppresses/continues the next model turn.
 
 ## Layer 13 — Built-in tools
 
-**Status: `WP-13.1` `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED`, `TOOL-028` `PENDING_R006` (blocked
-on `R006-C`'s unresolved collation feasibility, `minion-agent#48`), `TOOL-027` `NOT_ADOPTED_CORE`
-(unchanged, see below).** First independent review (`minion-agent-docs#133`) returned `CHANGES
-REQUIRED` -- nine findings, `L13-WP131-R001`-`R009`; Layer 12 boundary confirmed `CLEAR`, no
-reopen required. Remediated across `CE-L13-WP131-01`'s five-lane convergence episode
-(`minion-agent#48`). `R002` (`TOOL-026`, malformed `file://` handling) and `R005` (`TOOL-025`, image
-handling) and `R010` (`TOOL-025`/`TOOL-026`, error text) are now OWNER-DECIDED (`R002-A`, `R005-A`,
-`R010-B`) and integrated below. `R007` (`ls`-specific enumeration/cap semantics, decided `R007-b`)
-and `R006` (`ls`-specific collation; `R006-A`/`R006-B` resolved, `R006-C` `FEASIBILITY_BLOCKED`)
-apply to `TOOL-028` only -- neither touches `TOOL-025`/`TOOL-026` at all. `TOOL-028` is deliberately
-NOT integrated pending `R006-C`'s resolution, to avoid encoding a guessed outcome (`spec/tools.md`
-is a single evolving specification, not a revision-numbered historical series -- git history is the
-record here, unlike `assurance/layers/` scoping/checkpoint artifacts). `TOOL-025`/`TOOL-026`
-integration: first independent review (`minion-agent-docs#156`) found the underlying owner
-decisions correctly APPROVED but the normative integration itself REJECTED on four findings
-(`L13-WP131-INT-R001`-`R004`: `R005-A`'s stale pre-decision text left in place, `R002-A`/`R002-B`
-conflation, `R010-B`'s intentional-divergence disposition not distinguished from `adopted`, and a
-normative `TOOL-028` cross-reference) -- remediated in this revision; not yet re-reviewed. Owns the
+**Status: `WP-13.1` contract fully integrated, pending one complete final contract-convergence
+review (`minion-agent#48`): `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED` (integration approved,
+`minion-agent-docs#156`), `TOOL-028` `CONTRACT_INTEGRATED` (this revision), `TOOL-027`
+`NOT_ADOPTED_CORE` (unchanged, see below).** The first independent review
+(`minion-agent-docs#133`) returned `CHANGES REQUIRED` with nine findings, `L13-WP131-R001`-`R009`;
+the Layer 12 boundary was confirmed `CLEAR`. All nine were remediated across `CE-L13-WP131-01`'s
+five-lane convergence episode. Owner decisions: `R002-A`, `R005-A`, and `R010-B` (integrated
+into `TOOL-025`/`TOOL-026`, and `R010-B` also into `TOOL-028`); `R007-b` (certified and merged as
+`WP-12.E1`/`EXEC-007`); and `R006-C` (collation, owner-selected after an independently replayed
+differential). `spec/tools.md` is a single evolving specification; git history is its record,
+unlike the revision-numbered `assurance/layers/` artifacts. Owns the
 concrete
 built-in tools themselves -- their argument schemas, path-argument handling, output/truncation
 shapes, and same-target mutation serialization -- as opposed to Layer 05/06's generic
@@ -612,7 +605,8 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
    step 5 normally.
 5. Pass the result as the `path` argument to the appropriate READ-ONLY
    ctx.fs operation directly -- read_text_file / read_binary_file /
-   file_info / list_dir (Layer 12, FileSystem Protocol). Tilde expansion,
+   file_info for read; probe_dir_entry / list_dir_raw (EXEC-007) for ls
+   (Layer 12, FileSystem Protocol). Tilde expansion,
    absolute-path normalization, and cwd-relative resolution all happen
    INSIDE that provider call, via the SAME already-certified
    resolve_local_path logic every other execution-seam operation uses --
@@ -678,7 +672,7 @@ exists to represent (`spec/execution.md` §2.1), distinct from a genuine OS-leve
 code/text choice to Lane E (`R002-A`'s "error projection: deferred to `L13-WP131-R010`"); this
 integration pass makes that deferred choice concrete now that `R010-B` is decided, rather than
 leaving it unresolved. **Final message text** follows `TOOL-025`'s `R010-B` integration below
-(governed by manifest row `TOOL-029`, `disposition: intentional divergence`, not by this row's own
+(governed by manifest row `TOOL-039`, `disposition: intentional divergence`, not by this row's own
 `adopted` disposition): the existence/permission-check template, `"Cannot access <path>: invalid
 path"` -- this is the SAME "reject before touching `ctx.fs`" checkpoint shape `read`'s own earlier
 site uses, applied here to the pipeline's own step-4 rejection.
@@ -855,7 +849,8 @@ Image result
 - **Error text (`R010-B` -- integration of the resolved `CE-L13-WP131-01` Lane E decision,
   `minion-agent#48`; scope corrected this revision, independent review `minion-agent-docs#156`,
   `L13-WP131-INT-R004` -- an earlier integration pass normatively cross-referenced `TOOL-028`, which
-  remains frozen/`PENDING_R006` and is NOT integrated by this pass at all):** pinned Pi's `read.ts`
+  was then still frozen pending `R006` and was not integrated by that pass; `TOOL-028`'s own
+  integration is now in its section below):** pinned Pi's `read.ts`
   authors NO hand-authored error text at all -- every distinguishable `read` failure is a raw or
   hybrid site under Lane E's own characterization
   (`assurance/layers/13-wp131-ce-l13-wp131-01-r010-error-projection.md`). The owner selected
@@ -867,18 +862,18 @@ Image result
   **Disposition (`L13-WP131-INT-R003`, machine-readable separation -- an earlier revision only
   disclaimed this in prose within `TOOL-025`'s own row, which independent review correctly found
   insufficient):** this error-TEXT normalization on raw/hybrid sites is governed by its OWN,
-  SEPARATE manifest row, **`TOOL-029`** (`disposition: intentional divergence`), NOT by
+  SEPARATE manifest row, **`TOOL-039`** (`disposition: intentional divergence`; renumbered from
+  `TOOL-029`, which the Layer 13 scoping allocates to `WP-13.2`'s `write` -- an ID correction
+  only), NOT by
   `TOOL-025`'s or `TOOL-026`'s own `disposition: adopted`, which describe those tools' core
   Pi-mirroring behavior (schema, truncation, image handling under `R005-A`, cancellation, path
   preprocessing/routing) only. A parity audit checking "does Minion reproduce Pi's error text"
-  must consult `TOOL-029`'s own row, not `TOOL-025`/`TOOL-026`'s.
+  must consult `TOOL-039`'s own row, not `TOOL-025`/`TOOL-026`'s.
 
-  The closed cause-phrase vocabulary below is scoped to `TOOL-025`/`read` (and, narrowly, to
-  `TOOL-026`'s own `R002-A` step-4 rejection above, which is part of `read`'s/`ls`'s SHARED
-  preprocessing pipeline, already integrated) -- it is NOT applied to `TOOL-028`/`ls`'s own
-  raw/hybrid sites (its `readdir`/`stat` wrapper text, `list_dir_raw`/`probe_dir_entry` outcomes)
-  by this pass; that remains `TOOL-028`'s own, separate, not-yet-integrated decision to make once
-  `R006-C` resolves and `TOOL-028` itself is integrated:
+  The closed cause-phrase vocabulary below applies to `TOOL-025`/`read`, to `TOOL-026`'s own
+  `R002-A` step-4 rejection above (part of `read`'s and `ls`'s shared pipeline), and to
+  `TOOL-028`/`ls`'s raw and hybrid sites, whose exact templates are specified in `TOOL-028`'s own
+  error-text subsection below:
 
   ```text
   FsErrorCode        -> cause phrase
@@ -930,94 +925,208 @@ filename-encoding quirks" for an arbitrary provider.
 
 #### `ls` (`TOOL-028`)
 
+**Status: `CONTRACT_INTEGRATED`, pending the complete `WP-13.1` final contract-convergence review.**
+This section integrates three settled decisions: `R006-C` for collation (owner-selected,
+`minion-agent#48#issuecomment-5808308811`), `R007-b` for enumeration and the cap, now certified as
+`WP-12.E1`/`EXEC-007`, and `R010-B` for error text, plus the frozen `R003` numeric-domain and
+`R008` cancellation rules. It replaces the pre-convergence draft, which called `ctx.fs.list_dir`
+and disclosed two per-entry divergences. `R007-b` exists to remove those divergences, and this
+revision does.
+
+Pinned Pi source: `packages/coding-agent/src/core/tools/ls.ts` at `b7bb00b9`.
+
 ```text
 Input
-    path?     string, default: cwd (an explicit empty string "" is
-              equivalent to omitted -- both select cwd)
-    limit?    number -- same unconstrained domain as read's offset/limit
+    path?     string, default: cwd. An explicit empty string "" is
+              equivalent to omitted (Pi: `path || "."`).
+    limit?    number, default 500. R003's unconstrained JSON number domain,
+              defaulted by nullish coalescing (`limit ?? 500`): only an
+              absent/null value takes the default; 0, negatives, and
+              fractions are honored literally.
 
-Output
+Output (success)
     content_blocks
-        [0]  text  -- one of:
-                    "(empty directory)"  -- the zero-surviving-entries
-                        outcome (empty dir, every entry filtered by
-                        format below, OR limit <= 0 on a non-empty dir
-                        -- see below); a MODEL-VISIBLE literal string,
-                        not a rendering-only concern
-                    otherwise: the formatted entry listing (below) PLUS
-                        any limit/truncation notices appended as
-                        additional lines
-    details.truncation?           present only when the byte ceiling
-                                   was hit
-    details.entry_limit_reached?  integer -- present only when the
-                                   entry-count cap was hit BEFORE the
-                                   byte ceiling
+        [0]  text  -- "(empty directory)" when no entry survives,
+                      otherwise the listing plus any notice suffix (below)
+    details        -- ABSENT unless a notice applies; then an object with
+                      only the fields that apply:
+        entry_limit_reached?  number -- the effective limit, verbatim;
+                              may be fractional (1.5), never rounded and
+                              never the listed count
+        truncation?           TruncationResult (same shape as read's
+                              details.truncation) -- only when the byte
+                              ceiling was hit
 ```
 
-- `path` must resolve to an existing directory; a nonexistent path and an existing non-directory
-  path are two distinguishable input errors; a directory that fails to enumerate (e.g. a
-  permission error surfaced by the underlying listing call) is a THIRD distinguishable error, not
-  folded into either of the first two (`L13-WP131-R007` correction, `ls.ts:130-152`).
-- Entries are sorted with `a.toLowerCase().localeCompare(b.toLowerCase())` -- see the open
-  governance question below; this is not fully specified by "case-insensitive" alone. A directory
-  entry gets a trailing `/` in its formatted name.
-- **Seam and per-entry behavior (`L13-WP131-R002`/`R007` correction):** this operation calls
-  `ctx.fs.list_dir(path)` (Layer 12, `FileSystem` Protocol) directly, which already returns
-  `list[FileInfo]` (name, path, kind, size, mtime) in a single call -- a `MINION_ARCHITECTURAL_
-  MAPPING` from Pi's own two-step `readdir` (names only) + per-entry `stat` (kind) pattern, not a
-  literal port of the call shape. `LocalFileSystem.list_dir`'s own already-certified per-entry
-  behavior (`filesystem.py:443-461`) already silently skips an entry whose kind cannot be
-  classified (matching Pi's own `fileInfoFromStats` discard-on-unsupported-kind spirit), so this
-  contract inherits that skip behavior rather than re-specifying it. Two disclosed, NOT-blocking
-  divergences from Pi's exact per-entry semantics, both consequences of consuming the
-  already-certified Layer 12 primitive rather than reopening it: (1) Layer 12's `FileInfo` is
-  derived via `lstat` (never following symlinks, per `spec/execution.md` §3.2's own established
-  policy) -- a broken symlink therefore appears as a `kind: symlink` entry here, where Pi's own
-  `stat()`-based (symlink-following) probe would throw and silently skip it entirely; (2) an
-  OS-level error on one entry during enumeration (permission race, deleted-between-scan-and-stat)
-  fails the WHOLE `list_dir` call here, where Pi's independent per-entry `try`/`catch` skips only
-  that one entry and continues. Neither divergence is reachable through Layer 13 alone to fix
-  without a Layer 12 change, which is out of this contract's scope.
-- **Cap timing (`L13-WP131-R007` correction):** the entry-count `limit` is checked BEFORE
-  attempting to include the next sorted entry, not after -- so a cap can be reported
-  (`entry_limit_reached`) even when the next unvisited entry, had it been reached, would itself
-  have been skipped for the reasons above. A `limit` of zero or negative on a non-empty directory
-  takes the SAME "(empty directory)" text branch as a genuinely empty directory, WITHOUT setting
-  `entry_limit_reached` (`DIRECT_PI_PARITY`, `ls.ts:159-165` -- the loop's own `results.length >=
-  effectiveLimit` guard is checked at the top of each iteration, so zero/negative `effectiveLimit`
-  never adds a single entry and never reaches the code path that would set the details field).
-- Byte truncation applies to the raw joined entry listing BEFORE any limit/truncation notice text
-  is appended -- the notices themselves are additional, un-truncated lines appended after
-  (`DIRECT_PI_PARITY`, `ls.ts:185-202`), using the same `DEFAULT_MAX_BYTES` ceiling as `read`, with
-  no separate line-count ceiling (`truncateHead` called with an effectively unbounded line limit).
+##### Algorithm
+
+```text
+1. Cancellation pre-check (R008, below).
+2. Path: run `path` (or "." when omitted or "") through TOOL-026's shared
+   pipeline. <path> in every message below is the resolved absolute path of
+   the addressed directory, i.e. what ctx.fs.absolute_path returns for the
+   pipeline's step-5 string. This corresponds to Pi's `dirPath`.
+3. Directory check: ONE ctx.fs.probe_dir_entry(p) call (EXEC-007; follows
+   symlinks to classify):
+     Ok, kind in {directory, symlink_to_directory}  -> continue
+     Ok, any other kind                             -> error "Not a directory: <path>"
+     Err(not_supported)                             -> error "Cannot access <path>: not supported by this provider"
+     Err(any other code)                            -> error "Path not found: <path>"
+4. Enumeration: ctx.fs.list_dir_raw(p) (EXEC-007) returns raw names in
+   provider order with no per-entry work.
+     Err(aborted)                                   -> "Operation aborted" (R008)
+     Err(any other code)                            -> error "Cannot read directory: <cause phrase>"
+5. Sort: STABLE sort of the raw names by comparing key(a) with key(b) using
+   the pinned collator (Collation, below), where key(x) = the pinned ICU
+   root-locale lowercase of x. Ties (compare == 0) keep list_dir_raw order.
+6. Entry loop (spec/execution.md §11.5, R007-b), over sorted names in order:
+     a. if results.length >= effective_limit: set entry_limit_reached and
+        STOP -- this name and every later name are never probed;
+     b. otherwise probe_dir_entry(join_path([resolved directory, name])):
+          Ok  -> append name + "/" if kind in {directory,
+                 symlink_to_directory}, else name alone
+          Err -> skip silently; not counted, never surfaced as text
+   The appended name is always the RAW list_dir_raw name, never its
+   lowercase key.
+7. Zero results -> text "(empty directory)", details ABSENT. This holds even
+   when 6a fired (limit <= 0 on a non-empty directory): Pi returns before
+   building details (ls.ts:180-183).
+8. Listing: join results with "\n"; head-truncate to DEFAULT_MAX_BYTES
+   (read's shared constant) with no line ceiling (Pi calls truncateHead with
+   maxLines = Number.MAX_SAFE_INTEGER, ls.ts:187).
+9. Notices, in this order, only those that apply:
+     "<L> entries limit reached. Use limit=<2L> for more"   when 6a fired;
+                                          sets details.entry_limit_reached = L
+     "50.0KB limit reached"               when step 8 truncated; sets
+                                          details.truncation (Pi's
+                                          formatSize(DEFAULT_MAX_BYTES))
+   L is the effective limit. Both L and 2L (computed in IEEE-754 double
+   arithmetic) render with ECMAScript Number::toString, e.g. 1.5 -> "1.5",
+   3 -> "3". When any notice applies:
+     text = truncated listing + "\n\n[" + notices joined by ". " + "]"
+   Notices are appended after truncation and are never truncated themselves
+   (ls.ts:190-202).
+```
+
+**Why one probe reproduces Pi's two-step directory check (step 3).** Pi first calls
+`pathExists` (`path-utils.ts:31-38`), which is `access(F_OK)` inside a try/catch. It follows
+symlinks and turns every failure into `false`, so Pi reports `"Path not found: <path>"` alike for
+a missing path, a broken symlink, a non-directory path component, a component without search
+permission, and a symlink loop. A following `stat` fails under those same conditions, so mapping
+every `probe_dir_entry` failure to `"Path not found"` reproduces Pi's output
+(`DIRECT_PI_PARITY`). Pi's next call, an unwrapped `stat(dirPath)` (`ls.ts:139`), can only fail
+if the path changes between the two calls, and then Pi surfaces raw Node text. Minion determines
+existence and kind in a single probe, so that race-only raw site has no counterpart
+(`MINION_ARCHITECTURAL_MAPPING`). `not_supported` also has no Pi counterpart: it means the
+provider lacks the `EXEC-007` extension. It is reported with `R010-B`'s vocabulary instead of
+being disguised as a missing path.
+
+**Per-entry parity (step 6).** `probe_dir_entry` follows symlinks exactly as Pi's per-entry
+`stat` does (`ls.ts:166-174`). So the two divergences the pre-convergence draft disclosed are
+gone:
+- A broken symlink or a looping entry fails its probe and is skipped, as in Pi.
+- One entry failing no longer fails the whole call.
+
+An entry whose kind is not a directory (a regular file, a symlink to a file, or `other` such as a
+FIFO) is listed without `"/"`, as in Pi. The cap is checked before each probe, so a cap can be
+reported even when the next, unprobed entry would itself have been skipped. `EXEC-007`'s §11.6
+lazy-cap witness makes probing beyond the cap a discriminating failure.
+
+##### Collation (`R006-C`)
+
+Pi sorts with `entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))`
+(`ls.ts:155`). No locale is passed, so Pi's order depends on the host's Node/ICU default locale.
+Minion pins every part of that comparator:
+
+```text
+engines       Python: PyICU 2.16.2.   Rust: rust_icu_ucol 5.8.0, with every
+              rust_icu_* crate at 5.8.0.
+ICU           ONE build of the official icu4c-78.3-sources.tgz whose SHA-512
+              matches the release's own SHASUM512.txt, linked by both
+              engines. An implementation MUST fail rather than fall back if
+              it would link or load any other ICU. The differential run found
+              a stock Debian image silently linking its own ICU 72 development
+              library ahead of the pinned build.
+collator      locale "en-001"; STRENGTH = TERTIARY   (Intl sensitivity "variant")
+                               NUMERIC_COLLATION = OFF (numeric false)
+                               CASE_FIRST = OFF        (caseFirst "false")
+                               NORMALIZATION_MODE = ON
+              default collation, usage "sort"
+lowercase     ICU root-locale full lowercase from the same pinned build
+              (u_strToLower with locale ""), not the host language's own
+              lowercase function
+sort          stable; compare(key(a), key(b)); ties keep enumeration order
+```
+
+Two parts of this mapping go beyond the owner-selected tuple's stated options. Both are
+integration findings, flagged for review, and not yet approved:
+
+- **`NORMALIZATION_MODE = ON`.** ECMA-402 requires canonically-equivalent strings to compare
+  equal. On this host (Node 22.15.1, ICU 76.1, `en-001`), Pi's `localeCompare` returns 0 for
+  three non-FCD canonically-equivalent pairs. ICU 78.3 with normalization OFF (the setting the
+  first differential used, since ICU's default is OFF) compares them as -1. With normalization
+  ON it returns 0 for all of them. Without it, `R006-C` would not match Pi on an `en-001` host
+  for a name whose combining marks are out of canonical order, contradicting the owner
+  decision's own parity disposition. Classified `CONTRACT_ASSURANCE_DEFECT` in the ICU mapping
+  of the owner's Intl-level options; those options themselves are unchanged.
+- **ICU root-locale lowercase.** Lane C revision 4, Correction 2, found real Unicode-version skew
+  in the `toLowerCase` step across Node, Python, and Rust, and required it to be pinned or
+  disclosed. ECMA-262 defines `toLowerCase` as Unicode Default Case Conversion, which ICU's
+  root-locale lowercase implements. Taking it from the same pinned ICU removes the skew without
+  any crate beyond the tuple (`rust_icu_sys` 5.8.0 exposes `u_strToLower`).
+
+Evidence: the first differential (`minion-agent-docs#159`, raw and pre-lowercased 24-name
+corpus) and the supplementary v2 differential in
+`assurance/layers/data/13-wp131-ce-l13-wp131-01/r006-c-differential-v2/`. v2 used both settings
+above with lowercasing done inside each engine, over the 24-name corpus plus 12 normalization and
+case-mapping witnesses, and found 0 disagreements across 1,296 ordered pairs per mode. Negative
+controls fail as expected. Informationally (Node carries ICU 76.1), the pinned end-to-end order
+also equals Pi's own comparator output on this `en-001` host for all 36 strings.
+
+**Parity disposition.** On a host whose effective default locale is `en-001`, this ordering is
+intended to match Pi, and the evidence above supports it. Pi itself orders differently on hosts
+with another default locale, and Minion does not follow. That is a deliberate, deterministic
+`MINION_ARCHITECTURAL_MAPPING`, recorded in its own manifest row `TOOL-040`
+(`disposition: intentional divergence`), not inside `TOOL-028`'s `adopted` row.
+
+##### Error text (`R010-B`)
+
+```text
+site                                        text                                                 source
+directory check fails (step 3, any code     "Path not found: <path>"                            Pi template, verbatim
+  except not_supported)
+path is not a directory (step 3)            "Not a directory: <path>"                           Pi template, verbatim
+directory check Err(not_supported)          "Cannot access <path>: not supported by this        R010-B vocabulary
+                                              provider"                                           (Minion-only outcome)
+enumeration fails (step 4)                  "Cannot read directory: <cause phrase>"             Pi's wrapper verbatim; its
+                                                                                                  embedded raw OS text is
+                                                                                                  replaced by the R010-B
+                                                                                                  cause phrase
+cancellation (R008)                         "Operation aborted"                                 Pi template, verbatim
+one entry's probe fails (step 6b)           none -- the entry is skipped
+```
+
+`<cause phrase>` comes from the closed `FsErrorCode` table under `read`'s `R010-B` text above,
+so `"Cannot read directory: permission denied"` is an example. Every generated `ls` error keeps
+the certified `details: {}` shape. The three `ls`-specific templates and the shared abort
+template are `TOOL-028`'s own adopted content. The two replacements of raw or hybrid provider
+wording (the `not_supported` directory-check text and the `"Cannot read directory"` cause
+phrase) are governed by manifest row `TOOL-039` (`disposition: intentional divergence`), the
+same row that governs `read`'s raw sites.
+
+##### Cancellation (`R008`, frozen)
+
 - **Cancellation (`L13-WP131-R008` correction, `ls`):** same signal contract as `read` -- an
   already-aborted signal at call start rejects immediately with `"Operation aborted"`; a live abort
   during directory enumeration or per-entry classification rejects the same way (`ls.ts:111-125`).
   `ls` has no equivalent of `read`'s explicit post-access checkpoint; its own listing/classification
   work is the sole interruptible span.
 
-**Open governance question -- `ls` collation determinism (`L13-WP131-R006`, `PI_BEHAVIOR_
-UNCERTAIN`, unresolved, not fixed by this revision):** `a.toLowerCase().localeCompare(b.toLowerCase())`
-passes no explicit locale to `localeCompare`, so pinned Pi's own sort order for non-ASCII names and
-the RELATIVE order of names that differ ONLY by case is a function of the running Node process's
-OS/ICU-derived default locale -- confirmed by direct testing (this session's own environment
-resolved to `en-001`/ICU 76.1; a different machine's default locale is not guaranteed to match).
-Two further, directly-verified consequences: (1) after `.toLowerCase()` is applied to BOTH sides,
-two names differing only by case (`"A"`/`"a"`) compare EQUAL (`localeCompare` returns `0`), and
-because `Array.prototype.sort` has been a stable sort since ES2019, such ties preserve the
-PRE-SORT relative order -- which is itself the underlying directory-enumeration order, itself
-platform/filesystem-dependent, not alphabetical; (2) non-ASCII collation is genuinely rule-based,
-not a simple codepoint comparison (directly observed: `"Straße"` sorts adjacent to `"strasse"`
-under default collation, an ICU rule, not something a naive per-codepoint comparator would
-produce). Pi therefore has no single, environment-independent `ls` ordering to certify byte-for-byte
--- the same class of problem `WP-13.4`'s `fd`/`rg` pinning question already identified for a
-different surface, here surfacing as a genuinely non-deterministic Pi behavior rather than an
-unpinned dependency. This contract does NOT adopt a specific deterministic replacement ordering
-unilaterally; per the review's own guidance, that requires owner governance (e.g., a documented,
-intentionally-diverging deterministic collation -- ordinal case-insensitive primary key plus an
-exact-string tiebreak for determinism -- recorded as `intentional divergence`) before `TOOL-028`
-can be marked implementation-ready. `WP-13.1` is otherwise complete; this single open question is
-the only remaining blocker before `CONTRACT_REVIEW` can close.
+Note, from the pinned source, adding no new rule: Pi attaches its abort listener before the
+directory check and removes it only after the entry loop (`ls.ts:125`, `ls.ts:178`). The
+interruptible span is therefore steps 3–6. An abort after step 6 completes does not change the
+result. `EXEC-007`'s own primitives do not provide mid-call cancellation (spec/execution.md
+§11.4), so the tool owns this outer race.
 
 #### Witness matrix (`L13-WP131-R009`, part 1)
 
@@ -1058,20 +1167,54 @@ TOOL-026 (path pipeline)
         exception (the disclosed divergence above)
 
 TOOL-028 (ls)
-    ls_entry_limit_checked_before_next_stat          limit=1, second
-        sorted entry would itself fail classification -> cap reported
-        after only the first entry, notice text present
-    ls_zero_limit_on_nonempty_dir_no_details          limit=0, non-empty
-        dir -> "(empty directory)" text, entry_limit_reached ABSENT
-    ls_broken_symlink_included_as_symlink_kind        a broken symlink
-        entry -> included with kind=symlink (disclosed divergence from
-        Pi's skip-on-stat-failure), no trailing "/"
-    ls_readdir_failure_distinguishable                a directory whose
-        enumeration itself fails -> a third, distinct error shape
+    ls_lazy_cap_never_probes_beyond_limit           raw order [z_slow, a_ok],
+        limit=1 -> only a_ok is probed; listing "a_ok"; notice "1 entries
+        limit reached. Use limit=2 for more"; entry_limit_reached = 1
+        (EXEC-007 §11.6 LAZY CAP BOUNDARY)
+    ls_entry_limit_checked_before_next_probe        limit=1, the second sorted
+        entry would itself fail its probe -> cap still reported after the
+        first entry
+    ls_zero_limit_on_nonempty_dir_no_details        limit=0, non-empty dir ->
+        "(empty directory)", details ABSENT
+    ls_fractional_limit_verbatim                    limit=1.5, 3 entries -> 2
+        listed; entry_limit_reached = 1.5; "1.5 entries limit reached. Use
+        limit=3 for more"
+    ls_broken_symlink_entry_skipped                 a broken-symlink entry ->
+        absent from the listing and not counted (Pi parity via
+        probe_dir_entry)
+    ls_symlinked_entries_follow_target_kind         symlink -> directory is
+        listed "name/"; symlink -> file is listed "name"
+    ls_special_entry_listed_without_slash           a FIFO or other special
+        entry (or a provider stand-in reporting kind other) -> listed, no "/"
+    ls_path_symlink_to_directory_is_listed          `path` is a symlink to a
+        directory -> the target's entries are listed
+    ls_missing_path_and_broken_link_path_not_found  missing path, and a path
+        that is a broken symlink -> "Path not found: <path>"
+    ls_file_path_not_a_directory                    `path` is a regular file
+        -> "Not a directory: <path>"
+    ls_enumeration_failure_cannot_read_directory    unreadable directory ->
+        "Cannot read directory: permission denied", details {}
+    ls_provider_without_extension_not_supported     provider lacking EXEC-007
+        -> "Cannot access <path>: not supported by this provider"
+    ls_byte_truncation_then_notice                  listing over 50 KiB ->
+        head-truncated listing + "\n\n[50.0KB limit reached]";
+        details.truncation present
+    ls_both_notices_in_order                        entry cap and byte ceiling
+        both hit -> "[<L> entries limit reached. Use limit=<2L> for more.
+        50.0KB limit reached]"
+    ls_pre_aborted_signal                           already-aborted signal ->
+        "Operation aborted" before any ctx.fs call
+    ls_collation_r006c_corpus_order                 the 24-name Part 6 corpus
+        in its recorded enumeration order -> the exact order recorded in
+        r006-c-differential/results (lowercased mode)
+    ls_collation_case_ties_keep_enumeration_order   "apple"/"Apple"/"APPLE"
+        in two different enumeration orders -> each order preserved
+    ls_collation_canonical_equivalents_tie          a non-FCD canonically-
+        equivalent pair keeps enumeration order (compares equal; requires
+        NORMALIZATION_MODE = ON)
+    ls_lowercase_key_uses_pinned_icu_root_mapping   final sigma, U+0130,
+        U+1E9E, U+01C5 -> sort keys equal ICU 78.3 root-locale lowercase
 ```
-
-The `ls` collation open question (`L13-WP131-R006`) has no witness here -- it cannot be
-discriminated until the governance question above is resolved.
 
 ### Explicitly not certified by WP-13.1
 
