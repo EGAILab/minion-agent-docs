@@ -1,0 +1,10 @@
+[package]
+name = "r006c_rust_engine"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+rust_icu_ucol = "=5.8.0"
+rust_icu_sys = "=5.8.0"
+serde_json = "1"

@@ -1,0 +1,7 @@
+== attribute: NORMALIZATION_MODE reported OFF: exit 1; 1 FAIL line(s)
+    FAIL  NORMALIZATION_MODE=ON (17) in both, all attributes identical {'STRENGTH': 2, 'NUMERIC_COLLATION': 16, 'CASE_FIRST': 16, 'ALTERNATE_HANDLING': 21, 'NORMALIZATION_MODE': 17}
+== lowercase: final sigma (U+03C2) replaced by medial sigma (U+03C3): exit 1; 1 FAIL line(s)
+    FAIL  ICU root lowercase identical across engines for all 36 strings (1 differ)
+== matrix: canonically-equivalent pair made unequal (the normalization-OFF outcome): exit 1; 2 FAIL line(s)
+    FAIL  icu_lowercased: all 1296 ordered-pair comparisons identical (1 disagreements)
+    FAIL  canonically-equivalent 'a\u0302\u0323' vs 'a\u0323\u0302' compare 0 (lowercased mode)

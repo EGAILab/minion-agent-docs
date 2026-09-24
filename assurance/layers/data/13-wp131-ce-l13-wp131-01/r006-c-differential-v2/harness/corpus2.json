@@ -1,0 +1,59 @@
+{
+ "source": "24-name Part 6 corpus (unchanged, first 24) + 12 normalization/case-mapping witnesses",
+ "strings": [
+  "apple",
+  "Apple",
+  "APPLE",
+  "banana",
+  "Banana",
+  "caf\u00e9",
+  "cafe",
+  "Caf\u00e9",
+  "stra\u00dfe",
+  "strasse",
+  "STRASSE",
+  "file1",
+  "file10",
+  "file2",
+  "a-b",
+  "a_b",
+  "a.b",
+  "a b",
+  "e\u0301",
+  "\u00e9",
+  "\u65e5\u672c\u8a9e",
+  "\u306b\u307b\u3093\u3054",
+  "Stra\u00dfe",
+  "strasse2",
+  "a\u0302\u0323",
+  "a\u0323\u0302",
+  "\u1e0b\u0323",
+  "\u1e0d\u0307",
+  "q\u0307\u0323",
+  "q\u0323\u0307",
+  "\u039f\u0394\u039f\u03a3",
+  "\u03a3\u0391\u03a3",
+  "\u0130",
+  "\u1e9e",
+  "\u01c5",
+  "\u01c4"
+ ],
+ "extra_witnesses": {
+  "non_fcd_canonical_pairs": [
+   "a\u0302\u0323",
+   "a\u0323\u0302",
+   "\u1e0b\u0323",
+   "\u1e0d\u0307",
+   "q\u0307\u0323",
+   "q\u0323\u0307"
+  ],
+  "case_mapping": [
+   "\u039f\u0394\u039f\u03a3",
+   "\u03a3\u0391\u03a3",
+   "\u0130",
+   "\u1e9e",
+   "\u01c5",
+   "\u01c4"
+  ]
+ }
+}

@@ -1,0 +1,79 @@
+CE-L13-WP131-01 -- R006-C supplementary differential (v2): normalization + case mapping
+Status: DIFFERENTIAL_PASS; exposes and closes an assurance gap in R006-C's option mapping
+Date: 2026-09-24
+Author: Claude (Python/shared-contract owner), during TOOL-028 contract integration
+Relation: supplements ../r006-c-differential/ (accepted exact-SHA evidence, minion-agent-docs#159
+@ 72449cf8). That record is unchanged. Same container base digest, same ICU4C 78.3 artifact and
+SHA-512, same PyICU 2.16.2 + rust_icu_* 5.8.0 tuple, same ldd single-ICU guard.
+
+== Why a v2 run was needed ==
+
+Integrating R006-C into TOOL-028 raised two questions the v1 differential did not cover.
+
+1. Normalization. v1 left UCOL_NORMALIZATION_MODE at ICU's default (OFF), because the pinned
+   options list only the Intl.Collator-level settings. Pi's comparator is
+   a.toLowerCase().localeCompare(b.toLowerCase()) (ls.ts:155). Probed on this host (Node 22.15.1,
+   ICU 76.1, en-001): localeCompare returns 0 for four canonically-equivalent pairs, three of them
+   non-FCD (combining marks out of canonical order). Probed on the pinned ICU 78.3
+   (results/norm_probe.log): with NORMALIZATION OFF those three pairs compare -1; with
+   NORMALIZATION ON all four compare 0. So the v1 settings do NOT reproduce Pi on an en-001 host
+   for such names, contradicting the owner decision's own parity disposition. ECMA-402 requires
+   canonically-equivalent strings to compare equal; NORMALIZATION_MODE=ON is the ICU attribute that
+   delivers it. Classification: CONTRACT_ASSURANCE_DEFECT in the option mapping (not a change to
+   the owner-selected Intl-level options).
+
+2. Case mapping. Lane C revision 4, Correction 2, found real Unicode-version skew in the
+   toLowerCase step across runtimes and required it to be pinned or disclosed. v1 lowercased once
+   in the harness (Python str.lower) and fed both engines the same strings, so it proved the
+   collator only. v2 lowercases INSIDE each engine with ICU root-locale full case mapping from the
+   same pinned build (PyICU UnicodeString.toLower(Locale.getRoot()); Rust u_strToLower with locale
+   "" via rust_icu_sys 5.8.0). ECMA-262 defines toLowerCase as Unicode Default Case Conversion,
+   which ICU's root-locale lowercase implements. No crate beyond the pinned tuple is used.
+
+== Settings (v2) ==
+
+en-001; STRENGTH=TERTIARY; NUMERIC_COLLATION=OFF; CASE_FIRST=OFF; NORMALIZATION_MODE=ON.
+Read back from both engines and identical: STRENGTH 2, NUMERIC 16, CASE_FIRST 16, ALTERNATE 21,
+NORMALIZATION 17 (ON).
+
+== Corpus ==
+
+harness/corpus2.json: the unchanged 24-name Part 6 corpus plus 12 targeted witnesses: three
+non-FCD canonically-equivalent pairs (a+U+0302+U+0323 / a+U+0323+U+0302, U+1E0B+U+0323 /
+U+1E0D+U+0307, q+U+0307+U+0323 / q+U+0323+U+0307) and six case-mapping cases (Greek final sigma
+in two positions, U+0130, U+1E9E, U+01C5, U+01C4). 36 strings, 1296 ordered pairs per mode.
+
+== Result (results/verdict2.txt) ==
+
+ICU 78.3 in both engines; PyICU 2.16.2 ...................................... PASS
+NORMALIZATION_MODE=ON in both; all attributes identical ..................... PASS
+ICU root lowercase identical across engines, all 36 strings ................. PASS
+raw: 1296 ordered pairs identical; stable sort identical .................... PASS
+icu_lowercased: 1296 ordered pairs identical; stable sort identical ......... PASS
+each canonically-equivalent pair compares 0 in both engines ................. PASS (3/3)
+VERDICT: PASS -- no differential disagreement
+
+Informational (Node carries ICU 76.1, not the pinned 78.3; not a pass criterion):
+  ICU 78.3 root lowercase == Node 22.15.1 toLowerCase for all 36 strings.
+  ICU 78.3 end-to-end order (ICU-lowercase, then collate with normalization ON) == the order Pi's
+  own comparator produces on Node 22.15.1 / en-001 for all 36 strings (harness/node_reference.json).
+
+== Negative controls (results/negative_control2.log) ==
+
+attribute reported OFF -> FAIL; one final sigma (U+03C2) swapped for medial sigma (U+03C3) ->
+FAIL; one canonically-equivalent cell made unequal (the normalization-OFF outcome) -> FAIL.
+
+== Reproduce ==
+
+Use ../r006-c-differential/harness/build_icu.sh to build the shared ICU into a named volume, then:
+  docker run --rm -v "$PWD:/work" -v r006c-opt:/opt <base digest> bash /work/run2.sh
+with this directory's harness/ contents (plus an out/ containing the build's expected.sha512) at
+/work. norm_probe.sh reproduces the OFF-vs-ON probe. node_reference.json was produced on the host
+with Pi's comparator (see its own fields). Host residue after the run: none (volume and image
+removed).
+
+== Scope ==
+
+Evidence only. The contract consequences (NORMALIZATION_MODE=ON and ICU-root lowercase as part
+of TOOL-028's R006-C integration) are stated in spec/tools.md and flagged for the owner and the
+independent reviewer; they are not presented as already approved.

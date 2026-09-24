@@ -1,0 +1,15 @@
+PASS  ICU runtime 78.3 in both (py 78.3, rust 78.3.0.0)
+PASS  PyICU 2.16.2 (got 2.16.2)
+PASS  NORMALIZATION_MODE=ON (17) in both, all attributes identical {'STRENGTH': 2, 'NUMERIC_COLLATION': 16, 'CASE_FIRST': 16, 'ALTERNATE_HANDLING': 21, 'NORMALIZATION_MODE': 17}
+PASS  ICU root lowercase identical across engines for all 36 strings (0 differ)
+INFO  ICU 78.3 root lowercase vs Node 22.15.1 (ICU 76.1) toLowerCase: identical for all 36
+PASS  raw: all 1296 ordered-pair comparisons identical (0 disagreements)
+PASS  raw: stable sort order identical
+PASS  icu_lowercased: all 1296 ordered-pair comparisons identical (0 disagreements)
+PASS  icu_lowercased: stable sort order identical
+PASS  canonically-equivalent 'a\u0302\u0323' vs 'a\u0323\u0302' compare 0 (lowercased mode)
+PASS  canonically-equivalent '\u1e0b\u0323' vs '\u1e0d\u0307' compare 0 (lowercased mode)
+PASS  canonically-equivalent 'q\u0307\u0323' vs 'q\u0323\u0307' compare 0 (lowercased mode)
+INFO  ICU 78.3 end-to-end order (lowercase + collate, normalization ON) MATCHES Pi's comparator on Node 22.15.1 / ICU 76.1 for all 36 strings (informational)
+      order: 'a\u0302\u0323', 'a\u0323\u0302', 'a b', 'a_b', 'a-b', 'a.b', 'apple', 'Apple', 'APPLE', 'banana', 'Banana', 'cafe', 'caf\xe9', 'Caf\xe9', '\u1e0b\u0323', '\u1e0d\u0307', '\u01c5', '\u01c4', 'e\u0301', '\xe9', 'file1', 'file10', 'file2', '\u0130', 'q\u0307\u0323', 'q\u0323\u0307', '\u1e9e', 'strasse', 'STRASSE', 'stra\xdfe', 'Stra\xdfe', 'strasse2', '\u039f\u0394\u039f\u03a3', '\u03a3\u0391\u03a3', '\u306b\u307b\u3093\u3054', '\u65e5\u672c\u8a9e'
+VERDICT  PASS -- no differential disagreement

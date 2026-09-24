@@ -1,0 +1,11 @@
+  libicui18n.so.78 => /opt/icu-78.3/lib/libicui18n.so.78
+  libicuuc.so.78 => /opt/icu-78.3/lib/libicuuc.so.78
+  libicudata.so.78 => /opt/icu-78.3/lib/libicudata.so.78
+PyICU 2.16.2 ICU 78.3 Unicode 17.0
+NORMALIZATION OFF [("'a\\u0302\\u0323'", "'a\\u0323\\u0302'", -1), ("'e\\u0301'", "'\\xe9'", 0), ("'\\u1e0b\\u0323'", "'\\u1e0d\\u0307'", -1), ("'q\\u0307\\u0323'", "'q\\u0323\\u0307'", -1)]
+NORMALIZATION ON  [("'a\\u0302\\u0323'", "'a\\u0323\\u0302'", 0), ("'e\\u0301'", "'\\xe9'", 0), ("'\\u1e0b\\u0323'", "'\\u1e0d\\u0307'", 0), ("'q\\u0307\\u0323'", "'q\\u0323\\u0307'", 0)]
+ICU root toLower '\u039f\u0394\u039f\u03a3' -> ['0x3bf', '0x3b4', '0x3bf', '0x3c2']
+ICU root toLower '\u0130' -> ['0x69', '0x307']
+ICU root toLower '\u1e9e' -> ['0xdf']
+ICU root toLower 'Stra\xdfe' -> ['0x73', '0x74', '0x72', '0x61', '0xdf', '0x65']
+ICU root toLower 'APPLE' -> ['0x61', '0x70', '0x70', '0x6c', '0x65']

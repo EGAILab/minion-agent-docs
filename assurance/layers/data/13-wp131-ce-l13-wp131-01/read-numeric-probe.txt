@@ -1,0 +1,128 @@
+CE-L13-WP131-01 -- direct Node probe evidence, read/ls numeric semantics (R002/R003)
+Executed this session. Node version and environment recorded in each probe's own output.
+
+=== PROBE 1: read.ts's exact offset/limit algorithm, reproduced verbatim from source ===
+
+Command:
+
+node -e "
+const allLines = ['L1','L2','L3','L4','L5'];
+
+function simulateRead(offset, limit) {
+  const startLine = offset ? Math.max(0, offset - 1) : 0;
+  const startLineDisplay = startLine + 1;
+  if (startLine >= allLines.length) return {error: \`Offset \${offset} is beyond end of file (\${allLines.length} lines total)\`};
+  let selectedContent, userLimitedLines;
+  if (limit !== undefined) {
+    const endLine = Math.min(startLine + limit, allLines.length);
+    selectedContent = allLines.slice(startLine, endLine).join(',');
+    userLimitedLines = endLine - startLine;
+  } else {
+    selectedContent = allLines.slice(startLine).join(',');
+    userLimitedLines = undefined;
+  }
+  return {startLine, startLineDisplay, selectedContent, userLimitedLines};
+}
+
+const cases = [
+  [undefined, undefined], [undefined, -1], [undefined, 0], [undefined, 1], [undefined, 1.5], [undefined, -1.5],
+  [1, undefined], [0, undefined], [-1, undefined], [1.5, undefined], [2.9, undefined], [-2, undefined],
+  [3, -1], [3, 0], [3, -100], [1, NaN], [1, Infinity], [1, -Infinity], [NaN, undefined], [Infinity, undefined]
+];
+for (const [offset, limit] of cases) {
+  console.log(JSON.stringify({offset, limit}), '->', JSON.stringify(simulateRead(offset, limit)));
+}
+"
+
+Raw output:
+
+{} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"limit":-1} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4","userLimitedLines":-1}
+{"limit":0} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"","userLimitedLines":0}
+{"limit":1} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1","userLimitedLines":1}
+{"limit":1.5} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1","userLimitedLines":1.5}
+{"limit":-1.5} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4","userLimitedLines":-1.5}
+{"offset":1} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":0} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":-1} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":1.5} -> {"startLine":0.5,"startLineDisplay":1.5,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":2.9} -> {"startLine":1.9,"startLineDisplay":2.9,"selectedContent":"L2,L3,L4,L5"}
+{"offset":-2} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":3,"limit":-1} -> {"startLine":2,"startLineDisplay":3,"selectedContent":"","userLimitedLines":-1}
+{"offset":3,"limit":0} -> {"startLine":2,"startLineDisplay":3,"selectedContent":"","userLimitedLines":0}
+{"offset":3,"limit":-100} -> {"startLine":2,"startLineDisplay":3,"selectedContent":"","userLimitedLines":-100}
+{"offset":1,"limit":null} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"","userLimitedLines":null}
+{"offset":1,"limit":null} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5","userLimitedLines":5}
+{"offset":1,"limit":null} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"","userLimitedLines":null}
+{"offset":null} -> {"startLine":0,"startLineDisplay":1,"selectedContent":"L1,L2,L3,L4,L5"}
+{"offset":null} -> {"error":"Offset Infinity is beyond end of file (5 lines total)"}
+
+(Note: JSON.stringify renders NaN/Infinity as `null` in the printed argument key; the actual
+JS values passed and computed were the real NaN/Infinity per the case list above -- the computed
+results are correct for the true values, only the console.log of the input key is lossy.)
+
+=== PROBE 2: ls.ts's exact cap-check algorithm, reproduced verbatim from source ===
+
+Command:
+
+node -e "
+function simulateLsCap(entries, effectiveLimit) {
+  const results = [];
+  let entryLimitReached = false;
+  for (const entry of entries) {
+    if (results.length >= effectiveLimit) { entryLimitReached = true; break; }
+    results.push(entry);
+  }
+  return {results, entryLimitReached, entryLimitReachedValue: entryLimitReached ? effectiveLimit : undefined};
+}
+const entries = ['a','b','c','d','e'];
+for (const limit of [undefined, 0, -1, -0.5, 1, 1.5, 2.9, 500, NaN, Infinity]) {
+  const effectiveLimit = limit ?? 500;
+  console.log('limit=' + JSON.stringify(limit), '->', JSON.stringify(simulateLsCap(entries, effectiveLimit)));
+}
+"
+
+Raw output:
+
+limit=undefined -> {"results":["a","b","c","d","e"],"entryLimitReached":false}
+limit=0 -> {"results":[],"entryLimitReached":true,"entryLimitReachedValue":0}
+limit=-1 -> {"results":[],"entryLimitReached":true,"entryLimitReachedValue":-1}
+limit=-0.5 -> {"results":[],"entryLimitReached":true,"entryLimitReachedValue":-0.5}
+limit=1 -> {"results":["a"],"entryLimitReached":true,"entryLimitReachedValue":1}
+limit=1.5 -> {"results":["a","b"],"entryLimitReached":true,"entryLimitReachedValue":1.5}
+limit=2.9 -> {"results":["a","b","c"],"entryLimitReached":true,"entryLimitReachedValue":2.9}
+limit=500 -> {"results":["a","b","c","d","e"],"entryLimitReached":false}
+limit=null -> {"results":["a","b","c","d","e"],"entryLimitReached":false}
+limit=null -> {"results":["a","b","c","d","e"],"entryLimitReached":false}
+
+=== PROBE 3: R006 collation -- environment, corpus sort, tie-stability, locale-override attempt ===
+
+Commands and raw output:
+
+node -e "console.log('Node:', process.version, 'ICU:', process.versions.icu, 'V8:', process.versions.v8); console.log('Default locale:', new Intl.Collator().resolvedOptions().locale); console.log('Platform:', process.platform, process.arch);"
+->
+Node: v22.15.1 ICU: 76.1 V8: 12.4.254.21-node.24
+Default locale: en-001
+Platform: win32 x64
+
+[full corpus sort, tie tests, and explicit-locale comparisons -- see the checkpoint document's
+Part 6 for the complete corpus/output table, reproduced there verbatim from this same probe run]
+
+LANG=de_DE.UTF-8 node -e "console.log('LANG=de_DE default locale:', new Intl.Collator().resolvedOptions().locale);"
+-> LANG=de_DE default locale: en-001
+
+LANG=ja_JP.UTF-8 node -e "console.log('LANG=ja_JP default locale:', new Intl.Collator().resolvedOptions().locale);"
+-> LANG=ja_JP default locale: en-001
+
+LC_ALL=fr_FR.UTF-8 node -e "console.log('LC_ALL=fr_FR default locale:', new Intl.Collator().resolvedOptions().locale);"
+-> LC_ALL=fr_FR default locale: en-001
+
+node -e "console.log('no override default locale:', new Intl.Collator().resolvedOptions().locale);"
+-> no override default locale: en-001
+
+Interpretation: on this specific Windows/Node build, POSIX LANG/LC_ALL environment variables had
+no effect on Intl's resolved default locale. This is a negative result for cross-machine
+reproduction within this single session, not a refutation of the underlying claim -- the claim
+that Pi's collation is not a single portable contract rests on the SOURCE-LEVEL fact (no locale
+is ever explicitly passed to localeCompare in ls.ts) plus Node/ICU's documented OS-locale-derived
+default resolution, not on this session having produced two divergent concrete machines.

@@ -538,3 +538,693 @@ Providers, assurance Layer 11), and everything the master's own agent run loop o
 `prompt()`/`continue()` lifecycle, steering/follow-up message injection,
 `shouldStopAfterTurn`/`prepareNextTurn`, and whether a `terminate=true` batch or any other
 condition actually suppresses/continues the next model turn.
+
+---
+
+## Layer 13 — Built-in tools
+
+**Status: `WP-13.1` contract fully integrated, pending one complete final contract-convergence
+review (`minion-agent#48`): `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED` (integration approved,
+`minion-agent-docs#156`), `TOOL-028` `CONTRACT_INTEGRATED` (this revision), `TOOL-027`
+`NOT_ADOPTED_CORE` (unchanged, see below).** The first independent review
+(`minion-agent-docs#133`) returned `CHANGES REQUIRED` with nine findings, `L13-WP131-R001`-`R009`;
+the Layer 12 boundary was confirmed `CLEAR`. All nine were remediated across `CE-L13-WP131-01`'s
+five-lane convergence episode. Owner decisions: `R002-A`, `R005-A`, and `R010-B` (integrated
+into `TOOL-025`/`TOOL-026`, and `R010-B` also into `TOOL-028`); `R007-b` (certified and merged as
+`WP-12.E1`/`EXEC-007`); and `R006-C` (collation, owner-selected after an independently replayed
+differential). `spec/tools.md` is a single evolving specification; git history is its record,
+unlike the revision-numbered `assurance/layers/` artifacts. Owns the
+concrete
+built-in tools themselves -- their argument schemas, path-argument handling, output/truncation
+shapes, and same-target mutation serialization -- as opposed to Layer 05/06's generic
+tool-definition/execution framework above, which any tool (built-in or extension-registered) goes
+through uniformly. Scoping history, independent review chain, and owner governance decisions live
+in `minion-agent#47` (`WP-13.SCOPE`, CLOSED) and its four downstream per-work-package coordination
+issues (`minion-agent#48`-`#51`); this section is filled in per work package as each is drafted.
+
+Mirrors pinned Pi's `packages/coding-agent/src/core/tools/` (the full product-level tool set:
+`read`, `bash`, `edit`, `write`, `grep`, `find`, `ls` -- `index.ts`'s `allToolNames`), not the
+smaller `packages/agent/src/harness/tools/` SDK subset (`bash`/`edit`/`read`/`write` only, built
+directly on `ExecutionEnv`). Pi's own `coding-agent` tools do not route through that harness
+`ExecutionEnv` abstraction at all -- they call `node:fs/promises` directly, with their own separate
+path-resolution pipeline (`utils/paths.ts`), distinct from the harness/`nodejs.ts` resolver Layer
+12's `resolve_local_path` already mirrors. Minion's built-in tools intentionally diverge here
+(`MINION_ARCHITECTURAL_MAPPING`, not `DIRECT_PI_PARITY`): every built-in tool that touches the
+filesystem goes through `ctx.fs` (the certified Layer 12 seam), never a direct local-filesystem
+call, because Minion's local/remote/virtual/swappable provider model makes that seam load-bearing
+in a way Pi's own single-environment CLI never needed it to be. This is a deliberate design
+choice, not an oversight or an incomplete port of Pi's own (itself inconsistent) two-tier
+structure.
+
+### WP-13.1 — Native filesystem query tools (`read`, `ls`)
+
+Requirements `TOOL-025`-`TOOL-028` (`minion-agent#48`). No mutation-queue participation, no
+`ctx.subprocess` dependency, no external-binary dependency -- the lowest-risk, most independently
+certifiable Layer 13 surface (`assurance/layers/13-built-in-tools-scoping-v4.md`).
+
+#### Shared path-argument pipeline (`TOOL-026`)
+
+Every `read`/`ls` `path` argument is resolved through one pipeline before reaching `ctx.fs`:
+
+```text
+1. Normalize Unicode space variants -- the CLOSED set U+00A0, U+2000..U+200A,
+   U+202F, U+205F, U+3000 -- to ASCII space (U+0020). No other character is
+   affected; ordinary ASCII leading/trailing whitespace is NOT trimmed
+   (`L13-WP131-R001` correction -- see below).
+2. Strip exactly one leading "@", if present.
+3. On Windows only: rewrite a Git-Bash/MSYS/Cygwin/WSL-style POSIX drive path
+   ("/c/...", "/mnt/c/...", "/cygdrive/c/...") to its native Windows form
+   ("C:\...").
+4. If the result starts with "file://" (`R002-A`, integrated below): call
+   Layer 12's already-certified `_file_url_to_path` conversion DIRECTLY,
+   UNWRAPPED -- no exception-suppressing wrapper. A conversion failure
+   REJECTS THE CALL IMMEDIATELY, right here in the pipeline, BEFORE any
+   `ctx.fs`/provider access is attempted -- it does NOT fall through to
+   step 5 with the literal string. A successful conversion replaces the
+   pipeline's working value with the converted path and continues to
+   step 5 normally.
+5. Pass the result as the `path` argument to the appropriate READ-ONLY
+   ctx.fs operation directly -- read_text_file / read_binary_file /
+   file_info for read; probe_dir_entry / list_dir_raw (EXEC-007) for ls
+   (Layer 12, FileSystem Protocol). Tilde expansion,
+   absolute-path normalization, and cwd-relative resolution all happen
+   INSIDE that provider call, via the SAME already-certified
+   resolve_local_path logic every other execution-seam operation uses --
+   this pipeline does not reimplement that part of it. (A non-`file://`
+   input never reaches step 4's conversion at all; `resolve_local_path`'s
+   OWN internal `file://` handling, §3.2, is therefore never exercised by
+   this pipeline for a WP-13.1 caller -- step 4 always intercepts first.)
+```
+
+**`L13-WP131-R001` correction:** an earlier revision of this pipeline added a mandatory trim step
+and described the whole sequence as mirroring `utils/paths.ts:normalizePath`'s option set "exactly."
+Pinned Pi's own tool call sites never set `trim: true` -- `path-utils.ts:40-49`/`utils/
+paths.ts:75-84` -- so Pi itself preserves leading/trailing ASCII whitespace in a `path` argument;
+only the closed Unicode-space set above is normalized. A caller-supplied `" report.txt"` and
+`"report.txt"` are two different Pi paths (a directory containing both files makes this
+observable: Pi's `read " report.txt"` addresses the space-prefixed file; a version of this
+pipeline that trims would silently redirect to the other one). The trim step is removed entirely;
+this is `DIRECT_PI_PARITY`, not `MINION_ARCHITECTURAL_MAPPING` -- there was never a reason to
+diverge here.
+
+**`L13-WP131-R002` correction:** an earlier revision named `ctx.fs.resolve(path)` (`EXEC-003`) as
+the call every preprocessed path goes through. That call is Layer 12's `FsTarget` identity bridge
+-- it returns an opaque `target_key` for later same-target comparison (the mechanism `WP-13.2`'s
+mutation queue needs), not a resolved path string, and it is not the seam `read_text_file`/
+`read_binary_file`/`file_info`/`list_dir` themselves consume (verified directly against
+`FileSystem`'s Protocol definition, `minion-agent-python/src/minion_agent/execution/
+filesystem.py:487-553`: each of those four operations takes `path: str` directly and performs its
+own lexical resolution internally -- `LocalFileSystem.read_text_file`/`list_dir`/etc. all resolve
+via `resolve_local_path(self.cwd, path)` exactly as `absolute_path` does). `WP-13.1` has no need
+for `FsTarget`/`resolve()`/`process_path()` at all: it calls the four read-only operations directly
+with the pipeline's own preprocessed string. `MINION_ARCHITECTURAL_MAPPING`, corrected; no Layer
+12 change required -- the defect was entirely in which already-certified operation this contract
+named.
+
+**Owner-decided divergence (`TOOL-026`, `R002-A` -- integration of the resolved `CE-L13-WP131-01`
+Lane B decision, `minion-agent#48`; corrected this revision, independent review
+`minion-agent-docs#156`, `L13-WP131-INT-R002` -- an earlier integration pass conflated `R002-A`
+with the rejected `R002-B` alternative's own outcome):** pinned Pi's own two path-resolution
+implementations disagree on a malformed `file://` URL. The harness-level resolver Layer 12's
+`resolve_local_path` mirrors (`packages/agent/src/harness/env/nodejs.ts:57-62`) catches a
+`fileURLToPath` failure and falls through with the literal string unchanged. The `coding-agent`
+tool layer's own resolver (`utils/paths.ts:95-97`) does **not** catch that failure --
+`fileURLToPath(normalized)` is called unguarded, so pinned Pi's actual `read`/`ls` tools reject
+with a raw URL-parsing error for a malformed `file://` path.
+
+**The owner's exact governance text (`minion-agent#48` comment `5769645809`) selected `R002-A`**:
+"preserve pinned coding-agent behavior by REJECTING malformed `file://` input through the
+already-certified STRICT conversion boundary BEFORE `ctx.fs` filesystem access." This is `R002-A`'s
+defining property: the malformed input is rejected IMMEDIATELY, at the pipeline step (step 4,
+above) -- it never reaches an ordinary provider filesystem lookup at all. **Mechanism**: Layer 12's
+existing, already-certified `_file_url_to_path` conversion function (`filesystem.py:190`, Rust's
+equivalent conversion function) is called DIRECTLY, without the exception-suppressing wrapper
+`resolve_local_path` normally applies around it -- reusing the identical, unmodified,
+already-certified conversion logic, not a new independently-written parser; this requires only that
+Layer 12 make the existing function visibility-exposable (e.g. re-exported without its leading
+underscore), not a behavioral change or a reopening of Layer 12's own certified characterization.
+
+**Classification**: `_file_url_to_path`'s own failure (a `ValueError`/`OSError` from URL parsing,
+never an OS-level filesystem errno at all, since no filesystem call has been made yet) maps to
+`FsErrorCode.INVALID` -- the malformed-input condition the certified taxonomy's `invalid` code
+exists to represent (`spec/execution.md` §2.1), distinct from a genuine OS-level `not_found`/
+`permission_denied`/etc. outcome. Lane B's own characterization explicitly deferred this exact
+code/text choice to Lane E (`R002-A`'s "error projection: deferred to `L13-WP131-R010`"); this
+integration pass makes that deferred choice concrete now that `R010-B` is decided, rather than
+leaving it unresolved. **Final message text** follows `TOOL-025`'s `R010-B` integration below
+(governed by manifest row `TOOL-039`, `disposition: intentional divergence`, not by this row's own
+`adopted` disposition): the existence/permission-check template, `"Cannot access <path>: invalid
+path"` -- this is the SAME "reject before touching `ctx.fs`" checkpoint shape `read`'s own earlier
+site uses, applied here to the pipeline's own step-4 rejection.
+
+**`R002-B` (NOT selected -- the platform-dependent fall-through alternative, disclosed for
+contrast, not part of this contract):** had the owner instead chosen to let a malformed `file://`
+URL fall through to an ordinary provider filesystem lookup (i.e. NOT reject at step 4, matching
+`resolve_local_path`'s own default suppress-and-continue behavior), the resulting classification
+would have been platform-dependent, confirmed directly on both platforms: Windows -- the malformed
+literal fall-through path contains a colon outside drive-letter position, an illegal character at
+the OS level, `errno.EINVAL` -> `FsErrorCode.INVALID` (verified directly); POSIX -- the identical
+literal fall-through path is an ordinary, syntactically legal (if nonsensical) path component,
+`ENOENT` -> `FsErrorCode.NOT_FOUND` (independently verified on Linux/WSL). This platform split is
+`R002-B`'s own disclosed consequence, NOT `R002-A`'s -- `WP-13.1` does not reproduce it, since
+`R002-A` rejects uniformly (as `invalid`) on every platform, before any platform-dependent
+filesystem call would occur.
+
+`@`-prefix stripping happens unconditionally on any leading `@`, matching Pi's CLI `@file`
+convention exactly -- a path whose caller genuinely intends a literal leading `@` character has no
+way to express that through this pipeline, matching Pi's own behavior (`PI_SOURCE_ALGORITHM`, no
+narrower Minion-specific carve-out).
+
+#### `read` (`TOOL-025`)
+
+```text
+Input
+    path      string, REQUIRED
+    offset?   number -- unconstrained (not integer-only, not
+              minimum-constrained); see numeric-domain note below
+    limit?    number -- same unconstrained domain as offset
+
+Output -- exactly one of the two shapes below, never both, never neither
+
+Text result
+    content_blocks
+        [0]  text            the model-visible text (selected content,
+                              PLUS any continuation/overflow notice
+                              appended per the rules below -- one
+                              combined string, matching Pi's own single
+                              text content block, not a separate
+                              "notice" field)
+    details.truncation?      present ONLY for automatic truncation or a
+                              first-line-byte-overflow outcome (see
+                              below); ABSENT for the "user limit stopped
+                              early, more remains" outcome even though
+                              that outcome also appends a continuation
+                              notice to the text
+        .truncated           bool
+        .truncated_by        "lines" | "bytes" | null
+        .total_lines         integer -- line count of the content that
+                              was PASSED INTO truncation (i.e. after
+                              offset/limit already selected a range) --
+                              NOT the whole file's line count
+        .total_bytes          integer, same selected-range scope
+        .first_line_exceeds_limit  bool
+
+Image result
+    content_blocks
+        [0]  text     "Read image file [<final mime type after any
+                      conversion>]" + hint lines (conversion / resize
+                      dimension notes, each its own line) + an optional
+                      non-vision note -- ALWAYS present, even on success
+        [1]  image    -- ABSENT if image processing failed (see below);
+                      present otherwise
+            .data         base64-encoded string (NOT raw bytes)
+            .mime_type    the FINAL mime type after any BMP-to-PNG
+                          conversion and/or resize re-encode -- may
+                          differ from the sniffed mime type
+```
+
+- **Numeric domain (`L13-WP131-R003` correction):** `offset`/`limit` are pinned Pi's own
+  unconstrained `number` schema (`read.ts:21-25`) -- not narrowed to non-negative integers. A
+  fractional, zero, or negative value is a VALID input that reaches ordinary array-slice
+  arithmetic: `offset` undergoes `Math.max(0, offset - 1)` (so `offset <= 1` and any negative
+  value behave identically -- start at line 1; a fractional `offset` like `2.5` produces a
+  fractional 0-indexed start that JS array slicing then floors); `limit`, if given, computes
+  `Math.min(startLine + limit, allLines.length)` (a negative `limit` can therefore produce an end
+  index before the start index, yielding an empty selected range, not an error). This contract
+  reproduces that exact unconstrained domain and JS-arithmetic-shaped edge behavior rather than
+  narrowing it -- narrowing without owner governance was the defect; matching Pi exactly avoids
+  needing a separate governance round.
+- `offset`/`limit` are 1-indexed line semantics, applied BEFORE truncation, exactly as in the
+  narrowed-domain draft's ordering description (`DIRECT_PI_PARITY`, `read.ts:277-322`): an
+  `offset` at or beyond the file's actual line count (post the `Math.max(0, offset-1)` coercion
+  above) is a distinguishable input error citing the file's total line count -- this is the ONE
+  place a genuinely out-of-range `offset` is rejected rather than silently coerced.
+- **Two distinct line-count meanings (`L13-WP131-R004` correction):** Pi's own source has two
+  different counts that an earlier revision of this contract collapsed into one `total_lines`
+  field. `totalFileLines = allLines.length` is the WHOLE FILE's line count, used only inside the
+  continuation-notice TEXT (e.g. `"...Use offset=61 to continue."` math). `details.truncation
+  .total_lines` (when present) is the count of the SELECTED range already handed to truncation --
+  i.e. AFTER `offset`/`limit` already cut it down -- and can be far smaller than the whole-file
+  count. This contract keeps them as two separately-named, separately-scoped values; a language
+  implementation MUST NOT conflate them into one field.
+- **Result-shape rules, by outcome (`L13-WP131-R004` correction):**
+  - Automatic truncation occurred (the selected range exceeds `DEFAULT_MAX_LINES`/
+    `DEFAULT_MAX_BYTES`): text is the truncated content plus an exact continuation notice citing
+    the shown line range and the whole-file `totalFileLines`; `details.truncation` is present.
+  - The single first line alone exceeds the byte limit: text is Pi's actionable diagnostic
+    (`"[Line <n> is <size>, exceeds <limit> limit. Use bash: sed -n '<n>p' <path> | head -c
+    <limit>]"`) -- NOT empty content, correcting an earlier revision's claim that content is empty
+    in this case; `details.truncation.first_line_exceeds_limit` is `true`.
+  - A caller-supplied `limit` stopped the selection early AND the file still has more content
+    beyond it: text is the selected content plus a DIFFERENT continuation notice (`"[<n> more
+    lines in file. Use offset=<next> to continue.]"`); `details.truncation` is **ABSENT** for this
+    outcome specifically -- it is a caller-limit boundary, not an automatic-truncation event, and
+    Pi's own source does not attach truncation details to it.
+  - None of the above: text is exactly the selected content, no notice, no `details`.
+- Truncation, when it applies, is from the **head** (keep the first N lines/bytes, never a partial
+  line except the single-line-exceeds-limit case above), using the same two-limit-whichever-first
+  ceiling as every other Layer 13 tool: `DEFAULT_MAX_LINES = 2000`, `DEFAULT_MAX_BYTES = 51200`
+  (50 KiB), both measured UTF-8-byte-accurate, not UTF-16-code-unit-accurate (`DIRECT_PI_PARITY`,
+  `truncate.ts`). These two constants are shared Layer 13 constants, not `read`-specific -- restated
+  once here, referenced by `TOOL-028`/(bash `TOOL-034`/`TOOL-035`) rather than redefined per tool.
+- **Image handling (`L13-WP131-R005` correction):** detection is MIME-sniffed from the first ~4100
+  bytes of file content (magic-byte signatures), not the file extension -- the closed sniffed-format
+  set is JPEG (a specific malformed-marker byte pattern is explicitly rejected back to non-image),
+  non-animated PNG (an `acTL` chunk before any `IDAT` chunk marks an animated PNG, which sniffs as
+  NOT an image), GIF, WEBP (RIFF+WEBP container check), and BMP (`detectSupportedImageMimeType`,
+  `mime.ts`). Of those five, four (PNG/JPEG/GIF/WEBP) are directly usable inline; BMP is always
+  converted to PNG first (`image-process.ts:normalizeImage`); any other sniffed-but-unhandled case
+  is unreachable given the closed sniff set above.
+  - If conversion (BMP only) or resize (see below) fails, the result is a **text-only success**,
+    not a tool error: `content_blocks[0].text` is `"Read image file [<sniffed mime type>]\n[Image
+    omitted: could not be converted to a supported inline image format.]"` or the equivalent
+    resize-failure message; there is no `content_blocks[1]`.
+  - Auto-resize (`autoResizeImages`, default `true`) targets 2000x2000 max dimensions and a 4.5 MiB
+    base64-payload ceiling (`image-resize-core.ts` defaults); EXIF orientation is applied before
+    measuring/resizing. When resize actually changes dimensions, a hint line states the original
+    and displayed dimensions and the scale factor needed to map a model-reported coordinate back to
+    the original image. A BMP-to-PNG conversion, independently, adds its own hint line
+    (`"[Image converted from bmp to png.]"`).
+  - **Semantic authority (`R005-A` -- integration of the resolved `CE-L13-WP131-01` Lane A decision,
+    `minion-agent#48` comment `5760619717`; corrected this revision, independent review
+    `minion-agent-docs#156`, `L13-WP131-INT-R001` -- an earlier integration pass left the OPPOSITE,
+    pre-decision "implementation-delegated" rule in place instead of integrating this one):** the
+    owner selected `R005-A`, `semantic authority: PINNED_PHOTON_COMPATIBLE`, pinned Pi dependency
+    `@silvia-odwyer/photon-node 0.3.4` and its corresponding `photon_rs_bg.wasm` artifact, with the
+    explicit intent of MAXIMUM observable Pi fidelity on `read` image processing -- **NOT**
+    implementation-delegated, and **NOT** satisfied by mere visual equivalence or "produces a valid
+    image." Scope is the COMPLETE Photon-dependent observable surface: decoder acceptance/rejection,
+    EXIF orientation, BMP-to-PNG conversion and its own failure mode, the resize-path's independent
+    re-decode, the no-resize fast-path success boundary, the resize/re-encode candidate search, the
+    success-versus-text-only-failure boundary, MIME, dimensions, `wasResized`, and the encoded data
+    itself -- every one of these is Photon-authoritative, not merely "a reasonable approximation."
+    Python and Rust MAY use different binding mechanics ONLY when each mechanically demonstrates
+    genuine compatibility with the pinned Photon semantics -- ordinary visual similarity is
+    EXPRESSLY insufficient. Before implementation authorization, checkpoint evidence must pin the
+    engine/package and underlying artifact, an integrity hash where applicable, and
+    behavior-affecting wrapper/runtime versions, plus a differential corpus covering PNG/JPEG/GIF/
+    WebP/BMP; boundary dimensions and encoded sizes; EXIF; sniff-positive malformed/rejected inputs;
+    BMP conversion failure; both the no-resize and resize paths; multiple resize candidates; and
+    candidate-search success/exhaustion -- comparing success/failure branch, MIME, dimensions,
+    `wasResized`, and encoded data wherever exact Photon output is authoritative. **If either
+    implementation cannot reproduce pinned Photon semantics maintainably, implementation STOPS and
+    returns to the owner** -- no silent fallback to a looser fidelity standard is authorized without
+    a new governance decision. This decision authorizes contract/checkpoint integration only; it
+    does not itself authorize Python implementation, Rust implementation, Layer-12 changes, or
+    Layer-14 work.
+  - A non-vision-model note, when present, is appended as an additional line in
+    `content_blocks[0].text` -- it never replaces or suppresses `content_blocks[1]`; a successfully
+    processed image is returned to every requesting model regardless of that model's own vision
+    support (`DIRECT_PI_PARITY`, `read.ts:250-270`).
+- **Cancellation (`L13-WP131-R008` correction, `read`):** `read` accepts the Layer 09/Layer 06
+  cancellation signal. An already-aborted signal at call start rejects immediately with
+  `"Operation aborted"` before any filesystem access. Once started, the tool checks the signal
+  after path resolution and after the readability-access check (two explicit checkpoints,
+  `read.ts:223-249`) in addition to reacting to a live abort event; an abort that fires after the
+  file content has already been fully read and processed does not retroactively discard that
+  already-completed result -- the checkpoints are pre-completion only, not a post-hoc rejection of
+  a settled success.
+- `path` not resolving to an existing, readable file is a distinguishable error, separate from any
+  truncation/offset outcome (`DIRECT_PI_PARITY`).
+- **Error text (`R010-B` -- integration of the resolved `CE-L13-WP131-01` Lane E decision,
+  `minion-agent#48`; scope corrected this revision, independent review `minion-agent-docs#156`,
+  `L13-WP131-INT-R004` -- an earlier integration pass normatively cross-referenced `TOOL-028`, which
+  was then still frozen pending `R006` and was not integrated by that pass; `TOOL-028`'s own
+  integration is now in its section below):** pinned Pi's `read.ts`
+  authors NO hand-authored error text at all -- every distinguishable `read` failure is a raw or
+  hybrid site under Lane E's own characterization
+  (`assurance/layers/13-wp131-ce-l13-wp131-01-r010-error-projection.md`). The owner selected
+  `R010-B`: raw/hybrid sites use a deterministic, closed Layer-13 vocabulary selected from the
+  certified `FsErrorCode` (`spec/execution.md` §2.1) as an internal dispatch key -- never Pi's own
+  raw, platform-dependent OS/provider text, and never exposed as a separate structured field
+  (`details` remains `{}`, per every generated tool error).
+
+  **Disposition (`L13-WP131-INT-R003`, machine-readable separation -- an earlier revision only
+  disclaimed this in prose within `TOOL-025`'s own row, which independent review correctly found
+  insufficient):** this error-TEXT normalization on raw/hybrid sites is governed by its OWN,
+  SEPARATE manifest row, **`TOOL-039`** (`disposition: intentional divergence`; renumbered from
+  `TOOL-029`, which the Layer 13 scoping allocates to `WP-13.2`'s `write` -- an ID correction
+  only), NOT by
+  `TOOL-025`'s or `TOOL-026`'s own `disposition: adopted`, which describe those tools' core
+  Pi-mirroring behavior (schema, truncation, image handling under `R005-A`, cancellation, path
+  preprocessing/routing) only. A parity audit checking "does Minion reproduce Pi's error text"
+  must consult `TOOL-039`'s own row, not `TOOL-025`/`TOOL-026`'s.
+
+  The closed cause-phrase vocabulary below applies to `TOOL-025`/`read`, to `TOOL-026`'s own
+  `R002-A` step-4 rejection above (part of `read`'s and `ls`'s shared pipeline), and to
+  `TOOL-028`/`ls`'s raw and hybrid sites, whose exact templates are specified in `TOOL-028`'s own
+  error-text subsection below:
+
+  ```text
+  FsErrorCode        -> cause phrase
+  not_found          -> "no such file or directory"
+  permission_denied  -> "permission denied"
+  not_directory      -> "not a directory"
+  is_directory       -> "is a directory"
+  invalid            -> "invalid path"
+  not_supported      -> "not supported by this provider"
+  unknown            -> "unknown filesystem error"
+  ```
+
+  Applied to `read`'s two raw sites (Lane E's own site split):
+
+  ```text
+  existence/permission check fails (the earlier, `ops.access`-equivalent site;
+  reachable codes: not_found, permission_denied, not_directory, invalid,
+  not_supported, unknown):
+      "Cannot access <path>: <cause phrase>"
+
+  later content-read step fails (`read_text_file`/`read_binary_file` itself;
+  reachable codes: is_directory (the specific addressed-path-is-a-directory
+  subcase), plus not_found/permission_denied/not_directory/invalid/
+  not_supported/unknown for every other cause):
+      "Cannot read <path>: <cause phrase>"
+  ```
+
+  And to `TOOL-026`'s own step-4 rejection (`R002-A`, above) -- a malformed `file://` URL, reachable
+  code `invalid` only: `"Cannot access <path>: invalid path"` (the SAME template shape as `read`'s
+  existence/permission check, since it is architecturally the same kind of
+  reject-before-`ctx.fs`-access checkpoint).
+
+  `"Operation aborted"` (uniform, hand-authored, unchanged -- see the cancellation rule above) is
+  the sole exception: it is one of Pi's own four stable templates (Lane E), preserved verbatim, not
+  a raw/hybrid site subject to this vocabulary.
+
+`TOOL-027` -- Pi's macOS-specific filename-fallback heuristics (narrow-no-break-space AM/PM
+substitution, NFD normalization, straight-to-curly-apostrophe substitution, and their
+combination, tried in that order only when the initially resolved path does not exist) -- carry
+**owner disposition `NOT_ADOPTED_CORE`**, recorded in the shared manifest as `intentional
+divergence` (`minion-agent#47`, `minion-agent#48` -- `NOT_ADOPTED_CORE` itself is an owner-facing
+label, not a manifest disposition; `pi-parity-manifest.yaml`'s `TOOL-027` row is the binding
+record, `L13-WP131-R009` correction). They are `MINION_EXTENSION`/optional UX behavior, not part
+of this certified contract. `read` MUST NOT perform these fallback probes as part of its core
+behavior. The identifier is reserved, not implemented, so a future optional local-macOS provider
+extension can reference it without an ID collision; it imposes no obligation on this contract's
+`ctx.fs`-based implementation, which has no inherent concept of "the local machine's own
+filename-encoding quirks" for an arbitrary provider.
+
+#### `ls` (`TOOL-028`)
+
+**Status: `CONTRACT_INTEGRATED`, pending the complete `WP-13.1` final contract-convergence review.**
+This section integrates three settled decisions: `R006-C` for collation (owner-selected,
+`minion-agent#48#issuecomment-5808308811`), `R007-b` for enumeration and the cap, now certified as
+`WP-12.E1`/`EXEC-007`, and `R010-B` for error text, plus the frozen `R003` numeric-domain and
+`R008` cancellation rules. It replaces the pre-convergence draft, which called `ctx.fs.list_dir`
+and disclosed two per-entry divergences. `R007-b` exists to remove those divergences, and this
+revision does.
+
+Pinned Pi source: `packages/coding-agent/src/core/tools/ls.ts` at `b7bb00b9`.
+
+```text
+Input
+    path?     string, default: cwd. An explicit empty string "" is
+              equivalent to omitted (Pi: `path || "."`).
+    limit?    number, default 500. R003's unconstrained JSON number domain,
+              defaulted by nullish coalescing (`limit ?? 500`): only an
+              absent/null value takes the default; 0, negatives, and
+              fractions are honored literally.
+
+Output (success)
+    content_blocks
+        [0]  text  -- "(empty directory)" when no entry survives,
+                      otherwise the listing plus any notice suffix (below)
+    details        -- ABSENT unless a notice applies; then an object with
+                      only the fields that apply:
+        entry_limit_reached?  number -- the effective limit, verbatim;
+                              may be fractional (1.5), never rounded and
+                              never the listed count
+        truncation?           TruncationResult (same shape as read's
+                              details.truncation) -- only when the byte
+                              ceiling was hit
+```
+
+##### Algorithm
+
+```text
+1. Cancellation pre-check (R008, below).
+2. Path: run `path` (or "." when omitted or "") through TOOL-026's shared
+   pipeline. <path> in every message below is the resolved absolute path of
+   the addressed directory, i.e. what ctx.fs.absolute_path returns for the
+   pipeline's step-5 string. This corresponds to Pi's `dirPath`.
+3. Directory check: ONE ctx.fs.probe_dir_entry(p) call (EXEC-007; follows
+   symlinks to classify):
+     Ok, kind in {directory, symlink_to_directory}  -> continue
+     Ok, any other kind                             -> error "Not a directory: <path>"
+     Err(not_supported)                             -> error "Cannot access <path>: not supported by this provider"
+     Err(any other code)                            -> error "Path not found: <path>"
+4. Enumeration: ctx.fs.list_dir_raw(p) (EXEC-007) returns raw names in
+   provider order with no per-entry work.
+     Err(aborted)                                   -> "Operation aborted" (R008)
+     Err(any other code)                            -> error "Cannot read directory: <cause phrase>"
+5. Sort: STABLE sort of the raw names by comparing key(a) with key(b) using
+   the pinned collator (Collation, below), where key(x) = the pinned ICU
+   root-locale lowercase of x. Ties (compare == 0) keep list_dir_raw order.
+6. Entry loop (spec/execution.md §11.5, R007-b), over sorted names in order:
+     a. if results.length >= effective_limit: set entry_limit_reached and
+        STOP -- this name and every later name are never probed;
+     b. otherwise probe_dir_entry(join_path([resolved directory, name])):
+          Ok  -> append name + "/" if kind in {directory,
+                 symlink_to_directory}, else name alone
+          Err -> skip silently; not counted, never surfaced as text
+   The appended name is always the RAW list_dir_raw name, never its
+   lowercase key.
+7. Zero results -> text "(empty directory)", details ABSENT. This holds even
+   when 6a fired (limit <= 0 on a non-empty directory): Pi returns before
+   building details (ls.ts:180-183).
+8. Listing: join results with "\n"; head-truncate to DEFAULT_MAX_BYTES
+   (read's shared constant) with no line ceiling (Pi calls truncateHead with
+   maxLines = Number.MAX_SAFE_INTEGER, ls.ts:187).
+9. Notices, in this order, only those that apply:
+     "<L> entries limit reached. Use limit=<2L> for more"   when 6a fired;
+                                          sets details.entry_limit_reached = L
+     "50.0KB limit reached"               when step 8 truncated; sets
+                                          details.truncation (Pi's
+                                          formatSize(DEFAULT_MAX_BYTES))
+   L is the effective limit. Both L and 2L (computed in IEEE-754 double
+   arithmetic) render with ECMAScript Number::toString, e.g. 1.5 -> "1.5",
+   3 -> "3". When any notice applies:
+     text = truncated listing + "\n\n[" + notices joined by ". " + "]"
+   Notices are appended after truncation and are never truncated themselves
+   (ls.ts:190-202).
+```
+
+**Why one probe reproduces Pi's two-step directory check (step 3).** Pi first calls
+`pathExists` (`path-utils.ts:31-38`), which is `access(F_OK)` inside a try/catch. It follows
+symlinks and turns every failure into `false`, so Pi reports `"Path not found: <path>"` alike for
+a missing path, a broken symlink, a non-directory path component, a component without search
+permission, and a symlink loop. A following `stat` fails under those same conditions, so mapping
+every `probe_dir_entry` failure to `"Path not found"` reproduces Pi's output
+(`DIRECT_PI_PARITY`). Pi's next call, an unwrapped `stat(dirPath)` (`ls.ts:139`), can only fail
+if the path changes between the two calls, and then Pi surfaces raw Node text. Minion determines
+existence and kind in a single probe, so that race-only raw site has no counterpart
+(`MINION_ARCHITECTURAL_MAPPING`). `not_supported` also has no Pi counterpart: it means the
+provider lacks the `EXEC-007` extension. It is reported with `R010-B`'s vocabulary instead of
+being disguised as a missing path.
+
+**Per-entry parity (step 6).** `probe_dir_entry` follows symlinks exactly as Pi's per-entry
+`stat` does (`ls.ts:166-174`). So the two divergences the pre-convergence draft disclosed are
+gone:
+- A broken symlink or a looping entry fails its probe and is skipped, as in Pi.
+- One entry failing no longer fails the whole call.
+
+An entry whose kind is not a directory (a regular file, a symlink to a file, or `other` such as a
+FIFO) is listed without `"/"`, as in Pi. The cap is checked before each probe, so a cap can be
+reported even when the next, unprobed entry would itself have been skipped. `EXEC-007`'s §11.6
+lazy-cap witness makes probing beyond the cap a discriminating failure.
+
+##### Collation (`R006-C`)
+
+Pi sorts with `entries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))`
+(`ls.ts:155`). No locale is passed, so Pi's order depends on the host's Node/ICU default locale.
+Minion pins every part of that comparator:
+
+```text
+engines       Python: PyICU 2.16.2.   Rust: rust_icu_ucol 5.8.0, with every
+              rust_icu_* crate at 5.8.0.
+ICU           ONE build of the official icu4c-78.3-sources.tgz whose SHA-512
+              matches the release's own SHASUM512.txt, linked by both
+              engines. An implementation MUST fail rather than fall back if
+              it would link or load any other ICU. The differential run found
+              a stock Debian image silently linking its own ICU 72 development
+              library ahead of the pinned build.
+collator      locale "en-001"; STRENGTH = TERTIARY   (Intl sensitivity "variant")
+                               NUMERIC_COLLATION = OFF (numeric false)
+                               CASE_FIRST = OFF        (caseFirst "false")
+                               NORMALIZATION_MODE = ON
+              default collation, usage "sort"
+lowercase     ICU root-locale full lowercase from the same pinned build
+              (u_strToLower with locale ""), not the host language's own
+              lowercase function
+sort          stable; compare(key(a), key(b)); ties keep enumeration order
+```
+
+Two parts of this mapping go beyond the tuple's originally stated options. Both are now settled:
+
+- **`NORMALIZATION_MODE = ON` (owner-ratified correction to `R006-C`,
+  `minion-agent#48#issuecomment-5810098437`; it supersedes only the normalization bit of
+  `minion-agent-docs#159`'s evidence).** ECMA-402 requires canonically-equivalent strings to compare
+  equal. On this host (Node 22.15.1, ICU 76.1, `en-001`), Pi's `localeCompare` returns 0 for
+  three non-FCD canonically-equivalent pairs. ICU 78.3 with normalization OFF (the setting the
+  first differential used, since ICU's default is OFF) compares them as -1. With normalization
+  ON it returns 0 for all of them. Without it, `R006-C` would not match Pi on an `en-001` host
+  for a name whose combining marks are out of canonical order, contradicting the owner
+  decision's own parity disposition. Raised as a `CONTRACT_ASSURANCE_DEFECT` in the ICU mapping
+  (`INT-F1`); the owner-selected Intl-level options themselves are unchanged.
+- **ICU root-locale lowercase (accepted by the independent final review, `INT-F2`).** Lane C
+  revision 4, Correction 2, found real Unicode-version skew
+  in the `toLowerCase` step across Node, Python, and Rust, and required it to be pinned or
+  disclosed. ECMA-262 defines `toLowerCase` as Unicode Default Case Conversion, which ICU's
+  root-locale lowercase implements. Taking it from the same pinned ICU removes the skew without
+  any crate beyond the tuple (`rust_icu_sys` 5.8.0 exposes `u_strToLower`).
+
+Evidence: the first differential (`minion-agent-docs#159`, raw and pre-lowercased 24-name
+corpus) and the supplementary v2 differential in
+`assurance/layers/data/13-wp131-ce-l13-wp131-01/r006-c-differential-v2/`. v2 used both settings
+above with lowercasing done inside each engine, over the 24-name corpus plus 12 normalization and
+case-mapping witnesses, and found 0 disagreements across 1,296 ordered pairs per mode. Negative
+controls fail as expected. Informationally (Node carries ICU 76.1), the pinned end-to-end order
+also equals Pi's own comparator output on this `en-001` host for all 36 strings.
+
+**Parity disposition.** On a host whose effective default locale is `en-001`, this ordering is
+intended to match Pi, and the evidence above supports it. Pi itself orders differently on hosts
+with another default locale, and Minion does not follow. That is a deliberate, deterministic
+`MINION_ARCHITECTURAL_MAPPING`, recorded in its own manifest row `TOOL-040`
+(`disposition: intentional divergence`), not inside `TOOL-028`'s `adopted` row.
+
+##### Error text (`R010-B`)
+
+```text
+site                                        text                                                 source
+directory check fails (step 3, any code     "Path not found: <path>"                            Pi template, verbatim
+  except not_supported)
+path is not a directory (step 3)            "Not a directory: <path>"                           Pi template, verbatim
+directory check Err(not_supported)          "Cannot access <path>: not supported by this        R010-B vocabulary
+                                              provider"                                           (Minion-only outcome)
+enumeration fails (step 4)                  "Cannot read directory: <cause phrase>"             Pi's wrapper verbatim; its
+                                                                                                  embedded raw OS text is
+                                                                                                  replaced by the R010-B
+                                                                                                  cause phrase
+cancellation (R008)                         "Operation aborted"                                 Pi template, verbatim
+one entry's probe fails (step 6b)           none -- the entry is skipped
+```
+
+`<cause phrase>` comes from the closed `FsErrorCode` table under `read`'s `R010-B` text above,
+so `"Cannot read directory: permission denied"` is an example. Every generated `ls` error keeps
+the certified `details: {}` shape. The three `ls`-specific templates and the shared abort
+template are `TOOL-028`'s own adopted content. The two replacements of raw or hybrid provider
+wording (the `not_supported` directory-check text and the `"Cannot read directory"` cause
+phrase) are governed by manifest row `TOOL-039` (`disposition: intentional divergence`), the
+same row that governs `read`'s raw sites.
+
+##### Cancellation (`R008`, frozen)
+
+- **Cancellation (`L13-WP131-R008` correction, `ls`):** same signal contract as `read` -- an
+  already-aborted signal at call start rejects immediately with `"Operation aborted"`; a live abort
+  during directory enumeration or per-entry classification rejects the same way (`ls.ts:111-125`).
+  `ls` has no equivalent of `read`'s explicit post-access checkpoint; its own listing/classification
+  work is the sole interruptible span.
+
+Note, from the pinned source, adding no new rule: Pi attaches its abort listener before the
+directory check and removes it only after the entry loop (`ls.ts:125`, `ls.ts:178`). The
+interruptible span is therefore steps 3–6. An abort after step 6 completes does not change the
+result. `EXEC-007`'s own primitives do not provide mid-call cancellation (spec/execution.md
+§11.4), so the tool owns this outer race.
+
+#### Witness matrix (`L13-WP131-R009`, part 1)
+
+Discriminating scenarios an independent language implementation must reproduce; each corresponds
+to a `pi-parity-manifest.yaml` `tests:` entry for its requirement (planned canonical scenarios --
+no implementation exists yet to run them against, so none are claimed as passing evidence):
+
+```text
+TOOL-025 (read)
+    read_offset_limit_then_truncation_ordering    100-line file, offset=41,
+        limit=20 -> lines 41-60 + "[40 more lines in file. Use offset=61
+        to continue.]", details ABSENT (caller-limit-stopped-early case)
+    read_first_line_exceeds_byte_limit             single line > 50 KiB ->
+        Pi's sed/head diagnostic text, NOT empty content;
+        details.truncation.first_line_exceeds_limit = true
+    read_offset_out_of_bounds                      offset beyond EOF ->
+        distinguishable input error citing total line count
+    read_fractional_and_negative_numeric_inputs     offset=2.5, limit=-1 ->
+        JS-arithmetic-shaped coercion, not a schema-validation error
+    read_image_success_includes_image_for_non_vision_model
+        valid PNG + a non-vision model -> content_blocks has BOTH the
+        text block (with non-vision note) AND the image block
+    read_image_bmp_converts_and_resizes             valid BMP larger than
+        2000x2000 -> converted to PNG, resized, both hints present in
+        that order
+    read_image_processing_failure_is_text_only_success
+        an image that sniffs as supported but fails conversion/resize ->
+        single text block, no image block, NOT a tool error
+
+TOOL-026 (path pipeline)
+    read_leading_ascii_space_not_trimmed            two files " x.txt"/
+        "x.txt" -> path=" x.txt" addresses the space-prefixed file
+    read_unicode_space_normalized                   path uses U+00A0 in
+        place of an ASCII space where the real file uses ASCII space ->
+        still resolves to the same file
+    malformed_file_url_rejected_before_ctx_fs_access_as_invalid
+        a syntactically invalid file:// path (e.g. "file:///%ZZ") ->
+        rejected at pipeline step 4 by the strict conversion, before
+        any ctx.fs call is made (R002-A); classified FsErrorCode
+        invalid; text "Cannot access <path>: invalid path"; details {}
+
+TOOL-028 (ls)
+    ls_lazy_cap_never_probes_beyond_limit           raw order [z_slow, a_ok],
+        limit=1 -> only a_ok is probed; listing "a_ok"; notice "1 entries
+        limit reached. Use limit=2 for more"; entry_limit_reached = 1
+        (EXEC-007 §11.6 LAZY CAP BOUNDARY)
+    ls_entry_limit_checked_before_next_probe        limit=1, the second sorted
+        entry would itself fail its probe -> cap still reported after the
+        first entry
+    ls_zero_limit_on_nonempty_dir_no_details        limit=0, non-empty dir ->
+        "(empty directory)", details ABSENT
+    ls_fractional_limit_verbatim                    limit=1.5, 3 entries -> 2
+        listed; entry_limit_reached = 1.5; "1.5 entries limit reached. Use
+        limit=3 for more"
+    ls_broken_symlink_entry_skipped                 a broken-symlink entry ->
+        absent from the listing and not counted (Pi parity via
+        probe_dir_entry)
+    ls_symlinked_entries_follow_target_kind         symlink -> directory is
+        listed "name/"; symlink -> file is listed "name"
+    ls_special_entry_listed_without_slash           a FIFO or other special
+        entry (or a provider stand-in reporting kind other) -> listed, no "/"
+    ls_path_symlink_to_directory_is_listed          `path` is a symlink to a
+        directory -> the target's entries are listed
+    ls_missing_path_and_broken_link_path_not_found  missing path, and a path
+        that is a broken symlink -> "Path not found: <path>"
+    ls_file_path_not_a_directory                    `path` is a regular file
+        -> "Not a directory: <path>"
+    ls_enumeration_failure_cannot_read_directory    unreadable directory ->
+        "Cannot read directory: permission denied", details {}
+    ls_provider_without_extension_not_supported     provider lacking EXEC-007
+        -> "Cannot access <path>: not supported by this provider"
+    ls_byte_truncation_then_notice                  listing over 50 KiB ->
+        head-truncated listing + "\n\n[50.0KB limit reached]";
+        details.truncation present
+    ls_both_notices_in_order                        entry cap and byte ceiling
+        both hit -> "[<L> entries limit reached. Use limit=<2L> for more.
+        50.0KB limit reached]"
+    ls_pre_aborted_signal                           already-aborted signal ->
+        "Operation aborted" before any ctx.fs call
+    ls_collation_r006c_corpus_order                 the 24-name Part 6 corpus
+        in its recorded enumeration order -> the exact order recorded in
+        r006-c-differential/results (lowercased mode)
+    ls_collation_case_ties_keep_enumeration_order   "apple"/"Apple"/"APPLE"
+        in two different enumeration orders -> each order preserved
+    ls_collation_canonical_equivalents_tie          a non-FCD canonically-
+        equivalent pair keeps enumeration order (compares equal; requires
+        NORMALIZATION_MODE = ON)
+    ls_lowercase_key_uses_pinned_icu_root_mapping   final sigma, U+0130,
+        U+1E9E, U+01C5 -> sort keys equal ICU 78.3 root-locale lowercase
+```
+
+### Explicitly not certified by WP-13.1
+
+`write`, `edit`, and the shared mutation queue (`WP-13.2`, `minion-agent#49`); `bash` and its
+`ctx.subprocess`-based kill/wait lifecycle (`WP-13.3`, `minion-agent#50`); `find`/`grep` and the
+owner-decided exact-pinned-engine strategy (`WP-13.4`, `minion-agent#51`, `TOOL-038`); and every
+Layer 06 concern (tool registration/visibility, the per-call pipeline, hook ordering) a built-in
+tool participates in identically to any other registered tool, already certified above and not
+restated here.

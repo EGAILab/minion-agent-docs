@@ -1,0 +1,22 @@
+== negative control: Rust engine with NUMERIC_COLLATION=ON vs unmodified PyICU output
+PASS  PyICU version == 2.16.2 (got 2.16.2)
+PASS  PyICU runtime ICU == 78.3 (got 78.3)
+PASS  Rust runtime ICU == 78.3.0.0 (got 78.3.0.0)
+FAIL  identical effective collator attributes {'STRENGTH': 2, 'NUMERIC_COLLATION': 16, 'CASE_FIRST': 16, 'ALTERNATE_HANDLING': 21, 'NORMALIZATION_MODE': 16}
+FAIL  raw: all 576 ordered-pair comparisons identical (2 disagreements)
+      disagree 'file10' vs 'file2': py=-1 rust=1
+      disagree 'file2' vs 'file10': py=1 rust=-1
+FAIL  raw: stable sort order identical
+      raw order: 'a b', 'a_b', 'a-b', 'a.b', 'apple', 'Apple', 'APPLE', 'banana', 'Banana', 'cafe', 'caf\xe9', 'Caf\xe9', 'e\u0301', '\xe9', 'file1', 'file10', 'file2', 'strasse', 'STRASSE', 'stra\xdfe', 'Stra\xdfe', 'strasse2', '\u306b\u307b\u3093\u3054', '\u65e5\u672c\u8a9e'
+FAIL  lowercased_by_harness: all 576 ordered-pair comparisons identical (2 disagreements)
+      disagree 'file10' vs 'file2': py=-1 rust=1
+      disagree 'file2' vs 'file10': py=1 rust=-1
+FAIL  lowercased_by_harness: stable sort order identical
+      lowercased_by_harness order: 'a b', 'a_b', 'a-b', 'a.b', 'apple', 'Apple', 'APPLE', 'banana', 'Banana', 'cafe', 'caf\xe9', 'Caf\xe9', 'e\u0301', '\xe9', 'file1', 'file10', 'file2', 'strasse', 'STRASSE', 'stra\xdfe', 'Stra\xdfe', 'strasse2', '\u306b\u307b\u3093\u3054', '\u65e5\u672c\u8a9e'
+INFO  ICU 78.3 lowercased order matches the recorded Node 22.15.1 / ICU 76.1 order (not a pass criterion)
+VERDICT  FAIL
+compare exit code: 1
+== negative control 2: single flipped matrix cell (synthetic)
+FAIL  raw: all 576 ordered-pair comparisons identical (1 disagreements)
+VERDICT  FAIL
+compare exit code: 1
