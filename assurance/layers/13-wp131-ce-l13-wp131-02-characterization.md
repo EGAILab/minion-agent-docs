@@ -317,3 +317,153 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of revision 2); then the owner for Q and P
 ```
+
+---
+
+## Revision 3 -- complete access matrix after checkpoint review REJECTED (`CE13-C003`)
+
+Codex's §11.8.5 review of revision 2 at `2545bc42` (minion-agent-docs#162, 2026-09-24T20:57Z):
+**REJECTED** -- `CE13-C003`: an unreadable directory fails Pi's `access(R_OK)` (EACCES, access site),
+but revision 1/2's `file_info` directory shortcut answered `Cannot read ... is a directory` without
+any readability check. Accepted. Revisions 1-2 are kept as history.
+
+Three access edges in a row were found one at a time, so this revision stops patching cases and
+measures the whole surface.
+
+### Complete measured matrix
+
+Evidence: `data/13-wp131-ce-l13-wp131-02-access-matrix/` (fixture `setup.sh`; `node_probe.mjs` runs
+pinned Pi's read path operation by operation -- `access(R_OK)` (read.ts:248), `open`+`read` 4100
+bytes (mime.ts sniff), `readFile` (read.ts:256/273); `minion_probe.py` runs the certified Layer 12
+`LocalFileSystem`). Linux: Node 22.15.1 `node:22.15.1-bookworm-slim` as uid `node`, Python 3.12
+`python:3.12-slim` as `nobody`, both unprivileged (mode bits apply). Windows 11: this host, Node
+22.15.1, Python 3.13.5, deny ACLs.
+
+```text
+LINUX                   Pi: access  sniff    readFile   Pi site            | Minion read_binary_file
+f_ok                        ok      ok       ok         -- success         | ok
+f_000 (unreadable file)     EACCES  EACCES   EACCES     ACCESS             | permission_denied
+d_ok (readable dir)         ok      EISDIR   EISDIR     READ (is a dir)    | is_directory
+d_000 (unreadable dir)      EACCES  EACCES   EACCES     ACCESS  (CE13-C003)| permission_denied
+d_x (search-only dir)       EACCES  EACCES   EACCES     ACCESS             | permission_denied
+d_r (read, no search)       ok      EISDIR   EISDIR     READ (is a dir)    | is_directory
+d_x/inner                   ok      ok       ok         -- success         | ok
+d_r/inner (unsearchable)    EACCES  EACCES   EACCES     ACCESS             | permission_denied
+lk -> f_ok                  ok      ok       ok         -- success         | ok
+lk -> f_000                 EACCES  EACCES   EACCES     ACCESS             | permission_denied
+lk -> d_ok                  ok      EISDIR   EISDIR     READ (is a dir)    | is_directory
+lk -> d_000                 EACCES  EACCES   EACCES     ACCESS             | permission_denied
+dangling symlink            ENOENT  ENOENT   ENOENT     ACCESS             | not_found
+symlink loop                ELOOP   ELOOP    ELOOP      ACCESS             | unknown
+f_ok/x (file component)     ENOTDIR ENOTDIR  ENOTDIR    ACCESS             | not_directory
+missing                     ENOENT  ENOENT   ENOENT     ACCESS             | not_found
+
+WINDOWS                 Pi: access  sniff    readFile   Pi site            | Minion read_binary_file
+f_000 (deny read)           ok      EPERM    EPERM      READ               | permission_denied
+d_ok                        ok      EISDIR   EISDIR     READ (is a dir)    | permission_denied (L12 defect)
+d_000 (deny read)           ok      EPERM    EPERM      READ               | permission_denied
+lk -> f_000 / lk -> d_000   ok      EPERM    EPERM      READ               | permission_denied
+dangling symlink            ok (!)  ENOENT   ENOENT     READ               | not_found
+symlink loop                ok (!)  ELOOP    ELOOP      READ               | invalid
+f_ok/x                      ENOENT  ENOENT   ENOENT     ACCESS             | not_found
+missing                     ENOENT  ENOENT   ENOENT     ACCESS             | not_found
+```
+
+(All other Windows rows succeed or match; full data in the JSON files.)
+
+### What the matrix shows
+
+1. **Linux (POSIX) -- the site is a function of the filesystem state, and that state is visible in one
+   read's error code.** `access(R_OK)` fails exactly when the path does not resolve (`ENOENT`,
+   `ENOTDIR`, `ELOOP`) or the target -- file OR directory -- is not readable (`EACCES`). The ONLY
+   content-read failure that is not already an access failure is `EISDIR`, from a READABLE directory
+   (directly or through a symlink). Minion's `read_binary_file` returns the corresponding code in
+   every row (`permission_denied`, `not_found`, `not_directory`, `unknown`, `is_directory`).
+2. **Windows -- Pi's `access` checks almost nothing.** libuv's `access` uses file attributes and does
+   not follow the final symlink: it succeeds for unreadable files and directories, dangling links and
+   link loops. Nearly every Windows failure is therefore the READ site in Pi.
+3. **Pi's two calls open a race window; Minion needs only one call.** Codex's CE13-C002 H2 and C012's
+   "removed between access and read" are states that CHANGE between Pi's `access` and `readFile`.
+   With a single content read there is no such window to reproduce; each Minion call observes one
+   state, and the rule below reports the site Pi reports for that state on POSIX.
+
+### Proposed rule (replaces revisions 1-2's access step)
+
+```text
+read's filesystem access = ONE ctx.fs.read_binary_file(p) -- no separate access step, no signal.
+  Ok                                         -> continue (sniff, image or text)
+  Err(is_directory)                          -> "Cannot read <path>: is a directory"
+  Err(not_supported)                         -> "Cannot read <path>: not supported by this provider"
+  Err(not_found | permission_denied | not_directory | invalid | unknown)
+                                             -> "Cannot access <path>: <cause phrase>"
+<path> = ctx.fs.absolute_path(<step-5 string>)
+```
+
+This is Pi's POSIX site for every stable filesystem state in the matrix (Linux rows: 16/16), uses one
+certified core operation (no `canonical_path`, `file_info` or `EXEC-007` dependency -- CE13-C001 and
+the original C012 cannot arise), handles unreadable directories (CE13-C003) and needs no Layer 12
+change. `not_supported` stays a read-site failure: the provider cannot supply content (R010-B).
+
+### Disclosed divergences (for the owner)
+
+- **D1 -- Windows host.** Pi reports most Windows failures at the READ site (row 2). The rule reports
+  the POSIX site on every host -- the same choice as the owner's C012-A rationale ("matches Pi on
+  POSIX; deterministic provider-independent projection; no platform concept in ctx.fs"), extended
+  from `permission_denied` to all codes.
+- **D2 -- Pi's race window.** A path whose state changes between Pi's `access` and `readFile` (removed,
+  made unreadable, replaced by a directory) gets Pi's READ site; Minion, making one call, reports
+  the site for the state it observed. Pi's own outcome in that window depends on timing.
+- **D3 -- scope change versus the recorded C012-A text.** The owner's decision (`#48` comment
+  `5822062094`) says that apart from `permission_denied`, failures "after the access step" stay at the
+  read site (`not_found` -> `Cannot read ...`, etc.). That text assumed a separate access step
+  (revision 1). With no separate step, a `not_found`/`not_directory`/`invalid`/`unknown` from the one
+  read IS the state Pi's `access` rejects, so the rule reports it at the access site. This needs the
+  owner's explicit confirmation; it is not assumed.
+- **D4 -- Windows Layer 12 defect.** Certified Python `read_binary_file` on Windows classifies a
+  readable directory as `permission_denied` (Node: `EISDIR`), so a directory read on Windows would
+  say `Cannot access <path>: permission denied` instead of `Cannot read <path>: is a directory`. The
+  fix belongs in Layer 12 (already escalated); `read` does not work around it with a check that
+  would reintroduce CE13-C003.
+
+### Alternatives for the owner menu
+
+- **M-A (recommended):** the rule above (D1-D4 disclosed).
+- **M-B:** a Layer 12 readability operation (`access(R_OK)`-equivalent) to reproduce Pi's two-call
+  structure, including its race window. Still host-dependent (D1 unless the operation copies libuv's
+  Windows behavior). Lower-layer change in both languages.
+- **M-C:** READ site for every content failure (Windows-like). Diverges from Pi on POSIX for every
+  missing / unreadable / bad-path case -- the common cases.
+
+### Revised witnesses (replace W-C1..W-C8)
+
+- `W-A1..W-A16`: one canonical case per Linux matrix row, real fixture where the host allows it
+  (Windows cannot create mode-000 semantics), otherwise scripted `read_binary_file` codes; expected
+  text from the Linux Pi site column.
+- `W-A17` provider without `EXEC-007`, and a provider whose `canonical_path` is `not_supported`:
+  reads normally, `fs_calls` = `read_binary_file` only.
+- `W-A18` `not_supported` from `read_binary_file` -> `Cannot read ... not supported by this provider`.
+- Negative controls: a `file_info` directory shortcut (fails W-A for `d_000`), any separate access
+  step (fails W-A17's `fs_calls`), the revision-1 rule "every read failure is the read site except
+  permission_denied" (fails `missing`/`dangling`).
+
+I001 is unchanged (no checkpoint blocker at revisions 1-2).
+
+### Revised checkpoint
+
+```text
+PROPOSED FOR IMPLEMENTATION  (revision 3; subject to the owner's M choice and D3 confirmation)
+
+OPEN FINDINGS
+    L13-WP131-I001, L13-WP131-C012 (+ CE13-C001, CE13-C002, CE13-C003)
+
+ACCEPTANCE WITNESSES
+    W-I1..W-I5; W-A1..W-A18 with the listed negative controls
+
+NORMATIVE DELTAS
+    spec/tools.md (read operation mapping -> the single-read rule; R010-B site text; D1-D4 disclosed;
+    read/ls cancellation per I001), TOOL-039 (site rule and divergences), manifest TOOL-025/039 tests,
+    conformance/agent/builtin-*.yaml
+
+NEXT_OWNER
+    Codex (checkpoint review of revision 3); then the owner for M and D3
+```
