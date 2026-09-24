@@ -1,0 +1,40 @@
+== container: Debian GNU/Linux 12 (bookworm) / x86_64 / 2026-09-24T04:59:44Z
+== sha512 recorded at build time:
+04a49455e1489030c520a4bfd2664fa2171e7938d08f2acdbbcb1fda976639fd8b1f0704f2eec89ba59a7b6d118ceaab6ec5a096e40d9085a0895d91ce225245 *icu4c-78.3-sources.tgz
+== toolchain packages (inside container only)
+system ICU dev before purge: libicu-dev:amd64 72.1-3+deb12u1
+system ICU dev after purge: none (no unversioned libicu*.so, no /usr/include/unicode)
+pkg-config icu-i18n: 78.3
+== PyICU 2.16.2 against the shared build
+PyICU NEEDED:
+  [libicui18n.so.78]
+  [libicuuc.so.78]
+PyICU resolves:
+  libicui18n.so.78 => /opt/icu-78.3/lib/libicui18n.so.78
+  libicuuc.so.78 => /opt/icu-78.3/lib/libicuuc.so.78
+  libicudata.so.78 => /opt/icu-78.3/lib/libicudata.so.78
+== rust_icu_ucol 5.8.0 against the same shared build
+resolved rust_icu crates:
+  rust_icu_common 5.8.0
+  rust_icu_release 5.8.0
+  rust_icu_sys 5.8.0
+  rust_icu_ucol 5.8.0
+  rust_icu_uenum 5.8.0
+  rust_icu_ustring 5.8.0
+Rust resolves:
+  libicuuc.so.78 => /opt/icu-78.3/lib/libicuuc.so.78
+  libicui18n.so.78 => /opt/icu-78.3/lib/libicui18n.so.78
+  libicudata.so.78 => /opt/icu-78.3/lib/libicudata.so.78
+== run engines
+PASS  PyICU version == 2.16.2 (got 2.16.2)
+PASS  PyICU runtime ICU == 78.3 (got 78.3)
+PASS  Rust runtime ICU == 78.3.0.0 (got 78.3.0.0)
+PASS  identical effective collator attributes {'STRENGTH': 2, 'NUMERIC_COLLATION': 16, 'CASE_FIRST': 16, 'ALTERNATE_HANDLING': 21, 'NORMALIZATION_MODE': 16}
+PASS  raw: all 576 ordered-pair comparisons identical (0 disagreements)
+PASS  raw: stable sort order identical
+      raw order: 'a b', 'a_b', 'a-b', 'a.b', 'apple', 'Apple', 'APPLE', 'banana', 'Banana', 'cafe', 'caf\xe9', 'Caf\xe9', 'e\u0301', '\xe9', 'file1', 'file10', 'file2', 'strasse', 'STRASSE', 'stra\xdfe', 'Stra\xdfe', 'strasse2', '\u306b\u307b\u3093\u3054', '\u65e5\u672c\u8a9e'
+PASS  lowercased_by_harness: all 576 ordered-pair comparisons identical (0 disagreements)
+PASS  lowercased_by_harness: stable sort order identical
+      lowercased_by_harness order: 'a b', 'a_b', 'a-b', 'a.b', 'apple', 'Apple', 'APPLE', 'banana', 'Banana', 'cafe', 'caf\xe9', 'Caf\xe9', 'e\u0301', '\xe9', 'file1', 'file10', 'file2', 'strasse', 'STRASSE', 'stra\xdfe', 'Stra\xdfe', 'strasse2', '\u306b\u307b\u3093\u3054', '\u65e5\u672c\u8a9e'
+INFO  ICU 78.3 lowercased order matches the recorded Node 22.15.1 / ICU 76.1 order (not a pass criterion)
+VERDICT  PASS -- no differential disagreement

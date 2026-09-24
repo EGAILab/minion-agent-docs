@@ -1,0 +1,6 @@
+04a49455e1489030c520a4bfd2664fa2171e7938d08f2acdbbcb1fda976639fd8b1f0704f2eec89ba59a7b6d118ceaab6ec5a096e40d9085a0895d91ce225245 *icu4c-78.3-sources.tgz
+icu4c-78.3-sources.tgz: OK
+CFLAGS = -O3  -std=c11 -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings $(THREADSCFLAGS) 
+CXXFLAGS = -O3  -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long -std=c++17 $(THREADSCXXFLAGS) 
+CPPFLAGS =  $(THREADSCPPFLAGS)  -DU_HAVE_ELF_H=1 
+ICU built

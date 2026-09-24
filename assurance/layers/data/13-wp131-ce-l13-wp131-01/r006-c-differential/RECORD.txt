@@ -1,0 +1,95 @@
+CE-L13-WP131-01 -- R006-C Correction 3c differential proof: EXECUTED
+Status: DIFFERENTIAL_PASS (pending independent replay; R006 owner selection NOT made here)
+Date: 2026-09-24
+Author: Claude (Python/shared-contract owner)
+Supersedes as current state: r006-c-differential-probe-feasibility-blocked.txt (kept unchanged as history)
+
+== Why this became possible without violating the 2026-09-22 owner ruling ==
+
+The 2026-09-22 ruling kept R006-C FEASIBILITY_BLOCKED "until an isolated environment (e.g. a
+disposable CI/container/VM) capable of constructing the exact pinned tuple becomes available", and
+forbade host-level tooling changes. The earlier attempt checked only native Windows and WSL Ubuntu.
+This host already had Docker 29.7.2 with a running Linux engine. Every build step below ran inside
+throwaway `docker run --rm` containers. No tooling was installed on the Windows host or in WSL.
+Host residue after the run: none -- the named volume `r006c-opt` and the pulled base image were
+both removed (docker volume rm / docker image rm).
+
+== Exact tuple under test (Lane C revision 4, Corrections 3a/3b) ==
+
+Container base:  rust@sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e
+                 (rust:1-bookworm; Debian 12; rustc/cargo 1.98.1; Python 3.11)
+ICU4C artifact:  icu4c-78.3-sources.tgz, 27,977,255 bytes, GitHub release unicode-org/icu
+                 release-78.3 (published 2026-03-17)
+SHA-512:         04a49455e1489030c520a4bfd2664fa2171e7938d08f2acdbbcb1fda976639fd8b1f0704f2eec89ba59a7b6d118ceaab6ec5a096e40d9085a0895d91ce225245
+                 verified with `sha512sum -c` against the release's own SHASUM512.txt
+                 (results/SHASUM512.txt, results/expected.sha512). PGP (.asc) not checked.
+ICU build:       built ONCE into /opt/icu-78.3 (runConfigureICU Linux, --disable-samples
+                 --disable-tests; flags in results/icu_build_flags.txt); both engines link it.
+Python engine:   PyICU 2.16.2, built from sdist (--no-binary) against /opt/icu-78.3
+Rust engine:     rust_icu_ucol =5.8.0; Cargo.lock resolves every rust_icu_* crate to 5.8.0
+                 (common, release, sys, ucol, uenum, ustring)
+Locale/options:  "en-001"; STRENGTH=TERTIARY (sensitivity "variant"), NUMERIC_COLLATION=OFF
+                 (numeric false), CASE_FIRST=OFF (caseFirst "false"). Effective attribute
+                 values read back from both engines and required to be identical:
+                 STRENGTH 2, NUMERIC 16 (OFF), CASE_FIRST 16 (OFF), ALTERNATE 21
+                 (NON_IGNORABLE), NORMALIZATION 16 (OFF). NORMALIZATION_MODE was not part of the
+                 pinned options and was left at ICU's default in both engines.
+
+== A real build hazard the proof caught ==
+
+The first run failed at PyICU import with `undefined symbol _ZTIN6icu_7811ReplaceableE`. Cause:
+the base image ships Debian's libicu-dev 72.1, and PyICU's link line placed -L/usr/lib/x86_64-
+linux-gnu BEFORE -L/opt/icu-78.3/lib, so -licui18n silently resolved to the system ICU 72 dev
+library; no icu_78 symbol resolved and --as-needed dropped the NEEDED entries. This is exactly the
+"whatever the OS provides" skew Correction 3b warns about. Fix, inside the disposable container
+only: purge libicu-dev, hard-fail if any unversioned libicu*.so or /usr/include/unicode remains,
+and hard-fail unless every ICU library either engine resolves (ldd) lives under /opt/icu-78.3/lib.
+Final run: PyICU NEEDED libicui18n.so.78 + libicuuc.so.78; both engines resolve libicuuc,
+libicui18n, libicudata .so.78 from /opt/icu-78.3/lib (results/run.log).
+
+== Corpus and method ==
+
+Corpus: the 24-name witness set from assurance/layers/13-wp131-ce-l13-wp131-01-characterization.md
+Part 6 (lines 500-507), codepoints re-extracted from that file, including e+U+0301 and U+00E9 as
+distinct entries (harness/corpus.json).
+Modes: (1) raw names; (2) names lower-cased ONCE by the harness and stored in corpus.json, read
+verbatim by both engines -- mirrors Pi's a.toLowerCase().localeCompare(b.toLowerCase()) shape
+without letting either language's own case mapping differ.
+Comparison: every ordered pair (24 x 24 = 576) per mode, plus a stable sort from enumeration
+order, compared by harness/compare.py (plain JSON, no ICU).
+
+== Result (results/verdict.txt) ==
+
+PyICU 2.16.2 on ICU 78.3; Rust runtime u_getVersion 78.3.0.0
+identical effective collator attributes .................... PASS
+raw: 576 ordered-pair comparisons identical, 0 disagreements  PASS
+raw: stable sort order identical ............................ PASS
+lowercased: 576 comparisons identical, 0 disagreements ...... PASS
+lowercased: stable sort order identical ..................... PASS
+VERDICT: PASS -- no differential disagreement
+
+Informational only (not a pass criterion): the ICU 78.3 lowercased order equals the order recorded
+earlier this lane under Node 22.15.1 / ICU 76.1 for this corpus.
+
+== Negative controls (results/negative_control.log) -- the comparator can fail ==
+
+1. Semantic: Rust engine rebuilt with NUMERIC_COLLATION=ON (one-line change, harness/neg.sh). The
+   comparator reports FAIL: attribute mismatch, and exactly the file10/file2 pair disagreeing in
+   both modes (py=-1, rust=1), plus sort-order mismatch.
+2. Synthetic: one flipped cell in the Rust raw matrix. Comparator reports FAIL (1 disagreement).
+
+== Reproduce ==
+
+From a directory containing harness/ contents plus an empty out/:
+  docker volume create r006c-opt
+  docker run --rm -v "$PWD:/work" -v r006c-opt:/opt <base digest above> bash /work/build_icu.sh
+  docker run --rm -v "$PWD:/work" -v r006c-opt:/opt <base digest above> bash /work/run.sh
+  docker run --rm -v "$PWD:/work" -v r006c-opt:/opt <base digest above> bash /work/neg.sh
+  (harness/rust_neg/ is rust/ with the single NUMERIC_COLLATION line switched to UCOL_ON)
+  docker volume rm r006c-opt
+
+== Scope ==
+
+This executes Correction 3c's differential run and nothing else. It does not select an R006
+option (owner decision), does not change spec/tools.md or the manifest, does not implement
+WP-13.1, and does not reopen R006-A/R006-B or any closed lane.

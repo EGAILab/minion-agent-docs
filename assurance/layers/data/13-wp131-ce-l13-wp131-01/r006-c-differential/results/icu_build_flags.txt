@@ -1,0 +1,3 @@
+CFLAGS = -O3  -std=c11 -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings $(THREADSCFLAGS) 
+CXXFLAGS = -O3  -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long -std=c++17 $(THREADSCXXFLAGS) 
+CPPFLAGS =  $(THREADSCPPFLAGS)  -DU_HAVE_ELF_H=1 
