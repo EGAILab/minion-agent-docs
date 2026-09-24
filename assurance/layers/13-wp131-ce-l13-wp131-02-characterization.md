@@ -467,3 +467,93 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of revision 3); then the owner for M and D3
 ```
+
+---
+
+## Revision 4 -- outcome cross-product and owner menu after checkpoint review REJECTED (`CE13-C004`)
+
+Codex's §11.8.5 review of revision 3 at `c16ef87f` (minion-agent-docs#162, 2026-09-24T21:09Z):
+**REJECTED** -- `CE13-C004`: a STABLE path can pass Pi's `access` and fail a later operation
+(`/proc/self/mem`, Node 22.15.1 non-root: `access(R_OK)` ok, sniff `EIO`, `readFile` `EIO`), and an
+independently supplied `ReadOperations` can do the same. Revision 3's one-read rule sends that `EIO`
+(Layer 12 `unknown`) to the ACCESS site. Accepted. Revisions 1-3 are kept as history; revision 3's
+matrix stays valid for static ordinary files.
+
+### The structure, not more cases
+
+Pinned Pi (`read.ts:47-61`, `248-273`) runs three independently supplied operations in order:
+`A = access(p)` (required), `S = detectImageMimeType(p)` (optional; default = `open` + `read` 4100),
+`R = readFile(p)`. The site is decided by WHICH operation failed:
+
+```text
+A        S        R        Pi outcome
+fail(c)  -        -        Cannot access <path>: <c>
+ok       fail(c)  -        Cannot read <path>: <c>          (a sniff failure is a read-stage failure)
+ok       ok       fail(c)  Cannot read <path>: <c>
+ok       ok       ok       success
+```
+
+Every code `c` that can occur at BOTH `A` and a later stage is ambiguous to any design that does not
+itself perform `A`. From the measured matrix plus CE13-C004: `not_found`, `permission_denied`,
+`not_directory`, `invalid`, `unknown` all occur at `A` (static states) AND at `S`/`R` (EIO, races,
+Windows' attribute-only `access`, or any provider). Only `is_directory` is read-stage-only; only a
+provider-level `not_supported` is unambiguous by definition.
+
+**Conclusion: no composition of certified Layer 12 operations reproduces `A`.** `canonical_path`/
+`file_info`/`probe_dir_entry` resolve paths but never check readability; `read_binary_file`/
+`read_text_lines` check readability only by reading, which merges `A` with `R`. Preserving Pi's sites
+in general needs an `A`-equivalent operation, or an owner-approved divergence.
+
+### Owner menu (complete by construction: every row of the table above, every code)
+
+- **G1 -- add Pi's `access` seam to `ctx.fs` (recommended; the only Pi-faithful option).** A new
+  additive Layer 12 extension operation (e.g. `EXEC-008 check_readable(path, signal?) ->
+  Result[None, FsError]`) with Pi's `access(path, R_OK)` meaning: resolve following symlinks; fail for
+  an unresolvable path or a target that cannot be read; never read content. `read` then performs A,
+  then one `read_binary_file` for S+R: A's error -> `Cannot access`, the read's error -> `Cannot read`,
+  for every code -- reproducing the table exactly, including CE13-C004 and every race.
+  Costs and sub-decisions: a Layer 12 contract pass and implementation in BOTH languages (reopens a
+  certified layer -- owner authorization); its meaning on Windows (POSIX-style readability, as the
+  owner's C012-A rationale chose, rather than libuv's attribute-only check); and what `read` does on a
+  provider without the extension -- recommended: fall back to G2 below, disclosed as a
+  provider-capability difference (CE13-C001's lesson: an optional operation must not make `read`
+  unusable).
+- **G2 -- one read, site from the error code (revision 3's rule).** No lower-layer change.
+  Diverges from Pi whenever a later stage fails with an access-capable code: a stable I/O error
+  (`EIO` -> `unknown`, CE13-C004), any virtual/remote provider whose read fails after its own access
+  would pass, the Windows host (most failures), and Pi's race window.
+- **G2' -- G2 with `unknown` moved to the read site.** Fixes CE13-C004's `EIO`; a symlink loop
+  (`ELOOP`, an `A` failure) then reads `Cannot read ... unknown filesystem error`. All other G2
+  divergences remain.
+- **G3 -- one template for both sites.** Report every filesystem failure of `read` with one wording
+  (e.g. `Cannot read <path>: <cause phrase>`). Removes the site distinction entirely: a change to the
+  owner-decided R010-B (`TOOL-039`) templates, and it no longer reproduces Pi's `Cannot access` text
+  anywhere.
+
+The owner's C012-A decision (`#48` comment `5822062094`) and revision 3's D3 question both fold into
+this choice: under G1 the site is exact and C012-A only fixes the Windows meaning of the new
+operation; under G2/G2' the owner accepts the listed divergences; under G3 the question disappears.
+
+### Witnesses for any option
+
+`W-X1` Codex's CE13-C004 witness at the seam: scripted provider, `A ok`, read `Err(unknown)` (EIO)
+-> `Cannot read <path>: unknown filesystem error` under G1/G2', `Cannot access ...` under G2 (the
+chosen option decides; the other must fail it as its negative control). `W-X2` `A fail(c)` for every
+code -> `Cannot access` (G1). `W-X3` `A ok`, read fail(c) for every code -> `Cannot read` (G1). `W-X4`
+provider without the new operation -> the fallback rule. Revision 3's `W-A1..W-A18` stay as the
+static-state regression set; I001's `W-I1..W-I5` unchanged.
+
+### Checkpoint
+
+```text
+NOT PROPOSED FOR IMPLEMENTATION -- awaiting the owner's G choice (§11.7 governance:
+G1 reopens Layer 12; G2/G2'/G3 are intentional divergences).
+
+OPEN FINDINGS
+    L13-WP131-I001 (characterization accepted at revisions 1-3), L13-WP131-C012
+    (+ CE13-C001..C004)
+
+NEXT_OWNER
+    Owner (G choice); then Claude authors the checkpoint for the chosen option and Codex reviews it
+    (§11.8.5). Implementation stays frozen.
+```
