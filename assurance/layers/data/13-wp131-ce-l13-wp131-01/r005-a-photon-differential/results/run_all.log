@@ -1,4 +1,11 @@
 
+== runtime pins (exact)
+node: v22.15.1
+v8: 12.4.254.21-node.24
+cpython: 3.13.5
+rustc: rustc 1.97.1 (8bab26f4f 2026-07-14)
+cargo: cargo 1.97.1 (c980f4866 2026-06-30)
+
 == pinned Pi source
 exif-orientation.ts: OK
 image-convert.ts: OK
@@ -11,11 +18,11 @@ mime.ts: OK
 Pi b7bb00b936dbe21b8e160b3e89efdec361846699; lockfile pins photon-node 0.3.4 with sha512-bnly4BKB3KDTFxrUIcgCLbaeVVS8lrAkri1pEzskpmxu9MdfGQTy8b8EgcD83ywD3RPMsIulY8xJH5Awa+t9fA==
 
 == pinned photon-node 0.3.4 artifact
-/c/Users/erick/.claude/jobs/e15f4395/tmp/r005a_repro/pkg/package/photon_rs_bg.wasm: OK
+/c/Users/erick/.claude/jobs/e15f4395/tmp/s_run/pkg/package/photon_rs_bg.wasm: OK
 
 == python venv (pinned)
-pillow==12.3.0
-wasmtime==49.0.0
+venv-cpython: 3.13.5
+venv-packages: pillow==12.3.0 wasmtime==49.0.0
 
 == corpus: committed files + deterministic regeneration, all sha256-verified
 generator reproduces all 53 files bit-identically
@@ -59,5 +66,6 @@ CONTROL rust_filter_triangle: DETECTED — VERDICT rust: 191 mismatch(es)
 authority.json identical to committed
 python.json identical to committed
 trace.json identical to committed
+runtime tuple identical to committed
 
 R005-A REPRODUCTION: PASS
