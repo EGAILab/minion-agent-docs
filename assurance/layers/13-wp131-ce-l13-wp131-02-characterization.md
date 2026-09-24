@@ -208,3 +208,112 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of exactly this proposal); Owner for the C012 site decision
 ```
+
+---
+
+## Revision 2 -- after checkpoint review REJECTED (`CE13-C001`, `CE13-C002`)
+
+Codex's §11.8.5 review of revision 1 at `30ecdd55` (minion-agent-docs#162 comment `5821849846`):
+**REJECTED** for C012 (I001: no checkpoint blocker). Revision 1 above is kept as reviewed history.
+Both points are accepted.
+
+**Governance note.** Before this rejection was known, the owner answered revision 1's menu and
+selected C012-A (`minion-agent#48` comment `5822062094`), explicitly placing a `permission_denied`
+returned by `read_binary_file` at the access site "on every provider/host". That menu did not
+present CE13-C002's post-access history, so per the review it is an answer to an incomplete menu. It
+is recorded, not treated as settling C002; the complete menu below goes back to the owner after
+this revision is independently reviewed.
+
+### CE13-C001 -- the access step's own operation may be unsupported
+
+Certified Layer 12 (`spec/execution.md` §4, `L12-R018`) allows `canonical_path -> not_supported` on a
+provider that still supports `file_info` and `read_binary_file`. Pi's `ReadOperations.access` and
+`readFile` are supplied independently, so every Pi provider has an access check; a Minion provider
+may not have the symlink-following one. Options:
+
+- **Q1 -- fail.** `canonical_path -> not_supported` is `Cannot access <path>: not supported by this
+  provider` (R010-B's "provider cannot supply this check"). `read` is unusable on such a provider.
+  This is the dependency C012 exists to remove.
+- **Q2 -- fall back to `file_info` (recommended).** On `not_supported`, the access step is
+  `file_info(p)` (core, `lstat`): `Err(code)` -> access site; `kind == directory` -> `Cannot read ...
+  is a directory`. Because `lstat` does not follow a final symlink, a content read failing with
+  `not_found`, `not_directory` or `invalid` UNDER THE FALLBACK is reported at the access site (those
+  are exactly what the missing symlink-following check would have caught); all other read failures
+  stay at the read site. Deterministic for a given provider capability; differs from the primary
+  path only in which site a post-access removal is attributed to, and only on such providers.
+- **Q3 -- skip the check.** On `not_supported`, go straight to the read and attribute purely by the
+  read's code (the `61f40e4d` rule). Rejected by review for ordinary providers; restricted to this
+  case it is Q2 without `file_info`'s directory decision.
+
+Whichever is chosen is an observable provider-capability difference and needs owner approval
+(Codex: "explicitly seek Owner approval for an observable provider-capability divergence").
+
+### CE13-C002 -- `permission_denied` has two histories the error code cannot tell apart
+
+```text
+history                                             Pi (POSIX)        Pi (Windows)
+H1 unreadable before the access check               Cannot access     Cannot read
+H2 readable at access, unreadable before readFile   Cannot read       Cannot read
+```
+
+Minion's primary path sees `canonical_path Ok, file_info Ok(file), read_binary_file ->
+permission_denied` in BOTH histories. No certified operation checks readability without reading.
+Options:
+
+- **P1 -- access site always** (the owner's current C012-A). H1 matches Pi on POSIX; H2 on POSIX and
+  both histories on Windows are reported at the access site where Pi says `Cannot read`. H2 needs a
+  permission change in the window between two consecutive filesystem calls.
+- **P2 -- read site always** (C012-B). H2 matches Pi everywhere and H1 matches Pi on Windows; H1 on
+  POSIX (the common, stable case) diverges.
+- **P3 -- readability probe from an existing core operation.** Add `read_text_lines(p, max_lines=1)`
+  to the access step (certified: it opens the file and reads at most one line; `max_lines <= 0` would
+  not touch the file). `permission_denied` there -> access site (H1); a later
+  `read_binary_file -> permission_denied` -> read site (H2). Matches Pi on POSIX for BOTH histories;
+  on Windows H1 still differs (Pi's `access` never sees the ACL), exactly as P1. Costs: one extra open
+  and a partial read per `read` call (up to the first newline -- the whole file if it has none), the
+  probe's own `not_supported` needs the Q-rule above, and a directory on Windows reaches the Layer 12
+  classification defect unless `file_info` decides it first (it does, per R-C2).
+- **P4 -- Layer 12 extension.** A certified readability-check operation (`access(R_OK)` without
+  reading). Lower-layer change in both languages; owner authorization and a Layer 12 contract pass.
+
+Recommendation: **P1 with Q2**, i.e. the owner's C012-A as already decided, with its H2 consequence
+stated. It needs no new mechanism, and H2 only arises when a file's permissions change in the window
+between two consecutive filesystem calls. If the owner wants H2 to match Pi on POSIX, P3 does that
+with core operations at the stated cost.
+
+### Revised behavior matrix (C012; rows unchanged from revision 1 are not repeated)
+
+```text
+case                                                        rule    expected
+canonical_path not_supported; file_info Ok(file); read Ok   Q2      reads normally (CE13-C001 witness)
+canonical_path not_supported; file_info Err(not_found)      Q2      Cannot access <path>: no such file or directory
+canonical_path not_supported; dangling symlink; read NF     Q2      Cannot access <path>: no such file or directory
+canonical_path not_supported; read unknown                  Q2      Cannot read <path>: unknown filesystem error
+H1: unreadable before access (POSIX-like provider)          P1      Cannot access <path>: permission denied
+H2: permission removed between access and read              P1      Cannot access <path>: permission denied (Pi: Cannot read)
+                                                            P3      Cannot read <path>: permission denied
+```
+
+Added witnesses: `W-C6` (CE13-C001: `canonical_path -> not_supported`, `file_info` ok, read ok ->
+success; negative control: Q1 must fail it), `W-C7` (CE13-C002 H1: scripted access-step
+`permission_denied`), `W-C8` (CE13-C002 H2: access ok, scripted read `permission_denied`; its
+expected text is set by the owner's P choice; negative control: the other P option must fail it).
+
+### Revised checkpoint
+
+```text
+PROPOSED FOR IMPLEMENTATION  (revision 2; subject to the owner's Q and P choices)
+
+OPEN FINDINGS
+    L13-WP131-I001 (no checkpoint blocker at revision 1), L13-WP131-C012 (+ CE13-C001, CE13-C002)
+
+ACCEPTANCE WITNESSES
+    W-I1..W-I5, W-C1..W-C8, with the listed negative controls
+
+NORMATIVE DELTAS
+    as revision 1, plus: the access-step fallback rule (Q) and the permission_denied rule (P) in
+    spec/tools.md and TOOL-039
+
+NEXT_OWNER
+    Codex (checkpoint review of revision 2); then the owner for Q and P
+```
