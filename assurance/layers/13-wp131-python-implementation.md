@@ -125,3 +125,57 @@ implementation against the contract, the canonical scenario shape and runner (th
 Rust?), the negative controls, and whether the Layer 12 finding is correctly scoped out. Stop
 condition: accept or reject with findings. Accepting does NOT authorize merge, Rust
 implementation or Layer 14; after acceptance #48 returns to the owner for merge authorization.
+
+## 7. Remediation 1 -- `L13-WP131-I001`, `L13-WP131-C012`
+
+Independent review (Codex) of code #60 @ `c59f72ce` and docs #162 @ `388c8200`: **CHANGES
+REQUIRED** (`minion-agent#48` comment `5814079346`; witnesses on #60 comment `5814058189` and #162
+comment `5814058617`). Both findings accepted as stated; sections 1-6 above are the reviewed
+history and are left unchanged.
+
+**`L13-WP131-I001` (`PI_PARITY_DEFECT`).** `race_abort` cancelled the in-flight provider call when
+the abort won. Pinned Pi rejects the tool promise from its abort listener but lets the pending
+`access`/`readFile` run on, then stops at `read`'s checkpoints (`read.ts:246`, `:249`); `ls` has no
+checkpoints and runs to completion. The Layer 09 contract also forbids forcibly interrupting tool
+work. The earlier live-abort test asserted only the returned text, which is why it passed.
+Fix: the tool is still answered `"Operation aborted"` at once, but the work is left running (held
+so it cannot be garbage-collected) and its result or failure is discarded; `read` stops at both
+checkpoints; no `ctx.fs` call is given the signal (Pi passes none to `access`/`readFile`/`readdir`).
+Permanent witnesses (`tests/tools/builtin/test_tools.py`): with the provider blocked, the call is
+answered while the provider is still blocked; after release the provider call completes
+uncancelled; `read` then makes no `read_binary_file` call (checkpoint), and `ls` goes on to
+`list_dir_raw` and every per-entry probe. Spec: the cancellation rules for both tools now state it.
+
+**`L13-WP131-C012` (`CONTRACT_ASSURANCE_DEFECT`).** `IMPL-C002`'s repair made `read` depend on the
+additive `EXEC-007` `probe_dir_entry`; a conforming provider without that extension (`not_supported`)
+made `read` fail with no content read attempted, though Pi's `access`/`readFile` have no such
+dependency. Fix, from core operations only: the access step is `file_info` (a real directory ->
+`"Cannot read <path>: is a directory"`); a failed `read_binary_file` is the read site for
+`is_directory` and `not_supported`, and the access site for every other code, since those are
+exactly where Pi's symlink-following `access(R_OK)` fails first. New canonical witness
+`builtin-read-provider-without-exec-007-reads-normally.yaml` (text and image reads on a provider
+reporting `not_supported` for `EXEC-007`, with `fs_calls` pinned to `file_info` then
+`read_binary_file`); the R010-B scenario's access cases now script `file_info`, and its read cases
+follow the new site rule (including a scripted `is_directory`).
+Disclosed edges: a genuine I/O error (`unknown`) after a successful access check is reported at the
+access site (Pi: read site); a directory reached through a symlink relies on the provider
+classifying the read as `is_directory` (below).
+
+**Second Layer 12 finding, escalated (not changed).** Certified Python
+`LocalFileSystem.read_binary_file` on Windows classifies reading a directory as `permission_denied`
+(`[Errno 13]` from `open()`); Node reports `EISDIR` (`open` succeeds, `read` fails -- verified live),
+which the Layer 12 mapping turns into `is_directory`. Only a symlink to a directory reaches it from
+`read` (a real directory is decided by `file_info`). Recorded with the newline finding for an owner
+decision on reopening Layer 12.
+
+**Negative controls, refreshed** (`data/13-wp131-python-implementation/mutants.log`): 25/25. The
+old `lstat`-access mutant is now the implementation and is replaced by `access_via_exec_007_probe`
+(the rejected design) and `every_read_failure_at_read_site`; `cancel_in_flight` and
+`signal_passed_to_fs` run against the Python abort witnesses, since timing is not expressible in the
+canonical YAML. All detected.
+
+**Gates (fresh, remediated tree):** `pytest` 1991 passed, 4 skipped, 19 xfailed; coverage 100.00%;
+`ruff check` clean; `mypy --strict` clean. Canonical `builtin_tool` scenarios: 41.
+
+Requested next: Codex's targeted exact-SHA closure review of `I001` and `C012` at the new PR heads
+recorded on `minion-agent#48`, then the workflow's final complete review.

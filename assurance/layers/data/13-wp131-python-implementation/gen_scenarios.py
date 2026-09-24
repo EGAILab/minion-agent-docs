@@ -302,14 +302,15 @@ def main():
     access_codes = ["not_found", "permission_denied", "not_directory", "invalid", "not_supported", "unknown"]
     read_codes = ["not_found", "not_directory", "invalid", "not_supported", "unknown"]
     fixture = [{"path": f"acc_{c}.txt", "file": {"text": "x"}} for c in access_codes]
-    fixture += [{"path": f"rd_{c}.txt", "file": {"text": "x"}} for c in read_codes + ["permission_denied"]]
+    fixture += [{"path": f"rd_{c}.txt", "file": {"text": "x"}} for c in read_codes + ["permission_denied", "is_directory"]]
     fixture += [{"path": "sub", "dir": True}, {"path": "dangling", "symlink": "missing-target"}]
     cases = [{"id": f"access-{c}", "arguments": {"path": f"acc_{c}.txt"}, "expect": {
         "is_error": True, "text": f"Cannot access {{abs:acc_{c}.txt}}: {phrases[c]}", "details": {}}} for c in access_codes]
+    read_site = lambda c: "Cannot read" if c in ("is_directory", "not_supported") else "Cannot access"
     cases += [{"id": f"read-{c}", "arguments": {"path": f"rd_{c}.txt"}, "expect": {
-        "is_error": True, "text": f"Cannot read {{abs:rd_{c}.txt}}: {phrases[c]}", "details": {}}} for c in read_codes]
-    cases += [{"id": "read-permission-denied-reported-at-access-site", "arguments": {"path": "rd_permission_denied.txt"},
-               "expect": {"is_error": True, "text": "Cannot access {abs:rd_permission_denied.txt}: permission denied", "details": {}}},
+        "is_error": True, "text": f"{read_site(c)} {{abs:rd_{c}.txt}}: {phrases[c]}", "details": {}}}
+        for c in read_codes + ["permission_denied", "is_directory"]]
+    cases += [
               {"id": "directory-is-directory", "arguments": {"path": "sub"}, "expect": {
                   "is_error": True, "text": "Cannot read {abs:sub}: is a directory", "details": {}}},
               {"id": "real-missing-file", "arguments": {"path": "missing.txt"}, "expect": {
@@ -318,14 +319,25 @@ def main():
                   "is_error": True, "text": "Cannot access {abs:dangling}: no such file or directory", "details": {}}}]
     write("builtin-read-error-text-matches-r010b-closed-vocabulary-per-fserrorcode", ["TOOL-039", "TOOL-025"],
           ["read_error_text_matches_r010b_closed_vocabulary_per_fserrorcode"],
-          "R010-B: each FsErrorCode maps to its closed cause phrase. The existence check "
-          "(probe_dir_entry, following symlinks) is the 'Cannot access' site; the content read is the "
-          "'Cannot read' site, except permission_denied, which is where Pi's access(R_OK) fails "
-          "(IMPL-C002); a directory is 'Cannot read <path>: is a directory'. <path> is the resolved "
-          "absolute path (IMPL-C003). details stays {}.",
+          "R010-B: each FsErrorCode maps to its closed cause phrase. The access step (file_info) is "
+          "the 'Cannot access' site. A failed content read is 'Cannot read' only for is_directory and "
+          "not_supported; any other code is reported at the access site, because Pi's "
+          "symlink-following access(R_OK) would have failed first (L13-WP131-C012). A directory is "
+          "'Cannot read <path>: is a directory'; a dangling symlink is 'Cannot access ... no such file "
+          "or directory'. <path> is the resolved absolute path (IMPL-C003). details stays {}.",
           "read", cases, fixture=fixture,
-          provider={"probe_dir_entry": [{"path": f"acc_{c}.txt", "error": c} for c in access_codes],
-                    "read_binary_file": [{"path": f"rd_{c}.txt", "error": c} for c in read_codes + ["permission_denied"]]})
+          provider={"file_info": [{"path": f"acc_{c}.txt", "error": c} for c in access_codes],
+                    "read_binary_file": [{"path": f"rd_{c}.txt", "error": c} for c in read_codes + ["permission_denied", "is_directory"]]})
+    write("builtin-read-provider-without-exec-007-reads-normally", ["TOOL-025"],
+          ["read_does_not_require_exec_007"],
+          "L13-WP131-C012: read uses only core ctx.fs operations (file_info, read_binary_file), so a "
+          "provider that reports not_supported for the additive EXEC-007 extension still reads text "
+          "and images normally; ls, which needs EXEC-007, reports its own not_supported text.", "read",
+          [{"id": "text", "arguments": {"path": "a.txt"}, "expect": {"is_error": False, "text": "hello", "details": {},
+                                                                    "fs_calls": ["file_info a.txt", "read_binary_file a.txt"]}},
+           image_case("png_small_rgb.png")],
+          fixture=[{"path": "a.txt", "file": {"text": "hello"}}] + fx("png_small_rgb.png"),
+          provider={"without_exec_007": True})
 
     # ---- TOOL-028 ls ------------------------------------------------------------------------
     files = lambda *names: [{"path": n, "file": {"text": "x"}} for n in names]

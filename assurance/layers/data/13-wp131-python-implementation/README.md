@@ -9,6 +9,8 @@ gen_scenarios.py  Generates minion-agent conformance/agent/builtin-*.yaml. Every
 synth.py          Synthetic JPEG/WebP/PNG/GIF/BMP byte inputs for every EXIF/MIME parser branch;
                   expected values from Pi via piauth/probe_bytes.mjs (tests/tools/builtin/
                   test_byte_parsers.py).
-mutants.py        Negative controls: 23 single-point wrong implementations injected into the real
-                  modules; the builtin_tool canonical suite must fail for each (mutants.log: 23/23).
+mutants.py        Negative controls: single-point wrong implementations injected into the real
+                  modules; the builtin_tool canonical suite (or, for abort timing, the Python abort
+                  witnesses) must fail for each. mutants.log: 25/25 after remediation 1 (23/23 at
+                  the first review).
 pi_sources.sha256 The pinned Pi files audited for this pass.

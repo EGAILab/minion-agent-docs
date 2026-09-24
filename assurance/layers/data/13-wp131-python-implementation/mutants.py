@@ -26,9 +26,6 @@ MUTANTS = {
                                     'return (f"[Image converted from {converted_from.split(\'/\')[-1]} to {to.split(\'/\')[-1]}.]",)'),
     "non_vision_note_always": ("read.py", "note = NON_VISION_IMAGE_NOTE if supports is not None and supports() is False else None",
                                "note = NON_VISION_IMAGE_NOTE if supports is None or supports() is False else None"),
-    "access_via_lstat": ("read.py", "        probe = await self._fs.probe_dir_entry(working)\n        if isinstance(probe, Err):\n            raise _fs_failure(\"Cannot access\", await self._absolute(working), probe.error)\n",
-                         "        info = await self._fs.file_info(working)\n        if isinstance(info, Err):\n            raise _fs_failure(\"Cannot access\", await self._absolute(working), info.error)\n        probe = await self._fs.probe_dir_entry(working)\n        if isinstance(probe, Err):\n            raise _fs_failure(\"Cannot read\", await self._absolute(working), probe.error)\n"),
-    "permission_at_read_site": ("read.py", '                "Cannot access"\n                if read.error.code', '                "Cannot read"\n                if read.error.code'),
     "newline_translation": ("read.py", 'all_lines = data.decode("utf-8", "replace").split("\\n")',
                             'all_lines = data.decode("utf-8", "replace").replace("\\r\\n", "\\n").replace("\\r", "\\n").split("\\n")'),
     "python_slice": ("read.py", "        selected = \"\\n\".join(js_slice(all_lines, start_line, end_line))",
@@ -47,10 +44,23 @@ MUTANTS = {
     "codepoint_sort": ("collation.py", "        keyed.sort(key=functools.cmp_to_key(by_key))", "        keyed.sort(key=lambda kv: kv[0])"),
     "reverse_on_ties": ("collation.py", "            return self.compare(a[0], b[0])", "            return self.compare(a[0], b[0]) or (1 if a[1] < b[1] else -1 if a[1] > b[1] else 0)"),
 }
+MUTANTS.update({
+    "access_via_exec_007_probe": ("read.py", "        info = await self._fs.file_info(working)\n        if isinstance(info, Err):",
+                                  "        info = await self._fs.probe_dir_entry(working)\n        if isinstance(info, Err):"),
+    "every_read_failure_at_read_site": ("read.py", '    return "Cannot access"\n', '    return "Cannot read"\n'),
+})
+PYTHON_WITNESS_MUTANTS = {
+    # timing is not expressible in canonical YAML; these run the Python witness tests instead
+    "cancel_in_flight": ("_signal.py", "    _ABANDONED.add(task)\n", "    task.cancel()\n    _ABANDONED.add(task)\n"),
+    "signal_passed_to_fs": ("read.py", "        info = await self._fs.file_info(working)\n",
+                            "        info = await self._fs.file_info(working, signal)\n"),
+}
 BUILTIN = PY / "src" / "minion_agent" / "tools" / "builtin"
 env = dict(os.environ)
 results = {}
-for name, (fname, old, new) in MUTANTS.items():
+ALL = [(n, v, "tests/conformance/test_builtin_tool_conformance.py") for n, v in MUTANTS.items()]
+ALL += [(n, v, "tests/tools/builtin/test_tools.py tests/tools/builtin/test_helpers.py") for n, v in PYTHON_WITNESS_MUTANTS.items()]
+for name, (fname, old, new), target in ALL:
     path = BUILTIN / fname
     original = path.read_text(encoding="utf-8")
     fixed_old = old if old in original else old.replace("value.NORMALIZATION_MODE", "attribute.NORMALIZATION_MODE")
@@ -58,11 +68,10 @@ for name, (fname, old, new) in MUTANTS.items():
     path.write_text(original.replace(fixed_old, new), encoding="utf-8")
     try:
         run = subprocess.run(
-            [str(PY / ".venv/Scripts/python.exe"), "-m", "pytest", "tests/conformance/test_builtin_tool_conformance.py",
+            [str(PY / ".venv/Scripts/python.exe"), "-m", "pytest", *target.split(),
              "-q", "-p", "no:cacheprovider", "--no-cov", "--color=no"],
             cwd=PY, capture_output=True, text=True, env=env)
-        failed = [l.split("[", 1)[1].rstrip("]") for l in run.stdout.splitlines() if l.startswith("FAILED")]
-        failed = [f.split("]")[0] for f in failed]
+        failed = [l.split("::", 1)[1].split(" ")[0] for l in run.stdout.splitlines() if l.startswith("FAILED")]
         results[name] = failed
         print(f"MUTANT {name}: {'DETECTED' if failed else 'NOT DETECTED'} ({len(failed)} scenario(s)){': ' + ', '.join(failed[:3]) if failed else ''}", flush=True)
     finally:
