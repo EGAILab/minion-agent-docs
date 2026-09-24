@@ -1,0 +1,164 @@
+CE-L13-WP131-01 -- R005-A pre-implementation evidence: pinned Photon differential
+Status: DIFFERENTIAL_PASS (candidate) -- FEASIBLE; pending independent exact-SHA review (Codex)
+Date: 2026-09-24
+Author: Claude (Python/shared-contract owner)
+Authorization: minion-agent#48 comment 5811105123 (owner decision, transcribed and round-trip
+verified): after WP-13.1 contract merge verification, "R005-A PRE-IMPLEMENTATION EVIDENCE" only --
+characterization/assurance, not production implementation. R005-A itself: minion-agent#48 comment
+5760619717; spec/tools.md TOOL-025 "Semantic authority (R005-A ...)".
+Not authorized by this record and not done: Python implementation, Rust implementation (nothing
+under minion-agent-rust/** was touched), Layer 14, any spec/manifest change.
+
+== Question ==
+
+Can Python and Rust each reproduce pinned Pi's Photon-dependent `read` image behavior EXACTLY
+(branch, MIME, dimensions, wasResized, encoded bytes) -- maintainably -- rather than by visual
+equivalence? R005-A says to stop and return to the owner if not.
+
+== Answer ==
+
+Yes, by executing the SAME pinned photon_rs_bg.wasm bytes Pi executes, under wasmtime in both
+languages, with host glue that mirrors photon-node's own photon_rs.js call for call.
+  - Python (wasmtime-py 49.0.0): full Pi pipeline end-to-end over the corpus is IDENTICAL to the
+    authority on every compared field of all 72 cases.
+  - Rust (wasmtime crate 49.0.0): replays every Photon call the pipeline made (719 calls on 50
+    instances, 12 traps) and reproduces every result, handle, trap and thrown message IDENTICALLY.
+  - 12/12 discriminating negative controls are detected.
+  - Full from-scratch reproduction (harness/run_all.sh) passes and regenerates byte-identical
+    results (results/run_all.log).
+
+== Pins (all verified by harness/run_all.sh on every run) ==
+
+Pi source             b7bb00b936dbe21b8e160b3e89efdec361846699, packages/coding-agent/src/utils/
+                      {photon,image-process,image-convert,image-resize,image-resize-core,
+                      image-resize-worker,exif-orientation,mime}.ts, executed UNMODIFIED
+                      (harness/pi_utils.sha256; byte-identical to the pinned checkout).
+Package               @silvia-odwyer/photon-node 0.3.4 (Apache-2.0, no dependencies).
+Package integrity     sha512-bnly4BKB3KDTFxrUIcgCLbaeVVS8lrAkri1pEzskpmxu9MdfGQTy8b8EgcD83ywD3RPMsIulY8xJH5Awa+t9fA==
+                      == the integrity recorded for it in pinned Pi's own package-lock.json
+                      (packages/coding-agent/package.json pins "0.3.4" exactly). Fetched with
+                      `npm pack`, checked, then extracted (no npm install, no lifecycle scripts).
+WASM artifact         photon_rs_bg.wasm, 1,881,634 bytes,
+                      sha256 10468181565c56004c867f3a4af96f89a0ef5a63a72f2b5fb12c1f1992a3615c.
+                      Both hosts REFUSE any other bytes before compiling (see controls).
+JS glue (reference)   photon_rs.js sha256 d60656705f0d59baa79e36b0381eb023f1864eeb57e92956cf21dcd9fb8f879f
+                      (the CommonJS entry Pi loads; the Python/Rust hosts mirror its calls).
+Authority runtime     Node 22.15.1, V8 12.4.254.21-node.24 (`--experimental-strip-types`).
+Python runtime        CPython 3.13.5; wasmtime==49.0.0; pillow==12.3.0 (corpus generation and
+                      one negative control ONLY; never on the compared path).
+Rust runtime          rustc/cargo 1.97.1; wasmtime =49.0.0 (harness/rs_host/Cargo.lock, --locked).
+WASM surface          results/wasm_surface.txt: 41 imports (wasm-bindgen, externref table,
+                      multi-value returns). Imports Pi's image path can reach are implemented as
+                      photon_rs.js does; every other import is a stub that traps with its own
+                      name and is recorded -- none was reached (unexpected imports: [] in both hosts).
+
+== Method ==
+
+1. Authority (harness/authority/run_authority.mjs): pinned Pi source + pinned photon-node, as-is.
+   Read level: Pi's detectSupportedImageMimeType, then Pi's processImage (BMP conversion, resize
+   worker path, hints, failure texts). Core level: Pi's resizeImageInProcess with explicit options.
+   Records branch, MIME, hints/messages, dimensions, wasResized and sha256/length of the exact
+   encoded data (results/authority.json).
+2. Python (harness/py_host): photon_host.py = wasmtime host mirroring photon_rs.js;
+   pi_pipeline.py = evidence-only transliteration of the pinned TS pipeline onto it, including the
+   instance lifecycle (a fresh Photon instance per resize, as Pi's worker loads Photon per call; one
+   long-lived instance for BMP conversion and direct core calls, as Pi's main thread does).
+   Compared field by field with the authority by harness/compare.py (results/python.json).
+3. Rust (harness/rs_host): the Python host records every Photon API call (instance, arguments,
+   input-blob sha256, result or trap + thrown message, console.error output) to results/trace.json;
+   the Rust host re-executes the whole trace on fresh wasmtime instances and compares each event.
+   Image handles are compared too, so allocator state is proven identical, not just outputs.
+4. Sniffing is NOT Photon scope (mime.ts is pure TS byte inspection); both hosts take the
+   authority's sniffed MIME as input. Sniff behavior belongs to TOOL-025's own canonical cases.
+
+== Corpus (corpus/, harness/make_corpus.py seed 20260924, harness/core_cases.json) ==
+
+52 read-level files + 20 core-level cases:
+  PNG     RGB/RGBA/gray/palette/16-bit; 2000x2000 (limit) vs 2001x40 / 40x2001 (one over);
+          4000x1001 (Math.round(500.5) -> 501); 2250x100 (toFixed(1.125) -> "1.13");
+          8001x2 (target height round(0.4999)=0 -> Photon trap -> text-only failure);
+          encoded-size boundary: base64 just below vs exactly at 4.5 MiB; 2600x2600 noise
+          (forces the JPEG candidates); 256x256 noise (candidate-search cases).
+  JPEG    baseline/progressive/gray/CMYK; 2600x40; EXIF orientation 1..8, invalid 9, big-endian
+          TIFF, orientation 6 on a 2600-wide image (rotate-then-resize).
+  WebP    lossy/lossless/alpha/animated; EXIF orientation 6; 2600x40.
+  GIF     static/animated/transparent.
+  BMP     24/32/8-bit conversions; 2100x20 (conversion + resize -> two hints); truncated and
+          header-only (conversion failure text).
+  Rejected (sniff-positive, Photon rejects): truncated PNG, JPEG SOI + garbage, truncated JPEG,
+          GIF header only, WebP garbage. Plus one sniff-negative file (branch "not an image").
+  Core    first-candidate-under-limit (not smallest), walk to q55, strict "<" at exact equality,
+          success only after 0.75 shrink, exhaustion -> null, custom jpegQuality reorders the
+          steps (at a limit where the default order picks a different candidate), custom
+          maxWidth/maxHeight, zero-width-after-EXIF-rotation trap -> null, undecodable -> null,
+          and forced resizes of all EXIF variants (so the applied orientation is observable in
+          dimensions and encoded bytes: 8 distinct outputs for 1..8; 9 == 1).
+Outcomes at read level: 43 success, 8 text-only failure, 1 not sniffed. Resize path, no-resize
+fast path, BMP conversion success and failure, candidate-search success and exhaustion all occur.
+The committed corpus holds every file <= 1 MiB; the three larger ones (png_noise_2600.png 21 MB,
+png_size_at_limit.png, png_size_just_below.png) are regenerated by make_corpus.py, which run_all.sh
+proves reproduces ALL 53 files (incl. manifest.json) bit-identically against corpus/SHA256SUMS.
+
+== Results ==
+
+Python end-to-end vs authority (compare.py) ............................ IDENTICAL, 72/72 cases
+  fields: input sha256, sniffed MIME, branch, MIME, hints, failure message, data sha256, data
+  length, base64 length; core: full result incl. original/final dimensions and wasResized.
+Rust replay vs recorded Photon calls ................................... IDENTICAL, 719/719 calls
+  50 instances, 12 traps reproduced with identical thrown messages, 0 unexpected imports.
+Negative controls (harness/run_controls.sh) ............................ 12/12 DETECTED
+  filter Triangle instead of Lanczos3 ................ 40 mismatches
+  filter CatmullRom instead of Lanczos3 .............. 39
+  smallest candidate instead of first under limit .... 46
+  "<=" instead of strict "<" ......................... 1  (core strict_less_than_at_equality)
+  Python round() (half-even) instead of Math.round ... 4  (png_4000x1001 ...)
+  jpegQuality option ignored ......................... 1  (core custom_quality_reorders_steps)
+  Python "%.2f" instead of JS toFixed ................ 1  (png_2250x100)
+  EXIF orientation ignored ........................... 13
+  Pillow encoders on the SAME Photon pixels .......... 56 (visually equivalent != Photon output)
+  one flipped WASM byte, Python host ................. refused before compile (sha256 pin)
+  one flipped WASM byte, Rust host ................... refused before compile (sha256 pin)
+  Rust replay with every resize issued as Triangle ... 191 mismatches
+  A control that crashes counts as a harness error, never as a detection.
+
+== Findings relevant to the later implementation contract (NOT integrated into spec here) ==
+
+F1  JavaScript arithmetic is part of the observable contract: Math.round is floor(x + 0.5);
+    toFixed(2) rounds the exact binary value with ties up; EXIF reads use signed 32-bit LE
+    offsets, out-of-range bytes read as 0, and JS % keeps the dividend's sign. Controls prove
+    naive host-language equivalents change observable output on this corpus.
+F2  Candidate search: qualities are [jpegQuality, 85, 70, 55, 40] de-duplicated in order; PNG
+    first; the FIRST candidate whose base64 length is strictly below maxBytes wins (not the
+    smallest); otherwise shrink both sides by floor(x * 0.75) (min 1) until 1x1 or no change.
+F3  A zero-sized target (e.g. 8001x2 -> 2000x0) is not rejected by Photon's resize; the encode
+    traps, and Pi's catch turns it into the text-only resize failure.
+F4  Instance state after traps: wasm-bindgen's borrow flag stays set after a trap inside a
+    borrowing method, so Pi's later free() of that object throws "attempted to take ownership of
+    Rust value while it was borrowed"; Pi's observable outcome is unchanged (text-only failure).
+    Pi keeps using its long-lived main-thread instance after traps: in this run that instance
+    trapped twice (BMP conversion failures) and then served 397 further calls, identical in both
+    hosts.
+F5  Maintainability: each host is small (Python host 233 lines incl. tracing; Rust replay host
+    257 lines), implements 6 of 41 imports, and has no other native dependency. An implementation
+    must vendor the 1.88 MB Apache-2.0 WASM and verify its sha256 at load.
+
+== Residual risks / open questions for the reviewer ==
+
+R1  Rust is proven at the Photon-binding level (every call Pi's pipeline makes, byte-identical),
+    not with its own transliteration of the pipeline logic; that logic is language-neutral
+    contract (F1-F3) proven by the Python end-to-end differential and its controls. Reviewer to
+    confirm this satisfies "each implementation mechanically demonstrates compatibility" at the
+    PRE-implementation stage; a Rust implementation would still owe its own end-to-end canonical
+    run.
+R2  WASM float determinism across engines: NaN payload bits and relaxed-SIMD are the only
+    permitted sources of divergence; none was observed (V8 and Cranelift agree on all 719 calls,
+    Lanczos3 included), but the corpus is finite. Keeping engine versions pinned is advised.
+R3  Evidence ran on Windows x86-64 only (Node, Python and Rust all on the same host).
+
+== Reproduce ==
+
+  bash harness/run_all.sh <empty-scratch-dir> <pi-checkout-at-b7bb00b9>
+  (PYTHON=<CPython 3.13> ; needs node 22.15.1, npm, cargo 1.97.1, openssl on PATH)
+Everything is created inside <scratch-dir> (tarball, venv, CARGO_HOME, build); delete it afterwards.
+The script verifies every pin above, rebuilds the corpus, reruns authority, Python, Rust and all
+controls, and requires the fresh authority/python/trace outputs to be byte-identical to results/.

@@ -1,0 +1,13 @@
+*.sh text eol=lf
+*.py text eol=lf
+*.rs text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+SHA256SUMS text eol=lf
+*.sha256 text eol=lf
+corpus/*.png binary
+corpus/*.jpg binary
+corpus/*.gif binary
+corpus/*.webp binary
+corpus/*.bmp binary
+corpus/manifest.json -text

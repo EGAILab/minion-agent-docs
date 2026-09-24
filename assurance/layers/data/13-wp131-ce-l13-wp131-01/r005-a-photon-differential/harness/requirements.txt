@@ -1,0 +1,2 @@
+pillow==12.3.0
+wasmtime==49.0.0

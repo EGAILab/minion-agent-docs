@@ -1,0 +1,13 @@
+[package]
+name = "photon-replay"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# R005-A evidence only: replays the recorded Photon call trace on the pinned photon_rs_bg.wasm via
+# the wasmtime crate. Not production code; lives outside minion-agent-rust/** by design.
+[dependencies]
+wasmtime = "=49.0.0"
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
