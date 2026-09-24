@@ -543,7 +543,10 @@ condition actually suppresses/continues the next model turn.
 
 ## Layer 13 — Built-in tools
 
-**Status: `WP-13.1` contract fully integrated, pending one complete final contract-convergence
+**Status: `WP-13.1` contract merged (docs `b1ed1530`, manifest `cb8ed1c1`); R005-A evidence merged
+(`f46051fb`); Python implementation candidate pending independent review, with the
+implementation-pass contract repairs `IMPL-C001`-`IMPL-C011` below (`minion-agent#48`). Earlier:
+contract fully integrated, pending one complete final contract-convergence
 review (`minion-agent#48`): `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED` (integration approved,
 `minion-agent-docs#156`), `TOOL-028` `CONTRACT_INTEGRATED` (this revision), `TOOL-027`
 `NOT_ADOPTED_CORE` (unchanged, see below).** The first independent review
@@ -604,8 +607,9 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
    pipeline's working value with the converted path and continues to
    step 5 normally.
 5. Pass the result as the `path` argument to the appropriate READ-ONLY
-   ctx.fs operation directly -- read_text_file / read_binary_file /
-   file_info for read; probe_dir_entry / list_dir_raw (EXEC-007) for ls
+   ctx.fs operation directly -- probe_dir_entry (EXEC-007) then
+   read_binary_file for read (see "`read`: operation mapping" below;
+   IMPL-C002); probe_dir_entry / list_dir_raw (EXEC-007) for ls
    (Layer 12, FileSystem Protocol). Tilde expansion,
    absolute-path normalization, and cwd-relative resolution all happen
    INSIDE that provider call, via the SAME already-certified
@@ -737,7 +741,9 @@ Image result
                       non-vision note -- ALWAYS present, even on success
         [1]  image    -- ABSENT if image processing failed (see below);
                       present otherwise
-            .data         base64-encoded string (NOT raw bytes)
+            .data         the image's bytes -- exactly the bytes whose
+                          standard base64 encoding is Pi's `data` string
+                          (Layer 02 ImageBlock carries bytes; IMPL-C009)
             .mime_type    the FINAL mime type after any BMP-to-PNG
                           conversion and/or resize re-encode -- may
                           differ from the sniffed mime type
@@ -749,8 +755,13 @@ Image result
   arithmetic: `offset` undergoes `Math.max(0, offset - 1)` (so `offset <= 1` and any negative
   value behave identically -- start at line 1; a fractional `offset` like `2.5` produces a
   fractional 0-indexed start that JS array slicing then floors); `limit`, if given, computes
-  `Math.min(startLine + limit, allLines.length)` (a negative `limit` can therefore produce an end
-  index before the start index, yielding an empty selected range, not an error). This contract
+  `Math.min(startLine + limit, allLines.length)`, and the range is `allLines.slice(startLine,
+  endLine)` with `Array.prototype.slice` semantics: fractional indices truncate toward zero and a
+  NEGATIVE index counts from the end (IMPL-C008, correcting an earlier revision that said a negative
+  `limit` always yields an empty range). A 10-line file with no `offset` and `limit=-3` selects
+  lines 1-7 and appends `"[13 more lines in file. Use offset=-2 to continue.]"`; `offset=2.5,
+  limit=-1` selects nothing and appends `"[9.5 more lines in file. Use offset=1.5 to continue.]"`.
+  None of these is an error. This contract
   reproduces that exact unconstrained domain and JS-arithmetic-shaped edge behavior rather than
   narrowing it -- narrowing without owner governance was the defect; matching Pi exactly avoids
   needing a separate governance round.
@@ -781,6 +792,10 @@ Image result
     outcome specifically -- it is a caller-limit boundary, not an automatic-truncation event, and
     Pi's own source does not attach truncation details to it.
   - None of the above: text is exactly the selected content, no notice, no `details`.
+  - "`details` ABSENT" (here and in `TOOL-028`) means the tool returns none of its own `details`
+    keys (`truncation`, `entry_limit_reached`). Per Layer 06 (`IR-L06-004`, `CA-L06-007`) a host
+    whose result type defaults `details` to an empty mapping satisfies it; canonical evidence
+    asserts the absence of the keys, not a representation (IMPL-C007).
 - Truncation, when it applies, is from the **head** (keep the first N lines/bytes, never a partial
   line except the single-line-exceeds-limit case above), using the same two-limit-whichever-first
   ceiling as every other Layer 13 tool: `DEFAULT_MAX_LINES = 2000`, `DEFAULT_MAX_BYTES = 51200`
@@ -803,8 +818,9 @@ Image result
     base64-payload ceiling (`image-resize-core.ts` defaults); EXIF orientation is applied before
     measuring/resizing. When resize actually changes dimensions, a hint line states the original
     and displayed dimensions and the scale factor needed to map a model-reported coordinate back to
-    the original image. A BMP-to-PNG conversion, independently, adds its own hint line
-    (`"[Image converted from bmp to png.]"`).
+    the original image. A BMP-to-PNG conversion, independently, adds its own hint line,
+    `"[Image converted from image/bmp to image/png.]"` -- base MIME types, exactly as pinned Pi's
+    `conversionHint` renders them (IMPL-C011, correcting an earlier revision's `"bmp to png"`).
   - **Semantic authority (`R005-A` -- integration of the resolved `CE-L13-WP131-01` Lane A decision,
     `minion-agent#48` comment `5760619717`; corrected this revision, independent review
     `minion-agent-docs#156`, `L13-WP131-INT-R001` -- an earlier integration pass left the OPPOSITE,
@@ -835,7 +851,18 @@ Image result
   - A non-vision-model note, when present, is appended as an additional line in
     `content_blocks[0].text` -- it never replaces or suppresses `content_blocks[1]`; a successfully
     processed image is returned to every requesting model regardless of that model's own vision
-    support (`DIRECT_PI_PARITY`, `read.ts:250-270`).
+    support (`DIRECT_PI_PARITY`, `read.ts:250-270`). The note is exactly `"[Current model does not
+    support images. The image will be omitted from this request.]"`, on both the success and the
+    text-only-failure outputs.
+  - **Where the model's image support comes from (IMPL-C001, `MINION_ARCHITECTURAL_MAPPING`).** Pi
+    reads `ctx?.model` when `execute` runs and adds the note only for a KNOWN model whose `input`
+    lacks `"image"` (`getNonVisionImageNote`: no model, no note). Minion tools receive no model
+    context, so `read` is constructed with an optional model-capability provider: a function taking
+    no arguments, called once per image result at execution time, returning `true` (accepts
+    images), `false` (does not) or unknown. Only `false` adds the note; `true`, unknown, and no
+    provider at all add none. Whoever composes the tools with an agent supplies the provider from
+    the current request's model (Pi's `model.input.includes("image")`, Layer 04's
+    `TargetModel.supports_images`).
 - **Cancellation (`L13-WP131-R008` correction, `read`):** `read` accepts the Layer 09/Layer 06
   cancellation signal. An already-aborted signal at call start rejects immediately with
   `"Operation aborted"` before any filesystem access. Once started, the tool checks the signal
@@ -909,6 +936,123 @@ Image result
   `"Operation aborted"` (uniform, hand-authored, unchanged -- see the cancellation rule above) is
   the sole exception: it is one of Pi's own four stable templates (Lane E), preserved verbatim, not
   a raw/hybrid site subject to this vocabulary.
+
+##### `read`: operation mapping, paths, text and numbers (implementation-pass repairs)
+
+The WP-13.1 Python implementation pass (`minion-agent#48`) found that the integrated contract
+left several `read` behaviors that an independent implementation must match either unstated or
+misstated. Each is a `CONTRACT_ASSURANCE_DEFECT` (`IMPL-C001`-`IMPL-C011`), repaired here from the
+pinned source; none changes an owner decision. Evidence: `assurance/layers/13-wp131-python-implementation.md`.
+
+```text
+1. Cancellation pre-check ("Operation aborted", no ctx.fs call).
+2. Path: TOOL-026 steps 1-4. A step-4 rejection is "Cannot access <s>: invalid path", where <s>
+   is the step-4 input string itself (no ctx.fs call has been made, so there is no resolved path).
+3. Existence check -- Pi's `access(absolutePath, R_OK)`: ONE ctx.fs.probe_dir_entry(p) (EXEC-007),
+   which follows symlinks exactly as access() does:
+     Err(code)                                     -> "Cannot access <path>: <cause phrase>"
+     Ok, kind in {directory, symlink_to_directory}  -> "Cannot read <path>: is a directory"
+   (Pi: access() succeeds on a directory and the later read fails with EISDIR. Deciding it from
+   the probe gives that outcome on every platform and provider.)
+4. Content: ONE ctx.fs.read_binary_file(p, signal):
+     Err(aborted)             -> "Operation aborted"
+     Err(permission_denied)   -> "Cannot access <path>: permission denied"
+     Err(any other code)      -> "Cannot read <path>: <cause phrase>"
+   Readability is what Pi's access(R_OK) checks, and no certified operation checks it on its own,
+   so an unreadable file surfaces at the read and is reported at Pi's site.
+5. Sniff the first 4100 bytes (below): an image goes to image processing, anything else is text.
+
+<path> = ctx.fs.absolute_path(<step-5 string>) -- Pi's `absolutePath`; if that call itself fails,
+the step-5 string.
+```
+
+- **Not `file_info` (`IMPL-C002`).** An earlier revision listed `file_info` among `read`'s
+  operations. `file_info` is `lstat`-based: it does not follow symlinks and does not check
+  readability, so a broken symlink would pass the existence check and fail later as `"Cannot read
+  ..."`, where Pi reports `"Cannot access <path>: no such file or directory"`.
+- **Text decoding (`IMPL-C005`).** Text is Node's `Buffer.toString("utf-8")`: each maximal invalid
+  UTF-8 subpart becomes one U+FFFD, a byte-order mark is kept, and CR / CRLF are NOT translated.
+  Lines split on `"\n"` only, so a `"\r"` stays at the end of its line. (Python's text-mode file
+  reading translates newlines; see the Layer 12 finding in the assurance record, which is why `read`
+  decodes the bytes of `read_binary_file` itself.)
+- **Numbers (`IMPL-C006`).** `offset`/`limit` are IEEE-754 doubles (JSON integers included).
+  Every number `read` writes into text -- `"Offset N ..."`, `"Showing lines A-B ..."`,
+  `"Use offset=N ..."`, `"[N more lines ...]"`, the first-line diagnostic's line number -- uses
+  ECMAScript `Number::toString`: `offset=2.5` produces `"[Showing lines 2.5-..."`.
+- **Two different paths in messages (`IMPL-C003`).** Error texts cite `<path>` as defined above.
+  The first-line diagnostic's `sed -n '<n>p' <path> | head -c 51200` cites the RAW `path` argument
+  exactly as the caller supplied it (`read.ts:300` uses `path`, not `absolutePath`).
+- **Fractional offset whose first selected line is too long (`IMPL-C010`).** `read.ts:299` measures
+  `allLines[startLine]`; with a fractional `startLine` that is `undefined`, and Node throws
+  `TypeError: The "string" argument must be of type string or an instance of Buffer or ArrayBuffer.
+  Received undefined`. The result is a tool error with exactly that message text (Node 22.15.1).
+
+##### `read` image processing (normative; `R005-A`, `IMPL-C004`)
+
+Pinned sources: `packages/coding-agent/src/utils/{mime,image-process,image-convert,image-resize,
+image-resize-core,exif-orientation}.ts` at `b7bb00b9`. Photon calls go to the pinned
+`photon_rs_bg.wasm` (sha256 `10468181565c56004c867f3a4af96f89a0ef5a63a72f2b5fb12c1f1992a3615c`),
+which an implementation MUST verify before use and MUST NOT replace with another encoder
+(`minion-agent-docs` `assurance/layers/data/13-wp131-ce-l13-wp131-01/r005-a-photon-differential/`).
+
+```text
+Sniff (mime.ts), on the first 4100 bytes only:
+  FF D8 FF                      -> image/jpeg, except byte 3 == F7 -> not an image
+  PNG signature                 -> image/png if bytes 8-11 (big-endian) == 13 and 12-15 == "IHDR"
+                                   and no "acTL" chunk precedes the first "IDAT" in the chunk
+                                   walk; otherwise not an image. The walk stops (still image)
+                                   when the next chunk would start past the sniffed bytes.
+  "GIF"                         -> image/gif
+  "RIFF" at 0 and "WEBP" at 8   -> image/webp
+  "BM" and a valid BMP header   -> image/bmp (length >= 26; declared size 0 or >= 26; pixel offset
+                                   >= 14 + DIB size and < declared size when that is non-zero; DIB
+                                   12 -> planes/bpp at 22/24, DIB 40..124 -> at 26/28 with length
+                                   >= 30; one plane; bpp in {1,4,8,16,24,32})
+  Integers are read unsigned; a byte past the end reads as 0.
+
+processImage(bytes, sniffed):
+  base = lowercase(trim(sniffed up to ";")); png/jpeg(jpg)/gif/webp are used as is.
+  Anything else (BMP) -> convert: decode, EXIF-orient, re-encode as PNG. Failure ->
+    "[Image omitted: could not be converted to a supported inline image format.]"
+  autoResizeImages false -> the (converted) bytes, hints = [conversion hint] only.
+  Otherwise resize (below). null ->
+    "[Image omitted: could not be resized below the inline image size limit.]"
+  hints, in order: "[Image converted from <base> to <final mime>.]" when converted and the MIME
+  changed; then, when resized, "[Image: original WxH, displayed at wxh. Multiply coordinates by
+  <toFixed(W/w, 2)> to map to original image.]" (ECMAScript toFixed: the exact binary value
+  rounded half away from zero -- 2250/2000 = 1.125 -> "1.13").
+
+resize (resizeImageInProcess; maxWidth = maxHeight = 2000, maxBytes = 4.5 MiB of base64,
+jpegQuality = 80):
+  decode (Photon new_from_byteslice) and EXIF-orient; W, H = the oriented dimensions.
+  If W <= 2000 and H <= 2000 and ceil(len/3)*4 < maxBytes -> the INPUT bytes unchanged,
+    not resized.
+  Target: if W > maxWidth, h = Math.round(H*maxWidth/W), w = maxWidth; then if h > maxHeight,
+    w = Math.round(w*maxHeight/h), h = maxHeight. (Math.round: halves toward +Infinity; exact,
+    not floor(x + 0.5).)
+  Loop: resize with Lanczos3 (sampling filter 5) to w x h; candidates in order PNG (get_bytes),
+    then JPEG (get_bytes_jpeg) at each of [jpegQuality, 85, 70, 55, 40] de-duplicated keeping
+    first occurrence; the FIRST whose base64 length is STRICTLY below maxBytes wins (not the
+    smallest). None -> stop at 1x1, else w = max(1, floor(0.75w)), h likewise (a side already 1
+    stays 1), and repeat.
+  Any Photon failure -> null. This includes the zero-sized target: 8001x2 targets 2000x0
+    (Math.round(4000/8001) = Math.round(0.49994) = 0), Photon's resize accepts it and the encode traps.
+
+EXIF orientation (exif-orientation.ts): JPEG -- walk markers from offset 2 (skipping FF fill
+  bytes); the first APP1 (FF E1) must hold "Exif\0\0", else no orientation; other segments are
+  skipped by their big-endian length. WebP -- walk RIFF chunks from offset 12; an "EXIF" chunk's
+  TIFF data starts after an optional "Exif\0\0". TIFF: "II" = little-endian; the IFD offset is a
+  SIGNED 32-bit read when little-endian and unsigned when big-endian; tag 0x0112's value 1-8 is
+  used, anything else is 1. A chunk walk advances by size + (size % 2) with JS `%`. Orientations
+  2-8 map to Photon fliph/flipv and a 90-degree pixel rotation rebuilt with Photon new(raw, h, w),
+  exactly as the pinned source does.
+```
+
+Each Photon operation may run on a fresh instance: the R005-A differential showed instance
+lifecycle has no observable effect. A trap inside a borrowing call can leave wasm-bindgen's borrow
+flag set on the long-lived instance Pi keeps, but that does not change any output.
+
+`TOOL-025`'s image content block carries the resulting bytes (`IMPL-C009`) with the final MIME.
 
 `TOOL-027` -- Pi's macOS-specific filename-fallback heuristics (narrow-no-break-space AM/PM
 substitution, NFD normalization, straight-to-curly-apostrophe substitution, and their
@@ -1133,8 +1277,12 @@ result. `EXEC-007`'s own primitives do not provide mid-call cancellation (spec/e
 #### Witness matrix (`L13-WP131-R009`, part 1)
 
 Discriminating scenarios an independent language implementation must reproduce; each corresponds
-to a `pi-parity-manifest.yaml` `tests:` entry for its requirement (planned canonical scenarios --
-no implementation exists yet to run them against, so none are claimed as passing evidence):
+to a `pi-parity-manifest.yaml` `tests:` entry for its requirement. They now exist as canonical
+`builtin_tool` scenarios, `minion-agent` `conformance/agent/builtin-*.yaml` (schema
+`conformance/schema/builtin-tool-scenario.schema.json`), whose manifest entries name the files;
+the implementation pass added `read_text_decoding_matches_node_utf8` and
+`read_image_auto_resize_disabled` (TOOL-025), plus a post-Unicode-15.1 case-pair witness for
+`ls_lowercase_key_uses_pinned_icu_root_mapping`:
 
 ```text
 TOOL-025 (read)

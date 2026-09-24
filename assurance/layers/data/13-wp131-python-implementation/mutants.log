@@ -1,0 +1,25 @@
+MUTANT path_trimmed: DETECTED (1 scenario(s)): builtin-read-leading-ascii-space-not-trimmed
+MUTANT at_prefix_all_stripped: DETECTED (1 scenario(s)): builtin-read-leading-ascii-space-not-trimmed
+MUTANT file_url_falls_through: DETECTED (2 scenario(s)): builtin-ls-malformed-file-url-rejected-before-ctx-fs-access-as-invalid, builtin-read-malformed-file-url-rejected-before-ctx-fs-access-as-invalid
+MUTANT python_round_in_resize: DETECTED (1 scenario(s)): builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT naive_to_fixed: DETECTED (1 scenario(s)): builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT smallest_candidate: DETECTED (2 scenario(s)): builtin-read-image-bmp-converts-and-resizes, builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT exif_ignored: DETECTED (1 scenario(s)): builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT conversion_hint_short_names: DETECTED (3 scenario(s)): builtin-read-image-auto-resize-disabled, builtin-read-image-bmp-converts-and-resizes, builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT non_vision_note_always: DETECTED (4 scenario(s)): builtin-read-image-auto-resize-disabled, builtin-read-image-bmp-converts-and-resizes, builtin-read-image-differential-corpus-matches-pinned-photon-0-3-4
+MUTANT access_via_lstat: DETECTED (1 scenario(s)): builtin-read-error-text-matches-r010b-closed-vocabulary-per-fserrorcode
+MUTANT permission_at_read_site: DETECTED (1 scenario(s)): builtin-read-error-text-matches-r010b-closed-vocabulary-per-fserrorcode
+MUTANT newline_translation: DETECTED (1 scenario(s)): builtin-read-text-decoding-matches-node-utf8
+MUTANT python_slice: DETECTED (1 scenario(s)): builtin-read-fractional-and-negative-numeric-inputs
+MUTANT details_on_caller_limit: DETECTED (2 scenario(s)): builtin-read-fractional-and-negative-numeric-inputs, builtin-read-offset-limit-then-truncation-ordering
+MUTANT resolved_path_in_sed_hint: DETECTED (1 scenario(s)): builtin-read-first-line-exceeds-byte-limit
+MUTANT cap_after_probe: DETECTED (5 scenario(s)): builtin-ls-both-notices-in-order, builtin-ls-entry-limit-checked-before-next-probe, builtin-ls-fractional-limit-verbatim
+MUTANT limit_rounded: DETECTED (1 scenario(s)): builtin-ls-fractional-limit-verbatim
+MUTANT failed_entry_listed: DETECTED (1 scenario(s)): builtin-ls-broken-symlink-entry-skipped
+MUTANT not_supported_as_not_found: DETECTED (1 scenario(s)): builtin-ls-provider-without-extension-not-supported
+MUTANT python_lower_keys: DETECTED (1 scenario(s)): builtin-ls-lowercase-key-post-unicode-15-mappings
+MUTANT normalization_off: DETECTED (1 scenario(s)): builtin-ls-collation-canonical-equivalents-tie-order-b
+MUTANT codepoint_sort: DETECTED (3 scenario(s)): builtin-ls-collation-canonical-equivalents-tie-order-b, builtin-ls-collation-r006c-corpus-order, builtin-ls-lowercase-key-uses-pinned-icu-root-mapping
+MUTANT reverse_on_ties: DETECTED (4 scenario(s)): builtin-ls-collation-canonical-equivalents-tie-order-a, builtin-ls-collation-case-ties-keep-enumeration-order-order-b, builtin-ls-collation-r006c-corpus-order
+
+23/23 mutants detected
