@@ -1058,18 +1058,20 @@ lowercase     ICU root-locale full lowercase from the same pinned build
 sort          stable; compare(key(a), key(b)); ties keep enumeration order
 ```
 
-Two parts of this mapping go beyond the owner-selected tuple's stated options. Both are
-integration findings, flagged for review, and not yet approved:
+Two parts of this mapping go beyond the tuple's originally stated options. Both are now settled:
 
-- **`NORMALIZATION_MODE = ON`.** ECMA-402 requires canonically-equivalent strings to compare
+- **`NORMALIZATION_MODE = ON` (owner-ratified correction to `R006-C`,
+  `minion-agent#48#issuecomment-5810098437`; it supersedes only the normalization bit of
+  `minion-agent-docs#159`'s evidence).** ECMA-402 requires canonically-equivalent strings to compare
   equal. On this host (Node 22.15.1, ICU 76.1, `en-001`), Pi's `localeCompare` returns 0 for
   three non-FCD canonically-equivalent pairs. ICU 78.3 with normalization OFF (the setting the
   first differential used, since ICU's default is OFF) compares them as -1. With normalization
   ON it returns 0 for all of them. Without it, `R006-C` would not match Pi on an `en-001` host
   for a name whose combining marks are out of canonical order, contradicting the owner
-  decision's own parity disposition. Classified `CONTRACT_ASSURANCE_DEFECT` in the ICU mapping
-  of the owner's Intl-level options; those options themselves are unchanged.
-- **ICU root-locale lowercase.** Lane C revision 4, Correction 2, found real Unicode-version skew
+  decision's own parity disposition. Raised as a `CONTRACT_ASSURANCE_DEFECT` in the ICU mapping
+  (`INT-F1`); the owner-selected Intl-level options themselves are unchanged.
+- **ICU root-locale lowercase (accepted by the independent final review, `INT-F2`).** Lane C
+  revision 4, Correction 2, found real Unicode-version skew
   in the `toLowerCase` step across Node, Python, and Rust, and required it to be pinned or
   disclosed. ECMA-262 defines `toLowerCase` as Unicode Default Case Conversion, which ICU's
   root-locale lowercase implements. Taking it from the same pinned ICU removes the skew without
@@ -1162,9 +1164,11 @@ TOOL-026 (path pipeline)
     read_unicode_space_normalized                   path uses U+00A0 in
         place of an ASCII space where the real file uses ASCII space ->
         still resolves to the same file
-    read_malformed_file_url_surfaces_as_not_found    a syntactically
-        invalid file:// path -> an ordinary FsError, not a URL-parse
-        exception (the disclosed divergence above)
+    malformed_file_url_rejected_before_ctx_fs_access_as_invalid
+        a syntactically invalid file:// path (e.g. "file:///%ZZ") ->
+        rejected at pipeline step 4 by the strict conversion, before
+        any ctx.fs call is made (R002-A); classified FsErrorCode
+        invalid; text "Cannot access <path>: invalid path"; details {}
 
 TOOL-028 (ls)
     ls_lazy_cap_never_probes_beyond_limit           raw order [z_slow, a_ok],
