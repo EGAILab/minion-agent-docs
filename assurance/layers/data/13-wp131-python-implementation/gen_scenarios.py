@@ -295,49 +295,117 @@ def main():
                   "is_error": True, "text": f"Cannot access {u}: invalid path", "details": {}, "fs_calls": []}}
                   for u in ["file:///%ZZ", "file:///a%2Fb"]])
 
-    # ---- TOOL-039 read error vocabulary --------------------------------------------------------
+    # ---- TOOL-039 / TOOL-025 read error sites (CE-L13-WP131-02 revision 6, G1 on EXEC-008) ---------
+    # The operation that failed owns the site, whatever the code: check_readable (Pi's access stage,
+    # read.ts:248) -> "Cannot access"; the one content read (Pi's sniff + readFile) -> "Cannot read".
     phrases = {"not_found": "no such file or directory", "permission_denied": "permission denied",
                "not_directory": "not a directory", "is_directory": "is a directory", "invalid": "invalid path",
                "not_supported": "not supported by this provider", "unknown": "unknown filesystem error"}
-    access_codes = ["not_found", "permission_denied", "not_directory", "invalid", "not_supported", "unknown"]
-    read_codes = ["not_found", "not_directory", "invalid", "not_supported", "unknown"]
+    access_codes = ["not_found", "permission_denied", "not_directory", "is_directory", "invalid", "unknown"]
+    read_codes = ["not_found", "permission_denied", "not_directory", "is_directory", "invalid", "not_supported",
+                  "unknown"]
     fixture = [{"path": f"acc_{c}.txt", "file": {"text": "x"}} for c in access_codes]
-    fixture += [{"path": f"rd_{c}.txt", "file": {"text": "x"}} for c in read_codes + ["permission_denied", "is_directory"]]
-    fixture += [{"path": "sub", "dir": True}, {"path": "dangling", "symlink": "missing-target"}]
+    fixture += [{"path": f"rd_{c}.txt", "file": {"text": "x"}} for c in read_codes]
+    fixture += [{"path": "locked_dir", "dir": True}, {"path": "target.txt", "file": {"text": "target"}},
+                {"path": "link.txt", "symlink": "target.txt"}, {"path": "dangling", "symlink": "missing-target"}]
     cases = [{"id": f"access-{c}", "arguments": {"path": f"acc_{c}.txt"}, "expect": {
-        "is_error": True, "text": f"Cannot access {{abs:acc_{c}.txt}}: {phrases[c]}", "details": {}}} for c in access_codes]
-    read_site = lambda c: "Cannot read" if c in ("is_directory", "not_supported") else "Cannot access"
-    cases += [{"id": f"read-{c}", "arguments": {"path": f"rd_{c}.txt"}, "expect": {
-        "is_error": True, "text": f"{read_site(c)} {{abs:rd_{c}.txt}}: {phrases[c]}", "details": {}}}
-        for c in read_codes + ["permission_denied", "is_directory"]]
+        "is_error": True, "text": f"Cannot access {{abs:acc_{c}.txt}}: {phrases[c]}", "details": {},
+        "fs_calls": [f"check_readable acc_{c}.txt", f"absolute_path acc_{c}.txt"]}} for c in access_codes]
+    cases += [{"id": f"read-after-access-{c}", "arguments": {"path": f"rd_{c}.txt"}, "expect": {
+        "is_error": True, "text": f"Cannot read {{abs:rd_{c}.txt}}: {phrases[c]}", "details": {},
+        "fs_calls": [f"check_readable rd_{c}.txt", f"read_binary_file rd_{c}.txt", f"absolute_path rd_{c}.txt"]}}
+        for c in read_codes]
     cases += [
-              {"id": "directory-is-directory", "arguments": {"path": "sub"}, "expect": {
-                  "is_error": True, "text": "Cannot read {abs:sub}: is a directory", "details": {}}},
-              {"id": "real-missing-file", "arguments": {"path": "missing.txt"}, "expect": {
-                  "is_error": True, "text": "Cannot access {abs:missing.txt}: no such file or directory", "details": {}}},
-              {"id": "dangling-symlink-fails-the-access-check", "arguments": {"path": "dangling"}, "expect": {
-                  "is_error": True, "text": "Cannot access {abs:dangling}: no such file or directory", "details": {}}}]
+        {"id": "unreadable-directory-fails-access", "arguments": {"path": "locked_dir"}, "expect": {
+            "is_error": True, "text": "Cannot access {abs:locked_dir}: permission denied", "details": {},
+            "fs_calls": ["check_readable locked_dir", "absolute_path locked_dir"]}},
+        {"id": "real-missing-file-fails-access", "arguments": {"path": "missing.txt"}, "expect": {
+            "is_error": True, "text": "Cannot access {abs:missing.txt}: no such file or directory", "details": {},
+            "fs_calls": ["check_readable missing.txt", "absolute_path missing.txt"]}},
+        {"id": "real-dangling-symlink-fails-access", "arguments": {"path": "dangling"}, "expect": {
+            "is_error": True, "text": "Cannot access {abs:dangling}: no such file or directory", "details": {},
+            "fs_calls": ["check_readable dangling", "absolute_path dangling"]}},
+        {"id": "real-symlink-to-readable-file-reads-the-target", "arguments": {"path": "link.txt"}, "expect": {
+            "is_error": False, "text": "target", "details": {},
+            "fs_calls": ["check_readable link.txt", "read_binary_file link.txt"]}}]
     write("builtin-read-error-text-matches-r010b-closed-vocabulary-per-fserrorcode", ["TOOL-039", "TOOL-025"],
-          ["read_error_text_matches_r010b_closed_vocabulary_per_fserrorcode"],
-          "R010-B: each FsErrorCode maps to its closed cause phrase. The access step (file_info) is "
-          "the 'Cannot access' site. A failed content read is 'Cannot read' only for is_directory and "
-          "not_supported; any other code is reported at the access site, because Pi's "
-          "symlink-following access(R_OK) would have failed first (L13-WP131-C012). A directory is "
-          "'Cannot read <path>: is a directory'; a dangling symlink is 'Cannot access ... no such file "
-          "or directory'. <path> is the resolved absolute path (IMPL-C003). details stays {}.",
+          ["read_error_text_matches_r010b_closed_vocabulary_per_fserrorcode", "W-G1", "W-G2", "W-G3", "W-G4",
+           "W-G5", "W-G6", "W-G7", "W-G8", "W-G9", "W-G12", "W-G13"],
+          "R010-B closed cause phrases, with the site decided by WHICH operation failed (L13-WP131-C012, owner "
+          "G1; CE-L13-WP131-02 revision 6). check_readable (EXEC-008, Pi's access stage) failing with any code "
+          "except not_supported is 'Cannot access <path>: <phrase>' and no content read follows. After a "
+          "successful check_readable, the one read_binary_file failing with ANY code is 'Cannot read "
+          "<path>: <phrase>' -- including not_found (removed after the access check), permission_denied "
+          "(made unreadable after it) and unknown (a stable I/O error after it, CE13-C004). A real missing "
+          "file and a real dangling symlink fail the access check; a real symlink to a readable file reads "
+          "its target. <path> is the resolved absolute path (IMPL-C003). details stays {}.",
           "read", cases, fixture=fixture,
-          provider={"file_info": [{"path": f"acc_{c}.txt", "error": c} for c in access_codes],
-                    "read_binary_file": [{"path": f"rd_{c}.txt", "error": c} for c in read_codes + ["permission_denied", "is_directory"]]})
+          provider={"check_readable": [{"path": f"acc_{c}.txt", "error": c} for c in access_codes]
+                    + [{"path": "locked_dir", "error": "permission_denied"}],
+                    "read_binary_file": [{"path": f"rd_{c}.txt", "error": c} for c in read_codes]})
+    fb_site = lambda c: "Cannot read" if c in ("is_directory", "not_supported") else "Cannot access"
+    fb_codes = ["not_found", "permission_denied", "not_directory", "is_directory", "invalid", "not_supported",
+                "unknown"]
+    write("builtin-read-provider-without-exec-008-uses-disclosed-fallback", ["TOOL-025", "TOOL-039"],
+          ["W-G10"],
+          "A provider WITHOUT EXEC-008 answers check_readable -> not_supported for every path; read continues "
+          "in the disclosed FALLBACK mode (spec/execution.md section 12.5; owner G2 as a provider-capability "
+          "fallback, an intentional approximation, never Pi-equivalent): a readable file reads normally, and a "
+          "failed content read is 'Cannot read' for is_directory and not_supported, 'Cannot access' for "
+          "every other code.",
+          "read",
+          [{"id": "reads-normally", "arguments": {"path": "a.txt"}, "expect": {
+              "is_error": False, "text": "hello", "details": {},
+              "fs_calls": ["check_readable a.txt", "read_binary_file a.txt"]}}]
+          + [{"id": f"fallback-{c}", "arguments": {"path": f"fb_{c}.txt"}, "expect": {
+              "is_error": True, "text": f"{fb_site(c)} {{abs:fb_{c}.txt}}: {phrases[c]}", "details": {}}}
+             for c in fb_codes],
+          fixture=[{"path": "a.txt", "file": {"text": "hello"}}]
+          + [{"path": f"fb_{c}.txt", "file": {"text": "x"}} for c in fb_codes],
+          provider={"without_exec_008": True,
+                    "read_binary_file": [{"path": f"fb_{c}.txt", "error": c} for c in fb_codes]})
+    write("builtin-read-abort-at-the-access-checkpoint-normal-mode", ["TOOL-025"],
+          ["W-G14"],
+          "read.ts:249: once the access stage has completed -- check_readable answered Ok (NORMAL mode) or "
+          "not_supported (FALLBACK mode) -- read checks the signal before any content work. An abort that "
+          "lands as check_readable returns is 'Operation aborted', and read_binary_file is never called "
+          "(CE-L13-WP131-02 revision 6, CE13-C005).",
+          "read",
+          [{"id": "normal-mode", "abort_after": "check_readable", "arguments": {"path": "a.txt"}, "expect": {
+              "is_error": True, "text": "Operation aborted", "details": {}, "fs_calls": ["check_readable a.txt"]}}],
+          fixture=[{"path": "a.txt", "file": {"text": "hello"}}])
+    write("builtin-read-abort-at-the-access-checkpoint-fallback-mode", ["TOOL-025"],
+          ["W-G15"],
+          "The FALLBACK-mode half of the read.ts:249 checkpoint: a provider without EXEC-008 answers "
+          "check_readable -> not_supported, the signal aborts as it returns, and read stops before any "
+          "content read (CE13-C005; spec/execution.md section 12.5).",
+          "read",
+          [{"id": "fallback-mode", "abort_after": "check_readable", "arguments": {"path": "a.txt"}, "expect": {
+              "is_error": True, "text": "Operation aborted", "details": {}, "fs_calls": ["check_readable a.txt"]}}],
+          fixture=[{"path": "a.txt", "file": {"text": "hello"}}],
+          provider={"without_exec_008": True})
     write("builtin-read-provider-without-exec-007-reads-normally", ["TOOL-025"],
-          ["read_does_not_require_exec_007"],
-          "L13-WP131-C012: read uses only core ctx.fs operations (file_info, read_binary_file), so a "
-          "provider that reports not_supported for the additive EXEC-007 extension still reads text "
-          "and images normally; ls, which needs EXEC-007, reports its own not_supported text.", "read",
+          ["read_does_not_require_exec_007", "W-G13"],
+          "read's filesystem access is exactly check_readable (EXEC-008) then read_binary_file (L13-WP131-C012, "
+          "G1), so a provider that reports not_supported for the additive EXEC-007 extension still reads "
+          "text and images normally; ls, which needs EXEC-007, reports its own not_supported text.", "read",
           [{"id": "text", "arguments": {"path": "a.txt"}, "expect": {"is_error": False, "text": "hello", "details": {},
-                                                                    "fs_calls": ["file_info a.txt", "read_binary_file a.txt"]}},
+                                                                    "fs_calls": ["check_readable a.txt", "read_binary_file a.txt"]}},
            image_case("png_small_rgb.png")],
           fixture=[{"path": "a.txt", "file": {"text": "hello"}}] + fx("png_small_rgb.png"),
           provider={"without_exec_007": True})
+    write("builtin-read-does-not-depend-on-file-info-or-canonical-path", ["TOOL-025", "TOOL-026"],
+          ["W-G16"],
+          "TOOL-026 step 5 (CE13-C006): read's filesystem access is check_readable then read_binary_file only. "
+          "A conforming provider whose file_info and canonical_path answer not_supported still reads a "
+          "readable file, and neither operation is called.",
+          "read",
+          [{"id": "reads-without-file-info", "arguments": {"path": "a.txt"}, "expect": {
+              "is_error": False, "text": "hello", "details": {},
+              "fs_calls": ["check_readable a.txt", "read_binary_file a.txt"]}}],
+          fixture=[{"path": "a.txt", "file": {"text": "hello"}}],
+          provider={"file_info": [{"path": "a.txt", "error": "not_supported"}],
+                    "canonical_path": [{"path": "a.txt", "error": "not_supported"}]})
 
     # ---- TOOL-028 ls ------------------------------------------------------------------------
     files = lambda *names: [{"path": n, "file": {"text": "x"}} for n in names]

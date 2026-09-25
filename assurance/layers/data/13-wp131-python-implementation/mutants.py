@@ -45,21 +45,37 @@ MUTANTS = {
     "reverse_on_ties": ("collation.py", "            return self.compare(a[0], b[0])", "            return self.compare(a[0], b[0]) or (1 if a[1] < b[1] else -1 if a[1] > b[1] else 0)"),
 }
 MUTANTS.update({
-    "access_via_exec_007_probe": ("read.py", "        info = await self._fs.file_info(working)\n        if isinstance(info, Err):",
-                                  "        info = await self._fs.probe_dir_entry(working)\n        if isinstance(info, Err):"),
-    "every_read_failure_at_read_site": ("read.py", '    return "Cannot access"\n', '    return "Cannot read"\n'),
+    # CE-L13-WP131-02 revision 5/6 negative controls (G1 on EXEC-008); the pre-G1 C012 mutants
+    # (access_via_exec_007_probe, every_read_failure_at_read_site) targeted the superseded file_info
+    # access step and are recorded in mutants.log.
+    "site_from_code_in_normal_mode": ("read.py", "            site = _fallback_read_site(read.error.code) if fallback else _READ_SITE\n",
+                                      "            site = _fallback_read_site(read.error.code)\n"),
+    "always_fallback": ("read.py", "        fallback = False\n", "        fallback = True\n"),
+    "skip_access_stage": ("read.py", "        access = await self._fs.check_readable(working)\n", "        access = None\n"),
+    "not_supported_as_access_failure": ("read.py", "            if access.error.code != FsErrorCode.NOT_SUPPORTED:\n",
+                                        "            if True:\n"),
+    "file_info_before_read": ("read.py", "        read = await self._fs.read_binary_file(working)\n",
+                              "        await self._fs.file_info(working)\n        read = await self._fs.read_binary_file(working)\n"),
+    "fallback_skips_checkpoint_249": ("read.py", "        if signal is not None and signal.aborted:\n            raise aborted()\n        read = ",
+                                      "        if signal is not None and signal.aborted and not fallback:\n            raise aborted()\n        read = "),
+    "no_checkpoint_249": ("read.py", "        if signal is not None and signal.aborted:\n            raise aborted()\n        read = ",
+                          "        read = "),
 })
 PYTHON_WITNESS_MUTANTS = {
     # timing is not expressible in canonical YAML; these run the Python witness tests instead
     "cancel_in_flight": ("_signal.py", "    _ABANDONED.add(task)\n", "    task.cancel()\n    _ABANDONED.add(task)\n"),
-    "signal_passed_to_fs": ("read.py", "        info = await self._fs.file_info(working)\n",
-                            "        info = await self._fs.file_info(working, signal)\n"),
+    "signal_passed_to_fs": ("read.py", "        access = await self._fs.check_readable(working)\n",
+                            "        access = await self._fs.check_readable(working, signal)\n"),
+    "settle_point_check_removed": ("_signal.py", "    task = asyncio.ensure_future(_settle(work, signal))\n",
+                                   "    task = asyncio.ensure_future(work)\n"),
+    "result_rechecked_after_settling": ("_signal.py", "    if task.done():\n        return task.result()\n",
+                                        "    if task.done() and not signal.aborted:\n        return task.result()\n"),
 }
 BUILTIN = PY / "src" / "minion_agent" / "tools" / "builtin"
 env = dict(os.environ)
 results = {}
 ALL = [(n, v, "tests/conformance/test_builtin_tool_conformance.py") for n, v in MUTANTS.items()]
-ALL += [(n, v, "tests/tools/builtin/test_tools.py tests/tools/builtin/test_helpers.py") for n, v in PYTHON_WITNESS_MUTANTS.items()]
+ALL += [(n, v, "tests/tools/builtin/test_tools.py tests/tools/builtin/test_helpers.py tests/tools/builtin/test_read_access_and_abort_order.py") for n, v in PYTHON_WITNESS_MUTANTS.items()]
 for name, (fname, old, new), target in ALL:
     path = BUILTIN / fname
     original = path.read_text(encoding="utf-8")

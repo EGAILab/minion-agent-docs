@@ -607,9 +607,9 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
    pipeline's working value with the converted path and continues to
    step 5 normally.
 5. Pass the result as the `path` argument to the appropriate READ-ONLY
-   ctx.fs operation directly -- file_info then read_binary_file for read,
-   core operations only (see "`read`: operation mapping" below;
-   L13-WP131-C012); probe_dir_entry / list_dir_raw (EXEC-007) for ls
+   ctx.fs operation directly -- check_readable then read_binary_file for
+   read (EXEC-008, spec/execution.md §12.5; see "`read`: operation mapping"
+   below; L13-WP131-C012); probe_dir_entry / list_dir_raw (EXEC-007) for ls
    (Layer 12, FileSystem Protocol). Tilde expansion,
    absolute-path normalization, and cwd-relative resolution all happen
    INSIDE that provider call, via the SAME already-certified
@@ -866,8 +866,9 @@ Image result
 - **Cancellation (`L13-WP131-R008` correction, `read`):** `read` accepts the Layer 09/Layer 06
   cancellation signal. An already-aborted signal at call start rejects immediately with
   `"Operation aborted"` before any filesystem access. Once started, the tool checks the signal
-  after path resolution and after the readability-access check (two explicit checkpoints,
-  `read.ts:223-249`) in addition to reacting to a live abort event; an abort that fires after the
+  after path resolution and after `check_readable` returns -- in both its NORMAL and FALLBACK modes
+  (two explicit checkpoints, `read.ts:223-249`; `CE13-C005`) -- in addition to reacting to a live
+  abort event; an abort that fires after the
   file content has already been fully read and processed does not retroactively discard that
   already-completed result -- the checkpoints are pre-completion only, not a post-hoc rejection of
   a settled success.
@@ -879,6 +880,12 @@ Image result
   MUST NOT cancel or signal the pending `ctx.fs` call (no `ctx.fs` call receives the signal), and
   MUST discard the work's eventual result or failure. (This also follows from the Layer 09 signal
   contract: tool work is never forcibly interrupted.)
+  **The outcome is decided by order (`L13-WP131-I001`, `CE-L13-WP131-02`).** If the signal aborted
+  before the work reached its settle point (the last synchronous step before its result or failure
+  is delivered), the outcome is `"Operation aborted"` -- including when the work then fails (Pi:
+  `if (!aborted) reject(error)`); if the work settled first, its result or error stands, even when
+  the abort lands before the caller resumes. How soon the rejection is delivered is implementation
+  latency and never changes which outcome stands. The same ordering applies to `ls`.
 - `path` not resolving to an existing, readable file is a distinguishable error, separate from any
   truncation/offset outcome (`DIRECT_PI_PARITY`).
 - **Error text (`R010-B` -- integration of the resolved `CE-L13-WP131-01` Lane E decision,
@@ -924,23 +931,24 @@ Image result
   Applied to `read`'s two raw sites (Lane E's own site split):
 
   ```text
-  existence/permission check fails (the earlier, `ops.access`-equivalent site;
-  reachable codes: not_found, permission_denied, not_directory, invalid,
-  not_supported, unknown):
+  access check fails (`ctx.fs.check_readable`, EXEC-008 -- Pi's `ops.access`;
+  reachable codes: every code check_readable returns except not_supported;
+  plus, on a provider WITHOUT EXEC-008 only, a content read's
+  not_found/permission_denied/not_directory/invalid/unknown -- the
+  disclosed fallback F-1):
       "Cannot access <path>: <cause phrase>"
 
-  later content-read step fails (`read_text_file`/`read_binary_file` itself;
-  reachable codes: is_directory (the specific addressed-path-is-a-directory
-  subcase), plus not_found/permission_denied/not_directory/invalid/
-  not_supported/unknown for every other cause):
+  later content read fails (`read_binary_file`, after check_readable
+  answered; reachable codes: all seven -- on a provider without EXEC-008,
+  only is_directory and not_supported):
       "Cannot read <path>: <cause phrase>"
   ```
 
   Which `ctx.fs` failure lands at which of these two sites is fixed by the operation mapping in
-  "`read`: operation mapping" below (`L13-WP131-C012`): with the core `file_info` as the access
-  step, a content read failing `is_directory` or `not_supported` is the read site, and a content
-  read failing with any other code is the access site, because those are the conditions under
-  which Pi's symlink-following `access(R_OK)` fails first.
+  "`read`: operation mapping" below (`L13-WP131-C012`, owner decision `G1`): **the operation that
+  failed owns the site, whatever the code** -- `check_readable` is Pi's access stage, so its failure
+  is the access site; the content read is Pi's sniff + `readFile`, so its failure is the read site.
+  Only a provider without `EXEC-008` falls back to recovering the site from the read's code (F-1).
 
   And to `TOOL-026`'s own step-4 rejection (`R002-A`, above) -- a malformed `file://` URL, reachable
   code `invalid` only: `"Cannot access <path>: invalid path"` (the SAME template shape as `read`'s
@@ -963,21 +971,20 @@ pinned source; none changes an owner decision. Evidence: `assurance/layers/13-wp
 2. Path: TOOL-026 steps 1-4. A step-4 rejection is "Cannot access <s>: invalid path", where <s>
    is the step-4 input string itself (no ctx.fs call has been made, so there is no resolved path).
    Abort checkpoint (read.ts:246): if the signal has aborted, the work stops here.
-3. Access step -- Pi's `access(absolutePath, R_OK)`, from CORE operations only (L13-WP131-C012):
-   ONE ctx.fs.file_info(p):
-     Err(code)                    -> "Cannot access <path>: <cause phrase>"
-   Abort checkpoint (read.ts:249).
-     Ok, kind == directory        -> "Cannot read <path>: is a directory"
-   (Pi: access() succeeds on a directory and the later read fails with EISDIR.)
-4. Content: ONE ctx.fs.read_binary_file(p) -- no signal (Pi's readFile takes none):
-     Err(is_directory | not_supported)  -> "Cannot read <path>: <cause phrase>"
-     Err(any other code)                -> "Cannot access <path>: <cause phrase>"
-   file_info does not follow a final symlink and does not check readability, so a read that
-   fails with not_found, permission_denied, not_directory, invalid or unknown -- a dangling link,
-   an unreadable file or target, a looping link -- is exactly where Pi's symlink-following
-   access(R_OK) would already have failed. is_directory (a symlink to a directory) and
-   not_supported (a provider that can check the path but cannot supply content) are genuine read
-   failures, as R010-B places them.
+3. Access -- Pi's `access(absolutePath)` (read.ts:248), EXEC-008 (L13-WP131-C012, owner G1):
+   ONE ctx.fs.check_readable(p) -- no signal (Pi passes none to access):
+     Err(not_supported)  -> the provider lacks EXEC-008: FALLBACK mode
+     Err(code)           -> "Cannot access <path>: <cause phrase>"    (every other code)
+     Ok                  -> NORMAL mode
+   Abort checkpoint (read.ts:249): one check, in BOTH modes, before any content work.
+   A directory is not decided here: a readable directory passes, an unreadable one fails
+   (permission_denied), exactly as Pi's access(R_OK).
+4. Content -- Pi's sniff + readFile: ONE ctx.fs.read_binary_file(p) -- no signal:
+     NORMAL mode:   Err(code) -> "Cannot read <path>: <cause phrase>"   (every code)
+     FALLBACK mode: Err(is_directory | not_supported) -> "Cannot read <path>: <cause phrase>"
+                    Err(any other code)               -> "Cannot access <path>: <cause phrase>"
+   No other ctx.fs operation is used for access: no file_info, canonical_path, probe_dir_entry
+   or list_dir_raw (EXEC-007 stays unused by read).
 5. Sniff the first 4100 bytes (below): an image goes to image processing, anything else is text.
 
 <path> = ctx.fs.absolute_path(<step-5 string>) -- Pi's `absolutePath`; if that call itself fails,
@@ -993,13 +1000,22 @@ the step-5 string.
   provider without ever reading (`L13-WP131-C012`, independent review of docs #162 @ `388c8200`;
   Pi's `access` and `readFile` are independently pluggable, with no such dependency). The mapping
   above keeps `read` on core operations and recovers Pi's site split from the read's own error
-  code instead.
-- **Disclosed edges of that mapping.** A genuine I/O failure (`unknown`) AFTER a successful access
-  check is reported at the access site; Pi would report it at the read site. And the mapping relies
-  on the provider classifying a read of a directory (reached through a symlink) as `is_directory`:
-  certified Python `LocalFileSystem.read_binary_file` on Windows classifies it as
-  `permission_denied` (Node reports `EISDIR`), a Layer 12 defect recorded for an owner decision in
-  the assurance record, not repaired here. A real directory is unaffected: step 3 decides it.
+  code instead. That code-to-site rule could not tell the two sites apart when the same code
+  arises at both (`CE13-C001`..`C004`: an unsupported access step, a permission change or removal
+  between the stages, an unreadable directory, a stable I/O error after a successful access), so
+  the owner selected `G1` (`minion-agent#48` comment `5822609576`): a Layer-12 readability operation,
+  `EXEC-008` `check_readable`, certified in both languages (`minion-agent#62`), now performs Pi's
+  access stage, and the failing operation owns the site (`CE-L13-WP131-02` revision 6).
+- **Disclosed divergences of that mapping (`CE-L13-WP131-02` revision 5).** On POSIX, and for every
+  race between Pi's access and read stages, the sites equal pinned Pi's. W-1: on Windows the access
+  site follows `EXEC-008`'s certified readability disposition (a deny ACL -> `permission_denied`, a
+  dangling link -> `not_found`) where Pi's attribute-only `access` passes and Pi reports the read
+  site. W-2: the Windows symlink-loop CODE is the Layer-12 mapper's (`minion-agent#69`), not
+  remapped by `read`. W-3: certified Python `read_binary_file` on Windows classifies a directory read
+  as `permission_denied` (Node: `EISDIR`; `minion-agent#67`), so a readable Windows directory reads
+  `"Cannot read <path>: permission denied"` -- the site matches Pi, the phrase does not; `read` does
+  not work around it. F-1: a provider without `EXEC-008` gets the fallback site mapping above, a
+  provider-capability approximation, never Pi-equivalent.
 - **Text decoding (`IMPL-C005`).** Text is Node's `Buffer.toString("utf-8")`: each maximal invalid
   UTF-8 subpart becomes one U+FFFD, a byte-order mark is kept, and CR / CRLF are NOT translated.
   Lines split on `"\n"` only, so a `"\r"` stays at the end of its line. (Python's text-mode file
@@ -1338,6 +1354,27 @@ TOOL-025 (read)
     read_image_processing_failure_is_text_only_success
         an image that sniffs as supported but fails conversion/resize ->
         single text block, no image block, NOT a tool error
+    read access/read sites by provenance (L13-WP131-C012, owner G1;
+    CE-L13-WP131-02 revision 6, W-G1..W-G16):
+    read_error_text_matches_r010b_closed_vocabulary_per_fserrorcode
+        check_readable fails with c (every code but not_supported) ->
+        "Cannot access <path>: <c>", no content read; check_readable ok,
+        then read_binary_file fails with c (all seven, incl. a removal,
+        a permission change and a stable I/O error after the check) ->
+        "Cannot read <path>: <c>"; real missing file / dangling symlink
+        -> Cannot access; real symlink to a readable file -> its text
+    read_provider_without_exec_008_uses_disclosed_fallback
+        check_readable -> not_supported: a readable file reads normally;
+        a failed read is Cannot read only for is_directory/not_supported
+    read_abort_at_the_access_checkpoint_normal_mode / _fallback_mode
+        the signal aborts as check_readable returns (Ok, or
+        not_supported) -> "Operation aborted", no read_binary_file call
+    read_does_not_depend_on_file_info_or_canonical_path
+        file_info and canonical_path answer not_supported -> read still
+        succeeds; ctx.fs calls are check_readable then read_binary_file
+    (plus, per language: I001 ordering W-I1..W-I4 -- abort-then-settle is
+    "Operation aborted", including a failure after the abort; settle-then-
+    abort keeps the result -- and real-host W-G6/W-G11/W-G12)
 
 TOOL-026 (path pipeline)
     read_leading_ascii_space_not_trimmed            two files " x.txt"/
