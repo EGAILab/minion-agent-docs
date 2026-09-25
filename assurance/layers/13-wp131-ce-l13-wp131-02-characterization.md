@@ -826,3 +826,128 @@ NEXT_OWNER
     Codex -- §11.8.5 review of exactly this checkpoint. Implementation of the frozen Python
     candidate starts only after checkpoint agreement.
 ```
+
+---
+
+## Revision 6 -- delta-inventory corrections after checkpoint review REJECTED (`CE13-C005`, `CE13-C006`)
+
+Codex's §11.8.5 review of revision 5 at `90dddb7e` (minion-agent-docs#162 comment `5828171940`;
+review-only evidence docs #166 @ `c83f10a7`): **REJECTED**, for two live normative contradictions
+missing from revision 5's delta inventory. R-G1..R-G4, W-G1..W-G14, W-1..W-3/F-1 and the integrated
+I001 rules were found acceptable for the checkpoint. Both findings are accepted. Revision 5 is kept
+as reviewed history; this revision amends only its checkpoint-249 wording, its witnesses and its
+normative-delta inventory. The rules R-G1..R-G4 are otherwise unchanged.
+
+### CE13-C005 -- the fallback branch must pass checkpoint 249 (`spec/execution.md` §12.5)
+
+- **The contradiction:** certified `spec/execution.md` §12.5 (docs `master` `e1d9b817`) sends `Err(not_supported)` straight to "step 3 in FALLBACK mode", and only its `Ok` branch visits the `read.ts:249` abort checkpoint. Revision 5 requires the checkpoint after `check_readable` returns, including its `not_supported` answer. An implementation could follow either text.
+- **Pi's placement:** pinned Pi checks `if (aborted) return` immediately after its access call returns, before the sniff and `readFile` (`read.ts:248-250`). Pi has no fallback, so the Pi-faithful placement is a checkpoint after the access stage has completed, whichever way it completed.
+- **The rule (amends revision 5's step 3):**
+
+  ```text
+  3. Access:
+       r = ctx.fs.check_readable(p)          -- no signal
+         Err(not_supported)  -> mode := FALLBACK
+         Err(c)              -> "Cannot access <path>: <cause(c)>"      (stop)
+         Ok                  -> mode := NORMAL
+     Abort checkpoint (read.ts:249): ONE check, reached in BOTH modes, before any content work.
+     An abort observed here -> "Operation aborted"; no read_binary_file call in either mode.
+  ```
+
+- **Classification:** `CONTRACT_ASSURANCE_DEFECT`, in §12.5's Layer-13 consumption pattern. §12.5 is normative for `TOOL-025`, not part of `EXEC-008`'s operation semantics.
+- **What the correction leaves alone:**
+  - `check_readable`'s signature, POSIX and Windows semantics, error mapping and its accepted-not-inspected signal;
+  - its §12.6 witnesses;
+  - the Python/Rust certification;
+  - the fallback's site mapping.
+- It changes only where `read` places its checkpoint on the fallback branch. No `EXEC-008` implementation changes, because neither certified implementation contains Layer-13 `read` code.
+- **New witness, `W-G15` (fallback abort):**
+  - Setup: a provider without `EXEC-008` (`check_readable` returns `not_supported`); the signal is aborted after that answer and before any content read.
+  - Expected: `"Operation aborted"`, with `fs_calls == [check_readable]`: zero `read_binary_file` calls.
+  - The normal-branch counterpart is `W-G14`.
+- **Negative control:** a literal pre-correction §12.5 reading, where `not_supported` goes directly to the fallback read and skips the checkpoint, must fail `W-G15`.
+
+### CE13-C006 -- the path pipeline still names `file_info` for `read` (`spec/tools.md`, TOOL-026 step 5)
+
+- **The contradiction:** candidate `spec/tools.md` (docs #162) says, in the TOOL-026 path pipeline's step 5, "`file_info then read_binary_file for read`, core operations only". Revision 5's R-G4 forbids `file_info`, and its delta list did not name this upstream passage.
+- **Replacement text for `read` in step 5:** "`check_readable` then `read_binary_file` for read (`EXEC-008`, `spec/execution.md` §12.5; see '`read`: operation mapping' below; `L13-WP131-C012`)".
+  - Unchanged: `ls`'s `probe_dir_entry` / `list_dir_raw` (`EXEC-007`) and every TOOL-026 path transformation.
+- **Sweep of the live `spec/tools.md` at `90dddb7e`**, every `read`-access instruction:
+
+  | Location | Wording | Disposition |
+  |---|---|---|
+  | lines 609-612, path pipeline step 5 | `file_info then read_binary_file` | **replace** (this finding) |
+  | lines 939-943, site paragraph | "with the core `file_info` as the access step ..." | **replace** (already in revision 5's delta list) |
+  | lines 966-980, "`read`: operation mapping" steps 3-4 | `file_info` access step; code -> site | **replace** (already listed) |
+  | lines 987-996, "Access step history" | `IMPL-C002`, `probe_dir_entry`, then C012 | **keep as history**, append the G1 entry |
+  | line 638, the `L13-WP131-R002` correction | names `file_info` among operations that take `path: str` | **unchanged**: historical and descriptive, not a `read` access instruction |
+
+  No other live `read`-access instruction names `file_info`, `canonical_path`, `probe_dir_entry` or `list_dir_raw`.
+- **New witness, `W-G16` (no `file_info` dependency):** a conforming provider supports `check_readable` and `read_binary_file` but returns `not_supported` from `file_info` (and from `canonical_path`).
+  - Expected: `read` succeeds on a readable file, with `fs_calls == [check_readable, read_binary_file]`.
+- **Negative control:** an implementation following the uncorrected step 5 (calling `file_info`) must fail `W-G16`, and `W-G13`'s call pinning.
+
+### Complete normative-delta inventory (replaces revision 5's list)
+
+1. **Carry §12 onto the WP-13.1 docs branch first.**
+   - Docs #162's base (`f46051fb`) predates `WP-12.E2`, so its `spec/execution.md` has no §12.
+   - The branch merges current docs `master` (`e1d9b817`) before any §12.5 edit. A clean merge was verified with `git merge-tree`.
+   - This is a merge, not a rewrite: #162's history and every review artifact stay unchanged.
+2. **`spec/execution.md` §12.5 (CE13-C005):**
+   - the consumption pattern gains the common checkpoint rule above;
+   - a correction note under §12.5 cites this revision and states that `EXEC-008`'s operation semantics, witnesses and certification are unchanged;
+   - §12's status paragraph ("unchanged in substance from its approved, merged revision") gains "except the §12.5 Layer-13 checkpoint correction noted there".
+3. **`spec/tools.md`:**
+   - TOOL-026 path pipeline step 5 (CE13-C006);
+   - "`read`: operation mapping" steps 3-4 -> R-G1..R-G4 with the amended step 3;
+   - the site paragraph -> R-G1;
+   - "Disclosed edges" -> W-1..W-3 and F-1;
+   - R010-B's two-site table: reachable codes per revision 5;
+   - the `read` cancellation paragraph: checkpoint 249 = "after `check_readable` returns, in both modes";
+   - the "Access step history" bullet: append the G1 entry;
+   - the `read` witness list gains W-G1..W-G16.
+4. **`pi-parity-manifest.yaml`:**
+   - `TOOL-025`: depends on `EXEC-008`; tests W-G1..W-G16, W-I1..W-I5;
+   - `TOOL-039`: the site rule is by provenance; W-1..W-3 and F-1 are disclosed;
+   - `EXEC-008`: no change.
+5. **`conformance/schema/builtin-tool-scenario.schema.json`:**
+   - `provider.check_readable` (`scriptedError[]`) and `provider.without_exec_008` (`const: true`);
+   - scripted `file_info` / `canonical_path` `not_supported` for `W-G16`;
+   - a scripted abort point between `check_readable` and the content read, for `W-G14`/`W-G15`.
+   - The runner stays thin: it answers scripted calls, records `fs_calls` and triggers the abort. It never performs `read`'s site or checkpoint logic.
+6. **`conformance/agent/builtin-read-*.yaml`:**
+   - the R010-B per-code scenario is rescripted onto `check_readable` (access site) and `read_binary_file` after `A` ok (read site);
+   - new scenarios cover W-G3, W-G5, W-G7, W-G10, W-G12..W-G16.
+
+### Acceptance witnesses (amends revision 5)
+
+W-I1..W-I5; W-G1..W-G16 (W-G15 and W-G16 are new here); revision 5's negative controls, plus:
+
+| Negative control | Must fail |
+|---|---|
+| Fallback skips checkpoint 249 | W-G15 |
+| `read` calls `file_info` / follows the uncorrected step 5 | W-G16 and W-G13 |
+
+### Checkpoint
+
+```text
+PROPOSED FOR IMPLEMENTATION  (revision 6 = revision 5 amended for CE13-C005 and CE13-C006)
+
+OPEN FINDINGS
+    L13-WP131-I001  (R-I1..R-I4; checkpoint 249 reached in both NORMAL and FALLBACK modes)
+    L13-WP131-C012  (R-G1..R-G4 with the amended step 3; CE13-C001..C004 resolved per revision 5;
+                     CE13-C005 and CE13-C006 addressed above)
+
+ACCEPTANCE WITNESSES
+    W-I1..W-I5, W-G1..W-G16, with the negative controls of revisions 5 and 6
+
+DISCLOSED DIVERGENCES
+    W-1 (EXEC-008 Windows disposition), W-2 (#69), W-3 (#67), F-1 (G2 fallback)
+
+NORMATIVE DELTAS
+    the complete inventory above (items 1-6)
+
+NEXT_OWNER
+    Codex -- §11.8.5 re-review of exactly this revision. The frozen Python candidate (#60 @ 61f40e4d)
+    is not touched until checkpoint agreement.
+```
