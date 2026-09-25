@@ -62,3 +62,46 @@ Layer 14                    NOT STARTED
 The approved spec §12 still carries its original draft-era authorization/status marker. That marker is documentary state, not a new semantic rule; the durable issue #62 governance and exact-SHA approval supersede it operationally. The shared owner should status-sync it at closure without changing §12's behavioral contract.
 
 Next owner: Claude, for independent exact-SHA Rust closure verification of PR #64 and this assurance candidate. Codex does not merge its own Rust candidate or start WP-13.1.
+
+## Narrow remediation after independent closure review
+
+The independent review of code `54e33cf8c8d155f6ad4d66076a32ea0dc0034f7b` and this artifact at `227b06894afa3b99643351b0fa39132bd4541266` found two blockers. This section appends their remediation; the earlier candidate record above is preserved as the state reviewed at those SHAs.
+
+### WP12E2-RI001 — host unsupported is not provider incapability
+
+The previous local implementation reused `map_fs_error`, whose `io::ErrorKind::Unsupported` branch produces `FsErrorCode::NotSupported`. A host `ENOSYS` or Windows error 120 could therefore masquerade as a provider lacking EXEC-008. The additive `map_readability_error` now maps only this host-error kind to `Unknown`, leaving every other error kind and all existing uses of `map_fs_error` unchanged. The trait default remains the only `NotSupported` source for `check_readable`.
+
+Permanent tests cover `NotFound`, `NotADirectory`, `PermissionDenied`, `InvalidInput`, generic `Other`, and `Unsupported`; POSIX raw `ENOENT`, `ENOTDIR`, `EACCES`, `ELOOP`, `EIO`, `EINVAL`, and `ENOSYS`; and Windows raw error 120. A temporary negative-control mutation restoring the broad `map_fs_error` call made `host_readability_errors_never_report_missing_provider_capability` fail with actual `NotSupported` versus expected `Unknown`; the conforming mapper was restored before final gates.
+
+### WP12E2-RI002 — permanent stat-before-access race witness
+
+The POSIX production path still performs one `access(path, R_OK)` and no preliminary stat. A narrow internal query boundary now permits a deterministic unit witness to remove an existing target immediately before that authoritative access call. It asserts one query and `NotFound` from the access syscall, not a fabricated permission denial. The boundary changes no public API or observable production behavior.
+
+A temporary guarded stat-then-boolean-access mutation at that boundary made `target_removed_at_access_boundary_preserves_not_found_and_one_query` fail with actual `PermissionDenied` versus expected `NotFound`; the conforming implementation was restored. This is the I001 mechanism the first Rust candidate's tests failed to distinguish. The POSIX permission test also gained a scope-bound mode-restoration guard so a failed assertion does not strand a 000 directory and hide later test results.
+
+### Fresh remediation gates
+
+```text
+Windows Rust 1.97.1:
+  cargo fmt --all -- --check                                  PASS
+  cargo clippy --workspace --all-targets --all-features -- -D warnings  PASS
+  cargo test --workspace --all-features --quiet               PASS: 383 tests, 0 failures
+  RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps    PASS
+  cargo run -p xtask -- conformance verify                     PASS
+  cargo run -p xtask -- layering                              PASS
+  cargo run -p xtask -- coverage                              PASS
+
+Linux Docker:
+  filesystem unit tests                                       8/8 PASS
+  focused EXEC-008 integration tests                          7/7 PASS as root
+  same integration binary                                     7/7 PASS unprivileged
+
+Shared validation:
+  manifest/schema/layering pytest                             218/218 PASS
+```
+
+No Python implementation, shared semantic rule, manifest disposition, other Layer-12 operation, WP-13.1 implementation, or Layer-14 file changed in this remediation. The issue #62 follow-ups for pre-existing Layer-12 behavior remain separate and unauthorized for this pass.
+
+Remediation code candidate: [minion-agent#64](https://github.com/EGAILab/minion-agent/pull/64) @ `f339dfcadff5ceb76dd607498cd092c461bb09a9`.
+
+Current disposition: RI001 and RI002 are *remediated, pending independent exact-SHA re-review*; not self-closed or cross-language certified. No merge is authorized.
