@@ -218,7 +218,7 @@ cleanup() -> None   # best-effort, must not raise
 list_dir_raw(path, signal?) -> Result[list[str], FsError]
 probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
 
--- ADDITIVE, §12 (WP-12.E2, EXEC-008, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- ADDITIVE, §12 (WP-12.E2, EXEC-008, CERTIFIED -- NOT part of the DIRECT_PI_PARITY set
 -- above; see §12 for semantics, host behavior, error mapping and cancellation):
 check_readable(path, signal?) -> Result[None, FsError]
 ```
@@ -2168,11 +2168,17 @@ EXISTING `list_dir`/`file_info` BEHAVIOR IS UNCHANGED BY THIS EXTENSION (regress
 
 ## 12. Layer-12 additive extension `WP-12.E2` -- `check_readable`
 
-**Status: `CONTRACT_DRAFT`, pending independent contract review (`WP-12.E2`, requirement `EXEC-008`).**
+**Status: CERTIFIED in both languages (`WP-12.E2`, requirement `EXEC-008`, `CERTIFIED_CLOSED`);
+cross-language closure recorded in `minion-agent#62`.** The contract below is unchanged in substance
+from its approved, merged revision (`minion-agent-docs#163`, `master`
+`7007732a26965facff73ccdaf82b4ee856d3683e`); this status paragraph is a documentary update only.
+Accepted implementations: Python at `minion-agent/main` `9987bd8112168792e41d8da5b474c8c7f330b1d1`
+(`minion-agent#63`), Rust at `minion-agent/main` `689db685f4d586c9b3dc97965e1e096771c8f87e`
+(`minion-agent#64`), Rust assurance at `minion-agent-docs/master`
+`b0c511665b458710186143ca57b07d3f56b505fa` (`minion-agent-docs#164`).
 Owner-selected as `G1` in `minion-agent#48` (governance record
 `https://github.com/EGAILab/minion-agent/issues/48#issuecomment-5822609576`) while resolving Layer
-13 finding `L13-WP131-C012` (convergence episode `CE-L13-WP131-02`). No Python or Rust
-implementation is performed or authorized by this section. Like `WP-12.E1` (§11), it is additive:
+13 finding `L13-WP131-C012` (convergence episode `CE-L13-WP131-02`). Like `WP-12.E1` (§11), it is additive:
 every existing operation in §3's inventory (`canonical_path`, `file_info`, `read_binary_file`,
 `list_dir`, `list_dir_raw`, `probe_dir_entry`, and the rest) is unchanged in wording and semantics,
 and no existing certification or §10/§11.6 witness is invalidated.
