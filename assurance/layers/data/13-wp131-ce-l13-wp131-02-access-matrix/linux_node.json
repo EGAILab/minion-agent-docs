@@ -1,0 +1,134 @@
+{
+ "node": "v22.15.1",
+ "platform": "linux",
+ "cases": {
+  "f_ok": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "ok",
+   "readFile": "ok"
+  },
+  "f_000": {
+   "access_R_OK": "EACCES",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "d_ok": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EISDIR",
+   "readFile": "EISDIR"
+  },
+  "d_000": {
+   "access_R_OK": "EACCES",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "d_x": {
+   "access_R_OK": "EACCES",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "d_r": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EISDIR",
+   "readFile": "EISDIR"
+  },
+  "d_x/inner": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "ok",
+   "readFile": "ok"
+  },
+  "d_r/inner": {
+   "access_R_OK": "EACCES",
+   "realpath": "EACCES",
+   "lstat": "EACCES",
+   "stat": "EACCES",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "lk_f_ok": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "ok",
+   "readFile": "ok"
+  },
+  "lk_f_000": {
+   "access_R_OK": "EACCES",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "lk_d_ok": {
+   "access_R_OK": "ok",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EISDIR",
+   "readFile": "EISDIR"
+  },
+  "lk_d_000": {
+   "access_R_OK": "EACCES",
+   "realpath": "ok",
+   "lstat": "ok",
+   "stat": "ok",
+   "sniff_open_read": "EACCES",
+   "readFile": "EACCES"
+  },
+  "dangling": {
+   "access_R_OK": "ENOENT",
+   "realpath": "ENOENT",
+   "lstat": "ok",
+   "stat": "ENOENT",
+   "sniff_open_read": "ENOENT",
+   "readFile": "ENOENT"
+  },
+  "loop_a": {
+   "access_R_OK": "ELOOP",
+   "realpath": "ELOOP",
+   "lstat": "ok",
+   "stat": "ELOOP",
+   "sniff_open_read": "ELOOP",
+   "readFile": "ELOOP"
+  },
+  "f_ok/x": {
+   "access_R_OK": "ENOTDIR",
+   "realpath": "ENOTDIR",
+   "lstat": "ENOTDIR",
+   "stat": "ENOTDIR",
+   "sniff_open_read": "ENOTDIR",
+   "readFile": "ENOTDIR"
+  },
+  "missing": {
+   "access_R_OK": "ENOENT",
+   "realpath": "ENOENT",
+   "lstat": "ENOENT",
+   "stat": "ENOENT",
+   "sniff_open_read": "ENOENT",
+   "readFile": "ENOENT"
+  }
+ }
+}
