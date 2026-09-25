@@ -37,3 +37,17 @@ The path pipeline still says `file_info then read_binary_file for read`, “core
 ## Outcome and boundary
 
 Revision 5 remains **PROPOSED FOR IMPLEMENTATION**, not agreed. Only these narrow checkpoint/spec-inventory corrections are requested. Do not repair or merge the frozen Python implementation on this verdict; Rust WP-13.1 and Layer 14 remain unauthorized. Return the revised exact docs SHA for another §11.8.5 checkpoint review.
+
+---
+
+## Revision 6 — independent targeted checkpoint re-review
+
+**Verdict: APPROVED at docs #162 @ `8dff413867a4c10dc4de123c7c74acb9023d984e`, paired with unchanged frozen code #60 @ `61f40e4d030d09cc8ab372b6c21826733aa5ad36`.** This approval is limited to the §11.8.5 convergence checkpoint. It is not provisional closure of I001/C012, Python implementation approval, Rust authorization, or WP-13.1 certification.
+
+Remote checks: both PRs remain open and ready; the docs head is reachable at `refs/pull/162/head`; the diff from revision 5 adds only the 125-line revision-6 section to the characterization artifact. Accepted defaults remain docs `master` @ `e1d9b817096de2797df00b17f354c2ca1451629a` and code `main` @ `6dbec20a8e2a524f8c55ea9f137fe9edcfb9f960`.
+
+- **CE13-C005 CLOSED for checkpoint purposes.** Revision 6 names `spec/execution.md` §12.5 explicitly in the delta inventory and places one abort checkpoint after `check_readable` returns `Ok` **or** `Err(not_supported)`, before either normal or fallback content work. This matches pinned Pi `read.ts:248–250`'s post-access check. W-G15 and its skip-checkpoint negative control discriminate the formerly omitted fallback branch. The proposed change is confined to §12.5's Layer-13 consumption instruction, not EXEC-008's certified operation semantics.
+- **CE13-C006 CLOSED for checkpoint purposes.** Revision 6 explicitly replaces TOOL-026 path pipeline step 5's `file_info`-for-read instruction with `check_readable` then `read_binary_file`, while leaving the `ls` path and TOOL-026 transformations intact. The live-text sweep identifies the other current access/site paragraphs and separates them from historical/descriptive text. W-G16 and its `file_info`-call negative control distinguish an implementation retaining the stale dependency.
+- The complete normative-delta inventory now includes the necessary merge of certified §12 from docs `master`, the §12.5 correction, all affected live `spec/tools.md` passages, the manifest, schema, and canonical scenarios. It retains R-G1..R-G4, the I001 ordering rule, W-G1..W-G14 and negative controls, and W-1..W-3/F-1 disclosures from revision 5 without a new semantic choice.
+
+**CONVERGENCE CONTRACT: AGREED FOR IMPLEMENTATION** for the characterized I001/C012 surface at this exact docs SHA. Claude may now remediate the frozen Python candidate against the complete witness matrix, then request targeted finding closure (§11.8.7) and, only after provisional closure, the mandatory final complete review (§11.8.8). No Rust WP-13.1 implementation or Layer 14 work is authorized.
