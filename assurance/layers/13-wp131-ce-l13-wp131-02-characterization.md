@@ -557,3 +557,272 @@ NEXT_OWNER
     Owner (G choice); then Claude authors the checkpoint for the chosen option and Codex reviews it
     (§11.8.5). Implementation stays frozen.
 ```
+
+---
+
+## Revision 5 -- G1 checkpoint on certified `EXEC-008`
+
+Mode: workflow §11.8.3 checkpoint authoring, resumed by the fired deferred trigger on
+`minion-agent#48` after `WP-12.E2` / `EXEC-008` became `CERTIFIED_CLOSED` (`minion-agent#62`, closure
+record in its body; owner closure decision `#62` comment `5827959957`, section 4). **No
+implementation performed.** The WP-13.1 candidate stays frozen: code #60 @ `61f40e4d`, docs #162 @
+`ceae53a4` (this revision's parent). Revisions 1-4 are kept as reviewed history.
+
+### Governance and certified inputs
+
+- **C012 structure:** the owner selected `G1` (`minion-agent#48` comment `5822609576`).
+  - G2, G2' and G3 are not selected as primary semantics.
+  - The G2 rule survives only as the disclosed fallback for providers without `EXEC-008`.
+- **The `check_readable` seam:** `EXEC-008 check_readable(path, signal?) -> Result[None, FsError]`, `spec/execution.md`
+  §12, certified at docs `master` `e1d9b817096de2797df00b17f354c2ca1451629a`.
+  - Python is at `minion-agent/main` `9987bd81`; Rust is at `689db685`.
+  - The manifest status is synced at `6dbec20a`.
+- **Its certified behaviour:**
+  - it follows symlinks and consumes no content;
+  - POSIX is `access(path, R_OK)`, keeping the native errno;
+  - Windows reports the target's real readability (a deny ACL gives `permission_denied`, a dangling link gives `not_found`);
+  - an embedded NUL gives `unknown`;
+  - `not_supported` means only that the provider lacks the capability;
+  - `signal` is accepted but not inspected.
+- **Layer-13 consumption:** the §12.5 pattern is normative for `read` (`TOOL-025`). This revision applies
+  it; it does not re-derive it.
+- **Owner-required resumption sequence** (`#62` comment `5827959957`, section 4):
+  1. update this checkpoint;
+  2. integrate: `check_readable` failure -> `Cannot access`, later read failure -> `Cannot read`, provider without `EXEC-008` -> disclosed G2 fallback;
+  3. preserve the settled I001 ordering rule;
+  4. Codex §11.8.5 review;
+  5. only then remediate the frozen Python candidate.
+
+### What G1 supersedes
+
+| Superseded | Status now |
+|---|---|
+| Revision 1's R-C1..R-C4 (`canonical_path` access step, `file_info` directory shortcut) | superseded |
+| Revision 2's Q/P options | superseded |
+| Revision 3's single-read site-from-code rule and its D1-D4 | superseded (D3 is moot) |
+| Revision 4's G2/G2'/G3 | not selected; G2 kept only as the fallback |
+| The owner's C012-A (`#48` comment `5822062094`) | Windows meaning now lives in `EXEC-008`'s certified Windows disposition; no separate `read` rule remains |
+| Docs #162's `spec/tools.md` "`read`: operation mapping" steps 3-4 (`file_info` access step, then read-code -> site collapse) | superseded |
+| Docs #162's "Disclosed edges of that mapping" | superseded |
+| Docs #162's "Which `ctx.fs` failure lands at which of these two sites..." site paragraph | superseded |
+| Frozen code #60's `_read_failure_site` and its `file_info` access step | superseded |
+
+### Observable rules (C012 under G1)
+
+```text
+read's filesystem access (replaces #162 "read: operation mapping" steps 3-4; steps 1-2 and 5 unchanged):
+
+1. Cancellation pre-check ("Operation aborted", no ctx.fs call).                    [unchanged]
+2. Path: TOOL-026 steps 1-4 ...; abort checkpoint (read.ts:246).                     [unchanged]
+3. Access -- Pi's A = ops.access(absolutePath) = access(R_OK):
+     r = ctx.fs.check_readable(p)          -- NO signal (Pi passes none to access)
+       Err(not_supported)  -> the provider lacks EXEC-008: continue in FALLBACK mode
+       Err(c)              -> "Cannot access <path>: <cause(c)>"          for EVERY other code c
+       Ok                  -> continue in NORMAL mode
+   Abort checkpoint (read.ts:249) -- also after the not_supported answer (A has completed).
+4. Content (Pi's S + R: the MIME sniff's own open/read and readFile):
+     ONE ctx.fs.read_binary_file(p)        -- NO signal
+       NORMAL mode:    Err(c) -> "Cannot read <path>: <cause(c)>"                 for EVERY code c
+       FALLBACK mode:  Err(is_directory | not_supported) -> "Cannot read <path>: <cause(c)>"
+                       Err(any other c)                  -> "Cannot access <path>: <cause(c)>"
+5. Sniff the first 4100 bytes, then image or text.                                    [unchanged]
+
+<path> = ctx.fs.absolute_path(<step-5 string>)                                        [unchanged]
+```
+
+- **R-G1. The operation that failed owns the site, whatever the code.**
+  - Step 3's failure is the access site; step 4's failure is the read site.
+  - This is Pi's `A`/`S`/`R` table (revision 4) reproduced exactly.
+  - No error code is ever translated into a site.
+- **R-G2. A directory is not decided by `read`.**
+  - A readable directory passes step 3, and step 4 fails `is_directory` -> `Cannot read <path>: is a directory` (Pi: `access` ok, `readFile` `EISDIR`).
+  - An unreadable directory fails step 3 -> `Cannot access <path>: permission denied` (Pi, `CE13-C003`).
+  - There is no `file_info` or `canonical_path` shortcut.
+- **R-G3. Fallback is only for a genuine capability gap.**
+  - It is entered only on step 3's `not_supported`.
+  - The certified first-party providers never produce `not_supported` from `check_readable` (§12.5, and `WP12E2-RI001` closed in Rust), so on them the normal mode always applies.
+  - The fallback is a provider-capability fallback and an intentional approximation (the owner's G2). It is never described as Pi-equivalent.
+- **R-G4. `ctx.fs` calls.**
+  - The filesystem-access calls are exactly `check_readable(p)` then `read_binary_file(p)`, in that order, neither receiving the signal.
+  - `absolute_path` is still used only to build `<path>` text.
+  - `read` makes no `canonical_path`, `file_info`, `probe_dir_entry`, `list_dir_raw` or `read_text_*` call; `EXEC-007` stays unused.
+  - A step-2 rejection or an abort at checkpoint 246 makes no `check_readable` call. A step-3 failure, or an abort at checkpoint 249, makes no `read_binary_file` call.
+
+### Observable rules (I001 -- unchanged, integrated)
+
+I001's settled rules R-I1..R-I4 are unchanged; characterization was accepted at revisions 1-3, and no checkpoint blocker has been raised against them.
+- **Where the checkpoints are:** R-I4's two `read` checkpoints are now "after path resolution" (read.ts:246) and "after `check_readable` returns, including its `not_supported` answer" (read.ts:249).
+- **A blocked `check_readable`:**
+  - `"Operation aborted"` is delivered as soon as the abort is observed, while the call is still blocked (R-I2).
+  - The call is neither cancelled nor given the signal (R-I3). `EXEC-008` does not inspect a signal anyway, and `read` passes none.
+  - When it completes, `read` stops at checkpoint 249 and makes no `read_binary_file` call.
+- **Settle point (R-I1):** abort before the settle point, including a failure thrown after the abort, gives `Operation aborted`. A result or error settled before the abort stands. `RunSignal` stays as certified; there is no Layer 09 change.
+
+### Behavior matrix (G1; `<path>` as above)
+
+POSIX (the revision 3 Linux measurement, re-read under G1 -- every row equals Pi's site):
+
+```text
+case                         check_readable        read_binary_file      read's text
+f_ok / lk -> f_ok            Ok                    Ok                    success
+f_000 / lk -> f_000          permission_denied     (not called)          Cannot access <path>: permission denied
+d_ok / lk -> d_ok / d_r      Ok                    is_directory          Cannot read <path>: is a directory
+d_000 / lk -> d_000 / d_x    permission_denied     (not called)          Cannot access <path>: permission denied
+d_x/inner                    Ok                    Ok                    success
+d_r/inner (unsearchable)     permission_denied     (not called)          Cannot access <path>: permission denied
+dangling symlink / missing   not_found             (not called)          Cannot access <path>: no such file or directory
+symlink loop                 unknown (ELOOP)       (not called)          Cannot access <path>: unknown filesystem error
+f_ok/x (file component)      not_directory         (not called)          Cannot access <path>: not a directory
+embedded NUL                 unknown               (not called)          Cannot access <path>: unknown filesystem error
+```
+
+Provenance rows (any host; scripted provider over the real seam):
+
+```text
+case                                            A (check_readable)   later read            read's text
+A fails with c (every code except not_supported) Err(c)              (not called)          Cannot access <path>: <cause(c)>
+A ok, read fails with c (every code)            Ok                   Err(c)                Cannot read <path>: <cause(c)>
+stable EIO after A (CE13-C004, /proc/self/mem)  Ok                   Err(unknown)          Cannot read <path>: unknown filesystem error
+target removed after A                          Ok                   Err(not_found)        Cannot read <path>: no such file or directory
+permission removed after A (CE13-C002 H2)       Ok                   Err(permission_denied) Cannot read <path>: permission denied
+unreadable before A (CE13-C002 H1)              Err(permission_denied) (not called)        Cannot access <path>: permission denied
+provider without EXEC-008, read ok              Err(not_supported)   Ok                    success (FALLBACK)
+provider without EXEC-008, read fails c         Err(not_supported)   Err(c)                is_directory|not_supported -> Cannot read; else Cannot access
+provider without EXEC-007                       Ok                   Ok                    success (EXEC-007 unused)
+```
+
+Windows (Python `LocalFileSystem`, certified `EXEC-008` Windows disposition), with every Pi difference disclosed:
+
+```text
+case                     check_readable      read's text                                   pinned Pi on Windows
+f_000 / lk -> f_000      permission_denied   Cannot access <path>: permission denied       Cannot read (EPERM)          W-1
+d_000                    permission_denied   Cannot access <path>: permission denied       Cannot read (EPERM)          W-1
+dangling symlink         not_found           Cannot access <path>: no such file ...        Cannot read (ENOENT)         W-1
+symlink loop             invalid             Cannot access <path>: invalid path            Cannot read (ELOOP->unknown) W-1, W-2
+d_ok (readable dir)      Ok                  Cannot read <path>: permission denied         Cannot read ... is a dir     W-3
+f_ok/x, missing          not_found           Cannot access <path>: no such file ...        Cannot access (ENOENT)       equal
+```
+
+### Disclosed divergences
+
+- **W-1: Windows site.** On Windows, Pi's `access` is libuv's attribute-only check, so most Windows failures land at Pi's read site. Minion reports the access site for them.
+  - This is the certified `EXEC-008` Windows disposition, `MINION_ARCHITECTURAL_MAPPING`: the owner's C012-A/G1 rationale is deterministic readability semantics with no platform identity in `ctx.fs`.
+  - It is inherited from `EXEC-008`; `read` adds nothing.
+- **W-2: Windows symlink-loop code.** Python classifies it `invalid` where Node reports `ELOOP` (-> `unknown`); Rust gives `unknown`.
+  - This is the pre-existing Layer-12 mapper divergence `L12-WINDOWS-ERROR-MAP`, `minion-agent#69`, remediation not authorized. `read` inherits whatever `check_readable` reports and does not remap it.
+- **W-3: Windows readable directory.** Certified Python `read_binary_file` classifies a directory read as `permission_denied` (`L12-WINDOWS-DIRECTORY-READ`, `minion-agent#67`, remediation not authorized).
+  - The site matches Pi (`Cannot read`); the cause phrase differs.
+  - `read` does not work around it: a `file_info` shortcut would reintroduce `CE13-C003`.
+- **F-1: fallback.** On a provider without `EXEC-008`, sites are recovered from codes (G2). This is an intentional approximation, disclosed as a provider-capability difference, never Pi-equivalent.
+  - It is reachable only on third-party providers (R-G3).
+- **Race parity:** there is none to disclose.
+  - With `A` performed, Pi's race windows (`H2`, removal after access, `CE13-C004`) are reproduced exactly: whichever call observed the failure owns the site.
+  - Pi's separate sniff `open` before `readFile` is merged into one `read_binary_file`; both are read-stage, so the site is identical (revision 1, "out of scope").
+
+### Resolution of the checkpoint findings
+
+| Finding | Resolution under G1 |
+|---|---|
+| `CE13-C001` (optional access-step operation) | `EXEC-008` is an additive capability whose absence is answered explicitly (`not_supported`), and R-G3's disclosed fallback keeps `read` usable. It also uses no `canonical_path`/`EXEC-007` dependency. |
+| `CE13-C002` (two `permission_denied` histories) | `A` distinguishes H1 (access site) from H2 (read site), as in Pi. |
+| `CE13-C003` (unreadable directory) | Fails `A` -> access site. |
+| `CE13-C004` (stable EIO after a successful access) | A read-stage failure -> `Cannot read`. |
+| `L13-WP131-C012` | Resolved by R-G1..R-G4, subject to this checkpoint's review. |
+| `L13-WP131-I001` | Resolved by R-I1..R-I4 as integrated above. |
+
+### Acceptance witnesses (replace W-C1..W-C8, W-A17/W-A18 and W-X1..W-X4; W-I1..W-I5 kept)
+
+The G1 witnesses. The owner's required witness list (`#48` comment `5822609576`) maps onto W-G1..W-G10.
+- `W-G1`: `A` fails with every R010-B vocabulary code except `not_supported` (`not_found`, `permission_denied`, `not_directory`, `is_directory`, `invalid`, `unknown`) -> `Cannot access <path>: <cause>`. There is no `read_binary_file` call. Scripted `check_readable`.
+- `W-G2`: `A` ok, then the read fails with each of the seven vocabulary codes (including `not_supported`) -> `Cannot read <path>: <cause>`. Scripted `read_binary_file`.
+  - `aborted` is unreachable from `ctx.fs` here: neither call receives the signal.
+- `W-G3`: stable `unknown` (EIO) after `A` ok -> `Cannot read` (Codex's `CE13-C004`).
+- `W-G4`: a real missing target -> `Cannot access ... no such file or directory`.
+- `W-G5`: target removed after `A` -> `Cannot read ... no such file or directory` (scripted read `not_found` after a real `A` ok).
+- `W-G6`: permission denied at `A` -> `Cannot access ... permission denied`.
+  - Real fixture: a POSIX mode-000 file run unprivileged, and a Windows deny-`RD` ACE; otherwise scripted.
+- `W-G7`: permission denied after `A` -> `Cannot read ... permission denied` (scripted read).
+- `W-G8`: a real symlink to a readable target -> success.
+- `W-G9`: a real dangling symlink -> `Cannot access ... no such file or directory`.
+- `W-G10`: provider without `EXEC-008` (scripted `check_readable` -> `not_supported` for every path).
+  - Read ok -> success.
+  - Read `is_directory` / `not_supported` -> `Cannot read`.
+  - Read `not_found` / `permission_denied` / `not_directory` / `invalid` / `unknown` -> `Cannot access`.
+- `W-G11`: a readable directory, real and through a symlink -> `Cannot read <path>: is a directory` on POSIX.
+  - On Windows the expected text records W-3 explicitly, rather than skipping the case.
+- `W-G12`: an unreadable directory -> `Cannot access ... permission denied` (`CE13-C003`).
+- `W-G13`: `fs_calls` pinning.
+  - Success -> `[check_readable, read_binary_file]`.
+  - `A` fails -> `[check_readable]`.
+  - Step-2 rejection -> `[]`.
+  - None of the calls carries a signal.
+- `W-G14`: the checkpoint-249 abort. `check_readable` is blocked; abort; release -> `Operation aborted`, and no `read_binary_file` call (R-I4 + W-I5 on the new seam).
+
+The I001 witnesses `W-I1..W-I5` are unchanged; W-I5's blocked access call is now `check_readable`. Revision 3's Linux static matrix stays as regression evidence under the G1 expectations above.
+
+Negative controls (§11.8.7.1), each of which must fail the stated witness:
+
+| Negative control | Must fail |
+|---|---|
+| Swap provenance: site from the code in normal mode (the `61f40e4d` / #162 rule) | W-G2, W-G3, W-G5, W-G7 |
+| Always use the fallback, even when `A` succeeded | W-G3, W-G5, W-G7 |
+| Skip `A` (read only) | W-G6, W-G12, W-G13 |
+| Treat `A`'s `not_supported` as `Cannot access` | W-G10 |
+| `file_info` directory shortcut | W-G12, W-G13 |
+| Pass the signal to `check_readable` / `read_binary_file` | W-G13, W-I5 |
+| Read after a checkpoint-249 abort | W-G14 |
+| Settle-then-check removed | W-I1 |
+| Result re-checked after settling | W-I4 |
+
+### Normative deltas
+
+- **`spec/tools.md`:**
+  - replace #162's "`read`: operation mapping" steps 3-4 with the rules above, and replace "Disclosed edges" with W-1..W-3 and F-1;
+  - rewrite the site paragraph ("Which `ctx.fs` failure lands at which of these two sites ...") to R-G1;
+  - R010-B's two-site table: the access site's reachable codes become every code `check_readable` can return except `not_supported`, plus the fallback's; the read site's become all codes;
+  - the cancellation paragraph names checkpoint 249 as "after `check_readable`";
+  - the "access step history" bullet gains the G1 entry.
+- **`pi-parity-manifest.yaml`:**
+  - `TOOL-025` (depends on `EXEC-008`; tests W-G*), `TOOL-039` (site rule by provenance; W-1..W-3 and F-1 disclosed);
+  - no change to `EXEC-008`.
+- **`conformance/schema/builtin-tool-scenario.schema.json`:**
+  - `provider.check_readable` (an array of `scriptedError`, per path);
+  - `provider.without_exec_008` (`const: true`: `check_readable` returns `not_supported`);
+  - `provider.file_info` is kept for `ls` only if still used there.
+  - The runner stays thin: it answers scripted calls and records calls, and it never performs `read`'s site logic.
+- **`conformance/agent/builtin-read-*.yaml`:**
+  - the R010-B per-code scenario is rescripted onto `check_readable` (access site) and `read_binary_file` after `A` ok (read site);
+  - new scenarios cover W-G3/W-G5/W-G7/W-G10/W-G12/W-G13/W-G14.
+
+### Implementation constraints
+
+- Python only; Rust WP-13.1 is not authorized.
+- No Layer 09 change.
+- No Layer 12 change: `EXEC-008` is certified as-is; `#65`/`#66`/`#67`/`#69`/`#70` are not remediated here.
+- `read` uses `check_readable` as specified in §12.5, without remapping its codes.
+
+### Checkpoint
+
+```text
+PROPOSED FOR IMPLEMENTATION  (revision 5; G1 on certified EXEC-008)
+
+OPEN FINDINGS
+    L13-WP131-I001  (rules R-I1..R-I4, integrated above)
+    L13-WP131-C012  (rules R-G1..R-G4; CE13-C001..C004 resolved as stated above)
+
+ACCEPTANCE WITNESSES
+    W-I1..W-I5, W-G1..W-G14, with the negative controls above;
+    revision 3 Linux static matrix as regression evidence under G1 expectations
+
+DISCLOSED DIVERGENCES
+    W-1 (EXEC-008 Windows disposition), W-2 (#69), W-3 (#67), F-1 (G2 fallback)
+
+NORMATIVE DELTAS
+    spec/tools.md (read mapping, site paragraph, R010-B site table, cancellation checkpoint text),
+    pi-parity-manifest.yaml (TOOL-025, TOOL-039), conformance schema (check_readable scripting,
+    without_exec_008), conformance/agent/builtin-read-*.yaml
+
+NEXT_OWNER
+    Codex -- §11.8.5 review of exactly this checkpoint. Implementation of the frozen Python
+    candidate starts only after checkpoint agreement.
+```
