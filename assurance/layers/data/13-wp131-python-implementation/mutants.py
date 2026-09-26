@@ -70,12 +70,16 @@ PYTHON_WITNESS_MUTANTS = {
                                    "    task = asyncio.ensure_future(work)\n"),
     "result_rechecked_after_settling": ("_signal.py", "    if task.done():\n        return task.result()\n",
                                         "    if task.done() and not signal.aborted:\n        return task.result()\n"),
+    # L13-WP131-FR003: the ICU build-identity gate (one verified build; a same-version foreign build fails closed)
+    "icu_identity_gate_removed": ("collation.py", "    verify_build_identity(_loaded_icu_libraries(), os.environ.get(ICU_IDENTITY_ENV))\n",
+                                  "    pass\n"),
+    "icu_identity_hash_not_compared": ("collation.py", "        if actual != expected:\n", "        if False:\n"),
 }
 BUILTIN = PY / "src" / "minion_agent" / "tools" / "builtin"
 env = dict(os.environ)
 results = {}
 ALL = [(n, v, "tests/conformance/test_builtin_tool_conformance.py") for n, v in MUTANTS.items()]
-ALL += [(n, v, "tests/tools/builtin/test_tools.py tests/tools/builtin/test_helpers.py tests/tools/builtin/test_read_access_and_abort_order.py") for n, v in PYTHON_WITNESS_MUTANTS.items()]
+ALL += [(n, v, "tests/tools/builtin/test_tools.py tests/tools/builtin/test_helpers.py tests/tools/builtin/test_read_access_and_abort_order.py tests/tools/builtin/test_collation_build_identity.py") for n, v in PYTHON_WITNESS_MUTANTS.items()]
 for name, (fname, old, new), target in ALL:
     path = BUILTIN / fname
     original = path.read_text(encoding="utf-8")

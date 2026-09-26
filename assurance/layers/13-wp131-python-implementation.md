@@ -264,3 +264,53 @@ Canonical `builtin_tool` scenarios: 45.
 - the only failures are 2 `ls` tests that need the pinned PyICU the container deliberately lacks.
 
 Requested next: Codex's targeted exact-SHA closure review of `I001` and `C012` at the new PR heads recorded on `minion-agent#48`, then the workflow's final complete WP-13.1 review. Rust WP-13.1 and Layer 14 remain unauthorized.
+
+## 9. Remediation 3 -- final complete review round 1 (`FR001`, `FR002`, `FR003`)
+
+Codex's mandatory §11.8.8 complete review of code #60 @ `c2b9990f` / docs #162 @ `b9bd356f`
+(`minion-agent-docs#168` @ `36060395`, `assurance/layers/13-wp131-final-implementation-review-r1.md`)
+returned **CHANGES REQUIRED**.
+- **I001/C012:** both stay provisionally closed (targeted review #167), and this remediation does not touch them.
+- **The three findings:** all accepted. They are fixed narrowly as §11.8.8 Case A.
+
+**`L13-WP131-FR001` (`CONTRACT_ASSURANCE_DEFECT`).**
+- **Defect:** the manifest `TOOL-026.rule` still listed `read_text_file/read_binary_file/file_info/list_dir` as the operations receiving the preprocessed path.
+- **Fix:** it now names the approved sequence -- `check_readable` then `read_binary_file` for `read`, and `probe_dir_entry` then `list_dir_raw` for `ls` (`spec/tools.md` TOOL-026 step 5). The old list is kept only as history in the same sentence.
+- **Unchanged:** no behavior change.
+
+**`L13-WP131-FR002` (`CONTRACT_ASSURANCE_DEFECT`).**
+- **Defect:** the manifest `TOOL-025.rule` said image `data` is base64 text.
+- **Fix:** the rule now separates the two boundaries:
+  - Pi's serialized `ImageContent.data` is a base64 string;
+  - Minion's typed Layer-02 `ImageBlock.data` carries the decoded bytes (`IMPL-C009`), and a Pi-shaped wire serialization emits base64;
+  - an implementation must not put base64 text in the typed `data`.
+- **Unchanged:** `spec/tools.md` already stated this; code and canonical evidence are unchanged.
+
+**`L13-WP131-FR003` (`CONTRACT_ASSURANCE_DEFECT`).** R006-C requires ONE verified ICU 78.3 build, but loading checked only version strings, so a different build that also reports 78.3 passed. The fix is a fail-closed build-identity gate:
+- **Build side:**
+  - `scripts/pinned-icu/build.sh` records `<prefix>/pinned-icu-identity.txt`: the source tarball's SHA-512 (the one the build verified), plus the SHA-256 of the built `icuuc`/`icui18n`/`icudata` runtime libraries.
+  - `--env` exports it as `MINION_AGENT_ICU_IDENTITY`.
+  - `--identity` records it for an existing build, after re-verifying the source tarball.
+- **Load side** (`collation.py`, `verify_build_identity`), after the version checks:
+  - it finds the ICU libraries actually mapped into the process: loaded-module handles on Windows (`GetModuleHandleW` never loads anything), `/proc/self/maps` on Linux;
+  - it requires the identity to name the pinned source;
+  - it requires all three libraries to be loaded and byte-identical to the verified build.
+  - An unset or unreadable identity fails closed.
+- **Unchanged:** the collation tuple, engine and comparator.
+- **Evidence** (`tests/tools/builtin/test_collation_build_identity.py`):
+  - **Unit tests:** every rejection path (unset or unreadable identity, foreign source, library not loaded, identity missing a library, hash mismatch) and the Linux maps reader.
+  - **Real negative controls, in fresh processes with the real binding and loader:**
+    - the verified build is accepted;
+    - a same-version foreign build is REJECTED (a copy of the pinned DLLs whose `icuin78.dll` differs only by bytes appended after its image -- it still loads and still reports ICU 78.3; the version-only gate accepted it);
+    - Codex's stand-in, a module named `icu` reporting PyICU 2.16.2 / ICU 78.3, is REJECTED (the i18n library is never loaded).
+- **Negative controls:** `data/13-wp131-python-implementation/mutants-fr.log` records **34/34 detected**, including `icu_identity_gate_removed` and `icu_identity_hash_not_compared`. `mutants-r6.log` is kept.
+
+**Gates (fresh; Windows, Python 3.13.5, pinned ICU 78.3 with identity):**
+- `pytest`: 2057 passed, 11 skipped, 19 xfailed;
+- coverage 100.00%;
+- `ruff check` clean; `mypy --strict` clean (91 files);
+- manifest validation passes.
+
+Rust not touched. No merge, Rust WP-13.1 or Layer 14.
+
+Requested next (§11.8.8 Case A): Codex's targeted exact-SHA review of FR001-FR003, then another final complete review.
