@@ -1,0 +1,166 @@
+{
+ "python": "3.13.5",
+ "platform": "win32",
+ "cases": {
+  "f_ok": {
+   "canonical_path": "ok",
+   "file_info": "ok:file",
+   "probe_dir_entry": "ok:file",
+   "read_text_lines_1": "ok",
+   "read_binary_file": "ok",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "f_000": {
+   "canonical_path": "permission_denied",
+   "file_info": "ok:file",
+   "probe_dir_entry": "ok:file",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "d_ok": {
+   "canonical_path": "ok",
+   "file_info": "ok:directory",
+   "probe_dir_entry": "ok:directory",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "ok",
+   "list_dir_raw": "ok",
+   "exists": "ok:True"
+  },
+  "d_000": {
+   "canonical_path": "permission_denied",
+   "file_info": "ok:directory",
+   "probe_dir_entry": "ok:directory",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "permission_denied",
+   "list_dir_raw": "permission_denied",
+   "exists": "ok:True"
+  },
+  "d_x": {
+   "canonical_path": "ok",
+   "file_info": "ok:directory",
+   "probe_dir_entry": "ok:directory",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "permission_denied",
+   "list_dir_raw": "permission_denied",
+   "exists": "ok:True"
+  },
+  "d_r": {
+   "canonical_path": "ok",
+   "file_info": "ok:directory",
+   "probe_dir_entry": "ok:directory",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "ok",
+   "list_dir_raw": "ok",
+   "exists": "ok:True"
+  },
+  "d_x/inner": {
+   "canonical_path": "ok",
+   "file_info": "ok:file",
+   "probe_dir_entry": "ok:file",
+   "read_text_lines_1": "ok",
+   "read_binary_file": "ok",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "d_r/inner": {
+   "canonical_path": "ok",
+   "file_info": "ok:file",
+   "probe_dir_entry": "ok:file",
+   "read_text_lines_1": "ok",
+   "read_binary_file": "ok",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "lk_f_ok": {
+   "canonical_path": "ok",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "ok:symlink_to_file",
+   "read_text_lines_1": "ok",
+   "read_binary_file": "ok",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "lk_f_000": {
+   "canonical_path": "permission_denied",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "permission_denied",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "lk_d_ok": {
+   "canonical_path": "ok",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "ok:symlink_to_directory",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "ok",
+   "list_dir_raw": "ok",
+   "exists": "ok:True"
+  },
+  "lk_d_000": {
+   "canonical_path": "permission_denied",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "permission_denied",
+   "read_text_lines_1": "permission_denied",
+   "read_binary_file": "permission_denied",
+   "list_dir": "permission_denied",
+   "list_dir_raw": "permission_denied",
+   "exists": "ok:True"
+  },
+  "dangling": {
+   "canonical_path": "not_found",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "not_found",
+   "read_text_lines_1": "not_found",
+   "read_binary_file": "not_found",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "loop_a": {
+   "canonical_path": "invalid",
+   "file_info": "ok:symlink",
+   "probe_dir_entry": "invalid",
+   "read_text_lines_1": "invalid",
+   "read_binary_file": "invalid",
+   "list_dir": "not_directory",
+   "list_dir_raw": "not_directory",
+   "exists": "ok:True"
+  },
+  "f_ok/x": {
+   "canonical_path": "not_found",
+   "file_info": "not_found",
+   "probe_dir_entry": "not_found",
+   "read_text_lines_1": "not_found",
+   "read_binary_file": "not_found",
+   "list_dir": "not_found",
+   "list_dir_raw": "not_found",
+   "exists": "ok:False"
+  },
+  "missing": {
+   "canonical_path": "not_found",
+   "file_info": "not_found",
+   "probe_dir_entry": "not_found",
+   "read_text_lines_1": "not_found",
+   "read_binary_file": "not_found",
+   "list_dir": "not_found",
+   "list_dir_raw": "not_found",
+   "exists": "ok:False"
+  }
+ }
+}

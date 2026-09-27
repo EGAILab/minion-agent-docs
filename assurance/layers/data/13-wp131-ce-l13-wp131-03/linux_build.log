@@ -1,0 +1,10 @@
+icu4c-78.3-sources.tgz: OK
+identity recorded in /opt/pinned-icu/pinned-icu-identity.txt
+pinned ICU 78.3 built in /opt/pinned-icu
+export PYICU_INCLUDES='/opt/pinned-icu/install/include'
+export PYICU_LFLAGS='-L/opt/pinned-icu/install/lib:-Wl,-rpath,/opt/pinned-icu/install/lib:-Wl,--disable-new-dtags'
+export PYICU_LIBRARIES='icui18n:icuuc:icudata'
+export PYICU_CFLAGS='-std=c++17'
+export MINION_AGENT_ICU_IDENTITY='/opt/pinned-icu/pinned-icu-identity.txt'
+export ICU_VERSION=78.3
+export UV_NO_CACHE=1  # rebuild PyICU against this ICU rather than reuse a cached wheel

@@ -2171,7 +2171,8 @@ EXISTING `list_dir`/`file_info` BEHAVIOR IS UNCHANGED BY THIS EXTENSION (regress
 **Status: CERTIFIED in both languages (`WP-12.E2`, requirement `EXEC-008`, `CERTIFIED_CLOSED`);
 cross-language closure recorded in `minion-agent#62`.** The contract below is unchanged in substance
 from its approved, merged revision (`minion-agent-docs#163`, `master`
-`7007732a26965facff73ccdaf82b4ee856d3683e`); this status paragraph is a documentary update only.
+`7007732a26965facff73ccdaf82b4ee856d3683e`), except the §12.5 Layer-13 checkpoint correction noted
+there (`CE13-C005`); this status paragraph is a documentary update only.
 Accepted implementations: Python at `minion-agent/main` `9987bd8112168792e41d8da5b474c8c7f330b1d1`
 (`minion-agent#63`), Rust at `minion-agent/main` `689db685f4d586c9b3dc97965e1e096771c8f87e`
 (`minion-agent#64`), Rust assurance at `minion-agent-docs/master`
@@ -2259,14 +2260,22 @@ example, a regular file used as a path component is `ENOTDIR -> not_directory` o
 ```text
 1. the TOOL-026 path pipeline
 2. r = check_readable(p)                       -- no signal (Pi passes none to access)
-     Err(not_supported)  -> the provider lacks EXEC-008: go to step 3 in FALLBACK mode
+     Err(not_supported)  -> the provider lacks EXEC-008: FALLBACK mode
      Err(c)              -> "Cannot access <path>: <cause(c)>"
-     Ok                  -> abort checkpoint (read.ts:249), then step 3
+     Ok                  -> NORMAL mode
+   abort checkpoint (read.ts:249): ONE check, reached in BOTH modes, before any step-3 work
 3. the content/image pipeline (read_binary_file, sniff, image processing / text)
      normal mode:   any filesystem failure c -> "Cannot read <path>: <cause(c)>"
      fallback mode: is_directory | not_supported -> "Cannot read <path>: <cause(c)>";
                     any other c                  -> "Cannot access <path>: <cause(c)>"
 ```
+
+**Correction (`CE-L13-WP131-02` revision 6, `CE13-C005`, `minion-agent-docs#162`).** An earlier text of
+this pattern sent `Err(not_supported)` straight to step 3 and reached the `read.ts:249` checkpoint only
+on `Ok`. Pinned Pi checks `aborted` right after its access call returns, however it returned
+(`read.ts:248-250`), so the checkpoint belongs to both modes. This corrects the Layer-13 consumption
+pattern only: `check_readable`'s signature, semantics, error mapping, §12.6 witnesses and its Python
+and Rust certification are unchanged.
 
 The operation that failed owns the site, whatever the code. The FALLBACK exists only so that `read`
 stays usable on a provider without this extension; it is a provider-capability fallback and an

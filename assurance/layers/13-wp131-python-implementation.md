@@ -1,0 +1,385 @@
+# WP-13.1 — Python implementation pass (`read`, `ls`)
+
+Coordination: `minion-agent#48` (status `PYTHON_IMPLEMENTATION`). Authorization: the owner's
+decision transcribed at `minion-agent#48` comment `5813022280` ("authorize merging #161 and WP-13.1
+Python implementation"). Rust implementation and Layer 14 are NOT authorized and were not touched
+(nothing under `minion-agent-rust/**` changed).
+
+Baselines: code `minion-agent` main `cb8ed1c1` (manifest `TOOL-025`..`TOOL-028`, `TOOL-039`,
+`TOOL-040`); docs `minion-agent-docs` master `f46051fb` (WP-13.1 contract `b1ed1530` + R005-A evidence
+`#161`); pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`. The exact candidate SHAs are the
+paired PR heads recorded on `minion-agent#48`.
+
+Status wording: `Python WP-13.1: IMPLEMENTED, PENDING INDEPENDENT IMPLEMENTATION_REVIEW`;
+`shared WP-13.1 contract: REPAIRED (IMPL-C001..C011), PENDING REVIEW WITH THE IMPLEMENTATION`;
+`Rust WP-13.1: NOT_IMPLEMENTED / NOT AUTHORIZED`; `WP-13.1 cross-language: NOT CLOSED`.
+
+## 1. Pi audit
+
+Pinned files read in full (sha256 in `data/13-wp131-python-implementation/pi_sources.sha256`):
+`core/tools/read.ts` (schema 21-25, execute 223-334), `core/tools/ls.ts`, `core/tools/truncate.ts`
+(`truncateHead`, `formatSize`), `core/tools/path-utils.ts` (`resolveToCwd`, `pathExists`),
+`utils/paths.ts` (`normalizePath`, `normalizeWindowsShellPath`, `resolvePath`), `utils/mime.ts`,
+`utils/exif-orientation.ts`, `utils/image-process.ts`, `utils/image-convert.ts`,
+`utils/image-resize.ts` (worker with in-process fallback, `formatDimensionNote`),
+`utils/image-resize-core.ts`.
+
+## 2. Findings
+
+### Shared contract (`CONTRACT_ASSURANCE_DEFECT`, repaired in `spec/tools.md`)
+
+| ID | Defect | Discriminating witness | Repair |
+|---|---|---|---|
+| IMPL-C001 | The non-vision note needs the requesting model's image support; Minion tools get no model context and no registry maps `ModelId` to it. The exact note text was not stated. | `builtin-read-image-success-includes-image-for-non-vision-model` (+ vision / unknown companions) | Optional model-capability provider evaluated per call; only `false` adds the note (Pi: `!model` -> none). `MINION_ARCHITECTURAL_MAPPING`. Exact text quoted. |
+| IMPL-C002 | Step 5 named `file_info` for `read`; it is `lstat`-based (no symlink following, no readability), unlike Pi's `access(R_OK)`. | `...r010b-closed-vocabulary...`: `dangling-symlink-fails-the-access-check`, `read-permission-denied-reported-at-access-site`, `directory-is-directory` | Existence = `probe_dir_entry` (follows symlinks); directory -> "Cannot read <path>: is a directory"; read-time `permission_denied` reported at the access site. |
+| IMPL-C003 | `<path>` undefined for `read` errors and the R002-A rejection; the first-line diagnostic cites the raw argument. | `...first-line-exceeds-byte-limit` (`raw-path-quoted`), `...malformed-file-url...` | `<path>` = `absolute_path(step-5 string)`; R002-A cites the step-4 input; diagnostic cites the raw `path`. |
+| IMPL-C004 | The image pipeline was not normatively specified (sniff, processImage, resize core, EXIF, texts). | image scenarios; `tests/tools/builtin/test_byte_parsers.py`, `test_image.py` | New normative subsection from the pinned source + R005-A findings F1-F3. |
+| IMPL-C005 | Text decoding unstated. | `builtin-read-text-decoding-matches-node-utf8` (BOM, CR, CRLF, 4 malformed sequences) | Node `Buffer.toString("utf-8")`, no newline translation. Python == Node on 25 malformed cases (probe). |
+| IMPL-C006 | Number rendering in `read` notices unstated (stated for `ls` only). | `...fractional-and-negative-numeric-inputs` | ECMAScript `Number::toString` everywhere. |
+| IMPL-C007 | "details ABSENT" vs a host result type that defaults `details` to `{}`. | all scenarios assert `details` keys | ABSENT = no `truncation`/`entry_limit_reached` keys (Layer 06 rule). |
+| IMPL-C008 | Spec said a negative `limit` always yields an empty range; `slice` counts a negative end from the end. | `offset-None-limit--3` (lines 1-7, "[13 more lines ... offset=-2 ...]", from Pi under Node) | Prose corrected with Pi-computed examples. |
+| IMPL-C009 | "data: base64 string (NOT raw bytes)" conflicts with Layer 02's byte-carrying `ImageBlock`. | image scenarios compare sha256/length of the bytes | The block carries the bytes whose base64 is Pi's `data`. |
+| IMPL-C010 | Fractional offset + over-long first selected line: Pi throws Node's `TypeError` (`allLines[1.5]` is `undefined`). | `fractional-offset-undefined-line` (Node-produced text) | Pinned as that exact error text. |
+| IMPL-C011 | Spec quoted the BMP hint as "bmp to png"; Pi emits "image/bmp to image/png". | `builtin-read-image-bmp-converts-and-resizes`; R005-A authority (4 occurrences) | Text corrected. |
+
+### Lower layer (escalated, NOT changed here)
+
+**L12 `PI_PARITY_DEFECT` (Python):** certified `LocalFileSystem.read_text_file` opens the file in text
+mode without `newline=""`, so Python translates newlines: bytes `a\r\nb\rc\n` read as `'a\nb\nc\n'`,
+while Node's `readFileSync(path, "utf8")` returns `"a\r\nb\rc\n"` (verified live). Reopening a
+certified layer is an owner decision (`agent-workflow.md` §11.7); it is recorded for that decision.
+WP-13.1 does not depend on it: `read` needs the bytes for image sniffing anyway and decodes them
+itself (`IMPL-C005`).
+
+### Implementation hazards (not contract defects; handled)
+
+- The Windows SDK ships `icuuc.lib`/`icuin.Lib` for the system ICU on the default library path; a
+  bare-name link of PyICU silently picks them. `scripts/pinned-icu/build.sh` links the pinned build by
+  absolute path; `collation.py` verifies PyICU 2.16.2, the compiled ICU and the runtime-loaded ICU
+  (`u_getVersion_78` from the loaded `icuuc78`) and fails closed.
+- JS `/[a-z]/i` (no `u` flag) folds ASCII only (Python `re.I` also matches U+017F, U+212A); JS `.`
+  stops at `\r`, U+2028, U+2029; JS `$` is end of input. All three are reproduced (`re.ASCII`, a
+  negated class, `\Z`) and tested.
+- `Math.round` is exact (`floor(x + 0.5)` misrounds 0.49999999999999994); `toFixed` rounds the exact
+  binary value half away from zero, prints `-0` as `0.00` and keeps a sign on a negative that rounds
+  to zero. All checked against Node.
+
+## 3. Implementation (`minion-agent-python/src/minion_agent/tools/builtin/`)
+
+`read.py`, `ls.py`, `paths.py` (TOOL-026 steps 1-4, R010-B vocabulary), `mime.py`, `image.py`,
+`photon/` (vendored `photon_rs_bg.wasm`, sha256-checked on load, Apache-2.0 license, provenance),
+`collation.py`, `truncate.py`, `_js.py` (ECMAScript number semantics), `_signal.py` (abort race),
+`plugin.py` (`builtin-fs-query-tools`, injects `fs`/`tools`). Layer 12 gains only
+`execution.file_url_to_path`, the certified strict conversion under a public name (R002-A step 4,
+which the contract anticipated); no behavior change. New pinned dependencies: `wasmtime==49.0.0`,
+`pyicu==2.16.2` (built from the lock-hashed sdist against the pinned ICU; `scripts/pinned-icu/`).
+
+## 4. Evidence
+
+- **Canonical:** 40 `builtin_tool` scenarios, `conformance/agent/builtin-*.yaml`, new schema
+  `conformance/schema/builtin-tool-scenario.schema.json`, thin runner
+  `tests/conformance/builtin_tool_runner.py` (fixture on disk + scripted provider responses over the
+  REAL `LocalFileSystem`, real tools, real Layer 06 `execute_call`; it computes no tool output).
+  They cover every WP-13.1 manifest witness (manifest `tests:` entries now name the files) plus
+  `read_text_decoding_matches_node_utf8`, `read_image_auto_resize_disabled` and a
+  post-Unicode-15.1 case-pair witness. Expected values come from pinned-Pi authorities only
+  (`data/13-wp131-python-implementation/README.md`). The image fixtures are the committed R005-A
+  corpus (every file <= 1 MiB).
+- **Python tests** (`tests/tools/builtin/`): 20 R005-A core cases against pinned Pi's
+  `resizeImageInProcess` results (candidate order, strict `<`, custom quality, shrink loop,
+  exhaustion, zero-size trap); 52 EXIF/MIME byte cases (plus the 4100-byte sniff cutoff) against
+  pinned Pi's own `mime.ts` / `exif-orientation.ts` under Node; JS-number tables from Node; abort race; fail-closed ICU
+  loading; plugin mount/unmount.
+- **Negative controls:** `data/13-wp131-python-implementation/mutants.log`, 23/23 single-point
+  wrong implementations detected by the canonical suite: trimmed path, all `@` stripped, malformed
+  URL falling through, Python `round` in resize, `%.2f`, smallest candidate, EXIF ignored, short
+  conversion-hint names, note for unknown models, `lstat`-based access, permission at the read
+  site, newline translation, Python slicing, details on a caller limit, resolved path in the sed
+  hint, cap after probe, rounded limit, failed entry listed, not_supported as not-found, host
+  lowercase keys, normalization off, code-point sort, unstable ties. The host-lowercase mutant was
+  first MISSED; the post-Unicode-15.1 witness was added because of it.
+- **Gates (fresh, candidate tree):** `pytest` 1987 passed, 4 skipped, 19 xfailed; coverage 100.00%
+  (one `pragma: no cover` on Pi's unreachable "shrink made no progress" guard, with the proof in the
+  comment); `ruff check` clean; `mypy --strict` clean (91 files); schema and manifest validation
+  pass inside the suite.
+
+## 5. Divergences and residual risk
+
+- Disclosed architectural mappings: the model-capability provider (`IMPL-C001`); existence via
+  `probe_dir_entry` and read-time readability (`IMPL-C002`); fresh Photon instance per operation
+  (no observable effect, R005-A F4). Owner-decided divergences unchanged: `TOOL-039` (R010-B text),
+  `TOOL-040` (pinned collation), `TOOL-027` (not adopted).
+- Pre-aborted calls are answered by the Layer 06 pipeline before `execute` (as in Pi's agent
+  loop); the tools' own start check is covered by direct Python tests.
+- The three R005-A corpus files over 1 MiB (JPEG candidate path at read level) are exercised by the
+  merged R005-A evidence, not by canonical scenarios; the candidate search itself is covered by the
+  core-case tests.
+- Evidence ran on Windows x86-64 (real symlinks available). ICU/PyICU provisioning on Linux is
+  scripted but was not executed in this pass.
+
+## 6. Review request (Codex, `IMPLEMENTATION_REVIEW`)
+
+Independent exact-SHA review of the paired PR heads recorded on `minion-agent#48`: the IMPL-C001..
+C011 contract repairs (are they faithful to pinned Pi and to the owner decisions?), the Python
+implementation against the contract, the canonical scenario shape and runner (thin? portable to
+Rust?), the negative controls, and whether the Layer 12 finding is correctly scoped out. Stop
+condition: accept or reject with findings. Accepting does NOT authorize merge, Rust
+implementation or Layer 14; after acceptance #48 returns to the owner for merge authorization.
+
+## 7. Remediation 1 -- `L13-WP131-I001`, `L13-WP131-C012`
+
+Independent review (Codex) of code #60 @ `c59f72ce` and docs #162 @ `388c8200`: **CHANGES
+REQUIRED** (`minion-agent#48` comment `5814079346`; witnesses on #60 comment `5814058189` and #162
+comment `5814058617`). Both findings accepted as stated; sections 1-6 above are the reviewed
+history and are left unchanged.
+
+**`L13-WP131-I001` (`PI_PARITY_DEFECT`).** `race_abort` cancelled the in-flight provider call when
+the abort won. Pinned Pi rejects the tool promise from its abort listener but lets the pending
+`access`/`readFile` run on, then stops at `read`'s checkpoints (`read.ts:246`, `:249`); `ls` has no
+checkpoints and runs to completion. The Layer 09 contract also forbids forcibly interrupting tool
+work. The earlier live-abort test asserted only the returned text, which is why it passed.
+Fix: the tool is still answered `"Operation aborted"` at once, but the work is left running (held
+so it cannot be garbage-collected) and its result or failure is discarded; `read` stops at both
+checkpoints; no `ctx.fs` call is given the signal (Pi passes none to `access`/`readFile`/`readdir`).
+Permanent witnesses (`tests/tools/builtin/test_tools.py`): with the provider blocked, the call is
+answered while the provider is still blocked; after release the provider call completes
+uncancelled; `read` then makes no `read_binary_file` call (checkpoint), and `ls` goes on to
+`list_dir_raw` and every per-entry probe. Spec: the cancellation rules for both tools now state it.
+
+**`L13-WP131-C012` (`CONTRACT_ASSURANCE_DEFECT`).** `IMPL-C002`'s repair made `read` depend on the
+additive `EXEC-007` `probe_dir_entry`; a conforming provider without that extension (`not_supported`)
+made `read` fail with no content read attempted, though Pi's `access`/`readFile` have no such
+dependency. Fix, from core operations only: the access step is `file_info` (a real directory ->
+`"Cannot read <path>: is a directory"`); a failed `read_binary_file` is the read site for
+`is_directory` and `not_supported`, and the access site for every other code, since those are
+exactly where Pi's symlink-following `access(R_OK)` fails first. New canonical witness
+`builtin-read-provider-without-exec-007-reads-normally.yaml` (text and image reads on a provider
+reporting `not_supported` for `EXEC-007`, with `fs_calls` pinned to `file_info` then
+`read_binary_file`); the R010-B scenario's access cases now script `file_info`, and its read cases
+follow the new site rule (including a scripted `is_directory`).
+Disclosed edges: a genuine I/O error (`unknown`) after a successful access check is reported at the
+access site (Pi: read site); a directory reached through a symlink relies on the provider
+classifying the read as `is_directory` (below).
+
+**Second Layer 12 finding, escalated (not changed).** Certified Python
+`LocalFileSystem.read_binary_file` on Windows classifies reading a directory as `permission_denied`
+(`[Errno 13]` from `open()`); Node reports `EISDIR` (`open` succeeds, `read` fails -- verified live),
+which the Layer 12 mapping turns into `is_directory`. Only a symlink to a directory reaches it from
+`read` (a real directory is decided by `file_info`). Recorded with the newline finding for an owner
+decision on reopening Layer 12.
+
+**Negative controls, refreshed** (`data/13-wp131-python-implementation/mutants.log`): 25/25. The
+old `lstat`-access mutant is now the implementation and is replaced by `access_via_exec_007_probe`
+(the rejected design) and `every_read_failure_at_read_site`; `cancel_in_flight` and
+`signal_passed_to_fs` run against the Python abort witnesses, since timing is not expressible in the
+canonical YAML. All detected.
+
+**Gates (fresh, remediated tree):** `pytest` 1991 passed, 4 skipped, 19 xfailed; coverage 100.00%;
+`ruff check` clean; `mypy --strict` clean. Canonical `builtin_tool` scenarios: 41.
+
+Requested next: Codex's targeted exact-SHA closure review of `I001` and `C012` at the new PR heads
+recorded on `minion-agent#48`, then the workflow's final complete review.
+
+## 8. Remediation 2 -- `CE-L13-WP131-02` revision 6 (`G1` on certified `EXEC-008`; `I001` ordering)
+
+The targeted closure review of remediation 1 left both findings open (§11.8 trigger A), which opened
+convergence episode `CE-L13-WP131-02`.
+- **Characterization and the owner's decision:** revisions 1-4, then the owner's `G1` (`minion-agent#48` comment `5822609576`).
+- **The Layer-12 extension:** `WP-12.E2` / `EXEC-008` `check_readable`, certified in both languages (`minion-agent#62`, `CERTIFIED_CLOSED`).
+- **The checkpoint:** revisions 5 and 6. Revision 6 was agreed by Codex's §11.8.5 review (`minion-agent-docs#162` comment `5828260964`, `AGREED_FOR_IMPLEMENTATION` @ `8dff4138`).
+
+This section implements exactly that checkpoint. Remediation 1 above is preserved as history. Its `file_info` access step, code->site rule and `file_info` directory shortcut are superseded.
+
+**`L13-WP131-C012` under `G1`.**
+- **Access and content:** `read`'s access stage is `ctx.fs.check_readable` (Pi's `access`, `read.ts:248`), followed by ONE `read_binary_file`; neither receives the signal.
+- **Site rule:** the operation that failed owns the site, whatever the code. A `check_readable` failure is `"Cannot access <path>: <phrase>"`; a failure of the content read after it is `"Cannot read <path>: <phrase>"`.
+- **Fallback:** `check_readable -> not_supported` (a provider without `EXEC-008`) continues in the disclosed FALLBACK mode, `spec/execution.md` §12.5. There, only a content read's `is_directory`/`not_supported` is the read site.
+- **Checkpoint 249:** the `read.ts:249` checkpoint follows `check_readable` in both modes (`CE13-C005`).
+- **No other access operations:** `read` uses no `file_info`, `canonical_path` or `EXEC-007` (`CE13-C006`).
+- **Checkpoint findings:** `CE13-C001` to `C004` are resolved as revision 5 states.
+  - `C001`: an optional capability answered explicitly, with a disclosed fallback.
+  - `C002`: H1 at the access site, H2 at the read site.
+  - `C003`: an unreadable directory fails the access stage.
+  - `C004`: a stable I/O error after a successful access is `Cannot read`.
+
+**`L13-WP131-I001`.**
+- **Settle point:** the outcome is decided by order at the work's settle point. `race_abort` wraps the work so that its last synchronous step checks the signal.
+- **Abort first:** an abort before settling is `"Operation aborted"`, including over a failure raised after it.
+- **Settled first:** a result that settled first stands; it is never re-checked after settling.
+- **Unchanged from remediation 1:** the race only decides how soon the rejection is delivered, and in-flight `ctx.fs` work is still never cancelled.
+- **Checkpoints:** `read`'s checkpoints now raise `"Operation aborted"` directly; the `None` sentinel is removed.
+
+**Normative deltas (revision 6 inventory, applied in this docs candidate):**
+1. **Docs `master`:** `e1d9b817` merged in to carry §12.
+2. **`spec/execution.md` §12.5:** one checkpoint in both modes, plus a correction note; §12's status paragraph gains the §12.5 exception. `EXEC-008` semantics and certification are unchanged.
+3. **`spec/tools.md`:**
+   - TOOL-026 step 5;
+   - "`read`: operation mapping" steps 3-4;
+   - the site paragraph (R-G1);
+   - R010-B's two-site reachable codes;
+   - the cancellation paragraph (checkpoint 249 in both modes; I001 ordering);
+   - the access-step history (G1 entry);
+   - disclosed divergences W-1..W-3 and F-1;
+   - the witness matrix.
+4. **Manifest `TOOL-025` / `TOOL-039`:** code PR.
+5. **Conformance schema:** `provider.check_readable`, `without_exec_008`, `canonical_path`, and a case-level `abort_after`. The runner stays thin (code PR).
+6. **Scenarios:** regenerated by `data/13-wp131-python-implementation/gen_scenarios.py`. Every other scenario regenerated byte-identical.
+
+**Witnesses:**
+- W-G1..W-G16 are canonical scenarios:
+  - `builtin-read-error-text-matches-r010b-closed-vocabulary-per-fserrorcode`;
+  - `-provider-without-exec-008-uses-disclosed-fallback`;
+  - `-abort-at-the-access-checkpoint-normal-mode` / `-fallback-mode`;
+  - `-does-not-depend-on-file-info-or-canonical-path`;
+  - `-provider-without-exec-007-reads-normally`.
+- W-G6/W-G11/W-G12 on the real host, plus W-I1..W-I4, are in `tests/tools/builtin/test_read_access_and_abort_order.py`. W-I5 on `check_readable` is in `test_tools.py`.
+
+**Negative controls** (`data/13-wp131-python-implementation/mutants-r6.log`; `mutants.log` kept as the remediation-1 record): **32/32 detected**.
+- The two pre-G1 C012 mutants targeted the superseded `file_info` access step; they are replaced by revision 5/6's table:
+  - `site_from_code_in_normal_mode`
+  - `always_fallback`
+  - `skip_access_stage`
+  - `not_supported_as_access_failure`
+  - `file_info_before_read`
+  - `fallback_skips_checkpoint_249`
+  - `no_checkpoint_249`
+- New I001 mutants run against the Python witnesses:
+  - `settle_point_check_removed` (fails W-I1, W-I2, W-I3; it is exactly the candidate `61f40e4d` behaviour Codex's witness exposed);
+  - `result_rechecked_after_settling` (fails W-I4).
+- `cancel_in_flight` and `signal_passed_to_fs` stay.
+
+**Disclosed divergences:** W-1..W-3 and F-1 (`spec/tools.md`, "Disclosed divergences of that mapping"). The Layer-12 follow-ups remain separate and unauthorized: `minion-agent#65`, `#66`, `#67`, `#69`, `#70`.
+
+**Gates (fresh, remediated tree; Windows, Python 3.13.5, pinned ICU 78.3):**
+- `pytest`: 2046 passed, 11 skipped, 19 xfailed;
+- coverage 100.00%;
+- `ruff check` clean; `mypy --strict` clean (91 files);
+- conformance + manifest suites pass.
+
+Canonical `builtin_tool` scenarios: 45.
+
+**Linux** (`python:3.12-slim`, uid 1000, without PyICU):
+- all `read` witnesses pass, including the real POSIX mode-000 file/directory (W-G6/W-G12) and "is a directory" (W-G11, direct and through a symlink);
+- the 22 `read` canonical scenarios pass;
+- the only failures are 2 `ls` tests that need the pinned PyICU the container deliberately lacks.
+
+Requested next: Codex's targeted exact-SHA closure review of `I001` and `C012` at the new PR heads recorded on `minion-agent#48`, then the workflow's final complete WP-13.1 review. Rust WP-13.1 and Layer 14 remain unauthorized.
+
+## 9. Remediation 3 -- final complete review round 1 (`FR001`, `FR002`, `FR003`)
+
+Codex's mandatory §11.8.8 complete review of code #60 @ `c2b9990f` / docs #162 @ `b9bd356f`
+(`minion-agent-docs#168` @ `36060395`, `assurance/layers/13-wp131-final-implementation-review-r1.md`)
+returned **CHANGES REQUIRED**.
+- **I001/C012:** both stay provisionally closed (targeted review #167), and this remediation does not touch them.
+- **The three findings:** all accepted. They are fixed narrowly as §11.8.8 Case A.
+
+**`L13-WP131-FR001` (`CONTRACT_ASSURANCE_DEFECT`).**
+- **Defect:** the manifest `TOOL-026.rule` still listed `read_text_file/read_binary_file/file_info/list_dir` as the operations receiving the preprocessed path.
+- **Fix:** it now names the approved sequence -- `check_readable` then `read_binary_file` for `read`, and `probe_dir_entry` then `list_dir_raw` for `ls` (`spec/tools.md` TOOL-026 step 5). The old list is kept only as history in the same sentence.
+- **Unchanged:** no behavior change.
+
+**`L13-WP131-FR002` (`CONTRACT_ASSURANCE_DEFECT`).**
+- **Defect:** the manifest `TOOL-025.rule` said image `data` is base64 text.
+- **Fix:** the rule now separates the two boundaries:
+  - Pi's serialized `ImageContent.data` is a base64 string;
+  - Minion's typed Layer-02 `ImageBlock.data` carries the decoded bytes (`IMPL-C009`), and a Pi-shaped wire serialization emits base64;
+  - an implementation must not put base64 text in the typed `data`.
+- **Unchanged:** `spec/tools.md` already stated this; code and canonical evidence are unchanged.
+
+**`L13-WP131-FR003` (`CONTRACT_ASSURANCE_DEFECT`).** R006-C requires ONE verified ICU 78.3 build, but loading checked only version strings, so a different build that also reports 78.3 passed. The fix is a fail-closed build-identity gate:
+- **Build side:**
+  - `scripts/pinned-icu/build.sh` records `<prefix>/pinned-icu-identity.txt`: the source tarball's SHA-512 (the one the build verified), plus the SHA-256 of the built `icuuc`/`icui18n`/`icudata` runtime libraries.
+  - `--env` exports it as `MINION_AGENT_ICU_IDENTITY`.
+  - `--identity` records it for an existing build, after re-verifying the source tarball.
+- **Load side** (`collation.py`, `verify_build_identity`), after the version checks:
+  - it finds the ICU libraries actually mapped into the process: loaded-module handles on Windows (`GetModuleHandleW` never loads anything), `/proc/self/maps` on Linux;
+  - it requires the identity to name the pinned source;
+  - it requires all three libraries to be loaded and byte-identical to the verified build.
+  - An unset or unreadable identity fails closed.
+- **Unchanged:** the collation tuple, engine and comparator.
+- **Evidence** (`tests/tools/builtin/test_collation_build_identity.py`):
+  - **Unit tests:** every rejection path (unset or unreadable identity, foreign source, library not loaded, identity missing a library, hash mismatch) and the Linux maps reader.
+  - **Real negative controls, in fresh processes with the real binding and loader:**
+    - the verified build is accepted;
+    - a same-version foreign build is REJECTED (a copy of the pinned DLLs whose `icuin78.dll` differs only by bytes appended after its image -- it still loads and still reports ICU 78.3; the version-only gate accepted it);
+    - Codex's stand-in, a module named `icu` reporting PyICU 2.16.2 / ICU 78.3, is REJECTED (the i18n library is never loaded).
+- **Negative controls:** `data/13-wp131-python-implementation/mutants-fr.log` records **34/34 detected**, including `icu_identity_gate_removed` and `icu_identity_hash_not_compared`. `mutants-r6.log` is kept.
+
+**Gates (fresh; Windows, Python 3.13.5, pinned ICU 78.3 with identity):**
+- `pytest`: 2057 passed, 11 skipped, 19 xfailed;
+- coverage 100.00%;
+- `ruff check` clean; `mypy --strict` clean (91 files);
+- manifest validation passes.
+
+Rust not touched. No merge, Rust WP-13.1 or Layer 14.
+
+Requested next (§11.8.8 Case A): Codex's targeted exact-SHA review of FR001-FR003, then another final complete review.
+
+## 10. Remediation 4 -- `CE-L13-WP131-03` (`FR003`: one verified ICU build)
+
+Codex's targeted review of remediation 3 (`minion-agent#48` comment `5850822214`) closed FR001/FR002 provisionally and kept FR003 open with two defects:
+- **FR003-a:** a first-match inventory accepted a mixed process.
+- **FR003-b:** `build.sh --identity` could re-attest substituted binaries.
+
+As FR003 had survived two reviews (§11.8 trigger A):
+- **Characterization and checkpoint:** `assurance/layers/13-wp131-ce-l13-wp131-03-characterization.md`.
+- **Agreement:** Codex, §11.8.5, `minion-agent-docs#162` comment `5851039546`, `AGREED FOR IMPLEMENTATION`, FR003 only.
+
+This section implements exactly that checkpoint.
+
+**Implementation (code #60):**
+- **R-F1/R-F2** (`collation.py`):
+  - `loaded_icu_instances` lists every ICU library instance of any name or version (Windows `EnumProcessModules`, Linux every `/proc/self/maps` path).
+  - `verify_build_identity` requires each to be a file the verified build produced -- an unlisted ICU is rejected first, even with listed bytes -- and byte-identical to it; byte-identical copies pass.
+  - Common, i18n and data must be loaded.
+  - A runtime ICU that cannot be loaded raises the typed `PinnedIcuError`.
+- **R-F4** (`build.sh`):
+  - The identity (source SHA-512, platform, and every produced ICU runtime library's file name and SHA-256) is written only as the last step of a run that verified the tarball and cleared old binaries, install tree and identity. The same run extracts, compiles and installs before that step.
+  - `--identity` is removed (exit 2).
+  - The host's ICU was rebuilt by the new script. The rebuild produced different bytes from the earlier build of the same tarball, confirming MSVC builds are not reproducible, as R-F5's rejected-alternative note says.
+- **R-F3/R-F5:** documented in the module docstring and `scripts/pinned-icu/README.md`.
+
+**Found on the first real Linux PyICU build.** `PYICU_LFLAGS` baked a `DT_RUNPATH`, which does not apply to `libicuuc`'s own `libicudata` dependency, so PyICU could not load on Linux. The Linux link now uses `DT_RPATH` (`-Wl,--disable-new-dtags`). This was a latent defect of the Linux build instructions that had never been exercised; it is recorded here, not hidden.
+
+**Evidence:**
+- **Windows** (`tests/tools/builtin/test_collation_build_identity.py`, fresh processes, real binding and loader):
+  - verified build ACCEPTED;
+  - W-F1: a foreign same-name `icuin78.dll` next to the verified one is REJECTED;
+  - W-F2: a byte-identical twin is ACCEPTED;
+  - W-F3: an unlisted `icuuc77.dll` carrying verified bytes is REJECTED;
+  - W-F6: a same-version foreign build directory is REJECTED;
+  - W-F7: the stand-in binding is REJECTED;
+  - W-F5: `--identity` exits 2, and a static witness shows the identity write only after the verified, clean extract, compile and install.
+- **Linux** (`data/13-wp131-ce-l13-wp131-03/`: `run_linux.sh`, `probe.py`, `linux_transcript.txt`; disposable `python:3.12-slim`; ICU built by `build.sh`; PyICU 2.16.2 built from the hash-checked sdist):
+  - verified ACCEPTED;
+  - W-F1: a second `/tmp/foreign/libicui18n.so.78.3` mapping is REJECTED;
+  - W-F2: a twin is ACCEPTED;
+  - W-F3: `libicuuc.so.77.1` is REJECTED;
+  - W-F5: `--identity` exits 2 after a binary was substituted, and the identity file is unchanged;
+  - W-F6: the substituted binary in the verified prefix is REJECTED;
+  - W-F7: the stand-in is REJECTED (typed);
+  - unit tests: 19 passed.
+- **Negative controls** (`data/13-wp131-python-implementation/mutants-ce03.log`): **38/38 detected**, including:
+  - `icu_first_match_inventory`
+  - `icu_unlisted_library_ignored`
+  - `icu_identical_duplicate_rejected`
+  - `build_sh_reattest_mode`
+  - `icu_identity_gate_removed`
+  - `icu_identity_hash_not_compared`
+
+**Gates (fresh; Windows, Python 3.13.5, rebuilt pinned ICU 78.3):**
+- `pytest`: 2074 passed, 11 skipped, 19 xfailed;
+- coverage 100.00%;
+- `ruff check` clean; `mypy --strict` clean (91 files);
+- manifest validation passes.
+
+Rust not touched. Requested next: Codex's targeted exact-SHA closure review of FR003 (W-F1..W-F7), then the final complete WP-13.1 review (§11.8.8 Case A).
+
+**Targeted closure round 1 (Codex, `minion-agent#60` comment `5851237860`): CHANGES REQUIRED, accepted.**
+- **Finding:** `_loaded_windows_modules` silently skipped a module whose `GetModuleFileNameW` returned 0, so the inventory could be incomplete (R-F1).
+- **Fix (code #60 @ `03012577`):**
+  - a path-lookup failure or a truncated path raises `PinnedIcuError`;
+  - a listed instance that cannot be read to hash also fails closed, typed.
+- **Witnesses:** lookup failure and truncation among real enumerated modules; an unreadable listed instance.
+- **Negative controls:** `icu_module_path_failure_skipped` and `icu_unreadable_instance_skipped`. `data/13-wp131-python-implementation/mutants-ce03b.log` records **40/40 detected**.
+- **Gates:** 2077 passed, 11 skipped, 19 xfailed; coverage 100.00%; ruff and mypy clean.
