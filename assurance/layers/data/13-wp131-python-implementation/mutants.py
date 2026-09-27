@@ -79,6 +79,8 @@ PYTHON_WITNESS_MUTANTS = {
     "icu_unlisted_library_ignored": ("collation.py", "        if listed is None:\n", "        if listed is None:\n            continue\n"),
     "icu_identical_duplicate_rejected": ("collation.py", "        roles_loaded.add(role)\n",
                                          "        if role in roles_loaded:\n            raise PinnedIcuError(\"duplicate\")\n        roles_loaded.add(role)\n"),
+    "icu_module_path_failure_skipped": ("collation.py", "        if length == 0 or length >= len(buffer):\n", "        if False:\n"),
+    "icu_unreadable_instance_skipped": ("collation.py", "        except OSError as exc:\n", "        except OSError:\n            continue\n        except OSError as exc:\n"),
     "build_sh_reattest_mode": ("../../../../scripts/pinned-icu/build.sh", "  build|--env) ;;\n",
                                "  build|--env) ;;\n  --identity) write_identity; exit 0 ;;\n"),
 }

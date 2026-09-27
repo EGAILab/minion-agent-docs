@@ -374,3 +374,12 @@ This section implements exactly that checkpoint.
 - manifest validation passes.
 
 Rust not touched. Requested next: Codex's targeted exact-SHA closure review of FR003 (W-F1..W-F7), then the final complete WP-13.1 review (§11.8.8 Case A).
+
+**Targeted closure round 1 (Codex, `minion-agent#60` comment `5851237860`): CHANGES REQUIRED, accepted.**
+- **Finding:** `_loaded_windows_modules` silently skipped a module whose `GetModuleFileNameW` returned 0, so the inventory could be incomplete (R-F1).
+- **Fix (code #60 @ `03012577`):**
+  - a path-lookup failure or a truncated path raises `PinnedIcuError`;
+  - a listed instance that cannot be read to hash also fails closed, typed.
+- **Witnesses:** lookup failure and truncation among real enumerated modules; an unreadable listed instance.
+- **Negative controls:** `icu_module_path_failure_skipped` and `icu_unreadable_instance_skipped`. `data/13-wp131-python-implementation/mutants-ce03b.log` records **40/40 detected**.
+- **Gates:** 2077 passed, 11 skipped, 19 xfailed; coverage 100.00%; ruff and mypy clean.
