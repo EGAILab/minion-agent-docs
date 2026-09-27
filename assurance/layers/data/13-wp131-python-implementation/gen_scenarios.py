@@ -61,6 +61,16 @@ def pi_read_text(fixture, cases):
     return {r["id"]: r for r in node("gen_stdin.mjs", payload)}
 
 
+def image_expect(mime, sha256, size, base64_len=None):
+    """An image result (L13-WP131-RUST-I001): the semantic value is the MIME type plus the exact final
+    bytes (sha256 + length); the canonical serialization is the standard base64 of those bytes, whose
+    length is the Pi authority's own `data_base64_len` where recorded (else 4 * ceil(n / 3))."""
+    canonical_len = 4 * ((size + 2) // 3)
+    assert base64_len is None or base64_len == canonical_len, (base64_len, canonical_len)
+    return {"mime_type": mime, "sha256": sha256, "bytes": size, "base64_len": canonical_len,
+            "canonical_base64": True}
+
+
 def expectation(text, **extra):
     exp = {"is_error": extra.pop("is_error", False)}
     if len(text) > 4000:
@@ -192,7 +202,7 @@ def main():
             if note:
                 text += "\n" + note
             exp = {"is_error": False, "text": text,
-                   "image": {"mime_type": a["mime"], "sha256": a["data_sha256"], "bytes": a["data_bytes"]},
+                   "image": image_expect(a["mime"], a["data_sha256"], a["data_bytes"], a["data_base64_len"]),
                    "details": {}}
         else:
             text = f"Read image file [{a['sniffed_mime']}]\n{a['message']}"
@@ -250,13 +260,14 @@ def main():
           "read",
           [{"id": "png-unresized", "arguments": {"path": "png_2001x40.png"}, "expect": {
               "is_error": False, "text": "Read image file [image/png]",
-              "image": {"mime_type": "image/png",
-                        "sha256": hashlib.sha256((FIX / "png_2001x40.png").read_bytes()).hexdigest(),
-                        "bytes": (FIX / "png_2001x40.png").stat().st_size}, "details": {}}},
+              "image": image_expect("image/png",
+                                    hashlib.sha256((FIX / "png_2001x40.png").read_bytes()).hexdigest(),
+                                    (FIX / "png_2001x40.png").stat().st_size), "details": {}}},
            {"id": "bmp-converted", "arguments": {"path": "bmp_24.bmp"}, "expect": {
               "is_error": False, "text": "Read image file [image/png]\n[Image converted from image/bmp to image/png.]",
-              "image": {"mime_type": "image/png", "sha256": by_file["bmp_24.bmp"]["data_sha256"],
-                        "bytes": by_file["bmp_24.bmp"]["data_bytes"]}, "details": {}}}],
+              "image": image_expect("image/png", by_file["bmp_24.bmp"]["data_sha256"],
+                                    by_file["bmp_24.bmp"]["data_bytes"],
+                                    by_file["bmp_24.bmp"]["data_base64_len"]), "details": {}}}],
           fixture=fx("png_2001x40.png", "bmp_24.bmp"), options={"auto_resize_images": False})
     write("builtin-read-operation-aborted-template-preserved-verbatim", ["TOOL-025"],
           ["read_operation_aborted_template_preserved_verbatim"],
