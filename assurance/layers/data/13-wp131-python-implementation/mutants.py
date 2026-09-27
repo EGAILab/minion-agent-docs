@@ -70,10 +70,17 @@ PYTHON_WITNESS_MUTANTS = {
                                    "    task = asyncio.ensure_future(work)\n"),
     "result_rechecked_after_settling": ("_signal.py", "    if task.done():\n        return task.result()\n",
                                         "    if task.done() and not signal.aborted:\n        return task.result()\n"),
-    # L13-WP131-FR003: the ICU build-identity gate (one verified build; a same-version foreign build fails closed)
-    "icu_identity_gate_removed": ("collation.py", "    verify_build_identity(_loaded_icu_libraries(), os.environ.get(ICU_IDENTITY_ENV))\n",
+    # L13-WP131-FR003 / CE-L13-WP131-03 negative controls (R-F1..R-F5)
+    "icu_identity_gate_removed": ("collation.py", "    verify_build_identity(loaded_icu_instances(), os.environ.get(ICU_IDENTITY_ENV))\n",
                                   "    pass\n"),
     "icu_identity_hash_not_compared": ("collation.py", "        if actual != expected:\n", "        if False:\n"),
+    "icu_first_match_inventory": ("collation.py", "    return [module for module in modules if is_icu_library(module)]\n",
+                                  "    seen: set[str] = set()\n    return [m for m in modules if is_icu_library(m) and not (os.path.basename(m).lower() in seen or seen.add(os.path.basename(m).lower()))]\n"),
+    "icu_unlisted_library_ignored": ("collation.py", "        if listed is None:\n", "        if listed is None:\n            continue\n"),
+    "icu_identical_duplicate_rejected": ("collation.py", "        roles_loaded.add(role)\n",
+                                         "        if role in roles_loaded:\n            raise PinnedIcuError(\"duplicate\")\n        roles_loaded.add(role)\n"),
+    "build_sh_reattest_mode": ("../../../../scripts/pinned-icu/build.sh", "  build|--env) ;;\n",
+                               "  build|--env) ;;\n  --identity) write_identity; exit 0 ;;\n"),
 }
 BUILTIN = PY / "src" / "minion_agent" / "tools" / "builtin"
 env = dict(os.environ)

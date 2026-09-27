@@ -1,0 +1,38 @@
+== build.sh (verified tarball -> fresh extract -> compile -> clean install -> identity)
+build exit=0
+
+real	0m30.020s
+user	3m49.349s
+sys	0m39.921s
+# pinned ICU 78.3 build identity -- scripts/pinned-icu/build.sh (R006-C, CE-L13-WP131-03)
+source-sha512 04a49455e1489030c520a4bfd2664fa2171e7938d08f2acdbbcb1fda976639fd8b1f0704f2eec89ba59a7b6d118ceaab6ec5a096e40d9085a0895d91ce225245
+platform linux
+library icudata libicudata.so.78.3 561e8aa42852b1cbe491254b4549213172eecc3e812e05bbd1e555db3442d173
+library icui18n libicui18n.so.78.3 f11e5436f164b829a4cd48ac375c18a6d1643969b863840cb87525d370d029a3
+library icuio libicuio.so.78.3 bda07926ecbb48589602d67f7adebc2434a57db62b50b9ea7562a9d1c57e8534
+library other libicutest.so.78.3 d35db0fb29898f22af9ccefadc13659aac6d99254da0afb547c2efd5e084db94
+library icutu libicutu.so.78.3 441892cb152f9f00f4da28cf6ef8dda997b9c27390fe4caff2fa107d2b714088
+library icuuc libicuuc.so.78.3 12605520d8d8dcd113eba5f6c6f0efb9d3908209cbf35e9a0e4690d3cc32babc
+== PyICU 2.16.2 from the hash-checked sdist against the pinned build
+/inputs/pyicu-2.16.2.tar.gz: OK
+pyicu exit=0
+== witnesses (each a fresh process)
+[verified-only] ICU mappings: ['/opt/pinned-icu/install/lib/libicudata.so.78.3', '/opt/pinned-icu/install/lib/libicui18n.so.78.3', '/opt/pinned-icu/install/lib/libicuuc.so.78.3']
+[verified-only] ACCEPTED ['a', 'b']
+[W-F1-second-foreign-i18n-mapping] ICU mappings: ['/opt/pinned-icu/install/lib/libicudata.so.78.3', '/opt/pinned-icu/install/lib/libicui18n.so.78.3', '/opt/pinned-icu/install/lib/libicuuc.so.78.3', '/tmp/foreign/libicui18n.so.78.3']
+[W-F1-second-foreign-i18n-mapping] REJECTED loaded ICU library icui18n (/tmp/foreign/libicui18n.so.78.3) is not the verified ICU 78.3 build: sha256 21f4a1b7663e8b13c0379151e6e8d70bbbaf44e90ef65f212241d4954d2e7bce, expected f11e5436f164b829a4cd48ac375c18a6d1643969b863840cb87525d370d029a3
+[W-F2-byte-identical-twin] ICU mappings: ['/opt/pinned-icu/install/lib/libicudata.so.78.3', '/opt/pinned-icu/install/lib/libicui18n.so.78.3', '/opt/pinned-icu/install/lib/libicuuc.so.78.3', '/tmp/twin/libicui18n.so.78.3']
+[W-F2-byte-identical-twin] ACCEPTED ['a', 'b']
+[W-F3-unlisted-icu-library] ICU mappings: ['/opt/pinned-icu/install/lib/libicudata.so.78.3', '/opt/pinned-icu/install/lib/libicui18n.so.78.3', '/opt/pinned-icu/install/lib/libicuuc.so.78.3', '/tmp/other/libicuuc.so.77.1']
+[W-F3-unlisted-icu-library] REJECTED loaded ICU library /tmp/other/libicuuc.so.77.1 is not part of the verified ICU 78.3 build
+[W-F7-stand-in-binding] ICU mappings: []
+[W-F7-stand-in-binding] REJECTED the ICU 78.3 runtime is not loadable: libicuuc.so.78: cannot open shared object file: No such file or directory
+== W-F5: no re-attestation of a substituted binary
+unsupported mode: --identity (build or --env; an existing build is never re-attested)
+--identity exit=2
+identity file unchanged
+[W-F6-substituted-same-version-binary-in-the-verified-prefix] ICU mappings: ['/opt/pinned-icu/install/lib/libicudata.so.78.3', '/opt/pinned-icu/install/lib/libicui18n.so.78.3', '/opt/pinned-icu/install/lib/libicuuc.so.78.3']
+[W-F6-substituted-same-version-binary-in-the-verified-prefix] REJECTED loaded ICU library icui18n (/opt/pinned-icu/install/lib/libicui18n.so.78.3) is not the verified ICU 78.3 build: sha256 9e42ad4315684fa0f95d24875ab1a92e80cd161653b25ec3af29949ba86d3b90, expected f11e5436f164b829a4cd48ac375c18a6d1643969b863840cb87525d370d029a3
+== identity unit tests on Linux (Windows-only real tests skip)
+................ss..ssssss.                                              [100%]
+19 passed, 8 skipped in 0.50s

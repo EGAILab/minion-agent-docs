@@ -314,3 +314,63 @@ returned **CHANGES REQUIRED**.
 Rust not touched. No merge, Rust WP-13.1 or Layer 14.
 
 Requested next (§11.8.8 Case A): Codex's targeted exact-SHA review of FR001-FR003, then another final complete review.
+
+## 10. Remediation 4 -- `CE-L13-WP131-03` (`FR003`: one verified ICU build)
+
+Codex's targeted review of remediation 3 (`minion-agent#48` comment `5850822214`) closed FR001/FR002 provisionally and kept FR003 open with two defects:
+- **FR003-a:** a first-match inventory accepted a mixed process.
+- **FR003-b:** `build.sh --identity` could re-attest substituted binaries.
+
+As FR003 had survived two reviews (§11.8 trigger A):
+- **Characterization and checkpoint:** `assurance/layers/13-wp131-ce-l13-wp131-03-characterization.md`.
+- **Agreement:** Codex, §11.8.5, `minion-agent-docs#162` comment `5851039546`, `AGREED FOR IMPLEMENTATION`, FR003 only.
+
+This section implements exactly that checkpoint.
+
+**Implementation (code #60):**
+- **R-F1/R-F2** (`collation.py`):
+  - `loaded_icu_instances` lists every ICU library instance of any name or version (Windows `EnumProcessModules`, Linux every `/proc/self/maps` path).
+  - `verify_build_identity` requires each to be a file the verified build produced -- an unlisted ICU is rejected first, even with listed bytes -- and byte-identical to it; byte-identical copies pass.
+  - Common, i18n and data must be loaded.
+  - A runtime ICU that cannot be loaded raises the typed `PinnedIcuError`.
+- **R-F4** (`build.sh`):
+  - The identity (source SHA-512, platform, and every produced ICU runtime library's file name and SHA-256) is written only as the last step of a run that verified the tarball and cleared old binaries, install tree and identity. The same run extracts, compiles and installs before that step.
+  - `--identity` is removed (exit 2).
+  - The host's ICU was rebuilt by the new script. The rebuild produced different bytes from the earlier build of the same tarball, confirming MSVC builds are not reproducible, as R-F5's rejected-alternative note says.
+- **R-F3/R-F5:** documented in the module docstring and `scripts/pinned-icu/README.md`.
+
+**Found on the first real Linux PyICU build.** `PYICU_LFLAGS` baked a `DT_RUNPATH`, which does not apply to `libicuuc`'s own `libicudata` dependency, so PyICU could not load on Linux. The Linux link now uses `DT_RPATH` (`-Wl,--disable-new-dtags`). This was a latent defect of the Linux build instructions that had never been exercised; it is recorded here, not hidden.
+
+**Evidence:**
+- **Windows** (`tests/tools/builtin/test_collation_build_identity.py`, fresh processes, real binding and loader):
+  - verified build ACCEPTED;
+  - W-F1: a foreign same-name `icuin78.dll` next to the verified one is REJECTED;
+  - W-F2: a byte-identical twin is ACCEPTED;
+  - W-F3: an unlisted `icuuc77.dll` carrying verified bytes is REJECTED;
+  - W-F6: a same-version foreign build directory is REJECTED;
+  - W-F7: the stand-in binding is REJECTED;
+  - W-F5: `--identity` exits 2, and a static witness shows the identity write only after the verified, clean extract, compile and install.
+- **Linux** (`data/13-wp131-ce-l13-wp131-03/`: `run_linux.sh`, `probe.py`, `linux_transcript.txt`; disposable `python:3.12-slim`; ICU built by `build.sh`; PyICU 2.16.2 built from the hash-checked sdist):
+  - verified ACCEPTED;
+  - W-F1: a second `/tmp/foreign/libicui18n.so.78.3` mapping is REJECTED;
+  - W-F2: a twin is ACCEPTED;
+  - W-F3: `libicuuc.so.77.1` is REJECTED;
+  - W-F5: `--identity` exits 2 after a binary was substituted, and the identity file is unchanged;
+  - W-F6: the substituted binary in the verified prefix is REJECTED;
+  - W-F7: the stand-in is REJECTED (typed);
+  - unit tests: 19 passed.
+- **Negative controls** (`data/13-wp131-python-implementation/mutants-ce03.log`): **38/38 detected**, including:
+  - `icu_first_match_inventory`
+  - `icu_unlisted_library_ignored`
+  - `icu_identical_duplicate_rejected`
+  - `build_sh_reattest_mode`
+  - `icu_identity_gate_removed`
+  - `icu_identity_hash_not_compared`
+
+**Gates (fresh; Windows, Python 3.13.5, rebuilt pinned ICU 78.3):**
+- `pytest`: 2074 passed, 11 skipped, 19 xfailed;
+- coverage 100.00%;
+- `ruff check` clean; `mypy --strict` clean (91 files);
+- manifest validation passes.
+
+Rust not touched. Requested next: Codex's targeted exact-SHA closure review of FR003 (W-F1..W-F7), then the final complete WP-13.1 review (§11.8.8 Case A).
