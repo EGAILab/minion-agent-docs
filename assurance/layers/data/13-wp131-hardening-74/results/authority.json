@@ -1,0 +1,122 @@
+{
+ "engine": "node+pi+photon-node-0.3.4",
+ "node": "22.15.1",
+ "v8": "12.4.254.21-node.24",
+ "read_level": [
+  {
+   "file": "bmp1_noise_2100x2100.bmp",
+   "input_sha256": "46b6c3d083f9ffa1efd645534ce8f85b2df65f8742d16fbe19ecfc4facaae7f3",
+   "sniffed_mime": "image/bmp",
+   "ok": true,
+   "mime": "image/jpeg",
+   "hints": [
+    "[Image converted from image/bmp to image/jpeg.]",
+    "[Image: original 2100x2100, displayed at 2000x2000. Multiply coordinates by 1.05 to map to original image.]"
+   ],
+   "data_sha256": "14160ecc760a04ad0775d418e1e2325885b96e1389acc0883be606df8d03bf83",
+   "data_bytes": 2724365,
+   "data_base64_len": 3632488
+  },
+  {
+   "file": "png1_noise_2100x2100.png",
+   "input_sha256": "3eaacdc17485c2b873174886bd741a6e1be446d207681f5c6a31ce337bea42d9",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/jpeg",
+   "hints": [
+    "[Image: original 2100x2100, displayed at 2000x2000. Multiply coordinates by 1.05 to map to original image.]"
+   ],
+   "data_sha256": "6cbc55bd1915220be63c5c73f65966eb7d6390a13f4bd06c666af2f18d618f48",
+   "data_bytes": 2723660,
+   "data_base64_len": 3631548
+  },
+  {
+   "file": "png_actl_after_idat.png",
+   "input_sha256": "7f93665ab98e3fbbe1f39bbef1457f890c1050b938688665bcc0dc71a800fb46",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [],
+   "data_sha256": "7f93665ab98e3fbbe1f39bbef1457f890c1050b938688665bcc0dc71a800fb46",
+   "data_bytes": 103,
+   "data_base64_len": 140
+  },
+  {
+   "file": "png_rgb_2150x4.png",
+   "input_sha256": "ff5a6bf7bf3bcb6b33cf7ac408fa72096da57770c4d294b16c0b2c499b1ab589",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [
+    "[Image: original 2150x4, displayed at 2000x4. Multiply coordinates by 1.07 to map to original image.]"
+   ],
+   "data_sha256": "7627bfd570fc2586682cd1c3aaf24570193850812f348714bdf3d39dfba217fa",
+   "data_bytes": 28637,
+   "data_base64_len": 38184
+  },
+  {
+   "file": "png_rgb_2650x4.png",
+   "input_sha256": "6152cd359fceabf347919c7c51e814e4007b7473205c225a367cdef68a5fd812",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [
+    "[Image: original 2650x4, displayed at 2000x3. Multiply coordinates by 1.32 to map to original image.]"
+   ],
+   "data_sha256": "95c4402558e8bcf83e6dba31beab343c54e23dedc174377f717b03340d7399bd",
+   "data_bytes": 23814,
+   "data_base64_len": 31752
+  },
+  {
+   "file": "png_rgb_3050x4.png",
+   "input_sha256": "59231a6d7dfbe805fede942b96a6d475e690e4a3ebbc540bbb242e7f6440562e",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [
+    "[Image: original 3050x4, displayed at 2000x3. Multiply coordinates by 1.52 to map to original image.]"
+   ],
+   "data_sha256": "11bc63401b6e937b924087bac75f79d3cf9e8b0145e89cbf97f563368b487efc",
+   "data_bytes": 24071,
+   "data_base64_len": 32096
+  },
+  {
+   "file": "png_small_rgb_padded_3538941.png",
+   "input_sha256": "b9f5b3315c8d26580af76f223197ebad89369f49ebbd357a9c53075ef10e30fa",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [],
+   "data_sha256": "b9f5b3315c8d26580af76f223197ebad89369f49ebbd357a9c53075ef10e30fa",
+   "data_bytes": 3538941,
+   "data_base64_len": 4718588
+  },
+  {
+   "file": "png_small_rgb_padded_3538942.png",
+   "input_sha256": "905591edfaf010060215e62aa93fc70718870cf14c57f40c8635690731521502",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [
+    "[Image: original 8x5, displayed at 8x5. Multiply coordinates by 1.00 to map to original image.]"
+   ],
+   "data_sha256": "162dd8838e9294aa5faa7688774d7a04f589dea9971aa6897d204b7dd037fae0",
+   "data_bytes": 181,
+   "data_base64_len": 244
+  },
+  {
+   "file": "png_small_rgb_padded_3538944.png",
+   "input_sha256": "fcc7ce5d6bf08bc7c882291ef086e8f51f5b9ff0d55ee24ee9dd693e1806f5ff",
+   "sniffed_mime": "image/png",
+   "ok": true,
+   "mime": "image/png",
+   "hints": [
+    "[Image: original 8x5, displayed at 8x5. Multiply coordinates by 1.00 to map to original image.]"
+   ],
+   "data_sha256": "162dd8838e9294aa5faa7688774d7a04f589dea9971aa6897d204b7dd037fae0",
+   "data_bytes": 181,
+   "data_base64_len": 244
+  }
+ ],
+ "core_level": []
+}

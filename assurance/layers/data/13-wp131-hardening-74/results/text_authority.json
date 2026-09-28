@@ -1,0 +1,14 @@
+{
+ "engine": "node+pi-read-text-branch",
+ "node": "22.15.1",
+ "v8": "12.4.254.21-node.24",
+ "results": [
+  {
+   "file": "apng_actl_before_idat.png",
+   "input_sha256": "68bdea6d7370264992d9bf33b8d6f89c91ec8ad88a665869c8d6127c62c9a15f",
+   "sniffed_mime": null,
+   "text": "�PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR\u0000\u0000\u0000\b\u0000\u0000\u0000\u0005\b\u0002\u0000\u0000\u0000��:\u0002\u0000\u0000\u0000\bacTL\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000�-�\u0000\u0000\u0000\u001aIDATx�cd```g`�D,\f��\f\fX\u0010\u0015%\u0000:r\u0000�\t�u�\u0000\u0000\u0000\u0000IEND�B`�",
+   "details": null
+  }
+ ]
+}
