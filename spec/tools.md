@@ -543,13 +543,24 @@ condition actually suppresses/continues the next model turn.
 
 ## Layer 13 — Built-in tools
 
-**Status: `WP-13.1` contract merged (docs `b1ed1530`, manifest `cb8ed1c1`); R005-A evidence merged
+**Status: `WP-13.1` (`read`, `ls`; `TOOL-025`/`TOOL-026`/`TOOL-028`/`TOOL-039`/`TOOL-040`) CERTIFIED in both
+languages (`CERTIFIED_CLOSED`); cross-language closure recorded in `minion-agent#48`.** `TOOL-027` remains
+`NOT_ADOPTED_CORE`. Accepted implementations: Python at `minion-agent/main`
+`b60f47157965c4aa81c96a20a6105758d33cbf9f` (`minion-agent#60`); Rust at `minion-agent/main`
+`9802721fd4099ea6b6b1ecc1396f64889e4a1bc5` (`minion-agent#72`; assurance `minion-agent-docs#171`,
+`master` `e2f35bfadb04bb77463f753ac955c6d4aa2f2ba0`). The representation-neutral `TOOL-025` image
+correction (`L13-WP131-RUST-I001`) is merged at `master` `074b37f2593c9c87407b67bf6254783171fc4cc7`
+(`minion-agent-docs#170`) and `main` `45579e1fe5279d2f2e06e2542fa4f08fdd31d418` (`minion-agent#71`).
+This status paragraph is a documentary update only; the contract below is unchanged. The earlier status
+record follows.
+
+Earlier status: `WP-13.1` contract merged (docs `b1ed1530`, manifest `cb8ed1c1`); R005-A evidence merged
 (`f46051fb`); Python implementation candidate pending independent review, with the
 implementation-pass contract repairs `IMPL-C001`-`IMPL-C011` below (`minion-agent#48`). Earlier:
 contract fully integrated, pending one complete final contract-convergence
 review (`minion-agent#48`): `TOOL-025`/`TOOL-026` `CONTRACT_INTEGRATED` (integration approved,
 `minion-agent-docs#156`), `TOOL-028` `CONTRACT_INTEGRATED` (this revision), `TOOL-027`
-`NOT_ADOPTED_CORE` (unchanged, see below).** The first independent review
+`NOT_ADOPTED_CORE` (unchanged, see below). The first independent review
 (`minion-agent-docs#133`) returned `CHANGES REQUIRED` with nine findings, `L13-WP131-R001`-`R009`;
 the Layer 12 boundary was confirmed `CLEAR`. All nine were remediated across `CE-L13-WP131-01`'s
 five-lane convergence episode. Owner decisions: `R002-A`, `R005-A`, and `R010-B` (integrated
