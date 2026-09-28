@@ -67,3 +67,39 @@ No Python production file, shared semantic rule, canonical scenario, or manifest
 ## Handoff status
 
 Rust WP-13.1 is an implementation/certification **candidate**, pending independent exact-SHA review by the shared/Python owner. It is not merged or cross-language closed. The contract correction PRs and the Rust implementation PR must not be merged without the next owner/workflow authorization. Coordination transfers to `NEXT_OWNER = Claude` after the Rust candidate and this assurance are pushed and remote-reachable.
+
+## Remediation after independent review of the first candidate
+
+The exact `8b4eda37` / `ff19a84c` candidate was rejected in [the independent Rust review](https://github.com/EGAILab/minion-agent/pull/72#issuecomment-5853528408). The preceding sections are the original candidate's historical evidence, not claims that its review passed. This section records the subsequent Rust-only remediation; the new exact heads and fresh gate counts are recorded below after verification.
+
+- **RW-F001 (`PI_PARITY_DEFECT`):** a BMP converted to PNG and then resized to JPEG now constructs its conversion hint from the final MIME. The no-resize branch still names PNG. A deterministic 2100×2100 noise BMP exercises the JPEG result, while the pre-existing no-resize BMP test protects the PNG branch.
+- **RW-F002 (`PI_PARITY_DEFECT`):** the scale hint now formats the exact binary64 value with ECMAScript's positive `toFixed(2)` rounding. It does not pre-round `scale * 100` in binary64. Direct witnesses assert `1.075→1.07`, `1.125→1.13`, `1.005→1.00`, `2.675→2.67`, and `1.325→1.32`; a 2150-wide BMP exercises the full image path. The positive image-dimension `Math.round` sites also use Rust's half-away-from-zero `f64::round` (RW-F004).
+- **RW-F003 (`CONTRACT_ASSURANCE_DEFECT`, discriminating evidence):** new Rust witnesses cover all seven surviving material mutants. M04 aborts inside the real `FileSystem::read_binary_file` seam and checks the worker-settlement result. M09 verifies an invalid ICU identity at the sort seam. M10 presents a second same-basename loaded module with different bytes, then a byte-identical twin. M11 injects failed and truncated Windows module-path lookups. M13 uses noise whose PNG exceeds the ceiling while both JPEG qualities 80 and 85 fit, and asserts the first eligible candidate's exact bytes. M14 tests both sides of the exact base64 ceiling and demands re-encoding at equality. M19 inserts `acTL` before `IDAT` into a PNG and demands MIME rejection.
+
+Each M04/M09/M10/M11/M13/M14/M19 witness was run against its corresponding temporary single-point mutant, observed to fail for the intended reason, and the production line restored via a narrow patch. The first M13 witness did **not** kill the 80↔85 reorder because quality 85 did not fit; its input was strengthened until both JPEG candidates fit, and the rerun then failed on the reorder. No mutant remains in the candidate.
+
+The reviewer separately ran the first candidate in a disposable Linux `rust:1.97.1-bookworm` image with a hash-checked pinned ICU4C 78.3 build: strict Clippy, all 45 builtin canonical documents, the pinned-ICU tests and 80 library tests passed. Four full-workspace failures were confined to older Layer-12 cancellation/process/shell tests and reproduced on unmodified `main` in the same image. This is **reviewer-provided platform evidence**, not a claim that this remediation was freshly run on Linux; the lower-layer follow-ups remain out of WP-13.1 scope. `xtask layering` and `xtask coverage` are pre-existing no-op stubs and are not counted as verification gates. Only `xtask conformance verify` is counted below.
+
+### Remediation gates and handoff
+
+From the remediated Rust worktree, with the verified ICU4C 78.3 library/identity environment:
+
+```text
+cargo fmt --all -- --check
+    PASS
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+cargo test --workspace --all-features -j 2 --quiet
+    PASS — 409 tests, 0 failed, Windows
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --quiet
+    PASS
+cargo run -p xtask -- conformance verify
+    PASS
+MINION_AGENT_CONFORMANCE_ROOT=<exact Option-A #71 worktree>
+cargo test -p minion-agent --all-features --test builtin_tool_conformance every_builtin_scenario_uses_real_rust_tools_and_execution
+    PASS — 45 documents / 154 cases
+```
+
+The restricted test sandbox caused two pre-existing Windows subprocess tests to fail at `remove_dir_all` with OS sharing error 32. The identical `execution_process` suite passed 6/6 outside that restriction, followed by the complete unsandboxed 409/409 workspace pass. No lower-layer source was edited. `LNK4098` remains a disclosed linker warning, not a failed gate.
+
+Remediated Rust candidate code commit: `a5ca307cee7eb9561bc2f3cc6f5935c0fd1dbc25` on PR #72. The paired assurance head is recorded in issue #48 after both pushes are verified. This remains an independent-review candidate, not a merge or cross-language closure; Layer 14 remains unauthorized.
