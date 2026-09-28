@@ -741,9 +741,14 @@ Image result
                       non-vision note -- ALWAYS present, even on success
         [1]  image    -- ABSENT if image processing failed (see below);
                       present otherwise
-            .data         the image's bytes -- exactly the bytes whose
-                          standard base64 encoding is Pi's `data` string
-                          (Layer 02 ImageBlock carries bytes; IMPL-C009)
+            .data         the final image -- its semantic value is the exact
+                          final encoded byte sequence; canonically
+                          serialized as the standard base64 of those
+                          bytes, which is Pi's `data` string. The
+                          in-memory form is the Layer 02 binding's own
+                          (see "Image representation" below;
+                          L13-WP131-RUST-I001, superseding IMPL-C009's
+                          bytes-only wording)
             .mime_type    the FINAL mime type after any BMP-to-PNG
                           conversion and/or resize re-encode -- may
                           differ from the sniffed mime type
@@ -863,6 +868,31 @@ Image result
     provider at all add none. Whoever composes the tools with an agent supplies the provider from
     the current request's model (Pi's `model.input.includes("image")`, Layer 04's
     `TargetModel.supports_images`).
+- **Image representation (`L13-WP131-RUST-I001`, owner decision Option A, `minion-agent#48` comment
+  `5852786213`).** The image result is defined by its semantic value -- the final MIME type plus
+  the exact final encoded image byte sequence that the accepted image-processing semantics produce
+  (including pinned Photon, where `R005-A` makes it authoritative). Two implementations are
+  equivalent when they produce the same MIME type and byte-for-byte the same final bytes; a
+  cryptographic digest of those exact bytes may serve as the comparison evidence, but the
+  requirement is equality of the bytes themselves.
+  - **Canonical serialization.** An inline image's serialized `data` is the standard base64
+    (RFC 4648 section 4 alphabet, `=` padding, no line breaks or other characters) of exactly those
+    bytes -- Pi's observable `ImageContent.data`. Bytes -> canonical base64 -> serialized `data` is
+    deterministic.
+  - **Binding freedom.** The in-memory representation is the Layer 02 binding's own, since
+    `ImageBlock{mime_type,data|reference}` (`spec/llm.md`) does not prescribe it: e.g. Python's
+    `ImageBlock.data` holds the decoded bytes, Rust's `ImageSource::Data` holds the canonical base64
+    `String`. Any binding is valid if it represents exactly the semantic bytes and serializes them
+    canonically. This rule changes no Layer 02 contract or implementation.
+  - **Conformance normalization.** A canonical runner MAY convert a binding's certified
+    representation to the semantic bytes for comparison (decode canonical base64; take bytes as
+    they are). That is representation normalization only: a runner must not resize, transcode,
+    repair, reinterpret or otherwise perform the tool's work.
+  - **Canonical-serialization witness.** Byte equivalence alone is not enough: every binding's
+    evidence must also show that its canonical serialization of the result emits exactly the
+    canonical base64 of those bytes (strictly decodable, and re-encoding the decoded bytes
+    reproduces the serialized string character for character), so a representation holding
+    non-canonical base64 cannot pass because a permissive decoder recovers the same bytes.
 - **Cancellation (`L13-WP131-R008` correction, `read`):** `read` accepts the Layer 09/Layer 06
   cancellation signal. An already-aborted signal at call start rejects immediately with
   `"Operation aborted"` before any filesystem access. Once started, the tool checks the signal
@@ -1098,7 +1128,9 @@ Each Photon operation may run on a fresh instance: the R005-A differential showe
 lifecycle has no observable effect. A trap inside a borrowing call can leave wasm-bindgen's borrow
 flag set on the long-lived instance Pi keeps, but that does not change any output.
 
-`TOOL-025`'s image content block carries the resulting bytes (`IMPL-C009`) with the final MIME.
+`TOOL-025`'s image content block carries the resulting image -- semantically exactly those final
+bytes, canonically serialized as their standard base64 -- with the final MIME ("Image
+representation" above; `IMPL-C009` as corrected by `L13-WP131-RUST-I001`).
 
 `TOOL-027` -- Pi's macOS-specific filename-fallback heuristics (narrow-no-break-space AM/PM
 substitution, NFD normalization, straight-to-curly-apostrophe substitution, and their

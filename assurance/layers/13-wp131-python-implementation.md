@@ -383,3 +383,38 @@ Rust not touched. Requested next: Codex's targeted exact-SHA closure review of F
 - **Witnesses:** lookup failure and truncation among real enumerated modules; an unreadable listed instance.
 - **Negative controls:** `icu_module_path_failure_skipped` and `icu_unreadable_instance_skipped`. `data/13-wp131-python-implementation/mutants-ce03b.log` records **40/40 detected**.
 - **Gates:** 2077 passed, 11 skipped, 19 xfailed; coverage 100.00%; ruff and mypy clean.
+
+## 11. `L13-WP131-RUST-I001` -- representation-neutral image contract (after Python acceptance)
+
+The Rust WP-13.1 preflight (Codex, `minion-agent#48` comment `5852190115`) found that `TOOL-025` required the typed `ImageBlock.data` to carry decoded bytes and forbade base64 text in it. Certified Rust Layer 02 holds image data as a canonical base64 `String` (`ImageSource::Data { data: String }`).
+
+The owner selected **Option A** (`minion-agent#48` comment `5852786213`):
+- the defect is a `CONTRACT_ASSURANCE_DEFECT` in the WP-13.1 language-neutral contract;
+- `spec/llm.md`'s `ImageBlock{mime_type,data|reference}` never prescribed the in-memory type, so both certified bindings are valid;
+- no Layer-02 contract or implementation is reopened.
+
+**History, preserved.**
+- `IMPL-C009` (section 2, the Python implementation pass) introduced "the block carries the bytes whose base64 is Pi's `data`".
+- `L13-WP131-FR002` (section 9) reinforced it as "Minion's typed Layer-02 `ImageBlock.data` carries the decoded bytes; an implementation must not put base64 text in the typed `data`".
+- Both entries above stand as written. **`RUST-I001` supersedes their representation-specific part**, which promoted the Python binding choice into a shared requirement. Their underlying requirement -- that Pi's base64 `data` and Minion's image represent exactly the same image output -- remains valid.
+
+**Correction** (`spec/tools.md` TOOL-025: the output shape and a new "Image representation" rule; manifest `TOOL-025` rule):
+- **Semantic value:** MIME type plus the exact final encoded byte sequence. Equivalence means equal bytes, byte for byte; a digest of those bytes is evidence only.
+- **Canonical serialization:** the standard base64 of exactly those bytes, Pi's `ImageContent.data`, deterministically.
+- **In-memory form:** binding-specific -- Python bytes, Rust canonical base64 `String`.
+- **Conformance normalization:** a runner may convert a certified representation to the bytes (representation conversion only), never doing the tool's work.
+- **Canonical-serialization witness:** required per binding.
+
+`R005-A`'s exact-output authority and every image semantic are unchanged.
+
+**Witness** (code, `minion-agent` branch `contract/13-wp131-rust-i001`):
+- **Schema:** the `builtin_tool` image expectation gains `base64_len` and `canonical_base64`.
+- **Runner:** serializes through the binding's own canonical Layer-02 serializer, strictly decodes, and requires re-encoding to reproduce the serialized string character for character.
+- **Scenarios:** the 7 image scenarios are regenerated (`gen_scenarios.py`, `image_expect`) from the pinned-Pi authority. Each Pi `data_base64_len` equals the canonical length; all other scenarios are byte-identical.
+- **Negative controls** (`test_builtin_image_canonical_serialization.py`): line-wrapped and unpadded base64 of the same bytes fail.
+
+No Python src or Rust file changes, and merged Python WP-13.1 behavior is unchanged.
+
+**Gates:** 2080 passed, 11 skipped, 19 xfailed; coverage 100.00%; ruff and mypy clean; conformance 448 passed.
+
+Requested: Codex exact-SHA contract review. On approval, record `L13-WP131-RUST-I001` CLOSED; Rust WP-13.1 implementation then resumes (owner decision section 10).
