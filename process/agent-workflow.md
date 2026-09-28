@@ -745,6 +745,29 @@ Escalate to the owner for intentional Pi divergence, Pi-baseline changes, genuin
 
 Routine review/remediation handoff SHOULD proceed agent-to-agent through GitHub without requiring owner relay.
 
+**Standing delegation (in force).** The owner has delegated routine workflow governance to Claude. The authoritative text is the pinned issue `minion-agent#75`, a verbatim transcription of the owner's decision.
+
+Within that scope Claude decides and durably records routine transitions without a fresh owner response. Those transitions are:
+- exact-SHA merges after the required independent review is APPROVED with no blocking findings;
+- merge ordering;
+- progression to the next language or phase once the process-defined gates pass;
+- targeted remediation that implements an agreed contract or decision;
+- documentary/status-only corrections;
+- `CERTIFIED` / `CERTIFIED_CLOSED` declarations and coordination-issue closure once every predefined gate passes;
+- non-blocking follow-up issues;
+- ordinary handoffs.
+
+The delegation never weakens:
+- Claude/Codex implementer-reviewer separation;
+- exact-SHA approval (§11.3);
+- negative controls (§11.8.7.1);
+- convergence checkpoints;
+- required final complete reviews;
+- default-branch verification (§12);
+- the canonical coordination-state round-trip.
+
+The owner-only list in `minion-agent#75` governs escalation. On uncertainty, semantic or architectural questions go to the owner; routine execution, evidence and workflow questions are resolved by Claude using this process. Only the owner amends or revokes the delegation.
+
 ### 11.8 Contract convergence protocol
 
 The normal remediation/re-review loop is intentionally strict, but it MUST NOT become an unbounded semantic-discovery loop.
@@ -1162,6 +1185,17 @@ GOVERNANCE_SOURCE
     <exact decision>
     <exact scope>
 ```
+
+A decision Claude makes under the §11.7 standing delegation (`minion-agent#75`) is valid provenance when it is recorded as:
+
+```text
+GOVERNANCE_SOURCE
+    standing_delegation: https://github.com/EGAILab/minion-agent/issues/75
+    delegated_decision: <issue comment / assurance record containing Claude's decision>
+    scope: <exact work package / PR / transition>
+```
+
+Such a record must not be described as an owner decision on that specific item. Nothing outside the delegation's scope may be recorded this way.
 
 If no such source exists, the agent MUST NOT assert approval. It must instead report:
 
