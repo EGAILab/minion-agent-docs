@@ -103,3 +103,31 @@ cargo test -p minion-agent --all-features --test builtin_tool_conformance every_
 The restricted test sandbox caused two pre-existing Windows subprocess tests to fail at `remove_dir_all` with OS sharing error 32. The identical `execution_process` suite passed 6/6 outside that restriction, followed by the complete unsandboxed 409/409 workspace pass. No lower-layer source was edited. `LNK4098` remains a disclosed linker warning, not a failed gate.
 
 Remediated Rust candidate code commit: `a5ca307cee7eb9561bc2f3cc6f5935c0fd1dbc25` on PR #72. The paired assurance head is recorded in issue #48 after both pushes are verified. This remains an independent-review candidate, not a merge or cross-language closure; Layer 14 remains unauthorized.
+
+## RW-F005: Windows module-inventory fail-closed propagation
+
+The independent re-review of code `a5ca307c` and docs `31ca5639` closed RW-F001, RW-F002, RW-F004, and six of seven RW-F003 mutant rows, but identified [RW-F005](https://github.com/EGAILab/minion-agent/pull/72#issuecomment-5869587882): the Windows `GetModuleFileNameW` classifier was tested, while the per-handle inventory loop's propagation of its error was not. This section is an append-only remediation record; it does not rewrite the earlier candidate or its review.
+
+The production Windows enumerator now calls `loaded_module_paths_with(handles, getter)`. That helper owns the same per-handle `module_path_with(...)?` loop used by production, with only the OS lookup injectable. Two Windows language tests present three valid ICU-role paths followed by one failed (`0`) or truncated (`buffer.len()`) lookup. One requires the whole inventory to return the complete-path error; the other passes that inventory through the real `sort_names_with_inventory` seam and requires sorting to fail before an otherwise valid three-role identity can produce a result. Existing `list_dir`/ICU identity semantics are unchanged.
+
+The exact M11b negative control replaced the loop's `?` with a silent `if let Ok(path)` skip. Both tests failed independently: inventory incorrectly returned the three good paths, and sorting incorrectly returned `["a", "b"]`. The mutation was then restored; both tests passed. No mutant remains in the candidate. The earlier reviewer also corrected its M21 claim: the impractical exact-encoder-output boundary mutant is not counted as killed or as new evidence here.
+
+Fresh Windows gates on final code commit `41eb013d8db9eaa14670d010dcdddaa28d37063d`, using the verified pinned ICU4C 78.3 environment:
+
+```text
+cargo fmt --all -- --check
+    PASS
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    PASS
+cargo test --workspace --all-features -j 2 --quiet
+    PASS — 411 tests, 0 failed
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --quiet
+    PASS
+cargo run -p xtask -- conformance verify
+    PASS
+MINION_AGENT_CONFORMANCE_ROOT=<exact Option-A #71 worktree>
+cargo test -p minion-agent --all-features --test builtin_tool_conformance every_builtin_scenario_uses_real_rust_tools_and_execution -- --nocapture
+    PASS — 45 documents / 154 cases
+```
+
+The test count was independently checked with `cargo test --workspace --all-features -- --list` (411 `: test` entries). The previously disclosed Windows `LNK4098` warning remains non-fatal. No Linux rerun is claimed for this Windows-only targeted change. No shared contract, Python code, canonical scenario, or lower-layer behavior was changed. The pair remains pending independent exact-SHA review; neither merge nor cross-language closure nor Layer 14 is authorized.
