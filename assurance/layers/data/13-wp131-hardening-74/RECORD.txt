@@ -1,0 +1,17 @@
+minion-agent#74 -- WP-13.1 post-closure witness hardening: pinned-Pi authority run
+See assurance/layers/13-wp131-hardening-74.md for the full record.
+
+Reproduce (from this directory):
+  python harness/make_corpus.py <scratch>/corpus png_small_rgb.png     # must match corpus.sha256
+  docker run --rm -v <pi checkout @ b7bb00b9>:/pi:ro -v <this dir>:/evid:ro -v <out>:/out \
+      node:22.15.1-alpine sh /evid/harness/run_authority.sh
+  python harness/gen_scenarios.py <minion-agent worktree> <this dir> <scratch>/corpus
+
+Committed results (from the run recorded in results/runtime.txt):
+  results/authority.json        pinned Pi processImage over 9 image-path files
+  results/text_authority.json   pinned Pi read.ts text branch over apng_actl_before_idat.png
+  results/corpus.txt            corpus file sizes
+Inputs: png_small_rgb.png (the committed R005-A fixture, sha256 dd2696b1...), corpus.sha256.
+The corpus itself (about 11 MB) is regenerated deterministically rather than committed here. The
+five canonical scenarios' fixtures are committed in minion-agent conformance/agent/fixtures/
+h74-wp131-hardening/.
