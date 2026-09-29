@@ -631,6 +631,11 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
    this pipeline for a WP-13.1 caller -- step 4 always intercepts first.)
 ```
 
+**Shared preprocessing versus tool-specific dispatch (`L13-WP132-R002`).**
+- Steps 1-4 above are the **shared preprocessing**. Their output is the preprocessed path, and an `R002-A` rejection at step 4 answers before any `ctx.fs` access.
+- Step 5 is **each tool's own dispatch**. `read` and `ls` use the read-only dispatch written in step 5, unchanged.
+- `write` and `edit` (WP-13.2) consume steps 1-4 only and pass the preprocessed path to their own operations (see WP-13.2). They never go through step 5's read-only dispatch: a new-file `write` does not first ask `check_readable`.
+
 **`L13-WP131-R001` correction:** an earlier revision of this pipeline added a mandatory trim step
 and described the whole sequence as mirroring `utils/paths.ts:normalizePath`'s option set "exactly."
 Pinned Pi's own tool call sites never set `trim: true` -- `path-utils.ts:40-49`/`utils/
@@ -1595,8 +1600,12 @@ with_mutation_queue(fs, p, fn):
                                                   an Err here fails registration
         Err(any other code)                    -> registration fails with it
     link a new entry onto the tail of queue[fs identity][key]
-  (a failed registration raises its error to its own caller; it leaves no
-   entry behind and never blocks or reorders any other call's registration)
+  (registration is SERIALIZED: a later call's registration -- including its
+   canonical_path -- does not begin until every earlier registration has SETTLED,
+   whether it succeeded or failed. A slow registration that eventually fails
+   therefore delays later registrations until it settles (Pi's registrationQueue
+   chain awaits it), then raises its error to its own caller, leaves NO entry
+   behind, and does not block anything after it has settled -- L13-WP132-R003)
   WAIT until every earlier entry for the same (fs identity, key) has released
   RUN fn
   RELEASE the entry (whether fn returned or raised), and drop the key's queue
@@ -1612,7 +1621,9 @@ with_mutation_queue(fs, p, fn):
   - It deliberately does NOT use Layer 12's `resolve()`, whose fallback set omits `not_directory` (`minion-agent#78`).
 - **Provider scoping.** Queues are keyed by the pair (`ctx.fs` instance identity, key). Two different providers never share a queue even when their key strings are equal. Within one provider instance, equal keys share one FIFO.
 - **What the key identifies** follows Pi: the canonical, symlink-resolved path when the target exists, and the lexical absolute path when it does not. A symlink and its target therefore share a queue; a not-yet-existing path whose ancestor is a symlink can change key once it is created, which Pi accepts too.
-- **Registration failure** (a `canonical_path` or `absolute_path` failure not covered by the fallback) is the tool's error. Its text is under Error text below; it happens before the lock and before any abort check.
+- **Registration failure** (a `canonical_path` or `absolute_path` failure not covered by the fallback) is the tool's error. Its text is under Error text below.
+  - It happens before the lock and before any abort check.
+  - It delays later registrations only until it settles, and leaves no queue entry (`L13-WP132-R003`).
 
 #### Cancellation (`TOOL-033`, DIRECT_PI_PARITY)
 
@@ -1627,11 +1638,12 @@ with_mutation_queue(fs, p, fn):
 
 ```text
 execute(path, content):
-  p   = TOOL-026 pipeline(path)                 -- an R002-A rejection answers here,
-                                                  before registration
-  dir = the parent directory of fs.absolute_path(p)
-  with_mutation_queue(fs, p):
+  p = preprocess(path)                          -- TOOL-026 steps 1-4 only; an R002-A
+                                                  rejection answers here, before registration
+  with_mutation_queue(fs, p):                   -- NO provider await before registration
     check abort
+    a   = fs.absolute_path(p)                   -- no signal; failure: "Cannot resolve <path>: <cause>"
+    dir = the lexical parent directory of a     -- Pi's dirname(absolutePath)
     fs.create_dir(dir, recursive=True)          -- failure: "Cannot create parent directory of <path>: <cause>"
     check abort
     fs.write_file(p, content)                   -- failure: "Cannot write <path>: <cause>"
@@ -1639,6 +1651,11 @@ execute(path, content):
     return text "Successfully wrote <n> bytes to <path>",  details {}
 ```
 
+- **Where the parent directory comes from (`L13-WP132-R001`).**
+  - Pi computes `dirname(resolveToCwd(path))` synchronously, before `withFileMutationQueue`, so nothing can reorder calls ahead of registration.
+  - Minion's `absolute_path` is an asynchronous provider operation. Awaiting it before registration could let a later same-target call register first, so it runs INSIDE the lock, immediately after Pi's first abort checkpoint.
+  - Pi has no await between that checkpoint and `mkdir`. An abort arriving during `absolute_path` is therefore observed at the next checkpoint after `create_dir`, exactly where Pi observes an abort arriving during `mkdir`.
+  - Its failure is practically unreachable, because registration already resolved the same `p`. It uses the registration site's wrapper, `"Cannot resolve <path>: <cause>"`.
 - `<n>` is `content`'s length in UTF-16 code units: Pi's `content.length`, even though the message says "bytes". Pi's quirk is reproduced verbatim (`DIRECT_PI_PARITY`, recorded as a known Pi misnomer).
 - `<path>` is the argument exactly as given.
 - The file is created or overwritten with the UTF-8 encoding of `content` (String semantics above). Missing parent directories are created.
@@ -1652,7 +1669,7 @@ execute(input):
   (prepare_arguments and schema validation already ran -- Layer 06)
   if input.edits is not an array or is empty:
       error "Edit tool input is invalid. edits must contain at least one replacement."
-  p = TOOL-026 pipeline(input.path)             -- before registration
+  p = preprocess(input.path)                    -- TOOL-026 steps 1-4 only, before registration
   with_mutation_queue(fs, p):
     check abort
     ACCESS  r = fs.check_read_write(p)          -- EXEC-009, no signal
@@ -1787,8 +1804,9 @@ group the records (sorted by index) by the base lines they touch:
     groups use an EXCLUSIVE end line (last touched line + 1); a record whose start
     line < the current group's exclusive end line joins that group (the group's end
     becomes the max of both); otherwise it starts a new group
-    -- a zero-length match at the very end of base (possible when fuzzy_normalize(old)
-       is empty) lies in no line and raises INTERNAL (range): reachable, and witnessed
+    -- a zero-length match (fuzzy_normalize(old) empty, index 0) against an EMPTY base
+       lies in no line and raises INTERNAL (range): reachable (an empty file with an
+       oldText of only trailing whitespace), and witnessed
 output = for each group in order: the ORIGINAL lines before the group (verbatim),
          then apply_replacements over base[group start offset .. group end offset]
          (records rebased to the group's start offset);
@@ -1820,7 +1838,9 @@ Where Pi surfaces raw Node text or a hybrid, the raw part is replaced by the clo
 ```text
 site                                          Pi                                              Minion
 queue registration fails (canonical_path /    raw "<CODE>: <text>, realpath '<abs>'"          "Cannot resolve <path>: <cause>"
-  absolute_path, non-fallback code)                                                            (site-specific wrapper)
+  absolute_path, non-fallback code); write's                                                   (site-specific wrapper)
+  in-lock absolute_path fails (R001; no Pi
+  site -- Pi's resolution is synchronous)
 write: parent mkdir fails                     raw "<CODE>: <text>, mkdir '<abs dir>'"         "Cannot create parent directory of <path>: <cause>"
                                                                                               (site-specific wrapper)
 write: write fails                            raw "<CODE>: <text>, open '<abs>'"              "Cannot write <path>: <cause>" (site-specific wrapper)
@@ -1859,10 +1879,11 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
    - an abort during each step, with the step's own error winning where Pi checks later.
 3. **Queue witnesses:**
    - call-order FIFO when key resolution completes out of order, using a provider that delays `canonical_path`;
+   - `write` A then `write` B for the same target, with only A's provider calls delayed. B's `canonical_path` is not invoked before A's registration settles, and A's write completes before B's. The witness asserts the provider-call and write order, not just final queue contents (`L13-WP132-R001`). The negative control is an implementation awaiting `absolute_path` before registration;
    - a symlink and its target sharing a queue;
    - different providers with equal keys not sharing;
    - different keys running concurrently;
-   - a failed registration neither blocking nor reordering others;
+   - a registration whose `canonical_path` is pending and then fails: a later registration for another key does not begin its key lookup until the failure settles, then proceeds; no entry for the failed call remains (`L13-WP132-R003`). The negative controls are an implementation starting B early and one leaving a lingering entry;
    - release after an error and after an abort;
    - a later call never starting before an aborted call's in-flight write settles;
    - the `not_directory` fallback (`notes.txt/child.md`), negative-controlled against `resolve()`.
