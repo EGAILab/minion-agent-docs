@@ -221,6 +221,10 @@ probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
 -- ADDITIVE, §12 (WP-12.E2, EXEC-008, CERTIFIED -- NOT part of the DIRECT_PI_PARITY set
 -- above; see §12 for semantics, host behavior, error mapping and cancellation):
 check_readable(path, signal?) -> Result[None, FsError]
+
+-- ADDITIVE, §13 (WP-12.E3, EXEC-009, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- above; see §13 for semantics, host behavior, error mapping and cancellation):
+check_read_write(path, signal?) -> Result[None, FsError]
 ```
 
 ```text
@@ -2356,3 +2360,199 @@ Layer 13's provenance witnesses (`A` fails / `A` ok then the read fails, for eac
 stable `EIO` after a successful check; target removed after the check; the `G2` fallback; and the
 negative control that swaps the two stages) belong to `TOOL-025`'s integration and are listed in the
 governance record; they are not Layer 12 evidence.
+
+## 13. Layer-12 additive extension `WP-12.E3` -- `check_read_write`
+
+**Status: CONTRACT_DRAFT (`WP-12.E3`, requirement `EXEC-009`, `minion-agent#79`).**
+
+**Authorization.** Owner decision `L13-WP132-O2` = A-1, refined (`minion-agent#49` comment `5881558193`). The routine lifecycle is delegated to Claude under the standing delegation `minion-agent#75`.
+
+**Additivity.** Like `WP-12.E1` (§11) and `WP-12.E2` (§12), this extension is additive. Every existing operation in §3's inventory, `check_readable` (EXEC-008) included, is unchanged in wording and semantics, and no existing certification or §10/§11.6/§12.6 witness is invalidated.
+
+### 13.1 Motivation
+
+Pinned Pi's `edit` tool (`coding-agent/src/core/tools/edit.ts:105-109`, `347-356`) starts with ONE access operation: by default `fs.promises.access(path, R_OK | W_OK)`.
+- If it fails, `edit` answers at its access site (`Could not edit file: <path>. ...`) before reading anything.
+- If it succeeds, `edit` reads, matches and writes; failures of those later operations surface at their own sites.
+
+No composition of existing Layer 12 operations performs this check:
+- `check_readable` (EXEC-008) answers readability only.
+- A second, separate writability probe would be two independently observable operations. That opens a window Pi's single call does not have: the target could change between the probes.
+- Existence, metadata (`file_info`, `probe_dir_entry`) and canonicalization do not check writability at all.
+
+This extension adds exactly Pi's combined predicate as one provider operation.
+
+### 13.2 Operation signature
+
+```text
+check_read_write(path, signal?) -> Result[None, FsError]
+```
+
+- It uses §2.1's `FsError`/`FsErrorCode` taxonomy; there is no new error type.
+- `Ok(None)` means the addressed target exists and the calling process may both read and write it.
+- A provider that cannot supply this operation returns `Err(not_supported)` for every call. That is a capability answer, which a caller MUST NOT confuse with a failure of the addressed target (§13.5).
+- Like `check_readable`, it is single-purpose: there is no mode parameter. The combined read+write predicate is the whole operation. It is NOT composed from `check_readable` and a separate writability probe, and a provider MUST NOT implement it that way.
+
+### 13.3 Semantics
+
+- **Path resolution.** The path is resolved with §3.2's rules first, exactly as `check_readable` resolves its path.
+- **Symlinks are followed**, including the final component.
+- **Read+write accessible** means:
+  - **a non-directory target:** the calling process may open it for reading AND for writing;
+  - **a directory:** the calling process may read (list) it AND write it (create or remove entries). Search permission on the directory itself is not required: POSIX `access(R_OK | W_OK)` on a read+write-but-not-search directory succeeds. Every PARENT component needs search permission, as for any path.
+
+  A read+write-accessible directory is `Ok(None)`. It is not an error here, and it is not a successful content read: a later `read_binary_file` of it still fails `is_directory` (§3.3, unchanged).
+- **Non-mutating, and no content consumed.**
+  - The check never truncates, writes, creates, deletes, renames, or changes the target's content, size, timestamps or attributes.
+  - No bytes of a file are read, and no directory entries are returned or relied on.
+  - A FIFO without a writer, or without a reader, MUST NOT block this call.
+- **Errors** (§2.1's host-error mapping, as every Layer 12 operation uses it):
+  - missing target, or a symlink whose target does not exist -> `not_found`;
+  - a non-directory path component -> the host's mapping (POSIX `not_directory`; see §13.4);
+  - a target that is not readable, or not writable, or a parent component without search permission -> `permission_denied`;
+  - a read-only filesystem (`EROFS`), a busy executable text file (`ETXTBSY`), a symlink loop (`ELOOP`) and any other host failure -> the §2.1 mapping of that host error (`unknown` for each of those on POSIX).
+- **Never fabricated.** The answer comes from the host's own access decision for the combined predicate. It is never inferred from existence, from metadata such as mode bits read by `stat`, or from canonicalization.
+- **Cancellation.** `check_read_write` accepts `signal` (§3.1's uniform shape) but does not inspect it, like `check_readable`. It is a single metadata-class query with no content phase. A caller wanting an outer abort race owns it; Layer 13's `edit` has its own checkpoints (`TOOL-033`).
+
+### 13.4 Host semantics and the Windows disposition
+
+**POSIX: `DIRECT_PI_PARITY`.** The check is exactly one `access(path, R_OK | W_OK)`.
+- That is the call Node's `fs.access(path, R_OK | W_OK)` makes (libuv 1.49.2, bundled with Node 22.15.1, `src/unix/fs.c:1713`).
+- It is evaluated with the process's real user and group IDs, honouring ACLs where the host applies them to `access`.
+- The host's own errno is kept and classified; it is never replaced by a fabricated one.
+
+**Windows: `MINION_ARCHITECTURAL_MAPPING` (owner decision `L13-WP132-O2`, the same policy EXEC-008 took).**
+
+Node's Windows `access` is libuv's `fs__access` (`src/win/fs.c:2272`):
+- It is a `GetFileAttributesW` call that checks existence and, for `W_OK`, fails only when a non-directory has the read-only attribute.
+- It never checks ACLs and does not follow a final symlink.
+
+`check_read_write` does NOT copy that. On Windows it means semantic read+write accessibility for the current process: ACL denial of reading or writing fails `permission_denied`, a dangling symlink fails `not_found`, and the read-only attribute of a non-directory still denies writing.
+
+The defining probe is ONE `CreateFileW` of the resolved path:
+- `FILE_READ_DATA | FILE_WRITE_DATA`: read and write data for a file; list and add-file for a directory;
+- all sharing modes;
+- `OPEN_EXISTING`, so the target is never created or truncated;
+- `FILE_FLAG_BACKUP_SEMANTICS`, so a directory can be opened (this does not bypass the ACL unless the backup privilege is enabled);
+- no `FILE_FLAG_OPEN_REPARSE_POINT`, so symlinks are followed;
+- the handle is closed at once, and nothing is read or written.
+
+A failure is classified by §2.1 like every other operation's. A sharing-mode conflict with another open handle is reported as the host reports it, i.e. access denied -> `permission_denied`: the calling process genuinely cannot open the target for writing at that moment. This difference from Node on Windows is deliberate and deterministic; `ctx.fs` exposes no host identity with which to reproduce libuv's attribute-only answer.
+
+Host error classification for path-shape failures follows §2.1, as for every other operation. For example, a regular file used as a path component is `ENOTDIR -> not_directory` on POSIX and `ENOENT -> not_found` on Windows, as measured for `check_readable` (§12.4).
+
+### 13.5 Required Layer-13 consumption pattern (normative for `edit`, `TOOL-030`/`TOOL-033`; specified in `spec/tools.md`, not implemented or authorized here)
+
+```text
+1. the TOOL-026 path pipeline, then mutation-queue registration and wait (TOOL-032)
+2. abort checkpoint
+3. r = check_read_write(p)                    -- no signal (Pi passes none to access)
+     Err(not_supported)  -> the provider lacks EXEC-009: FALLBACK mode (below)
+     Err(c)              -> abort checkpoint, then edit's access-site error for c (TOOL-039 / O1)
+     Ok                  -> continue
+4. abort checkpoint, then read_binary_file / match / write_file, each failure at its own site
+```
+
+- The operation that failed owns the site, whatever the code (C012/G1's principle, applied to `edit` by `L13-WP132-O2`).
+- **FALLBACK mode** exists only so that `edit` stays usable on a provider without this extension.
+  - `edit` uses the strongest already-certified precheck available, `check_readable` (EXEC-008), when the provider has it.
+  - A later write failure then surfaces at the write site. A readable-but-unwritable file therefore fails at the write site, NOT the access site.
+  - This is a provider-capability approximation, disclosed and witnessed, and never described as Pi-equivalent.
+- Certified first-party local providers (Python and Rust) MUST implement `check_read_write`; `not_supported` from them would be a defect, not a fallback.
+
+### 13.6 Discriminating behavior/witness matrix (predicted outcomes, authored before implementation)
+
+```text
+READ+WRITE ACCESSIBLE REGULAR FILE, DIRECTLY AND THROUGH A SYMLINK
+    setup:     f (0644, owned by the caller / writable ACL); link -> f
+    expected:  Ok(None) for both; f's bytes, size and mtime are unchanged afterwards
+    negative control: an implementation that opens with truncation, or writes a probe byte, changes
+               f's size/mtime/content and fails this row
+
+READABLE BUT NOT WRITABLE FILE
+    setup:     POSIX: f444 (0444) as a non-root caller; Windows: f with a deny-write ACL, and
+               separately f with the read-only attribute
+    expected:  Err(permission_denied), directly and through a symlink
+    negative control: check_readable (EXEC-008) returns Ok and fails this row -- it is exactly the
+               case that distinguishes EXEC-009 from EXEC-008; a libuv-emulating Windows
+               implementation passes the deny-write-ACL file and fails this row
+
+WRITABLE BUT NOT READABLE FILE
+    setup:     POSIX: f222 (0222) as a non-root caller; Windows: f with a deny-read ACL
+    expected:  Err(permission_denied)
+    negative control: a writability-only probe returns Ok and fails this row
+
+ONE COMBINED OPERATION
+    setup:     an instrumented provider or host trace
+    expected:  exactly one host access decision (POSIX: one access(2) call with R_OK|W_OK;
+               Windows: one CreateFileW with FILE_READ_DATA|FILE_WRITE_DATA) per call
+    negative control: an implementation calling check_readable and then a separate write probe
+               makes two host calls and fails this row
+
+DANGLING SYMLINK
+    setup:     link -> missing-target
+    expected:  Err(not_found), on both hosts
+    negative control: lstat/attribute-based checks succeed and fail this row
+
+MISSING PATH / NON-DIRECTORY COMPONENT
+    expected:  Err(not_found) for a missing path; for "file/x" the host's §2.1 mapping
+               (POSIX not_directory, Windows not_found)
+
+READ+WRITE DIRECTORY; READ+WRITE-BUT-NOT-SEARCH DIRECTORY (POSIX)
+    setup:     d (0755 owned by the caller); drw (0666 owned by the caller)
+    expected:  Ok(None) for both -- a directory is accessible, not an error here
+    negative control: an implementation answering is_directory, or requiring search on the target
+               itself, fails this row
+
+READ-ONLY DIRECTORY; DENY-WRITE DIRECTORY (Windows)
+    setup:     POSIX: d555 as a non-root caller; Windows: d with a deny-add-file ACL
+    expected:  Err(permission_denied)
+    negative control: check_readable returns Ok and fails this row
+
+WINDOWS DIRECTORY WITH THE READ-ONLY ATTRIBUTE
+    setup:     d with the read-only attribute and a permissive ACL
+    expected:  Ok(None) -- the attribute does not deny writing entries into a directory (as libuv
+               also ignores it for directories)
+
+UNSEARCHABLE PARENT (POSIX)
+    setup:     dr/inner where dr is 0444
+    expected:  Err(permission_denied)
+
+READ-ONLY FILESYSTEM (POSIX, where a read-only mount is available to the test host)
+    setup:     a file on a read-only mount
+    expected:  Err(unknown)  (EROFS, §2.1)
+
+SYMLINK LOOP (POSIX)
+    setup:     a -> b, b -> a
+    expected:  Err(unknown)  (ELOOP, §2.1)
+
+NO CONTENT CONSUMED, NO BLOCKING
+    setup:     a FIFO with no writer and no reader (POSIX), mode 0666 owned by the caller
+    expected:  Ok(None) promptly; the call does not block
+    negative control: an implementation that opens the FIFO for reading or writing blocks and fails
+               this row
+
+RELATIVE PATH RESOLUTION
+    setup:     cwd /workspace, existing /workspace/sub/f (0644, owned by the caller)
+    expected:  check_read_write("sub/f") answers for /workspace/sub/f (same §3.2 resolution as
+               check_readable)
+
+EMBEDDED NUL
+    expected:  rejected before any native call, as check_readable rejects it (WP12E2-I002)
+
+SIGNAL ACCEPTED, NOT INSPECTED
+    setup:     a pre-aborted signal; accessible f
+    expected:  Ok(None)
+
+PROVIDER WITHOUT THE EXTENSION
+    setup:     a provider that cannot implement check_read_write
+    expected:  Err(not_supported) for every path, including accessible ones; never a silent success
+               and never a fallback to check_readable/file_info/exists inside the provider
+
+EXISTING OPERATIONS UNCHANGED (regression)
+    expected:  every §10, §11.6 and §12.6 witness passes exactly as before this section existed
+```
+
+Rows that need a non-root caller (permission-bit denials) are skipped, not faked, when the test host runs as root, and the skip is reported. Windows ACL rows are required on the Windows test host.
+
+Layer 13's provenance witnesses belong to `edit`'s integration (`TOOL-030`/`TOOL-033`), not to Layer 12 evidence. They cover: access fails, versus access ok followed by a read or write failure; the target changing after the check; the FALLBACK mode's readable-but-unwritable case at the write site; and the negative control that composes two probes.
