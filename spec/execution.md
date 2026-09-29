@@ -2397,9 +2397,14 @@ check_read_write(path, signal?) -> Result[None, FsError]
 
 - **Path resolution.** The path is resolved with §3.2's rules first, exactly as `check_readable` resolves its path.
 - **Symlinks are followed**, including the final component.
-- **Read+write accessible** means:
-  - **a non-directory target:** the calling process may open it for reading AND for writing;
-  - **a directory:** the calling process may read (list) it AND write it (create or remove entries). Search permission on the directory itself is not required: POSIX `access(R_OK | W_OK)` on a read+write-but-not-search directory succeeds. Every PARENT component needs search permission, as for any path.
+- **Read+write accessible** means that the host's single combined access decision for read AND write succeeds. The predicate is exactly that decision (§13.4), for every kind of target:
+  - **a non-directory target:** POSIX `access(R_OK | W_OK)`; on Windows, one open for read-data plus write-data;
+  - **a directory:** POSIX `access(R_OK | W_OK)` on the directory itself; on Windows, one open for list-directory plus add-file. Search permission on the directory itself is not required: POSIX `access(R_OK | W_OK)` on a read+write-but-not-search directory succeeds. Every PARENT component needs search permission, as for any path.
+
+  **`Ok(None)` is an access answer, not a promise that a later operation succeeds** (WP12E3-C001):
+  - On a directory it does NOT guarantee that entries can later be created or removed. POSIX creation by pathname also needs search permission on the directory, so a mode-0666 directory answers `Ok` yet refuses `d/child`. The Windows probe requests add-file but NOT `FILE_DELETE_CHILD`, so removal is not checked.
+  - On a file it does not guarantee that a later write succeeds either: the target can change, and the host can refuse for reasons `access` does not evaluate.
+  - A later operation's failure is that operation's own error, as in Pi, where `access` and the following `readFile`/`writeFile` are separate calls.
 
   A read+write-accessible directory is `Ok(None)`. It is not an error here, and it is not a successful content read: a later `read_binary_file` of it still fails `is_directory` (§3.3, unchanged).
 - **Non-mutating, and no content consumed.**
@@ -2417,20 +2422,20 @@ check_read_write(path, signal?) -> Result[None, FsError]
 ### 13.4 Host semantics and the Windows disposition
 
 **POSIX: `DIRECT_PI_PARITY`.** The check is exactly one `access(path, R_OK | W_OK)`.
-- That is the call Node's `fs.access(path, R_OK | W_OK)` makes (libuv 1.49.2, bundled with Node 22.15.1, `src/unix/fs.c:1713`).
+- That is the call Node's `fs.access(path, R_OK | W_OK)` makes. The source is libuv v1.49.2 -- tag commit `e1095c7a4373ce00cd8874d8e820de5afb25776e`, byte-identical to Node v22.15.1's bundled `deps/uv` (node commit `7039b12ae5e0913f7a14da4d9d58ad04d4a4a16e`, same git blobs). In `src/unix/fs.c` (git blob `239ecda16a7eb9b40453502cf0362ae66366cf72`), `uv_fs_access` (lines 1792-1801) queues `UV_FS_ACCESS`, and `uv__fs_work` (lines 1695-1764) executes it as `X(ACCESS, access(req->path, req->flags))` at line 1713.
 - It is evaluated with the process's real user and group IDs, honouring ACLs where the host applies them to `access`.
 - The host's own errno is kept and classified; it is never replaced by a fabricated one.
 
 **Windows: `MINION_ARCHITECTURAL_MAPPING` (owner decision `L13-WP132-O2`, the same policy EXEC-008 took).**
 
-Node's Windows `access` is libuv's `fs__access` (`src/win/fs.c:2272`):
+Node's Windows `access` is libuv's `fs__access`: in `src/win/fs.c` (git blob `f2215bb3082178193d37f8429536bfe7b707dd0d`, same libuv v1.49.2 source), lines 2272-2295, `GetFileAttributesW` at line 2273:
 - It is a `GetFileAttributesW` call that checks existence and, for `W_OK`, fails only when a non-directory has the read-only attribute.
 - It never checks ACLs and does not follow a final symlink.
 
 `check_read_write` does NOT copy that. On Windows it means semantic read+write accessibility for the current process: ACL denial of reading or writing fails `permission_denied`, a dangling symlink fails `not_found`, and the read-only attribute of a non-directory still denies writing.
 
 The defining probe is ONE `CreateFileW` of the resolved path:
-- `FILE_READ_DATA | FILE_WRITE_DATA`: read and write data for a file; list and add-file for a directory;
+- `FILE_READ_DATA | FILE_WRITE_DATA`: read and write data for a file; for a directory the same bits are `FILE_LIST_DIRECTORY | FILE_ADD_FILE`. `FILE_DELETE_CHILD` (`0x40`) and `FILE_ADD_SUBDIRECTORY` are NOT requested, and no second probe adds them;
 - all sharing modes;
 - `OPEN_EXISTING`, so the target is never created or truncated;
 - `FILE_FLAG_BACKUP_SEMANTICS`, so a directory can be opened (this does not bypass the ACL unless the backup privilege is enabled);
@@ -2500,9 +2505,17 @@ MISSING PATH / NON-DIRECTORY COMPONENT
 
 READ+WRITE DIRECTORY; READ+WRITE-BUT-NOT-SEARCH DIRECTORY (POSIX)
     setup:     d (0755 owned by the caller); drw (0666 owned by the caller)
-    expected:  Ok(None) for both -- a directory is accessible, not an error here
-    negative control: an implementation answering is_directory, or requiring search on the target
-               itself, fails this row
+    expected:  Ok(None) for both -- the combined access predicate holds; a directory is not an error
+               here. For drw, a following create_dir/write_file of drw/child still fails
+               permission_denied: Ok is an access answer, not a mutation guarantee (WP12E3-C001)
+    negative control: an implementation answering is_directory, requiring search on the target
+               itself, or attempting an entry creation to "prove" writability, fails this row
+
+WINDOWS DIRECTORY GRANTING LIST + ADD-FILE BUT DENYING DELETE-CHILD
+    setup:     d whose ACL allows FILE_LIST_DIRECTORY and FILE_ADD_FILE and denies FILE_DELETE_CHILD
+    expected:  Ok(None) -- the probe checks exactly list + add-file (WP12E3-C001)
+    negative control: an implementation that also requests FILE_DELETE_CHILD (or adds a removal
+               probe) answers permission_denied and fails this row
 
 READ-ONLY DIRECTORY; DENY-WRITE DIRECTORY (Windows)
     setup:     POSIX: d555 as a non-root caller; Windows: d with a deny-add-file ACL
