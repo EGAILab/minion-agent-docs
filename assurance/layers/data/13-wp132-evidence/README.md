@@ -137,8 +137,8 @@ Every queue scenario in the code repository cites the trace whose ordering it as
 ## 4. Canonical scenarios (`harness/make_scenarios.py`)
 
 These live in `minion-agent` `conformance/agent/builtin-mutation/` and use the shape `conformance/schema/builtin-mutation-scenario.schema.json`. There are 26 documents:
-- 8 corpus documents with 374 cases;
-- 7 hand-authored case documents with 42 cases;
+- 8 corpus documents with 373 cases (the non-object `prepare-not-an-object` input stays prepare-helper evidence, `L13-WP132-R005`);
+- 7 hand-authored case documents with 43 cases;
 - 11 queue scenarios.
 
 **Corpus scenarios** (`builtin-edit-corpus-*`, `builtin-write-corpus`) are mechanical conversions of §1. Each case gets:

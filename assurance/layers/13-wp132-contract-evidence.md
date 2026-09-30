@@ -11,7 +11,7 @@ The contract text (`spec/tools.md` WP-13.2) was checkpoint-approved after remedi
 | Spec witness item | Evidence |
 |---|---|
 | 1. `edit` authority corpus | `data/13-wp132-evidence/`. Pinned-Pi authority over 379 deterministic cases, in the pinned runtime, with the SRI-checked `diff` 8.0.4. |
-| 2. canonical `write`/`edit` scenarios | `minion-agent` `conformance/agent/builtin-mutation/`: 8 corpus documents (374 cases, generated) and 7 hand-authored case documents (42 cases). The shape is `builtin-mutation-scenario.schema.json`. |
+| 2. canonical `write`/`edit` scenarios | `minion-agent` `conformance/agent/builtin-mutation/`: 8 corpus documents (374 cases, generated) and 7 hand-authored case documents (42 cases); 373 and 43 after remediation 1 (below). The shape is `builtin-mutation-scenario.schema.json`. |
 | 3. queue witnesses | 11 queue scenarios, each citing the pinned `file-mutation-queue.ts` trace (9 traced scenarios) whose ordering it asserts. |
 | 4. negative controls | Corpus half: 13/13 single-point Pi-source mutants killed. Binding half: listed in the spec's evidence inventory; runs at each implementation review. |
 
@@ -63,3 +63,48 @@ No rule changed.
 - `Python WP-13.2`: NOT_IMPLEMENTED. It starts only after the contract review approves.
 - `Rust WP-13.2`: NOT_IMPLEMENTED.
 - Final `edit` certification also waits on `EXEC-009` (`minion-agent#79`).
+
+## Remediation 1: `L13-WP132-R004`, `L13-WP132-R005`
+
+**Trigger.** Codex's independent contract+evidence review rejected the candidate (code #81 @ `29d5b772`, docs #178 @ `ea8ddb24`), recorded in `minion-agent-docs#187` @ `02f8a7a1`.
+
+- Its byte-exact replay of every evidence output and all 26 scenario blobs matched.
+- The 13/13 mutants and the queue determinism audit were confirmed.
+- Two blocking `CONTRACT_ASSURANCE_DEFECT`s were found at the canonical entry boundary.
+
+Both are accepted.
+
+### `L13-WP132-R004`: ACCEPTED
+
+**Defect.** Tool-local pre-abort evidence contradicted the required Layer-06 entry.
+
+**Cause.** Pi's `agent-loop.ts` `prepareToolCall`, like certified Layer 06 in both bindings, answers an already-aborted signal before invoking `execute`. The candidate's `pre_aborted` cases expected the tool's own register-before-check trace through that pipeline. That trace is unreachable there.
+
+**Correction.**
+- **Preflight witness.** Each tool keeps one `pre_aborted` case, now expecting Layer 06's answer: `"Operation aborted"`, `fs_calls: []`, file untouched. The schema's `signal` comment states this.
+- **Tool-level rule, rewitnessed after preflight.** The rule is: no check before the lock; registration, including fallback-key derivation, completes; the answer comes after the lock is acquired. It is now witnessed with an abort that arrives after preflight:
+  - `write`/`edit` `abort-during-registration` (`abort_after: canonical_path`);
+  - `write` `abort-during-registration-still-derives-fallback-key`;
+  - the queue scenario `released-after-error-and-after-abort`. There, B is aborted by a step while it waits in the queue, instead of being pre-aborted. B keeps its place, answers only after the lock, and never reaches its in-lock steps.
+- **Schema.** Queue calls no longer accept `signal`. Every call starts live and passes preflight.
+- **Spec.** The TOOL-033 "Cancellation" rule now distinguishes the tool's direct `execute` semantics from the Layer 06 boundary. Witness item 2 is updated to match.
+- **No change** to Layer 06, to the tools' semantics, or to how the runner handles the signal.
+
+### `L13-WP132-R005`: ACCEPTED
+
+**Defect.** A non-object raw argument cannot enter the object-valued `ToolCall` pipeline.
+
+**Correction.**
+- `prepare-not-an-object` is no longer generated as a canonical integration case. It stays in the authority corpus as `prepareEditArguments` helper evidence.
+- The schema's case `arguments` is now `type: object`, with the reason stated.
+- The spec's `prepareEditArguments` subsection states the entry-domain constraint. It does not widen any lower-layer vocabulary.
+
+### Result
+
+- The corpus scenarios now carry 373 cases; the hand-authored documents carry 43 (the edit cancellation document gained `abort-during-registration`). There are still 26 documents.
+- All 26 validate against the schema.
+- The authority, mutant and queue outputs are unchanged (byte-identical; `cases.sha256` unchanged). Only `make_scenarios.py` and its outputs changed.
+
+### Dependency update
+
+`EXEC-009` is now CERTIFIED_CLOSED (`minion-agent#79`; closure record `12-wp12e3-closure.md`). The final-`edit`-certification dependency above is satisfied.

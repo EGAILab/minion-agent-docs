@@ -1582,6 +1582,10 @@ edit
 
 - A "single edit object" is a non-null, non-array object whose `oldText` and `newText` are both strings. Other keys are allowed and kept.
 - Pi mutates the raw argument object in place at step 2. The observable result is the returned value, which Layer 06 then validates; the pre-`prepare_arguments` arguments Layer 06 reports to hooks are Layer 06's own certified concern.
+- **Entry domain (`L13-WP132-R005`).** Layer 02/05's certified `ToolCall` arguments are a JSON object, so step 1's non-object branch is unreachable through the tool-call pipeline.
+  - A binding's `prepare_arguments` callback still reproduces it when called directly.
+  - The authority corpus records it as prepare-helper evidence, not as a canonical integration case.
+  - This constrains the entry domain; it does not widen or change any lower-layer vocabulary.
 
 #### Mutation queue (`TOOL-032`)
 
@@ -1631,7 +1635,10 @@ with_mutation_queue(fs, p, fn):
   - The lock is held until the in-flight filesystem operation has settled, then the abort surfaces.
   - The entry is released on the way out, so a later queued call never starts while an aborted call's own filesystem operation is still running.
 - **No filesystem call receives the signal.** Pi passes none to `mkdir`, `writeFile`, `access` or `readFile`.
-- **A pre-aborted call still registers and waits its turn.** There is no check before the lock, so it answers `"Operation aborted"` only after acquiring it.
+- **An abort that reaches the tool still registers and waits its turn.** The tool has no check before the lock. An abort arriving during registration or while the call is queued is therefore answered with `"Operation aborted"` only after the call acquires the lock. Registration, including a fallback-key `absolute_path`, completes first.
+  - This is the direct `execute` semantics of pinned `write.ts`/`edit.ts`.
+  - **Layer 06 boundary (`L13-WP132-R004`).** A signal that is already aborted when the tool call starts never reaches `execute`. Layer 06's certified preflight, mirroring Pi's `agent-loop.ts` `prepareToolCall`, answers `"Operation aborted"` first, with no `ctx.fs` call and no queue registration.
+  - Canonical integration evidence therefore witnesses the tool-level rule with an abort that arrives after preflight: `abort_after`, or a queue abort step. It witnesses the preflight rule with a pre-aborted call that expects zero filesystem calls.
 - **When a filesystem step fails, its own error wins**, unless the algorithm lists an abort check before that error, as `edit`'s access site does.
 
 #### `write` (`TOOL-029`)
@@ -1878,7 +1885,7 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
    - every error site above, including `EXEC-009` access failures at the access site and a later read or write failure at its own site;
    - the provider-without-`EXEC-009` FALLBACK witness;
    - `prepare_arguments` coercions, and empty `edits`;
-   - pre-aborted calls answering only after acquiring the lock;
+   - an abort arriving during registration or while queued answering only after acquiring the lock, and a pre-aborted call answered by Layer 06 preflight with no filesystem call (`L13-WP132-R004`);
    - an abort during each step, with the step's own error winning where Pi checks later.
 3. **Queue witnesses:**
    - call-order FIFO when key resolution completes out of order, using a provider that delays `canonical_path`;
@@ -1908,7 +1915,7 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
   - The corpus-level negative controls are 13 single-point mutants of copies of pinned `edit-diff.ts`, the `edit.ts`/`write.ts` glue and `diff` 8.0.4. All 13 are killed.
 - **Item 3's ordering authority.** Pinned `file-mutation-queue.ts` runs unmodified, with a scripted `realpath`, across 9 traced scenarios.
 - **Item 2 and item 3's scenarios.** They live in `minion-agent` `conformance/agent/builtin-mutation/`, in their own shape, `conformance/schema/builtin-mutation-scenario.schema.json` (key `builtin_mutation`). There are 26 documents:
-  - 8 are generated from the authority run and cover 374 cases. Expectations are pinned Pi's text, final bytes and details, verbatim.
+  - 8 are generated from the authority run and cover 373 cases. Expectations are pinned Pi's text, final bytes and details, verbatim. The one non-object `prepareEditArguments` input stays prepare-helper evidence (`L13-WP132-R005`).
   - 7 are hand-authored case documents covering the error sites, the FALLBACK and cancellation.
   - 11 are queue scenarios.
 

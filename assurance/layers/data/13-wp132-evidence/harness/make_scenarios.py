@@ -289,23 +289,27 @@ def hand_authored():
         ["TOOL-029", "TOOL-033"], ["write_cancellation_checkpoints"],
         "No abort listener while the lock is held; the signal is checked after registration+wait, after create_dir "
         "and after write_file (an abort during the in-lock absolute_path is observed after create_dir, where Pi "
-        "observes an abort during mkdir, L13-WP132-R001). A pre-aborted call still registers. A failing step's own "
-        "error wins: Pi checks abort only after a step succeeds.",
+        "observes an abort during mkdir, L13-WP132-R001). The tool has no check before the lock: an abort that "
+        "arrives after Layer 06 preflight, during registration, still completes registration (fallback key "
+        "included) and answers after acquiring the lock. A signal already aborted at the call's start is answered "
+        "by Layer 06 preflight, which never invokes execute (L13-WP132-R004). A failing step's own error wins: Pi "
+        "checks abort only after a step succeeds.",
         {"fixture": [file("f.txt", "original\n")],
          "provider": {"create_dir": [{"path": "denied", "error": "permission_denied"}],
                       "write_file": [{"path": "ro.txt", "error": "permission_denied"}]},
          "cases": [
-            {"id": "pre-aborted-existing", "tool": "write", "signal": "pre_aborted",
+            {"id": "pre-aborted-answered-by-layer06-preflight", "tool": "write", "signal": "pre_aborted",
+             "arguments": {"path": "f.txt", "content": "x"},
+             "expect": {**err(ABORTED), "fs_calls": [],
+                        "files_after": [{"path": "f.txt", "text": "original\n"}]}},
+            {"id": "abort-during-registration", "tool": "write", "abort_after": "canonical_path",
              "arguments": {"path": "f.txt", "content": "x"},
              "expect": {**err(ABORTED), "fs_calls": ["canonical_path f.txt"],
                         "files_after": [{"path": "f.txt", "text": "original\n"}]}},
-            {"id": "pre-aborted-new-file-registers-with-fallback-key", "tool": "write", "signal": "pre_aborted",
-             "arguments": {"path": "new.txt", "content": "x"},
+            {"id": "abort-during-registration-still-derives-fallback-key", "tool": "write",
+             "abort_after": "canonical_path", "arguments": {"path": "new.txt", "content": "x"},
              "expect": {**err(ABORTED), "fs_calls": ["canonical_path new.txt", "absolute_path new.txt"],
                         "files_after": [{"path": "new.txt", "absent": True}]}},
-            {"id": "abort-during-registration", "tool": "write", "abort_after": "canonical_path",
-             "arguments": {"path": "f.txt", "content": "x"},
-             "expect": {**err(ABORTED), "fs_calls": ["canonical_path f.txt"]}},
             {"id": "abort-during-in-lock-absolute-path-seen-after-create-dir", "tool": "write",
              "abort_after": "absolute_path", "arguments": {"path": "f.txt", "content": "x"},
              "expect": {**err(ABORTED), "fs_calls": ["canonical_path f.txt", "absolute_path f.txt", "create_dir ."],
@@ -337,7 +341,11 @@ def hand_authored():
                       "read_binary_file": [{"path": "unreadable.txt", "error": "permission_denied"}],
                       "write_file": [{"path": "ro.txt", "error": "permission_denied"}]},
          "cases": [
-            {"id": "pre-aborted", "tool": "edit", "signal": "pre_aborted",
+            {"id": "pre-aborted-answered-by-layer06-preflight", "tool": "edit", "signal": "pre_aborted",
+             "arguments": {"path": "f.txt", "edits": [{"oldText": "alpha", "newText": "A"}]},
+             "expect": {**err(ABORTED), "fs_calls": [],
+                        "files_after": [{"path": "f.txt", "text": "alpha\n"}]}},
+            {"id": "abort-during-registration", "tool": "edit", "abort_after": "canonical_path",
              "arguments": {"path": "f.txt", "edits": [{"oldText": "alpha", "newText": "A"}]},
              "expect": {**err(ABORTED), "fs_calls": ["canonical_path f.txt"],
                         "files_after": [{"path": "f.txt", "text": "alpha\n"}]}},
@@ -457,15 +465,17 @@ def queue_docs():
     docs.append(qdoc(
         "builtin-mutation-queue-released-after-error-and-after-abort",
         "queue_release_after_error_and_abort",
-        "A's write fails (scripted) and B's call is pre-aborted; each releases its entry, so the next call for the "
-        "same target runs. A pre-aborted call still registers and answers only after acquiring the lock.",
+        "A's write fails (scripted); B is aborted while it waits in the queue (after Layer 06 preflight and its "
+        "registration, L13-WP132-R004). There is no abort listener, so B keeps its place, answers 'Operation "
+        "aborted' only after acquiring the lock, and never reaches its in-lock steps; each releases its entry, so C "
+        "runs.",
         "same-key-waits-and-is-released-after-an-error",
         [file("f.txt", "original\n")],
         {"calls": [{"id": "A", "tool": "write", "arguments": {"path": "f.txt", "content": "A"}},
-                   {"id": "B", "tool": "write", "signal": "pre_aborted", "arguments": {"path": "./f.txt", "content": "B"}},
+                   {"id": "B", "tool": "write", "arguments": {"path": "./f.txt", "content": "B"}},
                    {"id": "C", "tool": "write", "arguments": {"path": "sub/../f.txt", "content": "C"}}],
          "gates": [{"id": "a-write", "operation": "write_file", "path": "f.txt"}],
-         "steps": [{"release": "a-write", "error": "permission_denied"}],
+         "steps": [{"abort": "B"}, {"release": "a-write", "error": "permission_denied"}],
          "expect": {"results": {"A": err(f"Cannot write f.txt: {CAUSE['permission_denied']}"), "B": err(ABORTED),
                                 "C": ok(W.format(1, "sub/../f.txt"))},
                     "order": [["p canonical_path ./f.txt #1 ok", "result A"],
@@ -610,6 +620,10 @@ def corpus_docs(cases, results):
             fixture = [{"path": "src/app.txt", "file": {"base64": c["file_b64"]}}]
             if c.get("prepare"):
                 args = c["raw_args"]
+                if not isinstance(args, dict):
+                    # L13-WP132-R005: ToolCall arguments are object-valued at Layer 02/05, so a non-object raw value
+                    # cannot enter the integration pipeline; it stays prepare-helper authority evidence only.
+                    continue
                 if not r["schema_valid"]:
                     expect = {"is_error": True, "argument_validation_failure": True, "fs_calls": []}
                 else:
