@@ -1,0 +1,17 @@
+runner
+quiesce returned 0.061 seconds; timer pending True
+after quiesce: ['timer progressed without any gate release']
+same early-answer mutant, poll interval 0.01 FAIL (mutant killed)
+['p canonical_path f.txt #1 start', 'p canonical_path f.txt #1 ok', 'p absolute_path f.txt #1 start', 'p absolute_path f.txt #1 ok', 'p create_dir . #1 start', 'p canonical_path ./f.txt #1 start', 'p create_dir . #1 ok', 'p write_file f.txt #1 start', 'p canonical_path ./f.txt #1 ok', 'p canonical_path sub/../f.txt #1 start', 'p canonical_path sub/../f.txt #1 ok', 'result B', 'p write_file f.txt #1 permission_denied', 'result A', 'p absolute_path sub/../f.txt #1 start', 'p absolute_path sub/../f.txt #1 ok', 'p create_dir . #2 start', 'p create_dir . #2 ok', 'p write_file sub/../f.txt #1 start', 'p write_file sub/../f.txt #1 ok', 'result C']
+same early-answer mutant, poll interval 0.5 PASS (mutant survived)
+['p canonical_path f.txt #1 start', 'p canonical_path f.txt #1 ok', 'p absolute_path f.txt #1 start', 'p absolute_path f.txt #1 ok', 'p create_dir . #1 start', 'p canonical_path ./f.txt #1 start', 'p canonical_path ./f.txt #1 ok', 'p create_dir . #1 ok', 'p write_file f.txt #1 start', 'p canonical_path sub/../f.txt #1 start', 'p canonical_path sub/../f.txt #1 ok', 'p write_file f.txt #1 permission_denied', 'result A', 'p absolute_path sub/../f.txt #1 start', 'p absolute_path sub/../f.txt #1 ok', 'p create_dir . #2 start', 'result B', 'p create_dir . #2 ok', 'p write_file sub/../f.txt #1 start', 'p write_file sub/../f.txt #1 ok', 'result C']
+
+json
+5000-digit valid JSON: prepared edits type str
+{"is_error": true, "text_prefix": "invalid arguments: '{\"oldText\":\"alpha\",\"newText\":\"A\",\"extra\":99999999999999999999999999999999999999999999999999999999999", "fs_calls": [], "files_after": [{"path": "f.txt", "text": "alpha\n"}]}
+IEEE-754 extra field 9007199254740993
+
+surrogate
+YAML valid paired surrogate representation: ['0xd83d', '0xde00']
+{"is_error": false, "text": "Successfully wrote 2 bytes to f.txt", "details": {}, "fs_calls": ["canonical_path f.txt", "absolute_path f.txt", "absolute_path f.txt", "create_dir .", "write_file f.txt"], "files_after": [{"path": "f.txt", "base64": "77+977+9"}]}
+expected UTF-8 hex f09f9880; actual efbfbdefbfbd
