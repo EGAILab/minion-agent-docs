@@ -2442,7 +2442,13 @@ The defining probe is ONE `CreateFileW` of the resolved path:
 - no `FILE_FLAG_OPEN_REPARSE_POINT`, so symlinks are followed;
 - the handle is closed at once, and nothing is read or written.
 
-A failure is classified by §2.1 like every other operation's. A sharing-mode conflict with another open handle is reported as the host reports it, i.e. access denied -> `permission_denied`: the calling process genuinely cannot open the target for writing at that moment. This difference from Node on Windows is deliberate and deterministic; `ctx.fs` exposes no host identity with which to reproduce libuv's attribute-only answer.
+A failure is classified by §2.1 like every other operation's, through the binding's own shared host-error mapper, the same one its `read_binary_file`, `canonical_path` and `check_readable` use. The difference from Node on Windows (ACL-aware meaning versus libuv's attribute-only answer) is deliberate and deterministic; `ctx.fs` exposes no host identity with which to reproduce libuv's answer.
+
+**Sharing and lock violations (correction `WP12E3-R001`).** A sharing-mode or lock conflict with another open handle (`ERROR_SHARING_VIOLATION`, `ERROR_LOCK_VIOLATION`) is NOT a special case of this operation.
+- Pinned Node's libuv translates both to `EBUSY`: libuv v1.49.2 `src/win/error.c`, git blob `7abf906bb5c82312aeb9f3f30f39ab2cadc07eae`, lines 84 and 86, the same content in Node v22.15.1's `deps/uv`. §2.1 (Pi's `toFileError`) maps `EBUSY` to `unknown`.
+- A binding classifies the condition exactly as its shared mapper classifies it for every other Layer-12 operation.
+- The bindings' mappers currently differ for this Windows condition: Rust answers `unknown` and Python `permission_denied`, in `check_readable` and `check_read_write` alike. That cross-language difference is an instance of the recorded Layer-12 finding `L12-WINDOWS-ERROR-MAP` (`minion-agent#69`), whose remediation is not authorized. It is not decided by this section.
+- An earlier revision of this paragraph said a sharing conflict is `permission_denied`. That contradicted both the pinned Node answer and the certified `check_readable` behavior of the Rust binding, and is withdrawn.
 
 Host error classification for path-shape failures follows §2.1, as for every other operation. For example, a regular file used as a path component is `ENOTDIR -> not_directory` on POSIX and `ENOENT -> not_found` on Windows, as measured for `check_readable` (§12.4).
 
@@ -2544,6 +2550,14 @@ NO CONTENT CONSUMED, NO BLOCKING
     expected:  Ok(None) promptly; the call does not block
     negative control: an implementation that opens the FIFO for reading or writing blocks and fails
                this row
+
+SHARING VIOLATION (Windows, WP12E3-R001)
+    setup:     f held open by another handle with no sharing (share mode 0)
+    expected:  the same FsErrorCode the binding's own check_readable and read_binary_file give for
+               the same held file -- a consistency witness within each binding; the cross-language
+               value is minion-agent#69's, not fixed here
+    negative control: a check_read_write-only special case (e.g. forcing permission_denied or
+               unknown only in this operation) disagrees with the binding's other operations
 
 RELATIVE PATH RESOLUTION
     setup:     cwd /workspace, existing /workspace/sub/f (0644, owned by the caller)
