@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const source = readFileSync('/pi/packages/coding-agent/src/core/tools/edit.ts','utf8');
+const single = source.slice(source.indexOf('function isSingleEditInput('),source.indexOf('export interface EditToolDetails'));
+const prepare = source.slice(source.indexOf('function prepareEditArguments('),source.indexOf('function validateEditInput('));
+const stripped = (single+prepare).replaceAll(': unknown', '').replace(': value is SingleEditInput', '').replace(': EditToolInput', '').replaceAll(' as Record<string, unknown>', '').replaceAll(' as LegacyEditToolInput', '').replaceAll(' as EditToolInput', '');
+const fn = new Function(stripped+';return prepareEditArguments;')();
+const core = await import('/tmp/s/a/pi/core/tools/edit-diff.ts');
+const huge = fn({path:'f.txt',edits:'{"oldText":"alpha","newText":"A","extra":'+'9'.repeat(5000)+'}'});
+const result = core.applyEditsToNormalizedContent('alpha\n',huge.edits,'f.txt');
+console.log(JSON.stringify({huge_edits_type:Array.isArray(huge.edits)?'array':typeof huge.edits,extra_is_infinity:huge.edits[0].extra===Infinity,text:'Successfully replaced '+huge.edits.length+' block(s) in f.txt.',file_after:result.newContent}));
+const small = fn({path:'f.txt',edits:'{"oldText":"alpha","newText":"A","extra":9007199254740993}'});
+console.log('IEEE-754 extra field',small.edits[0].extra);
