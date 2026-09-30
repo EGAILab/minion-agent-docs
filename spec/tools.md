@@ -602,6 +602,7 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 **Pydantic-model parameters** (a Python-only Layer-05 representation, `TOOL-F010`).
 - The same finite-only rule applies to the value Layer 06 delivers: the model's validated `model_dump()`, after the model's one ordinary validation including its own validators.
   - A non-finite number in any position the model's declared types make numeric (`float` or `int`) is rejected, independently of every other position.
+  - Only an actual runtime number is judged: a delivered value of another type (for example the string `"Infinity"`) is never converted into one (`L0506-D001-I002`, `CE-L0506-D001-I001-01` rev 4).
   - A union position is numeric only when no finite-only alternative accepts the complete value.
   - Undeclared (extra) keys and positions typed `Any`/`object` are unconstrained. A value outside its declared type is not a numeric position.
   - The check runs no user code, so each user validator runs exactly once. A value a user callback makes finite is judged as delivered (`CE-L0506-D001-I001-01` rev 3).

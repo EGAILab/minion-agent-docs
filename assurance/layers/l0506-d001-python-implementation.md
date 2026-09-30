@@ -149,3 +149,41 @@ The production tree reproduces `out/minion.json` byte-identically.
 The Linux container was not run; the change is platform-independent validator logic.
 
 **Status.** `L0506-D001-I001` is REMEDIATED, pending Codex's §11.8.7 targeted convergence closure. The §11.8.8 final complete review comes after that. Rust and cross-language are unchanged: NOT_IMPLEMENTED and NOT CLOSED.
+
+## Remediation 3: `L0506-D001-I002` (convergence episode `CE-L0506-D001-I001-01` rev 4)
+
+**Trigger.** Codex's §11.8.8 final complete review (`#200`, on code `8f6400a5` / docs `f352ff92`) returned CHANGES REQUIRED. I001 was confirmed PROVISIONALLY_CLOSED by the preceding targeted closure (`#200` comment `5918998489`). The new finding, `L0506-D001-I002`, is a CONTRACT_ASSURANCE_DEFECT and blocking:
+- **Symptom.** A callback delivering the string `"Infinity"`, `"-Infinity"` or `"NaN"` in a declared `float` field was rejected.
+- **Cause.** The rev-3 shape's lax `float` coerced the string into the number it spells.
+- **Baseline.** The accepted baseline `3c15b057` delivers the string unchanged.
+
+Accepted. The characterization and checkpoint are CE rev 4, **APPROVED, AGREED FOR IMPLEMENTATION** (Codex, `#200` @ `d5df1187`, evidence prototype `0b39d173`).
+
+**The fix** (`execute.py`, integrated exactly as agreed, with the `minion-agent-python/` tree identical to `0b39d173`):
+- The finite shape's numeric leaves are strict. A declared `float` becomes `Annotated[float, AllowInfNan(False), Strict()]`, and a declared `int` becomes `Annotated[int, Strict()] | <that float>`.
+- As a result, `finite_number` is reported only for an actual runtime non-finite float.
+- A delivered value of another type is out of shape: it is delivered unchanged, and it never exempts a sibling.
+- Everything else in Remediation 2 is unchanged.
+
+**Witnesses** (`test_prepared_runtime_callbacks.py`), each for `"Infinity"`, `"-Infinity"`, `"NaN"`, plus the controls `"outside"` and `"1"`:
+- a numeric-looking string delivered in `float`, `int`, a `list[float]` element and a nested record's `float` passes, and the hook and `execute` receive the original string;
+- a string in `float`/`int`/`list[float]`/`float | str` beside a genuine ±Infinity/NaN `float` sibling is rejected before the hook and `execute`.
+
+The 6 numeric-looking-string witnesses fail on `8f6400a5` and pass here.
+
+**Spec.** TOOL-041 *Pydantic-model parameters* gains the agreed precision clause: "Only an actual runtime number is judged: a delivered value of another type (for example the string `"Infinity"`) is never converted into one." The manifest's TOOL-041 `python` note names the strict numeric leaves and I002.
+
+**Gates** (code `683103a73584bc12190a61a5c2e826ab1b50b4ac`, Windows, pinned ICU, fresh):
+
+| Gate | Result |
+|---|---|
+| `pytest` | **2357 passed**, 16 skipped, 19 xfailed; coverage **100%** (`tools/execute.py` 231/231) |
+| `ruff check`, format (changed files), `mypy` (91 files) | clean |
+| manifest validation | passed |
+| delta gate | 19/19 |
+| §8 negative controls | 7/7 killed |
+| 105-cell matrix | byte-identical (`518d4051…`) |
+
+The Linux container was not run; the change is platform-independent.
+
+**Status.** `L0506-D001-I002` is REMEDIATED, pending Codex's §11.8.7 targeted closure. `L0506-D001-I001` stays PROVISIONALLY_CLOSED. The §11.8.8 final complete review follows. Rust and cross-language are unchanged: NOT_IMPLEMENTED and NOT CLOSED.
