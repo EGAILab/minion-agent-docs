@@ -617,6 +617,18 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
     - every finite literal to denote a finite binary64 value.
 
     A violation fails the document and is never defaulted.
+- **Evidence staging** (`L0506-D001-R003`, acyclic). Every scenario document names its `gate`.
+  - **`L0506-D001`: the delta's certification gate.** It is the three custom documents, with 19 cases. They use a tool's own `prepare_arguments` against declared-number, declared-integer and undeclared positions, so they run from the accepted Layer-05/06 baseline in every binding. The schema forbids an `edit` case in this gate.
+  - **`WP-13.2`: the real-`edit` document, with 8 cases.** It is an integration witness through the real built-in `edit` tool, which lands with WP-13.2, and it is **not** part of this delta's certification.
+    - Once `L0506-D001` is certified, WP-13.2's Python approval and Rust implementation reviews run it. It is recorded under `TOOL-030`.
+    - Until then it counts as neither passed nor executed for this delta.
+  - No runner skips, aliases or simulates a document of the other gate. The delta's runner selects gate `L0506-D001` explicitly.
+  - The resulting order is:
+
+    ```text
+    L0506-D001 contract -> Python + Rust delta implementations (gate L0506-D001) -> certified
+      -> WP-13.2 Python approval (runs gate WP-13.2) -> Rust WP-13.2 (runs gate WP-13.2) -> WP-13.2 closure
+    ```
 - The negative controls each binding's implementation review must run: Infinity rejected because a type cannot hold it; Infinity mapped to null; clamped to the largest finite value; stringified; `-0` collapsed to `+0`; a hook projection that loses a non-finite value; and a validator accepting a non-finite value in a declared `number` field.
 
 **Known Python defect,** fixed by this delta's Python implementation (`L0506-D001-C001`). Certified Python Layer 06 accepts ±inf and NaN in a declared `number` field, because the `jsonschema` library's `number` admits non-finite floats. The declared-number scenario witnesses it.

@@ -74,3 +74,20 @@ The authority now has 27 cases, and the declared-number document 7.
 - an overflowing "finite" literal fails the preflight.
 
 **Scope.** No production code changes.
+
+## Remediation 2: `L0506-D001-R003`, acyclic evidence staging
+
+**Trigger.** Codex's final complete review (`minion-agent-docs#198`) kept R001 and R002 closed, and found that the eight real-`edit` cases made delta certification depend on WP-13.2. WP-13.2 itself waits for this delta. Accepted.
+
+**The fix.**
+- **Schema.** Every document now requires a `gate`, either `L0506-D001` or `WP-13.2`. A delta-gated document may hold only `custom` cases, which the schema enforces. The top-level comment states the filter policy: explicit selection by `gate`, and never a skip, alias or simulation.
+- **Documents.** The three custom documents (19 cases) are gate `L0506-D001`. The real-`edit` document (8 cases) is gate `WP-13.2`, with a note on its trigger. The generator writes the gate.
+- **Spec.** A new "Evidence staging" paragraph gives the two gates, the trigger for the `WP-13.2` gate, and the acyclic order.
+- **Manifest.**
+  - `TOOL-041`'s tests name only the three delta-gated documents as its certification witness, and list the `edit` document as a WP-13.2-gated integration witness that is not part of this row's certification.
+  - `TOOL-030` gains `edit_prepared_runtime_numbers`, the gate-`WP-13.2` document.
+- **Tests.** Python schema tests: every document is gated; delta-gated documents are custom-only; an `edit` case moved into the delta gate is rejected; a missing gate is rejected.
+- **Unchanged.** The authority results (27 cases), the numeric semantics and R001/R002.
+- **Coordination.** `#49` (WP-13.2) records the added gate: after `#88` certifies, its Python approval and Rust implementation reviews run the gate-`WP-13.2` document.
+
+**Scope.** No production code changes, and no change to the Owner's condition: Rust WP-13.2 still follows delta certification.

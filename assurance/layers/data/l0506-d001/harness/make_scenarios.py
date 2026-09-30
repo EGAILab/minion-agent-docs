@@ -30,6 +30,9 @@ GROUPS = [
      "there -- +Infinity, -Infinity, NaN, -0 -- and the pre-execute hook and execute observe it."),
 ]
 
+GATE_NOTE_EDIT = (" Gate WP-13.2 (L0506-D001-R003): an integration witness through the real built-in edit tool; "
+                  "not part of the delta's certification gate -- WP-13.2's Python approval and Rust implementation "
+                  "reviews run it once L0506-D001 is certified.")
 
 def q(s):
     out = ['"']
@@ -103,7 +106,9 @@ def main():
             docs_cases.append(case)
         doc = {"name": name, "family": "agent", "authority": AUTH, "pi_revision": PI,
                "requirements": ["TOOL-041"], "witnesses": ["prepared_runtime_numeric_domain"],
-               "notes": notes + " GENERATED from the pinned-Pi authority run; regenerate with harness/make_scenarios.py.",
+               "notes": notes + (GATE_NOTE_EDIT if key == "edit" else "")
+                        + " GENERATED from the pinned-Pi authority run; regenerate with harness/make_scenarios.py.",
+               "gate": "WP-13.2" if key == "edit" else "L0506-D001",
                "prepared_runtime": {"cases": docs_cases}}
         (out / f"{name}.yaml").write_bytes((emit(doc) + "\n").encode("ascii"))
         print(name, len(docs_cases))
