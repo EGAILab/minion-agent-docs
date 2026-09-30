@@ -1,0 +1,175 @@
+{
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "edit-overflow-positive-exponent",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "+Infinity"
+   }
+  },
+  {
+   "id": "edit-overflow-negative-exponent",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "-Infinity"
+   }
+  },
+  {
+   "id": "edit-overflow-positive-400-digits",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "+Infinity"
+   }
+  },
+  {
+   "id": "edit-overflow-negative-400-digits",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "-Infinity"
+   }
+  },
+  {
+   "id": "edit-negative-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "-0"
+   }
+  },
+  {
+   "id": "edit-positive-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "0"
+   }
+  },
+  {
+   "id": "edit-largest-finite",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "1.7976931348623157e+308"
+   }
+  },
+  {
+   "id": "edit-rounded-integer",
+   "outcome": "prepared",
+   "observed": {
+    "/edits/0/extra": "9007199254740992"
+   }
+  },
+  {
+   "id": "declared-number-pos-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number"
+  },
+  {
+   "id": "declared-integer-pos-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be integer"
+  },
+  {
+   "id": "undeclared-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "+Infinity"
+   }
+  },
+  {
+   "id": "declared-number-neg-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number"
+  },
+  {
+   "id": "declared-integer-neg-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be integer"
+  },
+  {
+   "id": "undeclared-neg-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "-Infinity"
+   }
+  },
+  {
+   "id": "declared-number-nan",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number"
+  },
+  {
+   "id": "declared-integer-nan",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be integer"
+  },
+  {
+   "id": "undeclared-nan",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "NaN"
+   }
+  },
+  {
+   "id": "declared-number-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "declared-integer-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "undeclared-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "-0"
+   }
+  },
+  {
+   "id": "declared-number-large-finite",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "1e+308"
+   }
+  },
+  {
+   "id": "declared-integer-large-finite",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "1e+308"
+   }
+  },
+  {
+   "id": "undeclared-large-finite",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "1e+308"
+   }
+  },
+  {
+   "id": "declared-number-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "0"
+   }
+  },
+  {
+   "id": "declared-integer-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "0"
+   }
+  },
+  {
+   "id": "undeclared-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/extra": "0"
+   }
+  }
+ ]
+}

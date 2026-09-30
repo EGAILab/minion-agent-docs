@@ -1,0 +1,306 @@
+[
+ {
+  "id": "edit-overflow-positive-exponent",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":1e999}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-overflow-negative-exponent",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":-1e999}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-overflow-positive-400-digits",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-overflow-negative-400-digits",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":-9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-negative-zero",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":-0}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-positive-zero",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":0}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-largest-finite",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":1.7976931348623157e308}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "edit-rounded-integer",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "{\"oldText\":\"a\",\"newText\":\"b\",\"extra\":9007199254740993}"
+  },
+  "observe": [
+   "/edits/0/extra"
+  ]
+ },
+ {
+  "id": "declared-number-pos-inf",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "+Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-pos-inf",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "+Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-pos-inf",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "+Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "declared-number-neg-inf",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "-Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-neg-inf",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "-Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-neg-inf",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "-Infinity"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "declared-number-nan",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "NaN"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-nan",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "NaN"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-nan",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "NaN"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "declared-number-neg-zero",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "-0"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-neg-zero",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "-0"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-neg-zero",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "-0"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "declared-number-large-finite",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "1e308"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-large-finite",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "1e308"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-large-finite",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "1e308"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "declared-number-zero",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "0"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "declared-integer-zero",
+  "tool": "custom",
+  "schema": "integer",
+  "prepare_set": {
+   "limit": "0"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit"
+  ]
+ },
+ {
+  "id": "undeclared-zero",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "extra": "0"
+  },
+  "arguments": {},
+  "observe": [
+   "/extra"
+  ]
+ }
+]

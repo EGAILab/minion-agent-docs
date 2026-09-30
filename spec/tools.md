@@ -525,6 +525,93 @@ own `createToolResultMessage` conditionally *omits* that key entirely when the a
 (`addedToolNames?.length ? {...} : {}`), which Minion's "empty tuple becomes absent" already
 matches.
 
+### Prepared runtime numeric domain (`TOOL-041`, post-certification delta `L0506-D001`)
+
+**Status: CONTRACT_DRAFT (`minion-agent#88`).**
+
+- **Authorization.** Owner decision `L13-WP132-I004`, Option 1 (`minion-agent#49` comment `5912178299`). This is a narrow post-certification extension of the Layer-05/06 runtime domain. Historical Layer-05/06 certification stands outside the surface below, and no intentional divergence is introduced.
+- **Origin.** Implementation-review finding `L13-WP132-I004` (`minion-agent-docs#194`):
+  - pinned Pi's `edit` preparation can produce a runtime ±Infinity that its before-hook observes;
+  - Rust's certified argument type (`serde_json::Value`) cannot hold that value.
+
+**Affected surface.**
+- Layer 05: the representation of `prepare_arguments`' result.
+- Layer 06: validation of the prepared arguments, the `tools/pre-execute` hook's `arguments`, and the arguments handed to `execute`.
+
+Nothing else changes, in particular:
+- the raw `ToolCall.arguments`;
+- the original arguments carried by `tool_execution_start`/`tool_execution_update`/`tool_execution_end` (`IR-L06-005`);
+- every serialization of a `ToolCall`.
+
+**Two domains.**
+
+```text
+raw ToolCall arguments         JSON-compatible, unchanged: what the model sent, what
+  (Layer 02 / Layer 05 input)   sessions persist, what tool_execution_* events carry
+prepared runtime arguments     Pi's JavaScript runtime values after prepare_arguments:
+  (Layer 06 validate -> hooks   the value validation checks, the pre-execute hook sees
+   -> execute)                  and execute receives
+```
+
+A number in the prepared runtime domain is one of:
+
+```text
+finite binary64      including -0, whose sign is preserved
++Infinity
+-Infinity
+NaN                  reachable ONLY through a tool's own prepare_arguments (below)
+```
+
+**Reachability, from pinned-Pi characterization** (`#88` comment `5912236809`; authority below).
+- **Core preparation.** The only core-Pi preparation that decodes numbers is `edit`'s `prepareEditArguments`, via `JSON.parse`. It produces:
+  - ±Infinity for an overflowing number, such as `1e999` or a 400-digit integer;
+  - `-0` for `-0`;
+  - correctly rounded binary64 otherwise.
+
+  It never produces NaN: `JSON.parse("NaN")` is a `SyntaxError`.
+- **A tool's own shim.** A tool's `prepare_arguments` (Pi's public `AgentTool.prepareArguments`) can return any runtime number. Pi's validator keeps NaN in an undeclared key, and the hook observes it. NaN is therefore included because pinned Pi can produce it at this boundary, not merely because a representation could hold it (Owner decision §4).
+- **Out of scope.** Non-numeric runtime values a shim could return (`undefined`, functions, dates, big integers) stay outside this delta. The prepared value is otherwise the JSON-shaped object Layer 05 already certifies.
+
+**Validation** (pinned `validateToolArguments`, `typebox` 1.3.7, characterized):
+
+| Prepared value | declared `number` | declared `integer` | undeclared key |
+|---|---|---|---|
+| +Infinity, -Infinity, NaN | **rejected** | **rejected** | kept |
+| -0 | accepted, sign kept | accepted, sign kept | kept |
+| finite (e.g. 1e308) | accepted | accepted when integral | kept |
+
+- A declared `number`/`integer` instance is finite-only, which is also JSON Schema's own data model: JSON has no non-finite numbers.
+- A binding's validator MUST reject a non-finite value there. It MUST NOT reject, drop, clamp, stringify or null-map one in a position the schema leaves unconstrained.
+- Rejection is Layer 06's certified immediate argument-validation error (`TOOL-003`; its text is Layer 06's own).
+
+**Hooks and execute.** The `tools/pre-execute` listener's `arguments` and `execute`'s arguments carry the prepared runtime value exactly, including the sign of zero and non-finite values. A hook's `Proceed(arguments=...)` replacement is certified Layer-06 behavior. It is not extended here beyond carrying the same domain.
+
+**Serialization boundary.**
+- Layer 06 serializes no prepared value.
+- No projection such as `Infinity -> null` is defined here. `JSON.stringify` behavior applies only where pinned Pi performs that specific serialization. Any later boundary that serializes prepared values must specify its own projection.
+- Raw `ToolCall` JSON serialization is unchanged.
+
+**Representation.** The contract fixes values, not types.
+- **Python.** An integral finite number decoded from JSON is an `int`, as Layer 02 decodes JSON integers. Every other runtime number is a `float`, including `-0.0`, ±`inf` and `nan`.
+- **Rust.** It needs a prepared-runtime value representation able to carry these numbers through preparation, validation, hooks and `execute`. The API spelling is Rust's, delegated to its implementation review, and `serde_json::Value` is not the semantic authority for this domain (Owner decision §3).
+
+**Pydantic-model parameters** (a Python-only Layer-05 representation, `TOOL-F010`).
+- The same finite-only rule applies to fields the model declares as numbers.
+- Pydantic's own coercion stays the certified, disclosed Layer-06 divergence. In particular, an `int` field coerces `-0.0` to `0`; this is pre-existing and unchanged here, and is disclosed.
+
+**Evidence** (`assurance/layers/data/l0506-d001/`).
+- The pinned-Pi authority covers 26 cases. It runs:
+  - `agent-loop.ts`'s preparation and `validateToolArguments` unmodified;
+  - `edit.ts`'s `editSchema`, sliced from source;
+  - the `prepareEditArguments` copy the WP-13.2 authority already uses;
+  - `typebox` 1.3.7, SRI-checked.
+- Canonical scenarios live in `minion-agent` `conformance/agent/prepared-runtime/`, shape `prepared-runtime-scenario.schema.json`: 4 documents, generated from the authority.
+  - They cover the real `edit` path (±Infinity, -0, rounding, largest finite) and a custom shim against declared-number, declared-integer and undeclared positions (±Infinity, NaN, -0, large finite, 0).
+  - The runner asserts that the hook and `execute` observe the same token and that the raw arguments are unchanged.
+- The negative controls each binding's implementation review must run: Infinity rejected because a type cannot hold it; Infinity mapped to null; clamped to the largest finite value; stringified; `-0` collapsed to `+0`; a hook projection that loses a non-finite value; and a validator accepting a non-finite value in a declared `number` field.
+
+**Known Python defect,** fixed by this delta's Python implementation (`L0506-D001-C001`). Certified Python Layer 06 accepts ±inf and NaN in a declared `number` field, because the `jsonschema` library's `number` admits non-finite floats. The declared-number scenario witnesses it.
+
 ### Explicitly not certified by Layer 06
 
 Cancellation/abort propagation through `execute`/hooks was assurance Layer 09's territory, not
