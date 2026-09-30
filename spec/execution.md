@@ -222,7 +222,7 @@ probe_dir_entry(path, signal?) -> Result[DirEntryProbe, FsError]
 -- above; see §12 for semantics, host behavior, error mapping and cancellation):
 check_readable(path, signal?) -> Result[None, FsError]
 
--- ADDITIVE, §13 (WP-12.E3, EXEC-009, CONTRACT_DRAFT -- NOT part of the DIRECT_PI_PARITY set
+-- ADDITIVE, §13 (WP-12.E3, EXEC-009, CERTIFIED -- NOT part of the DIRECT_PI_PARITY set
 -- above; see §13 for semantics, host behavior, error mapping and cancellation):
 check_read_write(path, signal?) -> Result[None, FsError]
 ```
@@ -2363,7 +2363,9 @@ governance record; they are not Layer 12 evidence.
 
 ## 13. Layer-12 additive extension `WP-12.E3` -- `check_read_write`
 
-**Status: CONTRACT_DRAFT (`WP-12.E3`, requirement `EXEC-009`, `minion-agent#79`).**
+**Status: CERTIFIED in both languages (`WP-12.E3`, requirement `EXEC-009`, `CERTIFIED_CLOSED`); cross-language closure recorded in `minion-agent#79`.** The contract below is the approved, merged revision (`minion-agent-docs#176`) with the §13.4 sharing-violation correction (`WP12E3-R001`, `minion-agent-docs#185`); this status paragraph is a documentary update only. Accepted implementations: Python at `minion-agent/main` `ada1032644d3da701f4ad319a7d5e1402aafcf4d` (`minion-agent#82`, witness `#84`); Rust at `minion-agent/main` `8a2a39481f3613d3caea7d23048b518e05931bc0` (`minion-agent#83`; assurance `minion-agent-docs#184`). Closure record: `assurance/layers/12-wp12e3-closure.md`.
+
+Earlier status: CONTRACT_DRAFT (`WP-12.E3`, requirement `EXEC-009`, `minion-agent#79`).
 
 **Authorization.** Owner decision `L13-WP132-O2` = A-1, refined (`minion-agent#49` comment `5881558193`). The routine lifecycle is delegated to Claude under the standing delegation `minion-agent#75`.
 
