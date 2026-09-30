@@ -1,0 +1,14 @@
+icu build exit=0
+/inputs/pyicu-2.16.2.tar.gz: OK
+pyicu exit=0
+pip exit=0
+== WP-13.2 conformance + unit/negative controls (root)
+...............................................                          [100%]
+47 passed in 7.67s
+== WP-13.2 conformance as an unprivileged user
+............................                                             [100%]
+28 passed in 3.72s
+== full suite (root)
+=========================== short test summary info ============================
+FAILED tests/execution/test_shell.py::test_exec_no_bash_found_on_this_platform
+1 failed, 2148 passed, 79 skipped, 19 xfailed in 47.40s
