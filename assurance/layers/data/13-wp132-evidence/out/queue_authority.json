@@ -1,0 +1,312 @@
+{
+ "engine": "node+pi-file-mutation-queue",
+ "node": "22.15.1",
+ "results": [
+  {
+   "name": "same-target-registration-in-call-order",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/f.txt",
+     "realpath": {
+      "gate": true
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:ok A /w/f.txt",
+    "realpath:start B",
+    "realpath:ok B /w/f.txt",
+    "fn:start A",
+    "fn:end A",
+    "call:ok A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "slow-failing-registration-delays-later-registration-until-it-settles",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/a.txt",
+     "realpath": {
+      "gate": true
+     },
+     "fn": "ok"
+    },
+    {
+     "id": "B",
+     "path": "/w/b.txt",
+     "realpath": {
+      "ok": "/w/b.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:err A EACCES",
+    "realpath:start B",
+    "realpath:ok B /w/b.txt",
+    "call:err A EACCES",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "different-keys-run-concurrently",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/a.txt",
+     "realpath": {
+      "ok": "/w/a.txt"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/b.txt",
+     "realpath": {
+      "ok": "/w/b.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:ok A /w/a.txt",
+    "realpath:start B",
+    "realpath:ok B /w/b.txt",
+    "fn:start A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B",
+    "fn:end A",
+    "call:ok A"
+   ]
+  },
+  {
+   "name": "same-key-waits-and-is-released-after-an-error",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "throw"
+    },
+    {
+     "id": "B",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:ok A /w/f.txt",
+    "realpath:start B",
+    "realpath:ok B /w/f.txt",
+    "fn:start A",
+    "fn:throw A",
+    "call:err A fn A failed",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "enoent-fallback-key-serializes-creates",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/new.txt",
+     "realpath": {
+      "err": "ENOENT"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/new.txt",
+     "realpath": {
+      "err": "ENOENT"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:err A ENOENT",
+    "realpath:start B",
+    "realpath:err B ENOENT",
+    "fn:start A",
+    "fn:end A",
+    "call:ok A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "enotdir-fallback-key-serializes",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/notes.txt/child.md",
+     "realpath": {
+      "err": "ENOTDIR"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/notes.txt/child.md",
+     "realpath": {
+      "err": "ENOTDIR"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:err A ENOTDIR",
+    "realpath:start B",
+    "realpath:err B ENOTDIR",
+    "fn:start A",
+    "fn:end A",
+    "call:ok A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "other-realpath-error-fails-registration-and-leaves-no-entry",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/locked/f.txt",
+     "realpath": {
+      "err": "EACCES"
+     },
+     "fn": "ok"
+    },
+    {
+     "id": "B",
+     "path": "/w/locked/f.txt",
+     "realpath": {
+      "ok": "/w/locked/f.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:err A EACCES",
+    "realpath:start B",
+    "realpath:ok B /w/locked/f.txt",
+    "call:err A EACCES",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "symlink-and-target-share-one-queue",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/link.txt",
+     "realpath": {
+      "ok": "/w/target.txt"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/target.txt",
+     "realpath": {
+      "ok": "/w/target.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:ok A /w/target.txt",
+    "realpath:start B",
+    "realpath:ok B /w/target.txt",
+    "fn:start A",
+    "fn:end A",
+    "call:ok A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B"
+   ]
+  },
+  {
+   "name": "fifo-of-three-on-one-key",
+   "calls": [
+    {
+     "id": "A",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "B",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "gate"
+    },
+    {
+     "id": "C",
+     "path": "/w/f.txt",
+     "realpath": {
+      "ok": "/w/f.txt"
+     },
+     "fn": "ok"
+    }
+   ],
+   "trace": [
+    "realpath:start A",
+    "realpath:ok A /w/f.txt",
+    "realpath:start B",
+    "realpath:ok B /w/f.txt",
+    "fn:start A",
+    "realpath:start C",
+    "realpath:ok C /w/f.txt",
+    "fn:end A",
+    "call:ok A",
+    "fn:start B",
+    "fn:end B",
+    "call:ok B",
+    "fn:start C",
+    "fn:end C",
+    "call:ok C"
+   ]
+  }
+ ]
+}

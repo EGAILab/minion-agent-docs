@@ -631,6 +631,11 @@ Every `read`/`ls` `path` argument is resolved through one pipeline before reachi
    this pipeline for a WP-13.1 caller -- step 4 always intercepts first.)
 ```
 
+**Shared preprocessing versus tool-specific dispatch (`L13-WP132-R002`).**
+- Steps 1-4 above are the **shared preprocessing**. Their output is the preprocessed path, and an `R002-A` rejection at step 4 answers before any `ctx.fs` access.
+- Step 5 is **each tool's own dispatch**. `read` and `ls` use the read-only dispatch written in step 5, unchanged.
+- `write` and `edit` (WP-13.2) consume steps 1-4 only and pass the preprocessed path to their own operations (see WP-13.2). They never go through step 5's read-only dispatch: a new-file `write` does not first ask `check_readable`.
+
 **`L13-WP131-R001` correction:** an earlier revision of this pipeline added a mandatory trim step
 and described the whole sequence as mirroring `utils/paths.ts:normalizePath`'s option set "exactly."
 Pinned Pi's own tool call sites never set `trim: true` -- `path-utils.ts:40-49`/`utils/
@@ -956,7 +961,8 @@ Image result
   The closed cause-phrase vocabulary below applies to `TOOL-025`/`read`, to `TOOL-026`'s own
   `R002-A` step-4 rejection above (part of `read`'s and `ls`'s shared pipeline), and to
   `TOOL-028`/`ls`'s raw and hybrid sites, whose exact templates are specified in `TOOL-028`'s own
-  error-text subsection below:
+  error-text subsection below (and, by owner decision `L13-WP132-O1`, to every other Layer-13
+  `ctx.fs`-derived raw or hybrid site -- WP-13.2's are listed in its own "Error text" subsection):
 
   ```text
   FsErrorCode        -> cause phrase
@@ -1489,3 +1495,447 @@ owner-decided exact-pinned-engine strategy (`WP-13.4`, `minion-agent#51`, `TOOL-
 Layer 06 concern (tool registration/visibility, the per-call pipeline, hook ordering) a built-in
 tool participates in identically to any other registered tool, already certified above and not
 restated here.
+
+### WP-13.2 — Filesystem mutation tools (`write`, `edit`) and the shared mutation queue
+
+**Status: CONTRACT_DRAFT (`minion-agent#49`).**
+
+**Requirements:**
+- `TOOL-029`: `write`;
+- `TOOL-030`: `edit` pipeline, multi-edit matching, diagnostics and result;
+- `TOOL-031`: fuzzy matching, unchanged-line preservation, BOM and line endings;
+- `TOOL-032`: mutation queue;
+- `TOOL-033`: cancellation versus the queue lock.
+
+It also broadens two existing rows:
+- `TOOL-026`: `write` and `edit` resolve paths through the same pipeline;
+- `TOOL-039`: raw/hybrid `ctx.fs` error projection, extended to Layer 13 by owner decision `L13-WP132-O1`.
+
+**Authorities:**
+- Pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`: `packages/coding-agent/src/core/tools/{write,edit,edit-diff,file-mutation-queue,path-utils}.ts` and `packages/coding-agent/src/utils/text.ts`.
+- The pinned `diff` package 8.0.4 (Pi's `package-lock.json`, integrity `sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==`), specifically its `diffLines` and `createTwoFilesPatch`.
+- The pinned runtime, Node 22.15.1 (ICU 76.1, Unicode 16.0), wherever Pi's behavior depends on the JavaScript runtime.
+
+**Governance:**
+- Owner decisions `L13-WP132-O1` (E-1) and `L13-WP132-O2` (A-1, refined), recorded at `minion-agent#49` comment `5881558193`.
+- The routine lifecycle is delegated to Claude under `minion-agent#75`.
+
+`edit`'s access stage consumes `EXEC-009` (`spec/execution.md` §13, `WP-12.E3`, `minion-agent#79`). WP-13.2 does not claim final `edit` certification before `EXEC-009` is certified.
+
+Like WP-13.1, both tools reach the filesystem only through `ctx.fs` (Layer 12), never a direct host call (`MINION_ARCHITECTURAL_MAPPING`, stated above for all of Layer 13).
+
+#### String semantics (both tools)
+
+Pi's behavior is defined over JavaScript strings, which are sequences of UTF-16 code units. Every rule below is stated in those terms, and a binding MUST reproduce it exactly.
+
+- **Lengths, indices and `indexOf`/`substring`/`slice`** are UTF-16 code-unit measures.
+  - A binding with another native string unit MAY compute internally in its own unit only where the result is provably identical. A monotone position mapping preserves every comparison and slice below.
+  - A binding MUST use code units wherever a count itself is observable: `write`'s reported length, and `split("")` in the occurrence count.
+- **Decoding** file bytes to text is Node's `Buffer#toString("utf-8")`: WHATWG UTF-8 decode, each maximal invalid subpart becomes one U+FFFD, and the BOM is kept. This is the same rule `read` certifies (`IMPL-C005`).
+- **Encoding** text to file bytes is Node's `fs.writeFile(path, string, "utf-8")`: WHATWG UTF-8 encode. An unpaired surrogate code unit is written as U+FFFD (`EF BF BD`).
+- **Cross-language hazard, recorded rather than resolved here.** Whether a tool argument can contain an unpaired surrogate at all is decided below this layer, by Layer 02/05 argument decoding. The rules above are total for any string a binding does receive.
+
+#### Tool definitions (`TOOL-029`, `TOOL-030`)
+
+The model-visible strings below are verbatim from pinned Pi. They are part of the certified surface.
+
+```text
+write
+    name         "write"
+    label        "write"
+    description  "Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories."
+    parameters   object, required path and content:
+        path     string  "Path to the file to write (relative or absolute)"
+        content  string  "Content to write to the file"
+
+edit
+    name         "edit"
+    label        "edit"
+    description  "Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes."
+    parameters   object, required path and edits:
+        path     string  "Path to the file to edit (relative or absolute)"
+        edits    array   "One or more targeted replacements. Each edit is matched against the original file, not incrementally. Do not include overlapping or nested edits. If two changes touch the same block or nearby lines, merge them into one edit instead."
+          item   object, required oldText and newText:
+            oldText  string  "Exact text for one targeted replacement. It must be unique in the original file and must not overlap with any other edits[].oldText in the same call."
+            newText  string  "Replacement text for this targeted edit."
+    prepare_arguments  prepareEditArguments (below)
+```
+
+- **Schemas.** They follow Pi's TypeBox objects: no `additionalProperties` restriction, no `minItems`. Additional properties are therefore accepted, and an empty `edits` array passes schema validation. `validateEditInput` then rejects it in `execute` (below).
+- **Prompt metadata.** `promptSnippet`, `promptGuidelines`, rendering hooks and `constrainedSampling` are Layer 14 (prompt assembly) or UI concerns, and are not certified here.
+
+**`prepareEditArguments` (`edit.ts:116-147`, DIRECT_PI_PARITY).** It runs as Layer 06's `prepare_arguments`, before schema validation (Layer 06 certifies the call order). Given the raw arguments:
+
+```text
+1. not an object (or null) -> returned unchanged
+2. edits is a string:  JSON-parse it; an array result replaces edits;
+                       an object with string oldText and string newText replaces
+                       edits with [that object]; a parse error or any other value
+                       leaves edits unchanged
+   else edits is a single object with string oldText and string newText:
+                       edits becomes [edits]
+3. top-level oldText and newText are BOTH strings:
+       edits := (edits if it is an array else []) + [{oldText, newText}]
+       and the top-level oldText/newText keys are removed
+   otherwise the (possibly step-2-modified) object is returned as is
+```
+
+- A "single edit object" is a non-null, non-array object whose `oldText` and `newText` are both strings. Other keys are allowed and kept.
+- Pi mutates the raw argument object in place at step 2. The observable result is the returned value, which Layer 06 then validates; the pre-`prepare_arguments` arguments Layer 06 reports to hooks are Layer 06's own certified concern.
+- **Entry domain (`L13-WP132-R005`).** Layer 02/05's certified `ToolCall` arguments are a JSON object, so step 1's non-object branch is unreachable through the tool-call pipeline.
+  - A binding's `prepare_arguments` callback still reproduces it when called directly.
+  - The authority corpus records it as prepare-helper evidence, not as a canonical integration case.
+  - This constrains the entry domain; it does not widen or change any lower-layer vocabulary.
+
+#### Mutation queue (`TOOL-032`)
+
+`write` and `edit` both run their filesystem work inside the shared mutation queue.
+- `DIRECT_PI_PARITY` for ordering and key derivation (`file-mutation-queue.ts`).
+- `MINION_ARCHITECTURAL_MAPPING` for provider scoping.
+
+```text
+with_mutation_queue(fs, p, fn):
+  REGISTRATION -- one critical section, globally ordered across ALL pending
+  write/edit calls of the process, in call order:
+    k = fs.canonical_path(p)                   -- no signal
+        Ok(k)                                  -> key = k
+        Err(not_found | not_directory | not_supported)
+                                               -> key = fs.absolute_path(p)   -- no signal;
+                                                  an Err here fails registration
+        Err(any other code)                    -> registration fails with it
+    link a new entry onto the tail of queue[fs identity][key]
+  (registration is SERIALIZED: a later call's registration -- including its
+   canonical_path -- does not begin until every earlier registration has SETTLED,
+   whether it succeeded or failed. A slow registration that eventually fails
+   therefore delays later registrations until it settles (Pi's registrationQueue
+   chain awaits it), then raises its error to its own caller, leaves NO entry
+   behind, and does not block anything after it has settled -- L13-WP132-R003)
+  WAIT until every earlier entry for the same (fs identity, key) has released
+  RUN fn
+  RELEASE the entry (whether fn returned or raised), and drop the key's queue
+  once it is empty
+```
+
+- **Call order, not key-resolution order.** Registration takes one global critical section:
+  - Two calls for the same target are queued in the order the calls reached registration, even though `canonical_path` is asynchronous I/O. Pi's `registrationQueue` chain serializes exactly the key derivation plus the tail link.
+  - Only registration is global. After registration the operations themselves run concurrently for different keys.
+- **Key derivation mirrors `getMutationQueueKey` exactly.**
+  - It falls back to the lexical absolute path on `ENOENT` and `ENOTDIR`, which are Layer 12's `not_found` and `not_directory`.
+  - It additionally falls back on `not_supported`, for a provider that cannot canonicalize (`MINION_EXTENSION`; Pi has no such provider).
+  - It deliberately does NOT use Layer 12's `resolve()`, whose fallback set omits `not_directory` (`minion-agent#78`).
+- **Provider scoping.** Queues are keyed by the pair (`ctx.fs` instance identity, key). Two different providers never share a queue even when their key strings are equal. Within one provider instance, equal keys share one FIFO.
+- **What the key identifies** follows Pi: the canonical, symlink-resolved path when the target exists, and the lexical absolute path when it does not. A symlink and its target therefore share a queue; a not-yet-existing path whose ancestor is a symlink can change key once it is created, which Pi accepts too.
+- **Registration failure** (a `canonical_path` or `absolute_path` failure not covered by the fallback) is the tool's error. Its text is under Error text below.
+  - It happens before the lock and before any abort check.
+  - It delays later registrations only until it settles, and leaves no queue entry (`L13-WP132-R003`).
+
+#### Cancellation (`TOOL-033`, DIRECT_PI_PARITY)
+
+- Neither tool registers an abort listener while it holds the queue lock. After registration and the wait, each tool checks the signal after every awaited step, as listed in its own algorithm (`throwIfAborted`, `"Operation aborted"`).
+  - The lock is held until the in-flight filesystem operation has settled, then the abort surfaces.
+  - The entry is released on the way out, so a later queued call never starts while an aborted call's own filesystem operation is still running.
+- **No filesystem call receives the signal.** Pi passes none to `mkdir`, `writeFile`, `access` or `readFile`.
+- **An abort that reaches the tool still registers and waits its turn.** The tool has no check before the lock. An abort arriving during registration or while the call is queued is therefore answered with `"Operation aborted"` only after the call acquires the lock. Registration, including a fallback-key `absolute_path`, completes first.
+  - This is the direct `execute` semantics of pinned `write.ts`/`edit.ts`.
+  - **Layer 06 boundary (`L13-WP132-R004`).** A signal that is already aborted when the tool call starts never reaches `execute`. Layer 06's certified preflight, mirroring Pi's `agent-loop.ts` `prepareToolCall`, answers `"Operation aborted"` first, with no `ctx.fs` call and no queue registration.
+  - Canonical integration evidence therefore witnesses the tool-level rule with an abort that arrives after preflight: `abort_after`, or a queue abort step. It witnesses the preflight rule with a pre-aborted call that expects zero filesystem calls.
+- **When a filesystem step fails, its own error wins**, unless the algorithm lists an abort check before that error, as `edit`'s access site does.
+
+#### `write` (`TOOL-029`)
+
+```text
+execute(path, content):
+  p = preprocess(path)                          -- TOOL-026 steps 1-4 only; an R002-A
+                                                  rejection answers here, before registration
+  with_mutation_queue(fs, p):                   -- NO provider await before registration
+    check abort
+    a   = fs.absolute_path(p)                   -- no signal; failure: "Cannot resolve <path>: <cause>"
+    dir = the lexical parent directory of a     -- Pi's dirname(absolutePath)
+    fs.create_dir(dir, recursive=True)          -- failure: "Cannot create parent directory of <path>: <cause>"
+    check abort
+    fs.write_file(p, content)                   -- failure: "Cannot write <path>: <cause>"
+    check abort
+    return text "Successfully wrote <n> bytes to <path>",  details {}
+```
+
+- **Where the parent directory comes from (`L13-WP132-R001`).**
+  - Pi computes `dirname(resolveToCwd(path))` synchronously, before `withFileMutationQueue`, so nothing can reorder calls ahead of registration.
+  - Minion's `absolute_path` is an asynchronous provider operation. Awaiting it before registration could let a later same-target call register first, so it runs INSIDE the lock, immediately after Pi's first abort checkpoint.
+  - Pi has no await between that checkpoint and `mkdir`. An abort arriving during `absolute_path` is therefore observed at the next checkpoint after `create_dir`, exactly where Pi observes an abort arriving during `mkdir`.
+  - Its failure is practically unreachable, because registration already resolved the same `p`. It uses the registration site's wrapper, `"Cannot resolve <path>: <cause>"`.
+- `<n>` is `content`'s length in UTF-16 code units: Pi's `content.length`, even though the message says "bytes". Pi's quirk is reproduced verbatim (`DIRECT_PI_PARITY`, recorded as a known Pi misnomer).
+- `<path>` is the argument exactly as given.
+- The file is created or overwritten with the UTF-8 encoding of `content` (String semantics above). Missing parent directories are created.
+- `details` is Pi's `undefined`, projected as `{}` in canonical evidence.
+- Layer 12's `write_file` also creates missing parents. The explicit `create_dir` first keeps Pi's two separately checkpointed steps and their distinct failure sites.
+
+#### `edit` (`TOOL-030`)
+
+```text
+execute(input):
+  (prepare_arguments and schema validation already ran -- Layer 06)
+  if input.edits is not an array or is empty:
+      error "Edit tool input is invalid. edits must contain at least one replacement."
+  p = preprocess(input.path)                    -- TOOL-026 steps 1-4 only, before registration
+  with_mutation_queue(fs, p):
+    check abort
+    ACCESS  r = fs.check_read_write(p)          -- EXEC-009, no signal
+            Err(not_supported)  -> FALLBACK mode (below)
+            Err(c)              -> check abort; error "Could not edit file: <path>. <cause(c)>."
+    check abort
+    READ    bytes = fs.read_binary_file(p)      -- failure: "Cannot read <path>: <cause>"
+            raw = UTF-8 decode(bytes)
+    check abort
+    (bom, content)  = split_bom(raw)
+    ending          = detect_line_ending(content)
+    normalized      = normalize_to_lf(content)
+    (base, new)     = apply_edits(normalized, input.edits, <path>)   -- TOOL-030/031 diagnostics
+    check abort
+    WRITE   fs.write_file(p, bom + restore_line_endings(new, ending))  -- failure: "Cannot write <path>: <cause>"
+    check abort
+    return text "Successfully replaced <k> block(s) in <path>."   -- k = number of edits
+           details { diff, patch, firstChangedLine }               -- below
+```
+
+**FALLBACK mode (provider without `EXEC-009`; `spec/execution.md` §13.5; owner-disclosed, never Pi-equivalent):**
+- The access stage calls `check_readable` (EXEC-008) when the provider has it.
+  - `Err(c)`, other than `not_supported`, gives the access-site error.
+  - When `check_readable` is unsupported too, the access stage is skipped.
+- A readable-but-unwritable file then fails at the WRITE site, not the access site.
+- Certified first-party providers implement `EXEC-009`, so this mode never applies to them.
+
+**`apply_edits(normalized, edits, path)`** (`applyEditsToNormalizedContent`, DIRECT_PI_PARITY). `n` is the number of edits and indices are 0-based.
+
+```text
+1. e[i].old = normalize_to_lf(edits[i].oldText); e[i].new = normalize_to_lf(edits[i].newText)
+2. for i in order: e[i].old is empty -> error EMPTY(i)
+3. initial[i] = fuzzy_find(normalized, e[i].old) for every i
+   used_fuzzy = any(initial[i].used_fuzzy)
+   base_for_replacement = fuzzy_normalize(normalized) if used_fuzzy else normalized
+4. for i in order:
+     m = fuzzy_find(base_for_replacement, e[i].old)
+     not m.found                                   -> error NOT_FOUND(i)
+     occurrences(base_for_replacement, e[i].old) > 1 -> error DUPLICATE(i, that count)
+     record (i, m.index, m.length, e[i].new)
+5. sort records by index (stable); for each adjacent pair, if
+   prev.index + prev.length > cur.index        -> error OVERLAP(prev.i, cur.i)
+6. new = preserve_unchanged_lines(normalized, base_for_replacement, records)  if used_fuzzy
+         apply_replacements(base_for_replacement, records)                     otherwise
+7. new == normalized                           -> error NO_CHANGE
+8. return (base = normalized, new)
+```
+
+```text
+fuzzy_find(content, old):
+    j = content.indexOf(old)
+    j >= 0 -> found, index j, length old.length, used_fuzzy = false
+    otherwise: fc = fuzzy_normalize(content); fo = fuzzy_normalize(old); j = fc.indexOf(fo)
+    j >= 0 -> found, index j, length fo.length, used_fuzzy = true
+    else   -> not found
+
+occurrences(content, old):
+    = (number of pieces of fuzzy_normalize(content).split(fuzzy_normalize(old))) - 1
+      -- ALWAYS counted in fuzzy space, even when the exact match succeeded: an exactly
+         unique oldText can still be rejected as DUPLICATE when its normalized form
+         repeats (DIRECT_PI_PARITY)
+      -- JavaScript String.prototype.split semantics: non-overlapping occurrences, left to
+         right. When fuzzy_normalize(old) is the EMPTY string (e.g. old is only
+         trailing whitespace), split("") yields one piece per UTF-16 code unit, so
+         occurrences = (code units of the normalized content) - 1, and -1 for empty content
+
+apply_replacements(content, records):
+    apply records in descending index order: content = content[..index] + new + content[index+length..]
+```
+
+**Diagnostics** (Pi's templates, verbatim; `<path>` is the argument as given):
+
+```text
+EMPTY(i)          n == 1: "oldText must not be empty in <path>."
+                  n >  1: "edits[<i>].oldText must not be empty in <path>."
+NOT_FOUND(i)      n == 1: "Could not find the exact text in <path>. The old text must match exactly including all whitespace and newlines."
+                  n >  1: "Could not find edits[<i>] in <path>. The oldText must match exactly including all whitespace and newlines."
+DUPLICATE(i, c)   n == 1: "Found <c> occurrences of the text in <path>. The text must be unique. Please provide more context to make it unique."
+                  n >  1: "Found <c> occurrences of edits[<i>] in <path>. Each oldText must be unique. Please provide more context to make it unique."
+OVERLAP(a, b)     "edits[<a>] and edits[<b>] overlap in <path>. Merge them into one edit or target disjoint regions."
+NO_CHANGE         n == 1: "No changes made to <path>. The replacement produced identical content. This might indicate an issue with special characters or the text not existing as expected."
+                  n >  1: "No changes made to <path>. The replacements produced identical content."
+INTERNAL          "Replacement range is outside the base content."
+                  "Cannot preserve unchanged lines because the base content has a different line count."
+```
+
+- The two INTERNAL texts are Pi's own guards in `preserve_unchanged_lines`. They are reproduced if reached, and the differential corpus looks for inputs that reach them.
+  - The authority corpus reaches BOTH.
+  - The range guard fires on an empty file whose `oldText` is only whitespace.
+  - The line-count guard fires under fuzzy mode when the file ends in a whitespace-only line without `"\n"`: that line trims to nothing and `lines()` drops it, so the base has one line fewer. An ordinary edit therefore fails with Pi's internal text, e.g. `"a’\n   "` edited with `oldText` `"a'"`. This is `DIRECT_PI_PARITY` and is reproduced as is.
+- Every diagnostic is an error result with `details: {}`.
+
+#### Fuzzy matching, unchanged-line preservation, BOM and line endings (`TOOL-031`, DIRECT_PI_PARITY)
+
+```text
+split_bom(s):             s starts with U+FEFF -> ("﻿", s without it) else ("", s)
+detect_line_ending(s):    no "\n" in s                     -> "\n"
+                          no "\r\n" in s                   -> "\n"
+                          first "\r\n" before first "\n"   -> "\r\n"   else "\n"
+normalize_to_lf(s):       every "\r\n" -> "\n", then every remaining "\r" -> "\n"
+restore_line_endings(s,e): e == "\r\n" -> every "\n" -> "\r\n"; else s unchanged
+```
+
+These reproduce Pi's quirks exactly:
+- When CRLF comes first, every line break, including a lone CR that `normalize_to_lf` turned into LF, is written back as CRLF.
+- When LF comes first, every CRLF in the file is written back as LF.
+
+```text
+fuzzy_normalize(s):
+  1. NFKC normalization of s  -- Unicode 16.0 exactly (Node 22.15.1's ICU 76.1; see below)
+  2. split on "\n"; remove trailing JavaScript whitespace from each line; join with "\n"
+  3. U+2018 U+2019 U+201A U+201B                      -> "'"
+  4. U+201C U+201D U+201E U+201F                      -> '"'
+  5. U+2010 U+2011 U+2012 U+2013 U+2014 U+2015 U+2212 -> "-"
+  6. U+00A0, U+2002..U+200A, U+202F, U+205F, U+3000   -> " "
+```
+
+- **"JavaScript whitespace"** (`String.prototype.trimEnd`) is exactly ECMAScript's WhiteSpace and LineTerminator set, and nothing else. That is: U+0009, U+000B, U+000C, U+0020, U+00A0, U+FEFF, the Unicode `Zs` characters (U+1680, U+2000..U+200A, U+202F, U+205F, U+3000), and U+000A, U+000D, U+2028, U+2029.
+  - A binding's own "strip whitespace" routine MUST NOT be used unless it has exactly this set. For example, Python's `str.rstrip()` also strips U+001C..U+001F and U+0085, and differs.
+- **Unicode authority.** Pi's `String.prototype.normalize("NFKC")` uses the runtime's ICU. The pinned runtime, Node 22.15.1, is ICU 76.1 / Unicode 16.0, and that is the required version.
+  - Measured over every code point: Python's `unicodedata` (Unicode 15.1) differs on 36 code points (U+1CCD6..), and ICU 78.3 (Unicode 17.0) differs on exactly one (U+A7F1).
+  - A conforming implementation uses the already-pinned ICU4C 78.3 (`R006-C`), restricted to Unicode 16.0: ICU's filtered normalizer over `[:age=16.0:]`, under which a code point unassigned in 16.0 passes through unchanged. Any other mechanism MUST be proven equal over all code points, and over the multi-code-point composition corpus below.
+
+**`preserve_unchanged_lines(original, base, records)`** (`applyReplacementsPreservingUnchangedLines`). It is used only when `used_fuzzy`. `original` is the LF-normalized file text; `base` is its fuzzy-normalized form.
+
+```text
+lines(s)       = the regex match list /[^\n]*\n|[^\n]+/g over s -- each line WITH its "\n";
+                 an empty s has no lines; a final line without "\n" is kept
+O = lines(original); B = spans of lines(base) (start/end offsets in base)
+|O| != |B|     -> error INTERNAL (line count)
+group the records (sorted by index) by the base lines they touch:
+    a record's line range = [the line containing its index,
+                             the first line whose end >= index + length] (inclusive)
+    -- no line contains the index, or none reaches the end -> error INTERNAL (range)
+    groups use an EXCLUSIVE end line (last touched line + 1); a record whose start
+    line < the current group's exclusive end line joins that group (the group's end
+    becomes the max of both); otherwise it starts a new group
+    -- a zero-length match (fuzzy_normalize(old) empty, index 0) against an EMPTY base
+       lies in no line and raises INTERNAL (range): reachable (an empty file with an
+       oldText of only trailing whitespace), and witnessed
+output = for each group in order: the ORIGINAL lines before the group (verbatim),
+         then apply_replacements over base[group start offset .. group end offset]
+         (records rebased to the group's start offset);
+         then every ORIGINAL line after the last group (verbatim)
+```
+
+Lines no edit touches are copied byte for byte from the original. Fuzzy normalization never rewrites them.
+
+#### `edit` result details: `diff`, `patch`, `firstChangedLine`
+
+- **`patch`** = `createTwoFilesPatch(<path>, <path>, base, new, undefined, undefined, {context: 4, headerOptions: FILE_HEADERS_ONLY})` of the pinned `diff` 8.0.4. This is Pi's `generateUnifiedPatch`.
+- **`diff`** and **`firstChangedLine`** = Pi's `generateDiffString(base, new)` with 4 context lines, over that package's `diffLines(base, new)` with no options.
+- Both are `DIRECT_PI_PARITY` and are reproduced as algorithms, not approximated:
+  - the `diffLines` tokenizer: split on `\n`/`\r\n`, separators merged into the preceding line, a trailing empty token dropped, empty tokens removed;
+  - its Myers search, including jsdiff's diagonal pruning (`minDiagonalToConsider`/`maxDiagonalToConsider`), the branch choice `!canRemove || (canAdd && removePath.oldPos < addPath.oldPos)`, and component merging in `addToPath`/`extractCommon`/`buildValues`;
+  - `structuredPatch`'s hunk building: context 4, overlapping-context joins when a common run is at most 8 lines, and closing context;
+  - its trailing-newline handling: `\ No newline at end of file`;
+  - `formatPatch`: `--- <path>` / `+++ <path>` headers with no timestamps, the zero-length-hunk start adjustment, and a final `\n`;
+  - Pi's own `generateDiffString` formatting: `+`/`-`/space marker; the line number right-aligned to the digit width of `max(base.split("\n").length, new.split("\n").length)`, a count that includes a trailing empty piece; the ellipsis line; and context trimming around each change.
+- `firstChangedLine` is the new-file line number of the first added or removed part. It is always present: `NO_CHANGE` rules out an unchanged result.
+- The package is used exactly as Pi calls it: synchronous, no timeout, no `maxEditLength`. The algorithm is deterministic.
+
+#### Error text (`TOOL-039`, extended by `L13-WP132-O1`)
+
+Pi-authored stable text stays verbatim: every diagnostic above, the input-validation text, both success texts, and `"Operation aborted"`.
+
+Where Pi surfaces raw Node text or a hybrid, the raw part is replaced by the closed `R010-B` cause phrase for the failing operation's `FsErrorCode` (the table under `read`'s error text above). `details` is always `{}` for these generated errors.
+
+```text
+site                                          Pi                                              Minion
+queue registration fails (canonical_path /    raw "<CODE>: <text>, realpath '<abs>'"          "Cannot resolve <path>: <cause>"
+  absolute_path, non-fallback code); write's                                                   (site-specific wrapper)
+  in-lock absolute_path fails (R001; no Pi
+  site -- Pi's resolution is synchronous)
+write: parent mkdir fails                     raw "<CODE>: <text>, mkdir '<abs dir>'"         "Cannot create parent directory of <path>: <cause>"
+                                                                                              (site-specific wrapper)
+write: write fails                            raw "<CODE>: <text>, open '<abs>'"              "Cannot write <path>: <cause>" (site-specific wrapper)
+edit: access fails (EXEC-009, or EXEC-008     hybrid "Could not edit file: <path>. Error      "Could not edit file: <path>. <cause>."
+  in FALLBACK mode)                             code: <CODE>."                                  (Pi's frame kept, raw fragment replaced)
+edit: read fails                              raw "<CODE>: <text>, read"                      "Cannot read <path>: <cause>" (same template as read's)
+edit: write fails                             raw "<CODE>: <text>, open '<abs>'"              "Cannot write <path>: <cause>" (same as write's)
+TOOL-026 step-4 rejection (R002-A)            (as for read)                                   "Cannot access <path>: invalid path" (unchanged)
+```
+
+- `<path>` is the tool's `path` argument exactly as given, as in `read`'s templates.
+- The three wrappers `Cannot resolve`, `Cannot create parent directory of` and `Cannot write` are Minion-defined under O1's delegation: each names the operation that failed, following C012/G1's provenance principle.
+- This extension changes no WP-13.1 behavior, and WP-13.1's certified record is kept.
+
+#### Witnesses and differential evidence (required before implementation approval)
+
+1. **`edit` algorithm authority corpus.** Pinned Pi's `applyEditsToNormalizedContent`, `generateDiffString` and `generateUnifiedPatch` are executed unmodified under Node 22.15.1, in a disposable container with the SRI-checked `diff` 8.0.4, over a deterministic corpus. The corpus covers:
+   - exact and fuzzy single and multi edits, and fuzzy mode spreading to every edit in the call;
+   - duplicates counted in fuzzy space despite an exact match, and the empty-normalized-`oldText` `split("")` count including astral characters;
+   - overlaps, including edits that are adjacent but not overlapping;
+   - `NO_CHANGE` in both singular and plural forms;
+   - CRLF-first and LF-first mixtures with lone CR, BOM files, and a file without a final newline;
+   - trailing whitespace, smart quotes, dashes and special spaces;
+   - NFKC-changing text, including sequences that compose and a code point new in Unicode 17 (U+A7F1), which must stay unchanged;
+   - the JavaScript-whitespace set and the characters it excludes;
+   - line groups merging, the INTERNAL guards where reachable, astral characters in every position, and large diffs that exercise the Myers pruning.
+
+   Its results become canonical expectations: final file bytes, result text, `details.diff`, `details.patch` and `firstChangedLine`. Neither binding is an authority.
+2. **Canonical `builtin_tool` scenarios** for `write`/`edit`, generated from that authority and from pinned-Pi templates. They include:
+   - write creating parents, overwriting, reporting a UTF-16 length that differs from the byte length, and encoding a surrogate;
+   - every `edit` diagnostic, BOM and line-ending round trips, and `details` equality;
+   - every error site above, including `EXEC-009` access failures at the access site and a later read or write failure at its own site;
+   - the provider-without-`EXEC-009` FALLBACK witness;
+   - `prepare_arguments` coercions, and empty `edits`;
+   - an abort arriving during registration or while queued answering only after acquiring the lock, and a pre-aborted call answered by Layer 06 preflight with no filesystem call (`L13-WP132-R004`);
+   - an abort during each step, with the step's own error winning where Pi checks later.
+3. **Queue witnesses:**
+   - call-order FIFO when key resolution completes out of order, using a provider that delays `canonical_path`;
+   - `write` A then `write` B for the same target, with only A's provider calls delayed. B's `canonical_path` is not invoked before A's registration settles, and A's write completes before B's. The witness asserts the provider-call and write order, not just final queue contents (`L13-WP132-R001`). The negative control is an implementation awaiting `absolute_path` before registration;
+   - a symlink and its target sharing a queue;
+   - different providers with equal keys not sharing;
+   - different keys running concurrently;
+   - a registration whose `canonical_path` is pending and then fails: a later registration for another key does not begin its key lookup until the failure settles, then proceeds; no entry for the failed call remains (`L13-WP132-R003`). The negative controls are an implementation starting B early and one leaving a lingering entry;
+   - release after an error and after an abort;
+   - a later call never starting before an aborted call's in-flight write settles;
+   - the `not_directory` fallback (`notes.txt/child.md`), negative-controlled against `resolve()`.
+4. **Negative controls.** Each material rule gets a single-point mutant that its witness must kill:
+   - exact-only uniqueness counting;
+   - fuzzy applied per edit rather than per call;
+   - trimming with the binding's native whitespace set;
+   - Unicode 15.1 or 17.0 NFKC;
+   - line-ending restore, BOM, and the byte-length success count;
+   - Myers tie-break, context joining, and the missing-newline marker;
+   - a registration that is not globally serialized, and a global key without provider scoping;
+   - abort-listener release;
+   - a two-probe access check.
+
+**Evidence inventory (candidate for contract review).** The evidence lives in `assurance/layers/data/13-wp132-evidence/`, whose `README.md` gives the pins, the reproduction commands and the results.
+
+- **Items 1 and 4, corpus half.**
+  - The pinned-Pi authority run covers 379 cases: 60 curated edit cases, 300 seeded random edit cases, 9 `prepareEditArguments` cases, 5 write cases and 5 `normalizeForFuzzyMatch` cases.
+  - The corpus-level negative controls are 13 single-point mutants of copies of pinned `edit-diff.ts`, the `edit.ts`/`write.ts` glue and `diff` 8.0.4. All 13 are killed.
+- **Item 3's ordering authority.** Pinned `file-mutation-queue.ts` runs unmodified, with a scripted `realpath`, across 9 traced scenarios.
+- **Item 2 and item 3's scenarios.** They live in `minion-agent` `conformance/agent/builtin-mutation/`, in their own shape, `conformance/schema/builtin-mutation-scenario.schema.json` (key `builtin_mutation`). There are 26 documents:
+  - 8 are generated from the authority run and cover 373 cases. Expectations are pinned Pi's text, final bytes and details, verbatim. The one non-object `prepareEditArguments` input stays prepare-helper evidence (`L13-WP132-R005`).
+  - 7 are hand-authored case documents covering the error sites, the FALLBACK and cancellation.
+  - 11 are queue scenarios.
+
+  The shape's own comments define the runner protocol. A runner:
+  - builds a fresh root for each case;
+  - records the path each tool passed to `ctx.fs`;
+  - runs gated provider invocations, with steps separated by quiescence;
+  - checks ordering constraints over the event log;
+  - fails any call still pending once the steps are exhausted. This catches a lingering entry.
+- **Fuzzy-normalization replay.** `conformance/agent/fixtures/wp132-fuzzy-normalize/fuzzy_normalize.json` holds pinned Pi's `normalizeForFuzzyMatch` results. Each binding replays them against its own `fuzzy_normalize`.
+- **Unpaired surrogates.** Cases whose arguments contain an unpaired surrogate are flagged `unpaired_surrogate_arguments`, per String semantics above.
+  - A binding whose Layer 02/05 decoding carries such an argument MUST pass the case.
+  - A binding whose decoding cannot represent it MUST show the argument is rejected before the tool runs. It records that as the Layer 02/05 hazard, not as a pass.
+- **Binding-level negative controls.** The remaining item-4 controls are binding-level and run at each implementation review: Unicode 15.1/17.0 NFKC, a native whitespace set, non-serialized registration, no provider scoping, abort-listener release, and a two-probe access check. The corpus contains their killing inputs: U+1CCD6, U+A7F1, NEL, U+001C and U+FEFF, and the queue scenarios above.
+
+#### Explicitly not certified by WP-13.2
+
+- Pi's TUI rendering and preview (`renderCall`, `renderResult`, `computeEditsDiff`).
+- `promptSnippet` and `promptGuidelines` (Layer 14).
+- `constrainedSampling`.
+- Pi's `WriteOperations`/`EditOperations` override seams: Minion's seam is `ctx.fs` (Layer 12).
+- Lone-surrogate argument decoding (Layer 02/05).
+- `bash` (`WP-13.3`) and `find`/`grep` (`WP-13.4`).

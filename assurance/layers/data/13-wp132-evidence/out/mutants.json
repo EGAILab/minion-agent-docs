@@ -1,0 +1,159 @@
+[
+ {
+  "name": "exact-only uniqueness counting",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 56,
+  "examples": [
+   "duplicate-only-in-fuzzy-space",
+   "empty-normalized-old-counts-code-units",
+   "random-003",
+   "random-013",
+   "random-027"
+  ]
+ },
+ {
+  "name": "fuzzy only when every edit needs it (not per call)",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 18,
+  "examples": [
+   "fuzzy-spreads-to-all-edits",
+   "random-016",
+   "random-025",
+   "random-039",
+   "random-068"
+  ]
+ },
+ {
+  "name": "trailing-whitespace trim of space/tab only",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 2,
+  "examples": [
+   "js-whitespace-set",
+   "fz-trim-set"
+  ]
+ },
+ {
+  "name": "NFC instead of NFKC",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 40,
+  "examples": [
+   "fuzzy-nfkc-ligature",
+   "fuzzy-nfkc-fullwidth",
+   "fuzzy-nfkc-unicode16-outlined",
+   "fz-nfkc-compose",
+   "fz-unicode16-17"
+  ]
+ },
+ {
+  "name": "line endings never restored",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 30,
+  "examples": [
+   "crlf-first",
+   "crlf-first-with-lone-cr",
+   "bom-and-crlf",
+   "random-031",
+   "random-034"
+  ]
+ },
+ {
+  "name": "lone CR not normalized",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 2,
+  "examples": [
+   "crlf-first-with-lone-cr",
+   "cr-only"
+  ]
+ },
+ {
+  "name": "unchanged lines not preserved under fuzzy",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 24,
+  "examples": [
+   "fuzzy-trailing-ws",
+   "fuzzy-preserves-untouched-lines",
+   "empty-normalized-old-empty-file",
+   "internal-line-count-whitespace-only-last-line",
+   "internal-line-count-crlf-whitespace-last-line"
+  ]
+ },
+ {
+  "name": "adjacent edits treated as overlapping",
+  "file": "pi/core/tools/edit-diff.ts",
+  "killed": true,
+  "changed_cases": 7,
+  "examples": [
+   "adjacent-not-overlapping",
+   "random-078",
+   "random-152",
+   "random-183",
+   "random-229"
+  ]
+ },
+ {
+  "name": "BOM dropped on write",
+  "file": "edit_authority.mjs",
+  "killed": true,
+  "changed_cases": 7,
+  "examples": [
+   "bom-kept",
+   "bom-and-crlf",
+   "random-078",
+   "random-128",
+   "random-190"
+  ]
+ },
+ {
+  "name": "write reports UTF-8 bytes",
+  "file": "edit_authority.mjs",
+  "killed": true,
+  "changed_cases": 3,
+  "examples": [
+   "write-multibyte",
+   "write-astral",
+   "write-lone-surrogate"
+  ]
+ },
+ {
+  "name": "Myers tie-break <=",
+  "file": "node_modules/diff/libesm/diff/base.js",
+  "killed": true,
+  "changed_cases": 7,
+  "examples": [
+   "exact-multi-out-of-order",
+   "diff-repeated-lines-myers",
+   "random-082",
+   "random-200",
+   "random-204"
+  ]
+ },
+ {
+  "name": "patch context joining at < 2*context",
+  "file": "node_modules/diff/libesm/patch/create.js",
+  "killed": true,
+  "changed_cases": 1,
+  "examples": [
+   "diff-joined-context-8"
+  ]
+ },
+ {
+  "name": "no 'No newline at end of file' marker",
+  "file": "node_modules/diff/libesm/patch/create.js",
+  "killed": true,
+  "changed_cases": 62,
+  "examples": [
+   "empty-normalized-old-short-content",
+   "empty-normalized-old-two-units",
+   "cr-only",
+   "no-final-newline",
+   "add-final-newline"
+  ]
+ }
+]
