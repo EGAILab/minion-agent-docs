@@ -534,6 +534,18 @@ implementations).** `absolute_path` is used ONLY when `canonical_path` fails wit
 `DIRECT_PI_PARITY`: pinned Pi's own `getMutationQueueKey` (`file-mutation-queue.ts:20-26`) falls
 back for exactly these two codes and re-throws (propagates) for any other.
 
+**Correction (`L12-RESOLVE-ENOTDIR`, `minion-agent#78`; documentary only).** The parity claim in the paragraph above is wrong, and is corrected here; its text is kept as the historical record. `resolve()`'s runtime behavior is unchanged.
+- **Pinned Pi.** `getMutationQueueKey` falls back to the absolute path on `ENOENT` **and `ENOTDIR`**, which EXEC-001 maps to `not_found` and `not_directory`. It re-throws everything else. Pi has no provider that cannot canonicalize, so it has no `not_supported` case.
+- **`resolve()`.** It falls back on `not_found` and `not_supported`, and propagates `not_directory`.
+- **The two differences:**
+  - `not_directory`: Pi falls back; `resolve()` propagates.
+  - `not_supported`: a Minion provider extension with no Pi counterpart.
+
+  Reproduced in Node 22.15.1: `realpath` of a path running through a regular file fails with `ENOTDIR`, and Pi keys it lexically.
+- **Classification.** The fallback condition is therefore **not** `DIRECT_PI_PARITY`. It is a known Layer-12 parity gap.
+- **Impact.** `resolve()` has no production consumer. Layer 13's mutation queue derives its key directly from `canonical_path`, with Pi's exact set plus `not_supported` (`spec/tools.md`, `TOOL-032`), and never through `resolve()`.
+- **Scope.** Changing `resolve()` itself would be a non-additive change to certified Layer 12, and is not authorized. Any future consumer of `resolve()` that needs Pi's queue semantics must not rely on its fallback set.
+
 **`resolve()`'s own cancellation classification (refined at `L12-R016`, CE-L12-01-03).**
 `resolve(path, signal?)` is in the accepts-but-does-not-inspect group (§3.1) -- a direct
 consequence of composing two operations (`absolute_path`, `canonical_path`) that are BOTH already
