@@ -124,6 +124,10 @@ prepare("prepare-single-object", {"path": P, "edits": {"oldText": "a", "newText"
 prepare("prepare-legacy-top-level", {"path": P, "oldText": "a", "newText": "b"})
 prepare("prepare-legacy-appends", {"path": P, "edits": [{"oldText": "x", "newText": "y"}], "oldText": "a", "newText": "b"})
 prepare("prepare-legacy-non-string-ignored", {"path": P, "oldText": "a", "newText": 3})
+# JSON.parse numbers are IEEE-754 doubles: a 5000-digit integer is Infinity, not a parse failure
+# (L13-WP132-I002, implementation review docs #192).
+prepare("prepare-json-string-huge-integer-extra",
+        {"path": P, "edits": '{"oldText": "a", "newText": "b", "extra": ' + "9" * 5000 + "}"})
 prepare("prepare-not-an-object", "just a string")
 cases.append({"id": "validate-empty-edits", "kind": "edit", "args": {"path": P, "edits": []}, "file_b64": enc("x\n")})
 

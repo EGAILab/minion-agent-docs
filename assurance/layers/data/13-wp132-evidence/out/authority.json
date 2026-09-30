@@ -858,6 +858,34 @@
    "result": null
   },
   {
+   "id": "prepare-json-string-huge-integer-extra",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "a",
+      "newText": "b",
+      "extra": null
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-json-string-huge-integer-extra",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 1 block(s) in src/app.txt.",
+    "written_b64": "eApiCg==",
+    "written_sha256": "b99888fcd416c6ba96c0f72103faad28146e22a88ccb47fb702ebe962b05850f",
+    "details": {
+     "diff": " 1 x\n-2 a\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-a\n+b\n",
+     "firstChangedLine": 2
+    }
+   }
+  },
+  {
    "id": "prepare-not-an-object",
    "kind": "prepare",
    "prepared": "just a string",

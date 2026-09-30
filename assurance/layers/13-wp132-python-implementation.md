@@ -84,6 +84,8 @@
 
 Quiescence now also requires the event log to stay unchanged across a wall-clock settle window, and both abort-listener controls are killed. This implements the schema's "no task can make progress without a gate". Another binding's runner needs an equivalent that is not scheduler-turn-only.
 
+*Superseded by remediation 1 (`L13-WP132-I001`, below). A fixed real-time settle window is itself not quiescence.*
+
 ## Fresh gates
 
 **Windows,** on the candidate, with the pinned ICU 78.3 environment:
@@ -116,8 +118,70 @@ The Linux run used the content of `c8f3e4ba`. `d81872a0` adds only the direct-ca
 - **Lone-surrogate cases.** Python's JSON/YAML decoding carries unpaired surrogates, so both `unpaired_surrogate_arguments` cases pass as tool cases. None is recorded as a Layer 02/05 hazard for Python.
 - **Lexical parent.** `dirname` is `os.path.dirname` of the provider's absolute path. That is the host's `path.dirname`, as in Pi. A non-local provider with foreign path syntax would need its own lexical parent; no such provider is certified.
 
+## Remediation 1: `L13-WP132-I001`..`I003`
+
+**Trigger.** Codex's independent implementation review of code #87 @ `d81872a0` and docs #191 @ `940c815c`, recorded in `minion-agent-docs#192`, requested changes on three findings. All three are accepted.
+
+### `L13-WP132-I001`: timers are progress; they must be fired, not waited out (CONTRACT_ASSURANCE_DEFECT)
+
+**The defect.** A queue-wait abort listener polling every 500 ms survived the 50 ms settle window.
+
+**The fix.** Each queue scenario now runs on its own `VirtualClockLoop`, a `SelectorEventLoop` with a jumpable clock, in a worker thread. `_quiesce` repeatedly:
+1. drains ready callbacks;
+2. waits for real provider I/O, which is never skipped;
+3. fast-forwards to the next timer due within a 60-second virtual horizon and fires it.
+
+The runner advances to the next step only when nothing is ready, nothing is in flight, and no timer is due within the horizon.
+
+**Evidence.**
+- Both abort-listener controls are now parametrized over poll intervals of 10 ms, 500 ms and 10 s, and all six runs are killed.
+- Correct implementations have no timers, so they are unaffected.
+- The schema's QUIESCE comment now states the rule for every binding's runner: timers count as progress, and a fixed real-time window is not quiescence.
+
+### `L13-WP132-I002`: `JSON.parse` numbers are doubles (PI_PARITY_DEFECT)
+
+**The fix.** `prepareEditArguments` parses JSON integers through `float(str)`:
+- the value is correctly rounded (`9007199254740993` → `9007199254740992`);
+- an overflow is Infinity;
+- there is no CPython integer-digit limit;
+- an integral finite result stays a Python `int`, Layer 02's representation.
+
+Fractions and exponents were already correctly rounded doubles. The rejection of the `NaN`/`Infinity` literals is unchanged.
+
+**Evidence.**
+- A new pinned-Pi authority case, `prepare-json-string-huge-integer-extra` (a 5000-digit `extra`), is in the corpus. Pinned Pi prepares an edits array and applies the edit. The authority now has 380 cases; the 13 source mutants are still all killed; the queue authority is unchanged. The evidence, the README and the spec's evidence-inventory counts are updated.
+- It is generated into `builtin-edit-corpus-prepare` (now 374 corpus cases), so Rust carries the same canonical witness.
+- Python unit witnesses cover the prepared values: Infinity, the rounded integer, and the unchanged fraction.
+
+### `L13-WP132-I003`: a valid pair held as two characters (PI_PARITY_DEFECT)
+
+**The fix.** `encode_utf8` first combines valid high+low pairs through the UTF-16 round trip, then replaces only unpaired units with U+FFFD. The success count is unchanged, because it is already UTF-16 units.
+
+**Evidence.** Five witnesses go through the real Layer 06 pipeline from a YAML-escaped string:
+
+| Input | Length | Bytes written |
+|---|---|---|
+| valid pair `😀` | 2 | `f09f9880` |
+| unpaired high | 1 | `efbfbd` |
+| unpaired low | 1 | `efbfbd` |
+| wrong order | 2 | `efbfbdefbfbd` |
+| ordinary astral | 2 | `f09f9880` |
+
+### Fresh gates after remediation 1 (code `28a5938da93dd4b4c7205d3dffcdc8bc82227684`)
+
+**Windows:**
+
+| Gate | Result |
+|---|---|
+| `pytest` | **2224 passed**, 16 skipped, 19 xfailed; coverage **100%** |
+| `ruff check`, `ruff format --check` (new/changed files), `mypy` | clean |
+| canonical scenarios | 26/26 documents (374 corpus + 43 hand-authored cases + 11 queue scenarios) |
+| fuzzy replay | 5/5 |
+
+**Linux** (`5d5e2da5` content; `28a5938d` adds only a schema comment): WP-13.2 conformance and negative controls **59 passed** (root) and **28 passed** (unprivileged). Full suite: 2160 passed, 79 skipped, 19 xfailed, and the single pre-existing `#86` failure.
+
 ## Status
 
-- `Python WP-13.2`: IMPLEMENTATION CANDIDATE, pending independent exact-SHA review.
+- `Python WP-13.2`: IMPLEMENTATION CANDIDATE (remediation 1), pending targeted re-review, then the final complete exact-SHA review.
 - `Rust WP-13.2`: NOT_IMPLEMENTED.
 - `WP-13.2 cross-language`: NOT CLOSED.
