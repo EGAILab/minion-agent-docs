@@ -1,0 +1,6448 @@
+[
+ {
+  "id": "exact-single",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "beta",
+     "newText": "BETA"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEKYmV0YQpnYW1tYQo="
+ },
+ {
+  "id": "exact-multi-out-of-order",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "four",
+     "newText": "4"
+    },
+    {
+     "oldText": "one",
+     "newText": "1"
+    },
+    {
+     "oldText": "three",
+     "newText": "3"
+    }
+   ]
+  },
+  "file_b64": "b25lCnR3bwp0aHJlZQpmb3VyCmZpdmUK"
+ },
+ {
+  "id": "adjacent-not-overlapping",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "abc",
+     "newText": "X"
+    },
+    {
+     "oldText": "def",
+     "newText": "Y"
+    }
+   ]
+  },
+  "file_b64": "YWJjZGVmCg=="
+ },
+ {
+  "id": "overlap",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "abcd",
+     "newText": "X"
+    },
+    {
+     "oldText": "cdef",
+     "newText": "Y"
+    }
+   ]
+  },
+  "file_b64": "YWJjZGVmCg=="
+ },
+ {
+  "id": "overlap-reported-in-sorted-order",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "cdef",
+     "newText": "Y"
+    },
+    {
+     "oldText": "abcd",
+     "newText": "X"
+    }
+   ]
+  },
+  "file_b64": "YWJjZGVmCg=="
+ },
+ {
+  "id": "not-found-single",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "zeta",
+     "newText": "Z"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEK"
+ },
+ {
+  "id": "not-found-multi",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha",
+     "newText": "A"
+    },
+    {
+     "oldText": "zeta",
+     "newText": "Z"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEKYmV0YQo="
+ },
+ {
+  "id": "empty-old-single",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "",
+     "newText": "x"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEK"
+ },
+ {
+  "id": "empty-old-multi",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha",
+     "newText": "A"
+    },
+    {
+     "oldText": "",
+     "newText": "x"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEK"
+ },
+ {
+  "id": "empty-old-after-lf-normalization-is-not-empty",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\r\n",
+     "newText": "|"
+    }
+   ]
+  },
+  "file_b64": "YQ0KYgo="
+ },
+ {
+  "id": "duplicate-exact-single",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x = 1",
+     "newText": "x = 2"
+    }
+   ]
+  },
+  "file_b64": "eCA9IDEKeCA9IDEK"
+ },
+ {
+  "id": "duplicate-exact-multi",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a",
+     "newText": "A"
+    },
+    {
+     "oldText": "b",
+     "newText": "B"
+    }
+   ]
+  },
+  "file_b64": "YQpiCmIK"
+ },
+ {
+  "id": "duplicate-only-in-fuzzy-space",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "foo ",
+     "newText": "bar"
+    }
+   ]
+  },
+  "file_b64": "Zm9vIApmb28K"
+ },
+ {
+  "id": "no-change-single",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha",
+     "newText": "alpha"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEK"
+ },
+ {
+  "id": "no-change-multi",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha",
+     "newText": "alpha"
+    },
+    {
+     "oldText": "beta",
+     "newText": "beta"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEKYmV0YQo="
+ },
+ {
+  "id": "replace-with-empty",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "drop me\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "a2VlcApkcm9wIG1lCmtlZXAK"
+ },
+ {
+  "id": "multiline-old-and-new",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fn a() {\n  1\n}",
+     "newText": "fn a() {\n  2\n  3\n}"
+    }
+   ]
+  },
+  "file_b64": "Zm4gYSgpIHsKICAxCn0K"
+ },
+ {
+  "id": "old-text-crlf-normalized",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\r\nb",
+     "newText": "c\r\nd"
+    }
+   ]
+  },
+  "file_b64": "YQpiCg=="
+ },
+ {
+  "id": "fuzzy-trailing-ws",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha\nbeta",
+     "newText": "ALPHA\nBETA"
+    }
+   ]
+  },
+  "file_b64": "a2VlcCAgIAphbHBoYSAgCmJldGEJCnRhaWwgIAo="
+ },
+ {
+  "id": "fuzzy-spreads-to-all-edits",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "three",
+     "newText": "3"
+    },
+    {
+     "oldText": "one\ntwo",
+     "newText": "1\n2"
+    }
+   ]
+  },
+  "file_b64": "b25lICAgCnR3byAgCnRocmVlCg=="
+ },
+ {
+  "id": "fuzzy-smart-quotes",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "say 'hi' and \"bye\"",
+     "newText": "said"
+    }
+   ]
+  },
+  "file_b64": "c2F5IOKAmGhp4oCZIGFuZCDigJxieWXigJ0K"
+ },
+ {
+  "id": "fuzzy-dashes",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a-b-c-d-e-f-g-h",
+     "newText": "dashes"
+    }
+   ]
+  },
+  "file_b64": "YeKAk2LigJRj4oiSZOKAkGXigJFm4oCSZ+KAlWgK"
+ },
+ {
+  "id": "fuzzy-special-spaces",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x y z w v u",
+     "newText": "spaces"
+    }
+   ]
+  },
+  "file_b64": "eMKgeeKAgnrigK934oGfduOAgHUK"
+ },
+ {
+  "id": "fuzzy-nfkc-ligature",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a file here",
+     "newText": "ok"
+    }
+   ]
+  },
+  "file_b64": "YSDvrIFsZSBoZXJlICAgCg=="
+ },
+ {
+  "id": "fuzzy-nfkc-fullwidth",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "ABC",
+     "newText": "abc"
+    }
+   ]
+  },
+  "file_b64": "77yh77yi77yjIAo="
+ },
+ {
+  "id": "fuzzy-nfkc-unicode16-outlined",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "A x",
+     "newText": "hit"
+    }
+   ]
+  },
+  "file_b64": "8JyzliB4ICAK"
+ },
+ {
+  "id": "fuzzy-nfkc-unicode17-new-stays",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "zz",
+     "newText": "ZZ"
+    }
+   ]
+  },
+  "file_b64": "6p+xIGtlZXAgIAp6eiAgCg=="
+ },
+ {
+  "id": "fuzzy-nfkc-unicode17-on-touched-line",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "z'z",
+     "newText": "ZZ"
+    }
+   ]
+  },
+  "file_b64": "6p+xIHrigJl6ICAKa2VlcAo="
+ },
+ {
+  "id": "fuzzy-preserves-untouched-lines",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "t'x",
+     "newText": "T"
+    }
+   ]
+  },
+  "file_b64": "ICB1bnRvdWNoZWQgIAp04oCZeCAgCgl0cmFpbCAJCg=="
+ },
+ {
+  "id": "fuzzy-two-edits-same-line",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "ab",
+     "newText": "1"
+    },
+    {
+     "oldText": "ef",
+     "newText": "3"
+    }
+   ]
+  },
+  "file_b64": "YWIgIGNkICBlZiAgCg=="
+ },
+ {
+  "id": "fuzzy-duplicate-normalized-lines",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\nx\nx",
+     "newText": "y"
+    }
+   ]
+  },
+  "file_b64": "eCAgCngKeCAK"
+ },
+ {
+  "id": "js-whitespace-set",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\u0085\nb\u001c\nc\nd\ne\nf",
+     "newText": "W"
+    }
+   ]
+  },
+  "file_b64": "YcKFCmIcCmPjgIAKZO+7vwplwqAKZuKAqAo="
+ },
+ {
+  "id": "nel-is-not-js-whitespace",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "p\nq",
+     "newText": "PQ"
+    }
+   ]
+  },
+  "file_b64": "cMKFIApxCg=="
+ },
+ {
+  "id": "info-separator-is-not-js-whitespace",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "p\nq",
+     "newText": "PQ"
+    }
+   ]
+  },
+  "file_b64": "cBwKcQo="
+ },
+ {
+  "id": "empty-normalized-old-counts-code-units",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "   ",
+     "newText": "X"
+    }
+   ]
+  },
+  "file_b64": "YWLwn5iAYwo="
+ },
+ {
+  "id": "empty-normalized-old-short-content",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  ",
+     "newText": "X"
+    }
+   ]
+  },
+  "file_b64": "YQ=="
+ },
+ {
+  "id": "empty-normalized-old-empty-file",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  ",
+     "newText": "X"
+    }
+   ]
+  },
+  "file_b64": ""
+ },
+ {
+  "id": "empty-normalized-old-two-units",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\t",
+     "newText": "X"
+    }
+   ]
+  },
+  "file_b64": "YWI="
+ },
+ {
+  "id": "internal-line-count-whitespace-only-last-line",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a'",
+     "newText": "b"
+    }
+   ]
+  },
+  "file_b64": "YeKAmQogICA="
+ },
+ {
+  "id": "internal-line-count-crlf-whitespace-last-line",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\"",
+     "newText": "z"
+    }
+   ]
+  },
+  "file_b64": "eOKAnA0KeQ0KCSA="
+ },
+ {
+  "id": "bom-kept",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "beta",
+     "newText": "B"
+    }
+   ]
+  },
+  "file_b64": "77u/YWxwaGEKYmV0YQo="
+ },
+ {
+  "id": "crlf-first",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b",
+     "newText": "B"
+    }
+   ]
+  },
+  "file_b64": "YQ0KYg0KYw0K"
+ },
+ {
+  "id": "crlf-first-with-lone-cr",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c",
+     "newText": "C"
+    }
+   ]
+  },
+  "file_b64": "YQ0KYg1jCmQNCg=="
+ },
+ {
+  "id": "lf-first-then-crlf",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c",
+     "newText": "C"
+    }
+   ]
+  },
+  "file_b64": "YQpiDQpjDQo="
+ },
+ {
+  "id": "cr-only",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b",
+     "newText": "B"
+    }
+   ]
+  },
+  "file_b64": "YQ1iDWM="
+ },
+ {
+  "id": "no-final-newline",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "beta",
+     "newText": "BETA"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEKYmV0YQ=="
+ },
+ {
+  "id": "add-final-newline",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "beta",
+     "newText": "beta\n"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEKYmV0YQ=="
+ },
+ {
+  "id": "bom-and-crlf",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y",
+     "newText": "Y"
+    }
+   ]
+  },
+  "file_b64": "77u/eA0KeQ0K"
+ },
+ {
+  "id": "invalid-utf8-decoded",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "A",
+     "newText": "B"
+    }
+   ]
+  },
+  "file_b64": "//5BCg=="
+ },
+ {
+  "id": "astral-in-content",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "one",
+     "newText": "1"
+    },
+    {
+     "oldText": "end",
+     "newText": "END"
+    }
+   ]
+  },
+  "file_b64": "8J+YgCBvbmUg8J+YgQp0aGUgZW5kCg=="
+ },
+ {
+  "id": "lone-surrogate-new-text",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "alpha",
+     "newText": "a\ud800b"
+    }
+   ]
+  },
+  "file_b64": "YWxwaGEK"
+ },
+ {
+  "id": "write-ascii",
+  "kind": "write",
+  "path": "src/app.txt",
+  "content": "hello\n"
+ },
+ {
+  "id": "write-multibyte",
+  "kind": "write",
+  "path": "src/app.txt",
+  "content": "caf\u00e9 na\u00efve\n"
+ },
+ {
+  "id": "write-astral",
+  "kind": "write",
+  "path": "src/app.txt",
+  "content": "\ud83d\ude00\ud83d\ude01"
+ },
+ {
+  "id": "write-lone-surrogate",
+  "kind": "write",
+  "path": "src/app.txt",
+  "content": "x\udc00y"
+ },
+ {
+  "id": "write-empty",
+  "kind": "write",
+  "path": "src/app.txt",
+  "content": ""
+ },
+ {
+  "id": "diff-two-hunks",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "line 5\n",
+     "newText": "LINE 5\n"
+    },
+    {
+     "oldText": "line 30\n",
+     "newText": "LINE 30\n"
+    }
+   ]
+  },
+  "file_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKbGluZSAxMApsaW5lIDExCmxpbmUgMTIKbGluZSAxMwpsaW5lIDE0CmxpbmUgMTUKbGluZSAxNgpsaW5lIDE3CmxpbmUgMTgKbGluZSAxOQpsaW5lIDIwCmxpbmUgMjEKbGluZSAyMgpsaW5lIDIzCmxpbmUgMjQKbGluZSAyNQpsaW5lIDI2CmxpbmUgMjcKbGluZSAyOApsaW5lIDI5CmxpbmUgMzAKbGluZSAzMQpsaW5lIDMyCmxpbmUgMzMKbGluZSAzNApsaW5lIDM1CmxpbmUgMzYKbGluZSAzNwpsaW5lIDM4CmxpbmUgMzkKbGluZSA0MAo="
+ },
+ {
+  "id": "diff-joined-context-8",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "line 10\n",
+     "newText": "L10\n"
+    },
+    {
+     "oldText": "line 19\n",
+     "newText": "L19\n"
+    }
+   ]
+  },
+  "file_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKbGluZSAxMApsaW5lIDExCmxpbmUgMTIKbGluZSAxMwpsaW5lIDE0CmxpbmUgMTUKbGluZSAxNgpsaW5lIDE3CmxpbmUgMTgKbGluZSAxOQpsaW5lIDIwCmxpbmUgMjEKbGluZSAyMgpsaW5lIDIzCmxpbmUgMjQKbGluZSAyNQpsaW5lIDI2CmxpbmUgMjcKbGluZSAyOApsaW5lIDI5CmxpbmUgMzAKbGluZSAzMQpsaW5lIDMyCmxpbmUgMzMKbGluZSAzNApsaW5lIDM1CmxpbmUgMzYKbGluZSAzNwpsaW5lIDM4CmxpbmUgMzkKbGluZSA0MAo="
+ },
+ {
+  "id": "diff-split-context-9",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "line 10\n",
+     "newText": "L10\n"
+    },
+    {
+     "oldText": "line 20\n",
+     "newText": "L20\n"
+    }
+   ]
+  },
+  "file_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKbGluZSAxMApsaW5lIDExCmxpbmUgMTIKbGluZSAxMwpsaW5lIDE0CmxpbmUgMTUKbGluZSAxNgpsaW5lIDE3CmxpbmUgMTgKbGluZSAxOQpsaW5lIDIwCmxpbmUgMjEKbGluZSAyMgpsaW5lIDIzCmxpbmUgMjQKbGluZSAyNQpsaW5lIDI2CmxpbmUgMjcKbGluZSAyOApsaW5lIDI5CmxpbmUgMzAKbGluZSAzMQpsaW5lIDMyCmxpbmUgMzMKbGluZSAzNApsaW5lIDM1CmxpbmUgMzYKbGluZSAzNwpsaW5lIDM4CmxpbmUgMzkKbGluZSA0MAo="
+ },
+ {
+  "id": "diff-no-newline-at-eof",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c",
+     "newText": "C"
+    }
+   ]
+  },
+  "file_b64": "YQpiCmM="
+ },
+ {
+  "id": "diff-insert-lines",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\n",
+     "newText": "a\nx\ny\nz\n"
+    }
+   ]
+  },
+  "file_b64": "YQpiCg=="
+ },
+ {
+  "id": "diff-delete-lines",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\ny\nz\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "YQp4CnkKegpiCg=="
+ },
+ {
+  "id": "diff-width-changes",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "line 9",
+     "newText": "line 9\nline 10\nline 11"
+    }
+   ]
+  },
+  "file_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkK"
+ },
+ {
+  "id": "diff-repeated-lines-myers",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b\na\nb\na",
+     "newText": "b\nZ\nb\nZ"
+    }
+   ]
+  },
+  "file_b64": "YQpiCmEKYgphCmIK"
+ },
+ {
+  "id": "prepare-json-string-array",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": "[{\"oldText\": \"a\", \"newText\": \"b\"}]"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-json-string-single",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": "{\"oldText\": \"a\", \"newText\": \"b\"}"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-json-string-invalid",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": "[not json"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-json-string-other",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": "42"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-single-object",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": {
+    "oldText": "a",
+    "newText": "b",
+    "extra": 1
+   }
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-legacy-top-level",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "oldText": "a",
+   "newText": "b"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-legacy-appends",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x",
+     "newText": "y"
+    }
+   ],
+   "oldText": "a",
+   "newText": "b"
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-legacy-non-string-ignored",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": {
+   "path": "src/app.txt",
+   "oldText": "a",
+   "newText": 3
+  },
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "prepare-not-an-object",
+  "kind": "edit",
+  "prepare": true,
+  "raw_args": "just a string",
+  "file_b64": "eAphCg=="
+ },
+ {
+  "id": "validate-empty-edits",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": []
+  },
+  "file_b64": "eAo="
+ },
+ {
+  "id": "fz-trim-set",
+  "kind": "fuzzy",
+  "text": "a \t\u000b\f\u00a0\ufeff\u1680\u2000\u200a\u202f\u205f\u3000\u2028\u2029\n"
+ },
+ {
+  "id": "fz-not-trimmed",
+  "kind": "fuzzy",
+  "text": "a\u0085\u001c\u001d\u001e\u001f\u180e\u200b\n"
+ },
+ {
+  "id": "fz-nfkc-compose",
+  "kind": "fuzzy",
+  "text": "e\u0301 A\u030a \u1e9b\u0323 \uff76\uff9e"
+ },
+ {
+  "id": "fz-quotes-dashes-spaces",
+  "kind": "fuzzy",
+  "text": "\u2018\u2019\u201a\u201b\u201c\u201d\u201e\u201f\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00a0\u2002\u200a\u202f\u205f\u3000"
+ },
+ {
+  "id": "fz-unicode16-17",
+  "kind": "fuzzy",
+  "text": "\ud833\udcd6\ud833\udcf9\ua7f1"
+ },
+ {
+  "id": "random-000",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014y",
+     "newText": "\u2019\u0085"
+    },
+    {
+     "oldText": "y\u2019",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0301'e\u0301\n\n-",
+     "newText": "\u00a0\t\ud83d\ude00y\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "4oCZ4oCU4oCZZcyBDQrDqcKFYmLwn5iADQoNCnnigJTCoGXMgeKAmWXMgQ0KDQrigJRiwoXCoA0K76yB4oCUw6nigJTigJzjgIANCg=="
+ },
+ {
+  "id": "random-001",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c\u201c  ",
+     "newText": "\u2019c"
+    }
+   ]
+  },
+  "file_b64": "woXigJzigJwgIOKAnHg="
+ },
+ {
+  "id": "random-002",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "x\n"
+    },
+    {
+     "oldText": "\u00e9\n\n \u2014c",
+     "newText": "\u0085c\u00a0"
+    }
+   ]
+  },
+  "file_b64": "8J+YgMKgeQnigJnDqQoKIOKAlGPigJRhIAo="
+ },
+ {
+  "id": "random-003",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u3000\n\n\ud83d\ude00\u0085\nc",
+     "newText": "\u2019e\u0301b"
+    },
+    {
+     "oldText": "\u0085\nc\u0085x\ufb01\nb",
+     "newText": "\u3000x\u3000\u00e9"
+    },
+    {
+     "oldText": "  \n",
+     "newText": "\u2014\ud83d\ude00b  "
+    }
+   ]
+  },
+  "file_b64": "DQogwqDjgIANCg0K8J+YgMKFDQpjwoV476yBDQpiYXgJDQrwn5iA4oCU44CAICANCg=="
+ },
+ {
+  "id": "random-004",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "Cg=="
+ },
+ {
+  "id": "random-005",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u2014",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCZYsKF8J+YgArigJQ="
+ },
+ {
+  "id": "random-006",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301\t",
+     "newText": "xa\u2014\u2019"
+    },
+    {
+     "oldText": "\u201c\u201cb\u2014\n",
+     "newText": "\t\t\u3000"
+    }
+   ]
+  },
+  "file_b64": "77u/8J+YgMKFYmEJIAp54oCc4oCcYuKAlAoKCXgKYWN5eGF5Cg=="
+ },
+ {
+  "id": "random-007",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014\u2019",
+     "newText": "\ufb01\ufb01"
+    }
+   ]
+  },
+  "file_b64": "44CAY+KAnGXMgXl4DQrigJTDqcKFeWINCmJlzIEJwqAg76yBDQogeMKgYWI="
+ },
+ {
+  "id": "random-008",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "  \u2014\u2014 "
+    }
+   ]
+  },
+  "file_b64": "CQ0K4oCcYiANCvCfmIDChcKF4oCcw6kNCsKF8J+YgAkNCuKAnA0KeeKAlGHjgIANCiAg44CAw6l4YQ0K"
+ },
+ {
+  "id": "random-009",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000\n\ta\u201cx",
+     "newText": "\t"
+    },
+    {
+     "oldText": "\u0301\n",
+     "newText": "\u00e9\u3000\u201c\u3000x"
+    }
+   ]
+  },
+  "file_b64": "ICBlzIEgIO+sgeOAgAoJYeKAnHhlzIEK"
+ },
+ {
+  "id": "random-010",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301fi",
+     "newText": "e\u0301\u00e9"
+    }
+   ]
+  },
+  "file_b64": "IApjZcyB4oCZ8J+YgArigJnigJwKCQplzIHvrIHDqeKAlAo="
+ },
+ {
+  "id": "random-011",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " c\n y\u3000y",
+     "newText": "\n\u2014\u3000"
+    },
+    {
+     "oldText": "\ud83d\ude00  ",
+     "newText": "\u00a0"
+    }
+   ]
+  },
+  "file_b64": "4oCUw6kgYw0KIHnjgIB5DQrigJwNCmPigJx5IA0KwqAgIA=="
+ },
+ {
+  "id": "random-012",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u0085\u00a0a\ud83d\ude00"
+    },
+    {
+     "oldText": "\n",
+     "newText": "  be\u0301\u2014"
+    }
+   ]
+  },
+  "file_b64": "DQo="
+ },
+ {
+  "id": "random-013",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c\n\n",
+     "newText": "  \u00e9"
+    },
+    {
+     "oldText": "b\u00a0",
+     "newText": "\u00e9\u0085"
+    }
+   ]
+  },
+  "file_b64": "ePCfmIB5YwoKZcyBCmJiwqAK4oCZ4oCc8J+YgAnCoA=="
+ },
+ {
+  "id": "random-014",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y  \u00e9\n\ud83d\ude00",
+     "newText": "\ud83d\ude00b\u201c"
+    }
+   ]
+  },
+  "file_b64": "eSAg4oCUY2EKwoUKwoXigJwJw6nvrIHvrIEKwoV5ICDDqQrwn5iAYgp4CcOpwqAJ4oCcCsKF8J+YgOKAlHggIHkK"
+ },
+ {
+  "id": "random-015",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301\n",
+     "newText": "\u0085"
+    }
+   ]
+  },
+  "file_b64": "CgoKePCfmIAJYuKAlOKAlArigJkKwqBj76yBCiAgY2NlzIEK"
+ },
+ {
+  "id": "random-016",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085'x \nx",
+     "newText": "\ufb01"
+    },
+    {
+     "oldText": "\u00e9\u0085\u2019\u00a0\ufb01\n\n ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "w6nCheKAmcKg76yBCgogIAnjgIAJYQrChcKF4oCZeMKgCnh4w6ljwoUK"
+ },
+ {
+  "id": "random-017",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\n",
+     "newText": ""
+    },
+    {
+     "oldText": "a\u3000\ud83d\ude00\n",
+     "newText": "e\u0301e\u0301\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "YmHjgIDwn5iADQo="
+ },
+ {
+  "id": "random-018",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\t\ne\u0301x",
+     "newText": " \u2014b\u201c"
+    }
+   ]
+  },
+  "file_b64": "44CACiAg4oCZYgoJCmXMgXggIOKAmWI="
+ },
+ {
+  "id": "random-019",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\n",
+     "newText": "x\u201ce\u0301"
+    },
+    {
+     "oldText": "fia\n",
+     "newText": "\u00e9\ufb01 \u201cy"
+    },
+    {
+     "oldText": "\ufb01 by\ne\u0301\t",
+     "newText": "\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "IAnigJzigJQK44CAICAKCuOAgO+sgSBieQplzIEJ8J+YgHjigJnCoAplzIFh44CA76yBYQo="
+ },
+ {
+  "id": "random-020",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "\t\u201ca"
+    }
+   ]
+  },
+  "file_b64": "8J+YgGNlzIHCoAph4oCUwqBlzIEKecOp76yB4oCUCnggeeKAnAoJw6l5ICB5ZcyBCmLigJkKYWMK8J+YgAnDqcOp"
+ },
+ {
+  "id": "random-021",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014",
+     "newText": "\u00e9\u201c"
+    },
+    {
+     "oldText": "\u00a0\u2014",
+     "newText": "e\u0301\ufb01 \u201c"
+    }
+   ]
+  },
+  "file_b64": "wqDigJQ="
+ },
+ {
+  "id": "random-022",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fia ",
+     "newText": "by"
+    }
+   ]
+  },
+  "file_b64": "76yBYSAgIOKAlA=="
+ },
+ {
+  "id": "random-023",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000\u0085 \t ",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00e9\u3000",
+     "newText": "  "
+    },
+    {
+     "oldText": "\u00e9\u3000\u0085 \t ",
+     "newText": "\u00a0\u2019"
+    }
+   ]
+  },
+  "file_b64": "w6njgIDChSAJIA=="
+ },
+ {
+  "id": "random-024",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \ud83d\ude00",
+     "newText": ""
+    },
+    {
+     "oldText": "\u3000 \ud83d\ude00\u201c\u00a0\ncx",
+     "newText": "\u00a0a\u201c"
+    },
+    {
+     "oldText": "\n\ud83d\ude00",
+     "newText": "x"
+    }
+   ]
+  },
+  "file_b64": "44CAIPCfmIDigJzCoA0KY3jvrIEJ4oCZDQrigJxi4oCcCWMNCg0KwqDigJxhwqANCvCfmIA="
+ },
+ {
+  "id": "random-025",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e",
+     "newText": ""
+    },
+    {
+     "oldText": "\u3000",
+     "newText": "\ud83d\ude00c\ud83d\ude00c "
+    },
+    {
+     "oldText": "y \u0085",
+     "newText": "\nc\u3000  \u3000"
+    }
+   ]
+  },
+  "file_b64": "DQplzIF5wqDCheOAgA=="
+ },
+ {
+  "id": "random-026",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nb",
+     "newText": "e\u0301"
+    }
+   ]
+  },
+  "file_b64": "Cgpi4oCc"
+ },
+ {
+  "id": "random-027",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " a\u3000",
+     "newText": "\u3000\te\u0301"
+    },
+    {
+     "oldText": " ",
+     "newText": "\u2014c\n"
+    },
+    {
+     "oldText": "\u3000\n",
+     "newText": "\u0085e\u0301bc\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "4oCcCiBhY+KAmfCfmIDjgIAKCgkKYvCfmIAKwqDDqQogIGHjgIDDqQpjY2MgwqAgIAo="
+ },
+ {
+  "id": "random-028",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \nyax",
+     "newText": "e\u0301\n\u2014  "
+    },
+    {
+     "oldText": "\u201c   \n\u00a0",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eAphYsKF4oCcICAgCsKgCQrwn5iAeAkgIAp5YXjigJnCoGXMgQp48J+YgPCfmIBlzIEK76yB"
+ },
+ {
+  "id": "random-029",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301\ud83d\ude00",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "wqAgICDDqWLjgIAKICDDqWXMgfCfmIAgIAo="
+ },
+ {
+  "id": "random-030",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\ufb01\u201c",
+     "newText": "x\u00e9  x\t"
+    },
+    {
+     "oldText": "\u3000\n",
+     "newText": "\u0085 \u0085b"
+    },
+    {
+     "oldText": "\u201ccc\n\u2019\ufb01\ufb01\u201c",
+     "newText": "b\u2014\ud83d\ude00\t\u3000"
+    }
+   ]
+  },
+  "file_b64": "4oCZ76yB4oCU4oCcCuKAnGNjCuKAme+sge+sgeKAnOOAgAo="
+ },
+ {
+  "id": "random-031",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\ufb01b\te",
+     "newText": " x\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "CWEJ4oCUDQp44oCZY2XMgWNlzIENCmJ44oCZ4oCZDQplzIF4w6nCoGXMgcKgDQrvrIFiCWXMgSAg"
+ },
+ {
+  "id": "random-032",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u2019  \ufb01",
+     "newText": "\ud83d\ude00\u2014\u3000\n"
+    },
+    {
+     "oldText": "\ufb01",
+     "newText": "\u0085b\u00a0a"
+    },
+    {
+     "oldText": "\n '  ",
+     "newText": "\u201caab"
+    }
+   ]
+  },
+  "file_b64": "YwrigJTvrIHDqeKAnArCoOKAmSAg76yB"
+ },
+ {
+  "id": "random-033",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y",
+     "newText": "y\ufb01"
+    },
+    {
+     "oldText": "y",
+     "newText": " \u2014 "
+    },
+    {
+     "oldText": "y",
+     "newText": "acy\n"
+    }
+   ]
+  },
+  "file_b64": "eQ=="
+ },
+ {
+  "id": "random-034",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301bcb\u0085\nx",
+     "newText": "\ufb01  \ud83d\ude00\u2019"
+    }
+   ]
+  },
+  "file_b64": "44CA4oCceeKAmWXMgQ0KwoVlzIFiY2LChQ0KeAllzIHjgIB5DQog4oCUCQ0K76yBDQpjDQrjgIA="
+ },
+ {
+  "id": "random-035",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "e\u0301c"
+    }
+   ]
+  },
+  "file_b64": "ZcyBYeOAgAkNCmXMgeKAmeKAnMKF4oCcYg0K"
+ },
+ {
+  "id": "random-036",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c",
+     "newText": "\u2014\u3000"
+    }
+   ]
+  },
+  "file_b64": "wqBlzIHigJzigJw="
+ },
+ {
+  "id": "random-037",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x \n",
+     "newText": "\ud83d\ude00e\u0301\u201c"
+    },
+    {
+     "oldText": "\u3000-'",
+     "newText": "\u00a0a\u201c\ud83d\ude00"
+    },
+    {
+     "oldText": "\u00e9\ncxyx",
+     "newText": "c\u201c\u2014\u00e9"
+    }
+   ]
+  },
+  "file_b64": "44CA4oCU4oCZ44CA4oCUCuKAlGHDqWFiw6kKY3h5eArigJlhwoV4IAo="
+ },
+ {
+  "id": "random-038",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301x\u00e9\ud83d\ude00\n-",
+     "newText": "\ufb01\ud83d\ude00\u2019\u00e9\t"
+    },
+    {
+     "oldText": "\n\u201c\u201c'",
+     "newText": "\u2014  x"
+    },
+    {
+     "oldText": "\ud83d\ude00\n- \u3000x",
+     "newText": "  \ud83d\ude00cc\u201c"
+    }
+   ]
+  },
+  "file_b64": "44CAeOOAgGXMgcOpDQrigJzigJzigJlh8J+YgA0KZcyBeMOp8J+YgA0K4oCUIOOAgHhlzIHCoA0KYWHjgIDjgIAg76yBDQogDQrigJQNCng="
+ },
+ {
+  "id": "random-039",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u00e9 \u3000"
+    },
+    {
+     "oldText": "\ud83d\ude00 \n",
+     "newText": "  ce\u0301\ufb01"
+    }
+   ]
+  },
+  "file_b64": "ZcyB8J+YgMKgDQo="
+ },
+ {
+  "id": "random-040",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u00e9y  b\u0085"
+    }
+   ]
+  },
+  "file_b64": "Cgo="
+ },
+ {
+  "id": "random-041",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301\u00e9\n",
+     "newText": "  yb\u00a0"
+    },
+    {
+     "oldText": "\u0085\ne\u0301\u00e9\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\n \u0085",
+     "newText": "e\u0301\u201ce\u0301b"
+    }
+   ]
+  },
+  "file_b64": "ICBlzIEKCuKAlGN5woUK44CAYuOAgHh5IAoKwqDCheKAnAlhwoUKZcyBw6kKY8KFIA=="
+ },
+ {
+  "id": "random-042",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \u00e9c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eOOAgAogYSDDqQpi4oCcw6nvrIFiICAKCeKAnOKAnAphYgo="
+ },
+ {
+  "id": "random-043",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301",
+     "newText": " \u3000\u0085  b"
+    }
+   ]
+  },
+  "file_b64": "Yw0K4oCU44CACQ0KeXnCoHgJ4oCcDQrwn5iAZcyBwqDCoAl4DQrjgIAJZcyBwqAgIA0K"
+ },
+ {
+  "id": "random-044",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u3000b\n",
+     "newText": "\u00e9"
+    },
+    {
+     "oldText": "e\u0301",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "DQrjgIBiDQo="
+ },
+ {
+  "id": "random-045",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\nx\u00a0",
+     "newText": "\u201c"
+    },
+    {
+     "oldText": "\u0085\n\nx ",
+     "newText": "\n\u3000"
+    }
+   ]
+  },
+  "file_b64": "CWEgIA0KwqDCoMKFDQoNCnjCoA=="
+ },
+ {
+  "id": "random-046",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c",
+     "newText": "\u00a0\t\tb\u2019"
+    },
+    {
+     "oldText": "\u00e9a",
+     "newText": "bb\n"
+    }
+   ]
+  },
+  "file_b64": "CgrDqWHigJQKCu+sgcKg"
+ },
+ {
+  "id": "random-047",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019e\u0301\n",
+     "newText": "\ud83d\ude00c"
+    }
+   ]
+  },
+  "file_b64": "ICANCiAgIAnwn5iADQp5eXliYXgNCmJ54oCZwoUNCmENCgljeQ0KwoUg4oCZZcyBDQrDqcKgZcyBZcyBeeKAmQ0K"
+ },
+ {
+  "id": "random-048",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u00e9"
+    },
+    {
+     "oldText": "  \ud83d\ude00\n\u2014c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "76yBeMKgw6kgIPCfmIAK4oCUY8OpCgo="
+ },
+ {
+  "id": "random-049",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\ud83d\ude00a\n   \ud83d\ude00",
+     "newText": " \u00e9  "
+    },
+    {
+     "oldText": "a",
+     "newText": "x"
+    }
+   ]
+  },
+  "file_b64": "wqDigJQKwoXjgIBlzIF4CeOAgArCoOKAmfCfmIDigJkgIOOAgAplzIFh4oCcYgpjZcyB8J+YgPCfmIBhCiAgIPCfmIB5Ygo="
+ },
+ {
+  "id": "random-050",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": ""
+    },
+    {
+     "oldText": "\t\u00e9x\u00a0c",
+     "newText": "\u201c\u2019e\u0301  \ufb01"
+    },
+    {
+     "oldText": "\n \t\u00e9",
+     "newText": "e\u0301"
+    }
+   ]
+  },
+  "file_b64": "8J+YgPCfmIDvrIFlzIF54oCZCgoKCiAJw6l4wqBjCg=="
+ },
+ {
+  "id": "random-051",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\n\u3000",
+     "newText": "\n"
+    }
+   ]
+  },
+  "file_b64": "YgrCoOKAlAp4YuKAmeKAlAogIMKF4oCZeQrjgIDDqWXMgeKAnAplzIHigJR4woUgIAkK4oCU"
+ },
+ {
+  "id": "random-052",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u00a0\n\tac\ud83d\ude00",
+     "newText": "\u3000\n\n\ud83d\ude00e\u0301"
+    },
+    {
+     "oldText": "\n\tac\ud83d\ude00\nca",
+     "newText": "\tc\u2019b\u201c"
+    },
+    {
+     "oldText": "\u00a0\n\tac\ud83d\ude00\n",
+     "newText": "\ud83d\ude00\u0085"
+    }
+   ]
+  },
+  "file_b64": "YiAKw6nvrIF5CgrCoAoJYWPwn5iACmNh4oCU4oCZCuKAlHl5YSAgCg=="
+ },
+ {
+  "id": "random-053",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9x",
+     "newText": ""
+    },
+    {
+     "oldText": "c\t\u3000\u00e9x",
+     "newText": ""
+    },
+    {
+     "oldText": "\t\u3000\u00e9x",
+     "newText": "x\n\u2014y"
+    }
+   ]
+  },
+  "file_b64": "YwnjgIDDqXg="
+ },
+ {
+  "id": "random-054",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "\ufb01\u00a0y\u00a0"
+    },
+    {
+     "oldText": "\u201c",
+     "newText": "e\u0301\u3000c\u2019"
+    },
+    {
+     "oldText": "\ud83d\ude00\ud83d\ude00",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCc8J+YgPCfmIAKw6nChWFiCsKg44CAwqBjwoUK4oCc"
+ },
+ {
+  "id": "random-055",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301",
+     "newText": "y\u0085\n"
+    }
+   ]
+  },
+  "file_b64": "eGMJCvCfmIAJZcyBCg=="
+ },
+ {
+  "id": "random-056",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000fi\nfi\n",
+     "newText": "y\tc"
+    },
+    {
+     "oldText": "\u3000fi\nfi\n",
+     "newText": "\t\ufb01"
+    },
+    {
+     "oldText": "\n\ufb01\n",
+     "newText": "y  b \ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "4oCcIOKAlOKAmeOAgO+sgQrvrIEK"
+ },
+ {
+  "id": "random-057",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\ud83d\ude00",
+     "newText": "\u2019\n\t\t\u2014"
+    },
+    {
+     "oldText": "cbe\u0301",
+     "newText": "\u2014c\u2014"
+    },
+    {
+     "oldText": "cb",
+     "newText": "\ufb01\n \u00e9"
+    }
+   ]
+  },
+  "file_b64": "Y2JlzIE="
+ },
+ {
+  "id": "random-058",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a",
+     "newText": " \u3000"
+    }
+   ]
+  },
+  "file_b64": "4oCZwqDCoOKAlOKAmQ0KDQplzIHChQ0Kee+sgeOAgA0KDQplzIHvrIE="
+ },
+ {
+  "id": "random-059",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "be\u0301",
+     "newText": "  \u201c"
+    }
+   ]
+  },
+  "file_b64": "wqDwn5iAY+KAnArvrIEJIHliZcyBCgllzIFjCgrigJlj4oCcwqAgIOKAlArCoGNhIAoJ76yBeQrwn5iA76yB"
+ },
+ {
+  "id": "random-060",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9c\u00a0",
+     "newText": "\u3000"
+    },
+    {
+     "oldText": "e\u0301\u201ca\ud83d\ude00",
+     "newText": "\u2019"
+    },
+    {
+     "oldText": "\n\u0085",
+     "newText": "\u2019\ud83d\ude00\u2014"
+    }
+   ]
+  },
+  "file_b64": "CsKFICBlzIHigJxh8J+YgA=="
+ },
+ {
+  "id": "random-061",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\ud83d\ude00\ud83d\ude00",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "YiAgCXhjeArjgIBiYQph8J+YgPCfmIAJICDigJQK4oCUIO+sgXnChcOpCg=="
+ },
+ {
+  "id": "random-062",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301\na\u0085\nb",
+     "newText": "\u0085\ufb01\t\n"
+    }
+   ]
+  },
+  "file_b64": "eGLCoPCfmIDigJTwn5iACsKF4oCZCmXMgeKAlArigJRjY3gJZcyBCuKAmWXMgQllzIEKYcKFCmI="
+ },
+ {
+  "id": "random-063",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " c",
+     "newText": ""
+    },
+    {
+     "oldText": "\t \nfi\u0085\n",
+     "newText": "\u00e9\u00a0\u0085\u00e9\u2019"
+    },
+    {
+     "oldText": " ",
+     "newText": "\ud83d\ude00\u2019\u0085x"
+    }
+   ]
+  },
+  "file_b64": "CgnCoArvrIHChQogIGPCoArigJzDqWXMgSBhCmLigJTigJkg"
+ },
+ {
+  "id": "random-064",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-\n\u00e9\t \ud83d\ude00",
+     "newText": "\u3000e\u0301"
+    },
+    {
+     "oldText": "\u00e9\u2014\n\u00e9\t\u00a0\ud83d\ude00",
+     "newText": "\ud83d\ude00\u0085"
+    }
+   ]
+  },
+  "file_b64": "44CAw6nigJQKw6kJwqDwn5iA8J+YgArigJR5ZcyBeSAK"
+ },
+ {
+  "id": "random-065",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\t\ud83d\ude00 y\u201c"
+    },
+    {
+     "oldText": "\ud83d\ude00\n\t\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\u201c \u201c\ne\u0301",
+     "newText": "\u00e9\ufb01\u2014\u2019"
+    }
+   ]
+  },
+  "file_b64": "ePCfmIANCg0KecKF4oCcIOKAnA0KZcyB8J+YgCDwn5iAwqDCoA0KDQp4eMKFwoXCoO+sgQ0KwqDwn5iA4oCZwoXwn5iADQoJDQo="
+ },
+ {
+  "id": "random-066",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019\n",
+     "newText": "\ud83d\ude00yy\u201c "
+    },
+    {
+     "oldText": " \u2019\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\n",
+     "newText": "a\u2019"
+    }
+   ]
+  },
+  "file_b64": "ICAgIOKAlOKAmQp4CQrvrIEg4oCZCg=="
+ },
+ {
+  "id": "random-067",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\u2019\n\ud83d\ude00\u2014 ",
+     "newText": "\u3000\t"
+    },
+    {
+     "oldText": "\u00a0",
+     "newText": "\u3000"
+    },
+    {
+     "oldText": " \u00e9\n\ny c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCU4oCcICBlzIEgCsKgw6kKCnnCoGMg76yB4oCZCvCfmIDigJQgIAp4ICDCoO+sgQog4oCZeA=="
+ },
+ {
+  "id": "random-068",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "'\u3000b\u3000\n\n\u3000",
+     "newText": "xay\u0085"
+    },
+    {
+     "oldText": "\te\u0301",
+     "newText": "e\u0301a"
+    }
+   ]
+  },
+  "file_b64": "CmLwn5iACsKFYQrCoPCfmIDjgIAgIOOAgAoK4oCZ44CAYuOAgAoK44CA4oCcCWXMgWN4Cg=="
+ },
+ {
+  "id": "random-069",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9  \u2014",
+     "newText": ""
+    },
+    {
+     "oldText": "y",
+     "newText": "y\u3000"
+    }
+   ]
+  },
+  "file_b64": "Ce+sgXkgIHnvrIEKCeOAgOKAmQogIMKFCuOAgGPigJR5Cg=="
+ },
+ {
+  "id": "random-070",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301",
+     "newText": "\n\u00e9\u2019 "
+    }
+   ]
+  },
+  "file_b64": "4oCcICANCsKFwoUNCsOpZcyBYcKgDQp58J+YgCAg4oCU"
+ },
+ {
+  "id": "random-071",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \t\n",
+     "newText": "\u00a0c\t\u00a0"
+    }
+   ]
+  },
+  "file_b64": "44CACsOp76yBICAJCmLwn5iACQpjYWEK"
+ },
+ {
+  "id": "random-072",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301\n\ufb01ab\ufb01\u2019",
+     "newText": "b\u2019xb\u00e9"
+    },
+    {
+     "oldText": "\u00e9\u0085\n\u3000",
+     "newText": "\u00a0\n\u201c"
+    }
+   ]
+  },
+  "file_b64": "ICB4ZcyBIPCfmIAJCuKAmcKgCmEgIMOpwoUK44CAeMKFY/CfmIAKICDChWXMgQrvrIFhYu+sgeKAme+sgQo="
+ },
+ {
+  "id": "random-073",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c",
+     "newText": "\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "4oCc"
+ },
+ {
+  "id": "random-074",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \nbb\n\u201c\n",
+     "newText": "bx"
+    }
+   ]
+  },
+  "file_b64": "8J+YgMKgefCfmIBhCsOpYiAJ4oCZICAKYmIK4oCcCgllzIHigJwK44CACuOAgHlh8J+YgArigJTigJkg"
+ },
+ {
+  "id": "random-075",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u00e9y\ty\n",
+     "newText": "\u00e9\u0085\ny"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\n  \t  "
+    },
+    {
+     "oldText": "\u00e9y",
+     "newText": "\u2014b\ud83d\ude00\ufb01e\u0301"
+    }
+   ]
+  },
+  "file_b64": "YQkKw6l5CXkK"
+ },
+ {
+  "id": "random-076",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "bafi \n",
+     "newText": "\u2019\u00a0a"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\ufb01\u3000"
+    }
+   ]
+  },
+  "file_b64": "YmHvrIHCoAo="
+ },
+ {
+  "id": "random-077",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fi",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00a0\u2019",
+     "newText": "\u2019ye\u0301\u00a0"
+    },
+    {
+     "oldText": "\u201c\n",
+     "newText": "\u00e9a"
+    }
+   ]
+  },
+  "file_b64": "77u/eWFhIOKAnAplzIFh76yB"
+ },
+ {
+  "id": "random-078",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c \ud83d\ude00\u2019\n",
+     "newText": " \u2014\u201c"
+    },
+    {
+     "oldText": "\u00e9ae\u0301\ufb01\t",
+     "newText": ""
+    },
+    {
+     "oldText": "-",
+     "newText": "\ud83d\ude00\t\u2019  "
+    }
+   ]
+  },
+  "file_b64": "77u/wqDwn5iAYsKg8J+YgO+sgQph4oCcIPCfmIDigJkKw6lhZcyB76yBCQrDqWHCoAp4YcKgCsKgCuKAlGLjgIAg"
+ },
+ {
+  "id": "random-079",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "   ",
+     "newText": "x\u3000\u00a0"
+    }
+   ]
+  },
+  "file_b64": "w6kgIA0K4oCU8J+YgGEgYw0KICB476yBCSAgCQ0K8J+YgHkNCuKAlA0KCeOAgHkNCsKFw6lhICAg"
+ },
+ {
+  "id": "random-080",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eXh44oCUICANCsKF76yB8J+YgHnjgIANCmXMgWLigJQNCg0KICBieGF5DQo="
+ },
+ {
+  "id": "random-081",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\nce",
+     "newText": ""
+    },
+    {
+     "oldText": "a ",
+     "newText": "\t\u00a0"
+    },
+    {
+     "oldText": "\nce\u0301x\u201cc",
+     "newText": "e\u0301aa\u201c"
+    }
+   ]
+  },
+  "file_b64": "77u/w6lhICAJCgoKY2XMgXjigJxjCuOAgArvrIHCoOKAmXli"
+ },
+ {
+  "id": "random-082",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9e\u0301\u3000\ufb01\nb",
+     "newText": "\ufb01\t\u0085"
+    },
+    {
+     "oldText": "fi\tcb\ne\u0301a",
+     "newText": "\u00e9"
+    }
+   ]
+  },
+  "file_b64": "ZcyBICB48J+YgAp5YcOpZcyB44CA76yBCmIgCQkK76yBZcyBCcKFCu+sgQljYgplzIFh76yBCsKgwoXCoApiYg=="
+ },
+ {
+  "id": "random-083",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "e\u0301b\u3000ae\u0301"
+    },
+    {
+     "oldText": "\t\n  \u00e9\nb ",
+     "newText": "e\u0301xc\u2019\u00e9"
+    }
+   ]
+  },
+  "file_b64": "IOOAgCAK4oCc4oCcZcyB4oCZwoUKCQogIMOpCmLCoGIK76yBICDvrIHigJwK"
+ },
+ {
+  "id": "random-084",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c--",
+     "newText": "\n\ufb01b\ud83d\ude00"
+    },
+    {
+     "oldText": "\u2014\ud83d\ude00",
+     "newText": "y\u00a0"
+    },
+    {
+     "oldText": "\n'\u201c\u201c \u0085\n\u201c",
+     "newText": "\u00e9\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "76yBwoUK4oCcYyAgCsKFCWFhCuKAmeKAnOKAnCDChQrigJxlzIEgIOKAmQplzIHDqQrigJzigJTigJQg"
+ },
+ {
+  "id": "random-085",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014yx",
+     "newText": "ce\u0301x"
+    }
+   ]
+  },
+  "file_b64": "Y+OAgAogIApjCmJ5YQrDqSAKZcyB4oCUwoXwn5iAY3gK"
+ },
+ {
+  "id": "random-086",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c\n\ufb01",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eGMK76yB"
+ },
+ {
+  "id": "random-087",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\n\u0085\n'",
+     "newText": "\ud83d\ude00\u0085\u201c\ufb01"
+    },
+    {
+     "oldText": "e\u0301e\u0301",
+     "newText": "c\ud83d\ude00"
+    },
+    {
+     "oldText": "",
+     "newText": "y"
+    }
+   ]
+  },
+  "file_b64": "w6njgIDigJnCoOKAlMOpDQrChQ0K4oCZCfCfmIDChWENCnkgICAgZcyBDQp44oCUDQrjgIDigJkNCsKFZcyBZcyB8J+YgA0KZcyB4oCcZcyB44CA4oCUDQo="
+ },
+ {
+  "id": "random-088",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u00e9a",
+     "newText": "\t\u201c"
+    }
+   ]
+  },
+  "file_b64": "IAnigJTjgIBhYQrigJkgIMOp76yBZcyBeArDqWHCoApjCuKAnOKAnArDqeKAmeKAnAp54oCZICDigJx4eApj8J+YgMKF"
+ },
+ {
+  "id": "random-089",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c",
+     "newText": "a\n\t\u2014\u3000"
+    },
+    {
+     "oldText": "b",
+     "newText": "xya"
+    },
+    {
+     "oldText": "\u201cy",
+     "newText": "\t\t\ud83d\ude00\t"
+    }
+   ]
+  },
+  "file_b64": "eWIJ8J+YgArigJTCoOKAnHk="
+ },
+ {
+  "id": "random-090",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\u00e9\ufb01\u00a0\u2014",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00e9\ud83d\ude00\u00e9\ufb01\u00a0\u2014",
+     "newText": "\ud83d\ude00e\u0301"
+    },
+    {
+     "oldText": "\u3000\t\ud83d\ude00\u00e9\n\u00e9\ud83d\ude00",
+     "newText": "e\u0301\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "77u/YeOAgAnwn5iAw6kNCsOp8J+YgMOp76yBwqDigJQ="
+ },
+ {
+  "id": "random-091",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\t  ",
+     "newText": "a"
+    },
+    {
+     "oldText": "\n\ud83d\ude00\t ",
+     "newText": "\u0085a\u2014\n"
+    },
+    {
+     "oldText": "\u201c",
+     "newText": "\u2014\u0085"
+    }
+   ]
+  },
+  "file_b64": "ZcyBCvCfmIAJICDwn5iAIOKAnA=="
+ },
+ {
+  "id": "random-092",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " '\t  \u3000",
+     "newText": "\u2014\ufb01\u201c"
+    },
+    {
+     "oldText": " \nb",
+     "newText": "\u201c\u201c\u00e9\u0085x"
+    },
+    {
+     "oldText": "  \u3000  \n",
+     "newText": "y\u0085\u00e9"
+    }
+   ]
+  },
+  "file_b64": "76yBecKFICBj44CACmHvrIHigJxjYQogIOKAmQkgIOOAgCAgCmI="
+ },
+ {
+  "id": "random-093",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "xc\ud83d\ude00y\u0085\n",
+     "newText": ""
+    },
+    {
+     "oldText": "xc\ud83d\ude00",
+     "newText": " \u201c\u0085\n\u0085"
+    },
+    {
+     "oldText": "x",
+     "newText": "c"
+    }
+   ]
+  },
+  "file_b64": "77u/eGPwn5iAecKFCmJjICBlzIEgCgoK"
+ },
+ {
+  "id": "random-094",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "- \n'\u0085 '\n",
+     "newText": "\nc\ud83d\ude00\u2019c"
+    }
+   ]
+  },
+  "file_b64": "ICDCoHllzIHwn5iACgrChWLigJnigJTCoArigJnChcKg4oCZCg=="
+ },
+ {
+  "id": "random-095",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "y\u0085\u2014\u2014"
+    },
+    {
+     "oldText": "\n",
+     "newText": "b\u2019"
+    },
+    {
+     "oldText": "\ud83d\ude00 ",
+     "newText": "\u00a0\ufb01"
+    }
+   ]
+  },
+  "file_b64": "Cg=="
+ },
+ {
+  "id": "random-096",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u0085e\u0301\ud83d\ude00\u3000",
+     "newText": "a "
+    },
+    {
+     "oldText": "\u00e9\u00a0\n",
+     "newText": "\u201c\ufb01"
+    }
+   ]
+  },
+  "file_b64": "ZcyBee+sgQplzIHigJnjgIDDqcKgCgrChWXMgfCfmIDjgIAg8J+YgAp4CQpjZcyBCmXMgQo="
+ },
+ {
+  "id": "random-097",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u2014\u0085"
+    },
+    {
+     "oldText": "\u0301\n",
+     "newText": "\u2014\u0085  "
+    }
+   ]
+  },
+  "file_b64": "ZcyBICDigJkKCmXMgeOAgGEJ76yBCmXMgWIK4oCZCmXMgQo="
+ },
+ {
+  "id": "random-098",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ne\u0301",
+     "newText": "\u3000xy\u00e9x"
+    }
+   ]
+  },
+  "file_b64": "ZcyB8J+YgCDigJRhCmXMgeOAgGXMgQo="
+ },
+ {
+  "id": "random-099",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " c\u00e9-fi\ud83d\ude00",
+     "newText": "  "
+    },
+    {
+     "oldText": "\u00e9",
+     "newText": "\u3000xa\u00e9"
+    },
+    {
+     "oldText": " c\u00e9",
+     "newText": "\u201c"
+    }
+   ]
+  },
+  "file_b64": "IGPDqeKAlO+sgfCfmIANCg=="
+ },
+ {
+  "id": "random-100",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fi\t ",
+     "newText": "b\n\u0085c  "
+    }
+   ]
+  },
+  "file_b64": "CuKAlGXMgeOAgCBhCQphCu+sgQnCoAo="
+ },
+ {
+  "id": "random-101",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\n\u201c\u2014y",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eGHigJnCoOKAmXkNCg0Kw6nigJzigJQNCmLDqWENCuKAnOKAlHkNCuKAlCANCuOAgMOpDQo="
+ },
+ {
+  "id": "random-102",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301 ",
+     "newText": "cb"
+    }
+   ]
+  },
+  "file_b64": "ZcyBwqDDqQ0K4oCZ8J+YgMOp8J+YgA0K"
+ },
+ {
+  "id": "random-103",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a",
+     "newText": "e\u0301y"
+    },
+    {
+     "oldText": "e\u0301  ",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00a0\u00e9a",
+     "newText": "cx"
+    }
+   ]
+  },
+  "file_b64": "IO+sgeKAmeOAgOKAmQrCoMOpYQ=="
+ },
+ {
+  "id": "random-104",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b ",
+     "newText": "\u2019c\n\t "
+    },
+    {
+     "oldText": "\u0301\n",
+     "newText": "e\u0301a"
+    },
+    {
+     "oldText": "e\u0301\n",
+     "newText": "\u3000 \u3000"
+    }
+   ]
+  },
+  "file_b64": "CWIgIOKAlCAgZcyBCg=="
+ },
+ {
+  "id": "random-105",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0",
+     "newText": "\n\u3000"
+    },
+    {
+     "oldText": "\u2014",
+     "newText": "a\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "IOOAgGEKCsKgCmHCoOKAnMKFCnnvrIF5IMKg4oCU"
+ },
+ {
+  "id": "random-106",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eHnCoAplzIHvrIEKZcyBYiDCoMKgICAK4oCUZcyBIApiY+KAmSAgeQp4wqB4ZcyBCgo="
+ },
+ {
+  "id": "random-107",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\n",
+     "newText": "\n\u00e9"
+    }
+   ]
+  },
+  "file_b64": "76yB76yB4oCUYwpjefCfmIDChcOpCu+sgQo="
+ },
+ {
+  "id": "random-108",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\u00e9y\n \u3000\n\ufb01",
+     "newText": "  \u201cc"
+    },
+    {
+     "oldText": "b\u00e9  \u00a0y\n",
+     "newText": "\ufb01"
+    }
+   ]
+  },
+  "file_b64": "Y+OAgAlhw6l5DQog44CADQrvrIFhIA0KICDDqe+sgSAgDQrigJTCoA0KYw0KeGLDqSAgwqB5DQplzIENCg=="
+ },
+ {
+  "id": "random-109",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y  \u00a0",
+     "newText": "y\u00a0\u00e9x"
+    }
+   ]
+  },
+  "file_b64": ""
+ },
+ {
+  "id": "random-110",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nba\ud83d\ude00\nx'\u0085",
+     "newText": "  \u201c\n"
+    }
+   ]
+  },
+  "file_b64": "DQphw6nigJkNCmJh8J+YgA0KeOKAmcKFZcyBDQrCoGINCmXMgQ0K8J+YgA=="
+ },
+ {
+  "id": "random-111",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ne\u0301",
+     "newText": "\u3000\u2019"
+    },
+    {
+     "oldText": "  fia\n \u201ce",
+     "newText": "c\u00a0\u2014"
+    }
+   ]
+  },
+  "file_b64": "4oCZYQnChWINCgkgeXggIA0K4oCcYg0KZcyBICDvrIFhDQrCoOKAnGXMgcOpDQphDQplzIEgeQ0KwqBjICDigJwNCg=="
+ },
+ {
+  "id": "random-112",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\t\u2019\u3000ax",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "CsKFZcyBCgnigJnjgIBheAoKecOp8J+YgA=="
+ },
+ {
+  "id": "random-113",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014",
+     "newText": "  e\u0301\u2019\n\u00a0"
+    }
+   ]
+  },
+  "file_b64": "w6nigJxj4oCU76yBwoU="
+ },
+ {
+  "id": "random-114",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "",
+     "newText": "a\u2014"
+    },
+    {
+     "oldText": "\ny\t\ty",
+     "newText": "\u00a0ax\u3000\u0085"
+    },
+    {
+     "oldText": "\n\u2019\ud83d\ude00c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eCAgIGPigJx4CmXMgfCfmIAg4oCZYwrigJnwn5iAYwrwn5iA8J+YgPCfmIAKeQkJeQkgCg=="
+ },
+ {
+  "id": "random-115",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u0085 ",
+     "newText": "\u2019ye\u0301"
+    },
+    {
+     "oldText": "\u2014",
+     "newText": "  ae\u0301"
+    },
+    {
+     "oldText": "\ny\u0085 \nx",
+     "newText": "y\n\u00e9\u00e9a"
+    }
+   ]
+  },
+  "file_b64": "77u/wqAKecKFwqAKeGMKeSAKICBh8J+YgOKAlO+sgWEK76yBY8OpIApjecKgeAljCmPvrIFiYSAg"
+ },
+ {
+  "id": "random-116",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "'\ud83d\ude00-",
+     "newText": "c\ufb01"
+    },
+    {
+     "oldText": "\t",
+     "newText": "\u201c"
+    }
+   ]
+  },
+  "file_b64": "4oCcDQrigJkNCuKAmfCfmIDigJQNCmINCu+sgQ0K4oCcCQ=="
+ },
+ {
+  "id": "random-117",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b\n\u00a0\u0085c\ud83d\ude00e\u0301",
+     "newText": "\t"
+    }
+   ]
+  },
+  "file_b64": "76yB4oCUwoXjgIBiCsKgwoVj8J+YgGXMgWIKCvCfmIDDqWLvrIEKYmHCoHgK"
+ },
+ {
+  "id": "random-118",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\u2019\u00e9",
+     "newText": "\u2019  b\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "eOKAlMOpeQl5CiAg4oCceWFh4oCcCmPChcKgCWIJCmIgIAplzIHChWNlzIHCoMOpCgogIOKAnHnjgIDigJQKCg=="
+ },
+ {
+  "id": "random-119",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u0085",
+     "newText": "\u0085e\u0301ae\u0301"
+    },
+    {
+     "oldText": "  \n",
+     "newText": "x\u3000a\u00e9\u2019"
+    }
+   ]
+  },
+  "file_b64": "DQrCoOKAnHl5DQpiICANCsKF"
+ },
+ {
+  "id": "random-120",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9x\u3000\n\ud83d\ude00",
+     "newText": "\u0085y \n"
+    },
+    {
+     "oldText": "\u3000\n\ud83d\ude00\na\u201c\n",
+     "newText": "\u2019\u201cca"
+    },
+    {
+     "oldText": "\u3000\n\ud83d\ude00\na\u201c\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eHlhDQrDqXjjgIANCvCfmIANCmHigJwNCiDwn5iAYcKg"
+ },
+ {
+  "id": "random-121",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\n\u00e9",
+     "newText": "\u3000x"
+    },
+    {
+     "oldText": "\u00a0",
+     "newText": ""
+    },
+    {
+     "oldText": "\ne\u0301  y\n",
+     "newText": "\u3000  \u2019  b"
+    }
+   ]
+  },
+  "file_b64": "ICDigJnCoCAKZcyBICB5CsOp"
+ },
+ {
+  "id": "random-122",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b",
+     "newText": "  \u3000\ufb01ye\u0301"
+    },
+    {
+     "oldText": "\u00e9\u0085y\u00e9c\n",
+     "newText": " \n \u2019\u3000"
+    },
+    {
+     "oldText": " \n'b",
+     "newText": "\u2014\t\u00a0\t\u2014"
+    }
+   ]
+  },
+  "file_b64": "DQrjgIDDqWIJw6kNCgliDQpjeWIJ4oCUDQphw6nChXnDqWMNCmXMgWPwn5iAZcyBICANCuKAmWINCsOp"
+ },
+ {
+  "id": "random-123",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \n\u2014\u201c\n\ufb01",
+     "newText": "\u2019"
+    }
+   ]
+  },
+  "file_b64": "w6lhCgogICAK4oCU4oCcCu+sgQoJeGXMgQoK4oCUY8Op8J+YgCAg"
+ },
+ {
+  "id": "random-124",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014\u3000\u3000\n",
+     "newText": "\u00a0a"
+    }
+   ]
+  },
+  "file_b64": "4oCZYvCfmIAKZcyB4oCU44CA44CACg=="
+ },
+ {
+  "id": "random-125",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\u2014  ",
+     "newText": "\u00a0be\u0301y\u2019"
+    }
+   ]
+  },
+  "file_b64": "DQoJ4oCU4oCU44CA4oCZDQrjgIANCuKAlA0K8J+YgOKAnA0KeeKAlCAgw6nigJw="
+ },
+ {
+  "id": "random-126",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \u0085\u201c\n",
+     "newText": "\u3000"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\n\u0085\u2014\n\ufb01"
+    }
+   ]
+  },
+  "file_b64": "CmXMgSDCheKAnAoK4oCUCnjjgIBiw6nigJQKCu+sgWNlzIEKCg=="
+ },
+ {
+  "id": "random-127",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  a\na-\n\n",
+     "newText": "e\u0301e\u0301"
+    },
+    {
+     "oldText": "x\u3000x",
+     "newText": "\u00e9y\t"
+    },
+    {
+     "oldText": " \u3000\n",
+     "newText": "\u2014\u2019"
+    }
+   ]
+  },
+  "file_b64": "CmXMgWJiYWFhCnjigJwgIGEKYeKAlAoKwqBiwqBjeMOpCiDjgIAKwoU="
+ },
+ {
+  "id": "random-128",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u2019\ufb01\u00e9y\u201c\n",
+     "newText": "\ufb01\n\u3000\u0085"
+    }
+   ]
+  },
+  "file_b64": "77u/4oCcZcyB4oCcIGXMgQrwn5iACuKAme+sgcOpeeKAnAoK4oCU"
+ },
+ {
+  "id": "random-129",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085  ",
+     "newText": "yycb"
+    },
+    {
+     "oldText": "\u00e9",
+     "newText": "x\ud83d\ude00\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "CsKFICDigJkJICDigJkKCnnigJwKwoVj76yBY+OAgAogICAgYQ=="
+ },
+ {
+  "id": "random-130",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u0085\n"
+    },
+    {
+     "oldText": "\ud83d\ude00e\u0301\u201c\n",
+     "newText": " "
+    }
+   ]
+  },
+  "file_b64": "CQkKYQphIAnwn5iAZcyB4oCcCg=="
+ },
+ {
+  "id": "random-131",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y'-\ud83d\ude00 \n-\n",
+     "newText": "b"
+    },
+    {
+     "oldText": "b\u2014e\u0301",
+     "newText": "\u3000\u2014\ud83d\ude00\u3000"
+    },
+    {
+     "oldText": "  ",
+     "newText": "\t\u00e9cx "
+    }
+   ]
+  },
+  "file_b64": "Cgp54oCZ4oCU8J+YgMKgCuKAlArigJQgIA=="
+ },
+ {
+  "id": "random-132",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nb\n",
+     "newText": "y\u00e9 "
+    },
+    {
+     "oldText": " \n\u2019\ufb01\u201cbc",
+     "newText": "\u00a0\ufb01\ud83d\ude00"
+    },
+    {
+     "oldText": "\n\u2019\ufb01",
+     "newText": "\u3000cx\u00a0\u2014"
+    }
+   ]
+  },
+  "file_b64": "Y+KAlCAgZcyBCmXMgWXMgQkKwqB4YcKg4oCcCuKAmeKAmWJj76yBICAK4oCZ76yB4oCcYmMKYgpiwoXDqQl5CQo="
+ },
+ {
+  "id": "random-133",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\nyy\u00e9",
+     "newText": "\u2014c"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u00e9\n\u2014e\u0301"
+    },
+    {
+     "oldText": "\nyy\u00e9\n\n\u00e9\u00e9",
+     "newText": "\n\ufb01"
+    }
+   ]
+  },
+  "file_b64": "77u/76yBYgoKeXnDqQoKw6nDqe+sgeKAlAoKICDCoAo="
+ },
+ {
+  "id": "random-134",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  ",
+     "newText": "\u3000\u0085"
+    },
+    {
+     "oldText": " y  \ty",
+     "newText": "\ufb01e\u0301"
+    }
+   ]
+  },
+  "file_b64": "77u/8J+YgAnigJnjgIDChQ0KZcyBIHkgIAl5"
+ },
+ {
+  "id": "random-135",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e",
+     "newText": "\ud83d\ude00\u00e9"
+    }
+   ]
+  },
+  "file_b64": "ICAKCnllzIFiCuKAmQ=="
+ },
+ {
+  "id": "random-136",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u0085\u00e9",
+     "newText": "e\u0301"
+    },
+    {
+     "oldText": "\u00e9\ufb01 ",
+     "newText": "  a\u0085c"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u2014c\ud83d\ude00\u201ca"
+    }
+   ]
+  },
+  "file_b64": "CcOpICANCu+sgWHvrIENCuKAlMOpw6kJDQoNCg=="
+ },
+ {
+  "id": "random-137",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201ca",
+     "newText": "\t\u2019\u0085"
+    }
+   ]
+  },
+  "file_b64": "4oCcYQ=="
+ },
+ {
+  "id": "random-138",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n",
+     "newText": "\u2019\u0085"
+    },
+    {
+     "oldText": "\nfi\ny\u0085\n",
+     "newText": "\u0085c"
+    }
+   ]
+  },
+  "file_b64": "ICDChSAgCQkK76yBCnnChQoKwoVhwoXigJwKCgo="
+ },
+ {
+  "id": "random-139",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-",
+     "newText": "\u201c\n"
+    }
+   ]
+  },
+  "file_b64": "4oCUwqBh4oCZICAKYeKAnCDwn5iACuKAlHlhYe+sgXgK"
+ },
+ {
+  "id": "random-140",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \u00e9\n",
+     "newText": "e\u0301y\u201c"
+    },
+    {
+     "oldText": "\u201c",
+     "newText": "\ufb01\u00a0"
+    },
+    {
+     "oldText": "abc \u00e9\ne",
+     "newText": "\u00e9\u00e9"
+    }
+   ]
+  },
+  "file_b64": "44CACQ0KZcyBeSANCmFiYyDDqQ0KZcyBIHjigJTjgIBlzIENCg=="
+ },
+ {
+  "id": "random-141",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000",
+     "newText": "\u201c"
+    },
+    {
+     "oldText": "\ufb01\u00a0",
+     "newText": "c"
+    },
+    {
+     "oldText": "\n\u3000",
+     "newText": "\u201c\t\u00a0 x"
+    }
+   ]
+  },
+  "file_b64": "77u/wqDigJQKYnjigJwgIHgKCgrjgIA="
+ },
+ {
+  "id": "random-142",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014  \u201c\n",
+     "newText": "\u2019\u201ca\u00e9"
+    },
+    {
+     "oldText": "e\u0301\u3000a- ",
+     "newText": "\u2019\u201c"
+    }
+   ]
+  },
+  "file_b64": "ZcyB44CAYeKAlCAg4oCcDQo="
+ },
+ {
+  "id": "random-143",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u00a0e\u0301\ne\u0301",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0301",
+     "newText": "b"
+    }
+   ]
+  },
+  "file_b64": "CvCfmIDigJnjgIDCoMKgZcyBCmXMgWPvrIEKwqB5wqDigJllzIHigJkKee+sgWXMgQ=="
+ },
+ {
+  "id": "random-144",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\n\ty",
+     "newText": "\ud83d\ude00"
+    },
+    {
+     "oldText": "\ty",
+     "newText": "y\ufb01\u201c\n"
+    }
+   ]
+  },
+  "file_b64": "Cu+sgQoJeQ=="
+ },
+ {
+  "id": "random-145",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "CsOpwqAKZcyBYsOp4oCc4oCUeArChQp4CmIKCgo="
+ },
+ {
+  "id": "random-146",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085a\nfi",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00e9\ud83d\ude00\ufb01 \nb\u0085",
+     "newText": " \t\u00e9  "
+    }
+   ]
+  },
+  "file_b64": "w6nwn5iA76yBIApiwoVhCu+sgcOpIGLigJnigJwK"
+ },
+ {
+  "id": "random-147",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019",
+     "newText": "yx"
+    },
+    {
+     "oldText": "fi'",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "76yB4oCZ"
+ },
+ {
+  "id": "random-148",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\ufb01\u2014\u00a0"
+    },
+    {
+     "oldText": "  \n",
+     "newText": "\u0085e\u0301\u2019\u2019"
+    }
+   ]
+  },
+  "file_b64": "ePCfmIAKwoUJ4oCUCuKAlGXMgeKAnCAgecKFCmXMgSAKYnjCoMOpYSAgCiAgCg=="
+ },
+ {
+  "id": "random-149",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\naa\nbfi\u201c",
+     "newText": ""
+    },
+    {
+     "oldText": "aa\nb\ufb01\u201c\n",
+     "newText": "\u2014\u2019\u00e9\ud83d\ude00y"
+    }
+   ]
+  },
+  "file_b64": "ee+sgSAgeQphYQpi76yB4oCcCg=="
+ },
+ {
+  "id": "random-150",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201cx\n",
+     "newText": "\u00a0\ufb01"
+    },
+    {
+     "oldText": "\nabb",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "YeKAnGMNCsOp4oCceA0KYWJiwoU="
+ },
+ {
+  "id": "random-151",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b\ud83d\ude00y",
+     "newText": "\n\u00e9\t"
+    },
+    {
+     "oldText": "\ny\nx\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\u201c\nafix",
+     "newText": "cxyy"
+    }
+   ]
+  },
+  "file_b64": "8J+YgOKAnAph76yBeMKF76yB44CACnkKeApjw6nCoOKAnHgKYsOp4oCUYgrigJQJCg=="
+ },
+ {
+  "id": "random-152",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00x\t\n",
+     "newText": ""
+    },
+    {
+     "oldText": "e",
+     "newText": "\ufb01\ufb01\n"
+    },
+    {
+     "oldText": "a\u2014",
+     "newText": "\u00a0"
+    }
+   ]
+  },
+  "file_b64": "ICB58J+YgHgJCmHigJTigJkKZcyBwqAKIAp44oCU4oCZ76yBCg=="
+ },
+ {
+  "id": "random-153",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c  ",
+     "newText": "\ud83d\ude00\u2014\t"
+    },
+    {
+     "oldText": "x ",
+     "newText": "\u3000\t\ty"
+    },
+    {
+     "oldText": "e\u0301\t",
+     "newText": "\u2019  "
+    }
+   ]
+  },
+  "file_b64": "YSAgZcyBCSBlzIEKeCAJwqA="
+ },
+ {
+  "id": "random-154",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u3000\u00a0a\n"
+    }
+   ]
+  },
+  "file_b64": "CsKFCngK4oCZYgogIHnvrIFjCmLDqeKAnGXMgQpjYXkJCgo="
+ },
+ {
+  "id": "random-155",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000",
+     "newText": "\ne\u0301\u00e9\u3000"
+    }
+   ]
+  },
+  "file_b64": "76yBZcyB8J+YgAoKCsKFw6nDqWXMgWXMgQrwn5iA44CA"
+ },
+ {
+  "id": "random-156",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01",
+     "newText": "\ny\u0085   "
+    },
+    {
+     "oldText": "\u00e9\nxc\ufb01",
+     "newText": "y"
+    }
+   ]
+  },
+  "file_b64": "eQkKw6nChWIgw6kKeGPvrIHDqXkKCgllzIEK8J+YgMOpee+sgXjigJw="
+ },
+ {
+  "id": "random-157",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\u00e9\n",
+     "newText": "\u201c"
+    },
+    {
+     "oldText": "\ud83d\ude00\ud83d\ude00 ",
+     "newText": "\ud83d\ude00  \u2019"
+    }
+   ]
+  },
+  "file_b64": "8J+YgPCfmIAgIMOpeOOAgA0Kw6nvrIFhw6kNCg=="
+ },
+ {
+  "id": "random-158",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9",
+     "newText": "\ne\u0301\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "YnnigJzigJx5CmLjgIAKCuOAgCAKeGN54oCUCuOAgGJiCngg44CACsOpwoVlzIEK"
+ },
+ {
+  "id": "random-159",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9 ",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00e9  \u0085",
+     "newText": "ye\u0301\ud83d\ude00\u00e9 "
+    }
+   ]
+  },
+  "file_b64": "77u/woXigJkJCgplzIEgIAnDqSAgwoUK"
+ },
+ {
+  "id": "random-160",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000\t",
+     "newText": "a\ufb01\tbb"
+    },
+    {
+     "oldText": "e\u0301\n\ufb01\u00a0\u00a0 ",
+     "newText": "\u0085"
+    },
+    {
+     "oldText": " e\u0301\n",
+     "newText": "\u00e9\u00e9\u2019\u00e9"
+    }
+   ]
+  },
+  "file_b64": "44CAwqBhYiBlzIEK76yBwqDCoCB4CiAg44CAZcyBeWIKCuOAgAl5CnggIMOp4oCUYwogIO+sgQl4wqB5CmXMgQnjgIA="
+ },
+ {
+  "id": "random-161",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\t\t\u3000",
+     "newText": "\u0085b \u00e9"
+    },
+    {
+     "oldText": "\u0085",
+     "newText": "xye\u0301b\t"
+    },
+    {
+     "oldText": "\u3000\u0085",
+     "newText": "b\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "eOKAlAkJ44CAwoU="
+ },
+ {
+  "id": "random-162",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\t",
+     "newText": ""
+    },
+    {
+     "oldText": " \u00e9",
+     "newText": "\n"
+    }
+   ]
+  },
+  "file_b64": "woVhwqAgw6ljDQp5woVlzIHigJnigJljDQoNCg=="
+ },
+ {
+  "id": "random-163",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c",
+     "newText": "c\u2014\u00e9\u00a0\u2014"
+    }
+   ]
+  },
+  "file_b64": "4oCc4oCcwqDigJwK"
+ },
+ {
+  "id": "random-164",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y ",
+     "newText": "yce\u0301\ud83d\ude00\u2014"
+    }
+   ]
+  },
+  "file_b64": "ICBjCg=="
+ },
+ {
+  "id": "random-165",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u2019\ud83d\ude00"
+    },
+    {
+     "oldText": "\u0301\u00a0\n\u201c\u2014",
+     "newText": "  \ud83d\ude00\u3000x"
+    }
+   ]
+  },
+  "file_b64": "ZcyBecOpZcyBwqAK4oCc4oCUCeKAnGXMgXgK8J+YgOOAgMKF76yBIAo="
+ },
+ {
+  "id": "random-166",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n",
+     "newText": "a"
+    }
+   ]
+  },
+  "file_b64": "Y+OAgMKgY+KAlOOAgAp5ZcyBCsKg4oCUCmHigJzDqSAJCgph4oCUeOKAlHnwn5iACsKF76yB8J+YgMOp76yBwqA="
+ },
+ {
+  "id": "random-167",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\n\n\u201c\nac ",
+     "newText": ""
+    },
+    {
+     "oldText": " c\t",
+     "newText": "\t"
+    },
+    {
+     "oldText": "\na",
+     "newText": "x\ud83d\ude00e\u0301\u201c"
+    }
+   ]
+  },
+  "file_b64": "ZcyB4oCZYQrCoMOpCgrigJwKYWMgIAkKwqDigJRhIGXMgQph76yB"
+ },
+ {
+  "id": "random-168",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nx\ufb01",
+     "newText": "\u201c\ufb01\u2019"
+    }
+   ]
+  },
+  "file_b64": "wqAgIMKFeQrjgIDjgIDjgIBlzIEJYQp4ICAKeO+sgSAgY/CfmIAK8J+YgGPCoOKAmWMK76yB44CAIArwn5iAY2IK"
+ },
+ {
+  "id": "random-169",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c c",
+     "newText": "  "
+    },
+    {
+     "oldText": "\u201c ce\u0301y",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "77u/YXgK4oCU4oCcIGNlzIF5Cu+sgWLvrIFlzIHwn5iAZcyB"
+ },
+ {
+  "id": "random-170",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "xe",
+     "newText": "x"
+    },
+    {
+     "oldText": "\u201c\ufb01",
+     "newText": "xy\u3000"
+    }
+   ]
+  },
+  "file_b64": "IA0K4oCceGXMgeKAmQ0K"
+ },
+ {
+  "id": "random-171",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n\u3000-\u0085\u00e9",
+     "newText": "b\t\u00e9\u201c  "
+    }
+   ]
+  },
+  "file_b64": "CSAgwoUKCuOAgOKAlMKFw6kK4oCUwoU="
+ },
+ {
+  "id": "random-172",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eGPjgIANCmIgIMKFDQp5DQo="
+ },
+ {
+  "id": "random-173",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\tac\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "\u201cc\ud83d\ude00xa"
+    },
+    {
+     "oldText": "\ud83d\ude00\u00a0 \t",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "wqDDqQ0KCWFjDQrwn5iAYvCfmIDCoCAJ"
+ },
+ {
+  "id": "random-174",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "yx  e\u0301  "
+    }
+   ]
+  },
+  "file_b64": "YwrChfCfmIAgIHnChQrigJnChfCfmIDwn5iA8J+YgMOpCuKAlGXMgQkJ8J+YgA=="
+ },
+ {
+  "id": "random-175",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\n",
+     "newText": "xy"
+    },
+    {
+     "oldText": "x ",
+     "newText": "\u00e9\u201c\ud83d\ude00\u0085\u0085"
+    },
+    {
+     "oldText": "y\n",
+     "newText": "\u0085x"
+    }
+   ]
+  },
+  "file_b64": "w6nvrIFj4oCceQo="
+ },
+ {
+  "id": "random-176",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nc\t\u00e9b\n",
+     "newText": "\u00e9"
+    }
+   ]
+  },
+  "file_b64": "8J+YgMKFeOKAmQrChe+sgQoKYeOAgOKAlHjCoAoJ44CACmMJw6liCg=="
+ },
+ {
+  "id": "random-177",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\u201c\u00a0",
+     "newText": "\ufb01\ta\u201c"
+    },
+    {
+     "oldText": "  \ufb01\u201c\u00a0",
+     "newText": "\u201c"
+    },
+    {
+     "oldText": " ",
+     "newText": "\u2019\u00e9a\u00a0"
+    }
+   ]
+  },
+  "file_b64": "ICAgIO+sgeKAnMKgDQoJDQo="
+ },
+ {
+  "id": "random-178",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085\u2019\u0085\u3000\n\n\u00a0y",
+     "newText": "\ud83d\ude00"
+    },
+    {
+     "oldText": "\ud83d\ude00\u0085xfi\n",
+     "newText": "\tx"
+    }
+   ]
+  },
+  "file_b64": "w6kNCg0KYQ0KDQrvrIEgwoXigJnCheOAgA0KDQrCoHkNCuKAlPCfmIDChXjvrIENCg=="
+ },
+ {
+  "id": "random-179",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201ce",
+     "newText": "\t"
+    }
+   ]
+  },
+  "file_b64": "CsKFCcKg76yB8J+YgGMKYXjigJRiCgrigJxlzIHvrIEgIAogICBlzIE="
+ },
+ {
+  "id": "random-180",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\u201c\u0085",
+     "newText": "\u201c\u00a0\u2014"
+    },
+    {
+     "oldText": "e\u0301\ud83d\ude00\nx  -",
+     "newText": ""
+    },
+    {
+     "oldText": "e\u0301\u0085\u00a0e\u0301",
+     "newText": "\u201c"
+    }
+   ]
+  },
+  "file_b64": "CmXMgcKFwqBlzIHwn5iACnggwqDigJQK"
+ },
+ {
+  "id": "random-181",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a",
+     "newText": "\u00a0\u3000  "
+    },
+    {
+     "oldText": "\u0085",
+     "newText": " "
+    }
+   ]
+  },
+  "file_b64": "4oCcw6nigJkJCuKAmeKAnHggIO+sgcKFCmMJ4oCZCQnigJQ="
+ },
+ {
+  "id": "random-182",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nxax",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0301\u00a0  \nxa",
+     "newText": "\u201cbx"
+    }
+   ]
+  },
+  "file_b64": "wqBlzIHCoCAgCnhheMOpY/CfmIAK8J+YgCAgwoVlzIEK"
+ },
+ {
+  "id": "random-183",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\ufb01\n\ud83d\ude00",
+     "newText": "\ud83d\ude00\u2014"
+    },
+    {
+     "oldText": "bb\u201c\u00a0\n",
+     "newText": "\u2014\u2019"
+    },
+    {
+     "oldText": "e\u0301c",
+     "newText": " \t"
+    }
+   ]
+  },
+  "file_b64": "8J+YgGNiYuKAnMKgCmXMgWN44oCcCu+sgQrwn5iAICAgIA=="
+ },
+ {
+  "id": "random-184",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n\n ",
+     "newText": "\t"
+    },
+    {
+     "oldText": "  -'",
+     "newText": "\tx\ud83d\ude00\n "
+    }
+   ]
+  },
+  "file_b64": "ICBjCgoKICDigJTigJk="
+ },
+ {
+  "id": "random-185",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "e\u0301b"
+    }
+   ]
+  },
+  "file_b64": "YgrvrIFlzIEK44CAwoVi76yBeSAgCsKFCsKgw6njgIDigJTwn5iA4oCZCmHigJxjw6nDqQo="
+ },
+ {
+  "id": "random-186",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b\n",
+     "newText": "y  "
+    },
+    {
+     "oldText": "b\n",
+     "newText": "\u201cx\u2019yb"
+    },
+    {
+     "oldText": "b\n",
+     "newText": "\u00a0\u2014x\n\u2014"
+    }
+   ]
+  },
+  "file_b64": "Yg0K"
+ },
+ {
+  "id": "random-187",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y",
+     "newText": "ce\u0301\u0085"
+    },
+    {
+     "oldText": "\u0085y",
+     "newText": "\u201cx"
+    },
+    {
+     "oldText": "a",
+     "newText": " \u00e9y"
+    }
+   ]
+  },
+  "file_b64": "woV5"
+ },
+ {
+  "id": "random-188",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019\u3000\nby\u2019",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "DQoNCiBlzIENCuKAlMOpeXggIMOpDQpi4oCZ44CADQpieeKAmXh5DQrigJl44oCZICANCg=="
+ },
+ {
+  "id": "random-189",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u201cx\u3000"
+    }
+   ]
+  },
+  "file_b64": "ZcyBDQo="
+ },
+ {
+  "id": "random-190",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \t\n\u201c\n\u201c",
+     "newText": "\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "77u/CmMgIAphwqBhYcKgCQrigJwK4oCc"
+ },
+ {
+  "id": "random-191",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-x\n\u00e9 b\u0085",
+     "newText": ""
+    },
+    {
+     "oldText": "\t\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "woXChWLigJwKYWPjgIB44oCUeArDqSBiwoUK76yB4oCc76yBY++sgQogYsKFYmEJCsKFY2PCoAkK"
+ },
+ {
+  "id": "random-192",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y   ",
+     "newText": "\ud83d\ude00"
+    },
+    {
+     "oldText": "e\u0301\u201c \n\n",
+     "newText": "e\u0301c\ufb01"
+    },
+    {
+     "oldText": "e\u0301\ufb01\n\ud83d\ude00",
+     "newText": "e\u0301x\ufb01c "
+    }
+   ]
+  },
+  "file_b64": "YiAgYSAg76yBCu+sge+sgWXMgWXMge+sgQrwn5iAZcyB4oCcIAoK"
+ },
+ {
+  "id": "random-193",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n",
+     "newText": "\u2019a\t\u2019\ufb01"
+    },
+    {
+     "oldText": "\u2014\u3000",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "Cgo="
+ },
+ {
+  "id": "random-194",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c\n\u0085\u201c-\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0085\u00e9a\nxx\u00a0",
+     "newText": "cx"
+    },
+    {
+     "oldText": "  \u00a0\n  \u00a0",
+     "newText": " \u2019\u00e9\u2014y"
+    }
+   ]
+  },
+  "file_b64": "CQ0KeOKAnOKAnA0KwoXigJzigJQNCsKFw6lhDQp4eMKg76yBYg0KYeOAgGPigJkJDQogIMKgDQogIMKgCe+sgcKFw6kNCg=="
+ },
+ {
+  "id": "random-195",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000\ud83d\ude00",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0085",
+     "newText": "\u00a0"
+    },
+    {
+     "oldText": "ay\u3000",
+     "newText": "\u201c\ufb01\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "eWPCoHh5YQplzIHChQrwn5iA4oCUYgrCoHllzIHChSAK"
+ },
+ {
+  "id": "random-196",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \ud83d\ude00",
+     "newText": "\u00e9y"
+    },
+    {
+     "oldText": "\n\ud83d\ude00a\u201c\n\n\u2014",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "CsKFY8KFwoUKCSAgIArwn5iAYeKAnAoK4oCUeXjigJRlzIEK"
+ },
+ {
+  "id": "random-197",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nx\n\t\u00a0 \u00e9\n",
+     "newText": "b\u201c  \u2019\u3000"
+    }
+   ]
+  },
+  "file_b64": "76yB4oCcYeKAmQkKeAoJwqAgw6kKCeKAmeKAlOKAmQ=="
+ },
+ {
+  "id": "random-198",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\n  ",
+     "newText": "\ufb01"
+    },
+    {
+     "oldText": "\n\n\u2014",
+     "newText": "xb  \u3000"
+    }
+   ]
+  },
+  "file_b64": "w6nigJlhYu+sgeKAnA0KDQrChfCfmIDwn5iADQogIPCfmIAgIA0KDQrigJlhwqDvrIF54oCZDQoNCuKAlA0K"
+ },
+ {
+  "id": "random-199",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x \ne",
+     "newText": "xb"
+    },
+    {
+     "oldText": "\u0301c\t\u00e9 \nb\u0085",
+     "newText": ""
+    },
+    {
+     "oldText": "y\n",
+     "newText": "\u2014\u00e9\u00e9y"
+    }
+   ]
+  },
+  "file_b64": "ZcyBYwnDqcKgCmLChXggCmXMgQoK4oCcCuKAmeKAlGEK4oCZee+sgXkK"
+ },
+ {
+  "id": "random-200",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "xfi'\n",
+     "newText": "e\u0301"
+    },
+    {
+     "oldText": "\n\n",
+     "newText": "\u00e9\ufb01\ufb01a\t"
+    }
+   ]
+  },
+  "file_b64": "CcOp4oCUCQkgDQrjgIB476yB4oCZDQrChQ0KZcyBCWMNCnkNCg0K"
+ },
+ {
+  "id": "random-201",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a-\n\txy",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "wqANCuKAmcOp4oCUDQrigJxhYeKAlA0KCXh544CADQo="
+ },
+ {
+  "id": "random-202",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "ae\u0301\u201c",
+     "newText": "\u00a0"
+    },
+    {
+     "oldText": " \nae\u0301\u201c",
+     "newText": "c"
+    }
+   ]
+  },
+  "file_b64": "4oCUICAKYWXMgeKAnA=="
+ },
+ {
+  "id": "random-203",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014e\u0301\u00a0\ud83d\ude00",
+     "newText": "\u3000"
+    },
+    {
+     "oldText": "\u2014\u2014e\u0301\u00a0\ud83d\ude00c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCUee+sgeKAnA0K4oCU4oCUZcyBwqDwn5iAYw0K"
+ },
+ {
+  "id": "random-204",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  e\u0301\u201c",
+     "newText": "\u2014b\t\u201c"
+    },
+    {
+     "oldText": "\na\u3000\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "ZcyBYgogeHggIGXMgeKAnAp4CgkKYeOAgAo="
+ },
+ {
+  "id": "random-205",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\ufb01\u00e9\txc\n\u201c",
+     "newText": "\u00a0\n\u0085\u0085\ud83d\ude00"
+    },
+    {
+     "oldText": "\u00e9\t",
+     "newText": "\u2014\u201c\u2019"
+    },
+    {
+     "oldText": "\n\n\n",
+     "newText": "a\ufb01  "
+    }
+   ]
+  },
+  "file_b64": "76yB76yBw6kJeGMK4oCcCgoK"
+ },
+ {
+  "id": "random-206",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "bx\n",
+     "newText": "c\u00a0\u201c"
+    },
+    {
+     "oldText": "\n",
+     "newText": "b\t\ufb01"
+    }
+   ]
+  },
+  "file_b64": "DQp5IA0KZcyB4oCUYnhlzIHDqQ0KDQpieA0K"
+ },
+ {
+  "id": "random-207",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c\ufb01a",
+     "newText": ""
+    },
+    {
+     "oldText": "\u00e9\ud83d\ude00\ne\u0301\n",
+     "newText": " \ufb01y"
+    }
+   ]
+  },
+  "file_b64": "wqB5w6nwn5iADQplzIENCg0K44CAICBhZcyB"
+ },
+ {
+  "id": "random-208",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fi\n",
+     "newText": "\u201c b"
+    },
+    {
+     "oldText": "\ufb01\nye\u0301\ufb01\n",
+     "newText": "\u3000\u201c\u3000a"
+    }
+   ]
+  },
+  "file_b64": "4oCZCe+sgQ0KeWXMge+sgQ0KeOKAnO+sgQkNCg0KwoXigJwNCiAgZcyB76yBDQo="
+ },
+ {
+  "id": "random-209",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9b\u201c",
+     "newText": " x"
+    }
+   ]
+  },
+  "file_b64": "4oCUCcOpYuKAnA=="
+ },
+ {
+  "id": "random-210",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0",
+     "newText": "\ud83d\ude00"
+    },
+    {
+     "oldText": "\u00a0\u00a0",
+     "newText": " \u201c "
+    },
+    {
+     "oldText": "\u00e9 \u00a0\u00a0",
+     "newText": "\u00e9  \u00e9a "
+    }
+   ]
+  },
+  "file_b64": "IMOpIMKgwqANCg0K76yB76yB"
+ },
+ {
+  "id": "random-211",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\n\u00e9\u201c",
+     "newText": "\u0085\u3000\u00a0"
+    },
+    {
+     "oldText": "afi \nby",
+     "newText": "\ufb01\ufb01\u2014\u00e9\t"
+    }
+   ]
+  },
+  "file_b64": "ICBhDQp54oCUYe+sgcKgDQpieQkNCnnigJnwn5iADQrigJllzIFlzIHigJnvrIENCsOp4oCcY++sgQ0KeXkgIA0K"
+ },
+ {
+  "id": "random-212",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "    ",
+     "newText": "\u00a0  \ud83d\ude00\u201c"
+    },
+    {
+     "oldText": "b\nc",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCUICDChfCfmIBlzIENCnnjgIANCu+sgcKFw6nigJwNCuKAmWF5Yg0KY8Kg44CA4oCZDQoNCsKgY3kgw6k="
+ },
+ {
+  "id": "random-213",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u0085\n  xc",
+     "newText": "\u3000e\u0301\ny\u0085"
+    }
+   ]
+  },
+  "file_b64": "76yB44CAZcyB8J+YgCDDqQ0Kw6kNCsKFDQogIHhjYfCfmIANCnnvrIHCoGXMgXnChQ=="
+ },
+ {
+  "id": "random-214",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \ud83d\ude00",
+     "newText": "a\u2014x"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u201c \ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "ICB4IPCfmIDvrIEK"
+ },
+ {
+  "id": "random-215",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x ",
+     "newText": "y\u201c\n "
+    },
+    {
+     "oldText": "e\u0301\n",
+     "newText": "\u0085  a a"
+    },
+    {
+     "oldText": "e\u0301\n",
+     "newText": "\t\ufb01\u00a0\u2014"
+    }
+   ]
+  },
+  "file_b64": "eHjCoGXMgQo="
+ },
+ {
+  "id": "random-216",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "xe\u0301",
+     "newText": "b\u0085\u00a0 "
+    }
+   ]
+  },
+  "file_b64": "CQkJYvCfmIAKICAJ44CAICDjgIAKeGXMgQo="
+ },
+ {
+  "id": "random-217",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\n \n",
+     "newText": "\u2014a\ud83d\ude00y"
+    }
+   ]
+  },
+  "file_b64": "CmHjgIDwn5iAIMKg4oCUCmFlzIF476yB4oCc44CACiAKeOKAnAoKCWXMgQnDqWEJCg=="
+ },
+ {
+  "id": "random-218",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "b  \n",
+     "newText": "a\t\u2014\u3000x"
+    },
+    {
+     "oldText": "b",
+     "newText": "\u00e9b\u0085"
+    }
+   ]
+  },
+  "file_b64": "YiAgCg=="
+ },
+ {
+  "id": "random-219",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\n",
+     "newText": "a"
+    },
+    {
+     "oldText": "\n\u00e9",
+     "newText": "yy   "
+    }
+   ]
+  },
+  "file_b64": "4oCZCsOpCg=="
+ },
+ {
+  "id": "random-220",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \u201c\n",
+     "newText": "\u2019"
+    }
+   ]
+  },
+  "file_b64": "YWPDqeKAlAph4oCc4oCcCu+sgWEgw6kKCnliCsKFYyDigJwKw6lh4oCcCg=="
+ },
+ {
+  "id": "random-221",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000c\u2019",
+     "newText": "a\u2019"
+    },
+    {
+     "oldText": "\u0301e\u0301\n-\u201cfi",
+     "newText": "yx"
+    },
+    {
+     "oldText": " \n\ud83d\ude00",
+     "newText": "e\u0301   \u00a0x"
+    }
+   ]
+  },
+  "file_b64": "CmXMgWXMgQrigJTigJzvrIFheCAgCvCfmIAK"
+ },
+ {
+  "id": "random-222",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \u00e9  ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "76yB4oCcICDDqSAgCg=="
+ },
+ {
+  "id": "random-223",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301ca",
+     "newText": "\ufb01"
+    }
+   ]
+  },
+  "file_b64": "woVhCQ0KwoVhZcyBY2ENCuKAmcOp8J+YgMKF4oCcDQo="
+ },
+ {
+  "id": "random-224",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "\ud83d\ude00b\u0085"
+    },
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "b e\u0301x"
+    },
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "\t\u201c"
+    }
+   ]
+  },
+  "file_b64": "DQrwn5iA"
+ },
+ {
+  "id": "random-225",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9",
+     "newText": "\u00e9\u3000"
+    },
+    {
+     "oldText": "b\u00e9",
+     "newText": "\ud83d\ude00\u0085  \u2014"
+    },
+    {
+     "oldText": "\u00e9",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "YsOp"
+ },
+ {
+  "id": "random-226",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000 \n",
+     "newText": "\u3000\u2019\u2019\u00a0"
+    },
+    {
+     "oldText": "\ta",
+     "newText": "c\u00e9"
+    },
+    {
+     "oldText": "\u3000\u201c",
+     "newText": "\ncx\u2014"
+    }
+   ]
+  },
+  "file_b64": "4oCcICAgIOKAlGXMgQ0KY+KAnO+sgQ0KCfCfmIDigJQgIMKF4oCZDQrjgIANCiAJ4oCU44CAIA0K"
+ },
+ {
+  "id": "random-227",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  e\u0301\n \u00e9\t",
+     "newText": "\u00e9x"
+    },
+    {
+     "oldText": "c\ud83d\ude00",
+     "newText": "\u201c\u00a0"
+    },
+    {
+     "oldText": " \n\u00e9c\ud83d\ude00",
+     "newText": "\ufb01\u2019y"
+    }
+   ]
+  },
+  "file_b64": "77u/CiAgeCAgZcyBCiDDqQkK4oCcY2XMgSDCoAp4Ygrwn5iAYu+sgfCfmIDigJzCoArDqWPwn5iA"
+ },
+ {
+  "id": "random-228",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014c  ",
+     "newText": "ce\u0301"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u0085\u00e9\ufb01"
+    }
+   ]
+  },
+  "file_b64": "ICDigJTigJx5Y2IK4oCcwoXigJzvrIEJCmLjgIAKwqBjeCAKCg=="
+ },
+ {
+  "id": "random-229",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u201cfi  \u201c\n",
+     "newText": " c\t\u2019\t"
+    },
+    {
+     "oldText": "\n\nx",
+     "newText": "ae\u0301\t\ufb01"
+    },
+    {
+     "oldText": "\ufb01y",
+     "newText": "\u0085xe\u0301"
+    }
+   ]
+  },
+  "file_b64": "w6l4CQ0K76yBDQrigJzvrIEgIOKAnA0K76yBeQ0KDQp4eA0KZcyBZcyB4oCZZcyBYg0K"
+ },
+ {
+  "id": "random-230",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u00e9y",
+     "newText": "\u201c\u2019\u0085\u2014\n"
+    }
+   ]
+  },
+  "file_b64": "ICAg4oCZwqDDqWMK4oCcCsOpeWFlzIHigJkK44CACg=="
+ },
+ {
+  "id": "random-231",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c'",
+     "newText": "c c\u3000"
+    }
+   ]
+  },
+  "file_b64": "eGJjY+KAmQ=="
+ },
+ {
+  "id": "random-232",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n \n",
+     "newText": "y\tb"
+    },
+    {
+     "oldText": "c\n",
+     "newText": "e\u0301\u2019\ud83d\ude00a\u0085"
+    },
+    {
+     "oldText": "\n \n",
+     "newText": "c\u0085"
+    }
+   ]
+  },
+  "file_b64": "YwogCg=="
+ },
+ {
+  "id": "random-233",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \n",
+     "newText": "\u00e9"
+    }
+   ]
+  },
+  "file_b64": "ICDigJwKZcyBYwpiCSAgCg=="
+ },
+ {
+  "id": "random-234",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\nb",
+     "newText": "\u00a0c\u2014c"
+    },
+    {
+     "oldText": "\n\t",
+     "newText": "aa"
+    }
+   ]
+  },
+  "file_b64": "4oCUwqDigJlhICB4CmMJCvCfmIBjwoViCmHigJlhwqAgeApi8J+YgO+sgQoJCuKAlMKF"
+ },
+ {
+  "id": "random-235",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085\t\u0085\n",
+     "newText": "\u3000\u2014"
+    },
+    {
+     "oldText": "\u0301\u0085\t\u0085\ne",
+     "newText": "e\u0301e\u0301\n\u00e9"
+    }
+   ]
+  },
+  "file_b64": "CmXMgcKFCcKFCmXMgXgK4oCZ44CACiAg4oCZYwkK"
+ },
+ {
+  "id": "random-236",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \ufb01x\ne\u0301\n",
+     "newText": "\u201c"
+    }
+   ]
+  },
+  "file_b64": "4oCZee+sgQrigJTjgIAg76yBeAplzIEKCfCfmIAK"
+ },
+ {
+  "id": "random-237",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c",
+     "newText": ""
+    },
+    {
+     "oldText": "\ne\u0301a\u2019\u2014\ufb01",
+     "newText": "  \u201c\n"
+    },
+    {
+     "oldText": "\ud83d\ude00\u201c",
+     "newText": "\u3000\ufb01\u201c"
+    }
+   ]
+  },
+  "file_b64": "YWLwn5iAYyAK44CACmXMgWHigJnigJTvrIFjCgoKICDDqQrjgIDDqeOAgArChfCfmIA="
+ },
+ {
+  "id": "random-238",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019\u2014\ud83d\ude00c\u2014",
+     "newText": "e\u0301\ufb01\ufb01  \u2014"
+    }
+   ]
+  },
+  "file_b64": "DQrigJx5ZcyBDQplzIF4Y2INCuKAnOKAmeKAlPCfmIBj4oCUDQphYQ0K4oCc76yB8J+YgOKAnA0KDQrigJk="
+ },
+ {
+  "id": "random-239",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\ud83d\ude00",
+     "newText": "\u201c\n\u201c\ufb01"
+    },
+    {
+     "oldText": " c\ud83d\ude00\n ",
+     "newText": "e\u0301e\u0301"
+    },
+    {
+     "oldText": "bbx\n ",
+     "newText": "e\u0301\tc\u2014\u2019"
+    }
+   ]
+  },
+  "file_b64": "efCfmIBlzIF4DQoNCmJieA0KIGPwn5iADQog4oCU"
+ },
+ {
+  "id": "random-240",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \u2019\ne\u0301",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "eHnigJRlzIFjICAK4oCU4oCZCiDigJkKZcyB"
+ },
+ {
+  "id": "random-241",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301 fi\n",
+     "newText": "b\u2014\u2014"
+    },
+    {
+     "oldText": "\u201c",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCcwqBlzIHigJkKIGPvrIHigJwKZcyBIO+sgQo="
+ },
+ {
+  "id": "random-242",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nb\n",
+     "newText": "\u0085\u0085a"
+    },
+    {
+     "oldText": "\nb\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\nb\n",
+     "newText": "x\n\u3000\u0085e\u0301"
+    }
+   ]
+  },
+  "file_b64": "eMKgDQpiDQo="
+ },
+ {
+  "id": "random-243",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\t\ud83d\ude00fi  \n",
+     "newText": ""
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u0085\u0085x\u0085\n"
+    },
+    {
+     "oldText": "\t\ud83d\ude00\ufb01  \n",
+     "newText": "  \u00e9b\u0085"
+    }
+   ]
+  },
+  "file_b64": "44CA4oCc44CACsKgY/CfmIBhwoUKYWLigJwgwoUKY2IgCmMgIGXMgcKFCmXMgQrDqQnwn5iA76yBICAKCQnigJQK"
+ },
+ {
+  "id": "random-244",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y \u2014\n\n\n\ud83d\ude00",
+     "newText": ""
+    },
+    {
+     "oldText": "\u201c\u0085\n\u2014\u3000\n",
+     "newText": ""
+    },
+    {
+     "oldText": "c",
+     "newText": "\t\u2014\u0085"
+    }
+   ]
+  },
+  "file_b64": "eGN5woXigJkKw6l5IOKAlAoKCvCfmIDigJzChQrigJTjgIAKIMOpIHkKZcyBCg=="
+ },
+ {
+  "id": "random-245",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\n\ud83d\ude00",
+     "newText": "\ufb01 "
+    },
+    {
+     "oldText": "\u3000\n\na\ud83d\ude00",
+     "newText": "\u2019\u2019e\u0301"
+    },
+    {
+     "oldText": "\na\ud83d\ude00b\u201cx",
+     "newText": "\u3000"
+    }
+   ]
+  },
+  "file_b64": "ICDjgIAKCmHwn5iAYuKAnHjCoAoK8J+YgAo="
+ },
+ {
+  "id": "random-246",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301\t\u2014\u0085",
+     "newText": "\t"
+    }
+   ]
+  },
+  "file_b64": "eGXMgQnigJTChQ0K"
+ },
+ {
+  "id": "random-247",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\n\t\nc   ",
+     "newText": " \n\ud83d\ude00\u2019"
+    },
+    {
+     "oldText": "\u3000",
+     "newText": "y"
+    }
+   ]
+  },
+  "file_b64": "4oCcCuKAnPCfmIDCoOKAlPCfmIAKCQpjICAgCnhlzIFlzIHjgIAK"
+ },
+ {
+  "id": "random-248",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301",
+     "newText": "\n\u00e9"
+    },
+    {
+     "oldText": "c\n-b",
+     "newText": "\u00e9\u00a0\t\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "4oCZYw0K4oCUYmXMgWHjgIANCnjChXli4oCcDQrigJTCoA0KIGJlzIEgYg0K8J+YgOOAgA0K"
+ },
+ {
+  "id": "random-249",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\ncab\ud83d\ude00",
+     "newText": "\u3000\t\u2014"
+    },
+    {
+     "oldText": "\n  \ud83d\ude00b",
+     "newText": "\ud83d\ude00a\u2014\n"
+    },
+    {
+     "oldText": " ",
+     "newText": "\u201c\u2019"
+    }
+   ]
+  },
+  "file_b64": "YeKAlOKAlHgKY2Fi8J+YgArDqWMKCiAg8J+YgGIKICB5ZcyB4oCZCg=="
+ },
+ {
+  "id": "random-250",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00a0\u2019",
+     "newText": "\ud83d\ude00e\u0301"
+    },
+    {
+     "oldText": "ae\u0301\u201cy\n\u00a0",
+     "newText": "\ufb01\t\u201c"
+    }
+   ]
+  },
+  "file_b64": "CWFlzIHigJx5CsKg4oCZCWLwn5iACuKAnAoK8J+YgAo="
+ },
+ {
+  "id": "random-251",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u00a0y\n",
+     "newText": "\u3000"
+    },
+    {
+     "oldText": "c\u00e9\n\n\u2014",
+     "newText": "\u2014\n\u201c"
+    }
+   ]
+  },
+  "file_b64": "77u/w6ljICBlzIEKeGPCoAl4CQrCoHkK4oCZYwogIGPDqQoK4oCU4oCZCmHigJkgIA=="
+ },
+ {
+  "id": "random-252",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-\n",
+     "newText": "y\u201cyc\ufb01"
+    },
+    {
+     "oldText": "c",
+     "newText": "c\ufb01"
+    }
+   ]
+  },
+  "file_b64": "YWHigJzigJnjgIDvrIENCsOpYXli4oCUDQrwn5iADQrChXnigJnwn5iA4oCcDQrigJzChWPCoHhlzIENCuKAmeKAlOKAlMKF8J+YgMOpDQrigJTwn5iAefCfmIA="
+ },
+ {
+  "id": "random-253",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u201c",
+     "newText": "b\u2014"
+    }
+   ]
+  },
+  "file_b64": "eO+sgeKAlHnigJwKeQoK4oCZ8J+YgOKAlAnigJk="
+ },
+ {
+  "id": "random-254",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9",
+     "newText": " \ufb01  "
+    }
+   ]
+  },
+  "file_b64": "w6kg4oCZCvCfmIAgIOKAmSB5wqAKYsOpCmXMgWFlzIHwn5iACuKAmQ=="
+ },
+ {
+  "id": "random-255",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\n\n\u0085fi\n",
+     "newText": "e\u0301\u00a0 "
+    }
+   ]
+  },
+  "file_b64": "w6nvrIFi4oCZDQrCoPCfmIAgDQoJ8J+YgA0KDQrChe+sgQ0K"
+ },
+ {
+  "id": "random-256",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nc",
+     "newText": "  "
+    }
+   ]
+  },
+  "file_b64": "DQoJDQrigJRi76yBIA0KYg0KZcyB4oCUYw0KYmXMgWENCmM="
+ },
+ {
+  "id": "random-257",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "a\n"
+    },
+    {
+     "oldText": "\ud83d\ude00\u00a0",
+     "newText": "ae\u0301"
+    }
+   ]
+  },
+  "file_b64": "DQo="
+ },
+ {
+  "id": "random-258",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u3000\u3000\u00a0\u2014\n",
+     "newText": "b\n"
+    }
+   ]
+  },
+  "file_b64": "Y+OAgOOAgOOAgMKg4oCUCg=="
+ },
+ {
+  "id": "random-259",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ny",
+     "newText": "a "
+    }
+   ]
+  },
+  "file_b64": "YQp5"
+ },
+ {
+  "id": "random-260",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ud83d\ude00\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\ud83d\ude00",
+     "newText": "yy"
+    }
+   ]
+  },
+  "file_b64": "4oCZYXljY/CfmIAK"
+ },
+ {
+  "id": "random-261",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014\u201c",
+     "newText": "b\u2014\ud83d\ude00\u0085"
+    }
+   ]
+  },
+  "file_b64": "YuKAnAnwn5iAIA0Kw6lhZcyB8J+YgCAgDQrjgIBlzIF4eHgNCuKAnGMJCcKFDQrChWHwn5iAZcyBDQrvrIENCuKAlOKAnGJi8J+YgA0K"
+ },
+ {
+  "id": "random-262",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\t\u3000\n"
+    },
+    {
+     "oldText": "\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "Cg=="
+ },
+ {
+  "id": "random-263",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "   ",
+     "newText": "\u2019y"
+    },
+    {
+     "oldText": "e\u0301\u201c",
+     "newText": "\u2014\u3000\u2014  \u00a0"
+    }
+   ]
+  },
+  "file_b64": "4oCcCvCfmIDigJwJYcKFw6kK4oCUeGIKwqDCoCDDqQogYWN5eeKAmQrChSAgIGIgCmEK"
+ },
+ {
+  "id": "random-264",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\u0085\u2014\t\u00e9\n\u2014e",
+     "newText": "y\u2019\te\u0301x"
+    }
+   ]
+  },
+  "file_b64": "8J+YgCAgYXkNCsKF4oCUCcOpDQrigJRlzIHvrIHigJwgDQogYw0KYmNj4oCUwoUNCmLCoOKAnHnDqWENCg=="
+ },
+ {
+  "id": "random-265",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0085\u3000",
+     "newText": " b"
+    },
+    {
+     "oldText": "",
+     "newText": "\ufb01"
+    },
+    {
+     "oldText": "  ",
+     "newText": "\t\ud83d\ude00\u00e9b"
+    }
+   ]
+  },
+  "file_b64": "DQogIA=="
+ },
+ {
+  "id": "random-266",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \n ",
+     "newText": "\u0085x\t"
+    }
+   ]
+  },
+  "file_b64": "44CAeOKAmWMJCsOpwqBjICAKIO+sgWHCoArigJl5CgogIHgJCnlhZcyBwqAK"
+ },
+ {
+  "id": "random-267",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\nc\t\n- ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "4oCZeWIgCiAgeMOp4oCZCuKAnGN4IApjCQrigJQgeQrvrIEgIOOAgGEK"
+ },
+ {
+  "id": "random-268",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\n\t  bxx",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "Y2LigJQgIGINCvCfmIDigJkgIA0K8J+YgOKAmWLDqQ0KeeOAgCDDqQ0KCSAgYnh4DQogIA0K"
+ },
+ {
+  "id": "random-269",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9\u2019",
+     "newText": "x"
+    },
+    {
+     "oldText": "\n  \u00e9",
+     "newText": ""
+    },
+    {
+     "oldText": "\t\n",
+     "newText": "\n\u3000\ny"
+    }
+   ]
+  },
+  "file_b64": "CiAgw6nigJnigJzigJQJCg=="
+ },
+ {
+  "id": "random-270",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\ufb01"
+    },
+    {
+     "oldText": "y\n",
+     "newText": ""
+    },
+    {
+     "oldText": "y\n",
+     "newText": "\u2019"
+    }
+   ]
+  },
+  "file_b64": "ZcyBeQo="
+ },
+ {
+  "id": "random-271",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a",
+     "newText": "\u0085\n\u00a0\n"
+    },
+    {
+     "oldText": "\ud83d\ude00y\u201cb\n\t",
+     "newText": "c \ufb01"
+    }
+   ]
+  },
+  "file_b64": "ecOp8J+YgCAgICAgCuKAlGEKCsKFZcyB8J+YgGEgIAp5wqAg4oCcCeKAmQrwn5iAeeKAnGIKCQ=="
+ },
+ {
+  "id": "random-272",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-ax",
+     "newText": "c"
+    },
+    {
+     "oldText": "\u0085",
+     "newText": ""
+    },
+    {
+     "oldText": "c\u201c\ud83d\ude00",
+     "newText": "\u2019\u00e9\ud83d\ude00e\u0301e\u0301"
+    }
+   ]
+  },
+  "file_b64": "CfCfmIB4Y+KAnPCfmIAKYcOpw6lhCiDDqQplzIEKefCfmIBjwoUKw6nigJRheA=="
+ },
+ {
+  "id": "random-273",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\t\u201c'",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "woViCgnigJzigJk="
+ },
+ {
+  "id": "random-274",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "x\t  y\u3000"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\u201c"
+    },
+    {
+     "oldText": "\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "Cg=="
+ },
+ {
+  "id": "random-275",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\u0085",
+     "newText": ""
+    },
+    {
+     "oldText": "\ufb01",
+     "newText": "x  \u201c \u00a0"
+    }
+   ]
+  },
+  "file_b64": "ZcyB4oCZw6kgYQ0K76yB76yBDQrwn5iA76yBIHnjgIB4DQp4DQoJYcKFDQoNCuKAmQ0K"
+ },
+ {
+  "id": "random-276",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n b\n\u0085\n",
+     "newText": "\u3000\ne\u0301\u00e9c"
+    },
+    {
+     "oldText": "\u3000",
+     "newText": "\u0085\n\u2014"
+    },
+    {
+     "oldText": "\n",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "ZcyBICANCmLigJkgIMKFDQrjgIAgIGLvrIENCsKgYg0KwoUNCg=="
+ },
+ {
+  "id": "random-277",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2014x\ufb01\n\u2014\n",
+     "newText": "  a\t\u0085"
+    },
+    {
+     "oldText": "a\t-xfi\n-",
+     "newText": "  \u201c"
+    }
+   ]
+  },
+  "file_b64": "76yB8J+YgO+sgcOp44CACmPjgIDDqcOpCnhhCgoK44CAYQnigJR476yBCuKAlAogIOKAmQ=="
+ },
+ {
+  "id": "random-278",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a\u0085  ",
+     "newText": "ce\u0301\u3000"
+    },
+    {
+     "oldText": "\ud83d\ude00\u2019c\n",
+     "newText": ""
+    },
+    {
+     "oldText": "\t e\u0301",
+     "newText": "e\u0301\u00a0\n\u2014"
+    }
+   ]
+  },
+  "file_b64": "4oCUw6lhwoUgIA0KDQrwn5iA4oCZYw0KZcyBYQ0KCQ=="
+ },
+ {
+  "id": "random-279",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\ufb01\u2014  ",
+     "newText": "\t\u00a0\u0085"
+    },
+    {
+     "oldText": "\u3000\n",
+     "newText": "\nx"
+    },
+    {
+     "oldText": "\n",
+     "newText": "\ufb01 \ufb01\ud83d\ude00"
+    }
+   ]
+  },
+  "file_b64": "44CACg=="
+ },
+ {
+  "id": "random-280",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c\n",
+     "newText": "a  \ufb01"
+    },
+    {
+     "oldText": "\u2014c",
+     "newText": "\u0085\u00e9\ufb01"
+    },
+    {
+     "oldText": "\u3000",
+     "newText": "\ufb01\u3000x\u00e9"
+    }
+   ]
+  },
+  "file_b64": "IHhjeGMNCg=="
+ },
+ {
+  "id": "random-281",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " ",
+     "newText": "\u201c\ud83d\ude00"
+    },
+    {
+     "oldText": " \u00e9\ufb01\u2019\u00e9\u3000\n ",
+     "newText": "a \u201c"
+    },
+    {
+     "oldText": "\u00e9\ufb01\u2019\u00e9\u3000\n ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "77u/76yBDQrvrIENCiAgw6nvrIHigJnDqeOAgA0KIGXMgSAg4oCUCQ0KDQoNCuOAgA0K"
+ },
+ {
+  "id": "random-282",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-  \n",
+     "newText": ""
+    },
+    {
+     "oldText": "\u2019a\n\na\u2019\n\u00a0",
+     "newText": "y"
+    },
+    {
+     "oldText": "a\u201c",
+     "newText": "\u00a0yy\ud83d\ude00a"
+    }
+   ]
+  },
+  "file_b64": "4oCZYXnigJTigJQgIA0KYnnDqQ0KeOKAmWPigJlhDQoNCmHigJkNCsKgw6kgICAgDQrChQ0K"
+ },
+ {
+  "id": "random-283",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n- a\u0085\u00e9",
+     "newText": ""
+    },
+    {
+     "oldText": "a\u0085\u00e9\n",
+     "newText": "x\u00a0 "
+    },
+    {
+     "oldText": "\t\ufb01",
+     "newText": "\u2019a"
+    }
+   ]
+  },
+  "file_b64": "IArigJTCoGHChcOpCgnvrIE="
+ },
+ {
+  "id": "random-284",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "cy\u00e9",
+     "newText": "\ud83d\ude00be\u0301"
+    },
+    {
+     "oldText": "\u2019\u0085\n",
+     "newText": "\n"
+    },
+    {
+     "oldText": "c \n\u3000\u0085\n\u00a0\n",
+     "newText": "\u00a0\u201caxe\u0301"
+    }
+   ]
+  },
+  "file_b64": "77u/Y3nDqWMgDQrjgIDChQ0KwqANCu+sgfCfmIDCheKAmcKFDQo="
+ },
+ {
+  "id": "random-285",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "x\n",
+     "newText": "\ud83d\ude00y\u3000"
+    },
+    {
+     "oldText": "\u0301x\n",
+     "newText": "  \u3000\ufb01"
+    },
+    {
+     "oldText": "\ud83d\ude00\u2014",
+     "newText": "\u0085ce\u0301\n\n"
+    }
+   ]
+  },
+  "file_b64": "4oCcee+sgeKAlMOpCnggYgkKeWXMgXgK"
+ },
+ {
+  "id": "random-286",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n",
+     "newText": "\u201c"
+    }
+   ]
+  },
+  "file_b64": "Ywo="
+ },
+ {
+  "id": "random-287",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "  \u201ce\u0301",
+     "newText": " "
+    }
+   ]
+  },
+  "file_b64": "CiAg4oCcZcyB"
+ },
+ {
+  "id": "random-288",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "c-\na\n ",
+     "newText": "xe\u0301"
+    },
+    {
+     "oldText": "x",
+     "newText": "c"
+    }
+   ]
+  },
+  "file_b64": "YiAg8J+YgOKAlA0KCfCfmIAgIGPDqQ0KeWLigJRiY+KAlA0KYQ0KwqDjgIB444CADQoNCvCfmIBieGXMgQ0K"
+ },
+ {
+  "id": "random-289",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "a'\n  ",
+     "newText": ""
+    }
+   ]
+  },
+  "file_b64": "woXChWNh4oCZDQogIA0Kw6kgZcyBDQo="
+ },
+ {
+  "id": "random-290",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": " \u3000\n-\ud83d\ude00y",
+     "newText": "\u3000\ud83d\ude00\u2019\n"
+    }
+   ]
+  },
+  "file_b64": "IMKg44CADQrigJTwn5iAeWNhDQo="
+ },
+ {
+  "id": "random-291",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u0301\n\u00a0\n ",
+     "newText": "\ufb01  xc"
+    },
+    {
+     "oldText": " \n ",
+     "newText": ""
+    },
+    {
+     "oldText": "\n ",
+     "newText": "b"
+    }
+   ]
+  },
+  "file_b64": "ZcyBCsKgCiDigJkK"
+ },
+ {
+  "id": "random-292",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "-'y\n",
+     "newText": "  \u00e9e\u0301\ufb01"
+    },
+    {
+     "oldText": "\t",
+     "newText": "\u2014c"
+    }
+   ]
+  },
+  "file_b64": "DQoJZcyBCeKAmQ0KeQ0KwoV54oCU4oCZeQ0K"
+ },
+ {
+  "id": "random-293",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "y\u0085",
+     "newText": " "
+    },
+    {
+     "oldText": "\n'",
+     "newText": "xc\n"
+    }
+   ]
+  },
+  "file_b64": "wqDDqeKAmQnigJwKY2HigJnigJRlzIEgCuKAlAl5woViIArigJnChQoK"
+ },
+ {
+  "id": "random-294",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "e\u0301\u00e9\nb\u2014\n\u00e9",
+     "newText": "\u201c\ne\u0301\u2019\ud83d\ude00"
+    },
+    {
+     "oldText": "\u00e9",
+     "newText": ""
+    },
+    {
+     "oldText": "\u0301\u00e9",
+     "newText": "a"
+    }
+   ]
+  },
+  "file_b64": "CQ0KDQrDqeKAnMKg76yB76yBDQrwn5iAwoXigJllzIHDqQ0KYuKAlA0Kw6l58J+YgCANCuKAnMOpZcyBCfCfmIB5DQrjgIB4w6nChWE="
+ },
+ {
+  "id": "random-295",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u00e9b\ud83d\ude00c\n",
+     "newText": "e\u0301\ufb01"
+    },
+    {
+     "oldText": "bx",
+     "newText": "\tb"
+    }
+   ]
+  },
+  "file_b64": "DQogIMKg44CA4oCUDQrjgIDDqWLwn5iAYw0K"
+ },
+ {
+  "id": "random-296",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\u2019\u2019\n",
+     "newText": "c\ufb01x"
+    }
+   ]
+  },
+  "file_b64": "4oCZICBi4oCZ4oCZCg=="
+ },
+ {
+  "id": "random-297",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "fi",
+     "newText": "\u0085"
+    },
+    {
+     "oldText": "e\u0301y",
+     "newText": "c\u00e9\u201c"
+    }
+   ]
+  },
+  "file_b64": "CiAg76yBZcyB76yB4oCcCuKAlHkgIAp4YwkK8J+YgHkK"
+ },
+ {
+  "id": "random-298",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\na",
+     "newText": "\u00e9\u2014\u00a0c"
+    },
+    {
+     "oldText": "\n\t\u00e9e\u0301\na",
+     "newText": "\ufb01\u00a0\u00a0\u0085b"
+    },
+    {
+     "oldText": "\u00e9e\u0301\na\n",
+     "newText": "\ne\u0301\u2014e\u0301"
+    }
+   ]
+  },
+  "file_b64": "76yBw6nChfCfmIANCgnDqWXMgQ0KYQ0KDQo="
+ },
+ {
+  "id": "random-299",
+  "kind": "edit",
+  "args": {
+   "path": "src/app.txt",
+   "edits": [
+    {
+     "oldText": "\n\ufb01  ",
+     "newText": "\u2019\u2019\u2019\u3000e\u0301"
+    },
+    {
+     "oldText": " \u201c\u2014",
+     "newText": "\u00a0c\u0085\u3000 "
+    },
+    {
+     "oldText": "ye\u0301b",
+     "newText": "\u0085\u2019\ufb01"
+    }
+   ]
+  },
+  "file_b64": "IOKAnOKAlArwn5iACu+sgSAgYgrvrIHCoGFjwoXigJkKwoXigJkK44CA8J+YgOKAnArigJnChQrjgIDigJxhCeOAgCAgCg=="
+ }
+]

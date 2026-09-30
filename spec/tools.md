@@ -1757,6 +1757,9 @@ INTERNAL          "Replacement range is outside the base content."
 ```
 
 - The two INTERNAL texts are Pi's own guards in `preserve_unchanged_lines`. They are reproduced if reached, and the differential corpus looks for inputs that reach them.
+  - The authority corpus reaches BOTH.
+  - The range guard fires on an empty file whose `oldText` is only whitespace.
+  - The line-count guard fires under fuzzy mode when the file ends in a whitespace-only line without `"\n"`: that line trims to nothing and `lines()` drops it, so the base has one line fewer. An ordinary edit therefore fails with Pi's internal text, e.g. `"a’\n   "` edited with `oldText` `"a'"`. This is `DIRECT_PI_PARITY` and is reproduced as is.
 - Every diagnostic is an error result with `details: {}`.
 
 #### Fuzzy matching, unchanged-line preservation, BOM and line endings (`TOOL-031`, DIRECT_PI_PARITY)
@@ -1897,6 +1900,29 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
    - a registration that is not globally serialized, and a global key without provider scoping;
    - abort-listener release;
    - a two-probe access check.
+
+**Evidence inventory (candidate for contract review).** The evidence lives in `assurance/layers/data/13-wp132-evidence/`, whose `README.md` gives the pins, the reproduction commands and the results.
+
+- **Items 1 and 4, corpus half.**
+  - The pinned-Pi authority run covers 379 cases: 60 curated edit cases, 300 seeded random edit cases, 9 `prepareEditArguments` cases, 5 write cases and 5 `normalizeForFuzzyMatch` cases.
+  - The corpus-level negative controls are 13 single-point mutants of copies of pinned `edit-diff.ts`, the `edit.ts`/`write.ts` glue and `diff` 8.0.4. All 13 are killed.
+- **Item 3's ordering authority.** Pinned `file-mutation-queue.ts` runs unmodified, with a scripted `realpath`, across 9 traced scenarios.
+- **Item 2 and item 3's scenarios.** They live in `minion-agent` `conformance/agent/builtin-mutation/`, in their own shape, `conformance/schema/builtin-mutation-scenario.schema.json` (key `builtin_mutation`). There are 26 documents:
+  - 8 are generated from the authority run and cover 374 cases. Expectations are pinned Pi's text, final bytes and details, verbatim.
+  - 7 are hand-authored case documents covering the error sites, the FALLBACK and cancellation.
+  - 11 are queue scenarios.
+
+  The shape's own comments define the runner protocol. A runner:
+  - builds a fresh root for each case;
+  - records the path each tool passed to `ctx.fs`;
+  - runs gated provider invocations, with steps separated by quiescence;
+  - checks ordering constraints over the event log;
+  - fails any call still pending once the steps are exhausted. This catches a lingering entry.
+- **Fuzzy-normalization replay.** `conformance/agent/fixtures/wp132-fuzzy-normalize/fuzzy_normalize.json` holds pinned Pi's `normalizeForFuzzyMatch` results. Each binding replays them against its own `fuzzy_normalize`.
+- **Unpaired surrogates.** Cases whose arguments contain an unpaired surrogate are flagged `unpaired_surrogate_arguments`, per String semantics above.
+  - A binding whose Layer 02/05 decoding carries such an argument MUST pass the case.
+  - A binding whose decoding cannot represent it MUST show the argument is rejected before the tool runs. It records that as the Layer 02/05 hazard, not as a pass.
+- **Binding-level negative controls.** The remaining item-4 controls are binding-level and run at each implementation review: Unicode 15.1/17.0 NFKC, a native whitespace set, non-serialized registration, no provider scoping, abort-listener release, and a two-probe access check. The corpus contains their killing inputs: U+1CCD6, U+A7F1, NEL, U+001C and U+FEFF, and the queue scenarios above.
 
 #### Explicitly not certified by WP-13.2
 

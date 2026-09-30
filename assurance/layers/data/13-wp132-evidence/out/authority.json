@@ -1,0 +1,3371 @@
+{
+ "engine": "node+pi-edit-diff+diff-8.0.4",
+ "node": "22.15.1",
+ "v8": "12.4.254.21-node.24",
+ "icu": "76.1",
+ "unicode": "16.0",
+ "results": [
+  {
+   "id": "exact-single",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWxwaGEKQkVUQQpnYW1tYQo=",
+   "written_sha256": "b0d5fcac7492427d0767380786c6d7843c342299a8a447ac2ccc8deaa78ca153",
+   "details": {
+    "diff": " 1 alpha\n-2 beta\n+2 BETA\n 3 gamma",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n alpha\n-beta\n+BETA\n gamma\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "exact-multi-out-of-order",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "MQp0d28KMwo0CmZpdmUK",
+   "written_sha256": "a6663218d2cfce68cd8b8f1cf975c27d6a568f918102d3dac4993b2a1c6e8b06",
+   "details": {
+    "diff": "-1 one\n+1 1\n 2 two\n-3 three\n-4 four\n+3 3\n+4 4\n 5 five",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,5 @@\n-one\n+1\n two\n-three\n-four\n+3\n+4\n five\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "adjacent-not-overlapping",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "WFkK",
+   "written_sha256": "ad7c8d0f1c4faf0e6a37432a502a321c760133c08c074b9824b2341cecc77dae",
+   "details": {
+    "diff": "-1 abcdef\n+1 XY",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-abcdef\n+XY\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "overlap",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "overlap-reported-in-sorted-order",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "not-found-single",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "not-found-multi",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "empty-old-single",
+   "kind": "edit",
+   "is_error": true,
+   "text": "oldText must not be empty in src/app.txt."
+  },
+  {
+   "id": "empty-old-multi",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1].oldText must not be empty in src/app.txt."
+  },
+  {
+   "id": "empty-old-after-lf-normalization-is-not-empty",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "duplicate-exact-single",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "duplicate-exact-multi",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "duplicate-only-in-fuzzy-space",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "no-change-single",
+   "kind": "edit",
+   "is_error": true,
+   "text": "No changes made to src/app.txt. The replacement produced identical content. This might indicate an issue with special characters or the text not existing as expected."
+  },
+  {
+   "id": "no-change-multi",
+   "kind": "edit",
+   "is_error": true,
+   "text": "No changes made to src/app.txt. The replacements produced identical content."
+  },
+  {
+   "id": "replace-with-empty",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "a2VlcAprZWVwCg==",
+   "written_sha256": "37c6a99cc9c7c86c965982090d2a2ec743a50a30434139a05f8a5f32a729790a",
+   "details": {
+    "diff": " 1 keep\n-2 drop me\n 3 keep",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,2 @@\n keep\n-drop me\n keep\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "multiline-old-and-new",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Zm4gYSgpIHsKICAyCiAgMwp9Cg==",
+   "written_sha256": "a0d4051bc26e59a338b6e1569cce3e5dceb99048a0e3e0db90cbb8d864fabac0",
+   "details": {
+    "diff": " 1 fn a() {\n-2   1\n+2   2\n+3   3\n 3 }",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,4 @@\n fn a() {\n-  1\n+  2\n+  3\n }\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "old-text-crlf-normalized",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YwpkCg==",
+   "written_sha256": "a5567b11c329e9609dac4da00f406c208706b081a2df5244e2e03e1f272d33ff",
+   "details": {
+    "diff": "-1 a\n-2 b\n+1 c\n+2 d",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-a\n-b\n+c\n+d\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-trailing-ws",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "a2VlcCAgIApBTFBIQQpCRVRBCnRhaWwgIAo=",
+   "written_sha256": "40a17848c396a1235f0bfb0efcbbd74c04d630350ee2b71cd8c4361438762004",
+   "details": {
+    "diff": " 1 keep   \n-2 alpha  \n-3 beta\t\n+2 ALPHA\n+3 BETA\n 4 tail  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n keep   \n-alpha  \n-beta\t\n+ALPHA\n+BETA\n tail  \n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "fuzzy-spreads-to-all-edits",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "MQoyCjMK",
+   "written_sha256": "14c5e74c4b96ccef41cd94db73a9ec3348038ac094feca4fd897cecffa07cdae",
+   "details": {
+    "diff": "-1 one   \n-2 two  \n-3 three\n+1 1\n+2 2\n+3 3",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n-one   \n-two  \n-three\n+1\n+2\n+3\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-smart-quotes",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "c2FpZAo=",
+   "written_sha256": "14f3cba70f4dd8e17f76f6897ac4a8993aab0ce265ea401f8d4ea440272db9c6",
+   "details": {
+    "diff": "-1 say ‘hi’ and “bye”\n+1 said",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-say ‘hi’ and “bye”\n+said\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-dashes",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ZGFzaGVzCg==",
+   "written_sha256": "de14d1d99b225ee96b422ccdd073a9daf2841e87039df4fcdf9136567f2acd24",
+   "details": {
+    "diff": "-1 a–b—c−d‐e‑f‒g―h\n+1 dashes",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-a–b—c−d‐e‑f‒g―h\n+dashes\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-special-spaces",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "c3BhY2VzCg==",
+   "written_sha256": "e47fbedb2823cf1ae4d4cdb8273635be2024cb870588e259c9b23d76ae49d484",
+   "details": {
+    "diff": "-1 x y z w v　u\n+1 spaces",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-x y z w v　u\n+spaces\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-nfkc-ligature",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "b2sK",
+   "written_sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+   "details": {
+    "diff": "-1 a ﬁle here   \n+1 ok",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-a ﬁle here   \n+ok\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-nfkc-fullwidth",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWJjCg==",
+   "written_sha256": "edeaaff3f1774ad2888673770c6d64097e391bc362d7d6fb34982ddf0efd18cb",
+   "details": {
+    "diff": "-1 ＡＢＣ \n+1 abc",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-ＡＢＣ \n+abc\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-nfkc-unicode16-outlined",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "aGl0Cg==",
+   "written_sha256": "74a02f560cc1d8e023280b5f08a1ee7266e4bec6cea61ca457dc1a758d080fc8",
+   "details": {
+    "diff": "-1 𜳖 x  \n+1 hit",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-𜳖 x  \n+hit\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-nfkc-unicode17-new-stays",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "6p+xIGtlZXAgIApaWiAgCg==",
+   "written_sha256": "6ae0d0a73f9d0b23562b48a214bf5af602913e967af6cb442ea0e02548750739",
+   "details": {
+    "diff": " 1 ꟱ keep  \n-2 zz  \n+2 ZZ  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n ꟱ keep  \n-zz  \n+ZZ  \n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "fuzzy-nfkc-unicode17-on-touched-line",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "6p+xIFpaCmtlZXAK",
+   "written_sha256": "6c53076b333e025184c16de718d753a139aab10848c2d81883967b0f29b5241f",
+   "details": {
+    "diff": "-1 ꟱ z’z  \n+1 ꟱ ZZ\n 2 keep",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-꟱ z’z  \n+꟱ ZZ\n keep\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-preserves-untouched-lines",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ICB1bnRvdWNoZWQgIApUCgl0cmFpbCAJCg==",
+   "written_sha256": "2b7605a341803dd76bab6d854839f7768cc6cff440e90098a00b8990f160a6a4",
+   "details": {
+    "diff": " 1   untouched  \n-2 t’x  \n+2 T\n 3 \ttrail \t",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n   untouched  \n-t’x  \n+T\n \ttrail \t\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "fuzzy-two-edits-same-line",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "MSAgY2QgIDMgIAo=",
+   "written_sha256": "9f481687572f7127a1cbecfee2f1b89cdd381fc6e4b6d49f5e99c7b7c0586f26",
+   "details": {
+    "diff": "-1 ab  cd  ef  \n+1 1  cd  3  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-ab  cd  ef  \n+1  cd  3  \n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "fuzzy-duplicate-normalized-lines",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eQo=",
+   "written_sha256": "3bb2abb69ebb27fbfe63c7639624c6ec5e331b841a5bc8c3ebc10b9285e90877",
+   "details": {
+    "diff": "-1 x  \n-2 x\n-3 x \n+1 y",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,1 @@\n-x  \n-x\n-x \n+y\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "js-whitespace-set",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Vwo=",
+   "written_sha256": "7062c0dcd502ab26e450e2881a89cae3cdef227f2ea20801898ad088e10db071",
+   "details": {
+    "diff": "-1 a\n-2 b\u001c\n-3 c　\n-4 d﻿\n-5 e \n-6 f \n+1 W",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,1 @@\n-a\n-b\u001c\n-c　\n-d﻿\n-e \n-f \n+W\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "nel-is-not-js-whitespace",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "info-separator-is-not-js-whitespace",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "empty-normalized-old-counts-code-units",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 5 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "empty-normalized-old-short-content",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "WGE=",
+   "written_sha256": "eeb689906ed2c813f8d78a0d06048b56e98945aa433d3a8c55b0adccb18b8c94",
+   "details": {
+    "diff": "-1 a\n+1 Xa",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-a\n\\ No newline at end of file\n+Xa\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "empty-normalized-old-empty-file",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Replacement range is outside the base content."
+  },
+  {
+   "id": "empty-normalized-old-two-units",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "WGFi",
+   "written_sha256": "ea170effab0bfadc6830059f1d4ec193d8a9fdf3bd2346e2be17e7fac2f5c8b6",
+   "details": {
+    "diff": "-1 ab\n+1 Xab",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-ab\n\\ No newline at end of file\n+Xab\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "internal-line-count-whitespace-only-last-line",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Cannot preserve unchanged lines because the base content has a different line count."
+  },
+  {
+   "id": "internal-line-count-crlf-whitespace-last-line",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Cannot preserve unchanged lines because the base content has a different line count."
+  },
+  {
+   "id": "bom-kept",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "77u/YWxwaGEKQgo=",
+   "written_sha256": "5e76c899729ac47865201beef329afa8a7ceef95e7889f4893301e7767ede190",
+   "details": {
+    "diff": " 1 alpha\n-2 beta\n+2 B",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n+B\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "crlf-first",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQ0KQg0KYw0K",
+   "written_sha256": "301f6bd307377e2edefbe991f82a21e6925b772a60418cc16db1f516185bef19",
+   "details": {
+    "diff": " 1 a\n-2 b\n+2 B\n 3 c",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n a\n-b\n+B\n c\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "crlf-first-with-lone-cr",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQ0KYg0KQw0KZA0K",
+   "written_sha256": "1619000e490b7710bd5d1cd262ae969831fb42fb5f4268fa1ec6c7c190cba5c4",
+   "details": {
+    "diff": " 1 a\n 2 b\n-3 c\n+3 C\n 4 d",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n a\n b\n-c\n+C\n d\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "lf-first-then-crlf",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQpiCkMK",
+   "written_sha256": "a8f17a2f479dd80ee55ee157e6e8ff02fed0a56393e67580e0467201edaf18e6",
+   "details": {
+    "diff": " 1 a\n 2 b\n-3 c\n+3 C",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n a\n b\n-c\n+C\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "cr-only",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQpCCmM=",
+   "written_sha256": "8f37d02ad286259f5b9fee3509c7c63ffa16fe3a760fdbfdfcc9595ee7828ead",
+   "details": {
+    "diff": " 1 a\n-2 b\n+2 B\n 3 c",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n a\n-b\n+B\n c\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "no-final-newline",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWxwaGEKQkVUQQ==",
+   "written_sha256": "6221c2b549036d3c8096d93874dd8bdf1e232f3790530636c6e6f069fb4a6f0e",
+   "details": {
+    "diff": " 1 alpha\n-2 beta\n+2 BETA",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n\\ No newline at end of file\n+BETA\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "add-final-newline",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWxwaGEKYmV0YQo=",
+   "written_sha256": "e49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee",
+   "details": {
+    "diff": " 1 alpha\n-2 beta\n+2 beta",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n\\ No newline at end of file\n+beta\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "bom-and-crlf",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "77u/eA0KWQ0K",
+   "written_sha256": "4e9efc356da910d869153772cd09620a2f34b13d4fda674e924eac36ef0b5425",
+   "details": {
+    "diff": " 1 x\n-2 y\n+2 Y",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-y\n+Y\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "invalid-utf8-decoded",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "77+977+9Qgo=",
+   "written_sha256": "dc1a8689643051914685f68b3f1e43c2d97b7ed7b8990bc5acbfe42e64ab628b",
+   "details": {
+    "diff": "-1 ��A\n+1 ��B",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-��A\n+��B\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "astral-in-content",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "8J+YgCAxIPCfmIEKdGhlIEVORAo=",
+   "written_sha256": "3907168569327591893596787abcd9a6ac29095e0bf27c676093b28577df8659",
+   "details": {
+    "diff": "-1 😀 one 😁\n-2 the end\n+1 😀 1 😁\n+2 the END",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-😀 one 😁\n-the end\n+😀 1 😁\n+the END\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "lone-surrogate-new-text",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Ye+/vWIK",
+   "written_sha256": "fbd11afb8989888bd4d2a4eb5021ade171ab8b1e0e0033da75ca967b1b0ec3fc",
+   "details": {
+    "diff": "-1 alpha\n+1 a\ud800b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-alpha\n+a\ud800b\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "write-ascii",
+   "kind": "write",
+   "is_error": false,
+   "text": "Successfully wrote 6 bytes to src/app.txt",
+   "written_b64": "aGVsbG8K",
+   "written_sha256": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03"
+  },
+  {
+   "id": "write-multibyte",
+   "kind": "write",
+   "is_error": false,
+   "text": "Successfully wrote 11 bytes to src/app.txt",
+   "written_b64": "Y2Fmw6kgbmHDr3ZlCg==",
+   "written_sha256": "03f88f29ad1a19bc329f622300923db0a6ff2b01319be4fd0fdcf9eb8c608732"
+  },
+  {
+   "id": "write-astral",
+   "kind": "write",
+   "is_error": false,
+   "text": "Successfully wrote 4 bytes to src/app.txt",
+   "written_b64": "8J+YgPCfmIE=",
+   "written_sha256": "9131ffb6893628a6e09d044a97deee31a2570564b543a909a62dfdb658ff53b4"
+  },
+  {
+   "id": "write-lone-surrogate",
+   "kind": "write",
+   "is_error": false,
+   "text": "Successfully wrote 3 bytes to src/app.txt",
+   "written_b64": "eO+/vXk=",
+   "written_sha256": "0b37743370331e33808c0dd0167563798a3c324504cf0055d2b0ac81578d2c58"
+  },
+  {
+   "id": "write-empty",
+   "kind": "write",
+   "is_error": false,
+   "text": "Successfully wrote 0 bytes to src/app.txt",
+   "written_b64": "",
+   "written_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "id": "diff-two-hunks",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CkxJTkUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKbGluZSAxMApsaW5lIDExCmxpbmUgMTIKbGluZSAxMwpsaW5lIDE0CmxpbmUgMTUKbGluZSAxNgpsaW5lIDE3CmxpbmUgMTgKbGluZSAxOQpsaW5lIDIwCmxpbmUgMjEKbGluZSAyMgpsaW5lIDIzCmxpbmUgMjQKbGluZSAyNQpsaW5lIDI2CmxpbmUgMjcKbGluZSAyOApsaW5lIDI5CkxJTkUgMzAKbGluZSAzMQpsaW5lIDMyCmxpbmUgMzMKbGluZSAzNApsaW5lIDM1CmxpbmUgMzYKbGluZSAzNwpsaW5lIDM4CmxpbmUgMzkKbGluZSA0MAo=",
+   "written_sha256": "efe4a12d9bc6367ffddb611eb2c71af71a8ed8d8a535334ce02a3c2859ebfa25",
+   "details": {
+    "diff": "  1 line 1\n  2 line 2\n  3 line 3\n  4 line 4\n- 5 line 5\n+ 5 LINE 5\n  6 line 6\n  7 line 7\n  8 line 8\n  9 line 9\n    ...\n 26 line 26\n 27 line 27\n 28 line 28\n 29 line 29\n-30 line 30\n+30 LINE 30\n 31 line 31\n 32 line 32\n 33 line 33\n 34 line 34\n    ...",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,9 +1,9 @@\n line 1\n line 2\n line 3\n line 4\n-line 5\n+LINE 5\n line 6\n line 7\n line 8\n line 9\n@@ -26,9 +26,9 @@\n line 26\n line 27\n line 28\n line 29\n-line 30\n+LINE 30\n line 31\n line 32\n line 33\n line 34\n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "diff-joined-context-8",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKTDEwCmxpbmUgMTEKbGluZSAxMgpsaW5lIDEzCmxpbmUgMTQKbGluZSAxNQpsaW5lIDE2CmxpbmUgMTcKbGluZSAxOApMMTkKbGluZSAyMApsaW5lIDIxCmxpbmUgMjIKbGluZSAyMwpsaW5lIDI0CmxpbmUgMjUKbGluZSAyNgpsaW5lIDI3CmxpbmUgMjgKbGluZSAyOQpsaW5lIDMwCmxpbmUgMzEKbGluZSAzMgpsaW5lIDMzCmxpbmUgMzQKbGluZSAzNQpsaW5lIDM2CmxpbmUgMzcKbGluZSAzOApsaW5lIDM5CmxpbmUgNDAK",
+   "written_sha256": "f9e15ad498b101fee48829cec4e736d30ae4d4455bde1bb1c1b89f151bf5b69f",
+   "details": {
+    "diff": "    ...\n  6 line 6\n  7 line 7\n  8 line 8\n  9 line 9\n-10 line 10\n+10 L10\n 11 line 11\n 12 line 12\n 13 line 13\n 14 line 14\n 15 line 15\n 16 line 16\n 17 line 17\n 18 line 18\n-19 line 19\n+19 L19\n 20 line 20\n 21 line 21\n 22 line 22\n 23 line 23\n    ...",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -6,18 +6,18 @@\n line 6\n line 7\n line 8\n line 9\n-line 10\n+L10\n line 11\n line 12\n line 13\n line 14\n line 15\n line 16\n line 17\n line 18\n-line 19\n+L19\n line 20\n line 21\n line 22\n line 23\n",
+    "firstChangedLine": 10
+   }
+  },
+  {
+   "id": "diff-split-context-9",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKTDEwCmxpbmUgMTEKbGluZSAxMgpsaW5lIDEzCmxpbmUgMTQKbGluZSAxNQpsaW5lIDE2CmxpbmUgMTcKbGluZSAxOApsaW5lIDE5CkwyMApsaW5lIDIxCmxpbmUgMjIKbGluZSAyMwpsaW5lIDI0CmxpbmUgMjUKbGluZSAyNgpsaW5lIDI3CmxpbmUgMjgKbGluZSAyOQpsaW5lIDMwCmxpbmUgMzEKbGluZSAzMgpsaW5lIDMzCmxpbmUgMzQKbGluZSAzNQpsaW5lIDM2CmxpbmUgMzcKbGluZSAzOApsaW5lIDM5CmxpbmUgNDAK",
+   "written_sha256": "5aaf485363ec567039a623db9571199754f70e75015a6749ef31886999306fa8",
+   "details": {
+    "diff": "    ...\n  6 line 6\n  7 line 7\n  8 line 8\n  9 line 9\n-10 line 10\n+10 L10\n 11 line 11\n 12 line 12\n 13 line 13\n 14 line 14\n    ...\n 16 line 16\n 17 line 17\n 18 line 18\n 19 line 19\n-20 line 20\n+20 L20\n 21 line 21\n 22 line 22\n 23 line 23\n 24 line 24\n    ...",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -6,9 +6,9 @@\n line 6\n line 7\n line 8\n line 9\n-line 10\n+L10\n line 11\n line 12\n line 13\n line 14\n@@ -16,9 +16,9 @@\n line 16\n line 17\n line 18\n line 19\n-line 20\n+L20\n line 21\n line 22\n line 23\n line 24\n",
+    "firstChangedLine": 10
+   }
+  },
+  {
+   "id": "diff-no-newline-at-eof",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQpiCkM=",
+   "written_sha256": "2b77b232d935086b91ff53c591e16550500a9b241a665454bddfd2554aeafe38",
+   "details": {
+    "diff": " 1 a\n 2 b\n-3 c\n+3 C",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n a\n b\n-c\n\\ No newline at end of file\n+C\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "diff-insert-lines",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQp4CnkKegpiCg==",
+   "written_sha256": "a010603686b9800648d3cb710dc5e88456f2001c1398f261fb14905199236606",
+   "details": {
+    "diff": " 1 a\n+2 x\n+3 y\n+4 z\n 2 b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,5 @@\n a\n+x\n+y\n+z\n b\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "diff-delete-lines",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQpiCg==",
+   "written_sha256": "911169ddaaf146aff539f58c26c489af3b892dff0fe283c1c264c65ae5aa59a2",
+   "details": {
+    "diff": " 1 a\n-2 x\n-3 y\n-4 z\n 5 b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,2 @@\n a\n-x\n-y\n-z\n b\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "diff-width-changes",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "bGluZSAxCmxpbmUgMgpsaW5lIDMKbGluZSA0CmxpbmUgNQpsaW5lIDYKbGluZSA3CmxpbmUgOApsaW5lIDkKbGluZSAxMApsaW5lIDExCg==",
+   "written_sha256": "a495d11642517cdb93ec25230c6852c8063d590cb8b93b16b7f433d9a128ebc2",
+   "details": {
+    "diff": "    ...\n  6 line 6\n  7 line 7\n  8 line 8\n  9 line 9\n+10 line 10\n+11 line 11",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -6,4 +6,6 @@\n line 6\n line 7\n line 8\n line 9\n+line 10\n+line 11\n",
+    "firstChangedLine": 10
+   }
+  },
+  {
+   "id": "diff-repeated-lines-myers",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YQpiCloKYgpaCmIK",
+   "written_sha256": "e166a6af9c03fbd4fec93145baea20548f8a60f1b789655ef2c7e9fddc85db14",
+   "details": {
+    "diff": " 1 a\n 2 b\n-3 a\n+3 Z\n 4 b\n-5 a\n+5 Z\n 6 b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,6 @@\n a\n b\n-a\n+Z\n b\n-a\n+Z\n b\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "prepare-json-string-array",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "a",
+      "newText": "b"
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-json-string-array",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 1 block(s) in src/app.txt.",
+    "written_b64": "eApiCg==",
+    "written_sha256": "b99888fcd416c6ba96c0f72103faad28146e22a88ccb47fb702ebe962b05850f",
+    "details": {
+     "diff": " 1 x\n-2 a\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-a\n+b\n",
+     "firstChangedLine": 2
+    }
+   }
+  },
+  {
+   "id": "prepare-json-string-single",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "a",
+      "newText": "b"
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-json-string-single",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 1 block(s) in src/app.txt.",
+    "written_b64": "eApiCg==",
+    "written_sha256": "b99888fcd416c6ba96c0f72103faad28146e22a88ccb47fb702ebe962b05850f",
+    "details": {
+     "diff": " 1 x\n-2 a\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-a\n+b\n",
+     "firstChangedLine": 2
+    }
+   }
+  },
+  {
+   "id": "prepare-json-string-invalid",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": "[not json"
+   },
+   "schema_valid": false,
+   "result": null
+  },
+  {
+   "id": "prepare-json-string-other",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": "42"
+   },
+   "schema_valid": false,
+   "result": null
+  },
+  {
+   "id": "prepare-single-object",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "a",
+      "newText": "b",
+      "extra": 1
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-single-object",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 1 block(s) in src/app.txt.",
+    "written_b64": "eApiCg==",
+    "written_sha256": "b99888fcd416c6ba96c0f72103faad28146e22a88ccb47fb702ebe962b05850f",
+    "details": {
+     "diff": " 1 x\n-2 a\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-a\n+b\n",
+     "firstChangedLine": 2
+    }
+   }
+  },
+  {
+   "id": "prepare-legacy-top-level",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "a",
+      "newText": "b"
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-legacy-top-level",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 1 block(s) in src/app.txt.",
+    "written_b64": "eApiCg==",
+    "written_sha256": "b99888fcd416c6ba96c0f72103faad28146e22a88ccb47fb702ebe962b05850f",
+    "details": {
+     "diff": " 1 x\n-2 a\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n x\n-a\n+b\n",
+     "firstChangedLine": 2
+    }
+   }
+  },
+  {
+   "id": "prepare-legacy-appends",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "edits": [
+     {
+      "oldText": "x",
+      "newText": "y"
+     },
+     {
+      "oldText": "a",
+      "newText": "b"
+     }
+    ]
+   },
+   "schema_valid": true,
+   "result": {
+    "id": "prepare-legacy-appends",
+    "kind": "edit",
+    "is_error": false,
+    "text": "Successfully replaced 2 block(s) in src/app.txt.",
+    "written_b64": "eQpiCg==",
+    "written_sha256": "5ce58234077002b30a088f6c3b4c24cc19df37645d113dbb49fb0771254860e1",
+    "details": {
+     "diff": "-1 x\n-2 a\n+1 y\n+2 b",
+     "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-x\n-a\n+y\n+b\n",
+     "firstChangedLine": 1
+    }
+   }
+  },
+  {
+   "id": "prepare-legacy-non-string-ignored",
+   "kind": "prepare",
+   "prepared": {
+    "path": "src/app.txt",
+    "oldText": "a",
+    "newText": 3
+   },
+   "schema_valid": false,
+   "result": null
+  },
+  {
+   "id": "prepare-not-an-object",
+   "kind": "prepare",
+   "prepared": "just a string",
+   "schema_valid": false,
+   "result": null
+  },
+  {
+   "id": "validate-empty-edits",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Edit tool input is invalid. edits must contain at least one replacement."
+  },
+  {
+   "id": "fz-trim-set",
+   "kind": "fuzzy",
+   "normalized": "a\n"
+  },
+  {
+   "id": "fz-not-trimmed",
+   "kind": "fuzzy",
+   "normalized": "a\u001c\u001d\u001e\u001f᠎​\n"
+  },
+  {
+   "id": "fz-nfkc-compose",
+   "kind": "fuzzy",
+   "normalized": "é Å ṩ ガ"
+  },
+  {
+   "id": "fz-quotes-dashes-spaces",
+   "kind": "fuzzy",
+   "normalized": "''''\"\"\"\"-------"
+  },
+  {
+   "id": "fz-unicode16-17",
+   "kind": "fuzzy",
+   "normalized": "A9꟱"
+  },
+  {
+   "id": "random-000",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-001",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "woXigJlj4oCceA==",
+   "written_sha256": "0699604b50a50bf5d282345467779ed45e35cfeff163ea00e9fea1566eb13dbc",
+   "details": {
+    "diff": "-1 ““  “x\n+1 ’c“x",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-““  “x\n\\ No newline at end of file\n+’c“x\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-002",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-003",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-004",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "",
+   "written_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "details": {
+    "diff": "-1 ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +0,0 @@\n-\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-005",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCZYsKF8J+YgA==",
+   "written_sha256": "e2c43297ad5299ba66a88e10df5409a45bc3a30206e0d7a22e0f3fc964e83698",
+   "details": {
+    "diff": "-1 ’b😀\n-2 —\n+1 ’b😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n-’b😀\n-—\n\\ No newline at end of file\n+’b😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-006",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-007",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-008",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-009",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ICBlzIEgIO+sgQllw6njgIDigJzjgIB4",
+   "written_sha256": "59ffb450668c5dd40e0469ed7eb96dfda6638e4c3fa7da9af34e7bfc7cc8f008",
+   "details": {
+    "diff": "-1   é  ﬁ　\n-2 \ta“xé\n+1   é  ﬁ\teé　“　x",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n-  é  ﬁ　\n-\ta“xé\n+  é  ﬁ\teé　“　x\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-010",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-011",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-012",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-013",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-014",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eSAg4oCUY2EKwoUKwoXigJwJw6nvrIHvrIEKwoXwn5iAYuKAnGIKeAnDqcKgCeKAnArChfCfmIDigJR4ICB5Cg==",
+   "written_sha256": "07c6b4569a2fff249c0ba7ca22fbdfcb2db75952c850dacccdd883f6d438404e",
+   "details": {
+    "diff": " 1 y  —ca\n 2 \n 3 “\téﬁﬁ\n-4 y  é\n-5 😀b\n+4 😀b“b\n 6 x\té \t“\n 7 😀—x  y",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n y  —ca\n \n “\téﬁﬁ\n-y  é\n-😀b\n+😀b“b\n x\té \t“\n 😀—x  y\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-015",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CgoKePCfmIAJYuKAlOKAlArigJkKwqBj76yBCiAgY2PChQ==",
+   "written_sha256": "5ee0337aa5bffa5156e6198a45c2b528e8d2a2aff8bdd1481d5efdc8bc7e7f13",
+   "details": {
+    "diff": "   ...\n 3 \n 4 x😀\tb——\n 5 ’\n 6  cﬁ\n-7   ccé\n+7   cc",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -3,5 +3,5 @@\n \n x😀\tb——\n ’\n  cﬁ\n-  ccé\n+  cc\n\\ No newline at end of file\n",
+    "firstChangedLine": 7
+   }
+  },
+  {
+   "id": "random-016",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ICAJ44CACWEKwoXvrIF4w6ljwoUK",
+   "written_sha256": "4d9a679d37fa2002b48af9f59497f1cbe76082581fcec9117afd4ad2e0e99497",
+   "details": {
+    "diff": "-1 é’ ﬁ\n-2 \n 3   \t　\ta\n-4 ’x \n-5 xxéc\n+2 ﬁxéc",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,2 @@\n-é’ ﬁ\n-\n   \t　\ta\n-’x \n-xxéc\n+ﬁxéc\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-017",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-018",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "44CACiAg4oCZYgog4oCUYuKAnCAg4oCZYg==",
+   "written_sha256": "8d2eb6b4e97006b311c4095683133a661ec765da7e908efb1e175da18e80c102",
+   "details": {
+    "diff": " 1 　\n 2   ’b\n-3 \t\n-4 éx  ’b\n+3  —b“  ’b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,3 @@\n 　\n   ’b\n-\t\n-éx  ’b\n\\ No newline at end of file\n+ —b“  ’b\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-019",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-020",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-021",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-022",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YnkgIC0=",
+   "written_sha256": "6e92550b1874950911da9c367d0c186d5b7f31bf0995cbfd4e0b3579b51ef75f",
+   "details": {
+    "diff": "-1 ﬁa   —\n+1 by  -",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-ﬁa   —\n\\ No newline at end of file\n+by  -\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-023",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-024",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-025",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-026",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CmXMgeKAnA==",
+   "written_sha256": "789567c897dcb0f267de741447d8ca7a03b649f348603c20e96d57ff6731854f",
+   "details": {
+    "diff": " 1 \n-2 \n-3 b“\n+2 é“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,2 @@\n \n-\n-b“\n\\ No newline at end of file\n+é“\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-027",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-028",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "eAphYsKFCQrwn5iAeAkgZcyBCuKAlCAg4oCZwqBlzIEKePCfmIDwn5iAZcyBCu+sgQ==",
+   "written_sha256": "3c98a5469a215551e362b6fcddf042141268ecbf4324070fb9bb1c567a367362",
+   "details": {
+    "diff": " 1 x\n-2 ab“   \n-3  \t\n-4 😀x\t  \n-5 yax’ é\n+2 ab\t\n+3 😀x\t é\n+4 —  ’ é\n 6 x😀😀é\n 7 ﬁ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n x\n-ab“   \n- \t\n-😀x\t  \n-yax’ é\n+ab\t\n+😀x\t é\n+—  ’ é\n x😀😀é\n ﬁ\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-029",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "wqAgICDDqWLjgIAKICDDqSAgCg==",
+   "written_sha256": "05d7b5b1deb766fc5030385da0c2824080e7448ee35812bb0a896ec8f05fca14",
+   "details": {
+    "diff": " 1     éb　\n-2   éé😀  \n+2   é  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n     éb　\n-  éé😀  \n+  é  \n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-030",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-031",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CWEJ4oCUDQp44oCZY2XMgWNlzIENCmJ44oCZ4oCZDQplzIF4w6nCoGXMgcKgIHjwn5iAzIEgIA==",
+   "written_sha256": "45fc87d447434dcd06d1ec6e054b0137e1dae37b76b272a309314573e916a692",
+   "details": {
+    "diff": " 1 \ta\t—\n 2 x’cécé\n 3 bx’’\n-4 éxé é \n-5 ﬁb\té  \n+4 éxé é  x😀́  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n \ta\t—\n x’cécé\n bx’’\n-éxé é \n-ﬁb\té  \n\\ No newline at end of file\n+éxé é  x😀́  \n\\ No newline at end of file\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-032",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-033",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-034",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "44CA4oCceeKAmWXMgQ0KwoXvrIEgIPCfmIDigJkJZcyB44CAeQ0KIOKAlAkNCu+sgQ0KYw0K44CA",
+   "written_sha256": "6e6dbadcc22bf035ce3e238d902b24b36498966882601f7cbac3f0d945512732",
+   "details": {
+    "diff": " 1 　“y’é\n-2 ébcb\n-3 x\té　y\n+2 ﬁ  😀’\té　y\n 4  —\t\n 5 ﬁ\n 6 c\n 7 　",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n 　“y’é\n-ébcb\n-x\té　y\n+ﬁ  😀’\té　y\n  —\t\n ﬁ\n c\n 　\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-035",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-036",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-037",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-038",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-039",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-040",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-041",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-042",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-043",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-044",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-045",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-046",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-047",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ICANCiAgIAnwn5iADQp5eXliYXgNCmJ54oCZwoUNCmENCgljeQ0KwoUg8J+YgGPDqcKgZcyBZcyBeeKAmQ0K",
+   "written_sha256": "de55c1d9075551f05faac1596081013a58a9b09b62a89d9ff21711a8531da688",
+   "details": {
+    "diff": "   ...\n 3 yyybax\n 4 by’\n 5 a\n 6 \tcy\n-7  ’é\n-8 é ééy’\n+7  😀cé ééy’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -3,6 +3,5 @@\n yyybax\n by’\n a\n \tcy\n- ’é\n-é ééy’\n+ 😀cé ééy’\n",
+    "firstChangedLine": 7
+   }
+  },
+  {
+   "id": "random-048",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-049",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-050",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-051",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YgrCoOKAlAp4YuKAmeKAlAogIMKF4oCZCsOpZcyB4oCcCmXMgeKAlHjChSAgCQrigJQ=",
+   "written_sha256": "bbfbcf3dc92ed46147bff8f94dff1bf3eb651eb97f61bb3e787b8e7a71202d38",
+   "details": {
+    "diff": " 1 b\n 2  —\n 3 xb’—\n-4   ’y\n-5 　éé“\n+4   ’\n+5 éé“\n 6 é—x  \t\n 7 —",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,7 @@\n b\n  —\n xb’—\n-  ’y\n-　éé“\n+  ’\n+éé“\n é—x  \t\n —\n\\ No newline at end of file\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-052",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-053",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-054",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-055",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGMJCvCfmIAJZXnChQoK",
+   "written_sha256": "0b9c087d7861773e471ed6290317f8cafb0a529a224d3dd4964bc207627075ce",
+   "details": {
+    "diff": " 1 xc\t\n-2 😀\té\n+2 😀\tey\n+3 ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,3 @@\n xc\t\n-😀\té\n+😀\tey\n+\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-056",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-057",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-058",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-059",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "wqDwn5iAY+KAnArvrIEJIHkgIOKAnAoJZcyBYwoK4oCZY+KAnMKgICDigJQKwqBjYSAKCe+sgXkK8J+YgO+sgQ==",
+   "written_sha256": "2f25526a04fefe168833005161a93c3466b0c2efe5df61876aef388586da6468",
+   "details": {
+    "diff": " 1  😀c“\n-2 ﬁ\t ybé\n+2 ﬁ\t y  “\n 3 \téc\n 4 \n 5 ’c“   —\n 6  ca \n   ...",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,6 @@\n  😀c“\n-ﬁ\t ybé\n+ﬁ\t y  “\n \téc\n \n ’c“   —\n  ca \n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-060",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-061",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YiAgCXhjeArjgIBiYQoJICDigJQK4oCUIO+sgXnChcOpCg==",
+   "written_sha256": "5e2a901a0c343529c7485725b76a191d9d6b9865f328db58f2b24f3f09a93d68",
+   "details": {
+    "diff": " 1 b  \txcx\n 2 　ba\n-3 a😀😀\t  —\n+3 \t  —\n 4 — ﬁyé",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n b  \txcx\n 　ba\n-a😀😀\t  —\n+\t  —\n — ﬁyé\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-062",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGLCoPCfmIDigJTwn5iACsKF4oCZCmXMgeKAlArigJRjY3gJZcyBCuKAmWXMgQllwoXvrIEJCg==",
+   "written_sha256": "e8317ef7118e3418757a0898b38bda5bdf2b37dfb81fc2edaa8180ab57a82583",
+   "details": {
+    "diff": " 1 xb 😀—😀\n 2 ’\n 3 é—\n 4 —ccx\té\n-5 ’é\té\n-6 a\n-7 b\n+5 ’é\teﬁ\t",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,5 @@\n xb 😀—😀\n ’\n é—\n —ccx\té\n-’é\té\n-a\n-b\n\\ No newline at end of file\n+’é\teﬁ\t\n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "random-063",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 18 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-064",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-065",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-066",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-067",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 31 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-068",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "CmLwn5iACsKFYQrCoPCfmIDjgIAgIOOAgAoKeGF5woUgImXMgWFjeAo=",
+   "written_sha256": "6e0eff8a20d8d0c9f09ed26bfe730c25956663e42c96a35d8a9bbfb85622eb82",
+   "details": {
+    "diff": "   ...\n 2 b😀\n 3 a\n 4  😀　  　\n 5 \n-6 ’　b　\n-7 \n-8 　“\técx\n+6 xay \"éacx",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -2,7 +2,5 @@\n b😀\n a\n  😀　  　\n \n-’　b　\n-\n-　“\técx\n+xay \"éacx\n",
+    "firstChangedLine": 6
+   }
+  },
+  {
+   "id": "random-069",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-070",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-071",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 4 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-072",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ICB4ZcyBIPCfmIAJCuKAmcKgCmEgIMKgCuKAnHjChWPwn5iACiAgwoVlYuKAmXhiw6nvrIEK",
+   "written_sha256": "267687b1c5427b26aefe1e4c7f4d858a93bc489ae3eb1f4b2f05a3f81f554a39",
+   "details": {
+    "diff": " 1   xé 😀\t\n 2 ’ \n-3 a  é\n-4 　xc😀\n-5   é\n-6 ﬁabﬁ’ﬁ\n+3 a   \n+4 “xc😀\n+5   eb’xbéﬁ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,5 @@\n   xé 😀\t\n ’ \n-a  é\n-　xc😀\n-  é\n-ﬁabﬁ’ﬁ\n+a   \n+“xc😀\n+  eb’xbéﬁ\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-073",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "8J+YgA==",
+   "written_sha256": "f0443a342c5ef54783a111b51ba56c938e474c32324d90c3a60c9c8e3a37e2d9",
+   "details": {
+    "diff": "-1 “\n+1 😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-“\n\\ No newline at end of file\n+😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-074",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "8J+YgMKgefCfmIBhCsOpYiAJ4oCZYngJZcyB4oCcCuOAgArjgIB5YfCfmIAK4oCU4oCZIA==",
+   "written_sha256": "22148fca9d05f105c988ef6c81688a42049b667e1701717d5599baf589ca952a",
+   "details": {
+    "diff": " 1 😀 y😀a\n-2 éb \t’  \n-3 bb\n-4 “\n-5 \té“\n+2 éb \t’bx\té“\n 6 　\n 7 　ya😀\n 8 —’ ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,5 @@\n 😀 y😀a\n-éb \t’  \n-bb\n-“\n-\té“\n+éb \t’bx\té“\n 　\n 　ya😀\n —’ \n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-075",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-076",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-077",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-078",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "77u/wqDwn5iAYsKg8J+YgO+sgQphIOKAlOKAnArDqWHCoAp4YcKgCsKgCvCfmIAJ4oCZICBi",
+   "written_sha256": "4dda15bb4458ee87584eb79788d3a896d7d232d516cbaab12675953b81f445f7",
+   "details": {
+    "diff": " 1  😀b 😀ﬁ\n-2 a“ 😀’\n-3 éaéﬁ\t\n+2 a —“\n 4 éa \n 5 xa \n 6  \n-7 —b　 \n+6 😀\t’  b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n  😀b 😀ﬁ\n-a“ 😀’\n-éaéﬁ\t\n+a —“\n éa \n xa \n  \n-—b　 \n\\ No newline at end of file\n+😀\t’  b\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-079",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 27 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-080",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 23 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-081",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-082",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ZcyBICB48J+YgAp5Ye+sgQnChQrvrIFlzIEJwoUKw6lmaQrCoMKFwqAKYmI=",
+   "written_sha256": "4a70d94a9cca17a629f90fc671f374616797d751af1ef2ff97e32efc76fc355d",
+   "details": {
+    "diff": " 1 é  x😀\n-2 yaéé　ﬁ\n-3 b \t\t\n+2 yaﬁ\t\n 4 ﬁé\t\n-5 ﬁ\tcb\n-6 éaﬁ\n+4 éfi\n 7   \n 8 bb",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,6 @@\n é  x😀\n-yaéé　ﬁ\n-b \t\t\n+yaﬁ\t\n ﬁé\t\n-ﬁ\tcb\n-éaﬁ\n+éfi\n   \n bb\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-083",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-084",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-085",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-086",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eA==",
+   "written_sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+   "details": {
+    "diff": "-1 xc\n-2 ﬁ\n+1 x",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n-xc\n-ﬁ\n\\ No newline at end of file\n+x\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-087",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2].oldText must not be empty in src/app.txt."
+  },
+  {
+   "id": "random-088",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "IAnigJTjgIBhYQrigJkgIMOp76yBZcyBeAnigJzCoApjCuKAnOKAnArDqeKAmeKAnAp54oCZICDigJx4eApj8J+YgMKF",
+   "written_sha256": "dce504179b5e71e6cd82914fa2b1221c6137a1f6953f183c74653bd9bea1a590",
+   "details": {
+    "diff": " 1  \t—　aa\n-2 ’  éﬁéx\n-3 éa \n+2 ’  éﬁéx\t“ \n 4 c\n 5 ““\n 6 é’“\n 7 y’  “xx\n   ...",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n  \t—　aa\n-’  éﬁéx\n-éa \n+’  éﬁéx\t“ \n c\n ““\n é’“\n y’  “xx\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-089",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-090",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-091",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-092",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-093",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-094",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ICDCoHllzIHwn5iACgrChWInCmPwn5iA4oCZYw==",
+   "written_sha256": "98882bea486d82005b99a4fef0d125ca55cab14f611527c1e6426cb9d128c2d4",
+   "details": {
+    "diff": " 1    yé😀\n 2 \n-3 b’— \n-4 ’ ’\n+3 b'\n+4 c😀’c",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n    yé😀\n \n-b’— \n-’ ’\n+b'\n+c😀’c\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-095",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[2] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-096",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-097",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-098",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ZcyB8J+YgCDigJRh44CAeHnDqXjjgIBlzIEK",
+   "written_sha256": "8fbd748dd1368a8e46eef8cb30fdedbeadc6c10dd4e93e3f60f0880c6b92edc6",
+   "details": {
+    "diff": "-1 é😀 —a\n-2 é　é\n+1 é😀 —a　xyéx　é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n-é😀 —a\n-é　é\n+é😀 —a　xyéx　é\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-099",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-100",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CuKAlGXMgeOAgCBhCQphCmIKwoVjICAK",
+   "written_sha256": "a635d0a3b8220d94f81d25c10504c6b79ff191a481b72eecbba917cbd2a050a3",
+   "details": {
+    "diff": " 1 \n 2 —é　 a\t\n 3 a\n-4 ﬁ\t \n+4 b\n+5 c  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,5 @@\n \n —é　 a\t\n a\n-ﬁ\t \n+b\n+c  \n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-101",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGHigJnCoOKAmXkNCg0Kw6nigJzigJQNCmLDqQ0K4oCUIA0K44CAw6kNCg==",
+   "written_sha256": "b91cc413c267844616d101cf50b92fccf6c12503060733c196ced29a3a9963b3",
+   "details": {
+    "diff": " 1 xa’ ’y\n 2 \n 3 é“—\n-4 béa\n-5 “—y\n+4 bé\n 6 — \n 7 　é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n xa’ ’y\n \n é“—\n-béa\n-“—y\n+bé\n — \n 　é\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-102",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-103",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-104",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-105",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 17 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-106",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 25 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-107",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "76yB76yB4oCUYwpjefCfmIDChQrDqe+sgQo=",
+   "written_sha256": "1072b90149d0eab32447d0c7f4fccf097fe62e8e775f1b704d654a884a7068dc",
+   "details": {
+    "diff": " 1 ﬁﬁ—c\n-2 cy😀é\n-3 ﬁ\n+2 cy😀\n+3 éﬁ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n ﬁﬁ—c\n-cy😀é\n-ﬁ\n+cy😀\n+éﬁ\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-108",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "Y+OAgAkgIOKAnGNhIA0KICDDqe+sgSAgDQrigJTCoA0KYw0KeO+sgWXMgQ0K",
+   "written_sha256": "65238e3e971da939a7085590275546b6c9543cce1240bb5c8321fbb430b126d3",
+   "details": {
+    "diff": "-1 c　\taéy\n-2  　\n-3 ﬁa \n+1 c　\t  “ca \n 4   éﬁ  \n 5 — \n 6 c\n-7 xbé   y\n-8 é\n+5 xﬁé",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,5 @@\n-c　\taéy\n- 　\n-ﬁa \n+c　\t  “ca \n   éﬁ  \n — \n c\n-xbé   y\n-é\n+xﬁé\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-109",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-110",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "DQphw6knICDigJwNCsOpDQrCoGINCmXMgQ0K8J+YgA==",
+   "written_sha256": "09e48add486e1000a2e557a1cc4dbeaf954635a9d20f674ca78e10bbab5f1674",
+   "details": {
+    "diff": " 1 \n-2 aé’\n-3 ba😀\n-4 x’é\n+2 aé'  “\n+3 é\n 5  b\n 6 é\n 7 😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n \n-aé’\n-ba😀\n-x’é\n+aé'  “\n+é\n  b\n é\n 😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-111",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-112",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CsKFZcyBCgp5w6nwn5iA",
+   "written_sha256": "a7e57b769c618fe5da8d42d88b38756b39759c9a14e2b108f7c3cc9814456d3d",
+   "details": {
+    "diff": " 1 \n 2 é\n-3 \t’　ax\n 4 \n 5 yé😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n \n é\n-\t’　ax\n \n yé😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-113",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "w6nigJxjICBlzIHigJkKwqDvrIHChQ==",
+   "written_sha256": "b3072ff8088791ea3609e2377d840e6db9590d1d2364214823e003349b6c7d1b",
+   "details": {
+    "diff": "-1 é“c—ﬁ\n+1 é“c  é’\n+2  ﬁ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,2 @@\n-é“c—ﬁ\n\\ No newline at end of file\n+é“c  é’\n+ ﬁ\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-114",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0].oldText must not be empty in src/app.txt."
+  },
+  {
+   "id": "random-115",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-116",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 14 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-117",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "76yB4oCUwoXjgIAJYgoK8J+YgMOpYu+sgQpiYcKgeAo=",
+   "written_sha256": "08ba6205b60206278d39f83720a0569b84b8699179df9c994675306a81ecb9c8",
+   "details": {
+    "diff": "-1 ﬁ—　b\n-2  c😀éb\n+1 ﬁ—　\tb\n 3 \n 4 😀ébﬁ\n 5 ba x",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n-ﬁ—　b\n- c😀éb\n+ﬁ—　\tb\n \n 😀ébﬁ\n ba x\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-118",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-119",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-120",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-121",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 9 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-122",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 4 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-123",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "w6lhCgog4oCZCgl4ZcyBCgrigJRjw6nwn5iAICA=",
+   "written_sha256": "21e128c1f5cc92ababbd4633f58cdd4797f42e45038c10a377fdf735846bd8e5",
+   "details": {
+    "diff": " 1 éa\n 2 \n-3    \n-4 —“\n-5 ﬁ\n+3  ’\n 6 \txé\n 7 \n 8 —cé😀  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,6 @@\n éa\n \n-   \n-—“\n-ﬁ\n+ ’\n \txé\n \n —cé😀  \n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-124",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCZYvCfmIAKZcyBwqBh",
+   "written_sha256": "368f7efa7ebb8124c9cfcfe8475c0063d9d470873307cf6de6f2d1dca78b6b61",
+   "details": {
+    "diff": " 1 ’b😀\n-2 é—　　\n+2 é a",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n ’b😀\n-é—　　\n+é a\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-125",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "DQoJ4oCU4oCU44CA4oCZDQrjgIANCuKAlA0K8J+YgOKAnA0KwqBiZcyBeeKAmcOp4oCc",
+   "written_sha256": "cbac4898344fd15ef9683a7613ff7dcb7688271addf8968df269a6825e57f697",
+   "details": {
+    "diff": "   ...\n 2 \t——　’\n 3 　\n 4 —\n 5 😀“\n-6 y—  é“\n+6  béy’é“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -2,5 +2,5 @@\n \t——　’\n 　\n —\n 😀“\n-y—  é“\n\\ No newline at end of file\n+ béy’é“\n\\ No newline at end of file\n",
+    "firstChangedLine": 6
+   }
+  },
+  {
+   "id": "random-126",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-127",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-128",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "77u/4oCcZcyB4oCcIGXMgQrwn5iA76yBCuOAgMKFCuKAlA==",
+   "written_sha256": "8d45c7d6af532bbefa89aeb1e0443fd0bad05792559789bf39a0797963615a18",
+   "details": {
+    "diff": " 1 “é“ é\n-2 😀\n-3 ’ﬁéy“\n-4 \n+2 😀ﬁ\n+3 　\n 5 —",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n “é“ é\n-😀\n-’ﬁéy“\n-\n+😀ﬁ\n+　\n —\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-129",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-130",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-131",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-132",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-133",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-134",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 13 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-135",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ICAKCnnwn5iAw6nMgWIK4oCZ",
+   "written_sha256": "5cf41e916a1b51f3a95dbf635f55c57a66217083fb192ead2c4ebcea736b9aa9",
+   "details": {
+    "diff": " 1   \n 2 \n-3 yéb\n+3 y😀é́b\n 4 ’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n   \n \n-yéb\n+y😀é́b\n ’\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-136",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-137",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CeKAmcKF",
+   "written_sha256": "3ad96d28b97e89039e25493631c9e166af583e89465888382982f97b9411ac73",
+   "details": {
+    "diff": "-1 “a\n+1 \t’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-“a\n\\ No newline at end of file\n+\t’\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-138",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-139",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-140",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-141",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 11 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-142",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-143",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-144",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-145",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-146",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-147",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-148",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-149",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-150",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-151",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-152",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "ICB5wqDigJkK76yB76yBCsyBwqAKIAp44oCU4oCZ76yBCg==",
+   "written_sha256": "c54ba991959f2f6d753852f3eb6f226aefc8734d4109806768d0bd79f1f3dd16",
+   "details": {
+    "diff": "-1   y😀x\t\n-2 a—’\n-3 é \n+1   y ’\n+2 ﬁﬁ\n+3 ́ \n 4  \n 5 x—’ﬁ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,5 @@\n-  y😀x\t\n-a—’\n-é \n+  y ’\n+ﬁﬁ\n+́ \n  \n x—’ﬁ\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-153",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-154",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-155",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 15 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-156",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-157",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "8J+YgCAg4oCZIMOpeOOAgA0Kw6nvrIHigJw=",
+   "written_sha256": "a5791c08836b1129af6e8551d69f2ec3d8c429cfe9025f90c2ce3dd41a95428b",
+   "details": {
+    "diff": "-1 😀😀  éx　\n-2 éﬁaé\n+1 😀  ’ éx　\n+2 éﬁ“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-😀😀  éx　\n-éﬁaé\n+😀  ’ éx　\n+éﬁ“\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-158",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-159",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-160",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 42 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-161",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 5 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-162",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-163",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-164",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find the exact text in src/app.txt. The old text must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-165",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-166",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Y+OAgMKgY+KAlOOAgAp5ZcyBCsKg4oCUCmHigJzDqSAJYWHigJR44oCUefCfmIAKwoXvrIHwn5iAw6nvrIHCoA==",
+   "written_sha256": "fa281dcd084397d92199ea8c382d905bd8d8069c0ecdd5a2c63e66a8ede29bb0",
+   "details": {
+    "diff": " 1 c　 c—　\n 2 yé\n 3  —\n-4 a“é \t\n-5 \n-6 a—x—y😀\n+4 a“é \taa—x—y😀\n 7 ﬁ😀éﬁ ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,5 @@\n c　 c—　\n yé\n  —\n-a“é \t\n-\n-a—x—y😀\n+a“é \taa—x—y😀\n ﬁ😀éﬁ \n\\ No newline at end of file\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-167",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-168",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "wqAgIMKFeQrjgIDjgIDjgIBlzIEJYQp4ICDigJzvrIHigJkgIGPwn5iACvCfmIBjwqDigJljCu+sgeOAgCAK8J+YgGNiCg==",
+   "written_sha256": "ab0a1fc6d2eb6aed5607aae7712204631e84d052c185d482bb309187acab65f6",
+   "details": {
+    "diff": " 1    y\n 2 　　　é\ta\n-3 x  \n-4 xﬁ  c😀\n+3 x  “ﬁ’  c😀\n 5 😀c ’c\n 6 ﬁ　 \n 7 😀cb",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n    y\n 　　　é\ta\n-x  \n-xﬁ  c😀\n+x  “ﬁ’  c😀\n 😀c ’c\n ﬁ　 \n 😀cb\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-169",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-170",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-171",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CSAgwoViCcOp4oCcICAK4oCUwoU=",
+   "written_sha256": "c8701480deeccf60aa64e2488c8b0bdd4cf0d55576abc97420ffb0d5faec56ac",
+   "details": {
+    "diff": "-1 \t  \n-2 \n-3 　—é\n+1 \t  b\té“  \n 4 —",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,2 @@\n-\t  \n-\n-　—é\n+\t  b\té“  \n —\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-172",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGPjgIANCmIgIMKFDQo=",
+   "written_sha256": "fe6f897669239fb99fcc17cbf825314eb9e6fe68b49f4b5fececfd970a933c01",
+   "details": {
+    "diff": " 1 xc　\n 2 b  \n-3 y",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,2 @@\n xc　\n b  \n-y\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-173",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-174",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 5 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-175",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-176",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "8J+YgMKFeOKAmQrChe+sgQoKYeOAgOKAlHjCoAoJ44CAw6k=",
+   "written_sha256": "3964cde110c0f676185b62d230af2d1f3e4efd38f5bf6a6727eccd8d6c03f712",
+   "details": {
+    "diff": " 1 😀x’\n 2 ﬁ\n 3 \n 4 a　—x \n-5 \t　\n-6 c\téb\n+5 \t　é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,5 @@\n 😀x’\n ﬁ\n \n a　—x \n-\t　\n-c\téb\n+\t　é\n\\ No newline at end of file\n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "random-177",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-178",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "w6kNCg0KYQ0KDQpmaSDwn5iADQotCXg=",
+   "written_sha256": "2581060a8e68e75a6478151f73b24988a63ac2aa683523b3359796127bd3bc94",
+   "details": {
+    "diff": " 1 é\n 2 \n 3 a\n 4 \n-5 ﬁ ’　\n-6 \n-7  y\n-8 —😀xﬁ\n+5 fi 😀\n+6 -\tx",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,6 @@\n é\n \n a\n \n-ﬁ ’　\n-\n- y\n-—😀xﬁ\n+fi 😀\n+-\tx\n\\ No newline at end of file\n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "random-179",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CsKFCcKg76yB8J+YgGMKYXjigJRiCgoJzIHvrIEgIAogICBlzIE=",
+   "written_sha256": "7b5fc6aaabfe089019f49b341845c1c59c5c7105406336433b1d2df97e438550",
+   "details": {
+    "diff": " 1 \n 2 \t ﬁ😀c\n 3 ax—b\n 4 \n-5 “éﬁ  \n+5 \t́ﬁ  \n 6    é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,6 @@\n \n \t ﬁ😀c\n ax—b\n \n-“éﬁ  \n+\t́ﬁ  \n    é\n\\ No newline at end of file\n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "random-180",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-181",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-182",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-183",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "8J+YgGPigJTigJkgCXjigJzwn5iA4oCUICAgIA==",
+   "written_sha256": "d3899a8bad91fe118b20c80ebb6e5e6af1b9de4f672fec2b18aa929ace54ced5",
+   "details": {
+    "diff": "-1 😀cbb“ \n-2 écx“\n-3 ﬁ\n-4 😀    \n+1 😀c—’ \tx“😀—    ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,1 @@\n-😀cbb“ \n-écx“\n-ﬁ\n-😀    \n\\ No newline at end of file\n+😀c—’ \tx“😀—    \n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-184",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-185",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-186",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-187",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[2] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-188",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "DQoNCiBlzIENCuKAlMOpeXggIMOpDQpieHkNCuKAmXjigJkgIA0K",
+   "written_sha256": "afd614b67e9f0a391a40446a8055a90d1791d7c41de90c59a4118a36a6f29fc2",
+   "details": {
+    "diff": " 1 \n 2 \n 3  é\n 4 —éyx  é\n-5 b’　\n-6 by’xy\n+5 bxy\n 7 ’x’  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n \n \n  é\n —éyx  é\n-b’　\n-by’xy\n+bxy\n ’x’  \n",
+    "firstChangedLine": 5
+   }
+  },
+  {
+   "id": "random-189",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ZcyB4oCceOOAgA==",
+   "written_sha256": "ed8369cd30764723e9e6a615ffa53cd24e58efcfd3508da61b1fb9e03cc2c3b5",
+   "details": {
+    "diff": "-1 é\n+1 é“x　",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-é\n+é“x　\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-190",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "77u/CmMgIAphIGFh8J+YgA==",
+   "written_sha256": "34914a8fa7bfe2ab188472f4ae1f2ea41f5e0b5c9a5ebac4846d43f897c6fb0b",
+   "details": {
+    "diff": " 1 \n 2 c  \n-3 a aa \t\n-4 “\n-5 “\n+3 a aa😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,3 @@\n \n c  \n-a aa \t\n-“\n-“\n\\ No newline at end of file\n+a aa😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-191",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-192",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-193",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-194",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-195",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-196",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-197",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "76yB4oCcYeKAmQli4oCcICDigJnjgIAJ4oCZ4oCU4oCZ",
+   "written_sha256": "4add42823538bb44634eb7f428e41415d1f5ff4331243b54ec48a3c0a8a5b193",
+   "details": {
+    "diff": "-1 ﬁ“a’\t\n-2 x\n-3 \t  é\n-4 \t’—’\n+1 ﬁ“a’\tb“  ’　\t’—’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,1 @@\n-ﬁ“a’\t\n-x\n-\t  é\n-\t’—’\n\\ No newline at end of file\n+ﬁ“a’\tb“  ’　\t’—’\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-198",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-199",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-200",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "CcOp4oCUCQkgDQogZcyBwoUNCmXMgQljDQp5w6nvrIHvrIFhCQ==",
+   "written_sha256": "34fed541d6356a8642897523f80c686d92e9ef548d2c920e3bdd030d970d0ae8",
+   "details": {
+    "diff": " 1 \té—\t\t \n-2 　xﬁ’\n-3 \n+2  é\n 4 é\tc\n-5 y\n-6 \n+4 yéﬁﬁa\t",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,4 @@\n \té—\t\t \n-　xﬁ’\n-\n+ é\n é\tc\n-y\n-\n+yéﬁﬁa\t\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-201",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "wqANCuKAmcOp4oCUDQoiYQ0K",
+   "written_sha256": "43e41a9eccf94c370c8e4b0723d49128d750f91474505ab059b592e3b4978cb9",
+   "details": {
+    "diff": " 1  \n 2 ’é—\n-3 “aa—\n-4 \txy　\n+3 \"a",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,3 @@\n  \n ’é—\n-“aa—\n-\txy　\n+\"a\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-202",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-203",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-204",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ZcyBYgogeHjigJRiCeKAnAp4Cgk=",
+   "written_sha256": "f22336ba169169a68fecb6a0ef99b294b32fe67e90f189db7536aeca2102709a",
+   "details": {
+    "diff": " 1 éb\n-2  xx  é“\n+2  xx—b\t“\n 3 x\n-4 \t\n-5 a　\n+4 \t",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n éb\n- xx  é“\n+ xx—b\t“\n x\n-\t\n-a　\n+\t\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-205",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-206",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 5 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-207",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-208",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 4 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-209",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCUCSB4",
+   "written_sha256": "eafbd3d30e020c198bcf115ca27c6824c879ca61458ccc578241adfd92707681",
+   "details": {
+    "diff": "-1 —\téb“\n+1 —\t x",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-—\téb“\n\\ No newline at end of file\n+—\t x\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-210",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-211",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ICBhDQp5Le+sge+sgeKAlMOpCQ0KeeKAmfCfmIANCifDqcOpJ8KF44CAwqBjZmkNCnl5ICANCg==",
+   "written_sha256": "d13e6f217c80f721c29f9d5082ddb37be098794116fcec9303cffdbc72e8025a",
+   "details": {
+    "diff": " 1   a\n-2 y—aﬁ \n-3 by\t\n+2 y-ﬁﬁ—é\t\n 4 y’😀\n-5 ’éé’ﬁ\n-6 é“cﬁ\n+4 'éé'　 cfi\n 7 yy  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,5 @@\n   a\n-y—aﬁ \n-by\t\n+y-ﬁﬁ—é\t\n y’😀\n-’éé’ﬁ\n-é“cﬁ\n+'éé'　 cfi\n yy  \n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-212",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 31 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-213",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "76yB44CAZcyB8J+YgCDDqQ0Kw6njgIBlzIENCnnChWHwn5iADQp576yBwqBlzIF5woU=",
+   "written_sha256": "79f858a0bff0ffaf54cfa3508531025e9efaf947eb6d61936a7137222f318063",
+   "details": {
+    "diff": " 1 ﬁ　é😀 é\n-2 é\n-3 \n-4   xca😀\n+2 é　é\n+3 ya😀\n 5 yﬁ éy",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,4 @@\n ﬁ　é😀 é\n-é\n-\n-  xca😀\n+é　é\n+ya😀\n yﬁ éy\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-214",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "ICB4YeKAlHjvrIHigJwg8J+YgA==",
+   "written_sha256": "a1e9a88627c58a91d5ce33eb70db8d448d1ee3da47a286b8bd6a4484dbbf1024",
+   "details": {
+    "diff": "-1   x 😀ﬁ\n+1   xa—xﬁ“ 😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-  x 😀ﬁ\n+  xa—xﬁ“ 😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-215",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-216",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CQkJYvCfmIAKICAJ44CAICDjgIAKYsKFwqAgCg==",
+   "written_sha256": "262e08d348d3d02d238bb1dba8dd02aef496a173feeb02d9e95879838228add1",
+   "details": {
+    "diff": " 1 \t\t\tb😀\n 2   \t　  　\n-3 xé\n+3 b  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n \t\t\tb😀\n   \t　  　\n-xé\n+b  \n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-217",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-218",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-219",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-220",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWPDqeKAlAph4oCc4oCcCu+sgWEgw6kKCnliCsKFY+KAmcOpYeKAnAo=",
+   "written_sha256": "00dfd248e8873dd9ae7fb46c5df441e0aa0e445254854b5bb65780fb11422a14",
+   "details": {
+    "diff": "   ...\n 2 a““\n 3 ﬁa é\n 4 \n 5 yb\n-6 c “\n-7 éa“\n+6 c’éa“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -2,6 +2,5 @@\n a““\n ﬁa é\n \n yb\n-c “\n-éa“\n+c’éa“\n",
+    "firstChangedLine": 6
+   }
+  },
+  {
+   "id": "random-221",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-222",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "76yB4oCcCg==",
+   "written_sha256": "60e4e2aad0688214e316c0482f0e83fc8b0e31543cabd77c81dd5b7a6cd160d2",
+   "details": {
+    "diff": "-1 ﬁ“  é  \n+1 ﬁ“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-ﬁ“  é  \n+ﬁ“\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-223",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "woVhCQ0KwoVh76yBDQrigJnDqfCfmIDCheKAnA0K",
+   "written_sha256": "d646b6d32e6ec7e3ad9f720dbe37a8d5667f860e7348f5fb09e39cb7beb5cbb1",
+   "details": {
+    "diff": " 1 a\t\n-2 aéca\n+2 aﬁ\n 3 ’é😀“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,3 @@\n a\t\n-aéca\n+aﬁ\n ’é😀“\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-224",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-225",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-226",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 5 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-227",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-228",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-229",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "w6l4CQ0KZmkgYwnigJkJwoV4ZcyBYWXMgQnvrIF4DQplzIFlzIHigJllzIFiDQo=",
+   "written_sha256": "a20b13cff9a3194886d3635bc18037ac94b064ec344d7c45e294f2665c00c769",
+   "details": {
+    "diff": " 1 éx\t\n-2 ﬁ\n-3 “ﬁ  “\n-4 ﬁy\n-5 \n-6 xx\n+2 fi c\t’\txéaé\tﬁx\n 7 éé’éb",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,3 @@\n éx\t\n-ﬁ\n-“ﬁ  “\n-ﬁy\n-\n-xx\n+fi c\t’\txéaé\tﬁx\n éé’éb\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-230",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "ICAg4oCZwqDDqWMK4oCc4oCc4oCZwoXigJQKYWXMgeKAmQrjgIAK",
+   "written_sha256": "f5ea68b710d5c96d389531f55bb9b9ddd630e62538396b9cccb7a7c43350aff9",
+   "details": {
+    "diff": " 1    ’ éc\n-2 “\n-3 éyaé’\n+2 ““’—\n+3 aé’\n 4 　",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n    ’ éc\n-“\n-éyaé’\n+““’—\n+aé’\n 　\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-231",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGJjYyBj44CA",
+   "written_sha256": "712e6750f6c638343bac9abc82f6ba449a0d6e4330f6592aad9336ad08ce6d14",
+   "details": {
+    "diff": "-1 xbcc’\n+1 xbcc c　",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-xbcc’\n\\ No newline at end of file\n+xbcc c　\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-232",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-233",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-234",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-235",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-236",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCZee+sgQrigJTjgIDigJwJ8J+YgAo=",
+   "written_sha256": "d5a63f1667c7f033ede9c45bea835c38051b8138a081738ffa4b108ee8ddfaab",
+   "details": {
+    "diff": " 1 ’yﬁ\n-2 —　 ﬁx\n-3 é\n-4 \t😀\n+2 —　“\t😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,2 @@\n ’yﬁ\n-—　 ﬁx\n-é\n-\t😀\n+—　“\t😀\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-237",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-238",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "DQrigJx5ZcyBDQplzIF4Y2INCuKAnGXMge+sge+sgSAg4oCUDQphYQ0K4oCc76yB8J+YgOKAnA0KDQrigJk=",
+   "written_sha256": "02c42845f3968276706026018ee51fb310f1c50c7307c2f0744a6c1a9bfcb53d",
+   "details": {
+    "diff": " 1 \n 2 “yé\n 3 éxcb\n-4 “’—😀c—\n+4 “éﬁﬁ  —\n 5 aa\n 6 “ﬁ😀“\n 7 \n 8 ’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,8 @@\n \n “yé\n éxcb\n-“’—😀c—\n+“éﬁﬁ  —\n aa\n “ﬁ😀“\n \n ’\n\\ No newline at end of file\n",
+    "firstChangedLine": 4
+   }
+  },
+  {
+   "id": "random-239",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[2] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-240",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eHnigJRlzIFjICAK4oCU4oCZCg==",
+   "written_sha256": "cbe113fbf3e9b72e39acc15838f4d63e41d92144ba35750ffec9a2236f1ea78a",
+   "details": {
+    "diff": " 1 xy—éc  \n 2 —’\n-3  ’\n-4 é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,2 @@\n xy—éc  \n —’\n- ’\n-é\n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-241",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-242",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-243",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 8 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-244",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "eAnigJTChXnCheKAmQrDqSDDqSB5CmXMgQo=",
+   "written_sha256": "5e3c31433138e56da189619fa8603b5972671d9b8955b7ca35d7b8167d379023",
+   "details": {
+    "diff": "-1 xcy’\n-2 éy —\n-3 \n-4 \n-5 😀“\n-6 —　\n-7  é y\n+1 x\t—y’\n+2 é é y\n 8 é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,3 @@\n-xcy’\n-éy —\n-\n-\n-😀“\n-—　\n- é y\n+x\t—y’\n+é é y\n é\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-245",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-246",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eGUJDQo=",
+   "written_sha256": "0f39c6d0b009454c11e0edcdbdfd3d234e73b5d69f46bfb00f0a68ce3ee656df",
+   "details": {
+    "diff": "-1 xé\t—\n+1 xe\t",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-xé\t—\n+xe\t\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-247",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 16 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-248",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-249",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 26 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-250",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-251",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "77u/w6ljICBlzIEKeGPCoAl4CeOAgOKAmWMKICDigJQK4oCc4oCZCmHigJkgIA==",
+   "written_sha256": "306029a5268050e8acde62c2e70b1b0166547e88ca02b49bae4d0afcd29b6f24",
+   "details": {
+    "diff": " 1 éc  é\n-2 xc \tx\t\n-3  y\n-4 ’c\n-5   cé\n-6 \n-7 —’\n+2 xc \tx\t　’c\n+3   —\n+4 “’\n 8 a’  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,8 +1,5 @@\n éc  é\n-xc \tx\t\n- y\n-’c\n-  cé\n-\n-—’\n+xc \tx\t　’c\n+  —\n+“’\n a’  \n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-252",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "YWHigJzigJnjgIDvrIENCsOpYXlieeKAnHlj76yB8J+YgA0KwoV54oCZ8J+YgOKAnA0KIsKFY++sgSB4w6kNCuKAmeKAlOKAlMKF8J+YgMOpDQrigJTwn5iAefCfmIA=",
+   "written_sha256": "a2b6c7233a6f86d3bc031b1f9fb27c9952f87a1fca41b5ad58a685515aee59b0",
+   "details": {
+    "diff": " 1 aa“’　ﬁ\n-2 éayb—\n-3 😀\n+2 éayby“ycﬁ😀\n 4 y’😀“\n-5 “c xé\n+4 \"cﬁ xé\n 6 ’——😀é\n 7 —😀y😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,7 +1,6 @@\n aa“’　ﬁ\n-éayb—\n-😀\n+éayby“ycﬁ😀\n y’😀“\n-“c xé\n+\"cﬁ xé\n ’——😀é\n —😀y😀\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-253",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "eO+sgeKAlHli4oCUCnkKCuKAmfCfmIDigJQJ4oCZ",
+   "written_sha256": "f1ebcfd32985ccff1a13a579e3b721c5d76e200be0eb57631963d82dc222727a",
+   "details": {
+    "diff": "-1 xﬁ—y“\n+1 xﬁ—yb—\n 2 y\n 3 \n 4 ’😀—\t’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,4 @@\n-xﬁ—y“\n+xﬁ—yb—\n y\n \n ’😀—\t’\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-254",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 4 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-255",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "w6nvrIFi4oCZDQrCoPCfmIAgDQoJZcyBwqAg",
+   "written_sha256": "a62bcf80f44e51beff5970c30a8e929e242ea8520931b5be54edbe6abc403dfe",
+   "details": {
+    "diff": " 1 éﬁb’\n 2  😀 \n-3 \t😀\n-4 \n-5 ﬁ\n+3 \té  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,3 @@\n éﬁb’\n  😀 \n-\t😀\n-\n-ﬁ\n+\té  \n\\ No newline at end of file\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-256",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "DQoJDQrigJRi76yBIA0KYg0KZcyB4oCUYw0KYmXMgWEgIA==",
+   "written_sha256": "244da7c51da95542b49f9df4ce991dc0f0cf8c4a25a12ca4aec5a3dce5e8d096",
+   "details": {
+    "diff": "   ...\n 2 \t\n 3 —bﬁ \n 4 b\n 5 é—c\n-6 béa\n-7 c\n+6 béa  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -2,6 +2,5 @@\n \t\n —bﬁ \n b\n é—c\n-béa\n-c\n\\ No newline at end of file\n+béa  \n\\ No newline at end of file\n",
+    "firstChangedLine": 6
+   }
+  },
+  {
+   "id": "random-257",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-258",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Y+OAgGIK",
+   "written_sha256": "d0f20fd05c3855d294bb4b4cf80a3d24bb543c97da7dd07ca3eddfe8b8e02e01",
+   "details": {
+    "diff": "-1 c　　　 —\n+1 c　b",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-c　　　 —\n+c　b\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-259",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YWEg",
+   "written_sha256": "8cfb212c3275b2b596b4f61c6057b07599df5ff5c33ed8c1aacde07eff26c7ed",
+   "details": {
+    "diff": "-1 a\n-2 y\n+1 aa ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n-a\n-y\n\\ No newline at end of file\n+aa \n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-260",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-261",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "YuKAnAnwn5iAIA0Kw6lhZcyB8J+YgCAgDQrjgIBlzIF4eHgNCuKAnGMJCcKFDQrChWHwn5iAZcyBDQrvrIENCmLigJTwn5iAwoViYvCfmIANCg==",
+   "written_sha256": "8adaae6ce20333c11d705c6281687ff80f13a9fec438db9423c265ce82044be7",
+   "details": {
+    "diff": "   ...\n 3 　éxxx\n 4 “c\t\t\n 5 a😀é\n 6 ﬁ\n-7 —“bb😀\n+7 b—😀bb😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -3,5 +3,5 @@\n 　éxxx\n “c\t\t\n a😀é\n ﬁ\n-—“bb😀\n+b—😀bb😀\n",
+    "firstChangedLine": 7
+   }
+  },
+  {
+   "id": "random-262",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-263",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 33 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-264",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "8J+YgCAgYXl54oCZCWXMgXjMge+sgeKAnCANCiBjDQpiY2PigJTChQ0KYsKg4oCcecOpYQ0K",
+   "written_sha256": "b2efc8ffc624463f3d54ecf106373571ba071d1427d2f4994513c6f1ec33d230",
+   "details": {
+    "diff": "-1 😀  ay\n-2 —\té\n-3 —éﬁ“ \n+1 😀  ayy’\téx́ﬁ“ \n 4  c\n 5 bcc—\n 6 b “yéa",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,4 @@\n-😀  ay\n-—\té\n-—éﬁ“ \n+😀  ayy’\téx́ﬁ“ \n  c\n bcc—\n b “yéa\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-265",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1].oldText must not be empty in src/app.txt."
+  },
+  {
+   "id": "random-266",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of the text in src/app.txt. The text must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-267",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCZeWIgCiAgeMOp4oCZCiJjeCB5Cu+sgSAg44CAYQo=",
+   "written_sha256": "9ee88ba6b77625fa8afc7b787d13432f1a381b92ca70c5dfc22182d09314ccf7",
+   "details": {
+    "diff": " 1 ’yb \n 2   xé’\n-3 “cx \n-4 c\t\n-5 — y\n+3 \"cx y\n 6 ﬁ  　a",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,4 @@\n ’yb \n   xé’\n-“cx \n-c\t\n-— y\n+\"cx y\n ﬁ  　a\n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-268",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 6 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-269",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[2] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-270",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-271",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-272",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "CfCfmIB44oCZw6nwn5iAZcyBZcyBCmHDqcOpYQogw6kKZcyBCnnwn5iAYwrDqWM=",
+   "written_sha256": "39d60dd8a46d259017d420310720542fee6fa03978023f40eae92d30dcccbd4f",
+   "details": {
+    "diff": "-1 \t😀xc“😀\n+1 \t😀x’é😀éé\n 2 aééa\n 3  é\n 4 é\n-5 y😀c\n-6 é—ax\n+5 y😀c\n+6 éc",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,6 +1,6 @@\n-\t😀xc“😀\n+\t😀x’é😀éé\n aééa\n  é\n é\n-y😀c\n-é—ax\n\\ No newline at end of file\n+y😀c\n+éc\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-273",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "woViCg==",
+   "written_sha256": "4ccae84a4778e758460f2720a419edec237a2c9acf7201c55662204561ffba37",
+   "details": {
+    "diff": " 1 b\n-2 \t“’",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,1 @@\n b\n-\t“’\n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-274",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-275",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 3 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-276",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 19 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-277",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[0] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-278",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[2] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-279",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-280",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-281",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 22 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-282",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[2] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-283",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[0] and edits[1] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-284",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 3 block(s) in src/app.txt.",
+   "written_b64": "77u/8J+YgGJlzIHCoOKAnGF4ZcyB76yB8J+YgMKFDQo=",
+   "written_sha256": "57bc7d817b2ccb25c7e3882344d8f97c60e3239269c1367888c49cdd77d583f1",
+   "details": {
+    "diff": "-1 cyéc \n-2 　\n-3  \n-4 ﬁ😀’\n+1 😀bé “axéﬁ😀",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,4 +1,1 @@\n-cyéc \n-　\n- \n-ﬁ😀’\n+😀bé “axéﬁ😀\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-285",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[2] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-286",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "Y+KAnA==",
+   "written_sha256": "9790ac4caeffbb907a229b989f59a66a5dc1754c815ec671e79ddce6b9b6c34f",
+   "details": {
+    "diff": "-1 c\n+1 c“",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-c\n+c“\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-287",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "CiA=",
+   "written_sha256": "5d3d321750d18db9f9ca66e7b1ab099da838fb9de1b9d6b44d9ddb44f21cac00",
+   "details": {
+    "diff": " 1 \n-2   “é\n+2  ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n \n-  “é\n\\ No newline at end of file\n+ \n\\ No newline at end of file\n",
+    "firstChangedLine": 2
+   }
+  },
+  {
+   "id": "random-288",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-289",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "woXChWMgIA0Kw6kgZcyBDQo=",
+   "written_sha256": "db46fc94da17770759aa4a29ff74d6c126df74a2f4af096c06eb9828dcf647fc",
+   "details": {
+    "diff": "-1 ca’\n-2   \n+1 c  \n 3 é é",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,3 +1,2 @@\n-ca’\n-  \n+c  \n é é\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-290",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "44CA8J+YgOKAmQ0KY2ENCg==",
+   "written_sha256": "2f4dd479da0a301dec6e52db0b5b03c8284972b4a89acfe7ad814dcb9ddafb9e",
+   "details": {
+    "diff": "-1   　\n-2 —😀yca\n+1 　😀’\n+2 ca",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,2 +1,2 @@\n-  　\n-—😀yca\n+　😀’\n+ca\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-291",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[0] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-292",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 13 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-293",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 2 block(s) in src/app.txt.",
+   "written_b64": "wqDDqeKAmQnigJwKY2HigJnigJRlzIEgCi0JIGJ4YwrChQoK",
+   "written_sha256": "4a43b63ecb0bc75c81d266b4b6e05e6d195391c892761efb3dba8c434f60be9e",
+   "details": {
+    "diff": " 1  é’\t“\n 2 ca’—é \n-3 —\tyb \n-4 ’\n+3 -\t bxc\n+4 \n 5 ",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,5 +1,5 @@\n  é’\t“\n ca’—é \n-—\tyb \n-’\n+-\t bxc\n+\n \n",
+    "firstChangedLine": 3
+   }
+  },
+  {
+   "id": "random-294",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 7 occurrences of edits[1] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-295",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Could not find edits[1] in src/app.txt. The oldText must match exactly including all whitespace and newlines."
+  },
+  {
+   "id": "random-296",
+   "kind": "edit",
+   "is_error": false,
+   "text": "Successfully replaced 1 block(s) in src/app.txt.",
+   "written_b64": "4oCZICBiY++sgXg=",
+   "written_sha256": "1c64bb02e62b4b0592d26f24a32f76c7a0b957ba1bb91eed2da53f9518988523",
+   "details": {
+    "diff": "-1 ’  b’’\n+1 ’  bcﬁx",
+    "patch": "--- src/app.txt\n+++ src/app.txt\n@@ -1,1 +1,1 @@\n-’  b’’\n+’  bcﬁx\n\\ No newline at end of file\n",
+    "firstChangedLine": 1
+   }
+  },
+  {
+   "id": "random-297",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  },
+  {
+   "id": "random-298",
+   "kind": "edit",
+   "is_error": true,
+   "text": "edits[1] and edits[2] overlap in src/app.txt. Merge them into one edit or target disjoint regions."
+  },
+  {
+   "id": "random-299",
+   "kind": "edit",
+   "is_error": true,
+   "text": "Found 2 occurrences of edits[0] in src/app.txt. Each oldText must be unique. Please provide more context to make it unique."
+  }
+ ]
+}
