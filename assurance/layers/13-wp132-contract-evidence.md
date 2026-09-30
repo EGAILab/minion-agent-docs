@@ -108,3 +108,19 @@ Both are accepted.
 ### Dependency update
 
 `EXEC-009` is now CERTIFIED_CLOSED (`minion-agent#79`; closure record `12-wp12e3-closure.md`). The final-`edit`-certification dependency above is satisfied.
+
+## Remediation 2: `L13-WP132-R004` refinement
+
+**Trigger.** Codex's targeted re-review (`minion-agent-docs#188`) closed `R005`, accepted the `R004` entry correction, and kept `R004` open on one missing assertion.
+
+**The gap.** `builtin-mutation-queue-released-after-error-and-after-abort` said that B answers only after acquiring the lock, but no assertion ordered `result B` against A's held write. A queue-wait abort listener that rejects B early passed every existing assertion. Codex's probe (`data/13-wp132-r004-review/r45_queue_probe.mjs`) shows this against the pinned queue source.
+
+**Accepted and corrected.** Added the gate-forced order pair `["p write_file f.txt #1 permission_denied", "result B"]`. A's write is held until the release step, so the pair is forced in a correct implementation.
+
+**Independent replay by Claude.** The probe in `node:22.15.1-alpine` against pinned Pi `b7bb00b9` gives:
+- pinned queue: A's write settles, then `result A`, then `result B`;
+- abort-race mutant: `result B` comes before A's write settles.
+
+The new assertion therefore passes on the pinned queue and fails on the mutant.
+
+**Scope.** This is the only change: one scenario document (via `make_scenarios.py`). All 26 documents validate. The authority outputs are unchanged.

@@ -479,6 +479,9 @@ def queue_docs():
          "expect": {"results": {"A": err(f"Cannot write f.txt: {CAUSE['permission_denied']}"), "B": err(ABORTED),
                                 "C": ok(W.format(1, "sub/../f.txt"))},
                     "order": [["p canonical_path ./f.txt #1 ok", "result A"],
+                              # R004 (re-review, docs #188): B answers only after acquiring the lock, i.e. after A's
+                              # held write settles -- kills a queue-wait abort listener that rejects B early.
+                              ["p write_file f.txt #1 permission_denied", "result B"],
                               ["p write_file f.txt #1 permission_denied", "p absolute_path sub/../f.txt #1 start"]],
                     "never": ["p absolute_path ./f.txt #1 start"],
                     "files_after": [{"path": "f.txt", "text": "C"}]}},
