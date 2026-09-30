@@ -600,7 +600,12 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 - **Rust.** It needs a prepared-runtime value representation able to carry these numbers through preparation, validation, hooks and `execute`. The API spelling is Rust's, delegated to its implementation review, and `serde_json::Value` is not the semantic authority for this domain (Owner decision §3).
 
 **Pydantic-model parameters** (a Python-only Layer-05 representation, `TOOL-F010`).
-- The same finite-only rule applies to fields the model declares as numbers.
+- The same finite-only rule applies to the value Layer 06 delivers: the model's validated `model_dump()`, after the model's one ordinary validation including its own validators.
+  - A non-finite number in any position the model's declared types make numeric (`float` or `int`) is rejected, independently of every other position.
+  - Only an actual runtime number is judged: a delivered value of another type (for example the string `"Infinity"`) is never converted into one (`L0506-D001-I002`, `CE-L0506-D001-I001-01` rev 4).
+  - A union position is numeric only when no finite-only alternative accepts the complete value.
+  - Undeclared (extra) keys and positions typed `Any`/`object` are unconstrained. A value outside its declared type is not a numeric position.
+  - The check runs no user code, so each user validator runs exactly once. A value a user callback makes finite is judged as delivered (`CE-L0506-D001-I001-01` rev 3).
 - Pydantic's own coercion stays the certified, disclosed Layer-06 divergence. In particular, an `int` field coerces `-0.0` to `0`; this is pre-existing and unchanged here, and is disclosed.
 
 **Evidence** (`assurance/layers/data/l0506-d001/`).
