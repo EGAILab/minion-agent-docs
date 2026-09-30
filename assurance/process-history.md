@@ -4,6 +4,33 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layer 13 retrospective: earlier semantic discovery and deterministic workflow mechanics — proposed 2026-10-01
+
+**The problem.** WP-13.1, WP-13.2, WP-12.E3 and L0506-D001 showed the same two costs (`assurance/process-friction-layer13.md`):
+- **Late semantic discovery.** Runtime-value and lower-layer-capability gaps surfaced at implementation or final review. Examples: EXEC-009; the huge-integer → `-0` → Infinity chain that became a Layer-05/06 delta; the UTF-16 pair; the union → callback → sibling → numeric-looking-string chain in L0506-D001.
+- **Hand-executed workflow mechanics.** Coordination bodies grew to 24–35K characters, ~150 single-use patch scripts accumulated, status-only PR pairs recurred, and release-level gates were re-run after witness-only fixes.
+
+Every late finding was real and caught by independent review. The problem was *when*, not *whether*.
+
+**The fix (Phase A, workflow-only)** adds:
+- a mandatory Cross-Language Feasibility Matrix before a high-risk contract freeze (`agent-workflow.md` §4.1.1; `process/templates/cross-language-feasibility-matrix.md`);
+- reusable hazard families (`process/hazard-families.md`, §9.5) and a semantic-neighborhood expansion rule (§9.4);
+- a reviewer factual-evidence rule (§9.2.1);
+- gate tiers G0–G3 (`process/gate-tiers.md`, §13.1);
+- lean current-state guidance (§11.1.4; `coordination-state.md` §13);
+- a parallel-work policy with dependency edges (§11.15), and a semantic-risk map at scoping (§4.2);
+- process metrics (§14.6).
+
+**Phase B (design only)** covers the certification registry (`process/certification-registry-design.md`) and the lean-schema migration.
+
+**Phase C1 (implemented)** is `minion-process` (`process/minion-process-cli-design.md`, `process/tools/`): validate, status, transition legality, the §11.1.1 commit round-trip, handoff check, exact-head merge with containment, and verified comments. It has 73 offline tests at 100% statement coverage.
+
+**The reconciliation.** Dogfooding the validator on live issues found that the documented transition table did not cover the contract-first phase or some recorded transitions. `coordination-state.md` §10.1 reconciles the table, and the tool enforces it from adoption forward.
+
+**What does not change.** Independent review, exact-SHA binding, negative controls, the convergence protocol and the owner-governance boundaries (#75) are all unchanged. Nothing reopens certified semantics, and no historical record is rewritten. Prose rules are shortened only after equivalent enforcement exists (§12.7).
+
+**Status.** On independent process review and merge, this entry becomes "adopted <date>". Phase B migrations and Phase C2 commands then follow as separate reviewed changes.
+
 ## Layer 12 retrospective: remote coordination-body round-trip integrity — proposed 2026-09-21
 
 During Layer 12 closure, a PowerShell command captured the multiline GitHub coordination-issue

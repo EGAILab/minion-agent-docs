@@ -432,6 +432,30 @@ BLOCKED_FOR_OWNER
 
 `FINAL_CONTRACT_REVIEW` is not a mandatory second complete review of every candidate. A clean first `IMPLEMENTATION_REVIEW` (no blocking findings) transitions directly to `RUST_IMPLEMENTATION` — the merge happens as part of that transition, not as a separate reviewed step. `FINAL_CONTRACT_REVIEW` exists for candidates that CHANGED after the first `IMPLEMENTATION_REVIEW`: an ordinary `REMEDIATION` re-review, or a `CONTRACT_CONVERGENCE` episode whose findings are all provisionally closed. Reaching `FINAL_CONTRACT_REVIEW` from `IMPLEMENTATION_REVIEW` therefore always means that `IMPLEMENTATION_REVIEW` instance was itself a re-review of a remediated candidate, not the first pass.
 
+### 10.1 Reconciliation with practice (Layer-13 retrospective, PROPOSED)
+
+Replaying the actual status histories of `minion-agent#49`, `#79` and `#88` against the table above (`assurance/process-friction-layer13.md`) showed that the table did not cover the contract-first phase (`agent-workflow.md` §4.1), and that some transitions outside it went unnoticed. The reconciled table, enforced by `minion-process transition-check` / `apply` (`process/tools/minion_process/transitions.py`), adds exactly:
+
+```text
+any active state
+  -> BLOCKED_FOR_OWNER         # a governance question can arise at any point (§11.7)
+
+CONTRACT_REVIEW
+  -> FINAL_CONTRACT_REVIEW     # contract-first phase: targeted closure of contract findings is
+                               # done; one complete contract review follows (§11.4 pattern)
+
+FINAL_CONTRACT_REVIEW
+  -> PYTHON_IMPLEMENTATION     # contract-phase final review APPROVED (contract checkpoint)
+  -> CONTRACT_DRAFT            # contract-phase final review rejected
+```
+
+It keeps these historical transitions **illegal**, with the legal route stated:
+- `CONTRACT_REVIEW -> REMEDIATION` and `REMEDIATION -> CONTRACT_REVIEW` (#49): contract findings are remediated in `CONTRACT_DRAFT`. `REMEDIATION` is for an implementation candidate.
+- `RUST_IMPLEMENTATION -> IMPLEMENTATION_REVIEW` and `IMPLEMENTATION_REVIEW -> CLOSED` (#79): Rust review is `CLOSURE_REVIEW`, which alone leads to `CLOSED`.
+- `BLOCKED` (#49): not a status value.
+
+Historical records keep what they recorded. The table applies to transitions made after adoption.
+
 ---
 
 ## 11. Suggested validator rules
@@ -563,3 +587,75 @@ incidents:
 ```
 
 This representation makes the project state explicit without rewriting any historical Layer 11 artifact.
+
+---
+
+## 13. Lean current state (schema v2, PROPOSED)
+
+The current-state object answers only the §1 current-state questions. Layer 13 showed bodies growing to 24–35K characters (`#49`, `#88`), because every prior review, old SHA, test count and remediation narrative was kept in the state block. That contradicts §1 and makes every read and write carry history.
+
+### 13.1 What belongs in the state block
+
+```yaml
+workflow:
+  schema_version: 2
+  work_package: WP-13.2
+  title: "Filesystem mutation tools (write, edit)"
+  status: REMEDIATION
+  requirements: [TOOL-029, TOOL-030]
+
+  current_candidate:          # v1 `code` / `docs` stay accepted; one or the other form
+    code: {pr: 87, sha: "<40-hex>", base: main}
+    docs: {pr: 191, sha: "<40-hex>", base: master}
+
+  dependencies:               # edges for the scheduler (agent-workflow.md §11.15)
+    L0506-D001: {issue: 88, relation: blocked_by, status: RUST_IMPLEMENTATION}
+
+  open_findings: [L13-WP132-I004]          # IDs only
+  provisionally_closed: [L13-WP132-I001, L13-WP132-I002, L13-WP132-I003]
+
+  convergence:                # only while an episode is active or settled for the candidate
+    episode: CE-...
+    checkpoint: PROPOSED FOR IMPLEMENTATION | AGREED FOR IMPLEMENTATION
+    open_findings: [...]
+
+  governance_source: {...}    # §8, when a governed choice is in force
+  deferred_trigger: null
+  quarantine: {derived_from_quarantined_artifact: false}
+
+  next_owner: Claude
+  next_action: "<one concrete action>"
+  updated_by: Claude
+  updated_reason: "<one line>"
+
+  history:
+    assurance_index: assurance/layers/13-wp132-index.md   # or an issue-comment link
+```
+
+### 13.2 What does not belong in it
+
+These move to assurance records or comments, which the `history` reference points at:
+- prior reviews and their SHAs;
+- old candidate SHAs;
+- test counts;
+- remediation narratives;
+- closed findings' details;
+- finding rule/scope prose (it lives in the finding's assurance record);
+- status-transition logs.
+
+### 13.3 Rules
+
+- **Budget.** A state body SHOULD stay under 8,000 characters. `minion-process validate` warns above it, and warns on history-shaped keys (`remediations`, `reviews`, `review_history`, `history_log`).
+- **Shape.** In v2, `open_findings` / `provisionally_closed` are lists of finding IDs, an error otherwise. The v1 mapping form (ID → details) is accepted with a warning.
+- **Provenance** is not lost. Every removed item must be reachable from `history.assurance_index` or from issue comments before it leaves the state block.
+- **Commit rule unchanged.** The §11.1.1 commit rule (full semantic round-trip) applies unchanged, and a smaller object makes it cheaper.
+
+### 13.4 Migration
+
+Migration is incremental and per issue, performed when that issue next changes owner:
+1. write the history index (assurance record or comment) containing every item being removed;
+2. apply the lean state with `minion-process apply` (validated, round-trip checked);
+3. link the index from `history.assurance_index`.
+
+Parsers of v1 keep working: `code`/`docs` stay accepted, and `current_candidate` is an alternative, not a replacement, until every open issue is migrated.
+
