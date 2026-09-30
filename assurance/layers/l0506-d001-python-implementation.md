@@ -96,3 +96,56 @@ Accepted.
 | §8 negative controls | 7/7 killed |
 
 The Linux container was not run, since the change is platform-independent.
+
+## Remediation 2: `L0506-D001-I001` (convergence episode `CE-L0506-D001-I001-01`)
+
+**Trigger.** The Remediation 1 walker survived as I001: Codex's review `#90` comment `5918098742` found that walking the *validated* instance is branch-lossy on unions (`list[float] | list[Any]`, `Inner | dict[str, Any]`). That opened the convergence episode `CE-L0506-D001-I001-01` (`l0506-d001-ce-i001-01.md`):
+
+| Revision | Outcome | Findings |
+|---|---|---|
+| rev 1 | CHANGES REQUIRED | characterization and six-cell classification accepted; C001 validator replay, C002 after-validator non-finite |
+| rev 2 | CHANGES REQUIRED | C001 resolved; clamp scope needs no Owner escalation; C002 refined (malformed-sibling exemption) |
+| rev 3 | **APPROVED, AGREED FOR IMPLEMENTATION** | Codex, `#200` @ `a341386f`, evidence prototype `ec0ffb8e` |
+
+**The fix** (`execute.py`, `_reject_declared_non_finite`, `_shape`, `_record_shape`), integrated exactly as agreed:
+1. **One ordinary pydantic validation.** Each user validator runs once, in pydantic's order, with its result.
+2. **The delivered value is judged.** `model_dump()` is the value handed to the before-hook and `execute()`, and it is returned unchanged.
+3. **It is validated against a callback-free, finite-only structural shape of the declared types.** Record types become shape models over their delivered keys, including aliases under `serialize_by_alias` and computed fields; extra keys are allowed. No `Annotated` metadata, decorators, defaults or custom schemas are copied, and any other class is checked by `isinstance`. Recursion resolves through forward references.
+4. **Any `finite_number` error rejects.**
+   - A union some finite-only alternative accepts reports nothing (Pi's `anyOf`), so `Any`/`object`/extra positions keep their values.
+   - An out-of-shape position reports only its own mismatch, and never exempts another position.
+   - A declared `int` is finite-only as well.
+
+The Remediation 1 walker is removed.
+
+**Witnesses.**
+- `test_prepared_runtime_validation.py`: the declared positions, both union orders, `Literal`, recursive and mutually recursive models, and `float | str` rejection. It also holds five rule negative controls: no check, a whole-value sweep, JSON-schema number fields only, first union member only, and a witness table.
+- `test_prepared_runtime_callbacks.py` (new, real `execute_call` pipeline):
+  - **C001:** one-shot callback traces, returned values and `-0` sign, plus the replay negative control;
+  - **C002:** field/before/model/`Annotated`/nested callback-produced ±Infinity and NaN, rejected before the hook and `execute`;
+  - malformed-sibling, integer, nested-sibling and list-element witnesses, plus the rev-2 whole-record-exemption negative control;
+  - no-sweep and callback-finite (clamp) controls;
+  - `NewType`/type alias/`RootModel`/`TypeVar`/enum/computed/alias kinds.
+
+**Matrix** (`data/l0506-d001-ce-i001-01/rev2/`), 105 cells against pinned Pi's verdicts and returned values:
+- 97 are identical;
+- 6 are the accepted `TOOL-003` coercion cells;
+- 2 differ only by pydantic's default-fill of `thing: None`.
+
+The production tree reproduces `out/minion.json` byte-identically.
+
+**Spec.** The *Pydantic-model parameters* bullet of TOOL-041 (`spec/tools.md`) is replaced by the agreed rev-3 wording. The manifest's TOOL-041 `python` note names the mechanism.
+
+**Gates** (code `8f6400a5ea0841c1350e323aa73cf0fa4ed82458`, Windows, pinned ICU, fresh):
+
+| Gate | Result |
+|---|---|
+| `pytest` | **2332 passed**, 16 skipped, 19 xfailed; coverage **100%** (`tools/execute.py` 226/226) |
+| `ruff check`, format (changed files), `mypy` (91 files) | clean |
+| manifest validation | in suite, passed |
+| delta gate | 19/19 |
+| §8 negative controls (`test_prepared_runtime_negative_controls.py`) | 7/7 killed |
+
+The Linux container was not run; the change is platform-independent validator logic.
+
+**Status.** `L0506-D001-I001` is REMEDIATED, pending Codex's §11.8.7 targeted convergence closure. The §11.8.8 final complete review comes after that. Rust and cross-language are unchanged: NOT_IMPLEMENTED and NOT CLOSED.
