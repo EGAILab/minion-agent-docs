@@ -38,3 +38,39 @@
 - Python: NOT_IMPLEMENTED, with known defect C001.
 - Rust: NOT_IMPLEMENTED.
 - `WP-13.2` (#49) stays blocked on this delta for Python approval, Rust implementation and closure.
+
+## Remediation 1: `L0506-D001-R001`, `L0506-D001-R002`
+
+**Trigger.** Codex's independent contract review (`minion-agent-docs#196`) requested changes. It accepted decision 1 (NaN reachability) and reproduced the authority and scenario blobs byte for byte. Both findings are accepted.
+
+### `L0506-D001-R001`: Pi's diagnostic serialization
+
+**The defect.** The draft's blanket statement "Layer 06 serializes no prepared value" missed a serialization: Pi's validation-failure text uses `JSON.stringify(preparedToolCall.arguments, null, 2)`.
+
+**The fix.**
+- The spec's serialization boundary now distinguishes:
+  - the in-memory successful path, where nothing is serialized;
+  - Pi's failure diagnostic, a projection of ±Infinity and NaN to `null` and `-0` to `0`, with the runtime values unchanged;
+  - Minion's `TOOL-003` validator text, which is its own. Text parity is not reopened.
+- The manifest `TOOL-041` rule is corrected to match. Decision 4 above is superseded by this.
+
+**Witness.** The authority now records, for every failure, `diagnostic_arguments` (Pi's serialization) and `runtime_after_failure` (the untouched runtime values). A new case, `declared-number-diagnostic-projection`, prepares `{limit: +Infinity, extra: NaN, negativeZero: -0}`:
+- diagnostic: `{"limit": null, "extra": null, "negativeZero": 0}`;
+- runtime: `+Infinity`, `NaN`, `-0`.
+
+The authority now has 27 cases, and the declared-number document 7.
+
+### `L0506-D001-R002`: the canonical grammar
+
+**The fix.** `prepared-runtime-scenario.schema.json` now has:
+- explicit `editCase` and `customCase` forms, with `schema` and `prepare_set` required on custom and forbidden on edit;
+- prepared and failure expectation forms, with `observed` required on prepared (and `result_text` on edit), and `observed` forbidden on failure;
+- a strict token grammar: the four named tokens, or a finite JSON number literal;
+- a stated language-neutral PREFLIGHT: observed pointers exactly equal `observe`, and a finite literal must be finite. A violation fails the document and is never defaulted.
+
+**Tests** (Python schema validation):
+- each of the review's four mutations (missing `schema`, missing `prepare_set`, prepared without `observed`, `1garbage`), plus failure-with-`observed`, is **rejected**;
+- the preflight holds for every committed case;
+- an overflowing "finite" literal fails the preflight.
+
+**Scope.** No production code changes.

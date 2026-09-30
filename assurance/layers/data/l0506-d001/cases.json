@@ -302,5 +302,21 @@
   "observe": [
    "/extra"
   ]
+ },
+ {
+  "id": "declared-number-diagnostic-projection",
+  "tool": "custom",
+  "schema": "number",
+  "prepare_set": {
+   "limit": "+Infinity",
+   "extra": "NaN",
+   "negativeZero": "-0"
+  },
+  "arguments": {},
+  "observe": [
+   "/limit",
+   "/extra",
+   "/negativeZero"
+  ]
  }
 ]

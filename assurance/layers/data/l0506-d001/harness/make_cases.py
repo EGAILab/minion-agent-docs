@@ -43,6 +43,11 @@ for token in ["+Infinity", "-Infinity", "NaN", "-0", "1e308", "0"]:
     custom(f"declared-integer-{slug}", "integer", "limit", token)
     custom(f"undeclared-{slug}", "open", "extra", token)
 
+# L0506-D001-R001: several runtime numbers in one rejected call, for Pi's diagnostic serialization
+cases.append({"id": "declared-number-diagnostic-projection", "tool": "custom", "schema": "number",
+              "prepare_set": {"limit": "+Infinity", "extra": "NaN", "negativeZero": "-0"},
+              "arguments": {}, "observe": ["/limit", "/extra", "/negativeZero"]})
+
 with open(sys.argv[1], "w", encoding="utf-8", newline="\n") as handle:
     json.dump(cases, handle, indent=1)
     handle.write("\n")

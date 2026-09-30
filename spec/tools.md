@@ -586,10 +586,14 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 
 **Hooks and execute.** The `tools/pre-execute` listener's `arguments` and `execute`'s arguments carry the prepared runtime value exactly, including the sign of zero and non-finite values. A hook's `Proceed(arguments=...)` replacement is certified Layer-06 behavior. It is not extended here beyond carrying the same domain.
 
-**Serialization boundary.**
-- Layer 06 serializes no prepared value.
-- No projection such as `Infinity -> null` is defined here. `JSON.stringify` behavior applies only where pinned Pi performs that specific serialization. Any later boundary that serializes prepared values must specify its own projection.
-- Raw `ToolCall` JSON serialization is unchanged.
+**Serialization boundary** (corrected by `L0506-D001-R001`).
+- **The successful path serializes no prepared value.** Validation, the hook and `execute` pass the runtime value through in memory. No projection such as `Infinity -> null` applies to them.
+- **Pi's validation-failure diagnostic is the one place pinned Pi serializes the prepared value.** Pinned `validateToolArguments` builds its failure text with `JSON.stringify(toolCall.arguments, null, 2)`, and `agent-loop.ts` passes the prepared call. That diagnostic therefore shows ±Infinity and NaN as `null` and `-0` as `0`.
+  - The characterization case `declared-number-diagnostic-projection` prepares `{limit: +Infinity, extra: NaN, negativeZero: -0}` against a declared `number` `limit`. Its diagnostic reads `{"limit": null, "extra": null, "negativeZero": 0}`.
+  - The prepared runtime values are unchanged by it: still +Infinity, NaN and -0.
+  - It is a diagnostic projection, not runtime corruption. Neither the hook nor `execute` runs on that failure.
+- **Minion's diagnostic.** Minion's certified validation-error text is its validator's own message (`TOOL-003`). It is not Pi's `Validation failed ... Received arguments: <JSON>` text, and that text parity is not reopened here. Where a binding's validator message mentions a rejected value, it does so in that binding's own rendering, which is not part of the shared contract. No binding may derive a runtime value from that text.
+- **Raw `ToolCall` JSON serialization is unchanged.** Any later boundary that serializes prepared values must characterize and specify its own projection.
 
 **Representation.** The contract fixes values, not types.
 - **Python.** An integral finite number decoded from JSON is an `int`, as Layer 02 decodes JSON integers. Every other runtime number is a `float`, including `-0.0`, ±`inf` and `nan`.
@@ -600,7 +604,7 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 - Pydantic's own coercion stays the certified, disclosed Layer-06 divergence. In particular, an `int` field coerces `-0.0` to `0`; this is pre-existing and unchanged here, and is disclosed.
 
 **Evidence** (`assurance/layers/data/l0506-d001/`).
-- The pinned-Pi authority covers 26 cases. It runs:
+- The pinned-Pi authority covers 27 cases, including the diagnostic-projection case above. For a failure, it records both Pi's diagnostic serialization and the unchanged runtime values. It runs:
   - `agent-loop.ts`'s preparation and `validateToolArguments` unmodified;
   - `edit.ts`'s `editSchema`, sliced from source;
   - the `prepareEditArguments` copy the WP-13.2 authority already uses;
@@ -608,6 +612,11 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 - Canonical scenarios live in `minion-agent` `conformance/agent/prepared-runtime/`, shape `prepared-runtime-scenario.schema.json`: 4 documents, generated from the authority.
   - They cover the real `edit` path (±Infinity, -0, rounding, largest finite) and a custom shim against declared-number, declared-integer and undeclared positions (±Infinity, NaN, -0, large finite, 0).
   - The runner asserts that the hook and `execute` observe the same token and that the raw arguments are unchanged.
+  - The shape has explicit `edit`/`custom` and prepared/failure forms, and a strict token grammar (`L0506-D001-R002`). Its language-neutral PREFLIGHT requires:
+    - a prepared case's observed pointers to be exactly its `observe` pointers;
+    - every finite literal to denote a finite binary64 value.
+
+    A violation fails the document and is never defaulted.
 - The negative controls each binding's implementation review must run: Infinity rejected because a type cannot hold it; Infinity mapped to null; clamped to the largest finite value; stringified; `-0` collapsed to `+0`; a hook projection that loses a non-finite value; and a validator accepting a non-finite value in a declared `number` field.
 
 **Known Python defect,** fixed by this delta's Python implementation (`L0506-D001-C001`). Certified Python Layer 06 accepts ±inf and NaN in a declared `number` field, because the `jsonschema` library's `number` admits non-finite floats. The declared-number scenario witnesses it.

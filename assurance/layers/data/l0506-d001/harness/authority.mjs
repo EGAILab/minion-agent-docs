@@ -66,11 +66,10 @@ const token = (v) =>
 const at = (obj, pointer) => pointer.split("/").slice(1).reduce((o, k) => (o == null ? undefined : o[k]), obj);
 
 // agent-loop.ts prepareToolCallArguments + prepareToolCall's validateToolArguments, as Pi runs them
-function preflight(tool, rawArguments) {
+function prepare(tool, rawArguments) {
   const toolCall = { type: "toolCall", id: "call-1", name: tool.name, arguments: rawArguments };
   const prepared = tool.prepareArguments ? tool.prepareArguments(toolCall.arguments) : toolCall.arguments;
-  const preparedToolCall = prepared === toolCall.arguments ? toolCall : { ...toolCall, arguments: prepared };
-  return validateToolArguments(tool, preparedToolCall);
+  return prepared === toolCall.arguments ? toolCall : { ...toolCall, arguments: prepared };
 }
 
 const cases = JSON.parse(readFileSync(process.argv[2], "utf8"));
@@ -80,11 +79,18 @@ const results = cases.map((c) => {
     ? { name: "edit", parameters: editSchema, prepareArguments: prepareEditArguments }
     : { name: "probe", parameters: SCHEMAS[c.schema],
         prepareArguments: (args) => ({ ...args, ...Object.fromEntries(Object.entries(c.prepare_set).map(([k, t]) => [k, decode(t)])) }) };
+  const preparedToolCall = prepare(tool, raw);
+  const tokens = (obj) => Object.fromEntries(c.observe.map((p) => [p, token(at(obj, p))]));
   try {
-    const args = preflight(tool, raw);
-    return { id: c.id, outcome: "prepared", observed: Object.fromEntries(c.observe.map((p) => [p, token(at(args, p))])) };
+    const args = validateToolArguments(tool, preparedToolCall);
+    return { id: c.id, outcome: "prepared", observed: tokens(args) };
   } catch (error) {
-    return { id: c.id, outcome: "argument_validation_failure", message: String(error.message).split("\n")[1]?.trim() };
+    // L0506-D001-R001: Pi's failure text embeds JSON.stringify(preparedToolCall.arguments, null, 2) -- a DIAGNOSTIC
+    // projection (Infinity/NaN -> null, -0 -> 0). The prepared runtime values themselves are unchanged.
+    const message = String(error.message);
+    const received = message.slice(message.indexOf("Received arguments:\n") + "Received arguments:\n".length);
+    return { id: c.id, outcome: "argument_validation_failure", message: message.split("\n")[1]?.trim(),
+             diagnostic_arguments: JSON.parse(received), runtime_after_failure: tokens(preparedToolCall.arguments) };
   }
 });
 writeFileSync(process.argv[3], JSON.stringify({ node: process.versions.node, results }, null, 1) + "\n");

@@ -60,12 +60,24 @@
   {
    "id": "declared-number-pos-inf",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be number"
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity"
+   }
   },
   {
    "id": "declared-integer-pos-inf",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be integer"
+   "message": "- limit: must be integer",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity"
+   }
   },
   {
    "id": "undeclared-pos-inf",
@@ -77,12 +89,24 @@
   {
    "id": "declared-number-neg-inf",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be number"
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "-Infinity"
+   }
   },
   {
    "id": "declared-integer-neg-inf",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be integer"
+   "message": "- limit: must be integer",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "-Infinity"
+   }
   },
   {
    "id": "undeclared-neg-inf",
@@ -94,12 +118,24 @@
   {
    "id": "declared-number-nan",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be number"
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "NaN"
+   }
   },
   {
    "id": "declared-integer-nan",
    "outcome": "argument_validation_failure",
-   "message": "- limit: must be integer"
+   "message": "- limit: must be integer",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "NaN"
+   }
   },
   {
    "id": "undeclared-nan",
@@ -169,6 +205,21 @@
    "outcome": "prepared",
    "observed": {
     "/extra": "0"
+   }
+  },
+  {
+   "id": "declared-number-diagnostic-projection",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null,
+    "extra": null,
+    "negativeZero": 0
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity",
+    "/extra": "NaN",
+    "/negativeZero": "-0"
    }
   }
  ]

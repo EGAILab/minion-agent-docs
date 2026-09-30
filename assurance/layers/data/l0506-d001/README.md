@@ -25,7 +25,7 @@ python harness/make_scenarios.py cases.json <out>/authority.json <minion-agent>/
 
 ## What the authority runs
 
-For each of the 26 cases, `harness/authority.mjs` runs Pi's own steps:
+For each of the 27 cases, `harness/authority.mjs` runs Pi's own steps:
 1. **Preparation**, `agent-loop.ts`'s `prepareToolCallArguments`. Either:
    - `edit`'s `prepareEditArguments`, the same verbatim copy the WP-13.2 authority uses; or
    - a custom `prepareArguments` that sets a runtime number.
@@ -40,6 +40,7 @@ For each of the 26 cases, `harness/authority.mjs` runs Pi's own steps:
 | declared `number` | ±Infinity and NaN are **rejected** (`must be number`). `-0`, `1e308` and `0` pass; `-0` keeps its sign |
 | declared `integer` | ±Infinity and NaN are **rejected** (`must be integer`). `-0`, `1e308` and `0` pass |
 | undeclared key | every value is kept: ±Infinity, NaN, -0, 1e308, 0 |
+| `declared-number-diagnostic-projection` (`L0506-D001-R001`) | rejected. Pi's failure diagnostic serializes the prepared arguments as `{"limit": null, "extra": null, "negativeZero": 0}`, while the runtime values stay +Infinity, NaN and -0 (`diagnostic_arguments` and `runtime_after_failure` in `out/authority.json`) |
 
 ## `characterization/`
 
