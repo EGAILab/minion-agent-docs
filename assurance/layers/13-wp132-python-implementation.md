@@ -180,8 +180,31 @@ Fractions and exponents were already correctly rounded doubles. The rejection of
 
 **Linux** (`5d5e2da5` content; `28a5938d` adds only a schema comment): WP-13.2 conformance and negative controls **59 passed** (root) and **28 passed** (unprivileged). Full suite: 2160 passed, 79 skipped, 19 xfailed, and the single pre-existing `#86` failure.
 
+## Remediation 2: `L13-WP132-I002` refinement (negative zero)
+
+**Trigger.** Codex's targeted re-review (`minion-agent-docs#193`) provisionally closed `I001` and `I003`, and kept `I002` open on one point.
+
+**The defect.** The integer path turned the JSON token `-0` into the `int` `0`. Pinned Pi's `JSON.parse("-0")` is `-0`, and the prepared value is observable to Layer 06's pre-execute hook. Accepted.
+
+**The fix.** `_js_integer` returns the float `-0.0` for negative zero, which an `int` cannot represent. Every other finite integral value stays an `int`, and overflow and rounding are unchanged. This representation exception is stated in its docstring.
+
+**Evidence.**
+- The sign is asserted with `math.copysign`, not equality, for `-0`, `-0.0`, `-0e0`, `0` and `0.0`.
+- A real `execute_call` with a `TOOLS_PRE_EXECUTE` listener observes the sign as −1 for `-0`, and the edit applies.
+- The earlier huge-integer and rounding witnesses still pass.
+
+**Gates** (code `60278e6ce444005dd61128dd7633d374d209bc17`, Windows, pinned ICU):
+
+| Gate | Result |
+|---|---|
+| `pytest` | **2230 passed**, 16 skipped, 19 xfailed; coverage **100%** |
+| `ruff check`, format (changed files), `mypy` | clean |
+| WP-13.2 focused tests | 65 passed |
+
+The Linux container was not re-run for this platform-independent float change. The remediation-1 Linux run stands for everything else.
+
 ## Status
 
-- `Python WP-13.2`: IMPLEMENTATION CANDIDATE (remediation 1), pending targeted re-review, then the final complete exact-SHA review.
+- `Python WP-13.2`: IMPLEMENTATION CANDIDATE (remediation 2), pending targeted `I002` closure, then the final complete exact-SHA review.
 - `Rust WP-13.2`: NOT_IMPLEMENTED.
 - `WP-13.2 cross-language`: NOT CLOSED.
