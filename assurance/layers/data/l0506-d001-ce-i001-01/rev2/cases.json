@@ -1,0 +1,3185 @@
+[
+ {
+  "id": "scalar/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field",
+     "type": "number"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "scalar/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field",
+     "type": "number"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "scalar/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field",
+     "type": "number"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "scalar/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field",
+     "type": "number"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "scalar/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field",
+     "type": "number"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "nullable-numeric-first/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "nullable-numeric-first/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "nullable-numeric-first/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "nullable-numeric-first/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "nullable-numeric-first/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "nullable-none-first/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "nullable-none-first/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "nullable-none-first/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "nullable-none-first/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "nullable-none-first/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "numeric-or-string/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-string/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-string/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-string/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-string/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "string-or-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "string-or-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "string-or-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "string-or-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "string-or-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "numeric-or-any/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-any/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-any/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-any/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-any/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "any-or-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "any-or-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "any-or-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "any-or-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "any-or-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "numeric-or-object/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-object/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-object/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-object/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "numeric-or-object/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "list-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "items": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "array"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "items": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "array"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "items": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "array"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "items": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "array"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "items": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "array"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    1e+308
+   ]
+  }
+ },
+ {
+  "id": "list-numeric-or-list-any/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "items": {},
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric-or-list-any/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "items": {},
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric-or-list-any/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "items": {},
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric-or-list-any/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "items": {},
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-numeric-or-list-any/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "items": {},
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    1e+308
+   ]
+  }
+ },
+ {
+  "id": "list-any-or-list-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {},
+       "type": "array"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-any-or-list-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {},
+       "type": "array"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-any-or-list-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {},
+       "type": "array"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-any-or-list-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {},
+       "type": "array"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ {
+  "id": "list-any-or-list-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "items": {},
+       "type": "array"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": [
+    1.0,
+    1e+308
+   ]
+  }
+ },
+ {
+  "id": "dict-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "object"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "object"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "object"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "object"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "additionalProperties": {
+      "type": "number"
+     },
+     "title": "Field",
+     "type": "object"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ {
+  "id": "dict-numeric-or-dict-any/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric-or-dict-any/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric-or-dict-any/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric-or-dict-any/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-numeric-or-dict-any/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-dict-numeric/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-dict-numeric/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-dict-numeric/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-dict-numeric/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-dict-numeric/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ {
+  "id": "model/+Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Inner"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "model/-Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Inner"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "model/NaN",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Inner"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "model/-0",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Inner"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "model/1e308",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Inner"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ {
+  "id": "model-or-dict-any/+Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Inner"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "model-or-dict-any/-Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Inner"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "model-or-dict-any/NaN",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Inner"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "model-or-dict-any/-0",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Inner"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "model-or-dict-any/1e308",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Inner"
+      },
+      {
+       "additionalProperties": true,
+       "type": "object"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-model/+Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Inner"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-model/-Infinity",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Inner"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-model/NaN",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Inner"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-model/-0",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Inner"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "dict-any-or-model/1e308",
+  "schema": {
+   "$defs": {
+    "Inner": {
+     "properties": {
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "title": "Inner",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "$ref": "#/$defs/Inner"
+      }
+     ],
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ {
+  "id": "typeddict/+Infinity",
+  "schema": {
+   "$defs": {
+    "Box": {
+     "properties": {
+      "w": {
+       "title": "W",
+       "type": "number"
+      }
+     },
+     "required": [
+      "w"
+     ],
+     "title": "Box",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Box"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "w": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "typeddict/-Infinity",
+  "schema": {
+   "$defs": {
+    "Box": {
+     "properties": {
+      "w": {
+       "title": "W",
+       "type": "number"
+      }
+     },
+     "required": [
+      "w"
+     ],
+     "title": "Box",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Box"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "w": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "typeddict/NaN",
+  "schema": {
+   "$defs": {
+    "Box": {
+     "properties": {
+      "w": {
+       "title": "W",
+       "type": "number"
+      }
+     },
+     "required": [
+      "w"
+     ],
+     "title": "Box",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Box"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "w": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "typeddict/-0",
+  "schema": {
+   "$defs": {
+    "Box": {
+     "properties": {
+      "w": {
+       "title": "W",
+       "type": "number"
+      }
+     },
+     "required": [
+      "w"
+     ],
+     "title": "Box",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Box"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "w": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "typeddict/1e308",
+  "schema": {
+   "$defs": {
+    "Box": {
+     "properties": {
+      "w": {
+       "title": "W",
+       "type": "number"
+      }
+     },
+     "required": [
+      "w"
+     ],
+     "title": "Box",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Box"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "w": 1e+308
+   }
+  }
+ },
+ {
+  "id": "dataclass/+Infinity",
+  "schema": {
+   "$defs": {
+    "Pt": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "title": "Pt",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Pt"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "x": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dataclass/-Infinity",
+  "schema": {
+   "$defs": {
+    "Pt": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "title": "Pt",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Pt"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "x": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ {
+  "id": "dataclass/NaN",
+  "schema": {
+   "$defs": {
+    "Pt": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "title": "Pt",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Pt"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "x": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ {
+  "id": "dataclass/-0",
+  "schema": {
+   "$defs": {
+    "Pt": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "title": "Pt",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Pt"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "x": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ {
+  "id": "dataclass/1e308",
+  "schema": {
+   "$defs": {
+    "Pt": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "title": "Pt",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "field": {
+     "$ref": "#/$defs/Pt"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "x": 1e+308
+   }
+  }
+ },
+ {
+  "id": "any/+Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "any/-Infinity",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "any/NaN",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "any/-0",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "any/1e308",
+  "schema": {
+   "properties": {
+    "field": {
+     "title": "Field"
+    }
+   },
+   "required": [
+    "field"
+   ],
+   "title": "M",
+   "type": "object"
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ },
+ {
+  "id": "opaque-sibling/+Infinity",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "number"
+    },
+    "thing": {}
+   },
+   "required": [
+    "field"
+   ]
+  },
+  "arguments": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "opaque-sibling/-Infinity",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "number"
+    },
+    "thing": {}
+   },
+   "required": [
+    "field"
+   ]
+  },
+  "arguments": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "opaque-sibling/NaN",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "number"
+    },
+    "thing": {}
+   },
+   "required": [
+    "field"
+   ]
+  },
+  "arguments": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "opaque-sibling/-0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "number"
+    },
+    "thing": {}
+   },
+   "required": [
+    "field"
+   ]
+  },
+  "arguments": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "opaque-sibling/1e308",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "number"
+    },
+    "thing": {}
+   },
+   "required": [
+    "field"
+   ]
+  },
+  "arguments": {
+   "field": 1e+308
+  }
+ }
+]
