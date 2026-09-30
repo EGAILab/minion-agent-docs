@@ -207,6 +207,15 @@ rule, disposition, Python source, schema, canonical expectation, or normative
 spec changed. The delta is the already-approved Layer-05/06 domain extension;
 existing raw-wire/lifecycle behavior and finite JSON behavior are retained.
 
+During final handoff, defaults advanced to code `290ac1fdf3e19b6f8e14c2d491acfdf5a5959c66`
+and docs `b15c98659c897b35c99d936d549005a06cd56b98` via shared/Python status-sync
+PRs #93/#202. The code default was merged into the implementation branch,
+preserving its current approval wording and resolving only the adjoining `rust:`
+evidence line. `git diff --exit-code f2042d48e8da57550c7c69513bdc544187627a5c HEAD
+-- minion-agent-rust` verified the tested Rust tree remained byte-identical.
+Shared schema/manifest gates were rerun after that resolution. The docs status
+sync changes only `spec/tools.md`; this assurance branch does not edit that file.
+
 No active `PI_PARITY_DEFECT`, `CONTRACT_ASSURANCE_DEFECT`, or
 `PI_BEHAVIOR_UNCERTAIN` is known in this implementation pass. This is a candidate
 assessment, not independent certification. No new divergence is selected.
