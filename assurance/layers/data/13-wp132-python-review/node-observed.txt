@@ -1,0 +1,4 @@
+Node 22.15.1-alpine, pinned Pi preparation source and harness edit-diff core:
+{"huge_edits_type":"array","extra_is_infinity":true,"text":"Successfully replaced 1 block(s) in f.txt.","file_after":"A\n"}
+IEEE-754 extra field 9007199254740992
+{"length":2,"utf8":"f09f9880","base64":"8J+YgA=="}
