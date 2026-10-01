@@ -158,3 +158,18 @@ Both were recorded by Owner decision (§13 of each), and both were caught **befo
   - **The fix.** D002 keeps only scalar schema literals, adds the `enum: [U+FFFD]` discriminator, and moves `enum-lone` to `L05-D001`.
 
 **Lesson.** "String" is four domains, not one: instance, schema, raw/wire and serialized/projected. A matrix that audits only the instance misses the other three. The feasibility template now asks all four (§1.1). The reusable hazard family `F7 SCHEMA_RUNTIME_DOMAIN` (`process/hazard-families.md`) carries the probe list. Its canonical-case audit catches a schema literal in a case before review.
+
+## Post-merge evidence: authority execution coupled to live Docker/npm (TOOLING / HARNESS FRICTION)
+
+- **Category:** TOOLING / HARNESS FRICTION.
+- **Incident.** L0506-D002's and L0206-D002's final reviews found no contract defect, yet were withheld (REVIEW_BLOCKED). The independent reviewer's sandbox could reach neither Docker nor the npm registry, so it could not re-execute the pinned-Pi authority. The author's own byte-identical runs were rightly not accepted as a substitute.
+- **Root cause.** Authority execution was unnecessarily coupled to live Docker and npm access. The runners acquired `typebox`/`diff` only through `npm pack`, and ran only inside `node:22.15.1-alpine` with container-fixed paths.
+- **Assurance-preserving correction** (Owner decisions `minion-agent#99` comments `5930365971` and `5930377491`): cryptographically pinned offline dependency injection plus independent reviewer execution.
+  - The exact tarball was supplied to the review workspace and verified by the reviewer against pinned Pi's lockfile SRI.
+  - The reviewer executed the authority itself on a host proving Node v22.15.1.
+  - Both final reviews then approved at their unchanged SHAs.
+- **Made standing** in `process/authority-dependencies.md`:
+  - the shared `acquire_npm_pinned.sh` (offline and network acquisition converge on one verification path);
+  - runners that execute in a container or on a host;
+  - negative controls (`process/tools/authority/selftest.sh`).
+- **Lesson.** Remove friction that does not carry assurance (where the bytes come from), and keep exactly what does: digest verification against the authoritative pin, exact runtime identity, and independent execution and judgment.

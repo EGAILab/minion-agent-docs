@@ -340,6 +340,11 @@ A finding that expresses suspicion without discriminating evidence is recorded a
 
 ### 9.3 Pinned-Pi characterization probes
 
+**Authority dependencies** (normative, `process/authority-dependencies.md`).
+- An independent reviewer must independently **verify** the exact authority inputs and **execute** the authority. Downloading identical bytes is not required.
+- External dependencies (npm packages, ICU, Photon, `fd`/`rg` artifacts) are verified against their authoritative pinned digest, whatever their source.
+- Docker and network access are conveniences. Exact pinned runtime identity stays mandatory.
+
 For subtle observable behavior that depends on language runtime mechanics, it is acceptable and encouraged to maintain development-only Pi characterization probes against the pinned Pi revision.
 
 A suggested location is:

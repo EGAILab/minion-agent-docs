@@ -48,3 +48,5 @@ For each of the 58 cases, `harness/authority.mjs` runs Pi's own steps:
 These are the first-pass probes posted on `#88` (comment `5912236809`):
 - `probe.mjs`/`run.sh`: Pi's validator over TypeBox and plain JSON Schema, including `Type.Integer()`, and what `JSON.parse` can produce.
 - `py_probe.py`: certified Python Layer 06 on main `97d7c6bd`. It shows finding `L0506-D001-C001`: a declared `number` field accepts non-finite values.
+
+**Offline / host replay** (`process/authority-dependencies.md`). Set `TYPEBOX_TGZ=<path to the exact tarball>`, and it is verified against pinned Pi's lockfile before use. To run without Docker on a host proving the runtime pins, set `PI_DIR`, `OUT_DIR` and, if needed, `PYTHON`, and run the same harness runner directly.
