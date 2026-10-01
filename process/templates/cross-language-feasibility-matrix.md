@@ -33,6 +33,19 @@ UTF-16 code units          valid surrogate pair  lone surrogate (high / low)
 Unicode normalization / version
 ```
 
+### 1.1 Four value domains (F7, `L0506-D002-R001`)
+
+Answer each separately for every validation or value feature. The same textual type does not imply the same representability in all four:
+
+| Domain | Pi repr | Python repr | Rust repr | Owning seam | Lossless across all? |
+|---|---|---|---|---|---|
+| INSTANCE (prepared/runtime value) | | | | | |
+| SCHEMA (property names, `required`, `const`/`enum`, `pattern`) | | | | | |
+| RAW/WIRE (decoded provider value) | | | | | |
+| SERIALIZED/PROJECTED (`JSON.stringify`, UTF-8, provider sanitizing) | | | | | |
+
+**Canonical-case audit:** list every canonical case whose *schema* holds a value outside the scalar/JSON domain. Each one needs the SCHEMA row answered.
+
 ## 2. Lower-layer capability matrix
 
 One row per semantic operation the WP requires. A missing seam must be found **here**, not at implementation. (WP-13.2's combined read+write access check, `EXEC-009`, and its prepared runtime ±Infinity, L0506-D001, were both found late.)

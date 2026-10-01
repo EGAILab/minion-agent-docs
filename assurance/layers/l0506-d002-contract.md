@@ -115,3 +115,47 @@ FEASIBILITY
 - Python: conforms with no production change (173 + 20 cases, negative controls), PENDING contract review.
 - Rust: NOT_IMPLEMENTED.
 - `WP-13.2` (#49) Rust stays blocked on this delta.
+
+## Remediation 1: `L0506-D002-R001`, schema string domain separated
+
+**Trigger.** Codex's independent contract review (`minion-agent-docs#209` comment `5926370010`) REJECTED the draft. The `enum-lone` schema kind put a lone surrogate **in the schema**. Rust's certified schema seam cannot hold it, and this matrix had audited only the instance domain. The finding is accepted.
+
+**Owner decision** (`minion-agent#99` comment `5926416181`, Option 1):
+- A separate Layer-05 delta, `L05-D001` (`minion-agent#104`), owns the runtime-validation **schema** string domain.
+- D002 is not widened, and there is no divergence.
+- D002 moves schema-lone cases out, keeps scalar-schema instance discriminators, and continues independently.
+
+**Characterization of the schema side** (scratch probe on pinned `validateToolArguments`; it becomes `L05-D001`'s pass 1):
+- Property names, `required` entries, `additionalProperties`-checked keys, `const`/`enum` literals and `pattern` strings holding a lone surrogate are all honored by exact code units: a lone high never matches U+FFFD or a lone low.
+- `pattern` compiles a raw or escaped lone surrogate in Unicode mode and matches it.
+- `default` is not filled in.
+- Pi's provider-outbound path does not sanitize tool schemas.
+
+**Changes.**
+- **Authority** (`data/l0506-d002/`):
+  - `enum-lone` becomes `enum-fffd` (`enum: [U+FFFD]`, a scalar literal);
+  - the real U+FFFD joins the instance neighborhood (21 members);
+  - the rerun has 198 cases, sha256 `02193fff…`.
+  - `enum: [U+FFFD]` accepts only the real U+FFFD and rejects all 14 unpaired-surrogate instances. A binding that replaces a lone surrogate with U+FFFD before validation flips the verdict, so the instance discrimination is kept without a schema lone literal.
+- **Canonical scenarios:** regenerated. The `L0506-D002` gate has 181 cases (168 cells + 9 + 4); the `WP-13.2` gate has 21.
+- **Schema shape:** `schema` enumerates `enum-fffd`. Its comment states that every schema kind holds only scalar strings.
+- **Python:**
+  - runner `SCHEMAS`;
+  - counts;
+  - a new negative control: the replacement mutant flips the `enum-fffd/lone-high-only` and `enum-fffd/lone-low-only` verdicts. Two-unit members stay two characters after replacement, so they are not discriminators.
+- **Gates:** 2716 passed, 100% coverage, ruff and mypy clean.
+- **Spec:** a new "Instance domain, not schema domain" paragraph, the `const`/`enum` rule, and updated counts.
+- **Matrix additions** (§1, §2):
+
+| Observable / operation | Pi | Python | Rust | Resolution |
+|---|---|---|---|---|
+| schema string literals / property names with a non-scalar string | honored by code units (characterized above) | `dict` schema holds them | `JsonSchemaObject(Map<String, serde_json::Value>)` cannot | **`L05-D001`** (#104), outside D002 |
+| D002 canonical schemas | scalar literals only (`const-pair` holds a valid pair, which is representable) | yes | yes | in scope; no D002 claim depends on a non-scalar schema literal |
+
+- **WP-13.2 independence from `L05-D001`** (decision §7). Pinned `write` is `{path, content}` and `edit` is `{path, edits[{oldText, newText}]}`. Both have only ASCII property names and `Type.String` slots, with no `const`, `enum` or `pattern`, and both sources are pure ASCII. **WP-13.2 waits for D002 only.**
+- **Process** (decision §12):
+  - F7 `SCHEMA_RUNTIME_DOMAIN` in `process/hazard-families.md`;
+  - the four-domain question in the feasibility template (§1.1);
+  - Q001 and R001 entries in `assurance/process-friction-layer13.md`.
+
+**Status:** R001 is REMEDIATED, pending targeted re-review. The authority rerun is byte-reproducible here; Codex could not run Docker or npm and must still perform the fresh pinned-runtime replay in a capable environment, per its review.
