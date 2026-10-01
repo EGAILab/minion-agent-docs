@@ -1,0 +1,898 @@
+{
+ "platform": "win32",
+ "python": "3.13.5",
+ "results": [
+  {
+   "id": "bmp",
+   "input": [
+    102,
+    233,
+    46,
+    116,
+    120,
+    116
+   ],
+   "tool_write": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     119,
+     114,
+     111,
+     116,
+     101,
+     32,
+     55,
+     32,
+     98,
+     121,
+     116,
+     101,
+     115,
+     32,
+     116,
+     111,
+     32,
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "listing_after_write": [
+    [
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "tool_read": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     99,
+     111,
+     110,
+     116,
+     101,
+     110,
+     116
+    ]
+   },
+   "tool_edit": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     114,
+     101,
+     112,
+     108,
+     97,
+     99,
+     101,
+     100,
+     32,
+     49,
+     32,
+     98,
+     108,
+     111,
+     99,
+     107,
+     40,
+     115,
+     41,
+     32,
+     105,
+     110,
+     32,
+     102,
+     233,
+     46,
+     116,
+     120,
+     116,
+     46
+    ]
+   },
+   "tool_ls": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "fs_write_file": {
+    "result": "Ok",
+    "value": "None",
+    "error": "None"
+   },
+   "fs_read_text_file": {
+    "result": "Ok",
+    "value": "'changed'",
+    "error": "None"
+   },
+   "fs_canonical_path": {
+    "result": "Ok",
+    "value": "'C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\pyfs-akwtq_q8\\\\f\u00e9.txt'",
+    "error": "None"
+   },
+   "listing_final": [
+    [
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ],
+    [
+     103,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pair",
+   "input": [
+    102,
+    55357,
+    56832,
+    46,
+    116,
+    120,
+    116
+   ],
+   "tool_write": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     119,
+     114,
+     111,
+     116,
+     101,
+     32,
+     55,
+     32,
+     98,
+     121,
+     116,
+     101,
+     115,
+     32,
+     116,
+     111,
+     32,
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "listing_after_write": [
+    [
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "tool_read": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     99,
+     111,
+     110,
+     116,
+     101,
+     110,
+     116
+    ]
+   },
+   "tool_edit": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     114,
+     101,
+     112,
+     108,
+     97,
+     99,
+     101,
+     100,
+     32,
+     49,
+     32,
+     98,
+     108,
+     111,
+     99,
+     107,
+     40,
+     115,
+     41,
+     32,
+     105,
+     110,
+     32,
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116,
+     46
+    ]
+   },
+   "tool_ls": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "fs_write_file": {
+    "result": "Ok",
+    "value": "None",
+    "error": "None"
+   },
+   "fs_read_text_file": {
+    "result": "Ok",
+    "value": "'changed'",
+    "error": "None"
+   },
+   "fs_canonical_path": {
+    "result": "Ok",
+    "value": "'C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\pyfs-te559xp6\\\\f\ud83d\ude00.txt'",
+    "error": "None"
+   },
+   "listing_final": [
+    [
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ],
+    [
+     103,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   ]
+  },
+  {
+   "id": "lone-high-middle",
+   "input": [
+    102,
+    97,
+    55296,
+    98,
+    46,
+    116,
+    120,
+    116
+   ],
+   "tool_write": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     119,
+     114,
+     111,
+     116,
+     101,
+     32,
+     55,
+     32,
+     98,
+     121,
+     116,
+     101,
+     115,
+     32,
+     116,
+     111,
+     32,
+     102,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "listing_after_write": [
+    [
+     102,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "tool_read": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     99,
+     111,
+     110,
+     116,
+     101,
+     110,
+     116
+    ]
+   },
+   "tool_edit": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     114,
+     101,
+     112,
+     108,
+     97,
+     99,
+     101,
+     100,
+     32,
+     49,
+     32,
+     98,
+     108,
+     111,
+     99,
+     107,
+     40,
+     115,
+     41,
+     32,
+     105,
+     110,
+     32,
+     102,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116,
+     46
+    ]
+   },
+   "tool_ls": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     102,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "fs_write_file": {
+    "result": "Ok",
+    "value": "None",
+    "error": "None"
+   },
+   "fs_read_text_file": {
+    "result": "Ok",
+    "value": "'changed'",
+    "error": "None"
+   },
+   "fs_canonical_path": {
+    "result": "Ok",
+    "value": "'C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\pyfs-m75g_mip\\\\fa\\ud800b.txt'",
+    "error": "None"
+   },
+   "listing_final": [
+    [
+     102,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116
+    ],
+    [
+     103,
+     97,
+     55296,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   ]
+  },
+  {
+   "id": "lone-low-end",
+   "input": [
+    102,
+    97,
+    56320,
+    46,
+    116,
+    120,
+    116
+   ],
+   "tool_write": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     119,
+     114,
+     111,
+     116,
+     101,
+     32,
+     55,
+     32,
+     98,
+     121,
+     116,
+     101,
+     115,
+     32,
+     116,
+     111,
+     32,
+     102,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "listing_after_write": [
+    [
+     102,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "tool_read": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     99,
+     111,
+     110,
+     116,
+     101,
+     110,
+     116
+    ]
+   },
+   "tool_edit": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     114,
+     101,
+     112,
+     108,
+     97,
+     99,
+     101,
+     100,
+     32,
+     49,
+     32,
+     98,
+     108,
+     111,
+     99,
+     107,
+     40,
+     115,
+     41,
+     32,
+     105,
+     110,
+     32,
+     102,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116,
+     46
+    ]
+   },
+   "tool_ls": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     102,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "fs_write_file": {
+    "result": "Ok",
+    "value": "None",
+    "error": "None"
+   },
+   "fs_read_text_file": {
+    "result": "Ok",
+    "value": "'changed'",
+    "error": "None"
+   },
+   "fs_canonical_path": {
+    "result": "Ok",
+    "value": "'C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\pyfs-jferp0dr\\\\fa\\udc00.txt'",
+    "error": "None"
+   },
+   "listing_final": [
+    [
+     102,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116
+    ],
+    [
+     103,
+     97,
+     56320,
+     46,
+     116,
+     120,
+     116
+    ]
+   ]
+  },
+  {
+   "id": "mixed-pair-then-lone",
+   "input": [
+    102,
+    55357,
+    56832,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "tool_write": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     119,
+     114,
+     111,
+     116,
+     101,
+     32,
+     55,
+     32,
+     98,
+     121,
+     116,
+     101,
+     115,
+     32,
+     116,
+     111,
+     32,
+     102,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "listing_after_write": [
+    [
+     102,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "tool_read": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     99,
+     111,
+     110,
+     116,
+     101,
+     110,
+     116
+    ]
+   },
+   "tool_edit": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     83,
+     117,
+     99,
+     99,
+     101,
+     115,
+     115,
+     102,
+     117,
+     108,
+     108,
+     121,
+     32,
+     114,
+     101,
+     112,
+     108,
+     97,
+     99,
+     101,
+     100,
+     32,
+     49,
+     32,
+     98,
+     108,
+     111,
+     99,
+     107,
+     40,
+     115,
+     41,
+     32,
+     105,
+     110,
+     32,
+     102,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116,
+     46
+    ]
+   },
+   "tool_ls": {
+    "is_error": false,
+    "text_has_input": null,
+    "text_units": [
+     102,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "fs_write_file": {
+    "result": "Ok",
+    "value": "None",
+    "error": "None"
+   },
+   "fs_read_text_file": {
+    "result": "Ok",
+    "value": "'changed'",
+    "error": "None"
+   },
+   "fs_canonical_path": {
+    "result": "Ok",
+    "value": "'C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\pyfs-bt2i_5wu\\\\f\ud83d\ude00\\ud800.txt'",
+    "error": "None"
+   },
+   "listing_final": [
+    [
+     102,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116
+    ],
+    [
+     103,
+     55357,
+     56832,
+     55296,
+     46,
+     116,
+     120,
+     116
+    ]
+   ]
+  }
+ ]
+}
