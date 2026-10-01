@@ -209,7 +209,7 @@
    }
   },
   {
-   "id": "enum-lone/ascii",
+   "id": "enum-fffd/ascii",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -433,7 +433,7 @@
    }
   },
   {
-   "id": "enum-lone/bmp",
+   "id": "enum-fffd/bmp",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -679,7 +679,7 @@
    "raw_unchanged": true
   },
   {
-   "id": "enum-lone/pair",
+   "id": "enum-fffd/pair",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -903,7 +903,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-high-start",
+   "id": "enum-fffd/lone-high-start",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -1118,7 +1118,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-high-middle",
+   "id": "enum-fffd/lone-high-middle",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -1343,7 +1343,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-high-end",
+   "id": "enum-fffd/lone-high-end",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -1552,40 +1552,20 @@
    }
   },
   {
-   "id": "enum-lone/lone-high-only",
-   "outcome": "prepared",
-   "hook": {
+   "id": "enum-fffd/lone-high-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\"\n}",
+   "runtime_after_failure": {
     "values": {
      "/text": [
       55296
      ]
     },
     "keys": {}
-   },
-   "execute": {
-    "values": {
-     "/text": [
-      55296
-     ]
-    },
-    "keys": {}
-   },
-   "after": {
-    "values": {
-     "/text": [
-      55296
-     ]
-    },
-    "keys": {}
-   },
-   "same_object": true,
-   "projections": {
-    "/text": {
-     "utf8_hex": "efbfbd",
-     "json": "\"\\ud800\""
-    }
-   },
-   "raw_unchanged": true
+   }
   },
   {
    "id": "open/lone-low-start",
@@ -1795,7 +1775,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-low-start",
+   "id": "enum-fffd/lone-low-start",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -2010,7 +1990,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-low-middle",
+   "id": "enum-fffd/lone-low-middle",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -2235,7 +2215,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-low-end",
+   "id": "enum-fffd/lone-low-end",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -2444,7 +2424,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-low-only",
+   "id": "enum-fffd/lone-low-only",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -2667,7 +2647,7 @@
    }
   },
   {
-   "id": "enum-lone/adjacent-highs",
+   "id": "enum-fffd/adjacent-highs",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -2891,7 +2871,7 @@
    }
   },
   {
-   "id": "enum-lone/adjacent-lows",
+   "id": "enum-fffd/adjacent-lows",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -3115,7 +3095,7 @@
    }
   },
   {
-   "id": "enum-lone/high-then-non-low",
+   "id": "enum-fffd/high-then-non-low",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -3339,7 +3319,7 @@
    }
   },
   {
-   "id": "enum-lone/low-then-high",
+   "id": "enum-fffd/low-then-high",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -3578,7 +3558,7 @@
    }
   },
   {
-   "id": "enum-lone/pair-then-lone-high",
+   "id": "enum-fffd/pair-then-lone-high",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -3818,7 +3798,7 @@
    }
   },
   {
-   "id": "enum-lone/lone-low-then-pair",
+   "id": "enum-fffd/lone-low-then-pair",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -3982,7 +3962,7 @@
    }
   },
   {
-   "id": "enum-lone/empty",
+   "id": "enum-fffd/empty",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -4188,7 +4168,7 @@
    }
   },
   {
-   "id": "enum-lone/nul",
+   "id": "enum-fffd/nul",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -4402,7 +4382,7 @@
    }
   },
   {
-   "id": "enum-lone/nul-middle",
+   "id": "enum-fffd/nul-middle",
    "outcome": "argument_validation_failure",
    "message": "- text: must be equal to one of the allowed values",
    "hook_ran": false,
@@ -4418,6 +4398,234 @@
     },
     "keys": {}
    }
+  },
+  {
+   "id": "open/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
   },
   {
    "id": "position/nested-object-value",
@@ -5545,6 +5753,42 @@
     "/edits/0/newText": {
      "utf8_hex": "410042",
      "json": "\"A\\u0000B\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
     }
    },
    "raw_unchanged": false

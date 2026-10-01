@@ -24,7 +24,7 @@ GATE_NOTE_EDIT = (" Gate WP-13.2: an integration witness through the real built-
 GROUPS = [
     ("open", ["open"], "prepared-string-undeclared-field",
      "A tool's own prepare_arguments sets a key the schema does not declare to each member of the Owner decision's "
-     "string neighborhood. Pinned Pi keeps the exact UTF-16 code units -- lone high and low surrogates at every "
+     "string neighborhood plus the real U+FFFD (L0506-D002-R001). Pinned Pi keeps the exact UTF-16 code units -- lone high and low surrogates at every "
      "position, adjacent and reversed surrogates, valid pairs, the empty string and NUL -- and the pre-execute hook "
      "and execute observe them."),
     ("string", ["string"], "prepared-string-declared-type",
@@ -36,9 +36,11 @@ GROUPS = [
     ("pattern", ["pattern-one-char", "pattern-two-chars"], "prepared-string-pattern-keywords",
      "pattern is matched in Unicode mode: `.` matches a valid pair as one character and an unpaired surrogate as "
      "one character; NUL is a character."),
-    ("equality", ["const-pair", "enum-lone"], "prepared-string-equality-keywords",
-     "const/enum compare exact code-unit sequences: the pair constant matches only the pair, and the lone-high enum "
-     "member matches only the lone high (not the replacement character, not the lone low)."),
+    ("equality", ["const-pair", "enum-fffd"], "prepared-string-equality-keywords",
+     "const/enum compare exact code-unit sequences: the pair constant matches only the pair, and enum [U+FFFD] "
+     "matches only the real replacement character -- every unpaired-surrogate instance is rejected, so a binding "
+     "that replaces a lone surrogate with U+FFFD before validation is caught. The schema holds only scalar strings "
+     "(a lone surrogate IN THE SCHEMA is L05-D001's domain, Owner decision L0506-D002-R001)."),
 ]
 
 

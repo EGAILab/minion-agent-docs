@@ -696,16 +696,22 @@ The same domain applies to **object keys** in the prepared value.
   - treat high and low surrogates differently;
   - hand the hook and `execute` different values.
 
-**Validation** (pinned `validateToolArguments`, `typebox` 1.3.7; 160 characterized cells):
+**Validation** (pinned `validateToolArguments`, `typebox` 1.3.7; 168 characterized cells):
 
 | Keyword | Rule |
 |---|---|
 | `type: string` | every member is a string |
 | `minLength` / `maxLength` | count **code points**: a valid pair counts 1, and each unpaired surrogate code unit counts 1 (the pair passes `maxLength: 1`; adjacent highs fail it) |
 | `pattern` | Unicode mode: `.` matches a valid pair as one character and an unpaired surrogate as one character; NUL is a character |
-| `const` / `enum` | exact code-unit sequence equality (the pair matches only the pair; a lone high matches only that lone high, not U+FFFD and not a lone low) |
+| `const` / `enum` | exact code-unit sequence equality (the pair matches only the pair; `enum: [U+FFFD]` matches only the real U+FFFD and rejects every unpaired-surrogate instance) |
 
 A rejection is Layer 06's certified immediate argument-validation error (`TOOL-003`). Producing that error MUST NOT fail for any prepared string.
+
+**Instance domain, not schema domain** (`L0506-D002-R001`; Owner decision `minion-agent#99` comment `5926416181`).
+- This delta owns the prepared **instance**. The schema it is validated against holds only scalar strings here.
+- A non-scalar string **inside the schema** belongs to the separate Layer-05 delta `L05-D001` (`minion-agent#104`). That covers a property name, a `required` entry, a `const`/`enum` literal or a `pattern` holding an unpaired surrogate.
+- No certification claim of this delta depends on such a schema literal.
+- The scalar schema `enum: [U+FFFD]` is the instance-side discriminator against early replacement: a lone-surrogate instance stays distinct from the real U+FFFD.
 
 **Projection boundaries.** Each conversion of a runtime string into another representation is its own boundary, and replacement happens only there:
 - **UTF-8 encoding.** Node's `Buffer.from(s, "utf8")` is `fs.writeFile(path, s, "utf-8")`, which `edit`/`write` use. Each unpaired surrogate code unit becomes `EF BF BD`; a valid pair becomes its 4-byte UTF-8, and NUL becomes `00`. The WP-13.2 tools own this boundary (`spec/tools.md` String semantics).
@@ -722,12 +728,12 @@ A rejection is Layer 06's certified immediate argument-validation error (`TOOL-0
 - **Rust.** It needs a prepared-runtime string, and a prepared object **key**, able to carry any UTF-16 code-unit sequence losslessly through preparation, validation, hooks and `execute`. Examples are UTF-16 code units, or a WTF-8/WTF-16-capable wrapper. The API spelling is Rust's, delegated to its implementation review. `String`, `String::from_utf16_lossy`, early U+FFFD replacement and rejection are not acceptable (Owner decision §3). Its validation MUST implement the keyword rules above over code units and code points, not over a lossy projection.
 
 **Evidence** (`minion-agent-docs` `assurance/layers/data/l0506-d002/`).
-- **The pinned-Pi authority** covers 189 cases:
-  - the 20-member neighborhood × 8 schema kinds;
+- **The pinned-Pi authority** covers 198 cases:
+  - the 21-member neighborhood (the Owner decision's 20 plus the real U+FFFD, `L0506-D002-R001`) × 8 schema kinds;
   - nested-object, array-element and two-string positions;
   - 5 key cases;
   - the diagnostic case;
-  - the 20 real-`edit` cases.
+  - the 21 real-`edit` cases.
 
   It runs `agent-loop.ts`' preparation/execute/finalize functions sliced from source, unmodified `validateToolArguments` (`typebox` 1.3.7, SRI-checked) and `edit.ts`' `prepareEditArguments`/`editSchema`, sliced from source.
 - **Canonical scenarios** live in `minion-agent` `conformance/agent/prepared-runtime-string/`, shape `prepared-string-scenario.schema.json`: 8 documents.
@@ -735,8 +741,8 @@ A rejection is Layer 06's certified immediate argument-validation error (`TOOL-0
   - The runner asserts that the hook and `execute` observe the same code units (or, for a replacement, the replacement's), and that the raw arguments are unchanged.
   - Its language-neutral PREFLIGHT ties `observed`/`observed_keys`/`execute_observed` to the declared pointers.
 - **Evidence staging**, as `L0506-D001-R003`:
-  - **`L0506-D002`, the delta's certification gate:** 7 custom documents, 173 cases. That is 160 neighborhood × schema cells, 9 positions/keys/diagnostic cases, and 4 hook-replacement cases. The replacement cases are Minion's extension, and their expectations are the contract's, not Pi's.
-  - **`WP-13.2`:** `prepared-string-edit-json-string`, 20 cases through the real `edit` tool, including the final file bytes. Rust WP-13.2's implementation review runs it once this delta is certified; it is **not** part of this delta's certification.
+  - **`L0506-D002`, the delta's certification gate:** 7 custom documents, 181 cases. That is 168 neighborhood × schema cells, 9 positions/keys/diagnostic cases, and 4 hook-replacement cases. The replacement cases are Minion's extension, and their expectations are the contract's, not Pi's.
+  - **`WP-13.2`:** `prepared-string-edit-json-string`, 21 cases through the real `edit` tool, including the final file bytes. Rust WP-13.2's implementation review runs it once this delta is certified; it is **not** part of this delta's certification.
 - **The negative controls each binding runs** (Owner decision §6):
   - an unpaired surrogate replaced with U+FFFD during preparation;
   - one rejected during preparation;

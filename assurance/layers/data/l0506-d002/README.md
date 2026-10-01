@@ -11,7 +11,7 @@ All files here are byte-exact (`.gitattributes`: `-text`).
 | Pi | `b7bb00b936dbe21b8e160b3e89efdec361846699`. `agent/src/agent-loop.ts`, `ai/src/utils/validation.ts` and `coding-agent/src/core/tools/edit.ts` are checked against `harness/pi_sources.sha256` |
 | Runtime | `node:22.15.1-alpine` |
 | `typebox` | 1.3.7, fetched with `npm pack`. Its SHA-512 must equal the integrity in pinned Pi's `package-lock.json` |
-| Cases | `cases.json` (189 cases), regenerated deterministically by `harness/make_cases.py`. Its sha256 is `cases.sha256` |
+| Cases | `cases.json` (198 cases), regenerated deterministically by `harness/make_cases.py`. Its sha256 is `cases.sha256` |
 
 ## Reproduce
 
@@ -20,7 +20,7 @@ docker run --rm -v <pi>:/pi:ro -v <this directory>:/evid:ro -v <out>:/out node:2
 python harness/make_scenarios.py cases.json <out>/authority.json <minion-agent>/conformance/agent/prepared-runtime-string
 ```
 
-- `authority.json` must be byte-identical to `out/authority.json` (sha256 `664662eb89bfdc9ddd6ad381bdbd89b852ed6720802218c63f4dad2188e3fead`).
+- `authority.json` must be byte-identical to `out/authority.json` (sha256 `02193fff2aeb72fceedbb146fa34bcce6d462d9dda0a4e00d58e2b9f666f0f9f`; the pre-`L0506-D002-R001` run was `664662eb…`).
 - The regenerated scenarios must be byte-identical to the code repository's.
 
 ## What the authority runs
@@ -46,13 +46,13 @@ It runs them with Pi's unmodified `validateToolArguments`. For each case:
 
 | Cases | Result |
 |---|---|
-| 20 neighborhood members × `open` / `string` | all kept, exact code units, at the hook, execute and after-hook (one object) |
+| 21 neighborhood members (20 + the real U+FFFD) × `open` / `string` | all kept, exact code units, at the hook, execute and after-hook (one object) |
 | × `min-length-2` / `max-length-1` | code-point counts: a pair is 1, each unpaired surrogate is 1 |
 | × `pattern-one-char` / `pattern-two-chars` | Unicode mode: `.` matches a pair or an unpaired surrogate as one character |
-| × `const-pair` / `enum-lone` | exact code-unit equality |
+| × `const-pair` / `enum-fffd` | exact code-unit equality; `enum: [U+FFFD]` accepts only the real U+FFFD and rejects every unpaired surrogate (the schema holds only scalar strings, `L0506-D002-R001`) |
 | `position/*` (3) | nested value, array element, a lone high and a lone low together: kept |
 | `key/*` (5) | lone high, lone low, pair, reversed pair and empty keys: kept |
 | `diagnostic/lone-surrogates` | rejected. The diagnostic escapes `\ud800\ud800`, `A\udc00` and `\u0000`, and emits the pair literally. Runtime values are unchanged, and no hook or execute runs |
-| `edit/*` (20) | every member prepared. The hook observes the exact code units. The raw arguments are mutated in place by Pi (Minion's certified rule gives `prepare_arguments` a fresh copy instead). UTF-8 projection: unpaired surrogate → `EF BF BD` |
+| `edit/*` (21) | every member prepared. The hook observes the exact code units. The raw arguments are mutated in place by Pi (Minion's certified rule gives `prepare_arguments` a fresh copy instead). UTF-8 projection: unpaired surrogate → `EF BF BD` |
 
-All 180 cells shared with characterization pass 1 (`../l0506-d002-characterization/`) agree in verdict, code units and projections.
+All 160 cells shared with characterization pass 1 (`../l0506-d002-characterization/`) agree in verdict, code units and projections: 7 schema kinds × 20 members, plus 20 `edit` cases. Pass 1's 20 `enum-lone` cells put a lone surrogate in the **schema**, and moved to `L05-D001` (`L0506-D002-R001`).

@@ -37,11 +37,14 @@ NEIGHBORHOOD = {
     "empty": [],
     "nul": [0x00],
     "nul-middle": [A, 0x00, B],
+    # L0506-D002-R001: the real replacement character, distinct from every unpaired surrogate
+    "replacement-char": [0xFFFD],
 }
 # schema kinds that observe a string: none (undeclared), its type, its length in both directions, a Unicode-mode
-# pattern counting one and two characters, and exact equality (const of a pair, enum of a lone high)
+# pattern counting one and two characters, and exact equality (const of a pair, enum of U+FFFD). The schema itself
+# holds only scalar strings: a lone surrogate IN THE SCHEMA is L05-D001's domain (Owner decision L0506-D002-R001)
 SCHEMA_KINDS = ["open", "string", "min-length-2", "max-length-1", "pattern-one-char", "pattern-two-chars",
-                "const-pair", "enum-lone"]
+                "const-pair", "enum-fffd"]
 
 cases = []
 

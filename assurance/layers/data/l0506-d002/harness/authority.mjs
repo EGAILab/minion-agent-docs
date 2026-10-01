@@ -46,7 +46,8 @@ const SCHEMAS = {
   "pattern-one-char": { type: "object", properties: { text: { type: "string", pattern: "^.$" } } },
   "pattern-two-chars": { type: "object", properties: { text: { type: "string", pattern: "^..$" } } },
   "const-pair": { type: "object", properties: { text: { const: S([0xd83d, 0xde00]) } } },
-  "enum-lone": { type: "object", properties: { text: { enum: [S([0xd800])] } } },
+  // L0506-D002-R001: scalar schema literals only (a lone surrogate in the schema is L05-D001's domain)
+  "enum-fffd": { type: "object", properties: { text: { enum: [S([0xfffd])] } } },
 };
 
 // a prepare_set value: {"utf16": [...]} is a string; {"$key": [...], "value": v} an object with that one key

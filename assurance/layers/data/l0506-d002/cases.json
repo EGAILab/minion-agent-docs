@@ -133,9 +133,9 @@
   ]
  },
  {
-  "id": "enum-lone/ascii",
+  "id": "enum-fffd/ascii",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -285,9 +285,9 @@
   ]
  },
  {
-  "id": "enum-lone/bmp",
+  "id": "enum-fffd/bmp",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -437,9 +437,9 @@
   ]
  },
  {
-  "id": "enum-lone/pair",
+  "id": "enum-fffd/pair",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -589,9 +589,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-high-start",
+  "id": "enum-fffd/lone-high-start",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -748,9 +748,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-high-middle",
+  "id": "enum-fffd/lone-high-middle",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -901,9 +901,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-high-end",
+  "id": "enum-fffd/lone-high-end",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1046,9 +1046,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-high-only",
+  "id": "enum-fffd/lone-high-only",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1197,9 +1197,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-low-start",
+  "id": "enum-fffd/lone-low-start",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1356,9 +1356,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-low-middle",
+  "id": "enum-fffd/lone-low-middle",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1509,9 +1509,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-low-end",
+  "id": "enum-fffd/lone-low-end",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1654,9 +1654,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-low-only",
+  "id": "enum-fffd/lone-low-only",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1805,9 +1805,9 @@
   ]
  },
  {
-  "id": "enum-lone/adjacent-highs",
+  "id": "enum-fffd/adjacent-highs",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -1957,9 +1957,9 @@
   ]
  },
  {
-  "id": "enum-lone/adjacent-lows",
+  "id": "enum-fffd/adjacent-lows",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -2109,9 +2109,9 @@
   ]
  },
  {
-  "id": "enum-lone/high-then-non-low",
+  "id": "enum-fffd/high-then-non-low",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -2261,9 +2261,9 @@
   ]
  },
  {
-  "id": "enum-lone/low-then-high",
+  "id": "enum-fffd/low-then-high",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -2420,9 +2420,9 @@
   ]
  },
  {
-  "id": "enum-lone/pair-then-lone-high",
+  "id": "enum-fffd/pair-then-lone-high",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -2580,9 +2580,9 @@
   ]
  },
  {
-  "id": "enum-lone/lone-low-then-pair",
+  "id": "enum-fffd/lone-low-then-pair",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -2712,9 +2712,9 @@
   ]
  },
  {
-  "id": "enum-lone/empty",
+  "id": "enum-fffd/empty",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": []
@@ -2854,9 +2854,9 @@
   ]
  },
  {
-  "id": "enum-lone/nul",
+  "id": "enum-fffd/nul",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
@@ -3012,15 +3012,159 @@
   ]
  },
  {
-  "id": "enum-lone/nul-middle",
+  "id": "enum-fffd/nul-middle",
   "tool": "custom",
-  "schema": "enum-lone",
+  "schema": "enum-fffd",
   "prepare_set": {
    "/text": {
     "utf16": [
      65,
      0,
      66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/replacement-char",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/replacement-char",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/replacement-char",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/replacement-char",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/replacement-char",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/replacement-char",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/replacement-char",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/replacement-char",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
     ]
    }
   },
@@ -3453,6 +3597,17 @@
   "arguments": {
    "path": "f.txt",
    "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\u0000\\u0042\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/replacement-char",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ufffd\"}]"
   },
   "observe": [
    "/edits/0/newText"
