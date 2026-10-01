@@ -49,8 +49,13 @@ def _process_closure(old: dict[str, Any], new: dict[str, Any]) -> str | None:
     facts; the agent still verifies the final review approved that exact candidate."""
     if not (old["status"] == "FINAL_CONTRACT_REVIEW" and new["status"] == "CLOSED"):
         return None
-    if new.get("requirements"):
-        return "FINAL_CONTRACT_REVIEW -> CLOSED is for a process-only WP (requirements: []) (§10.2)"
+    if old.get("requirements") != [] or new.get("requirements") != []:
+        # explicit `[]` in BOTH states: a missing/null scope is not process-only, and the closure
+        # patch itself may not reclassify a product WP (PROC-L13-F001 refinement)
+        return (
+            "FINAL_CONTRACT_REVIEW -> CLOSED is for a process-only WP: requirements must be an explicit "
+            "[] before and after the transition (§10.2)"
+        )
     if new.get("open_findings"):
         return "cannot close with open findings (§4.3)"
     candidates = new.get("current_candidate") or {}

@@ -458,7 +458,7 @@ FINAL_CONTRACT_REVIEW
   -> CLOSED                    # process-only WP: final complete review APPROVED, candidate merged
 ```
 
-`minion-process apply` refuses it unless `requirements` is empty, `open_findings` is empty and every `current_candidate` entry records its `merged_sha` (§4.3). A WP that owns any product requirement still closes only through `CLOSURE_REVIEW`.
+`minion-process apply` refuses it unless `requirements` is an explicit `[]` in both the current and the intended state (a missing or `null` scope is not process-only, and the closing patch may not reclassify a product WP; a legitimate scope correction is a separate, ordinary checked state change), `open_findings` is empty and every `current_candidate` entry records its `merged_sha` (§4.3). A WP that owns any product requirement still closes only through `CLOSURE_REVIEW`.
 
 It keeps these historical transitions **illegal**, with the legal route stated:
 - `CONTRACT_REVIEW -> REMEDIATION` and `REMEDIATION -> CONTRACT_REVIEW` (#49): contract findings are remediated in `CONTRACT_DRAFT`. `REMEDIATION` is for an implementation candidate.

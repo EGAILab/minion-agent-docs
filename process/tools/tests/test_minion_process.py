@@ -468,3 +468,40 @@ def test_process_closure_is_refused_unless_mechanically_complete(
 ) -> None:
     with pytest.raises(CheckFailed, match=message):
         _close(_process_wp(**changes))
+
+
+def _close_for_real(state: dict[str, Any], clear_requirements: bool = False) -> FakeGitHub:
+    from minion_process.github import GitHub
+    from minion_process.model import render_body
+    from minion_process.ops import commit_state
+
+    fake = FakeGitHub()
+    fake.issues[(CODE, 10)] = {"body": render_body({"workflow": state}, ""), "state": "OPEN", "title": "x"}
+
+    def mutate(w: dict[str, Any]) -> None:
+        w["status"] = "CLOSED"
+        w["next_owner"] = None
+        w["next_action"] = None
+        if clear_requirements:
+            w["requirements"] = []
+
+    allowed = {"status", "next_owner", "next_action", "requirements"}
+    with pytest.raises(CheckFailed, match="explicit"):
+        commit_state(GitHub(fake.run), CODE, 10, mutate, allowed)
+    return fake
+
+
+@pytest.mark.parametrize(
+    ("scope", "clear"),
+    [("missing", False), (None, False), (["TOOL-041"], True)],
+    ids=["requirements-missing", "requirements-null", "closure-clears-product-requirements"],
+)
+def test_process_closure_needs_an_explicit_empty_scope_before_and_after(scope: object, clear: bool) -> None:
+    """PROC-L13-F001 refinement (Codex F001 review): each bypass is refused with ZERO writes."""
+    state = _process_wp()
+    if scope == "missing":
+        del state["requirements"]
+    else:
+        state["requirements"] = scope
+    fake = _close_for_real(state, clear_requirements=clear)
+    assert fake.edits == 0
