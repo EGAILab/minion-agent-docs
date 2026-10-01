@@ -34,7 +34,16 @@ second implementation's Session layer must reproduce the surface/log-only split 
 value-identity rule exactly, but is not required to know what any particular log-only kind a caller
 invents is for.
 
-Event data values are the JavaScript value domain Layer 02 defines for raw tool-call arguments (`spec/llm.md`, "Raw tool-call argument value domain", `L0206-D002`). These are strings of any UTF-16 code units, `-0` and ±Infinity included. Append accepts them, and replay and projection return them unchanged. The log is not a byte serialization, so no JSON text projection applies to it.
+Event data values are the JavaScript value domain of the carrier they hold. The log admits the union of these domains, and replay and projection return every value unchanged:
+
+| Carrier | Domain |
+|---|---|
+| raw tool-call arguments (`spec/llm.md`, "Raw tool-call argument value domain", `L0206-D002`) | strings of any UTF-16 code units, `-0` and ±Infinity included; no `NaN`, because `JSON.parse` cannot produce it |
+| a tool result's `content` text and `details` (`spec/tools.md`, "Tool-result runtime value domain", `L0506-D003`) | the same string domain at any depth of `details`, keys included, and numbers including `-0`, ±Infinity **and `NaN`** |
+
+- **The carrier boundary is kept.** `NaN` is admitted because it can occur inside a tool result's `ToolResultMessage`. It does not widen the raw-argument domain: `ToolCall.arguments` stay `NaN`-free.
+- **Replay means committed history.** The certified replay seams return the logged value unchanged: message derivation (`derive_messages`), and any binding surface that rebuilds events from the log (Python: Layer 08 `project`, including the `tool_execution_end` it rebuilds). A codec round trip of the event an append returned is not replay evidence.
+- **No JSON projection.** The log is not a byte serialization, so no JSON text projection applies to it. Pinned Pi's session-file projection is the obligation of a future persisted form (`spec/tools.md`, `L0506-D003`).
 
 Session projection ends at the message vocabulary Layer 02 defines. The Pi-compatible target-model
 transformation is a distinct, later stage that runs after session projection, not part of it.
