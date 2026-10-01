@@ -582,6 +582,11 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 
 - A declared `number`/`integer` instance is finite-only, which is also JSON Schema's own data model: JSON has no non-finite numbers.
 - A binding's validator MUST reject a non-finite value there. It MUST NOT reject, drop, clamp, stringify or null-map one in a position the schema leaves unconstrained.
+- **Numeric keywords apply to finite numbers only** (`L0506-D001-RC002`). `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum` and `multipleOf` constrain a finite number, as JSON Schema defines. A non-finite runtime number is outside them, as it is outside JSON's number model: in a position with no declared `number`/`integer` type, such a keyword neither accepts nor rejects it.
+  - Pinned Pi accepts ±Infinity and NaN under `{maximum: 0}`, `{minimum: 0}`, either exclusive bound and `{multipleOf: 2}`. It rejects the finite controls `1`, `-1`, `0`/`-0` and `3`.
+  - Through composition the branch verdicts follow. `{oneOf: [{maximum: 0}, {minimum: 1}]}` rejects ±Infinity and NaN, because both branches accept it. `{not: {maximum: 0}}` rejects +Infinity and NaN.
+  - A declared type still governs: `{type: number, maximum: 0}` rejects ±Infinity and NaN.
+  - A binding MUST NOT compare a non-finite value against a bound.
 - Rejection is Layer 06's certified immediate argument-validation error (`TOOL-003`; its text is Layer 06's own).
 
 **Hooks and execute.** The `tools/pre-execute` listener's `arguments` and `execute`'s arguments carry the prepared runtime value exactly, including the sign of zero and non-finite values. A hook's `Proceed(arguments=...)` replacement is certified Layer-06 behavior. It is not extended here beyond carrying the same domain.
@@ -608,13 +613,17 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
   - The check runs no user code, so each user validator runs exactly once. A value a user callback makes finite is judged as delivered (`CE-L0506-D001-I001-01` rev 3).
 - Pydantic's own coercion stays the certified, disclosed Layer-06 divergence. In particular, an `int` field coerces `-0.0` to `0`; this is pre-existing and unchanged here, and is disclosed.
 
+**Disclosed cells under the existing `TOOL-003` mapping** ("arguments conform to the supplied JSON Schema", not TypeBox's exact pipeline). These are recorded by `L0506-D001-RC002`; no new divergence is introduced:
+- **Number/string coercion.** In `{type: string}` or a `number | string` union, pinned Pi coerces a non-finite number to the string `"Infinity"`, `"-Infinity"` or `"NaN"`, and coerces a finite number such as `5` to `"5"`. Both bindings reject; neither reproduces TypeBox coercion.
+- **`uniqueItems` with `[0, -0]`.** Pinned Pi accepts, because TypeBox equality distinguishes `-0`. Both bindings reject, as JSON Schema's numeric equality does: `0` and `-0` are equal. `uniqueItems` over repeated ±Infinity or NaN rejects in Pi and in both bindings.
+
 **Evidence** (`assurance/layers/data/l0506-d001/`).
-- The pinned-Pi authority covers 27 cases, including the diagnostic-projection case above. For a failure, it records both Pi's diagnostic serialization and the unchanged runtime values. It runs:
+- The pinned-Pi authority covers 58 cases, including the diagnostic-projection case above and the 31 numeric-keyword cases (`L0506-D001-RC002`). For a failure, it records both Pi's diagnostic serialization and the unchanged runtime values. It runs:
   - `agent-loop.ts`'s preparation and `validateToolArguments` unmodified;
   - `edit.ts`'s `editSchema`, sliced from source;
   - the `prepareEditArguments` copy the WP-13.2 authority already uses;
   - `typebox` 1.3.7, SRI-checked.
-- Canonical scenarios live in `minion-agent` `conformance/agent/prepared-runtime/`, shape `prepared-runtime-scenario.schema.json`: 4 documents, generated from the authority.
+- Canonical scenarios live in `minion-agent` `conformance/agent/prepared-runtime/`, shape `prepared-runtime-scenario.schema.json`: 5 documents, generated from the authority.
   - They cover the real `edit` path (±Infinity, -0, rounding, largest finite) and a custom shim against declared-number, declared-integer and undeclared positions (±Infinity, NaN, -0, large finite, 0).
   - The runner asserts that the hook and `execute` observe the same token and that the raw arguments are unchanged.
   - The shape has explicit `edit`/`custom` and prepared/failure forms, and a strict token grammar (`L0506-D001-R002`). Its language-neutral PREFLIGHT requires:
@@ -623,7 +632,7 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 
     A violation fails the document and is never defaulted.
 - **Evidence staging** (`L0506-D001-R003`, acyclic). Every scenario document names its `gate`.
-  - **`L0506-D001`: the delta's certification gate.** It is the three custom documents, with 19 cases. They use a tool's own `prepare_arguments` against declared-number, declared-integer and undeclared positions, so they run from the accepted Layer-05/06 baseline in every binding. The schema forbids an `edit` case in this gate.
+  - **`L0506-D001`: the delta's certification gate.** It is the four custom documents, with 50 cases. They use a tool's own `prepare_arguments` against declared-number, declared-integer and undeclared positions, and (`prepared-runtime-numeric-keyword-applicability`, 31 cases) positions constrained only by numeric keywords, so they run from the accepted Layer-05/06 baseline in every binding. The schema forbids an `edit` case in this gate.
   - **`WP-13.2`: the real-`edit` document, with 8 cases.** It is an integration witness through the real built-in `edit` tool, which lands with WP-13.2, and it is **not** part of this delta's certification.
     - Once `L0506-D001` is certified, WP-13.2's Python approval and Rust implementation reviews run it. It is recorded under `TOOL-030`.
     - Until then it counts as neither passed nor executed for this delta.

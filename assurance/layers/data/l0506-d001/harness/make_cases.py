@@ -48,6 +48,25 @@ cases.append({"id": "declared-number-diagnostic-projection", "tool": "custom", "
               "prepare_set": {"limit": "+Infinity", "extra": "NaN", "negativeZero": "-0"},
               "arguments": {}, "observe": ["/limit", "/extra", "/negativeZero"]})
 
+# L0506-D001-RC002: numeric validation keywords with no declared type. Pinned Pi applies minimum/maximum/
+# exclusive*/multipleOf to finite numbers only -- a non-finite value is outside them -- and the finite controls show
+# each keyword does apply to a finite number.
+KEYWORD_TOKENS = {
+    "bound-maximum": ["+Infinity", "-Infinity", "NaN", "-0", "1"],
+    "bound-minimum": ["+Infinity", "-Infinity", "NaN", "-1"],
+    "bound-exclusive-maximum": ["+Infinity", "-Infinity", "-0", "0"],
+    "bound-exclusive-minimum": ["+Infinity", "-Infinity", "-0"],
+    "multiple-of": ["+Infinity", "NaN", "-0", "3"],
+    "one-of-bounds": ["+Infinity", "-Infinity", "NaN", "5"],
+    "not-bound": ["+Infinity", "NaN", "1"],
+    "number-bound": ["+Infinity", "-Infinity", "NaN", "-0"],
+}
+SLUG = {"+Infinity": "pos-inf", "-Infinity": "neg-inf", "NaN": "nan", "-0": "neg-zero", "0": "zero", "1": "one",
+        "-1": "minus-one", "3": "three", "5": "five"}
+for kind, tokens in KEYWORD_TOKENS.items():
+    for token in tokens:
+        custom(f"{kind}-{SLUG[token]}", kind, "limit", token)
+
 with open(sys.argv[1], "w", encoding="utf-8", newline="\n") as handle:
     json.dump(cases, handle, indent=1)
     handle.write("\n")
