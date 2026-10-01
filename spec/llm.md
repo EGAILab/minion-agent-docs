@@ -52,7 +52,7 @@ signal})`. Actual transport cancellation remains deferred to `PROV-004`. See `sp
 
 ## Raw tool-call argument value domain (`AI-003`, cross-layer delta `L0206-D002`)
 
-**Status (`minion-agent#103`):** CONTRACT_DRAFT. Python: conforms at every certified boundary, with no production change (pending contract review). Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#103`):** AGREED FOR IMPLEMENTATION. Contract code #105 → `c9b6e910`, docs #210 → `2ef3828b`. Python: no production change, implementation review pending. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner decision on `L0506-D002-Q001`, Option 1 (`minion-agent#99` comment `5926162818`). This is a separate cross-layer post-certification delta. It is not part of `L0506-D002` (prepared strings) or `L0206-D001` (key order, K1). No intentional divergence; deferring to Layer 11 was rejected; no whole-layer reopen.
 - **The rule.** `ToolCall.arguments` is not constrained to what a host JSON library or native string type can hold. It holds the value pinned Pi's `JSON.parse` produces from a provider's argument text (`parseStreamingJson` → `parseJsonWithRepair`). That is a JavaScript value:

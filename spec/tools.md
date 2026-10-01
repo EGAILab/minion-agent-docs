@@ -156,7 +156,7 @@ result) is Layer 06, not certified here.
 
 ### Runtime-validation schema string domain (`TOOL-016` / `TOOL-003`, post-certification delta `L05-D001`)
 
-**Status (`minion-agent#104`):** CONTRACT_DRAFT. Python: conforms with no production change (pending contract review). Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#104`):** AGREED FOR IMPLEMENTATION. Contract code #106 → `ef7fe40c`, docs #211 → `c624330b`. Python: no production change, implementation review pending. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner decision on `L0506-D002-R001`, Option 1 (`minion-agent#99` comment `5926416181`). This is a separate Layer-05 delta. It is distinct from `L0506-D002` (prepared instance strings), `L0206-D002` (raw arguments) and `L0206-D001` (key order). No intentional divergence; no whole-Layer-05 reopen.
 - **The rule.** A tool's `parameters` schema is a JavaScript object in pinned Pi. Wherever runtime argument validation (`TOOL-003`) consumes one of its string values or object keys, that string is a JavaScript String: any UTF-16 code units, unpaired surrogates included. Registration MUST accept such a schema, and validation MUST honor it as pinned Pi's `validateToolArguments` does, per role:
@@ -695,7 +695,7 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 
 ### Prepared runtime string domain (`TOOL-041`, post-certification delta `L0506-D002`)
 
-**Status (`minion-agent#99`):** CONTRACT_DRAFT. Python: conforms with no production change (pending contract review). Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#99`):** CERTIFIED_CLOSED. Python: no production change; contract code #102 → `28d409d4`, docs #209 → `74f125e3`. Rust: code #108 → `ac661221`, docs #213 → `2d2ba5fc`, closure review on `minion-agent-docs#213`.
 
 - **Authorization.** Owner decision on `WP132-RUST-C001`, Option 1 (`minion-agent#49` comment `5924605017`). This is a narrow post-certification extension of the Layer-05/06 runtime domain, the sibling of `L0506-D001` (numbers). Historical Layer-05/06 certification stands outside the surface below, D001's semantics are not reopened, and no intentional divergence is introduced.
 - **Origin.** Rust WP-13.2 implementation finding `WP132-RUST-C001`:
