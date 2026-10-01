@@ -407,3 +407,64 @@ def test_cli_apply_with_a_patch_file(fake: FakeGitHub, tmp_path: Path) -> None:
     )
     assert main(["apply", "10", str(patch)], gh=GitHub(fake.run)) == 0
     assert split_body(fake.issues[(CODE, 10)]["body"]).workflow["status"] == "REMEDIATION"
+
+
+# ---- PROC-L13-F001: a process-only WP closes from FINAL_CONTRACT_REVIEW (coordination-state.md §10.2)
+
+
+def _process_wp(**changes: Any) -> dict[str, Any]:
+    state = {k: v for k, v in workflow(schema_version=2).items() if k not in ("code", "docs")}
+    state.update(
+        status="FINAL_CONTRACT_REVIEW",
+        requirements=[],
+        open_findings=[],
+        current_candidate={"docs": {"pr": 7, "sha": "a" * 40, "merged_sha": "b" * 40}},
+    )
+    state.update(changes)
+    return state
+
+
+def _close(state: dict[str, Any]) -> None:
+    from minion_process.github import GitHub
+    from minion_process.model import render_body
+    from minion_process.ops import commit_state
+
+    fake = FakeGitHub()
+    fake.issues[(CODE, 10)] = {"body": render_body({"workflow": state}, ""), "state": "OPEN", "title": "x"}
+
+    def mutate(w: dict[str, Any]) -> None:
+        w["status"] = "CLOSED"
+        w["next_owner"] = None
+        w["next_action"] = None
+
+    commit_state(GitHub(fake.run), CODE, 10, mutate, {"status", "next_owner", "next_action"}, dry_run=True)
+
+
+def test_a_process_only_wp_may_close_from_final_review() -> None:
+    assert check_transition("FINAL_CONTRACT_REVIEW", "CLOSED") is None
+    _close(_process_wp())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"requirements": ["TOOL-041"]}, "process-only"),
+        ({"open_findings": ["X-R001"]}, "open findings"),
+        ({"current_candidate": {"docs": {"pr": 7, "sha": "a" * 40}}}, "merged_sha"),
+        (
+            {
+                "current_candidate": {
+                    "docs": {"pr": 7, "sha": "a" * 40, "merged_sha": "b" * 40},
+                    "code": {"pr": 8, "sha": "c" * 40},
+                }
+            },
+            "merged_sha",
+        ),
+    ],
+    ids=["product-requirement", "open-finding", "unmerged", "one-candidate-unmerged"],
+)
+def test_process_closure_is_refused_unless_mechanically_complete(
+    changes: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(CheckFailed, match=message):
+        _close(_process_wp(**changes))

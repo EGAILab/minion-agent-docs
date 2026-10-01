@@ -137,3 +137,11 @@ Review: `minion-agent-docs#204`, published verbatim on Codex's behalf (comment `
 - Every probe is now caught: the three validator cases error, both handoff holes report failures, and the governance-less resume is refused with zero writes.
 - Tool: 93 tests, 100% statement coverage, ruff and strict mypy clean.
 - Live issues #35, #49, #50, #51 and #95 still validate.
+
+## Post-merge finding `PROC-L13-F001`: no closure route for a process-only work package
+
+**Found:** closing `PROC-L13` itself (`minion-agent#95`). That was after Codex's §11.8.8 final review APPROVED `minion-agent-docs#204` at `c86e1ede` (comment `5925906831`) and it merged as `e4790199`.
+- **The gap.** The reconciled transition table reaches `CLOSED` only through `CLOSURE_REVIEW`, which is Rust's review. A process/harness WP has no product requirement, no Python implementation and no Rust side, so it had no legal way to close. Forcing `FINAL_CONTRACT_REVIEW -> RUST_IMPLEMENTATION -> CLOSURE_REVIEW` would have recorded work that never happened.
+- **Fix (`coordination-state.md` §10.2).** `FINAL_CONTRACT_REVIEW -> CLOSED` is legal for a process-only WP. `minion-process apply` enforces the mechanical facts: `requirements: []`, no open finding, and every candidate's `merged_sha` recorded (§4.3). A WP owning any product requirement still closes only through `CLOSURE_REVIEW`.
+- **Lesson.** The table was reconciled against product WP histories (#49, #79, #88) only. A new *kind* of work package needs its own lifecycle replayed end to end before its first closure, not only its convergence states.
+

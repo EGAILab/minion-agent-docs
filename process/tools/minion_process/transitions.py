@@ -36,6 +36,7 @@ LEGAL: dict[str, frozenset[str]] = {
             "CONTRACT_CONVERGENCE",
             "PYTHON_IMPLEMENTATION",  # contract-phase final review approved (§10.1)
             "CONTRACT_DRAFT",  # contract-phase final review rejected (§10.1)
+            "CLOSED",  # a process-only WP, final review approved and merged (§10.2; ops guard)
         }
     ),
     "RUST_IMPLEMENTATION": frozenset({"CLOSURE_REVIEW"}),

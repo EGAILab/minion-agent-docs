@@ -42,6 +42,23 @@ class Report:
             raise CheckFailed(f"{verdict}: " + "; ".join(self.failed))
 
 
+def _process_closure(old: dict[str, Any], new: dict[str, Any]) -> str | None:
+    """`FINAL_CONTRACT_REVIEW -> CLOSED` is legal only for a process-only work package
+    (`coordination-state.md` §10.2): no product requirement, no open finding, and every candidate
+    merged (its accepted default-branch milestone recorded, §4.3). The tool checks these mechanical
+    facts; the agent still verifies the final review approved that exact candidate."""
+    if not (old["status"] == "FINAL_CONTRACT_REVIEW" and new["status"] == "CLOSED"):
+        return None
+    if new.get("requirements"):
+        return "FINAL_CONTRACT_REVIEW -> CLOSED is for a process-only WP (requirements: []) (§10.2)"
+    if new.get("open_findings"):
+        return "cannot close with open findings (§4.3)"
+    candidates = new.get("current_candidate") or {}
+    if not candidates or not all(isinstance(c, dict) and c.get("merged_sha") for c in candidates.values()):
+        return "cannot close before every candidate records its merged_sha (§4.3, §10.2)"
+    return None
+
+
 def commit_state(
     gh: GitHub,
     repo: str,
@@ -81,7 +98,7 @@ def commit_state(
     outside = [k for k in changed if k not in allowed]
     if outside:
         raise CheckFailed(f"patch changed keys outside ALLOWED: {outside}")
-    reason = check_transition(old["status"], new_workflow["status"])
+    reason = check_transition(old["status"], new_workflow["status"]) or _process_closure(old, new_workflow)
     if reason:
         raise CheckFailed(reason)
     if old["status"] == "BLOCKED_FOR_OWNER" and new_workflow["status"] != "BLOCKED_FOR_OWNER":
