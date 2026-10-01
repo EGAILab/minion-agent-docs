@@ -126,3 +126,25 @@ Every JS-derived surface involving object arguments answers, in its feasibility 
 | duplicate key | last value wins, at the first occurrence's position (`JSON.parse`) |
 | boundaries | raw decoding, prepared value, each hook, execute, every JSON serialization (events, session, provider payload) |
 | independence | when no owned output depends on order, a focused witness proves it (permuted orders, identical outputs) |
+
+## F7. SCHEMA_RUNTIME_DOMAIN
+
+**Source:** L0506-D002-R001 (a validation case put a lone surrogate in the **schema**, which the Rust schema seam cannot hold). Owner decision `minion-agent#99` comment `5926416181` §12. Tracked as `L05-D001` (`minion-agent#104`).
+
+The same textual type, "string" or "number", lives in four value domains whose representability can differ by binding. A JS-derived validation or value surface answers each separately:
+
+| Domain | Question |
+|---|---|
+| INSTANCE | Which values can the prepared/runtime instance hold, and do both bindings carry them losslessly? |
+| SCHEMA | Which values can the schema itself hold (property names, `required`, `const`/`enum` literals, `pattern`), what operation does Pi perform on each role, and can each binding's **schema** seam express it? |
+| RAW/WIRE | What does wire decoding (`JSON.parse`) produce into the raw value, and can the raw type hold it? |
+| SERIALIZED/PROJECTED | What does each serialization boundary (`JSON.stringify`, UTF-8 encoding, provider sanitizing) project, and where exactly? |
+
+| Member | Probe |
+|---|---|
+| schema property name / `properties` key | a non-scalar name; the instance supplies the same name, a U+FFFD look-alike, or nothing |
+| `required` entry | present vs absent key with a non-scalar name |
+| `const` / `enum` literal | lone surrogate vs U+FFFD vs valid pair vs ordinary scalar |
+| `pattern` | what Pi's RegExp compilation accepts and how it matches: not assumed equal to code-unit equality |
+| documentary fields | `title`, `description`, `examples`: excluded unless they reach a certified observable |
+| canonical-case audit | does any canonical case put a non-scalar value in the schema? If so, its delta must own the schema domain |

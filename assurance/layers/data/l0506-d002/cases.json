@@ -1,0 +1,3616 @@
+[
+ {
+  "id": "open/ascii",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/ascii",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/ascii",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/ascii",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/ascii",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/ascii",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/ascii",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/ascii",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/bmp",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/bmp",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/bmp",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/bmp",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/bmp",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/bmp",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/bmp",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/bmp",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     233,
+     20013
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/pair",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/pair",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/pair",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/pair",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/pair",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/pair",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/pair",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/pair",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-high-start",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-high-start",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-start",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-start",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-start",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-start",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-start",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-high-start",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-high-middle",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-high-middle",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-middle",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-middle",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-middle",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-middle",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-middle",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-high-middle",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-high-end",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-high-end",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-end",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-end",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-end",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-end",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-end",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-high-end",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-high-only",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-high-only",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-only",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-only",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-only",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-only",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-only",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-high-only",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-low-start",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-low-start",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-start",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-start",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-start",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-start",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-start",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-low-start",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-low-middle",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-low-middle",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-middle",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-middle",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-middle",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-middle",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-middle",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-low-middle",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-low-end",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-low-end",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-end",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-end",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-end",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-end",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-end",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-low-end",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-low-only",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-low-only",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-only",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-only",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-only",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-only",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-only",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-low-only",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/adjacent-highs",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/adjacent-highs",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/adjacent-highs",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/adjacent-highs",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/adjacent-highs",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/adjacent-highs",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/adjacent-highs",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/adjacent-highs",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/adjacent-lows",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/adjacent-lows",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/adjacent-lows",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/adjacent-lows",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/adjacent-lows",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/adjacent-lows",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/adjacent-lows",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/adjacent-lows",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/high-then-non-low",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/high-then-non-low",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/high-then-non-low",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/high-then-non-low",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/high-then-non-low",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/high-then-non-low",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/high-then-non-low",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/high-then-non-low",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     65
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/low-then-high",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/low-then-high",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/low-then-high",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/low-then-high",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/low-then-high",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/low-then-high",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/low-then-high",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/low-then-high",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/pair-then-lone-high",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55357,
+     56832,
+     55296
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/lone-low-then-pair",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     56320,
+     55357,
+     56832
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/empty",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/empty",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/empty",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/empty",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/empty",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/empty",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/empty",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/empty",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": []
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/nul",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/nul",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/nul",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/nul",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/nul",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/nul",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/nul",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/nul",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/nul-middle",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/nul-middle",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/nul-middle",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/nul-middle",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/nul-middle",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/nul-middle",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/nul-middle",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/nul-middle",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65,
+     0,
+     66
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "open/replacement-char",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/extra": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/extra"
+  ]
+ },
+ {
+  "id": "string/replacement-char",
+  "tool": "custom",
+  "schema": "string",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "min-length-2/replacement-char",
+  "tool": "custom",
+  "schema": "min-length-2",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "max-length-1/replacement-char",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-one-char/replacement-char",
+  "tool": "custom",
+  "schema": "pattern-one-char",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "pattern-two-chars/replacement-char",
+  "tool": "custom",
+  "schema": "pattern-two-chars",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "const-pair/replacement-char",
+  "tool": "custom",
+  "schema": "const-pair",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "enum-fffd/replacement-char",
+  "tool": "custom",
+  "schema": "enum-fffd",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     65533
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text"
+  ]
+ },
+ {
+  "id": "position/nested-object-value",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/outer": {
+    "inner": {
+     "utf16": [
+      65,
+      55296
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/outer/inner"
+  ]
+ },
+ {
+  "id": "position/array-element",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/list": [
+    "x",
+    {
+     "utf16": [
+      56320,
+      66
+     ]
+    }
+   ]
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/list/0",
+   "/list/1"
+  ]
+ },
+ {
+  "id": "position/two-strings",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/high": {
+    "utf16": [
+     55296
+    ]
+   },
+   "/low": {
+    "utf16": [
+     56320
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/high",
+   "/low"
+  ]
+ },
+ {
+  "id": "key/lone-high-only",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/bag": {
+    "$key": [
+     55296
+    ],
+    "value": 1
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [],
+  "observe_keys": [
+   "/bag"
+  ]
+ },
+ {
+  "id": "key/lone-low-only",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/bag": {
+    "$key": [
+     56320
+    ],
+    "value": 1
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [],
+  "observe_keys": [
+   "/bag"
+  ]
+ },
+ {
+  "id": "key/pair",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/bag": {
+    "$key": [
+     55357,
+     56832
+    ],
+    "value": 1
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [],
+  "observe_keys": [
+   "/bag"
+  ]
+ },
+ {
+  "id": "key/low-then-high",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/bag": {
+    "$key": [
+     56320,
+     55296
+    ],
+    "value": 1
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [],
+  "observe_keys": [
+   "/bag"
+  ]
+ },
+ {
+  "id": "key/empty",
+  "tool": "custom",
+  "schema": "open",
+  "prepare_set": {
+   "/bag": {
+    "$key": [],
+    "value": 1
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [],
+  "observe_keys": [
+   "/bag"
+  ]
+ },
+ {
+  "id": "diagnostic/lone-surrogates",
+  "tool": "custom",
+  "schema": "max-length-1",
+  "prepare_set": {
+   "/text": {
+    "utf16": [
+     55296,
+     55296
+    ]
+   },
+   "/extra": {
+    "utf16": [
+     65,
+     56320
+    ]
+   },
+   "/pair": {
+    "utf16": [
+     55357,
+     56832
+    ]
+   },
+   "/nul": {
+    "utf16": [
+     0
+    ]
+   }
+  },
+  "arguments": {
+   "seed": "raw"
+  },
+  "observe": [
+   "/text",
+   "/extra",
+   "/pair",
+   "/nul"
+  ]
+ },
+ {
+  "id": "edit/ascii",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\u0042\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/bmp",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u00e9\\u4e2d\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/pair",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud83d\\ude00\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-high-start",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\u0041\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-high-middle",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\ud800\\u0042\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-high-end",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\ud800\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-high-only",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-low-start",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\u0041\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-low-middle",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\udc00\\u0042\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-low-end",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\udc00\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-low-only",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/adjacent-highs",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\ud800\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/adjacent-lows",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\udc00\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/high-then-non-low",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\u0041\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/low-then-high",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\ud800\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/pair-then-lone-high",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ud83d\\ude00\\ud800\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/lone-low-then-pair",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\ud83d\\ude00\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/empty",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/nul",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0000\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/nul-middle",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\u0000\\u0042\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ },
+ {
+  "id": "edit/replacement-char",
+  "tool": "edit",
+  "arguments": {
+   "path": "f.txt",
+   "edits": "[{\"oldText\":\"a\",\"newText\":\"\\ufffd\"}]"
+  },
+  "observe": [
+   "/edits/0/newText"
+  ]
+ }
+]
