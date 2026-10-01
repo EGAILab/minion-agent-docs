@@ -42,7 +42,10 @@ done
 
 echo "== pinned diff 8.0.4"
 . "$H/acquire_npm_pinned.sh"
-acquire_npm_pinned diff 8.0.4 "$PI/package-lock.json" "$S/a/node_modules/diff" "$S/acquire"
+# PROC-AUTHDEP-R001: the pinned lockfile is read from the VERIFIED pinned commit, never the working tree (a
+# coherently edited working-tree lockfile could otherwise select its own digest).
+git -c safe.directory='*' -C "$PI" show "$PINNED_PI:package-lock.json" > "$S/pinned-package-lock.json" || die "pinned package-lock.json"
+acquire_npm_pinned diff 8.0.4 "$S/pinned-package-lock.json" "$S/a/node_modules/diff" "$S/acquire"
 printf '{"name":"cross-spawn","version":"0.0.0-authority-stub","main":"index.js"}' > "$S/a/node_modules/cross-spawn/package.json"
 printf 'module.exports = function () { throw new Error("cross-spawn stub: not used by the WP-13.2 authority path"); };\nmodule.exports.sync = module.exports;\n' > "$S/a/node_modules/cross-spawn/index.js"
 echo '{"type":"module"}' > "$S/a/package.json"

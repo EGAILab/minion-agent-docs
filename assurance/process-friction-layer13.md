@@ -173,3 +173,19 @@ Both were recorded by Owner decision (§13 of each), and both were caught **befo
   - runners that execute in a container or on a host;
   - negative controls (`process/tools/authority/selftest.sh`).
 - **Lesson.** Remove friction that does not carry assurance (where the bytes come from), and keep exactly what does: digest verification against the authoritative pin, exact runtime identity, and independent execution and judgment.
+
+### Remediation: `PROC-AUTHDEP-R001`, pin bound to the commit, not the working tree
+
+**Trigger check.**
+- Trigger A has not fired: R001 has survived one independent review (Codex, docs #212 comment `5932645986`).
+- Trigger B has not fired: no successor finding.
+- Trigger C has not fired: the work package has one rejection.
+- Ordinary remediation.
+
+**The defect (accepted).** The runners read the expected digest from Pi's **working-tree** `package-lock.json`, which the cleanliness check (`packages/` only) did not cover. Codex showed a coherent forgery passing the unchanged runner and executing all 198 cases: tarball padded with 512 zero bytes, plus a lockfile edited to its SHA-512.
+
+**The fix.**
+- All four runners extract the lockfile from the verified pinned commit (`git show <pin>:package-lock.json`).
+- A test enforces that no runner reads `$PI/package-lock.json`.
+- `runner_witness.sh` reproduces the attack on a disposable shared clone. It FAILS with no authority output on all four fixed runners, and PASSES with the correct artifact. It is RED against the pre-fix runner (`91e6d56`), where it reproduces Codex's forged SRI `qwBwh73i…` and the authority runs.
+- All four authorities remain byte-identical in offline host mode, including WP-13.2's `mutants.json`.

@@ -27,7 +27,10 @@ cp "$PI/packages/ai/src/utils/validation.ts" "$S/pi/ai/src/utils/"
 cp "$PI/packages/coding-agent/src/core/tools/edit.ts" "$S/pi/coding-agent/src/core/tools/"
 (cd "$S" && sed 's/ \*/  /' "$H/pi_sources.sha256" | sha256sum -c -)
 . "$H/acquire_npm_pinned.sh"
-acquire_npm_pinned typebox 1.3.7 "$PI/package-lock.json" "$S/node_modules/typebox" "$S/acquire"
+# PROC-AUTHDEP-R001: the pinned lockfile is read from the VERIFIED pinned commit, never the working tree (a
+# coherently edited working-tree lockfile could otherwise select its own digest).
+git -c safe.directory='*' -C "$PI" show "b7bb00b936dbe21b8e160b3e89efdec361846699:package-lock.json" > "$S/pinned-package-lock.json" || die "pinned package-lock.json"
+acquire_npm_pinned typebox 1.3.7 "$S/pinned-package-lock.json" "$S/node_modules/typebox" "$S/acquire"
 echo '{"type":"module"}' > "$S/package.json"
 "$PYTHON" "$H/make_cases.py" "$S/cases.json"
 sha256sum "$S/cases.json" | cut -d' ' -f1 > "$OUT/cases.sha256"

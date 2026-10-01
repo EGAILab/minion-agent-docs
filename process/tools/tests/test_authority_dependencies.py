@@ -27,6 +27,10 @@ def test_an_active_runner_acquires_only_through_the_canonical_helper(runner: Pat
     assert '. "$H/acquire_npm_pinned.sh"' in code
     assert "acquire_npm_pinned " in code
     assert "npm pack" not in code  # no side door around the shared verification
+    # PROC-AUTHDEP-R001: the pin is read from the verified pinned COMMIT, never the working tree
+    assert 'show "' in code and ':package-lock.json" > "$S/pinned-package-lock.json"' in code
+    assert '"$S/pinned-package-lock.json"' in code.split("acquire_npm_pinned ", 2)[-1]
+    assert '"$PI/package-lock.json"' not in code
     copy = runner.parent / "acquire_npm_pinned.sh"
     assert copy.read_bytes() == CANONICAL.read_bytes(), f"{copy} differs from the canonical helper"
 

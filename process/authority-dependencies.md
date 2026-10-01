@@ -26,7 +26,9 @@ not acceptable:
 ```text
 external authority dependency
     exact identity / version            from the pinned authoritative record (e.g. Pi's package-lock.json)
-    authoritative digest                the pinned record's integrity (e.g. its sha512 SRI), never the supplier's claim
+    authoritative digest                the pinned record's integrity (e.g. its sha512 SRI), never the supplier's claim;
+                                        the record is read from the VERIFIED pinned commit (e.g. `git show <pin>:
+                                        package-lock.json`), never from a working tree a supplier could edit
     supplied bytes                      network download OR an explicitly supplied artifact -- both untrusted
     independent digest verification     computed by the runner before anything is unpacked or executed
     independent execution               the SAME authority implementation, whatever the byte source
@@ -55,6 +57,7 @@ external authority dependency
     1. the lockfile records exactly `<version>` with an `sha512` integrity;
     2. the tarball's SHA-512 equals that integrity;
     3. the unpacked `package.json` declares `<version>`.
+- **The pinned record comes from the commit** (`PROC-AUTHDEP-R001`). Each runner extracts `package-lock.json` with `git show <pinned SHA>:package-lock.json` after verifying HEAD. A coherently edited working-tree lockfile (forged digest matching modified bytes) is therefore never consulted. Real-runner witness: `process/tools/authority/runner_witness.sh` (coherent pin substitution FAILS with no authority output; the correct artifact against the pinned blob PASSES), run against all four active runners.
 - **Negative controls:** `process/tools/authority/selftest.sh`. The correct artifact passes; a wrong tarball, a modified tarball, a wrong version under the same filename, a wrong expected digest and a lockfile recording another version each fail.
 - **Runners.** The active authority runners take `PI_DIR`, `OUT_DIR`, `STAGE_DIR` and `PYTHON` (defaults: the container layout), so the same committed runner executes in `node:22.15.1-alpine` or on a host that proves the runtime pins:
   - `l0506-d001`
