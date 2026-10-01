@@ -156,7 +156,7 @@ result) is Layer 06, not certified here.
 
 ### Runtime-validation schema string domain (`TOOL-016` / `TOOL-003`, post-certification delta `L05-D001`)
 
-**Status (`minion-agent#104`):** AGREED FOR IMPLEMENTATION. Contract code #106 → `ef7fe40c`, docs #211 → `c624330b`. Python: no production change, implementation review pending. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#104`):** CERTIFIED_CLOSED. Contract code #106 → `ef7fe40c`, docs #211 → `c624330b`. Python: no production change, approved with the contract (docs #211). Rust: code #113 → `0d9f1e6a`, docs #217 → `ae5169ba`, closure review on `minion-agent-docs#217`.
 
 - **Authorization.** Owner decision on `L0506-D002-R001`, Option 1 (`minion-agent#99` comment `5926416181`). This is a separate Layer-05 delta. It is distinct from `L0506-D002` (prepared instance strings), `L0206-D002` (raw arguments) and `L0206-D001` (key order). No intentional divergence; no whole-Layer-05 reopen.
 - **The rule.** A tool's `parameters` schema is a JavaScript object in pinned Pi. Wherever runtime argument validation (`TOOL-003`) consumes one of its string values or object keys, that string is a JavaScript String: any UTF-16 code units, unpaired surrogates included. Registration MUST accept such a schema, and validation MUST honor it as pinned Pi's `validateToolArguments` does, per role:
