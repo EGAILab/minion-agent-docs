@@ -168,7 +168,7 @@ result) is Layer 06, not certified here.
 | `const`, `enum` literals | exact code-unit sequence equality |
 | `propertyNames: {const: S}` | exact code-unit equality of each key |
 | `dependentRequired` keys | trigger on the exact instance key |
-| `pattern` (anchored or not) and `patternProperties` keys | a **Unicode-mode RegExp**, not code-unit equality. A valid pair is one code point, so neither half matches inside it (e.g. pattern `\uD83D` does not match the instance `😀`). An unpaired surrogate matches where it genuinely occurs |
+| `pattern` and `patternProperties` keys, anchored or not (an unanchored `patternProperties` key searches instance keys, `L05-D001-R001`) | a **Unicode-mode RegExp**, not code-unit equality. A valid pair is one code point, so neither half matches inside it (e.g. pattern `\uD83D` does not match the instance `😀`). An unpaired surrogate matches where it genuinely occurs |
 
 Documentary fields (`title`, `description`, `examples`) are not consumed by validation and are outside this rule. `default` is not filled in by Pi's validator.
 
@@ -187,7 +187,7 @@ Documentary fields (`title`, `description`, `examples`) are not consumed by vali
 
 **Evidence.**
 - **Authority:** `minion-agent-docs` `assurance/layers/data/l05-d001-schema-domain/` (characterization `l05-d001-characterization.md`).
-- **Canonical scenarios:** `minion-agent` `conformance/agent/schema-domain/` (shape `schema-domain-scenario.schema.json`): 729 cases, which is 9 roles × 9 schema members × 9 instance members. Each case carries its literal schema and arguments as UTF-16 code units, and the runner observes only accept/reject through the real Layer-06 pipeline.
+- **Canonical scenarios:** `minion-agent` `conformance/agent/schema-domain/` (shape `schema-domain-scenario.schema.json`): 810 cases, which is 10 roles × 9 schema members × 9 instance members. Each case carries its literal schema and arguments as UTF-16 code units, and the runner observes only accept/reject through the real Layer-06 pipeline.
 - **Negative controls:**
   - a schema seam that rejects a lone surrogate at registration;
   - schema literals replaced with U+FFFD;

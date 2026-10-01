@@ -38,6 +38,8 @@ ROLES: dict[str, Any] = {
                                      lambda i: {"t": i}),
     "pattern-properties": lambda s: ({"type": "object", "patternProperties": {"^" + s + "$": {"type": "number"}}},
                                      lambda i: {i: "x"}),
+    "pattern-properties-unanchored": lambda s: ({"type": "object", "patternProperties": {s: {"type": "number"}}},
+                                                lambda i: {i: "x"}),
     "property-names-const": lambda s: ({"type": "object", "propertyNames": {"const": s}}, lambda i: {i: 1}),
     "dependent-required": lambda s: ({"type": "object", "dependentRequired": {s: ["a"]}}, lambda i: {i: 1}),
 }

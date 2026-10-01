@@ -19,6 +19,7 @@ MEMBERS = {
     "pair-low-half": [0xDE00],
 }
 ROLES = ["properties-required", "additional-properties-false", "const", "enum", "pattern", "pattern-unanchored", "pattern-properties",
+         "pattern-properties-unanchored",  # L05-D001-R001
          "property-names-const", "dependent-required"]
 cases = [{"id": f"{role}/{s}/{i}", "role": role, "schema_units": su, "instance_units": iu}
          for role in ROLES for s, su in MEMBERS.items() for i, iu in MEMBERS.items()]

@@ -26,6 +26,9 @@ const ROLES = {
   // a key matching the pattern-property must be a number; a string value under a matching key is rejected
   "pattern-properties": (s) => ({ schema: { type: "object", patternProperties: { ["^" + s + "$"]: { type: "number" } } },
                                   instance: (i) => ({ [i]: "x" }) }),
+  // L05-D001-R001: an unanchored patternProperties key is a Unicode-mode RegExp SEARCH over instance keys
+  "pattern-properties-unanchored": (s) => ({ schema: { type: "object", patternProperties: { [s]: { type: "number" } } },
+                                             instance: (i) => ({ [i]: "x" }) }),
   "property-names-const": (s) => ({ schema: { type: "object", propertyNames: { const: s } }, instance: (i) => ({ [i]: 1 }) }),
   "dependent-required": (s) => ({ schema: { type: "object", dependentRequired: { [s]: ["a"] } }, instance: (i) => ({ [i]: 1 }) }),
 };
@@ -37,7 +40,7 @@ const results = cases.map((c) => {
   let schemaError = null;
   try {
     const args = validateToolArguments(tool, { type: "toolCall", id: "c", name: "p", arguments: role.instance(S(c.instance_units)) });
-    return { id: c.id, verdict: "accept", keys: Object.keys(args).map((k) => Array.from(k, (_, n) => k.charCodeAt(n))) };
+    return { id: c.id, verdict: "accept", keys: Object.keys(args).map((k) => Array.from({ length: k.length }, (_, n) => k.charCodeAt(n))) };
   } catch (error) {
     schemaError = String(error && error.message);
     const line = schemaError.split("\n")[1]?.trim() ?? schemaError.split("\n")[0];

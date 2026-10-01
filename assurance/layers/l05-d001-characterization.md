@@ -77,3 +77,16 @@ Independent. The `write`/`edit` schemas are ASCII-named `Type.String` slots with
     - a code-unit (non-Unicode) pattern search;
     - property-name normalization.
 - Feasibility matrix with the four domains, then Codex contract review.
+
+## Pass 1 addendum: unanchored `patternProperties` (`L05-D001-R001`) and key capture
+
+- **New role.** `pattern-properties-unanchored` (`patternProperties: {S: number}`, instance `{I: "x"}`) is 81 cells, for 810 in all.
+  - Pinned Pi treats the key as a Unicode-mode RegExp **search**. Neither `pair-high-half` nor `pair-low-half` matches a key holding the pair (accept).
+  - `lone-high` matches inside `pair-then-lone-high`, where it is genuinely unpaired (reject: the guard).
+  - Python matches pinned Pi on all 810 cells.
+- **Key capture fixed.** `schema_probe.mjs` used `Array.from(k, …)`, which iterates code points, so astral keys lost code units. It now uses `Array.from({length: k.length}, …)`. That field is auxiliary: no verdict or canonical expectation consumes it.
+- **History.** The earlier authority output (`out/schema.json` `de31477d…`, 729 results) is preserved in this branch's history at `17b15015`.
+- **Hashes (SHA-256):**
+  - `cases.json`: `602bdb06e3a86e30fb759c5edb707e5770121b3c77aaf7c42728d01bee431c1f`
+  - `out/schema.json`: `ad7976793de2e9f508e53b0e16e06d15be149fc9a8d895965761b84e1d0cf244`
+  - `out/python.json`: `74bb907803ec3a04d5c2b4bec41ca99b60fb89d439f1807ea7b7cbdacf545f2c`

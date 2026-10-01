@@ -85,3 +85,24 @@ FEASIBILITY
 - Python: conforms with no production change (729 cases; negative controls), PENDING contract review.
 - Rust: NOT_IMPLEMENTED.
 - WP-13.2: independent (decision §7; confirmed in Codex CONTRACT2 on `L0506-D002`).
+
+## Remediation 1: `L05-D001-R001`, `patternProperties` Unicode-mode evidence
+
+**Trigger check (§11.8).**
+- Trigger A has not fired: R001 has survived one independent review (CONTRACT1, docs #211 comment `5930478907`).
+- Trigger B has not fired: no successor finding on this surface.
+- Trigger C has not fired: the work package has one rejected complete review.
+- Ordinary remediation.
+
+**The defect (accepted).** All 81 `pattern-properties` cells anchored their key regex, so a code-unit `patternProperties` matcher passed all 729 cases and every control. Codex demonstrated this with a real-seam mutant.
+
+**The fix.**
+- **Authority.**
+  - A new role, `pattern-properties-unanchored` (81 cells, 810 in all). It covers both pair halves (accepted: no Unicode-mode match) and the genuine-unpaired guard (`lone-high` in `pair-then-lone-high`, rejected).
+  - The key-capture field is corrected to code units (non-blocking observation).
+  - Python matches all 810 cells.
+- **Canonical:** 10 documents and 810 cases.
+- **Negative control.** `test_a_code_unit_pattern_properties_matcher_is_killed` replaces only the `patternProperties` keyword with a code-unit matcher. It is killed by the two pair-half cells, while the guard and the `pattern` keyword's own cells stay correct.
+- **Spec and manifest counts:** 810, 10 roles.
+
+**Status:** R001 is REMEDIATED, pending targeted re-review.

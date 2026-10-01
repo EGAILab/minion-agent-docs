@@ -6300,6 +6300,906 @@
   ]
  },
  {
+  "id": "pattern-properties-unanchored/ascii/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/ascii/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/bmp/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-high/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/lone-low/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-then-lone-high/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/fffd/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-high-half/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/ascii",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/bmp",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/pair",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/lone-low",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/pair-then-lone-high",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/fffd",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/pair-high-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties-unanchored/pair-low-half/pair-low-half",
+  "role": "pattern-properties-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
   "id": "property-names-const/ascii/ascii",
   "role": "property-names-const",
   "schema_units": [

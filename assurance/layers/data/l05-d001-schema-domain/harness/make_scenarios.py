@@ -26,6 +26,9 @@ ROLE_NOTES = {
                            "so neither of its halves matches inside it, while a genuinely unpaired surrogate does "
                            "match where it occurs"),
     "pattern-properties": "a `patternProperties` key is an anchored Unicode-mode RegExp over instance keys",
+    "pattern-properties-unanchored": ("an unanchored `patternProperties` key is a Unicode-mode RegExp SEARCH over "
+                                      "instance keys: neither half of a valid pair matches a key holding the pair, "
+                                      "while a genuinely unpaired surrogate matches where it occurs (L05-D001-R001)"),
     "property-names-const": "`propertyNames: {const: S}` compares keys by exact code units",
     "dependent-required": "a `dependentRequired` key triggers on the exact instance key",
 }
@@ -42,6 +45,7 @@ def build(role, s, i):
         "pattern": ({"type": "object", "properties": {"t": {"type": "string", "pattern": "^" + s + "$"}}}, {"t": i}),
         "pattern-unanchored": ({"type": "object", "properties": {"t": {"type": "string", "pattern": s}}}, {"t": i}),
         "pattern-properties": ({"type": "object", "patternProperties": {"^" + s + "$": {"type": "number"}}}, {i: "x"}),
+        "pattern-properties-unanchored": ({"type": "object", "patternProperties": {s: {"type": "number"}}}, {i: "x"}),
         "property-names-const": ({"type": "object", "propertyNames": {"const": s}}, {i: 1}),
         "dependent-required": ({"type": "object", "dependentRequired": {s: ["a"]}}, {i: 1}),
     }[role]

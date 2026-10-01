@@ -2709,6 +2709,341 @@
    "message": "\"invalid arguments: 'x' is not of type 'number'\""
   },
   {
+   "id": "pattern-properties-unanchored/ascii/ascii",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/bmp",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/lone-high",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/lone-low",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/fffd",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-high-half",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-low-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/ascii",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/bmp",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/lone-low",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-then-lone-high",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/fffd",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-high-half",
+   "verdict": "accept"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-low-half",
+   "verdict": "reject",
+   "message": "\"invalid arguments: 'x' is not of type 'number'\""
+  },
+  {
    "id": "property-names-const/ascii/ascii",
    "verdict": "accept"
   },
