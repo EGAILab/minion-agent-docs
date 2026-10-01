@@ -37,7 +37,7 @@ A **hazard family** is a recurring language/runtime behavior class whose members
 
 ## F2. JS String / UTF-16
 
-**Source:** WP-13.2 I003 (valid surrogate pair held as two characters); WP-13.1 read projection.
+**Source:** WP-13.2 I003 (valid surrogate pair held as two characters); WP-13.1 read projection; WP132-RUST-C001 / L0506-D002 (a prepared lone surrogate that a binding's string type cannot hold).
 
 | Member | Probe |
 |---|---|
@@ -47,8 +47,18 @@ A **hazard family** is a recurring language/runtime behavior class whose members
 | explicit surrogate pair | `"\uD83D\uDE00"` built from escapes |
 | lone high surrogate | `"\uD83D"` |
 | lone low surrogate | `"\uDE00"` |
+| lone surrogate position | high and low each at start / middle / end / alone |
+| adjacent and reversed surrogates | two highs, two lows, low-then-high, high-then-non-low |
+| mixed | a valid pair next to a lone surrogate, in both orders |
+| empty / NUL | `""`, `"\u0000"`, NUL in the middle |
+| string in a key | an object key carries the same domain (lone surrogates, pairs, empty) |
+| schema keywords | `minLength`/`maxLength` count code points; `pattern` is Unicode mode; `const`/`enum` compare code units |
+| every observer | prepare, validation, each hook, a hook's replacement, execute: one value, never re-encoded between them |
 | length / index / slice units | `String.length`, offsets, `slice`, diff hunks in UTF-16 code units |
 | encoding / replacement | UTF-8 encode of lone surrogates (→ U+FFFD), decode of invalid bytes |
+| JSON.stringify projection | a lone surrogate is escaped `\udXXX`; a valid pair is emitted as the character |
+| provider-outbound projection | Pi's `sanitizeSurrogates` **deletes** unpaired surrogates from outbound text (Layer 11) |
+| raw decoding | does wire JSON decoding (`JSON.parse` of an escaped lone surrogate) reach the raw argument type at all? |
 
 ## F3. Unicode / ICU
 
@@ -92,3 +102,27 @@ A **hazard family** is a recurring language/runtime behavior class whose members
 | coercion vs original value | does a check judge the delivered value or a coerced copy? |
 | union / alternative selection | complete-value alternatives in both orders; a mismatched sibling must not exempt another position |
 | callback / hook output | values produced after validation (after-validators, hooks) are judged as delivered |
+
+## F6. ECMASCRIPT_OBJECT_ORDER
+
+**Source:** L0506-D002 characterization K1 (`JSON.parse` enumerates array-index keys first); the Owner decision on K1 (`minion-agent#99` comment `5924847773` §11), tracked as `L0206-D001` (`minion-agent#100`).
+
+A JavaScript object enumerates its own string keys in ECMAScript order: **array-index** keys (canonical decimal integers 0 … 2^32 − 2) first, ascending numerically, then the other keys in insertion order. A Python `dict` enumerates in pure insertion order, and a sorted map in key order. A JS-derived surface that hands an object to an observer may therefore differ by binding.
+
+Every JS-derived surface involving object arguments answers, in its feasibility matrix:
+1. Does property enumeration order matter here (an observer iterates the object, or output depends on it)?
+2. Does a JSON serialization expose it (`JSON.stringify` emits enumeration order)?
+3. Do the Python and Rust representations preserve the same order?
+4. Are integer-index-like keys possible?
+5. Are nested objects affected?
+
+| Member | Probe |
+|---|---|
+| insertion order | non-index keys only: insertion order everywhere |
+| array-index keys first | `{"b":1,"2":2,"1":3,"a":4}` enumerates `1, 2, b, a` |
+| index boundaries | `"0"`, `"4294967294"` (largest index), `"4294967295"` (not an index) |
+| non-canonical numerals | `"00"`, `"01"`, `"-0"`, `"-1"`, `"1.0"`, `"+1"`: ordinary keys, insertion order |
+| nested objects | the rule applies at every level |
+| duplicate key | last value wins, at the first occurrence's position (`JSON.parse`) |
+| boundaries | raw decoding, prepared value, each hook, execute, every JSON serialization (events, session, provider payload) |
+| independence | when no owned output depends on order, a focused witness proves it (permuted orders, identical outputs) |
