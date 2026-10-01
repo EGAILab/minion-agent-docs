@@ -307,3 +307,88 @@ GitHub errors and caller patch exceptions are still not caught (rule 9).
 **Gates:** 250 tool tests pass, coverage 100%, ruff and strict mypy clean. The totality properties pass at 3000 examples each.
 
 **Convergence accounting:** this is the first targeted closure after the agreed revision-3 checkpoint, so §11.8.10 has not fired (as Codex noted).
+
+---
+
+## Checkpoint invalidation and revision 4 (`agent-workflow.md` §11.8.10)
+
+- **Trigger.** PROC-L13-R003 failed **two** targeted closures after the revision-3 `AGREED FOR IMPLEMENTATION` checkpoint:
+  1. at `290677bd`: invalid YAML inside a valid fence;
+  2. at `e574d9f5` (`#204` comment `5924841709`): PyYAML's native scalar constructors raise a plain `ValueError`, e.g. `updated_reason: 2026-02-30` and `!!int not-an-int`.
+- **Consequence.** The checkpoint is presumed inadequate. Implementation stopped. This revision returns to characterization and challenge, identifies the unmodeled root abstraction, and requests a new, explicit `AGREED FOR IMPLEMENTATION` before any more code. R001, R002 and R004 stay provisionally closed.
+
+### Unmodeled root abstraction
+
+Revisions 1–3 treated `yaml.safe_load` as a *parser* that fails only with `yaml.YAMLError` and yields JSON-like data. It is really a **constructor pipeline**:
+- a resolver assigns implicit tags (YAML 1.1);
+- per-tag constructors run arbitrary conversion code;
+- the result can be any Python value those constructors produce.
+
+Each review found one more class at that one boundary. The boundary itself was never modeled.
+
+### Characterization: PyYAML 6.0.3 `SafeLoader`, constructor table and resolver
+
+Probed directly, over every `SafeConstructor` tag (`null`, `bool`, `int`, `float`, `binary`, `timestamp`, `omap`, `pairs`, `set`, `str`, `seq`, `map`) plus the implicit resolvers:
+
+| Class | Example | `safe_load` outcome |
+|---|---|---|
+| **E1: non-`YAMLError` exception** | `2026-02-30` (implicit timestamp), `!!int not-an-int`, `!!float abc` | `ValueError` |
+| | `!!bool maybe` | `KeyError` |
+| | 5000-deep `[[[…]]]` | `RecursionError` |
+| **E2: non-JSON value** | `2026-02-28`, `2026-02-28 10:00:00` | `datetime.date` / `datetime.datetime` |
+| | `!!binary aGk=`; `!!binary '@@@'` | `bytes`; invalid base64 **silently** yields `b''` |
+| | `!!set {a: null}` | `set` |
+| | `!!omap [a: 1]`, `!!pairs [a: 1]` | a list of `tuple`s |
+| | `yes: 1`, `1: a`, `~: a` | non-string keys (`True`, `1`, `None`) |
+| **E3: silent YAML 1.1 reinterpretation** | `x: no`; `x: 1:30`; `b: {<<: *A}` | `False`; `90` (sexagesimal); a merge-key splice |
+| *(controlled already)* | unknown tag, a bad `!!omap`/merge/`!!str` on a map | `yaml.YAMLError` (`ConstructorError`) |
+
+### Rules added to 1–9 (they replace nothing; rule 4 is made precise)
+
+- **L1: the loader is total.** Any `Exception` raised while loading the fenced text is malformed **content** and becomes `BodyFormatError` with a diagnostic. `safe_load` runs no remote call and no caller patch, so rule 9's carve-outs cannot occur inside it. `BaseException`s that are not `Exception`s (`KeyboardInterrupt`, `SystemExit`) are not caught.
+- **L2: the tree is closed over the JSON domain.** A loaded state must be, recursively, a mapping with **string keys**, a list, a string, an int, a float, a bool, or null. Anything else (date, datetime, bytes, set, tuple, or a non-string key) is a `BodyFormatError` naming the path and the type.
+- **L3: no implicit YAML 1.1 reinterpretation.** The state block is loaded with a resolver restricted to the YAML 1.2 core / JSON schema:
+  - **kept:** `null`/`~`/empty, `true`/`false`, decimal ints, floats (including `.inf`/`.nan`);
+  - **not kept:** `yes`/`no`/`on`/`off`/`y`/`n` booleans, sexagesimal numbers, implicit timestamps, and the `<<` merge key. Those load as plain strings, or for `<<`, as a literal key.
+
+  Explicit tags still construct their types, and then L2 rejects the non-JSON ones.
+
+  This changes nothing for any body the tool writes: `yaml.safe_dump` quotes every string that YAML 1.1 would reinterpret. The live issues #35, #49, #50, #51, #95, #99 and #100 must still load to identical objects, and that is checked.
+- **L4: write-side symmetry.** The existing pre-write round trip (`apply` refuses a state YAML cannot carry unchanged) runs with the same restricted loader, so what is written is exactly what is read.
+
+### Acceptance witnesses, revision 4
+
+All are RED at `e574d9f5` unless marked positive:
+- **E1, every class:** each invalid-payload tag (`!!int`, `!!float`, `!!bool`, `!!timestamp`) and the implicit timestamp, plus deep nesting (`RecursionError`). Each is run × the body boundary, the 4 read commands, `apply` with that current state, repair of that current state (restoring a valid revision), and repair *to* that baseline (refused). Codex's exact witnesses are `2026-02-30` and `!!int not-an-int`.
+- **E2, every non-JSON constructor result:** date, datetime, `!!binary` (including the silently decoded garbage), `!!set`, `!!omap`/`!!pairs`, and non-string keys (`yes:`, `1:`, `~:`, as top-level keys and nested). Each is run × the same entry points.
+- **E3:** `no`/`yes`/`on`/`off`, `1:30` and an unquoted date load as **strings**, and `<<` is a literal key. A body using them in a control field, e.g. `next_owner: no`, therefore gets a string-shape diagnostic, not a silent bool.
+- **Positive controls:**
+  - every live issue body (#35 #49 #50 #51 #95 #99 #100) loads to an object identical to the previous loader's;
+  - YAML anchors/aliases, as in #49's `&id001`, keep working;
+  - quoted dates and quoted `"yes"` stay strings;
+  - `.inf`/`.nan` floats load.
+- **A grammar-based property** (Hypothesis): YAML text generated from a grammar mixing implicit scalars (date-like `DDDD-DD-DD`, `N:N`, yes/no/on/off, ints, floats, nulls), explicit tags from the full constructor table over random payloads, random keys of the same forms, nested sequences/maps up to large depth, and anchors/aliases. **Every** entry point stays total; whenever a load succeeds, the tree is JSON-domain (L2).
+- **Discrimination:** the new witnesses run against `e574d9f5`, which must fail them, and the record will state the RED count.
+
+### Checkpoint, revision 4
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 4, after section 11.8.10 invalidation)
+
+OPEN FINDINGS
+    PROC-L13-R003
+
+ROOT ABSTRACTION ADDED
+    the YAML load boundary as a constructor pipeline: L1 totality, L2 JSON-domain closure,
+    L3 YAML 1.2 core resolver, L4 write/read symmetry
+
+ACCEPTANCE WITNESSES
+    E1/E2/E3 class tables x every entry point; live-body identity; grammar-based property; RED at e574d9f5
+
+NORMATIVE DELTAS
+    coordination-state.md section 13.5 gains L1-L4; minion-process-cli-design.md section 1.1 gains L1-L4
+
+NEXT_OWNER
+    Codex (checkpoint review; no implementation before APPROVED)
+```
