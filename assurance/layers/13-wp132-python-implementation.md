@@ -208,3 +208,35 @@ The Linux container was not re-run for this platform-independent float change. T
 - `Python WP-13.2`: IMPLEMENTATION CANDIDATE (remediation 2), pending targeted `I002` closure, then the final complete exact-SHA review.
 - `Rust WP-13.2`: NOT_IMPLEMENTED.
 - `WP-13.2 cross-language`: NOT CLOSED.
+
+## Integration: `L13-WP132-I004` resolved by the certified L0506-D001 delta
+
+- **Trigger.** `L13-WP132-I004`: prepared/runtime `JSON.parse` overflow (±Infinity) must reach the hook. The Owner selected Option 1 (`minion-agent#49` comment `5912178299`), and it was delivered as the Layer-05/06 post-certification delta L0506-D001 (`minion-agent#88`). That delta is now **CERTIFIED_CLOSED**:
+  - Python: #90 / #200, plus the RC002 correction #96 / #205;
+  - Rust: #94 / #203;
+  - status sync: #97 / #206.
+- **Integration (no history rewrite).** `origin/main` is merged into `impl/13-wp132-python`, and `origin/master` into `assurance/13-wp132-python`. The only conflict was TOOL-030's manifest row: both the new `edit_prepared_runtime_numbers` test entry and the WP-13.2 Python note are kept.
+- **No production change.** WP-13.2's own `prepare_edit_arguments` / `_json_parse` (`I002`: doubles, `-0`) already produce the runtime numbers. L0506-D001 carries them through validation, the hook and `execute`.
+
+**The gate-WP-13.2 witness now runs** (L0506-D001-R003). `tests/conformance/test_prepared_runtime_edit_gate.py` runs `conformance/agent/prepared-runtime/prepared-runtime-edit-json-string-numbers.yaml`: **8 / 8 cases**, each through the real built-in `edit` tool over the real `LocalFileSystem` on a fresh `f.txt = "a\n"`.
+- **Observed at the pre-execute hook:** `1e999` / a 400-digit integer → `+Infinity`, their negatives → `-Infinity`, `-0` → `-0`, `0` → `0`, `1.7976931348623157e308` stays finite, and `9007199254740993` → `9007199254740992`.
+- **Each case also asserts:**
+  - the result text `Successfully replaced 1 block(s) in f.txt.`;
+  - the edit applied (`b\n`);
+  - the raw ToolCall arguments unchanged.
+
+**Negative controls** (killed):
+- a `JSON.parse` that maps non-finite values to `null` (a JSON-only runtime);
+- Python's own exact-integer `json.loads` (no binary64 rounding; `-0` collapses to `0`).
+
+**Gates** (code `86cabf85f5f4aaa96a98515e88c88aeb5e7f34b1`, Windows, pinned ICU, fresh):
+
+| Gate | Result |
+|---|---|
+| `pytest` | **2466 passed**, 17 skipped, 19 xfailed; coverage **100%** |
+| `ruff check`, format (changed files), `mypy` (97 files) | clean |
+
+**Status.**
+- `L13-WP132-I004` is REMEDIATED (via the certified delta), pending targeted closure. `I001`–`I003` stay PROVISIONALLY CLOSED.
+- Python WP-13.2 is an IMPLEMENTATION CANDIDATE: targeted `I004` closure comes next, then the final complete exact-SHA review.
+- Rust WP-13.2: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
