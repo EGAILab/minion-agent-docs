@@ -226,3 +226,79 @@ for distinct worktrees.
 - Terminal GitHub fetch/push access was unavailable; the owner-approved
   verified-bundle publication path is used. A local commit is not represented
   as a remotely reachable PR or a completed coordination transition.
+
+## Resume after L0506-D002 certification: output-domain blocker C002
+
+The preceding partial-pass state and counts are historical, not new gates.
+L0506-D002 is independently closure-reviewed and merged (code ac661221,
+docs 2d2ba5fc); C001's prepared-string representation is resolved. On this
+resume, Codex independently verified #49 RUST_IMPLEMENTATION / NEXT_OWNER
+Codex and preserved draft #98 b059ea4c / #207 f1fa6b47. Accepted current
+defaults are code `db1b5bdbc1652f8c77fb2535dad944807260da8c` and docs
+`306109bea44e2a56f753f94c67291aa5ae9c3943`.
+
+Terminal fetch remains blocked. The read-only GitHub git/commits API supplied
+the exact signed commit payloads; their complete trees already existed locally
+from the status-authoring commits. Tree hashes, parents and recomputed commit
+hashes were verified exactly before importing those objects and merging them
+into the existing WIP branches. No baseline was reconstructed from chat prose.
+Both merges were clean. No new production implementation was applied before
+the transitive audit exposed the boundary below.
+
+### WP132-RUST-C002 — CONTRACT_ASSURANCE_DEFECT — blocking
+
+**Rule:** TOOL-030/031 returns pinned Pi's exact `details.diff` and
+`details.patch`. Replacing an unpaired surrogate at the file UTF-8 boundary
+does not normalize the in-memory result strings. D002 certifies prepared
+arguments, not a widened tool-result/details domain.
+
+**Content-addressed source:** [edit.ts execute](https://github.com/badlogic/pi-mono/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit.ts)
+and [edit-diff.ts generateDiffString / generateUnifiedPatch](https://github.com/badlogic/pi-mono/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit-diff.ts).
+The probe uses their exact functions (only TypeScript erasure), Node 22.15.1
+and diff 8.0.4 bytes independently verified against pinned Pi's committed
+lockfile SHA-512. Complete actual Pi checkout cleanliness is checked.
+
+**Minimal setup:** existing f.txt bytes `61 0a` (`a\n`), scalar outer arguments
+with edits JSON string `[{"oldText":"a","newText":"\\ud800"}]`.
+
+**Expected / independently executed Pi observation:** successful edit; prepared
+newText units `[55296]`; file bytes `efbfbd0a`; result:
+
+```json
+{"diff":"-1 a\n+1 \ud800","firstChangedLine":1,"patch":"--- f.txt\n+++ f.txt\n@@ -1,1 +1,1 @@\n-a\n+\ud800\n"}
+```
+
+Neither result string contains U+FFFD. The escaping above is JSON display,
+not six literal characters in Pi's runtime string.
+
+**Certified Rust boundary:** `AgentToolResult.details: serde_json::Value`
+(tools/definition.rs), with JSON String(String); result finalization passes
+these details to ToolResultMessage without a UTF-16 result vocabulary. The
+locked serde_json rejects the exact result (`unexpected end of hex escape`)
+while U+FFFD and an escaped valid pair controls pass. PreparedString can now
+hold the argument, but cannot be inserted losslessly into this result field.
+The preserved edit engine also uses native String internally: an early lossy
+conversion would merely hide the output defect, not resolve it.
+
+**Discrimination:** the 21 prepared-string edit gate cases assert hook units,
+success text and file bytes, not result diff/patch units. A tool replacing
+newText early with U+FFFD could satisfy those output checks but violate exact
+TOOL-030/031 result semantics. A runner must not manufacture an escaped result
+string, drop details or bless that premature replacement.
+
+**Fresh probes:** exact pinned-Pi probe passes; locked Rust representation
+probe **2 passed / 0 failed** (one precise refusal witness plus scalar controls).
+Sources are preserved in `data/wp132-result-domain-c002/`. No full Cargo gates
+were run on this blocked resume; prior counts are not recycled as new evidence.
+
+**Required next step:** shared/lower-layer owner independently characterizes
+the result/details string and key domain and its reachable consumers/projections,
+including BMP, valid pair, lone high/low, positional variants, returned diff and
+patch, and any error-message path that can carry the same values. Scope and
+authorize the minimal lower-layer delta or obtain explicit divergence governance;
+do not silently broaden D002 or the raw/schema deltas. Existing prepared-domain
+certification remains valid. No output mutation or new semantics implemented.
+
+Rust WP-13.2 remains BLOCKED / NOT CERTIFIED; cross-language NOT CLOSED.
+Return C002 for contract resolution, not CLOSURE_REVIEW certification. Subsequent
+raw/schema implementation queue entries were not started during this pass.
