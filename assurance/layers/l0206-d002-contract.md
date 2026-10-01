@@ -156,3 +156,87 @@ FEASIBILITY
 **Gates:** 2554 passed, 17 skipped, 19 xfailed; 100% coverage; ruff and mypy clean.
 
 **Status:** R001 and R002 are REMEDIATED, pending targeted re-review.
+
+---
+
+## Convergence episode `CE-L0206-D002-01` (R002 numeric fixture domain)
+
+**Trigger check (§11.8).**
+- **Trigger A HAS fired:** `L0206-D002-R002` survived two independent reviews: CONTRACT1, docs #210 comment `5926939115`, and CONTRACT2, comment `5927166786`.
+- **Trigger B:** no other finding on this surface.
+- **Trigger C:** two complete-or-targeted rejections, not three.
+- So the episode is entered, with no ordinary point-fix pass. R001 stays provisionally closed (CONTRACT2).
+
+**Characterization** (§11.8.3): Codex's seed matrix in CONTRACT2. **Challenge pass** (§11.8.4, this author), independently re-executed:
+
+| Probe | Node 22.15.1 (`JSON.parse`, `String`, `BigInt`) | Python (`float`, `number_to_string`, `int(float)`) |
+|---|---|---|
+| `1000000000000000100` | value `1000000000000000128`; prints `1000000000000000100` | same; `int(token)` would give `…100` (the defect) |
+| `-1000000000000000100` | `-1000000000000000128`; prints the token | same |
+| `1000000000000000000` | exact | exact |
+| `1e21` | prints `1e+21`; integral `10^21` | — |
+| `9007199254740993` | `9007199254740992` | same |
+| integer `2^1024 - 2^970` and above | — | `float()` raises `OverflowError` |
+| integer `2^1024 - 2^970 - 1` | — | rounds to `1.7976931348623157e+308` and is **not** exactly representable |
+
+**Challenge answers.**
+- **Pi mapping:** correct. The raw value is `JSON.parse`'s binary64. `Number::toString` prints the shortest round-trip decimal, not the exact integer.
+- **Mechanics vs semantics:** the defect is in fixture decoding and observation (shared evidence), not in a Minion production seam. No lower layer reopens.
+- **Both languages:**
+  - Rust's `f64::from_str` is correctly rounded, and serde's `f64` path likewise, so a Rust fixture decoder that parses to `f64` already denotes the right value.
+  - Python must not use `int(token)`.
+  - The rules below are language-neutral.
+- **One-language-only cost?** The hazard is Python's arbitrary-precision `int` meeting decimal spelling. Rust needs only the language-neutral rules, not a fix.
+
+### Proposed rules (N1–N5)
+
+- **N1 (value).** A finite literal denotes **binary64(literal)**, the correctly rounded (round-half-even) parse. That is `JSON.parse`'s value, which for a canonical literal is the value whose `Number::toString` the literal is. Named tokens denote ±Infinity and −0.
+- **N2 (binding representation of a fixture).** A binding decodes a finite literal **through binary64**.
+  - Python: `f = float(literal)`. The value is `int(f)` when the literal is spelled without `.`/`e`/`E` (D001's integral-integer representation, now of the **exact binary64 integer**); otherwise it is `f`.
+  - The spelled decimal digits are never used as an integer.
+- **N3 (total, strict observation).** A runtime number observes as `{"number": Number::toString(binary64)}` exactly when it **is** a binary64 value. That covers a float, which is finite or a named value, and an int whose float conversion succeeds without `OverflowError` and converts back to the same integer. Every other int observes as a controlled `{"non_binary64_int": decimal}`, with no exception, at, below or above the overflow boundary.
+- **N4 (independent expectation).** A case's expected observation is computed **from the scenario text**, not through the fixture decoder. A number leaf's expectation is its token itself (canonical by the preflight); a string leaf's is its code units. A `non_binary64_int` marker can therefore never satisfy a valid number fixture.
+- **N5 (preflight, unchanged from R002).** A finite literal must be canonical: finite, and equal to `Number::toString` of its binary64 value. A named token is `+Infinity`, `-Infinity` or `-0`. There is no `NaN`.
+
+### Behavior matrix → acceptance witnesses (seed rows, each permanent)
+
+| Row | Witness |
+|---|---|
+| exact integer-looking `10^18` | new canonical case (Pi authority): hook/execute/update values equal the token |
+| non-exact integer-looking `±1000000000000000100` | new canonical cases (Pi authority: decode = `±…128`): every boundary observes the token. The **old decoder mutant** (`int(token)`) fails them |
+| integral exponential `1e+21` | new canonical case |
+| fractional, subnormal, max finite | existing `5e-324` and `1.7976931348623157e+308`; new `0.1` |
+| named | existing ±Infinity and −0; `NaN` refused (schema) |
+| noncanonical / out of domain | existing refusals (`9007199254740993`, `1e999`, `NaN`, alternate spellings) |
+| malformed runtime int at an observer | unit witnesses: `9007199254740993`, `1000000000000000100`, `2^1024-2^970-1`, `2^1024-2^970`, `2^1024`, `2^1024+1` all observe as `non_binary64_int`, with no exception; `1000000000000000128` and `2^53` observe as numbers |
+| independent expectation | a **decoder mutant** (`int(token)`) and an **observer mutant** (rendering via `float`) each fail the `±1000000000000000100` / `integer-2p53` cases |
+| real observers | the wrong value at **one** seam is killed for numbers too: an existing-style single-seam mutant (hook, execute, start, update event, update delivery) delivering `1000000000000000100` where the case expects `…128` |
+
+**Normative deltas.**
+- `spec/llm.md`: the number-token sentence gains N1–N4.
+- `raw-arguments-scenario.schema.json`: `$defs.token` comment gains N1–N4.
+- The runner: N2–N4.
+- The Pi probe: add `1000000000000000000`, `±1000000000000000100`, `1e21` and `0.1`, regenerating the number document (10 → 15 cases).
+- No production code. No manifest semantic change, only counts.
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION
+
+OPEN FINDINGS
+    L0206-D002-R002
+
+ROOT ABSTRACTION
+    a number fixture names a binary64 VALUE: decode through binary64 (N1/N2), observe strictly and totally (N3),
+    expect from the scenario text, never through the decoder (N4); preflight unchanged (N5)
+
+ACCEPTANCE WITNESSES
+    the behavior matrix above: 5 new Pi-authority canonical cases; observer totality units; decoder and observer
+    mutants; single-seam number mutants
+
+NORMATIVE DELTAS
+    spec/llm.md number-token rule; raw-arguments-scenario.schema.json $defs.token; raw_arguments_runner.py; Pi probe
+
+NEXT_OWNER
+    Codex (checkpoint review; no implementation before APPROVED)
+```
