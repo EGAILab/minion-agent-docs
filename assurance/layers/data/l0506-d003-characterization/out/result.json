@@ -9,7 +9,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         97,
+         98
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -112,7 +141,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           97,
+           98
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -245,7 +313,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            97,
+            98
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -390,7 +501,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        97,
+        98
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -478,7 +613,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       97,
+       98
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -536,7 +685,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      97,
+      98
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -603,7 +769,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         233,
+         20013
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -706,7 +901,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           233,
+           20013
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -839,7 +1073,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            233,
+            20013
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -984,7 +1261,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        233,
+        20013
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1072,7 +1373,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       233,
+       20013
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1130,7 +1445,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      233,
+      20013
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1197,7 +1529,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         55357,
+         56832
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1300,7 +1661,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           55357,
+           56832
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1433,7 +1833,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            55357,
+            56832
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1578,7 +2021,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        55357,
+        56832
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1666,7 +2133,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       55357,
+       56832
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1724,7 +2205,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      55357,
+      56832
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1791,7 +2289,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         55296,
+         65
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -1894,7 +2421,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           55296,
+           65
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2027,7 +2593,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            55296,
+            65
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2172,7 +2781,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        55296,
+        65
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2260,7 +2893,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       55296,
+       65
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2318,7 +2965,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      55296,
+      65
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2385,7 +3049,37 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         65,
+         55296,
+         66
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2491,7 +3185,47 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           65,
+           55296,
+           66
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2627,7 +3361,51 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            65,
+            55296,
+            66
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2775,7 +3553,32 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        65,
+        55296,
+        66
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2866,7 +3669,22 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       65,
+       55296,
+       66
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2927,7 +3745,25 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -2997,7 +3833,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         65,
+         55296
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3100,7 +3965,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           65,
+           55296
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3233,7 +4137,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            65,
+            55296
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3378,7 +4325,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        65,
+        55296
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3466,7 +4437,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       65,
+       55296
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3524,7 +4509,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      65,
+      55296
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3591,7 +4593,35 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         55296
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3691,7 +4721,45 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           55296
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3821,7 +4889,49 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            55296
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -3963,7 +5073,30 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        55296
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4048,7 +5181,20 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       55296
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4103,7 +5249,23 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      55296
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4167,7 +5329,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         56320,
+         65
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4270,7 +5461,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           56320,
+           65
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4403,7 +5633,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            56320,
+            65
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4548,7 +5821,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        56320,
+        65
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4636,7 +5933,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       56320,
+       65
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4694,7 +6005,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      56320,
+      65
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4761,7 +6089,35 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         56320
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4861,7 +6217,45 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           56320
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -4991,7 +6385,49 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            56320
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5133,7 +6569,30 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        56320
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5218,7 +6677,20 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       56320
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5273,7 +6745,23 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      56320
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5337,7 +6825,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         55296,
+         55296
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5440,7 +6957,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           55296,
+           55296
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5573,7 +7129,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            55296,
+            55296
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5718,7 +7317,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        55296,
+        55296
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5806,7 +7429,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       55296,
+       55296
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5864,7 +7501,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      55296,
+      55296
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -5931,7 +7585,36 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         56320,
+         55296
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6034,7 +7717,46 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           56320,
+           55296
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6167,7 +7889,50 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            56320,
+            55296
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6312,7 +8077,31 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        56320,
+        55296
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6400,7 +8189,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       56320,
+       55296
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6458,7 +8261,24 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      56320,
+      55296
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6525,7 +8345,37 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         55357,
+         56832,
+         55296
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6631,7 +8481,47 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           55357,
+           56832,
+           55296
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6767,7 +8657,51 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            55357,
+            56832,
+            55296
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -6915,7 +8849,32 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        55357,
+        56832,
+        55296
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7006,7 +8965,22 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       55357,
+       56832,
+       55296
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7067,7 +9041,25 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7137,7 +9129,37 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         56320,
+         55357,
+         56832
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7243,7 +9265,47 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           56320,
+           55357,
+           56832
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7379,7 +9441,51 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            56320,
+            55357,
+            56832
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7527,7 +9633,32 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        56320,
+        55357,
+        56832
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7618,7 +9749,22 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       56320,
+       55357,
+       56832
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7679,7 +9825,25 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7749,7 +9913,33 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": []
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7843,7 +10033,43 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": []
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -7967,7 +10193,47 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": []
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8103,7 +10369,28 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8182,7 +10469,18 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": []
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8231,7 +10529,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8289,7 +10601,35 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         0
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8389,7 +10729,45 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           0
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8519,7 +10897,49 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            0
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8661,7 +11081,30 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        0
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8746,7 +11189,20 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       0
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8801,7 +11257,23 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      0
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8865,7 +11337,35 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        100,
+        105,
+        102,
+        102
+       ],
+       {
+        "u": [
+         65533
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -8965,7 +11465,45 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        108,
+        105,
+        110,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "u": [
+           120
+          ]
+         },
+         {
+          "u": [
+           65533
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9095,7 +11633,49 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        111,
+        117,
+        116,
+        101,
+        114
+       ],
+       {
+        "o": [
+         [
+          [
+           105,
+           110,
+           110,
+           101,
+           114
+          ],
+          {
+           "u": [
+            65533
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9237,7 +11817,30 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        65533
+       ],
+       {
+        "v": true
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9322,7 +11925,20 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       65533
+      ]
+     }
+    ],
+    "details": {
+     "o": []
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9377,7 +11993,23 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "u": [
+      65533
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9441,7 +12073,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "0"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9538,7 +12197,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "0"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9650,7 +12341,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "0"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9708,7 +12413,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "-0"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9805,7 +12537,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "-0"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9917,7 +12681,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "-0"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -9975,7 +12753,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "1.5"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10072,7 +12877,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "1.5"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10184,7 +13021,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "1.5"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10242,7 +13093,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "+Infinity"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10339,7 +13217,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "+Infinity"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10451,7 +13361,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "+Infinity"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10509,7 +13433,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "-Infinity"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10606,7 +13557,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "-Infinity"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10718,7 +13701,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "-Infinity"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10776,7 +13773,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "NaN"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10873,7 +13897,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "NaN"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -10985,7 +14041,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "NaN"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11043,7 +14113,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "1.7976931348623157e+308"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11140,7 +14237,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "1.7976931348623157e+308"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11252,7 +14381,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "1.7976931348623157e+308"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11310,7 +14453,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "5e-324"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11407,7 +14577,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "5e-324"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11519,7 +14721,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "5e-324"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11577,7 +14793,34 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101
+       ],
+       {
+        "n": "9007199254740992"
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11674,7 +14917,39 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "o": [
+      [
+       [
+        118,
+        97,
+        108,
+        117,
+        101,
+        115
+       ],
+       {
+        "a": [
+         {
+          "n": "9007199254740992"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {
@@ -11786,7 +15061,21 @@
     "message_start",
     "message_end"
    ],
-   "hook": null,
+   "hook": {
+    "content": [
+     {
+      "u": [
+       111,
+       107
+      ]
+     }
+    ],
+    "details": {
+     "n": "9007199254740992"
+    },
+    "isError": false,
+    "same_object_as_returned": true
+   },
    "end": {
     "content": [
      {

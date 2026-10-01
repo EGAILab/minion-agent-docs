@@ -86,16 +86,16 @@ def build():
     cases = []
     for name, units in STRINGS.items():
         # the string as a details leaf, nested in an array, nested in an object, as an object key, and as the text
-        cases.append(case(f"details-leaf/{name}", details=o(("diff", u(units)))))
-        cases.append(case(f"details-array/{name}", details=o(("lines", a(s("x"), u(units))))))
-        cases.append(case(f"details-nested/{name}", details=o(("outer", o(("inner", u(units)))))))
-        cases.append(case(f"details-key/{name}", details=o((units, TRUE))))
-        cases.append(case(f"text/{name}", text=u(units)))
-        cases.append(case(f"details-top-string/{name}", details=u(units)))
+        cases.append(case(f"details-leaf/{name}", details=o(("diff", u(units))), hook="observe"))
+        cases.append(case(f"details-array/{name}", details=o(("lines", a(s("x"), u(units)))), hook="observe"))
+        cases.append(case(f"details-nested/{name}", details=o(("outer", o(("inner", u(units))))), hook="observe"))
+        cases.append(case(f"details-key/{name}", details=o((units, TRUE)), hook="observe"))
+        cases.append(case(f"text/{name}", text=u(units), hook="observe"))
+        cases.append(case(f"details-top-string/{name}", details=u(units), hook="observe"))
     for token in NUMBERS:
-        cases.append(case(f"details-number/{token}", details=o(("value", n(token)))))
-        cases.append(case(f"details-array-number/{token}", details=o(("values", a(n(token))))))
-        cases.append(case(f"details-top-number/{token}", details=n(token)))
+        cases.append(case(f"details-number/{token}", details=o(("value", n(token))), hook="observe"))
+        cases.append(case(f"details-array-number/{token}", details=o(("values", a(n(token)))), hook="observe"))
+        cases.append(case(f"details-top-number/{token}", details=n(token), hook="observe"))
     for name, value in {"null": NULL, "true": TRUE, "false": FALSE}.items():
         cases.append(case(f"details-scalar/{name}", details=o(("value", value))))
         cases.append(case(f"details-top-scalar/{name}", details=value))

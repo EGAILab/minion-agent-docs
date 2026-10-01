@@ -26,17 +26,17 @@ All of it is under `assurance/layers/data/l0506-d003-characterization/`.
 
 | Artifact | What |
 |---|---|
-| `harness/make_cases.py` → `cases.json` (sha256 `557148a3…`) | 145 cases plus the edit witness (§5), in the probe's tagged value form |
+| `harness/make_cases.py` → `cases.json` (sha256 `bfbc4e6d…`) | 145 cases plus the edit witness (§5), in the probe's tagged value form |
 | `harness/result_probe.mjs`, `harness/run.sh` | pinned-Pi authority |
-| `out/result.json` (sha256 `febfc4fcdfd1f837ca33e98edf028c5beb05c80a8eed3aa9070075cb8ca473b2`) | 146 Pi results |
-| `harness/py_probe.py` → `out/py.json` (sha256 `3de2df02…`) | certified Python, main `e83ba6aa`, through its real seams |
+| `out/result.json` (sha256 `97fa2ae9af4582533914c6a7b0007eab3edb85ac6f141a0c50dda537ba0212df`) | 146 Pi results |
+| `harness/py_probe.py` → `out/py.json` (sha256 `d7f6ff4d…`) | certified Python, main `e83ba6aa`, through its real seams |
 | `harness/compare.py` | Python vs Pi, boundary by boundary |
 
 **Authority.**
 - **Runtime and dependencies:** Node v22.15.1. typebox 1.3.7 and diff 8.0.4 are each verified against pinned Pi's committed lockfile via `acquire_npm_pinned.sh` (`process/authority-dependencies.md`).
 - **Pi sources:** the five Pi files are hash-pinned in `harness/pi_sources.sha256`. The pipeline is Pi's own `executeToolCalls` → `executeToolCallsSequential` → … → `emitToolResultMessage`, sliced from `agent-loop.ts` and run unmodified. The probe only supplies a custom tool and an `afterToolCall` hook.
 - **Determinism:** `Date.now` is fixed to 0 because `createToolResultMessage` stamps a timestamp. No characterized value depends on it. Identity observations use `Object.is`, so a top-level `NaN` (never `===` itself) is not misreported as a different value.
-- **Replays:** the output is byte-identical (`febfc4fc…`) across two host-offline runs and one `node:22.15.1-alpine` container run with network acquisition.
+- **Replays:** the output is byte-identical (`97fa2ae9…`) across two host-offline runs and one `node:22.15.1-alpine` container run with network acquisition.
 
 **Case families:**
 - **Strings:** 16 code-unit sequences: ASCII, BMP, a valid pair, lone high and low surrogates at start/middle/end, adjacent highs, low-then-high, pair+lone and lone+pair, empty, NUL, and U+FFFD as a control. Each appears as:
@@ -51,6 +51,8 @@ All of it is under `assurance/layers/data/l0506-d003-characterization/`.
 - **Hook and failure paths:**
   - after-hook modes: observe, return the same values, return `{details: null}`, replace details, replace text, replace with a non-finite number, throw;
   - a tool that throws.
+- **Which cases have an after-hook:** every string, key and number case runs with an *observing* after-hook. So the hook boundary is observed across the whole domain, not only in the hook family (decision §7). The scalar-shape and failure cases keep the no-hook path.
+- **Revision:** characterization revision 1 (`0369abf9`, output `febfc4fc…`) ran the domain families without a hook. Revision 2 adds the observing hook. The Pi observations at every other boundary are unchanged.
 
 ## 3. Pinned Pi: results
 
