@@ -56,3 +56,5 @@ It runs them with Pi's unmodified `validateToolArguments`. For each case:
 | `edit/*` (21) | every member prepared. The hook observes the exact code units. The raw arguments are mutated in place by Pi (Minion's certified rule gives `prepare_arguments` a fresh copy instead). UTF-8 projection: unpaired surrogate → `EF BF BD` |
 
 All 160 cells shared with characterization pass 1 (`../l0506-d002-characterization/`) agree in verdict, code units and projections: 7 schema kinds × 20 members, plus 20 `edit` cases. Pass 1's 20 `enum-lone` cells put a lone surrogate in the **schema**, and moved to `L05-D001` (`L0506-D002-R001`).
+
+**Offline / host replay** (`process/authority-dependencies.md`). Set `TYPEBOX_TGZ=<path to the exact tarball>`, and it is verified against pinned Pi's lockfile before use. To run without Docker on a host proving the runtime pins, set `PI_DIR`, `OUT_DIR` and, if needed, `PYTHON`, and run the same harness runner directly.

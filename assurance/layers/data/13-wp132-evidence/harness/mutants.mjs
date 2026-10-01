@@ -1,11 +1,14 @@
 // WP-13.2 corpus discrimination: each single-point mutant of the pinned Pi edit-diff.ts or diff@8.0.4 source, run
 // through the SAME corpus, must change at least one authority result. Run inside the authority container after
-// run_authority.sh (uses /tmp/s/a as the pristine authority tree and /out/authority.json as the baseline).
+// run_authority.sh (uses $STAGE_DIR/a as the pristine authority tree and $OUT_DIR/authority.json as the baseline;
+// defaults /tmp/s and /out, the container layout).
 import { cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
-const ROOT = "/tmp/s/a";
-const baseline = JSON.parse(readFileSync("/out/authority.json", "utf8")).results;
+const STAGE = process.env.STAGE_DIR || "/tmp/s";
+const OUT = process.env.OUT_DIR || "/out";
+const ROOT = `${STAGE}/a`;
+const baseline = JSON.parse(readFileSync(`${OUT}/authority.json`, "utf8")).results;
 const M = [
   ["exact-only uniqueness counting", "pi/core/tools/edit-diff.ts",
    "const fuzzyContent = normalizeForFuzzyMatch(content);\n\tconst fuzzyOldText = normalizeForFuzzyMatch(oldText);\n\treturn fuzzyContent.split(fuzzyOldText).length - 1;",
@@ -41,7 +44,7 @@ const M = [
 ];
 const out = [];
 for (const [name, file, from, to] of M) {
-  const dir = "/tmp/mut";
+  const dir = `${STAGE}/mut`;
   rmSync(dir, { recursive: true, force: true });
   cpSync(ROOT, dir, { recursive: true });
   const path = `${dir}/${file}`;
@@ -49,10 +52,10 @@ for (const [name, file, from, to] of M) {
   const count = src.split(from).length - 1;
   if (count !== 1) { out.push({ name, error: `anchor count ${count}` }); continue; }
   writeFileSync(path, src.replace(from, to));
-  execFileSync("node", ["--experimental-strip-types", "--no-warnings", "edit_authority.mjs", "/tmp/s/cases.json", "/tmp/mut.json"], { cwd: dir });
-  const mutated = JSON.parse(readFileSync("/tmp/mut.json", "utf8")).results;
+  execFileSync("node", ["--experimental-strip-types", "--no-warnings", "edit_authority.mjs", `${STAGE}/cases.json`, `${STAGE}/mut.json`], { cwd: dir });
+  const mutated = JSON.parse(readFileSync(`${STAGE}/mut.json`, "utf8")).results;
   const changed = mutated.filter((r, i) => JSON.stringify(r) !== JSON.stringify(baseline[i])).map((r) => r.id);
   out.push({ name, file, killed: changed.length > 0, changed_cases: changed.length, examples: changed.slice(0, 5) });
 }
-writeFileSync("/out/mutants.json", JSON.stringify(out, null, 1));
+writeFileSync(`${OUT}/mutants.json`, JSON.stringify(out, null, 1));
 for (const r of out) console.log(r.error ? `ERROR | ${r.name}: ${r.error}` : `${r.killed ? "KILLED" : "SURVIVED"} | ${r.name} (${r.changed_cases} cases: ${r.examples.join(", ")})`);
