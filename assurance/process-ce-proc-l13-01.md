@@ -119,3 +119,78 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review; only its APPROVED makes this AGREED FOR IMPLEMENTATION)
 ```
+
+---
+
+## Checkpoint revision 2: response to C-PROC-L13-01-01 / -02 (Codex, REJECTED at `9c603495`)
+
+- **Review:** `#204` comment `5923147284`, published verbatim on Codex's behalf.
+- **Accepted:** the core directions above. Both gaps are accepted. Revision 1 stays as written.
+- **Neighborhood expansion** (`agent-workflow.md` §9.4, proposed). Both gaps share a shape: an *entry point* or *field* that rev 1's enumeration missed. So rev 2 enumerates **entry points** as well as fields, mechanically from the source, and closes the partition, not just the two witnesses.
+
+### Added field rows
+
+| Field | Shape (rule) | A / N meaning | C, E, Z must → |
+|---|---|---|---|
+| `work_package` | non-empty string (the canonical WP identity, `coordination-state.md` §2) | **required**: A/N → error | E (non-string, e.g. `[None]`) → error; Z → error |
+| `title` | string | optional | E → error |
+| `layer` | string | optional | E → error |
+
+### Entry-point table
+
+Every function or command that consumes coordination state:
+
+| Entry point | Consumes | Rule |
+|---|---|---|
+| `validate_workflow` | the whole object | total: diagnostics only, never raises |
+| `candidate_report` | candidates (via `candidates()`) | validates first; any validation error → a failed check, and the candidate is not consumed further |
+| `handoff_report` | issue state, the whole object | as `candidate_report`; `HANDOFF_BLOCKED` on invalid state |
+| `commit_state`, **current** state | `status` (transition lookup), the whole object | **validates the current state before any use.** If invalid → `CheckFailed` ("current state invalid"), zero writes, and the transition lookup is never fed invalid data. **Exception: explicit repair mode** (`apply --repair`, `agent-workflow.md` §11.1.1 failed-commit repair). Transition legality is not evaluated against an invalid current status. The intended state must fully validate. The result is reported as `REPAIRED (current state was invalid)`, and the agent records the last-known-good source |
+| `commit_state`, **intended** state | the whole object, transition | validated before writing; `CheckFailed`, zero writes (as today) |
+| `commit_state`, **remote** state | the whole object | validated after writing; a failed state commit (as today) |
+| `cli status` | `work_package`, `status`, candidates, findings, owner/action, convergence | prints **validated** values. Candidates come through the single `candidates()` accessor, so v1 and v2 are read identically. An invalid state prints the diagnostics and exits 1, never a traceback |
+| `cli validate` / `candidate-check` / `handoff-check` | as their operations | diagnostics, non-zero exit, no traceback |
+| `cli apply` | as `commit_state` | `CheckFailed` / `BodyFormatError` → message and exit 1 |
+| `merge`, `comment` | arguments plus remote PR/comment data only | out of this surface (no coordination state); unchanged |
+
+### Rules added to 1–6
+
+7. **Entry-point coverage.** Every entry point above validates the state it consumes before consuming it, including `commit_state`'s **current** state. A new entry point without a row is a defect.
+8. **One accessor.** Every consumer reads candidates through `candidates()`, after validation. No consumer reads top-level `code`/`docs` directly. A valid v2 `current_candidate` is observed exactly as recorded.
+9. **Controlled-exception scope.** For **malformed coordination data**, `commit_state` raises only `CheckFailed` / `BodyFormatError`, before any write. Remote/network failures (`GitHubError`) and exceptions raised by a caller's own patch code are **out of scope**: they propagate as they are, and they are not described as malformed data.
+
+### Acceptance witnesses added
+
+All are RED at `cc44a13b` unless marked positive.
+- **Malformed identity:** `work_package: [None]`, `work_package` absent, and `work_package: ""` → validation errors.
+- **`cli status` positives, v1 and v2:** with real recorded `code`/`docs` PRs and SHAs, the output contains the exact PR numbers and SHAs (not just exit 0). With the v2 form, `PR None sha None` must not appear.
+- **`cli status` on malformed state:** diagnostics and exit 1, no traceback.
+- **Mutation boundary, current state:**
+  - `status: ["IMPLEMENTATION_REVIEW"]` patched to a valid status → `CheckFailed`, zero writes, transition lookup never reached;
+  - the same with a malformed `current_candidate`;
+  - the same with `work_package: [None]`.
+- **Mutation boundary, intended state:** a patch writing each malformed class → `CheckFailed`, zero writes.
+- **Repair mode** (positive): an invalid current state plus `repair=True` and a fully valid intended state → committed and round-trip verified. With `repair=True` and an invalid intended state → refused.
+- **Bounded Hypothesis totality** over every listed entry point: `validate_workflow`, `candidate_report`, `handoff_report`, `cli status`/`validate`, and `commit_state` with a substituted current or intended value. Arbitrary JSON-like values substituted at each consumed path → only the allowed outcomes, i.e. diagnostics, failed checks, `CheckFailed` / `BodyFormatError`, with zero writes on refusal. The search is bounded (`max_examples` per path), not a Cartesian product.
+- **Scope control:** a patch function that raises its own `RuntimeError` still propagates as `RuntimeError` (rule 9), and a `GitHubError` from the fake propagates unchanged.
+
+### Checkpoint, revision 2
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 2)
+
+OPEN FINDINGS
+    PROC-L13-R001, PROC-L13-R003
+
+ACCEPTANCE WITNESSES
+    rev 1 witnesses + the witnesses added above (identity, v1/v2 status positives,
+    mutation-boundary current/intended, repair mode, bounded entry-point totality, scope controls)
+
+NORMATIVE DELTAS
+    coordination-state.md §13: the field table (rev 1 + the added rows) and the entry-point table;
+    minion-process-cli-design.md: rules 1-9 and `apply --repair`
+
+NEXT_OWNER
+    Codex (checkpoint review)
+```
