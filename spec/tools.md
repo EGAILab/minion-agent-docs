@@ -154,6 +154,47 @@ error. What a caller does with that absence (e.g. a model-facing error
 result) is Layer 06, not certified here.
 ```
 
+### Runtime-validation schema string domain (`TOOL-016` / `TOOL-003`, post-certification delta `L05-D001`)
+
+**Status (`minion-agent#104`):** AGREED FOR IMPLEMENTATION. Contract code #106 → `ef7fe40c`, docs #211 → `c624330b`. Python: no production change, implementation review pending. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decision on `L0506-D002-R001`, Option 1 (`minion-agent#99` comment `5926416181`). This is a separate Layer-05 delta. It is distinct from `L0506-D002` (prepared instance strings), `L0206-D002` (raw arguments) and `L0206-D001` (key order). No intentional divergence; no whole-Layer-05 reopen.
+- **The rule.** A tool's `parameters` schema is a JavaScript object in pinned Pi. Wherever runtime argument validation (`TOOL-003`) consumes one of its string values or object keys, that string is a JavaScript String: any UTF-16 code units, unpaired surrogates included. Registration MUST accept such a schema, and validation MUST honor it as pinned Pi's `validateToolArguments` does, per role:
+
+| Schema-string role | Pinned Pi operation (characterized) |
+|---|---|
+| `properties` keys and `required` entries | exact UTF-16 identity with the instance key |
+| a declared property under `additionalProperties: false` | admits exactly the identical instance key |
+| `const`, `enum` literals | exact code-unit sequence equality |
+| `propertyNames: {const: S}` | exact code-unit equality of each key |
+| `dependentRequired` keys | trigger on the exact instance key |
+| `pattern` and `patternProperties` keys, anchored or not (an unanchored `patternProperties` key searches instance keys, `L05-D001-R001`) | a **Unicode-mode RegExp**, not code-unit equality. A valid pair is one code point, so neither half matches inside it (e.g. pattern `\uD83D` does not match the instance `😀`). An unpaired surrogate matches where it genuinely occurs |
+
+Documentary fields (`title`, `description`, `examples`) are not consumed by validation and are outside this rule. `default` is not filled in by Pi's validator.
+
+**Not changed.** Provider/wire schema transport (model-facing schema serialization, Layer 11). The four-domain split (`process/hazard-families.md` F7):
+
+| Domain | Delta |
+|---|---|
+| this schema domain | `L05-D001` |
+| the instance | `L0506-D002` / `L0206-D002` |
+| the raw/wire values | `L0206-D002` |
+| projections | their own boundaries |
+
+**Representation.**
+- **Python.** A `dict` schema holding `str` keys and values (valid pairs combined, unpaired surrogates as surrogate code points). Its validator (`TOOL-003`, Draft 2020-12 via `jsonschema`) already matches pinned Pi on every characterized cell.
+- **Rust.** The certified `ToolDefinition.parameters` (`JsonSchemaObject(Map<String, serde_json::Value>)`) cannot hold an unpaired surrogate as a key or string value. A runtime-validation schema representation with a JavaScript-string-capable key and value domain is required. Its validator MUST implement the per-role operations above, including the Unicode-mode `pattern`. The type design is delegated to contract and implementation review (decision §8). `serde_json` limitations are not schema semantic authority.
+
+**Evidence.**
+- **Authority:** `minion-agent-docs` `assurance/layers/data/l05-d001-schema-domain/` (characterization `l05-d001-characterization.md`).
+- **Canonical scenarios:** `minion-agent` `conformance/agent/schema-domain/` (shape `schema-domain-scenario.schema.json`): 810 cases, which is 10 roles × 9 schema members × 9 instance members. Each case carries its literal schema and arguments as UTF-16 code units, and the runner observes only accept/reject through the real Layer-06 pipeline.
+- **Negative controls:**
+  - a schema seam that rejects a lone surrogate at registration;
+  - schema literals replaced with U+FFFD;
+  - a code-unit (non-Unicode) `pattern` search;
+  - instance property-name normalization.
+- **WP-13.2:** independent. The `write`/`edit` schemas hold only ASCII names and unconstrained `Type.String` slots.
+
 ### Explicitly not certified by Layer 05
 
 `prepare_arguments`'s actual invocation timing/ordering, `execute`'s actual invocation
@@ -553,6 +594,8 @@ prepared runtime arguments     Pi's JavaScript runtime values after prepare_argu
    -> execute)                  and execute receives
 ```
 
+> **Corrected by `L0206-D002`** (`minion-agent#103`; Owner decision `L0506-D002-Q001`). The "raw ToolCall arguments: JSON-compatible" line above is superseded. Pinned Pi's raw arguments are `JSON.parse`'s JavaScript value: unpaired surrogates, `-0` and ±Infinity can already be raw, reaching `tool_execution_*` and the hook with no `prepare_arguments` (`spec/llm.md`, "Raw tool-call argument value domain"). The line is kept as the historical D001 text; D001's prepared-domain rules are unchanged.
+
 A number in the prepared runtime domain is one of:
 
 ```text
@@ -649,6 +692,115 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 - The negative controls each binding's implementation review must run: Infinity rejected because a type cannot hold it; Infinity mapped to null; clamped to the largest finite value; stringified; `-0` collapsed to `+0`; a hook projection that loses a non-finite value; and a validator accepting a non-finite value in a declared `number` field.
 
 **Known Python defect,** fixed by this delta's Python implementation (`L0506-D001-C001`). Certified Python Layer 06 accepts ±inf and NaN in a declared `number` field, because the `jsonschema` library's `number` admits non-finite floats. The declared-number scenario witnesses it.
+
+### Prepared runtime string domain (`TOOL-041`, post-certification delta `L0506-D002`)
+
+**Status (`minion-agent#99`):** CERTIFIED_CLOSED. Python: no production change; contract code #102 → `28d409d4`, docs #209 → `74f125e3`. Rust: code #108 → `ac661221`, docs #213 → `2d2ba5fc`, closure review on `minion-agent-docs#213`.
+
+- **Authorization.** Owner decision on `WP132-RUST-C001`, Option 1 (`minion-agent#49` comment `5924605017`). This is a narrow post-certification extension of the Layer-05/06 runtime domain, the sibling of `L0506-D001` (numbers). Historical Layer-05/06 certification stands outside the surface below, D001's semantics are not reopened, and no intentional divergence is introduced.
+- **Origin.** Rust WP-13.2 implementation finding `WP132-RUST-C001`:
+  - pinned Pi's `edit` preparation turns an escaped `\ud800` inside a string `edits` into a lone UTF-16 surrogate;
+  - Pi's hooks and `execute` observe it, and the file receives `EF BF BD`;
+  - Rust's certified prepared string type cannot hold it.
+
+**Affected surface.** As `L0506-D001`, applied to strings:
+- Layer 05: the representation of `prepare_arguments`' result.
+- Layer 06: validation of the prepared arguments, the `tools/pre-execute` listener's `arguments`, a listener's `Proceed(arguments=...)` replacement, and the arguments handed to `execute`.
+
+Unchanged: the raw `ToolCall.arguments` (see "Raw domain" below), the original arguments carried by `tool_execution_*` (`IR-L06-005`), and every serialization of a `ToolCall`.
+
+**The domain.** A string in the prepared runtime domain is a **JavaScript String**: a sequence of UTF-16 code units. It is not a Unicode scalar-value string, and no binding's native string type defines it. Every sequence pinned Pi can produce at this boundary is included:
+
+```text
+ASCII / BMP non-surrogate code units
+a valid surrogate pair (high then low): one astral character
+an unpaired high surrogate      at the start, middle, end, or alone
+an unpaired low surrogate       at the start, middle, end, or alone
+adjacent highs, adjacent lows, low-then-high, high-then-non-low
+a pair next to an unpaired surrogate, in either order
+the empty string, NUL (U+0000) alone or inside
+```
+
+The same domain applies to **object keys** in the prepared value.
+
+**Reachability, from pinned-Pi characterization** (authority below):
+- **Core preparation.** `edit`'s `prepareEditArguments` decodes a string `edits` with `JSON.parse`. That turns an escaped valid pair into one astral character, and keeps an escaped unpaired surrogate (`\ud800`, `\udc00`, in any position) as a lone code unit. All 20 neighborhood members are reachable this way.
+- **A tool's own shim.** A tool's `prepare_arguments` (Pi's public `AgentTool.prepareArguments`) can return any string, in values and in keys. Pi's validator keeps it, and the hook observes it.
+
+**Observers: one value, never re-encoded.** Pinned Pi hands the **same object** to `beforeToolCall` (`args`), to `execute`, and to `afterToolCall` (`args`). This is characterized by running `agent-loop.ts`' own `prepareToolCall`/`executePreparedToolCall`/`finalizeExecutedToolCall`, sliced from the pinned source.
+- In Minion, the `tools/pre-execute` listener and `execute` MUST observe the prepared string's exact code units.
+- A `Proceed(arguments=...)` replacement is Minion's own extension. It carries the same domain into `execute`: `execute` observes the replacement's exact code units.
+- Minion's `tools/post-execute` carries no arguments (certified Layer-06 surface), so it adds no observer here.
+- A binding MUST NOT, anywhere between preparation and `execute`:
+  - replace an unpaired surrogate (with U+FFFD or anything else);
+  - reject one;
+  - re-encode the value through a lossy or strict UTF-8/UTF-16 conversion;
+  - split a valid pair into two independent replacement characters;
+  - treat high and low surrogates differently;
+  - hand the hook and `execute` different values.
+
+**Validation** (pinned `validateToolArguments`, `typebox` 1.3.7; 168 characterized cells):
+
+| Keyword | Rule |
+|---|---|
+| `type: string` | every member is a string |
+| `minLength` / `maxLength` | count **code points**: a valid pair counts 1, and each unpaired surrogate code unit counts 1 (the pair passes `maxLength: 1`; adjacent highs fail it) |
+| `pattern` | Unicode mode: `.` matches a valid pair as one character and an unpaired surrogate as one character; NUL is a character |
+| `const` / `enum` | exact code-unit sequence equality (the pair matches only the pair; `enum: [U+FFFD]` matches only the real U+FFFD and rejects every unpaired-surrogate instance) |
+
+A rejection is Layer 06's certified immediate argument-validation error (`TOOL-003`). Producing that error MUST NOT fail for any prepared string.
+
+**Instance domain, not schema domain** (`L0506-D002-R001`; Owner decision `minion-agent#99` comment `5926416181`).
+- This delta owns the prepared **instance**. The schema it is validated against holds only scalar strings here.
+- A non-scalar string **inside the schema** belongs to the separate Layer-05 delta `L05-D001` (`minion-agent#104`). That covers a property name, a `required` entry, a `const`/`enum` literal or a `pattern` holding an unpaired surrogate.
+- No certification claim of this delta depends on such a schema literal.
+- The scalar schema `enum: [U+FFFD]` is the instance-side discriminator against early replacement: a lone-surrogate instance stays distinct from the real U+FFFD.
+
+**Projection boundaries.** Each conversion of a runtime string into another representation is its own boundary, and replacement happens only there:
+- **UTF-8 encoding.** Node's `Buffer.from(s, "utf8")` is `fs.writeFile(path, s, "utf-8")`, which `edit`/`write` use. Each unpaired surrogate code unit becomes `EF BF BD`; a valid pair becomes its 4-byte UTF-8, and NUL becomes `00`. The WP-13.2 tools own this boundary (`spec/tools.md` String semantics).
+- **Pi's validation-failure diagnostic** (`JSON.stringify(preparedToolCall.arguments, null, 2)`): each unpaired surrogate is escaped as `\udXXX` (well-formed `JSON.stringify`), NUL as `\u0000`, and a valid pair is emitted as the character itself.
+  - The runtime values are unchanged by it. The case `diagnostic/lone-surrogates` records both.
+  - Minion's `TOOL-003` text is its own, as for `L0506-D001`.
+- **The successful path serializes no prepared string.**
+- **Later boundaries, outside this delta.** A string that leaves Layer 06 inside a tool result crosses boundaries owned by later layers. Two are characterized but not certified here:
+  - JSON persistence escapes it as above.
+  - Pi's provider payloads (`sanitizeSurrogates`, Layer 11) **delete** unpaired surrogates from outbound text.
+
+**Representation.** The contract fixes values, not types.
+- **Python.** A `str` in which every valid pair is one astral code point and every unpaired surrogate is a surrogate code point. This is the canonical form `JSON.parse`-equivalent decoding and `utf-16-le`/`surrogatepass` produce. A `str` holding a valid pair as two separate surrogate code points is not a canonical value; it would count 2 under `maxLength`.
+- **Rust.** It needs a prepared-runtime string, and a prepared object **key**, able to carry any UTF-16 code-unit sequence losslessly through preparation, validation, hooks and `execute`. Examples are UTF-16 code units, or a WTF-8/WTF-16-capable wrapper. The API spelling is Rust's, delegated to its implementation review. `String`, `String::from_utf16_lossy`, early U+FFFD replacement and rejection are not acceptable (Owner decision §3). Its validation MUST implement the keyword rules above over code units and code points, not over a lossy projection.
+
+**Evidence** (`minion-agent-docs` `assurance/layers/data/l0506-d002/`).
+- **The pinned-Pi authority** covers 198 cases:
+  - the 21-member neighborhood (the Owner decision's 20 plus the real U+FFFD, `L0506-D002-R001`) × 8 schema kinds;
+  - nested-object, array-element and two-string positions;
+  - 5 key cases;
+  - the diagnostic case;
+  - the 21 real-`edit` cases.
+
+  It runs `agent-loop.ts`' preparation/execute/finalize functions sliced from source, unmodified `validateToolArguments` (`typebox` 1.3.7, SRI-checked) and `edit.ts`' `prepareEditArguments`/`editSchema`, sliced from source.
+- **Canonical scenarios** live in `minion-agent` `conformance/agent/prepared-runtime-string/`, shape `prepared-string-scenario.schema.json`: 8 documents.
+  - Strings are written as arrays of UTF-16 code units, so unpaired surrogates survive the scenario file.
+  - The runner asserts that the hook and `execute` observe the same code units (or, for a replacement, the replacement's), and that the raw arguments are unchanged.
+  - Its language-neutral PREFLIGHT ties `observed`/`observed_keys`/`execute_observed` to the declared pointers.
+- **Evidence staging**, as `L0506-D001-R003`:
+  - **`L0506-D002`, the delta's certification gate:** 7 custom documents, 181 cases. That is 168 neighborhood × schema cells, 9 positions/keys/diagnostic cases, and 4 hook-replacement cases. The replacement cases are Minion's extension, and their expectations are the contract's, not Pi's.
+  - **`WP-13.2`:** `prepared-string-edit-json-string`, 21 cases through the real `edit` tool, including the final file bytes. Rust WP-13.2's implementation review runs it once this delta is certified; it is **not** part of this delta's certification.
+- **The negative controls each binding runs** (Owner decision §6):
+  - an unpaired surrogate replaced with U+FFFD during preparation;
+  - one rejected during preparation;
+  - a strict UTF-8 string conversion failing;
+  - a lossy conversion;
+  - a valid pair held as two replacement characters;
+  - only lone lows mishandled;
+  - keys normalized while values are kept;
+  - the hook seeing a normalized value while `execute` sees the original;
+  - `execute` seeing a normalized value while the hook sees the original.
+
+**Raw domain: outside this delta, an open question.** The Owner decision keeps the raw/wire JSON domain unchanged (§1). The characterization nevertheless shows a sibling hole:
+- Pinned Pi's provider decoding (`parseStreamingJson` → `JSON.parse`) puts an escaped unpaired surrogate into the **raw** `ToolCall.arguments`, from which it reaches the hooks without any `prepare_arguments`.
+- WP-13.2 already records "lone-surrogate argument decoding (Layer 02/05)" as not certified.
+- Whether certified Layer 02/05 must carry such raw strings, and with them the `tool_execution_*` arguments and session persistence, is a governance question. It is raised with the Owner (`L0506-D002-Q001`) and not folded silently into this delta.
 
 ### Explicitly not certified by Layer 06
 

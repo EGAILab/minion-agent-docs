@@ -1,0 +1,5797 @@
+{
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "open/ascii",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "4142",
+     "json": "\"AB\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/ascii",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "4142",
+     "json": "\"AB\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/ascii",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "4142",
+     "json": "\"AB\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/ascii",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"AB\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/ascii",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"AB\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/ascii",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "4142",
+     "json": "\"AB\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/ascii",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"AB\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/ascii",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"AB\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/bmp",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "c3a9e4b8ad",
+     "json": "\"é中\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/bmp",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "c3a9e4b8ad",
+     "json": "\"é中\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/bmp",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "c3a9e4b8ad",
+     "json": "\"é中\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/bmp",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"é中\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/bmp",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"é中\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/bmp",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "c3a9e4b8ad",
+     "json": "\"é中\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/bmp",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"é中\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/bmp",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"é中\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "enum-fffd/pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-high-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-high-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-high-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-high-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-high-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-high-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/lone-high-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-high-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-high-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\ud800B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-high-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\ud800B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-high-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\ud800B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-high-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-high-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-high-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/lone-high-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-high-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-high-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-high-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-high-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-high-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-high-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-high-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/lone-high-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-high-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-high-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/lone-high-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/lone-high-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-high-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-low-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\udc00A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-low-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\udc00A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-low-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\udc00A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-low-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-low-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-low-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\udc00A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/lone-low-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-low-start",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-low-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\udc00B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-low-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\udc00B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-low-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\udc00B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-low-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-low-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-low-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/lone-low-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-low-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-low-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-low-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-low-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-low-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-low-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-low-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/lone-low-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-low-end",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-low-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/lone-low-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/lone-low-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-low-only",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/adjacent-highs",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\ud800\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/adjacent-highs",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\ud800\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/adjacent-highs",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\ud800\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/adjacent-highs",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/adjacent-highs",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/adjacent-highs",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\ud800\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/adjacent-highs",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/adjacent-highs",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/adjacent-lows",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/adjacent-lows",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/adjacent-lows",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/adjacent-lows",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/adjacent-lows",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/adjacent-lows",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/adjacent-lows",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/adjacent-lows",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\udc00\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/high-then-non-low",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/high-then-non-low",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/high-then-non-low",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/high-then-non-low",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/high-then-non-low",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/high-then-non-low",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/high-then-non-low",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/high-then-non-low",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800A\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/low-then-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/low-then-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/low-then-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/low-then-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/pair-then-lone-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "f09f9880efbfbd",
+     "json": "\"😀\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/pair-then-lone-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880efbfbd",
+     "json": "\"😀\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/pair-then-lone-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880efbfbd",
+     "json": "\"😀\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/pair-then-lone-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/pair-then-lone-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/pair-then-lone-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "f09f9880efbfbd",
+     "json": "\"😀\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/pair-then-lone-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/pair-then-lone-high",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"😀\\ud800\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/lone-low-then-pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbdf09f9880",
+     "json": "\"\\udc00😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/lone-low-then-pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdf09f9880",
+     "json": "\"\\udc00😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/lone-low-then-pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdf09f9880",
+     "json": "\"\\udc00😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/lone-low-then-pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/lone-low-then-pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/lone-low-then-pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbdf09f9880",
+     "json": "\"\\udc00😀\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "const-pair/lone-low-then-pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/lone-low-then-pair",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\udc00😀\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/empty",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": []
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": []
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": []
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "",
+     "json": "\"\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/empty",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "",
+     "json": "\"\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/empty",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/empty",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "",
+     "json": "\"\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/empty",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/empty",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/empty",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/empty",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": []
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/nul",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "00",
+     "json": "\"\\u0000\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/nul",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "00",
+     "json": "\"\\u0000\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/nul",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\u0000\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/nul",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "00",
+     "json": "\"\\u0000\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/nul",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "00",
+     "json": "\"\\u0000\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/nul",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\u0000\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/nul",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\u0000\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/nul",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\u0000\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      0
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/nul-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "410042",
+     "json": "\"A\\u0000B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/nul-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "410042",
+     "json": "\"A\\u0000B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/nul-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "410042",
+     "json": "\"A\\u0000B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "max-length-1/nul-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\u0000B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-one-char/nul-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^.$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\u0000B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "pattern-two-chars/nul-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\u0000B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/nul-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\u0000B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/nul-middle",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to one of the allowed values",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"A\\u0000B\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "open/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/extra": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/extra": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "string/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "min-length-2/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have fewer than 2 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "max-length-1/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-one-char/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "pattern-two-chars/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must match pattern \"^..$\"",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "const-pair/replacement-char",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must be equal to constant",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"�\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "enum-fffd/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/text": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/text": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "position/nested-object-value",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/outer/inner": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/outer/inner": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/outer/inner": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/outer/inner": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "position/array-element",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/list/0": [
+      120
+     ],
+     "/list/1": [
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/list/0": [
+      120
+     ],
+     "/list/1": [
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/list/0": [
+      120
+     ],
+     "/list/1": [
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/list/0": {
+     "utf8_hex": "78",
+     "json": "\"x\""
+    },
+    "/list/1": {
+     "utf8_hex": "efbfbd42",
+     "json": "\"\\udc00B\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "position/two-strings",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/high": [
+      55296
+     ],
+     "/low": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/high": [
+      55296
+     ],
+     "/low": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/high": [
+      55296
+     ],
+     "/low": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/high": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    },
+    "/low": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": true
+  },
+  {
+   "id": "key/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55296
+      ]
+     ]
+    }
+   },
+   "execute": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55296
+      ]
+     ]
+    }
+   },
+   "after": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55296
+      ]
+     ]
+    }
+   },
+   "same_object": true,
+   "projections": {},
+   "raw_unchanged": true
+  },
+  {
+   "id": "key/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320
+      ]
+     ]
+    }
+   },
+   "execute": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320
+      ]
+     ]
+    }
+   },
+   "after": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320
+      ]
+     ]
+    }
+   },
+   "same_object": true,
+   "projections": {},
+   "raw_unchanged": true
+  },
+  {
+   "id": "key/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55357,
+       56832
+      ]
+     ]
+    }
+   },
+   "execute": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55357,
+       56832
+      ]
+     ]
+    }
+   },
+   "after": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       55357,
+       56832
+      ]
+     ]
+    }
+   },
+   "same_object": true,
+   "projections": {},
+   "raw_unchanged": true
+  },
+  {
+   "id": "key/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320,
+       55296
+      ]
+     ]
+    }
+   },
+   "execute": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320,
+       55296
+      ]
+     ]
+    }
+   },
+   "after": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      [
+       56320,
+       55296
+      ]
+     ]
+    }
+   },
+   "same_object": true,
+   "projections": {},
+   "raw_unchanged": true
+  },
+  {
+   "id": "key/empty",
+   "outcome": "prepared",
+   "hook": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      []
+     ]
+    }
+   },
+   "execute": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      []
+     ]
+    }
+   },
+   "after": {
+    "values": {},
+    "keys": {
+     "/bag": [
+      []
+     ]
+    }
+   },
+   "same_object": true,
+   "projections": {},
+   "raw_unchanged": true
+  },
+  {
+   "id": "diagnostic/lone-surrogates",
+   "outcome": "argument_validation_failure",
+   "message": "- text: must not have more than 1 characters",
+   "hook_ran": false,
+   "execute_ran": false,
+   "diagnostic_arguments_text": "{\n  \"seed\": \"raw\",\n  \"text\": \"\\ud800\\ud800\",\n  \"extra\": \"A\\udc00\",\n  \"pair\": \"😀\",\n  \"nul\": \"\\u0000\"\n}",
+   "runtime_after_failure": {
+    "values": {
+     "/text": [
+      55296,
+      55296
+     ],
+     "/extra": [
+      65,
+      56320
+     ],
+     "/pair": [
+      55357,
+      56832
+     ],
+     "/nul": [
+      0
+     ]
+    },
+    "keys": {}
+   }
+  },
+  {
+   "id": "edit/ascii",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "4142",
+     "json": "\"AB\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/bmp",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      233,
+      20013
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "c3a9e4b8ad",
+     "json": "\"é中\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "f09f9880",
+     "json": "\"😀\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-high-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-high-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\ud800B\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-high-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\ud800\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-high-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\ud800\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-low-start",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\udc00A\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-low-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "41efbfbd42",
+     "json": "\"A\\udc00B\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-low-end",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "41efbfbd",
+     "json": "\"A\\udc00\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-low-only",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd",
+     "json": "\"\\udc00\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/adjacent-highs",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\ud800\\ud800\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/adjacent-lows",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      56320
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\udc00\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/high-then-non-low",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55296,
+      65
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd41",
+     "json": "\"\\ud800A\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/low-then-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbdefbfbd",
+     "json": "\"\\udc00\\ud800\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/pair-then-lone-high",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      55357,
+      56832,
+      55296
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "f09f9880efbfbd",
+     "json": "\"😀\\ud800\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/lone-low-then-pair",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      56320,
+      55357,
+      56832
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbdf09f9880",
+     "json": "\"\\udc00😀\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/empty",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": []
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": []
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": []
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "",
+     "json": "\"\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/nul",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      0
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "00",
+     "json": "\"\\u0000\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/nul-middle",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65,
+      0,
+      66
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "410042",
+     "json": "\"A\\u0000B\""
+    }
+   },
+   "raw_unchanged": false
+  },
+  {
+   "id": "edit/replacement-char",
+   "outcome": "prepared",
+   "hook": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "execute": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "after": {
+    "values": {
+     "/edits/0/newText": [
+      65533
+     ]
+    },
+    "keys": {}
+   },
+   "same_object": true,
+   "projections": {
+    "/edits/0/newText": {
+     "utf8_hex": "efbfbd",
+     "json": "\"�\""
+    }
+   },
+   "raw_unchanged": false
+  }
+ ]
+}

@@ -1,0 +1,5302 @@
+{
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "properties-required/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/ascii/bmp",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/pair",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/fffd",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- ab: must have required properties ab"
+  },
+  {
+   "id": "properties-required/bmp/ascii",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/bmp/pair",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/fffd",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- é中: must have required properties é中"
+  },
+  {
+   "id": "properties-required/pair/ascii",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/bmp",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/pair/lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/lone-low",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/fffd",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must have required properties \\ud83d\\ude00"
+  },
+  {
+   "id": "properties-required/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/pair",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ud800: must have required properties \\ud800"
+  },
+  {
+   "id": "properties-required/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/pair",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\udc00: must have required properties \\udc00"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must have required properties \\ud83d\\ude00\\ud800"
+  },
+  {
+   "id": "properties-required/fffd/ascii",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/bmp",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/pair",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- �: must have required properties �"
+  },
+  {
+   "id": "properties-required/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "properties-required/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ud83d: must have required properties \\ud83d"
+  },
+  {
+   "id": "properties-required/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ude00: must have required properties \\ude00"
+  },
+  {
+   "id": "properties-required/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/ascii/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/bmp/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/pair/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "additional-properties-false/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must not have additional properties"
+  },
+  {
+   "id": "additional-properties-false/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "const/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/ascii/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/bmp/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/pair/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "const/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to constant"
+  },
+  {
+   "id": "const/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/ascii/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/bmp/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/pair/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "enum/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must be equal to one of the allowed values"
+  },
+  {
+   "id": "enum/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/ascii/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^ab$\""
+  },
+  {
+   "id": "pattern/bmp/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/bmp/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^é中$\""
+  },
+  {
+   "id": "pattern/pair/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/pair/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00$\""
+  },
+  {
+   "id": "pattern/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud800$\""
+  },
+  {
+   "id": "pattern/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\udc00$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d\\ude00\\ud800$\""
+  },
+  {
+   "id": "pattern/fffd/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^�$\""
+  },
+  {
+   "id": "pattern/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ud83d$\""
+  },
+  {
+   "id": "pattern/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"^\\ude00$\""
+  },
+  {
+   "id": "pattern/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/ascii/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"ab\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/bmp/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"é中\""
+  },
+  {
+   "id": "pattern-unanchored/pair/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/pair/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/pair/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\udc00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\\ude00\\ud800\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"�\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-unanchored/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ud83d\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- t: must match pattern \"\\ude00\""
+  },
+  {
+   "id": "pattern-unanchored/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     116
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/ascii",
+   "verdict": "reject",
+   "message": "- ab: must be number"
+  },
+  {
+   "id": "pattern-properties/ascii/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/ascii/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/bmp",
+   "verdict": "reject",
+   "message": "- é中: must be number"
+  },
+  {
+   "id": "pattern-properties/bmp/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/bmp/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/pair",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must be number"
+  },
+  {
+   "id": "pattern-properties/pair/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- \\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties/lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/lone-low",
+   "verdict": "reject",
+   "message": "- \\udc00: must be number"
+  },
+  {
+   "id": "pattern-properties/lone-low/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/lone-low/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-then-lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/fffd",
+   "verdict": "reject",
+   "message": "- �: must be number"
+  },
+  {
+   "id": "pattern-properties/fffd/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/fffd/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-high-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ud83d: must be number"
+  },
+  {
+   "id": "pattern-properties/pair-high-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties/pair-low-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ude00: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/ascii",
+   "verdict": "reject",
+   "message": "- ab: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/ascii/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/bmp",
+   "verdict": "reject",
+   "message": "- é中: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/bmp/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- \\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/lone-low",
+   "verdict": "reject",
+   "message": "- \\udc00: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/lone-low/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- \\ud83d\\ude00\\ud800: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-then-lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/fffd",
+   "verdict": "reject",
+   "message": "- �: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/fffd/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- \\ud83d: must be number"
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-high-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "pattern-properties-unanchored/pair-low-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- \\ude00: must be number"
+  },
+  {
+   "id": "property-names-const/ascii/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/ascii/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/ascii/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/bmp/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/bmp/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/pair/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/pair/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/pair/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/pair/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/pair/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/lone-low/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/lone-low/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/pair-then-lone-high/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/fffd/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/fffd/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/pair-high-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "property-names-const/pair-high-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/ascii",
+   "verdict": "reject",
+   "message": "- root: property names ab are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/bmp",
+   "verdict": "reject",
+   "message": "- root: property names é中 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/pair",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/lone-low",
+   "verdict": "reject",
+   "message": "- root: property names \\udc00 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d\\ude00\\ud800 are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/fffd",
+   "verdict": "reject",
+   "message": "- root: property names � are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: property names \\ud83d are invalid"
+  },
+  {
+   "id": "property-names-const/pair-low-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/ascii",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property ab is present"
+  },
+  {
+   "id": "dependent-required/ascii/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/ascii/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/bmp",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property é中 is present"
+  },
+  {
+   "id": "dependent-required/bmp/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/bmp/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/pair",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\ud83d\\ude00 is present"
+  },
+  {
+   "id": "dependent-required/pair/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/lone-high",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\ud800 is present"
+  },
+  {
+   "id": "dependent-required/lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/lone-low",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\udc00 is present"
+  },
+  {
+   "id": "dependent-required/lone-low/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/lone-low/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/pair-then-lone-high",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\ud83d\\ude00\\ud800 is present"
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-then-lone-high/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/fffd",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property � is present"
+  },
+  {
+   "id": "dependent-required/fffd/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/fffd/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-high-half/pair-high-half",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\ud83d is present"
+  },
+  {
+   "id": "dependent-required/pair-high-half/pair-low-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/ascii",
+   "verdict": "accept",
+   "keys": [
+    [
+     97,
+     98
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/bmp",
+   "verdict": "accept",
+   "keys": [
+    [
+     233,
+     20013
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/pair",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/lone-low",
+   "verdict": "accept",
+   "keys": [
+    [
+     56320
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/pair-then-lone-high",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357,
+     56832,
+     55296
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/fffd",
+   "verdict": "accept",
+   "keys": [
+    [
+     65533
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/pair-high-half",
+   "verdict": "accept",
+   "keys": [
+    [
+     55357
+    ]
+   ]
+  },
+  {
+   "id": "dependent-required/pair-low-half/pair-low-half",
+   "verdict": "reject",
+   "message": "- root: must have properties a when property \\ude00 is present"
+  }
+ ]
+}

@@ -34,6 +34,8 @@ second implementation's Session layer must reproduce the surface/log-only split 
 value-identity rule exactly, but is not required to know what any particular log-only kind a caller
 invents is for.
 
+Event data values are the JavaScript value domain Layer 02 defines for raw tool-call arguments (`spec/llm.md`, "Raw tool-call argument value domain", `L0206-D002`). These are strings of any UTF-16 code units, `-0` and ±Infinity included. Append accepts them, and replay and projection return them unchanged. The log is not a byte serialization, so no JSON text projection applies to it.
+
 Session projection ends at the message vocabulary Layer 02 defines. The Pi-compatible target-model
 transformation is a distinct, later stage that runs after session projection, not part of it.
 

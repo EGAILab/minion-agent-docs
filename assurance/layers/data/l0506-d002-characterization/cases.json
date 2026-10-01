@@ -1,0 +1,1564 @@
+[
+ {
+  "id": "open/ascii",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "string/ascii",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "min-length-2/ascii",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "max-length-1/ascii",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "pattern-one-char/ascii",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "pattern-two-chars/ascii",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "const-pair/ascii",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "enum-lone/ascii",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   66
+  ]
+ },
+ {
+  "id": "open/bmp",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "string/bmp",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "min-length-2/bmp",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "max-length-1/bmp",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-one-char/bmp",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-two-chars/bmp",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const-pair/bmp",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum-lone/bmp",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "open/pair",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "string/pair",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "min-length-2/pair",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "max-length-1/pair",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-one-char/pair",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-two-chars/pair",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const-pair/pair",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum-lone/pair",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "open/lone-high-start",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "string/lone-high-start",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-start",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-start",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-start",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-start",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-start",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "enum-lone/lone-high-start",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "open/lone-high-middle",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "string/lone-high-middle",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-middle",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-middle",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-middle",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-middle",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-middle",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "enum-lone/lone-high-middle",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   55296,
+   66
+  ]
+ },
+ {
+  "id": "open/lone-high-end",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "string/lone-high-end",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-end",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-end",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-end",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-end",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-end",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "enum-lone/lone-high-end",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   55296
+  ]
+ },
+ {
+  "id": "open/lone-high-only",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "string/lone-high-only",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "min-length-2/lone-high-only",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "max-length-1/lone-high-only",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-high-only",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-high-only",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "const-pair/lone-high-only",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum-lone/lone-high-only",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55296
+  ]
+ },
+ {
+  "id": "open/lone-low-start",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "string/lone-low-start",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-start",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-start",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-start",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-start",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-start",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "enum-lone/lone-low-start",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   56320,
+   65
+  ]
+ },
+ {
+  "id": "open/lone-low-middle",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "string/lone-low-middle",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-middle",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-middle",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-middle",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-middle",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-middle",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "enum-lone/lone-low-middle",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   56320,
+   66
+  ]
+ },
+ {
+  "id": "open/lone-low-end",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "string/lone-low-end",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-end",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-end",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-end",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-end",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-end",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "enum-lone/lone-low-end",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   56320
+  ]
+ },
+ {
+  "id": "open/lone-low-only",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "string/lone-low-only",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-only",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-only",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-only",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-only",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-only",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum-lone/lone-low-only",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   56320
+  ]
+ },
+ {
+  "id": "open/adjacent-highs",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "string/adjacent-highs",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "min-length-2/adjacent-highs",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "max-length-1/adjacent-highs",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-one-char/adjacent-highs",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-two-chars/adjacent-highs",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "const-pair/adjacent-highs",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "enum-lone/adjacent-highs",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55296,
+   55296
+  ]
+ },
+ {
+  "id": "open/adjacent-lows",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "string/adjacent-lows",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "min-length-2/adjacent-lows",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "max-length-1/adjacent-lows",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "pattern-one-char/adjacent-lows",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "pattern-two-chars/adjacent-lows",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "const-pair/adjacent-lows",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "enum-lone/adjacent-lows",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   56320,
+   56320
+  ]
+ },
+ {
+  "id": "open/high-then-non-low",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "string/high-then-non-low",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "min-length-2/high-then-non-low",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "max-length-1/high-then-non-low",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "pattern-one-char/high-then-non-low",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "pattern-two-chars/high-then-non-low",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "const-pair/high-then-non-low",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "enum-lone/high-then-non-low",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55296,
+   65
+  ]
+ },
+ {
+  "id": "open/low-then-high",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "string/low-then-high",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "min-length-2/low-then-high",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "max-length-1/low-then-high",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-one-char/low-then-high",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-two-chars/low-then-high",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "const-pair/low-then-high",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "enum-lone/low-then-high",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   56320,
+   55296
+  ]
+ },
+ {
+  "id": "open/pair-then-lone-high",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "string/pair-then-lone-high",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "min-length-2/pair-then-lone-high",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "max-length-1/pair-then-lone-high",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-one-char/pair-then-lone-high",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-two-chars/pair-then-lone-high",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const-pair/pair-then-lone-high",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum-lone/pair-then-lone-high",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "open/lone-low-then-pair",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "string/lone-low-then-pair",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "min-length-2/lone-low-then-pair",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "max-length-1/lone-low-then-pair",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-one-char/lone-low-then-pair",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-two-chars/lone-low-then-pair",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const-pair/lone-low-then-pair",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum-lone/lone-low-then-pair",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   56320,
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "open/empty",
+  "kind": "string",
+  "schema": "open",
+  "units": []
+ },
+ {
+  "id": "string/empty",
+  "kind": "string",
+  "schema": "string",
+  "units": []
+ },
+ {
+  "id": "min-length-2/empty",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": []
+ },
+ {
+  "id": "max-length-1/empty",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": []
+ },
+ {
+  "id": "pattern-one-char/empty",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": []
+ },
+ {
+  "id": "pattern-two-chars/empty",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": []
+ },
+ {
+  "id": "const-pair/empty",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": []
+ },
+ {
+  "id": "enum-lone/empty",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": []
+ },
+ {
+  "id": "open/nul",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "string/nul",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "min-length-2/nul",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "max-length-1/nul",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "pattern-one-char/nul",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "pattern-two-chars/nul",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "const-pair/nul",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "enum-lone/nul",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   0
+  ]
+ },
+ {
+  "id": "open/nul-middle",
+  "kind": "string",
+  "schema": "open",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "string/nul-middle",
+  "kind": "string",
+  "schema": "string",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "min-length-2/nul-middle",
+  "kind": "string",
+  "schema": "min-length-2",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "max-length-1/nul-middle",
+  "kind": "string",
+  "schema": "max-length-1",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "pattern-one-char/nul-middle",
+  "kind": "string",
+  "schema": "pattern-one-char",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "pattern-two-chars/nul-middle",
+  "kind": "string",
+  "schema": "pattern-two-chars",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "const-pair/nul-middle",
+  "kind": "string",
+  "schema": "const-pair",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "enum-lone/nul-middle",
+  "kind": "string",
+  "schema": "enum-lone",
+  "units": [
+   65,
+   0,
+   66
+  ]
+ },
+ {
+  "id": "edit/ascii",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\u0042\"}]"
+ },
+ {
+  "id": "edit/bmp",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u00e9\\u4e2d\"}]"
+ },
+ {
+  "id": "edit/pair",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud83d\\ude00\"}]"
+ },
+ {
+  "id": "edit/lone-high-start",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\u0041\"}]"
+ },
+ {
+  "id": "edit/lone-high-middle",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\ud800\\u0042\"}]"
+ },
+ {
+  "id": "edit/lone-high-end",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\ud800\"}]"
+ },
+ {
+  "id": "edit/lone-high-only",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\"}]"
+ },
+ {
+  "id": "edit/lone-low-start",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\u0041\"}]"
+ },
+ {
+  "id": "edit/lone-low-middle",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\udc00\\u0042\"}]"
+ },
+ {
+  "id": "edit/lone-low-end",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\udc00\"}]"
+ },
+ {
+  "id": "edit/lone-low-only",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\"}]"
+ },
+ {
+  "id": "edit/adjacent-highs",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\ud800\"}]"
+ },
+ {
+  "id": "edit/adjacent-lows",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\udc00\"}]"
+ },
+ {
+  "id": "edit/high-then-non-low",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud800\\u0041\"}]"
+ },
+ {
+  "id": "edit/low-then-high",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\ud800\"}]"
+ },
+ {
+  "id": "edit/pair-then-lone-high",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\ud83d\\ude00\\ud800\"}]"
+ },
+ {
+  "id": "edit/lone-low-then-pair",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\udc00\\ud83d\\ude00\"}]"
+ },
+ {
+  "id": "edit/empty",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\"}]"
+ },
+ {
+  "id": "edit/nul",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0000\"}]"
+ },
+ {
+  "id": "edit/nul-middle",
+  "kind": "edit",
+  "edits_json": "[{\"oldText\":\"a\",\"newText\":\"\\u0041\\u0000\\u0042\"}]"
+ },
+ {
+  "id": "keys/integer-like-order",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"b\":1,\"2\":2,\"1\":3,\"a\":4}]"
+ },
+ {
+  "id": "keys/lone-surrogate-key",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"\\ud800\":1}]"
+ },
+ {
+  "id": "keys/pair-key",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"\\ud83d\\ude00\":1}]"
+ },
+ {
+  "id": "keys/proto-key",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"__proto__\":{\"x\":1}}]"
+ },
+ {
+  "id": "keys/duplicate-key",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"k\":1,\"k\":2}]"
+ },
+ {
+  "id": "keys/empty-key",
+  "kind": "keys",
+  "json_text": "[{\"oldText\":\"a\",\"newText\":\"b\",\"\":1}]"
+ }
+]

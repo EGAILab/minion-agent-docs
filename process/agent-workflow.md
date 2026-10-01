@@ -39,6 +39,7 @@ Always use the current repository contents, not remembered state.
 5. `/pi-parity-manifest.yaml`
 6. the applicable canonical scenarios under `/conformance/**`
 7. the adopted Pi source for the symbols being implemented or reviewed
+8. `minion-agent-docs/process/hazard-families.md` and `process/gate-tiers.md` (§9.5, §13.1)
 
 Do not assume old prompt SHAs, test counts, scenario counts, file names, or layer status are still current. Fetch first and record actual HEADs.
 
@@ -65,7 +66,7 @@ Unless the task explicitly narrows the pass further, use this sequence:
 5. Repair shared contract/evidence before implementing around a bad contract.
 6. Implement only the current layer through real existing seams.
 7. Add focused language tests and applicable language-neutral canonical evidence.
-8. Run the full language gates plus regressions for previously certified layers.
+8. Run the gates the stage requires (`process/gate-tiers.md`, §13.1). A complete-review hand-off (first implementation review, final complete review, closure review) and certification require G3 evidence, including regressions for previously certified layers; a targeted finding-closure hand-off requires only the tier its stage row gives.
 9. Perform the required independent cross-language review/implementation handoff.
 10. Certify/freeze only when the layer's gate is satisfied.
 11. Stop. Do not automatically start the next layer.
@@ -102,6 +103,24 @@ A contract checkpoint SHOULD be used when any of the following is true:
 - the same rule would be expensive to repeatedly rewrite after implementation;
 - a reviewer cannot state a finite discriminating behavior matrix before implementation.
 
+### 4.1.1 Cross-Language Feasibility Audit (mandatory before a high-risk contract freeze)
+
+For every high-risk Pi-derived work package (§4.1's criteria, or any WP whose values cross a Layer-05/06 boundary, touch strings, numbers or Unicode, or depend on lower-layer seams), the shared-contract owner produces a **Cross-Language Feasibility Matrix** from `process/templates/cross-language-feasibility-matrix.md`.
+
+The contract cannot become `AGREED FOR IMPLEMENTATION` (§11.8.5) or pass its contract checkpoint (§4.1) until the independent checkpoint reviewer has verified the matrix.
+
+**What the matrix covers.** It audits the WP's relevant **transitive** Pi semantic path, not just the entry function:
+1. the runtime value-domain matrix;
+2. the lower-layer capability matrix;
+3. the cross-runtime hazard checklist;
+4. the concurrency/order matrix, with a realistic wrong implementation per material ordering guarantee.
+
+**What an entry may say.** Every entry ends `AUDITED`, `NOT_APPLICABLE` (with a reason) or `DEFERRED_WITH_REASON`. Silence is not an answer.
+
+**A gap is a finding.** A row that shows a lossy representation, a missing lower-layer seam, or a hazard the contract does not state is classified with the normal taxonomy (§6) and resolved **before** the checkpoint. That includes any additive lower-layer extension WP, or an Owner decision for a non-additive reopen.
+
+**Why this exists.** WP-13.2 discovered both its missing combined access check (`EXEC-009`) and its runtime ±Infinity (L0506-D001) only after implementation began. Both are rows in this matrix (`assurance/process-friction-layer13.md`).
+
 ### 4.2 Work-package slicing
 
 A large assurance layer MAY be divided into smaller **work packages** without changing the architectural layer boundary.
@@ -128,6 +147,16 @@ Layer 11 — Real Providers
 A work package SHOULD be organized around observable semantic ownership, not implementation modules.
 
 A work package is not independently certified as the whole layer. Slicing a layer into work packages is a work-management technique that lets the shared contract and evidence for one tightly-coupled behavior settle before unrelated behavior is added; a layer is complete for the current baseline only when every in-scope requirement is `CERTIFIED`/`ADOPTED`, `DEFERRED PARITY` with an explicit closure trigger, or `INTENTIONAL DIVERGENCE` with valid governance provenance (see §11.1 and §11.13).
+
+**Semantic-risk map at scoping.** During `SCOPING`, record for each candidate surface:
+- the semantic surface;
+- lower-layer dependencies;
+- external runtime/library dependencies;
+- cross-language representation risk;
+- concurrency risk;
+- likely review independence.
+
+A work package should optimize for an independently characterizable semantic surface, an independently reviewable behavior matrix, minimal cross-layer dependencies and a bounded implementation/review blast radius. Do not group surfaces merely because they live in one source folder. If one WP combines several largely independent high-risk surfaces, split it **before** contract drafting.
 
 Do not use "Pass" as a semantic or certification level. Review rounds are events within a work package, not additional project hierarchy.
 
@@ -283,6 +312,32 @@ A prose-only finding is acceptable only when the defect is inherently documentar
 
 If the review states that existing code already satisfies a new witness (a prose-only/contract-assurance finding, not a behavior defect), the remediation owner MUST run that exact witness against the UNCHANGED candidate and confirm it directly before relying on the claim -- report the confirmation, not merely the review's own assertion. A "no code change" remediation still needs the full discriminating-evidence treatment: the new regression test is what closes the contract ambiguity, even when no production line changes.
 
+#### 9.2.1 Reviewer factual-evidence rule
+
+A reviewer verifies every factual or source claim before filing a blocker on it.
+
+**Source-reference claims** (a Pi symbol, a library/libuv/Node behavior, a citation, a claim that "these lines are unrelated"). Before filing:
+1. fetch the exact version or tag;
+2. locate the exact symbol;
+3. verify the content;
+4. record the commit, hash or version with a **content-addressed** link.
+
+A blocker without such a record is not filed. (WP-12.E3 `C002` cited libuv lines that did not support the claim, and it cost a full dispute cycle before withdrawal.)
+
+**Semantic findings** state, in the review record:
+
+```text
+rule believed violated
+exact authoritative source (content-addressed)
+minimal reproducer
+candidate observation
+expected observation
+why existing tests/evidence do not distinguish it
+suggested discriminating witness (convertible into a regression test)
+```
+
+A finding that expresses suspicion without discriminating evidence is recorded as a **question**, not a blocker. The remediation owner answers it; it does not by itself move the WP to `REMEDIATION`.
+
 ### 9.3 Pinned-Pi characterization probes
 
 For subtle observable behavior that depends on language runtime mechanics, it is acceptable and encouraged to maintain development-only Pi characterization probes against the pinned Pi revision.
@@ -315,6 +370,28 @@ Rules:
 - prefer deterministic, minimal examples;
 - when a probe reveals a semantic rule, express that rule in the normal manifest/spec/conformance/evidence chain.
 
+### 9.4 Semantic-neighborhood expansion
+
+When a finding hits one member of a known semantic family, do not close only that point. Before remediation is proposed, the remediation owner characterizes the **smallest coherent partition** containing it:
+- every member of the matching hazard family (`process/hazard-families.md`), probed against pinned Pi;
+- recorded in the finding's remediation record, or in the convergence episode record (§11.8.1).
+
+Examples:
+- a large JSON integer rounds incorrectly → finite boundaries, `-0`, ±Infinity, NaN reachability, serialization projection (F1);
+- a surrogate pair is wrong → BMP, astral, valid pair, lone high, lone low, length/count units (F2);
+- an abort-ordering race → before await, during await, after work settles, simultaneous error, waiting queue, prior-waiter failure, timer-delayed completion (F4);
+- a coercion or projection defect → every source of the same error code; delivered vs coerced value; union alternatives in both orders (F5).
+
+The expansion is characterization, not speculative production code. Members that need no change are recorded as `AUDITED — no change`, and they become regression witnesses where they are cheaply executable. The reviewer checks the expansion record at targeted closure. A missing partition member is a `CONTRACT_ASSURANCE_DEFECT` against the remediation, not a new independent finding.
+
+This targets sequences like WP-13.2's *huge integer → `-0` → Infinity* and L0506-D001's *union → callback → sibling → numeric-looking string*, where each adjacent member cost a separate review cycle.
+
+### 9.5 Reusable hazard families
+
+- **Families are consulted up front.** `process/hazard-families.md` holds the reusable runtime hazard families: JS Number, JS String/UTF-16, Unicode/ICU, Async/order, Error/coercion projection, ECMAScript object order and the schema runtime domain. The feasibility matrix (§4.1.1) and neighborhood expansion (§9.4) consult them instead of rediscovering them.
+- **Generalizable hazards are added.** When a finding reveals a generalizable hazard class, its remediation also adds the member or family there. The long-term trend is: *a model discovers a class once → the harness remembers it → future work gets the probes automatically.*
+- **Executable harnesses** live under `reference/pi-characterization/families/<family>/` (non-normative, §9.3).
+
 ## 10. Cross-language contract hazards
 
 Review these explicitly whenever relevant:
@@ -333,6 +410,8 @@ Review these explicitly whenever relevant:
 - whether an implementation-specific mechanism has leaked into the shared contract;
 - floating-point special values (`NaN`/`+Infinity`/`-Infinity`) and language-specific numeric coercion (e.g. JS `Math.max`/`Math.min` propagating `NaN` vs Python's non-propagating, order-dependent `max()`/`min()`; JS `Math.floor`/arithmetic never throwing on non-finite input vs Python's `math.floor` raising);
 - whether a test double's own timing/clock simulation can manufacture floating-point drift a real clock would never produce, and whether a fix for that drift has been confined to the test double rather than leaked into production arithmetic reachable by genuine public input.
+
+The runtime-value hazards above are enumerated member-by-member in `process/hazard-families.md` and audited per WP in the feasibility matrix (§4.1.1).
 
 Implement the semantic contract, not the other language's mechanics.
 
@@ -561,6 +640,13 @@ State intent:
 
 `BLOCKED_FOR_OWNER`
 : A governance decision is required before work may proceed (§11.7, §11.10).
+
+#### 11.1.4 Lean current state
+
+- **The state block holds current state only**: the current candidate, open blockers, dependencies, next owner/action, the active convergence/checkpoint, and the governing source.
+- **History moves out.** Every prior review, old SHA, test count, remediation narrative and closed finding's detail belongs in assurance records or comments, linked from `history.assurance_index` (`coordination-state.md` §13).
+- **Budget.** A body over the lean budget, or history-shaped keys, draws a warning from `minion-process validate`.
+- **Migration** of existing issues is incremental and preserves provenance (`coordination-state.md` §13.4).
 
 ### 11.2 PRs are candidate and handoff objects
 
@@ -1318,6 +1404,38 @@ Rules:
 
 This separation prevents a coordination issue from becoming an event log pretending to be a state store.
 
+### 11.15 Parallel work and dependency edges
+
+The rule is **one active owner per work package**, not one active work package in the project.
+
+When WP-A waits on one agent and WP-B is semantically independent and owned by the other, the idle agent SHOULD progress WP-B. For example, while Codex implements Rust L0506-D001, Claude progresses the WP-13.3 contract/Pi characterization, and a read-only research agent (§11.9) collects WP-13.4 pinned `fd`/`rg` evidence.
+
+Each coordination state records its dependency edges (`coordination-state.md` §13.1 `dependencies`) as one of:
+
+```text
+blocked_by        WP-B cannot proceed until WP-A reaches a named state
+independent_of    no shared semantics and no shared mutable artifact
+shares_artifact   no semantic dependency, but both edit the same shared file
+```
+
+**Rules.**
+- Never edit the same shared semantic artifact (spec file section, manifest row, canonical scenario) in two WPs concurrently.
+- For `shares_artifact` pairs, parallelize only read-only characterization/evidence. Serialize the edits.
+- A `blocked_by` WP may still do read-only characterization that does not presuppose the blocking outcome.
+- Ownership, independence and exact-SHA rules are unchanged per WP.
+
+### 11.16 Workflow mechanics tooling
+
+Deterministic workflow mechanics use `minion-process` (`process/minion-process-cli-design.md`, `process/tools/`) instead of per-agent scripts. That covers:
+- state validation;
+- the §11.1.1 commit round-trip (`apply`);
+- transition legality (`coordination-state.md` §10, §10.1);
+- handoff validation (§11.11);
+- exact-head merge with post-merge containment;
+- byte-verified history comments.
+
+The tool decides only mechanical legality. It never decides semantics, never records a verdict on its own, and never approves.
+
 ## 12. Repository and remote-state discipline
 
 ### 12.1 GitHub remote is the durable project state
@@ -1438,6 +1556,19 @@ helper/validator implementation may be separate follow-up work. Until it exists,
 canonical coordination-state schema" in §11.1.1 means an agent parsing and comparing against that
 schema directly, not invoking a concrete validator command.
 
+### 12.7 Moving rules from prompts to enforcement
+
+A rule that is deterministic moves out of natural-language prompts into schema validation, `minion-process`, CI, generated templates or pre-flight scripts. Examples:
+- state shape;
+- legal transitions;
+- exact-SHA and PR-head checks;
+- round-trip verification;
+- the convergence trigger counters;
+- closure prerequisites;
+- negative-control record fields.
+
+The prose rule is shortened **only after** equivalent enforcement exists and is independently reviewed. Safety and governance checks are never removed ahead of their enforcement. Role prompts keep what tooling cannot decide: semantic authority, scope ownership, Pi fidelity, review independence, finding classification and cross-language reasoning.
+
 ## 13. Certification gate
 
 Do not certify a layer merely because tests pass.
@@ -1461,6 +1592,16 @@ Certification requires, as applicable:
 Approval of a shared contract is not implementation certification. A language layer is not cross-language closed until the required implementations and assurance are complete and the closure state is durably available on GitHub.
 
 `PROVISIONALLY CLOSED` findings from §11.8 do not satisfy this gate by themselves. Final certification still requires one complete independent review of the exact final candidate.
+
+### 13.1 Gate tiers
+
+Verification is tiered G0 (development), G1 (finding closure), G2 (integration) and G3 (certification), with a minimum tier per workflow stage (`process/gate-tiers.md`).
+- Ordinary remediation needs G0+G1.
+- Targeted convergence closure needs G1 plus the relevant G2.
+- Complete-review hand-offs (the first `IMPLEMENTATION_REVIEW`, `FINAL_CONTRACT_REVIEW`, the Rust closure review) need G3 evidence at the exact candidate. Targeted finding-closure hand-offs do not; the stage table is authoritative for them.
+- G3 is author-run evidence, not a review. The independent complete review is the stage act that consumes it, and certification needs both.
+
+Running more is always allowed. A required escalation records its reason, and every hand-off reports the tier actually run with fresh counts. Certification (this section) always requires G3.
 
 ## 14. Workflow improvement and periodic retrospective
 
@@ -1556,6 +1697,23 @@ rejection
 ```
 
 The coding-agent project files are therefore expected to evolve as the project learns.
+
+### 14.6 Process metrics
+
+Record per work package, in its closure assurance record:
+
+```text
+review events to contract approval
+complete reviews / targeted reviews
+post-contract semantic discoveries
+lower-layer deltas discovered after implementation started
+Owner escalations
+documentary / status-only PRs
+full-suite (G3) runs
+findings discovered by the reusable hazard families vs ad hoc by review
+```
+
+These evaluate the workflow, not Claude or Codex. The metric to drive down most is **semantic dimensions discovered after implementation begins**, without an increase in escaped parity defects.
 
 ## 15. Standard final report
 
