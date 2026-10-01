@@ -18,9 +18,10 @@ python -m minion_process comment docs 200 review.md --pr
 **Patch files** for `apply` define:
 
 ```python
-ALLOWED = {"status", "next_owner", "next_action"}   # top-level workflow keys this patch may change
+ALLOWED = {"status", "next_owner", "next_action"}  # top-level workflow keys this patch may change
 
-def apply(w):          # mutate the workflow dict in place; optionally return replacement prose
+
+def apply(w):  # mutate the workflow dict in place; optionally return replacement prose
     w["status"] = "IMPLEMENTATION_REVIEW"
     w["next_owner"] = "Codex"
     w["next_action"] = "Targeted closure of R001 at code <sha> / docs <sha>."

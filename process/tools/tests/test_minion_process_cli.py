@@ -11,7 +11,7 @@ import pytest
 from minion_process import github as github_module
 from minion_process.cli import main
 from minion_process.github import GitHub, GitHubError, gh_runner
-from minion_process.model import BodyFormatError, IssueBody
+from minion_process.model import BodyFormatError, IssueBody, render_body
 from minion_process.ops import CheckFailed, candidate_report, commit_state, guarded_merge, verified_comment
 from minion_process.transitions import check_transition
 from minion_process.validate import errors, validate_workflow
@@ -87,12 +87,6 @@ def test_unknown_current_status_and_missing_workflow() -> None:
         IssueBody(state={"other": 1}, prose="").workflow  # noqa: B018
 
 
-def test_a_merged_candidate_skips_the_pr_checks(fake: FakeGitHub) -> None:
-    w = workflow(code={"pr": 1, "sha": SHA_A, "merged_sha": "m" * 40})
-    fake.prs[(CODE, 1)]["state"] = "MERGED"
-    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed == []
-
-
 # --- remaining failure branches of the operations ---------------------------------------------
 
 
@@ -122,12 +116,6 @@ def _handoff(w: dict[str, Any]) -> None:
 def test_remote_divergence_is_a_failed_commit(fake: FakeGitHub, rewrite: Any, match: str) -> None:
     with pytest.raises(CheckFailed, match=match):
         commit_state(_remote_rewrites(fake, rewrite), CODE, 10, _handoff, {"next_action"})
-
-
-def test_a_candidate_without_a_sha_or_side_is_skipped(fake: FakeGitHub) -> None:
-    w = workflow(code={"pr": 1}, docs=None)
-    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed == []
-    assert errors(validate_workflow(w)) == []
 
 
 def test_merge_waits_for_mergeability_and_detects_a_failed_merge(fake: FakeGitHub) -> None:
@@ -188,3 +176,124 @@ def test_v2_current_candidate_is_read(fake: FakeGitHub) -> None:
     assert candidate_report(GitHub(fake.run), v2, require_ready=True).ok
     bad = {**v2, "current_candidate": {"code": {"pr": 1, "sha": "short"}}}
     assert "code.sha" in [p.path for p in errors(validate_workflow(bad))]
+
+
+# --- PROC-L13-R001: exact-candidate checks never fail open (Codex reviewer witnesses) ---------
+
+
+def _bad_pr(fake: FakeGitHub) -> None:
+    fake.prs[(CODE, 1)] = {"state": "CLOSED", "isDraft": True, "headRefOid": "c" * 40}
+
+
+def test_a_pr_without_a_recorded_sha_is_invalid_and_blocks_handoff(fake: FakeGitHub) -> None:
+    w = workflow(code={"pr": 1, "base": "main"})
+    assert "code.sha" in [p.path for p in errors(validate_workflow(w))]
+    _bad_pr(fake)
+    report = candidate_report(GitHub(fake.run), w, require_ready=True)
+    assert "code candidate records an exact SHA" in report.failed
+
+
+def test_an_unverified_merged_claim_never_switches_checks_off(fake: FakeGitHub) -> None:
+    bogus = workflow(code={"pr": 1, "sha": SHA_A, "merged_sha": "not-a-real-sha"})
+    assert "code.merged_sha" in [p.path for p in errors(validate_workflow(bogus))]
+    _bad_pr(fake)
+    shaped = workflow(code={"pr": 1, "sha": SHA_A, "merged_sha": "e" * 40})  # well-formed, but false
+    failed = candidate_report(GitHub(fake.run), shaped, require_ready=True).failed
+    assert any("merged" in label for label in failed), failed
+
+
+def test_a_verified_merged_baseline_passes(fake: FakeGitHub) -> None:
+    merge = "e" * 40
+    fake.prs[(CODE, 1)] = {
+        "state": "MERGED",
+        "isDraft": False,
+        "headRefOid": SHA_A,
+        "mergeCommit": {"oid": merge},
+    }
+    fake.on_default.add(merge)
+    w = workflow(code={"pr": 1, "sha": SHA_A, "merged_sha": merge}, docs=None)
+    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed == []
+    fake.on_default.clear()  # merged, but not on the default branch
+    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed
+
+
+def test_a_side_with_no_candidate_is_not_checked(fake: FakeGitHub) -> None:
+    w = workflow(docs=None)
+    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed == []
+
+
+# --- PROC-L13-R002: an Owner-blocked resume needs a recorded governance source ----------------
+
+
+@pytest.mark.parametrize("source", [None, {}, {"artifact": None, "decision": ""}, ""])
+def test_resume_from_owner_block_without_provenance_is_refused(fake: FakeGitHub, source: Any) -> None:
+    fake.issues[(CODE, 10)]["body"] = render_body(
+        {"workflow": workflow(status="BLOCKED_FOR_OWNER", next_owner="Owner", governance_source=source)}, ""
+    )
+
+    def resume(w: dict[str, Any]) -> None:
+        w.update(status="RUST_IMPLEMENTATION", next_owner="Codex", next_action="implement")
+
+    with pytest.raises(CheckFailed, match="governance_source"):
+        commit_state(GitHub(fake.run), CODE, 10, resume, {"status", "next_owner", "next_action"})
+    assert fake.edits == 0
+
+
+def test_resume_from_owner_block_with_provenance_commits(fake: FakeGitHub) -> None:
+    source = {
+        "artifact": "https://github.com/EGAILab/minion-agent/issues/49#issuecomment-1",
+        "decision": "Option 1",
+    }
+    fake.issues[(CODE, 10)]["body"] = render_body(
+        {"workflow": workflow(status="BLOCKED_FOR_OWNER", next_owner="Owner", governance_source=source)}, ""
+    )
+
+    def resume(w: dict[str, Any]) -> None:
+        w.update(status="REMEDIATION", next_owner="Claude", next_action="implement the decision")
+
+    commit_state(GitHub(fake.run), CODE, 10, resume, {"status", "next_owner", "next_action"})
+    assert fake.edits == 1
+
+
+# --- PROC-L13-R003: malformed control data is rejected diagnostically --------------------------
+
+
+@pytest.mark.parametrize(
+    ("overrides", "path"),
+    [
+        ({"schema_version": 99}, "schema_version"),
+        ({"next_action": [123]}, "next_action"),
+        ({"next_owner": 5}, "next_owner"),
+        ({"updated_reason": {"x": 1}}, "updated_reason"),
+        ({"schema_version": 2, "open_findings": [None, {"R": "x"}]}, "open_findings[0]"),
+        ({"schema_version": 2, "open_findings": ["L13-WP132-I004", "not an id"]}, "open_findings[1]"),
+        ({"schema_version": 2, "open_findings": {"L13-WP132-I004": {}}}, "open_findings"),
+        ({"provisionally_closed": [7]}, "provisionally_closed[0]"),
+        ({"requirements": ["TOOL-041", None]}, "requirements[1]"),
+        (
+            {"current_candidate": {"code": {"pr": 1, "sha": SHA_A}}},
+            "current_candidate",
+        ),  # mixed with v1 code/docs
+    ],
+)
+def test_malformed_control_data(overrides: dict[str, Any], path: str) -> None:
+    found = [p.path for p in errors(validate_workflow(workflow(**overrides)))]
+    assert path in found, found
+
+
+def test_well_formed_v2_finding_lists_pass() -> None:
+    w = workflow(
+        schema_version=2, open_findings=["L0506-D001-RC001"], provisionally_closed=["L13-WP132-I001"]
+    )
+    assert errors(validate_workflow(w)) == []
+
+
+def test_a_malformed_candidate_side_fails_the_candidate_check(fake: FakeGitHub) -> None:
+    assert candidate_report(GitHub(fake.run), workflow(code="abc"), require_ready=True).failed
+
+
+def test_a_sha_only_candidate_is_checked_for_reachability(fake: FakeGitHub) -> None:
+    w = workflow(code={"sha": SHA_A}, docs=None)
+    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed == []
+    fake.commits.discard(SHA_A)
+    assert candidate_report(GitHub(fake.run), w, require_ready=True).failed

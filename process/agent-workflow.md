@@ -66,7 +66,7 @@ Unless the task explicitly narrows the pass further, use this sequence:
 5. Repair shared contract/evidence before implementing around a bad contract.
 6. Implement only the current layer through real existing seams.
 7. Add focused language tests and applicable language-neutral canonical evidence.
-8. Run the gates the stage requires (`process/gate-tiers.md`, §13.1); a review hand-off and certification require G3, including regressions for previously certified layers.
+8. Run the gates the stage requires (`process/gate-tiers.md`, §13.1). A complete-review hand-off (first implementation review, final complete review, closure review) and certification require G3 evidence, including regressions for previously certified layers; a targeted finding-closure hand-off requires only the tier its stage row gives.
 9. Perform the required independent cross-language review/implementation handoff.
 10. Certify/freeze only when the layer's gate is satisfied.
 11. Stop. Do not automatically start the next layer.
@@ -1598,7 +1598,8 @@ Approval of a shared contract is not implementation certification. A language la
 Verification is tiered G0 (development), G1 (finding closure), G2 (integration) and G3 (certification), with a minimum tier per workflow stage (`process/gate-tiers.md`).
 - Ordinary remediation needs G0+G1.
 - Targeted convergence closure needs G1 plus the relevant G2.
-- Review hand-offs and the final complete review need G3 at the exact candidate.
+- Complete-review hand-offs (the first `IMPLEMENTATION_REVIEW`, `FINAL_CONTRACT_REVIEW`, the Rust closure review) need G3 evidence at the exact candidate. Targeted finding-closure hand-offs do not; the stage table is authoritative for them.
+- G3 is author-run evidence, not a review. The independent complete review is the stage act that consumes it, and certification needs both.
 
 Running more is always allowed. A required escalation records its reason, and every hand-off reports the tier actually run with fresh counts. Certification (this section) always requires G3.
 

@@ -23,7 +23,7 @@ Every late finding was real and caught by independent review. The problem was *w
 
 **Phase B (design only)** covers the certification registry (`process/certification-registry-design.md`) and the lean-schema migration.
 
-**Phase C1 (implemented)** is `minion-process` (`process/minion-process-cli-design.md`, `process/tools/`): validate, status, transition legality, the §11.1.1 commit round-trip, handoff check, exact-head merge with containment, and verified comments. It has 73 offline tests at 100% statement coverage.
+**Phase C1 (implemented)** is `minion-process` (`process/minion-process-cli-design.md`, `process/tools/`): validate, status, transition legality, the §11.1.1 commit round-trip, handoff check, exact-head merge with containment, and verified comments. It has 93 offline tests at 100% statement coverage, including Codex's PROC-L13-R001..R003 reviewer witnesses.
 
 **The reconciliation.** Dogfooding the validator on live issues found that the documented transition table did not cover the contract-first phase or some recorded transitions. `coordination-state.md` §10.1 reconciles the table, and the tool enforces it from adoption forward.
 

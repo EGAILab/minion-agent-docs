@@ -67,6 +67,13 @@ def commit_state(
     reason = check_transition(old.get("status", ""), new_workflow.get("status", ""))
     if reason:
         raise CheckFailed(reason)
+    if old.get("status") == "BLOCKED_FOR_OWNER" and new_workflow.get("status") != "BLOCKED_FOR_OWNER":
+        source = new_workflow.get("governance_source")
+        if not source or (isinstance(source, dict) and not any(source.values())):
+            raise CheckFailed(
+                "resume from BLOCKED_FOR_OWNER requires a recorded governance_source (§11.10); the tool "
+                "checks its presence only -- the agent still validates its authority, decision and scope"
+            )
     state = dict(current.state)
     state["workflow"] = new_workflow
     body = render_body(state, prose if prose is not None else current.prose)
@@ -92,17 +99,34 @@ def candidate_report(gh: GitHub, workflow: dict[str, Any], require_ready: bool) 
     """Exact-SHA candidate checks for `code`/`docs` (§5, §11.3)."""
     report = Report()
     for side, candidate in candidates(workflow).items():
-        if not isinstance(candidate, dict) or candidate.get("sha") is None:
+        if candidate is None:
+            continue  # this side has no candidate at all
+        if not isinstance(candidate, dict) or not candidate.get("sha"):
+            report.check(False, f"{side} candidate records an exact SHA")
             continue
         repo, sha = REPOS[side], candidate["sha"]
         report.check(gh.commit_exists(repo, sha), f"{side} {sha[:12]} remote-reachable")
         pr_number = candidate.get("pr")
-        if isinstance(pr_number, int) and candidate.get("merged_sha") is None:
-            pr = gh.pr(repo, pr_number)
-            report.check(pr["state"] == "OPEN", f"{side} PR #{pr_number} open")
-            report.check(pr["headRefOid"] == sha, f"{side} PR #{pr_number} head == {sha[:12]}")
-            if require_ready:
-                report.check(not pr["isDraft"], f"{side} PR #{pr_number} ready for review")
+        if not isinstance(pr_number, int):
+            continue
+        pr = gh.pr(repo, pr_number)
+        merged = candidate.get("merged_sha")
+        if merged is not None:
+            # an accepted baseline: the claim itself is verified, never trusted to switch checks off
+            commit = pr.get("mergeCommit") or {}
+            report.check(pr["state"] == "MERGED", f"{side} PR #{pr_number} merged")
+            report.check(
+                commit.get("oid") == merged, f"{side} PR #{pr_number} merge commit == {str(merged)[:12]}"
+            )
+            report.check(pr["headRefOid"] == sha, f"{side} PR #{pr_number} merged head == {sha[:12]}")
+            report.check(
+                gh.contains(repo, gh.default_branch(repo), merged), f"{side} merge on the default branch"
+            )
+            continue
+        report.check(pr["state"] == "OPEN", f"{side} PR #{pr_number} open")
+        report.check(pr["headRefOid"] == sha, f"{side} PR #{pr_number} head == {sha[:12]}")
+        if require_ready:
+            report.check(not pr["isDraft"], f"{side} PR #{pr_number} ready for review")
     return report
 
 

@@ -113,3 +113,25 @@ For each incident: would the new process have discovered or prevented it earlier
 | C | `minion-process` CLI (design + first implementation), transition-table reconciliation | `process/minion-process-cli-design.md`; `process/tools/minion_process/`; `coordination-state.md` §10.1; workflow §11.16, §12.7 |
 
 Phase B migrations (registry, lean-schema migration of the open issues #49/#88) are designed here, and they proceed separately after independent approval. No existing issue body is rewritten by this change.
+
+---
+
+## Remediation 1: independent process review (Codex), CHANGES REQUIRED at `e5fe80e2`
+
+Review: `minion-agent-docs#204`, published verbatim on Codex's behalf (comment `5922990518`). All four findings are accepted:
+
+- **PROC-L13-R001.** The candidate checks failed open. A PR without a SHA skipped its side, and any `merged_sha` disabled the PR checks. My own test had codified the first hole.
+  - **Fix:** a PR reference now requires the exact SHA. `merged_sha` is shape-validated, and it is *verified* (PR merged, merge commit equal, head equal, on the default branch); it never switches checks off.
+  - A side with no candidate at all is still not checked.
+- **PROC-L13-R002.** A resume from `BLOCKED_FOR_OWNER` committed without provenance.
+  - **Fix:** `apply` refuses before writing unless a non-empty `governance_source` is recorded. The tool checks presence only; agents still validate authority, decision and scope (§11.10).
+- **PROC-L13-R003.** Malformed control data validated.
+  - **Fix:** supported `schema_version` values only; string-typed control fields; element-level validation after the container check; mixed v1/v2 candidate forms rejected.
+- **PROC-L13-R004.** The gate-stage wording contradicted itself.
+  - **Fix:** G3 is author-run certification *evidence*, consumed by the separate independent complete review. Complete-review hand-offs need G3 evidence; targeted finding-closure hand-offs follow the stage table, which is authoritative.
+
+**Evidence.**
+- Codex's `reviewer_probes.py` witnesses are now permanent tests.
+- Every probe is now caught: the three validator cases error, both handoff holes report failures, and the governance-less resume is refused with zero writes.
+- Tool: 93 tests, 100% statement coverage, ruff and strict mypy clean.
+- Live issues #35, #49, #50, #51 and #95 still validate.

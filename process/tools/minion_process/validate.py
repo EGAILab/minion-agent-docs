@@ -10,6 +10,9 @@ from typing import Any
 from .model import ACTIVE, NON_ACTIONABLE, OWNERS, STATUSES, candidates
 
 SHA = re.compile(r"^[0-9a-f]{40}$")
+FINDING_ID = re.compile(r"^[A-Z][A-Za-z0-9]*(-[A-Za-z0-9.]+)+$")
+"""A finding ID such as `L13-WP132-I004` or `L0506-D001-RC001`."""
+SCHEMA_VERSIONS = (1, 2)
 
 LEAN_BODY_CHARS = 8000
 """`coordination-state.md` §13: a current-state body above this is a lean-state warning."""
@@ -42,6 +45,17 @@ def validate_workflow(workflow: dict[str, Any], body_chars: int | None = None) -
     def warn(path: str, message: str) -> None:
         problems.append(Problem("warning", path, message))
 
+    version = workflow.get("schema_version", 1)
+    if version not in SCHEMA_VERSIONS:
+        error("schema_version", f"unsupported schema_version {version!r} (supported: {SCHEMA_VERSIONS})")
+        return problems
+    for key in ("next_owner", "next_action", "updated_by", "updated_reason"):
+        value = workflow.get(key)
+        if value is not None and not isinstance(value, str):
+            error(key, f"must be a string or null, got {type(value).__name__}")
+    if errors(problems):
+        return problems
+
     status = workflow.get("status")
     if status not in STATUSES:
         error("status", f"unknown status {status!r} (allowed: {', '.join(STATUSES)})")
@@ -63,6 +77,11 @@ def validate_workflow(workflow: dict[str, Any], body_chars: int | None = None) -
         if not _missing(owner) or not _missing(action):
             error("next_owner", "WAITING_FOR_TRIGGER requires next_owner/next_action null")
 
+    if "current_candidate" in workflow and ("code" in workflow or "docs" in workflow):
+        error(
+            "current_candidate",
+            "mixes the v2 `current_candidate` with v1 top-level `code`/`docs`; use one form",
+        )
     for side, candidate in candidates(workflow).items():
         if candidate is None:
             continue
@@ -72,6 +91,11 @@ def validate_workflow(workflow: dict[str, Any], body_chars: int | None = None) -
         sha = candidate.get("sha")
         if sha is not None and not (isinstance(sha, str) and SHA.match(sha)):
             error(f"{side}.sha", f"not a full 40-hex SHA: {sha!r}")
+        if candidate.get("pr") is not None and sha is None:
+            error(f"{side}.sha", "a PR reference requires the exact candidate SHA (§5)")
+        merged = candidate.get("merged_sha")
+        if merged is not None and not (isinstance(merged, str) and SHA.match(merged)):
+            error(f"{side}.merged_sha", f"not a full 40-hex SHA: {merged!r}")
         pr = candidate.get("pr")
         if pr is not None and not isinstance(pr, int):
             error(f"{side}.pr", f"PR must be an integer, got {pr!r}")
@@ -94,15 +118,24 @@ def validate_workflow(workflow: dict[str, Any], body_chars: int | None = None) -
         if checkpoint is not None and not isinstance(checkpoint, str):
             error("convergence.checkpoint", "must be a string")
 
-    lean = workflow.get("schema_version", 1) >= 2
+    lean = version >= 2
     for key in ("requirements", "open_findings", "provisionally_closed"):
         value = workflow.get(key)
-        if value is None or isinstance(value, list):
-            continue  # container shape first (agent-workflow.md §8)
+        if value is None:
+            continue
         if isinstance(value, dict) and key != "requirements" and not lean:
             warn(key, "legacy v1 mapping form; schema v2 uses a list of finding IDs (details in assurance)")
-        else:
-            error(key, "must be a list")
+            continue
+        if not isinstance(value, list):
+            error(key, "must be a list")  # container shape first (agent-workflow.md §8)
+            continue
+        for index, item in enumerate(value):  # then every element
+            if not (isinstance(item, str) and (key == "requirements" or FINDING_ID.match(item))):
+                error(
+                    f"{key}[{index}]",
+                    f"must be a {'requirement' if key == 'requirements' else 'finding'} ID string, "
+                    f"got {item!r}",
+                )
 
     quarantine = workflow.get("quarantine")
     if (
