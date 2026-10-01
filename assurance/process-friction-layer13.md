@@ -196,3 +196,21 @@ Both were recorded by Owner decision (§13 of each), and both were caught **befo
 - **Why it was not caught earlier.** The D002 matrix audited the value as it **enters** `execute` (prepared instance), and its four-domain table (§1.1) had no row for values a tool **returns**. The result carrier, which flows through the after-hook, `tool_execution_end`, `ToolResultMessage` and persistence, was nobody's row.
 - **Resolution.** Owner decision `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`): a separate delta `L0506-D003` (`minion-agent#112`) at the shared tool-result boundary. Its §6 lets same-carrier neighbors (surrogate keys, `NaN`/±Infinity) fold in at once, instead of being found one review at a time (C002 → C003 → C004).
 - **Lesson (§18).** This is the fourth time a language-native JSON type was narrower than the JavaScript runtime domain: raw, prepared, schema, result. The feasibility template's §1.1 now lists six carriers: raw input, prepared, schema, tool result, persistence projection, provider projection. It asks the Owner's six questions for every public/runtime value carrier. Hazard family F7 gains the TOOL RESULT row.
+
+## Post-merge evidence: two coordination bookkeeping incidents at WP-13.2 Rust closure (TOOLING / HARNESS FRICTION)
+
+Recorded per the Owner's acceptance of WP-13.2 closure (`minion-agent#49` comment `5942146215`). Neither incident reopens a certification.
+
+1. **A stale "ready" claim.**
+   - Claude's transport note for Codex's WP-13.2 resume (`#49` comment `5941519617`) said code #98 and docs #207 were "now ready". Both were in fact **closed** drafts: `gh pr ready` failed, and the note was written before checking.
+   - **Corrected** in `#49` comment `5941526749`: both PRs were reopened (fast-forward heads intact), marked ready and retitled.
+   - **Lesson.** A coordination statement about remote state is made only after the state-changing command has succeeded and been re-read. It is never written ahead of the command.
+2. **An issue closed before its canonical state write committed.**
+   - In one shell pipeline, `minion_process apply 49 … | tail -1 && gh issue close 49 …` ran.
+   - `apply` refused the write (`#49` is schema-v1: "mixes the v2 `current_candidate` with v1 top-level `code`/`docs`"). But `tail` exited 0, so `&&` let `gh issue close` run.
+   - GitHub briefly showed `#49` closed while its canonical workflow block still said `CLOSURE_REVIEW`.
+   - **Corrected** by re-applying a valid v1 closure patch (`COMMITTED`, `VALID`).
+   - **Lesson.** This one matters for the workflow CLI. A dependent GitHub action (close, merge, title change, handoff comment) must be **impossible** before the verified state commit succeeds. It must not depend on the operator's shell discipline. Proposed tooling change, not yet implemented and to be reviewed when scheduled:
+     - `minion_process` gains composite verbs (e.g. `close N patch.py`) that perform the dependent action only after `commit_state` returns.
+     - It exits non-zero on any refusal.
+     - The interim operator rule is: never pipe `minion_process` output into `&&`; test its own exit status.
