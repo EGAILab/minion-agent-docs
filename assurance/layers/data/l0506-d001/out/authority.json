@@ -221,6 +221,279 @@
     "/extra": "NaN",
     "/negativeZero": "-0"
    }
+  },
+  {
+   "id": "bound-maximum-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "bound-maximum-neg-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "bound-maximum-nan",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "bound-maximum-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "bound-maximum-one",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be <= 0",
+   "diagnostic_arguments": {
+    "limit": 1
+   },
+   "runtime_after_failure": {
+    "/limit": "1"
+   }
+  },
+  {
+   "id": "bound-minimum-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "bound-minimum-neg-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "bound-minimum-nan",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "bound-minimum-minus-one",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be >= 0",
+   "diagnostic_arguments": {
+    "limit": -1
+   },
+   "runtime_after_failure": {
+    "/limit": "-1"
+   }
+  },
+  {
+   "id": "bound-exclusive-maximum-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "bound-exclusive-maximum-neg-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "bound-exclusive-maximum-neg-zero",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be < 0",
+   "diagnostic_arguments": {
+    "limit": 0
+   },
+   "runtime_after_failure": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "bound-exclusive-maximum-zero",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be < 0",
+   "diagnostic_arguments": {
+    "limit": 0
+   },
+   "runtime_after_failure": {
+    "/limit": "0"
+   }
+  },
+  {
+   "id": "bound-exclusive-minimum-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "bound-exclusive-minimum-neg-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "bound-exclusive-minimum-neg-zero",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be > 0",
+   "diagnostic_arguments": {
+    "limit": 0
+   },
+   "runtime_after_failure": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "multiple-of-pos-inf",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "multiple-of-nan",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "multiple-of-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-0"
+   }
+  },
+  {
+   "id": "multiple-of-three",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be multiple of 2",
+   "diagnostic_arguments": {
+    "limit": 3
+   },
+   "runtime_after_failure": {
+    "/limit": "3"
+   }
+  },
+  {
+   "id": "one-of-bounds-pos-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must match exactly one schema in oneOf",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "one-of-bounds-neg-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must match exactly one schema in oneOf",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "one-of-bounds-nan",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must match exactly one schema in oneOf",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "one-of-bounds-five",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "5"
+   }
+  },
+  {
+   "id": "not-bound-pos-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must not be valid",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "not-bound-nan",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must not be valid",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "not-bound-one",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "1"
+   }
+  },
+  {
+   "id": "number-bound-pos-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "+Infinity"
+   }
+  },
+  {
+   "id": "number-bound-neg-inf",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "-Infinity"
+   }
+  },
+  {
+   "id": "number-bound-nan",
+   "outcome": "argument_validation_failure",
+   "message": "- limit: must be number",
+   "diagnostic_arguments": {
+    "limit": null
+   },
+   "runtime_after_failure": {
+    "/limit": "NaN"
+   }
+  },
+  {
+   "id": "number-bound-neg-zero",
+   "outcome": "prepared",
+   "observed": {
+    "/limit": "-0"
+   }
   }
  ]
 }

@@ -28,7 +28,15 @@ GROUPS = [
     ("open", "prepared-runtime-undeclared-field",
      "A tool's own prepare_arguments sets a key the schema does not declare. Pinned Pi keeps every runtime number "
      "there -- +Infinity, -Infinity, NaN, -0 -- and the pre-execute hook and execute observe it."),
+    ("keyword", "prepared-runtime-numeric-keyword-applicability",
+     "L0506-D001-RC002. A tool's own prepare_arguments sets `limit`, constrained only by numeric validation keywords "
+     "(no declared type) or, for number-bound, by {type: number, maximum: 0}. Pinned Pi applies minimum, maximum, "
+     "exclusiveMinimum, exclusiveMaximum and multipleOf to finite numbers only: a non-finite runtime number is outside "
+     "them (accepted under a bare keyword; through oneOf/not the branch verdicts follow), while a finite number is "
+     "constrained (the finite controls), and a declared number type still rejects non-finite values."),
 ]
+KEYWORD_KINDS = ("bound-maximum", "bound-minimum", "bound-exclusive-maximum", "bound-exclusive-minimum", "multiple-of",
+                 "one-of-bounds", "not-bound", "number-bound")
 
 GATE_NOTE_EDIT = (" Gate WP-13.2 (L0506-D001-R003): an integration witness through the real built-in edit tool; "
                   "not part of the delta's certification gate -- WP-13.2's Python approval and Rust implementation "
@@ -86,7 +94,8 @@ def main():
     out = Path(sys.argv[3])
     out.mkdir(parents=True, exist_ok=True)
     for key, name, notes in GROUPS:
-        members = [c for c in cases if (c["tool"] == "edit") == (key == "edit") and c.get("schema", "edit") in (key, "edit")]
+        kinds = KEYWORD_KINDS if key == "keyword" else (key, "edit")
+        members = [c for c in cases if (c["tool"] == "edit") == (key == "edit") and c.get("schema", "edit") in kinds]
         docs_cases = []
         for c in members:
             r = results[c["id"]]
