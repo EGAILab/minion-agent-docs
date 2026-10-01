@@ -520,3 +520,42 @@ Revision 5's negative-control paragraph wrongly gave "a valid implicit-date stri
 **Gates:** 283 tool tests pass, statement coverage 100%, ruff and strict mypy clean. The grammar property and the alias tests also pass at 2000 examples.
 
 **Status:** PROC-L13-R003 is REMEDIATED against the revision-5 agreement, pending Codex §11.8.7 targeted closure. R001, R002 and R004 stay provisionally closed. One §11.8.8 final complete review of #204 follows.
+
+---
+
+## Targeted-closure remediation 1 after revision-5 agreement (Codex CLOSURE4, `#204` comment `5925696530`)
+
+**Verdict received:** R003 NOT CLOSED (CONTRACT_ASSURANCE_DEFECT: L3 acceptance evidence). Both flagged additions are ACCEPTED: the `MAX_NODES` bound, and a shared alias counted at its deepest reference. The revision-5 checkpoint stays AGREED. This is the first targeted rejection after it, so §11.8.10 has not fired.
+
+**Accepted finding.** The intended-outcome table checked load success and workflow validity only.
+- `sexagesimal-string` and `leading-zero-string` sat in an unchecked `note` field.
+- The generated property asserted only `isinstance(state, dict)`.
+- `merge-literal-key` used a **quoted** `"<<"`, which the old loader also leaves literal.
+- So Codex's in-memory mutants survived every test: SafeLoader's integer resolver restored, and SafeLoader's merge resolver restored.
+
+**Correction of this record.** The revision-5 implementation section above calls the old loader's different values "not observable through any entry point". That is wrong: `load_state` and `split_body` expose them, and the intended-outcome table owns them. The statement is superseded here and left in place as history.
+
+**Witnesses added** (`process/tools/tests/test_ce_proc_l13_01_rev5.py`; no production change):
+- **Value and type table.** `L3_VALUES` has 29 implicit scalars, each asserted for exact value **and type** at `load_state` and at `split_body`. It covers:
+  - implicit valid and invalid dates and a datetime;
+  - `yes`/`no`/`on`/`off`/`y`;
+  - the sexagesimal int `1:30` and sexagesimal float `1:30.0`;
+  - the leading-zero `010`, `0x1f`, `0o17`, the underscored `1_000` and `1_0.5`, and the dotless `1e3`;
+  - the core bools, ints, floats and nulls, and a plain string.
+- Separate witnesses for `.inf`/`-.inf`/`.nan`, and for keys (top-level `yes`, nested `no`/`010`/`1:30`).
+- **Unquoted `<<`.** `a: &A {x: 1}` with `b: {<<: *A}` keeps the literal key `"<<"` holding the aliased mapping, and splices nothing into `b`. The alias stays a valid, shared, acyclic reference (`is`-identical). The same holds through `split_body`, and the body validates.
+- **Resolver mutants, permanent.** Each of SafeLoader's YAML 1.1 `int`, `merge`, `bool`, `timestamp` and `float` resolvers is restored in memory with `monkeypatch`. The table must be GREEN on the candidate and RED under the mutant, on named scalars. (`0o17` and `1e3` are strings under YAML 1.1 too, so they are table rows but not kill witnesses.)
+- **Value property.** A generated property nests `L3_VALUES` scalars in flow lists and mappings up to depth 3, and asserts the whole loaded value, with exact types (200 examples).
+
+**Codex's reproducer** (`.tmp/process204-review/closure4_mutant.py`) against the new tests:
+
+| Mutant | at `69d2252e` (rev-5 file / suite) | now (rev-5 file / suite) |
+|---|---|---|
+| SafeLoader integer resolver | 33 passed / 283 passed | **11 failed** / **11 failed** |
+| SafeLoader merge resolver | 33 passed / 283 passed | **6 failed** / **6 failed** |
+
+The suite runs also show 5 setup errors, which come from basetemp folders in Codex's sandbox that this environment cannot write. They are not test outcomes.
+
+**Gates:** 321 tool tests pass, statement coverage 100%, ruff (`check`, `format --check`) and strict mypy clean.
+
+**Status:** PROC-L13-R003 is REMEDIATED (second time), pending §11.8.7 targeted closure. R001, R002 and R004 stay provisionally closed.

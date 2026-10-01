@@ -263,3 +263,166 @@ def test_a_shared_alias_counts_at_its_deepest_reference() -> None:
     load_state("a: &D " + deep)  # depth 61: fine where it is anchored
     with pytest.raises(BodyFormatError, match="nesting deeper"):
         load_state("a: &D " + deep + chr(10) + "b: [[[[[*D]]]]]")  # referenced 5 deeper: 66
+
+
+# ---- PROC-L13-R003 targeted-closure refinement (Codex CLOSURE4, #204 comment 5925696530): L3's
+# resolved VALUES and TYPES are asserted directly at the load boundary, not only through workflow
+# validity, and every old SafeLoader resolver restored in memory must be caught by them.
+
+L3_VALUES: list[tuple[str, object]] = [
+    ("2026-02-30", "2026-02-30"),  # implicit timestamp: invalid date -> string
+    ("2026-02-28", "2026-02-28"),  # implicit timestamp: valid date -> string, not a date
+    ("2026-02-28 10:00:00", "2026-02-28 10:00:00"),
+    ("yes", "yes"),
+    ("no", "no"),
+    ("on", "on"),
+    ("off", "off"),
+    ("y", "y"),
+    ("1:30", "1:30"),  # sexagesimal -> string, not 90
+    ("010", "010"),  # leading zero -> string, not 8
+    ("0x1f", "0x1f"),
+    ("0o17", "0o17"),
+    ("1_000", "1_000"),
+    ("1e3", "1e3"),  # no dot: a string (section 13.6 L3)
+    ("1_0.5", "1_0.5"),  # YAML 1.1 underscore float -> string
+    ("1:30.0", "1:30.0"),  # YAML 1.1 sexagesimal float -> string
+    ("true", True),
+    ("False", False),
+    ("TRUE", True),
+    ("0", 0),
+    ("-12", -12),
+    ("+7", 7),
+    ("1.5", 1.5),
+    (".5", 0.5),
+    ("1.0e+3", 1000.0),
+    ("~", None),
+    ("null", None),
+    ("", None),
+    ("abc", "abc"),
+]
+
+
+def _resolved(scalar: str) -> object:
+    return load_state(f"x: {scalar}".rstrip())["x"]
+
+
+@pytest.mark.parametrize(("scalar", "expected"), L3_VALUES, ids=[repr(s) for s, _ in L3_VALUES])
+def test_l3_resolves_each_implicit_scalar_to_its_exact_value_and_type(scalar: str, expected: object) -> None:
+    for got in (
+        _resolved(scalar),
+        split_body(_body(f"note: {scalar}".rstrip())).state["workflow"]["note"],
+    ):
+        assert got == expected and type(got) is type(expected), (scalar, got)
+
+
+def test_l3_infinities_and_nan_are_floats() -> None:
+    assert _resolved(".inf") == float("inf") and _resolved("-.inf") == float("-inf")
+    nan = _resolved(".nan")
+    assert isinstance(nan, float) and nan != nan
+
+
+def test_l3_top_level_and_nested_keys_resolve_as_strings() -> None:
+    state = split_body(_body(extra_top="yes: 1")).state
+    assert "yes" in state and True not in state
+    assert load_state("m: {no: 1, 010: 2, 1:30: 3}")["m"] == {"no": 1, "010": 2, "1:30": 3}
+
+
+UNQUOTED_MERGE = "a: &A {x: 1}" + NL + "b: {<<: *A}"
+
+
+def test_an_unquoted_merge_key_stays_literal_and_splices_nothing() -> None:
+    state = load_state(UNQUOTED_MERGE)
+    assert state["b"] == {"<<": {"x": 1}}  # the literal key "<<", holding the aliased mapping
+    assert "x" not in state["b"]
+    assert state["b"]["<<"] is state["a"]  # the alias itself stays a valid, shared, acyclic reference
+    body = _body("note: {a: &A {x: 1}, b: {<<: *A}}")
+    assert split_body(body).state["workflow"]["note"]["b"] == {"<<": {"x": 1}}
+    assert errors(validate_workflow(split_body(body).state["workflow"])) == []
+
+
+def _with_old_resolvers(monkeypatch: pytest.MonkeyPatch, tags: set[str]) -> None:
+    """Restore SafeLoader's YAML 1.1 implicit resolvers for `tags` on the candidate loader, in
+    memory only (the realistic regression Codex's CLOSURE4 mutants demonstrate)."""
+    import yaml  # type: ignore[import-untyped]
+
+    from minion_process import model
+
+    resolvers = {k: list(v) for k, v in model._StateLoader.yaml_implicit_resolvers.items()}
+    for first, entries in yaml.SafeLoader.yaml_implicit_resolvers.items():
+        old = [(tag, regex) for tag, regex in entries if tag in tags]
+        if old:
+            kept = [(tag, regex) for tag, regex in resolvers.get(first, []) if tag not in tags]
+            resolvers[first] = old + kept
+    monkeypatch.setattr(model._StateLoader, "yaml_implicit_resolvers", resolvers)
+
+
+def _l3_violations() -> list[str]:
+    bad = []
+    for scalar, expected in L3_VALUES:
+        try:
+            got = _resolved(scalar)
+        except BodyFormatError:
+            bad.append(scalar)
+            continue
+        if not (got == expected and type(got) is type(expected)):
+            bad.append(scalar)
+    with contextlib.suppress(BodyFormatError):
+        if load_state(UNQUOTED_MERGE)["b"] == {"<<": {"x": 1}}:
+            return bad
+    return [*bad, "<<"]
+
+
+@pytest.mark.parametrize(
+    ("tag", "killed_by"),
+    [
+        ("int", {"1:30", "010", "0x1f", "1_000"}),
+        ("merge", {"<<"}),
+        ("bool", {"yes", "no", "on", "off"}),
+        ("timestamp", {"2026-02-30", "2026-02-28", "2026-02-28 10:00:00"}),
+        ("float", {"1_0.5", "1:30.0"}),
+    ],
+)
+def test_each_old_resolver_restored_in_memory_is_caught(
+    monkeypatch: pytest.MonkeyPatch, tag: str, killed_by: set[str]
+) -> None:
+    assert _l3_violations() == []  # GREEN on the candidate
+    _with_old_resolvers(monkeypatch, {f"tag:yaml.org,2002:{tag}"})
+    assert killed_by <= set(_l3_violations()), tag  # RED under the mutant
+
+
+_KNOWN = dict(L3_VALUES)
+
+
+def _known_tree(depth: int) -> st.SearchStrategy[tuple[str, object]]:
+    """(YAML text, intended value) over L3_VALUES scalars nested in flow lists and mappings."""
+    leaf = st.sampled_from([(s, v) for s, v in L3_VALUES if s])
+    if depth <= 0:
+        return leaf
+    child = _known_tree(depth - 1)
+    return st.one_of(
+        leaf,
+        st.lists(child, max_size=3).map(
+            lambda xs: ("[" + ", ".join(t for t, _ in xs) + "]", [v for _, v in xs])
+        ),
+        st.lists(
+            st.tuples(st.sampled_from(["a", "b", "c"]), child), max_size=3, unique_by=lambda kv: kv[0]
+        ).map(
+            lambda kv: ("{" + ", ".join(f"{k}: {t}" for k, (t, _) in kv) + "}", {k: v for k, (_, v) in kv})
+        ),
+    )
+
+
+@settings(max_examples=200, deadline=None)
+@given(tree=_known_tree(3))
+def test_generated_known_scalars_resolve_to_their_intended_values(tree: tuple[str, object]) -> None:
+    text, intended = tree
+    got = load_state(f"x: {text}")["x"]
+
+    def same(a: object, b: object) -> bool:
+        if isinstance(b, dict):
+            return isinstance(a, dict) and a.keys() == b.keys() and all(same(a[k], b[k]) for k in b)
+        if isinstance(b, list):
+            return isinstance(a, list) and len(a) == len(b) and all(map(same, a, b))
+        return type(a) is type(b) and a == b
+
+    assert same(got, intended), (text, got)
