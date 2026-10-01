@@ -97,7 +97,12 @@ def render_body(state: dict[str, Any], prose: str) -> str:
 
 
 def candidates(workflow: dict[str, Any]) -> dict[str, Any]:
-    """The `code`/`docs` candidate entries, from the v2 `current_candidate` or the v1 top-level form."""
-    current = workflow.get("current_candidate")
-    source = current if isinstance(current, dict) else workflow
+    """The `code`/`docs` candidate entries: the single accessor every consumer uses (CE-PROC-L13-01
+    rule 8), read only after validation. A supplied v2 `current_candidate` is never rerouted to the
+    v1 top-level form, even when malformed (rule 2)."""
+    if "current_candidate" in workflow:
+        current = workflow["current_candidate"]
+        source = current if isinstance(current, dict) else {}
+    else:
+        source = workflow
     return {side: source.get(side) for side in ("code", "docs")}

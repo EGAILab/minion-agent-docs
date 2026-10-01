@@ -55,6 +55,8 @@ class FakeGitHub:
         self.corrupt_next_edit = False
         self.edits = 0
         self.merges: list[tuple[str, int, str]] = []
+        self.revisions: dict[tuple[str, int], list[tuple[str, str]]] = {}
+        self.history_fails = False
 
     def run(self, args: list[str], stdin: str | None) -> str:
         from minion_process.github import GitHubError
@@ -70,6 +72,8 @@ class FakeGitHub:
             self.issues[(args[4], int(args[2]))]["body"] = body
             return ""
         if head == "pr" and args[1] == "view":
+            if (args[4], int(args[2])) not in self.prs:
+                raise GitHubError(f"no pull request {args[2]}")
             return json.dumps(self.prs[(args[4], int(args[2]))])
         if head == "pr" and args[1] == "merge":
             repo, number, sha = args[4], int(args[2]), args[-1]
@@ -83,6 +87,14 @@ class FakeGitHub:
             cid = str(len(self.comments) + 1)
             self.comments[cid] = stdin or ""
             return f"https://github.com/{args[4]}/issues/{args[2]}#issuecomment-{cid}\n"
+        if head == "api" and args[1] == "graphql":
+            if self.history_fails:
+                raise GitHubError("graphql unavailable")
+            fields = dict(a.split("=", 1) for a in args[2:] if "=" in a and not a.startswith("query="))
+            key = (f"{fields['o']}/{fields['n']}", int(fields["i"]))
+            nodes = [{"id": rid, "diff": body} for rid, body in self.revisions.get(key, [])]
+            page = {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": nodes}
+            return json.dumps({"data": {"repository": {"issue": {"userContentEdits": page}}}})
         if head == "api":
             path = args[1]
             if "/commits/" in path:
@@ -156,7 +168,10 @@ def test_a_valid_state_has_no_errors() -> None:
         ({"code": {"pr": "1", "sha": SHA_A}}, "code.pr"),
         ({"status": "CONTRACT_CONVERGENCE", "convergence": {}}, "convergence.episode"),
         (
-            {"status": "FINAL_CONTRACT_REVIEW", "convergence": {"episode": "CE", "open_findings": ["R1"]}},
+            {
+                "status": "FINAL_CONTRACT_REVIEW",
+                "convergence": {"episode": "CE", "open_findings": ["L13-X-R1"]},
+            },
             "convergence.open_findings",
         ),
         ({"requirements": "TOOL-041"}, "requirements"),  # a string is iterable but not a list

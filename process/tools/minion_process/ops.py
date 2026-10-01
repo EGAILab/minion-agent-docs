@@ -9,8 +9,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from .github import REPOS, GitHub, same_text
-from .model import NON_ACTIONABLE, candidates, render_body, split_body
+from .github import REPOS, GitHub, GitHubError, same_text
+from .model import NON_ACTIONABLE, BodyFormatError, candidates, render_body, split_body
 from .transitions import check_transition
 from .validate import errors, validate_workflow
 
@@ -53,36 +53,63 @@ def commit_state(
     """The coordination-state commit rule (`agent-workflow.md` §11.1.1), steps 1-7.
 
     `mutate(workflow)` edits a deep copy of the current workflow object in place and may return
-    replacement prose. Returns (changed keys, the new body). Raises before writing when the intended
-    state is invalid, changes a key outside `allowed`, or makes an illegal transition; raises after
-    writing when the re-fetched remote state is not semantically equal to the intended one."""
+    replacement prose. Returns (changed keys, the new body).
+
+    Malformed coordination data is refused with `CheckFailed` / `BodyFormatError` before any write
+    (CE-PROC-L13-01 rules 7 and 9): the CURRENT state is validated before it is used -- an invalid
+    current state never reaches the transition lookup; restore it with `restore_revision` first.
+    Then the patch's keys, the transition, governance-on-resume and the intended state are checked.
+    After writing, a remote state that is not valid, semantically equal and byte-equal is a failed
+    state commit. Exceptions raised by the caller's own `mutate` and remote `GitHubError`s propagate
+    unchanged (rule 9)."""
     current = split_body(gh.issue(repo, number)["body"])
     old = current.workflow
+    current_errors = errors(validate_workflow(old))
+    if current_errors:
+        raise CheckFailed(
+            "current state invalid -- restore a valid earlier revision first (`apply --repair --revision`): "
+            + "; ".join(map(str, current_errors))
+        )
     new_workflow = copy.deepcopy(old)
     prose = mutate(new_workflow)
+    if not isinstance(new_workflow, dict):  # pragma: no cover - mutate edits in place; defensive
+        raise CheckFailed("intended state invalid: workflow is not a mapping")
+    blocking = errors(validate_workflow(new_workflow))
+    if blocking:
+        raise CheckFailed("intended state invalid: " + "; ".join(map(str, blocking)))
     changed = sorted(k for k in set(old) | set(new_workflow) if old.get(k) != new_workflow.get(k))
     outside = [k for k in changed if k not in allowed]
     if outside:
         raise CheckFailed(f"patch changed keys outside ALLOWED: {outside}")
-    reason = check_transition(old.get("status", ""), new_workflow.get("status", ""))
+    reason = check_transition(old["status"], new_workflow["status"])
     if reason:
         raise CheckFailed(reason)
-    if old.get("status") == "BLOCKED_FOR_OWNER" and new_workflow.get("status") != "BLOCKED_FOR_OWNER":
+    if old["status"] == "BLOCKED_FOR_OWNER" and new_workflow["status"] != "BLOCKED_FOR_OWNER":
         source = new_workflow.get("governance_source")
         if not source or (isinstance(source, dict) and not any(source.values())):
             raise CheckFailed(
                 "resume from BLOCKED_FOR_OWNER requires a recorded governance_source (§11.10); the tool "
                 "checks its presence only -- the agent still validates its authority, decision and scope"
             )
+    if prose is not None and not isinstance(prose, str):
+        raise CheckFailed(f"patch returned non-string prose: {type(prose).__name__}")
     state = dict(current.state)
     state["workflow"] = new_workflow
     body = render_body(state, prose if prose is not None else current.prose)
-    blocking = errors(validate_workflow(new_workflow, len(body)))
-    if blocking:
-        raise CheckFailed("intended state invalid: " + "; ".join(map(str, blocking)))
+    try:  # pre-write round trip: a state YAML cannot carry faithfully is refused, never written
+        survives = split_body(body).state == state
+    except BodyFormatError:  # pragma: no cover - every state value is indented under `workflow:`
+        survives = False
+    if not survives:
+        raise CheckFailed("intended state does not survive YAML serialization unchanged; nothing was written")
     if dry_run:
         return changed, body
     gh.edit_issue_body(repo, number, body)
+    _verify_remote(gh, repo, number, state, body)
+    return changed, body
+
+
+def _verify_remote(gh: GitHub, repo: str, number: int, state: dict[str, Any], body: str) -> None:
     remote = gh.issue(repo, number)["body"]
     parsed = split_body(remote)
     remote_errors = errors(validate_workflow(parsed.workflow, len(remote)))
@@ -92,32 +119,75 @@ def commit_state(
         raise CheckFailed("FAILED STATE COMMIT: re-fetched state is not semantically equal (§11.1.1)")
     if not same_text(remote, body):
         raise CheckFailed("FAILED STATE COMMIT: re-fetched body differs from the written body")
-    return changed, body
 
 
-def candidate_report(gh: GitHub, workflow: dict[str, Any], require_ready: bool) -> Report:
-    """Exact-SHA candidate checks for `code`/`docs` (§5, §11.3)."""
+def restore_revision(gh: GitHub, repo: str, number: int, revision_id: str, dry_run: bool = False) -> str:
+    """Repair mode (CE-PROC-L13-01 revision 3): restore the issue body, byte for byte, to an earlier
+    revision of THAT issue's body taken from GitHub's own edit history -- never a caller-supplied
+    body, never a transition. Refused, with zero writes, unless the current state is invalid and the
+    revision exists and validates. Any change after restoration is an ordinary checked `commit_state`.
+    Returns the restored body."""
+    current_body = gh.issue(repo, number)["body"]
+    try:
+        current_valid = not errors(validate_workflow(split_body(current_body).workflow))
+    except BodyFormatError:
+        current_valid = False
+    if current_valid:
+        raise CheckFailed("current state is valid: use a normal checked apply, not repair")
+    try:
+        revisions = gh.issue_revisions(repo, number)
+    except GitHubError as error:
+        raise CheckFailed(f"cannot fetch the issue's edit history: {error}") from error
+    matches = [body for rid, body in revisions if rid == revision_id]
+    if not matches:
+        raise CheckFailed(f"revision {revision_id!r} is not in issue #{number}'s edit history")
+    baseline = matches[0]
+    try:
+        baseline_state = split_body(baseline)
+        baseline_errors = errors(validate_workflow(baseline_state.workflow))
+    except BodyFormatError as error:
+        raise CheckFailed(f"revision {revision_id} does not parse: {error}") from error
+    if baseline_errors:
+        raise CheckFailed(
+            f"revision {revision_id} is not a valid state: " + "; ".join(map(str, baseline_errors))
+        )
+    if dry_run:
+        return baseline
+    gh.edit_issue_body(repo, number, baseline)
+    _verify_remote(gh, repo, number, baseline_state.state, baseline)
+    return baseline
+
+
+def candidate_report(gh: GitHub, workflow: Any, require_ready: bool) -> Report:
+    """Exact-SHA candidate checks for `code`/`docs` (§5, §11.3). Validates first: an invalid state
+    is a failed check and its candidates are not consumed (CE-PROC-L13-01 rules 5 and 7)."""
     report = Report()
+    invalid = errors(validate_workflow(workflow))
+    if invalid:
+        report.check(False, "state block valid: " + "; ".join(map(str, invalid)))
+        return report
     for side, candidate in candidates(workflow).items():
         if candidate is None:
             continue  # this side has no candidate at all
-        if not isinstance(candidate, dict) or not candidate.get("sha"):
+        if not candidate.get("sha"):
             report.check(False, f"{side} candidate records an exact SHA")
             continue
         repo, sha = REPOS[side], candidate["sha"]
         report.check(gh.commit_exists(repo, sha), f"{side} {sha[:12]} remote-reachable")
         pr_number = candidate.get("pr")
-        if not isinstance(pr_number, int):
+        if pr_number is None:
             continue
-        pr = gh.pr(repo, pr_number)
+        try:
+            pr = gh.pr(repo, pr_number)
+        except GitHubError as error:  # a well-formed reference to a PR GitHub cannot return
+            report.check(False, f"{side} PR #{pr_number} exists: {error}")
+            continue
         merged = candidate.get("merged_sha")
         if merged is not None:
             # an accepted baseline: the claim itself is verified, never trusted to switch checks off
             commit = pr.get("mergeCommit") or {}
             report.check(pr["state"] == "MERGED", f"{side} PR #{pr_number} merged")
-            report.check(
-                commit.get("oid") == merged, f"{side} PR #{pr_number} merge commit == {str(merged)[:12]}"
-            )
+            report.check(commit.get("oid") == merged, f"{side} PR #{pr_number} merge commit == {merged[:12]}")
             report.check(pr["headRefOid"] == sha, f"{side} PR #{pr_number} merged head == {sha[:12]}")
             report.check(
                 gh.contains(repo, gh.default_branch(repo), merged), f"{side} merge on the default branch"
@@ -131,28 +201,34 @@ def candidate_report(gh: GitHub, workflow: dict[str, Any], require_ready: bool) 
 
 
 def handoff_report(gh: GitHub, repo: str, number: int) -> Report:
-    """Handoff validation (`agent-workflow.md` §11.11)."""
+    """Handoff validation (`agent-workflow.md` §11.11). Never raises on malformed coordination data:
+    it reports HANDOFF_BLOCKED instead (CE-PROC-L13-01 rule 4)."""
     issue = gh.issue(repo, number)
-    body = split_body(issue["body"])
-    workflow = body.workflow
     report = Report()
     report.check(issue["state"] == "OPEN", "coordination issue OPEN")
-    status = workflow.get("status")
+    try:
+        workflow = split_body(issue["body"]).workflow
+    except BodyFormatError as error:
+        report.check(False, f"state block parses: {error}")
+        return report
+    invalid = errors(validate_workflow(workflow))
     report.check(
-        status not in NON_ACTIONABLE | {"BLOCKED_FOR_OWNER"},
-        f"status {status} permits a handoff",
+        not invalid, "state block valid" + ("" if not invalid else ": " + "; ".join(map(str, invalid)))
     )
-    report.check(not errors(validate_workflow(workflow)), "state block valid")
+    if invalid:
+        return report
+    status = workflow["status"]
+    report.check(status not in NON_ACTIONABLE | {"BLOCKED_FOR_OWNER"}, f"status {status} permits a handoff")
     report.check(bool(workflow.get("next_owner")), "NEXT_OWNER present")
     report.check(bool(workflow.get("next_action")), "NEXT_ACTION present")
     quarantine = workflow.get("quarantine") or {}
     report.check(
-        not (isinstance(quarantine, dict) and quarantine.get("derived_from_quarantined_artifact")),
+        not quarantine.get("derived_from_quarantined_artifact"),
         "candidate not derived from a quarantined artifact",
     )
-    candidates = candidate_report(gh, workflow, require_ready=status in REVIEW_OR_HANDOFF_STATES)
-    report.ok += candidates.ok
-    report.failed += candidates.failed
+    found = candidate_report(gh, workflow, require_ready=status in REVIEW_OR_HANDOFF_STATES)
+    report.ok += found.ok
+    report.failed += found.failed
     return report
 
 

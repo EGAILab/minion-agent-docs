@@ -248,3 +248,34 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review)
 ```
+
+---
+
+## Implementation (after AGREED FOR IMPLEMENTATION at `fb2b1e8e`, Codex `#204` comment `5923479469`)
+
+The agreed revisions 1–3 are implemented in `process/tools/minion_process/{validate,ops,model,github,cli}.py`.
+
+**Witnesses:** `process/tools/tests/test_ce_proc_l13_01.py`, 107 tests:
+- the field × class table (35 + 9 v2 rows), with 9 documented-valid positive forms;
+- Codex's three refined witnesses, each across validation, handoff and the candidate check;
+- the CLI status v1/v2 positives (exact PR/SHA printed; no `PR None`), and malformed/unparseable state → exit 1 for every read command;
+- the mutation boundary: current invalid → refused before any use; intended invalid → refused; zero writes each time;
+- scope controls: a patch's own `RuntimeError` and a `GitHubError` propagate;
+- restore-only repair:
+  - positive: a byte-identical restore, then a legal `apply`;
+  - refusals: an illegal follow-up (`SCOPING` → `RUST_IMPLEMENTATION`); an owner-blocked resume without provenance; an unknown revision; a history-fetch failure; an unparseable or invalid revision; a valid current state; a CLI patch/body baseline;
+- bounded Hypothesis totality over 30 consumed paths × every entry point (read-only and `commit_state` current/intended).
+
+**Found by the totality search** (3000 examples per property; each pinned as a regression):
+1. A mapping key containing U+0085 (YAML NEL) validated, was written, and only then failed the remote round trip. `apply` now refuses before writing any state that does not survive YAML serialization unchanged.
+2. `pr: 0` passed as an integer and reached a remote lookup. PR and issue numbers must now be positive, and a failed PR lookup is a failed check, not an exception.
+
+**Negative control:** the new witnesses run against the characterized implementation `cc44a13b` (scratch copy; repair witnesses fail there because `restore_revision` did not exist): **68 failed / 39 passed**. All three refined witnesses are RED there and GREEN here. The 39 that pass there are positive controls and pre-existing checks.
+
+**Gates:** 200 tool tests passed, statement coverage 100%, ruff clean, strict mypy clean. The live issues #35, #49, #50, #51 and #95 still validate.
+
+**Housekeeping:** `cc44a13b` had accidentally committed `__pycache__/` files and `.coverage`. They are untracked here, and `process/tools/.gitignore` is added.
+
+**Normative deltas:** `coordination-state.md` §13.5, and `minion-process-cli-design.md` §1.1 (rules 1–9, restore-only repair).
+
+**Status:** PROC-L13-R001 and R003 are REMEDIATED, pending Codex §11.8.7 targeted closure. R002 and R004 stay provisionally closed. The §11.8.8 final complete review of #204 follows closure.

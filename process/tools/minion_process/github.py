@@ -38,6 +38,38 @@ class GitHub:
         data: dict[str, Any] = json.loads(out)
         return data
 
+    def issue_revisions(self, repo: str, number: int) -> list[tuple[str, str]]:
+        """The issue body's edit history from GitHub itself, newest first: (revision id, full body)."""
+        owner, name = repo.split("/", 1)
+        query = (
+            "query($o:String!,$n:String!,$i:Int!,$c:String){repository(owner:$o,name:$n){issue(number:$i)"
+            "{userContentEdits(first:100,after:$c){pageInfo{hasNextPage endCursor}nodes{id diff}}}}}"
+        )
+        revisions: list[tuple[str, str]] = []
+        cursor: str | None = None
+        while True:
+            args = [
+                "api",
+                "graphql",
+                "-f",
+                f"query={query}",
+                "-F",
+                f"o={owner}",
+                "-F",
+                f"n={name}",
+                "-F",
+                f"i={number}",
+            ]
+            if cursor:
+                args += ["-F", f"c={cursor}"]
+            page = json.loads(self._run(args, None))["data"]["repository"]["issue"]["userContentEdits"]
+            revisions += [
+                (node["id"], node["diff"]) for node in page["nodes"] if isinstance(node.get("diff"), str)
+            ]
+            if not page["pageInfo"]["hasNextPage"]:
+                return revisions
+            cursor = page["pageInfo"]["endCursor"]
+
     def edit_issue_body(self, repo: str, number: int, body: str) -> None:
         self._run(["issue", "edit", str(number), "-R", repo, "--body-file", "-"], body)
 

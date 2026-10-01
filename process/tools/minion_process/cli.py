@@ -20,13 +20,14 @@ import sys
 from pathlib import Path
 
 from .github import CODE_REPO, REPOS, GitHub
-from .model import split_body
+from .model import BodyFormatError, candidates, split_body
 from .ops import (
     CheckFailed,
     candidate_report,
     commit_state,
     guarded_merge,
     handoff_report,
+    restore_revision,
     verified_comment,
 )
 from .transitions import check_transition
@@ -50,8 +51,10 @@ def main(argv: list[str] | None = None, gh: GitHub | None = None) -> int:
     transition.add_argument("new")
     apply = sub.add_parser("apply")
     apply.add_argument("issue", type=int)
-    apply.add_argument("patch")
+    apply.add_argument("patch", nargs="?")
     apply.add_argument("--dry-run", action="store_true")
+    apply.add_argument("--repair", action="store_true", help="restore an earlier revision (restore only)")
+    apply.add_argument("--revision", help="the issue edit-history revision id to restore (with --repair)")
     sub.add_parser("handoff-check").add_argument("issue", type=int)
     candidate = sub.add_parser("candidate-check")
     candidate.add_argument("issue", type=int)
@@ -88,16 +91,33 @@ def main(argv: list[str] | None = None, gh: GitHub | None = None) -> int:
         if args.command == "status":
             issue = gh.issue(args.repo, args.issue)
             w = split_body(issue["body"]).workflow
+            invalid = errors(validate_workflow(w))
+            if invalid:  # rule 4: diagnostics, never a traceback on malformed state
+                for problem in invalid:
+                    print(problem)
+                print(f"#{args.issue} INVALID")
+                return 1
             conv = w.get("convergence") or {}
-            print(f"#{args.issue} [{issue['state']}] {w.get('work_package')}: {w.get('status')}")
-            for side in ("code", "docs"):
-                c = w.get(side) or {}
-                print(f"  {side}: PR {c.get('pr')} sha {c.get('sha')}")
+            print(f"#{args.issue} [{issue['state']}] {w['work_package']}: {w['status']}")
+            for side, entry in candidates(w).items():  # rule 8: the one accessor, v1 and v2 alike
+                entry = entry or {}
+                print(f"  {side}: PR {entry.get('pr')} sha {entry.get('sha')}")
             print(f"  open findings: {w.get('open_findings') or conv.get('open_findings') or []}")
             print(f"  next: {w.get('next_owner')} -- {w.get('next_action')}")
             print(f"  body: {len(issue['body'])} chars")
             return 0
+        if args.command == "apply" and args.repair:
+            if not args.revision or args.patch:
+                parser.error("--repair takes --revision <id> and no patch: it only restores (CE-PROC-L13-01)")
+            restore_revision(gh, args.repo, args.issue, args.revision, args.dry_run)
+            print(
+                ("DRY-RUN " if args.dry_run else "")
+                + f"RESTORED #{args.issue} to {args.revision} (current state was invalid)"
+            )
+            return 0
         if args.command == "apply":
+            if not args.patch:
+                parser.error("apply needs a patch file (or --repair --revision <id>)")
             patch = runpy.run_path(args.patch)
             changed, _ = commit_state(
                 gh, args.repo, args.issue, patch["apply"], set(patch["ALLOWED"]), args.dry_run
@@ -127,7 +147,7 @@ def main(argv: list[str] | None = None, gh: GitHub | None = None) -> int:
             kind = "pr" if args.pr else "issue"
             print(verified_comment(gh, _repo(args.repo), args.number, text, kind), "byte-verified")
             return 0
-    except CheckFailed as failure:
+    except (CheckFailed, BodyFormatError) as failure:
         print(failure, file=sys.stderr)
         return 1
     return 2  # pragma: no cover  (argparse requires a known command)

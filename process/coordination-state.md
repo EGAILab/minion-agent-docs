@@ -659,3 +659,27 @@ Migration is incremental and per issue, performed when that issue next changes o
 
 Parsers of v1 keep working: `code`/`docs` stay accepted, and `current_candidate` is an alternative, not a replacement, until every open issue is migrated.
 
+### 13.5 Field shapes and entry points (normative, CE-PROC-L13-01)
+
+The field table and the entry-point table in `assurance/process-ce-proc-l13-01.md`, revisions 1–3 (agreed), are the normative shape rules for every field a coordination tool consumes. In summary:
+
+- **Identity.** `work_package` is a required non-empty string; `title` and `layer` are optional strings.
+- **Control fields** (`next_owner`, `next_action`, `updated_by`, `updated_reason`) are strings or null. `schema_version` ∈ {1, 2}.
+- **Candidates.**
+  - A `code`/`docs` side is a mapping or null (null means no candidate).
+  - `pr` is a positive integer. `sha` and `merged_sha` are 40-hex.
+  - `sha` is required with `pr` or `merged_sha`, and `merged_sha` requires `pr`.
+  - A v2 `current_candidate` is a mapping whose only keys are `code`/`docs`. It is never mixed with top-level `code`/`docs`, and a malformed one is never read as absent.
+- **Containers** are validated before their elements, at every depth:
+  - `requirements`, `open_findings`, `provisionally_closed`, `convergence.open_findings` and `convergence.provisionally_closed` take finding/requirement IDs;
+  - `convergence.provisionally_closed` also accepts the §6 `{finding, …}` mapping;
+  - the v1 top-level ID → details mapping is a warning in v1 and an error in v2.
+- **Other shapes:**
+  - `governance_source` and `deferred_trigger` are a mapping, a non-empty string, or null;
+  - `quarantine` is a mapping with a boolean flag;
+  - v2 `dependencies` maps a name to `{issue, relation}`;
+  - v2 `history` is a mapping.
+- **Entry points** validate the state they consume before consuming it:
+  - validation and the read-only operations are total, reporting diagnostics and never raising;
+  - a mutation refuses an invalid *current* or *intended* state with zero writes, and refuses a state YAML cannot carry unchanged;
+  - an invalid current state is repaired only by restoring, byte for byte, an earlier valid revision from the issue's own GitHub edit history, then making changes with a normal checked mutation.

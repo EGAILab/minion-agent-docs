@@ -35,6 +35,26 @@ Each is covered offline by `process/tools/tests/` (fake `gh`, 100% statement cov
 - **historical-replay tests** for #49, #79 and #88 transitions;
 - **transport-corruption tests**: a flattened body, a remote rewrite, a mangled comment.
 
+### 1.1 Fail-closed control data (CE-PROC-L13-01, rules 1–9)
+
+1. **Coverage.** Every field and entry point the tool consumes has a shape rule (`coordination-state.md` §13.5).
+2. **No reinterpretation.** A supplied malformed value is an error: never treated as absent, defaulted, or rerouted to another form.
+3. **Element after container**, at every depth.
+4. **Totality.** Validation and the read-only operations (`candidate_report`, `handoff-check`, `candidate-check`, `status`, `validate`) never raise on malformed coordination data; they report diagnostics or `HANDOFF_BLOCKED`.
+5. **Fail closed.** An invalid state fails every candidate and handoff check.
+6. **Merged baseline.** `merged_sha` requires `pr` and `sha`, and it is verified remotely. A failed PR lookup is a failed check.
+7. **Entry-point coverage.** `apply` validates the current state before any use, then the intended state. It also refuses a state that does not survive YAML serialization unchanged, all before writing.
+8. **One accessor.** Every consumer reads candidates through `model.candidates`, so v1 and v2 are read alike.
+9. **Scope.** `apply` raises only `CheckFailed` / `BodyFormatError` for malformed coordination data. Remote `GitHubError`s and exceptions raised by the caller's patch code propagate unchanged.
+
+**Repair:** `apply <issue> --repair --revision <id>` restores, byte for byte, an earlier revision from the issue's own GitHub edit history.
+- **Preconditions:** the current state must be invalid, and the revision must exist, parse and validate. Otherwise it refuses with zero writes.
+- **It is never a transition**, and it takes no caller body or patch. Any change after it is an ordinary checked `apply`.
+
+**Evidence:** `tests/test_ce_proc_l13_01.py`.
+- The field/class table, the refined witnesses, CLI v1/v2 positives, the mutation boundary, scope controls, and every repair positive and refusal.
+- Bounded Hypothesis totality over 30 consumed paths × every entry point. A 3000-example search found and pinned two defects: a YAML-unsafe key written before detection, and `pr: 0`.
+
 ## 2. Phase C2 — next (design)
 
 | Command | Enforces |

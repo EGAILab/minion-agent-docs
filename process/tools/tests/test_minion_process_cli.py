@@ -162,7 +162,7 @@ def test_gh_runner(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_legacy_mapping_findings_warn_in_v1_and_fail_in_v2() -> None:
-    legacy = workflow(open_findings={"R1": {"state": "OPEN"}})
+    legacy = workflow(open_findings={"L13-X-R1": {"state": "OPEN"}})
     problems = validate_workflow(legacy)
     assert errors(problems) == [] and [p.path for p in problems] == ["open_findings"]
     assert errors(validate_workflow({**legacy, "schema_version": 2}))
@@ -175,7 +175,7 @@ def test_v2_current_candidate_is_read(fake: FakeGitHub) -> None:
     assert errors(validate_workflow(v2)) == []
     assert candidate_report(GitHub(fake.run), v2, require_ready=True).ok
     bad = {**v2, "current_candidate": {"code": {"pr": 1, "sha": "short"}}}
-    assert "code.sha" in [p.path for p in errors(validate_workflow(bad))]
+    assert "current_candidate.code.sha" in [p.path for p in errors(validate_workflow(bad))]
 
 
 # --- PROC-L13-R001: exact-candidate checks never fail open (Codex reviewer witnesses) ---------
@@ -190,7 +190,7 @@ def test_a_pr_without_a_recorded_sha_is_invalid_and_blocks_handoff(fake: FakeGit
     assert "code.sha" in [p.path for p in errors(validate_workflow(w))]
     _bad_pr(fake)
     report = candidate_report(GitHub(fake.run), w, require_ready=True)
-    assert "code candidate records an exact SHA" in report.failed
+    assert any(label.startswith("state block valid") and "code.sha" in label for label in report.failed)
 
 
 def test_an_unverified_merged_claim_never_switches_checks_off(fake: FakeGitHub) -> None:
