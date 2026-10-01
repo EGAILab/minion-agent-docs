@@ -392,3 +392,89 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review; no implementation before APPROVED)
 ```
+
+---
+
+## Checkpoint revision 5: response to C-PROC-L13-01-04 / -05 (Codex, REJECTED at `8e73c8b5`)
+
+- **Review:** `#204` comment `5925419210`, published verbatim on Codex's behalf.
+- **Accepted:** both findings.
+- **Unchanged:** the revision-4 root abstraction (the loader is a constructor pipeline) and L1/L3/L4, except where stated below.
+
+### Missing dimension 1 (C-04), expanded to its neighborhood
+
+The loaded **value**, not just the load, is part of the boundary. A successful load can yield a **cyclic graph**: `workflow: &W {history: *W}`, or `{history: &H [*H]}`. Expanding to every *recursive consumer* the tool runs **after** a load, probed directly:
+- `copy.deepcopy` and `yaml.safe_dump` survive cycles (memoization), but raise `RecursionError` on a legal, *acyclic* 3000-level structure;
+- the validator walk recurses;
+- comparing two distinct cyclic graphs (the round-trip equality check) recurses without end.
+
+So both **cycles** and **depth** are part of the boundary.
+
+### Rules (replacing revision 4's L2; L1 extended)
+
+- **L1′: controlled totality** covers loading **and** the post-load domain/graph check. Any `Exception` from either is a `BodyFormatError` with a diagnostic. Remote errors, caller patch exceptions and non-`Exception` `BaseException`s stay outside, as in rule 9.
+- **L2′: an acyclic, depth-bounded JSON graph.** A loaded state is accepted only if it is an **acyclic** graph of JSON-domain nodes (mappings with string keys, lists, strings, ints, floats, bools, null) whose nesting depth is at most **`MAX_DEPTH = 64`**.
+  - The check is **iterative**: an explicit stack, with no recursion of its own.
+  - **Cycles:** a node reached again *on its own ancestor path* is a cycle and is rejected.
+  - **Shared aliases:** a node shared across siblings (acyclic sharing, such as #49's `&id001`) is accepted.
+  - **Why the bound is safe:** every recursive consumer the tool runs afterwards (`deepcopy`, `safe_dump`, the validator, equality) is then safe by construction. 64 exceeds any real state block's depth (live maximum: 6) with a wide margin.
+- **L3 is unchanged:** a resolver restricted to the YAML 1.2 core / JSON schema. Its **consequences are now stated as outcomes**; see the split table.
+- **L4 is unchanged:** write/read symmetry. The pre-write round trip also runs L2′, so no state deeper than 64 or cyclic is ever written.
+
+### Witness table, split (C-05)
+
+**Historical characterization (old `SafeLoader`; evidence only, not acceptance instruction):** see revision 4's E1/E2/E3 table.
+
+**Intended outcomes under L1′–L4:**
+
+| Input | Load outcome | Workflow validation | Repair: current state | Repair: as baseline |
+|---|---|---|---|---|
+| `updated_reason: 2026-02-30` (implicit) | **string** `"2026-02-30"` | valid (an optional string) | current is valid → repair refused; normal `apply` works | valid baseline → restorable |
+| `work_package: 2026-02-30` | string | valid | as above | as above |
+| `next_owner: no` | **string** `"no"` | **workflow error** (unknown owner) | current invalid → restorable from a valid revision | invalid baseline → refused |
+| `yes: 1` (top-level key) | **string key** `"yes"` | valid (an extra key) | current valid → repair refused | valid → restorable |
+| `x: 1:30` / `<<: …` | string `"1:30"` / literal key `"<<"` | valid if in a free field | as for valid | as for valid |
+| `!!timestamp 2026-02-30` | **`BodyFormatError`** (E1: `ValueError` contained) | — | restorable from a valid revision | refused (does not parse) |
+| `!!timestamp 2026-02-28` | **`BodyFormatError`** (L2′: date) | — | restorable | refused |
+| `!!int not-an-int`, `!!float abc`, `!!bool maybe` | `BodyFormatError` (E1) | — | restorable | refused |
+| `!!binary aGk=`, `!!binary '@@@'`, `!!set`, `!!omap`, `!!pairs` | `BodyFormatError` (L2′: bytes / set / tuple) | — | restorable | refused |
+| `!!int 1: a`, `!!bool true: a`, `!!null '': a` (tagged keys) | `BodyFormatError` (L2′: non-string key) | — | restorable | refused |
+| `workflow: &W {history: *W}` (self-map) | `BodyFormatError` (L2′: cycle) | — | restorable | refused |
+| `workflow: {history: &H [*H]}` (self-list) | `BodyFormatError` (cycle) | — | restorable | refused |
+| indirect cycle `a: &A {b: {c: *A}}` | `BodyFormatError` (cycle) | — | restorable | refused |
+| acyclic shared alias `a: &A {x: 1}` + `b: *A` (and #49's real body) | **loads** (sharing accepted) | valid / as #49 | not repairable (valid) | restorable |
+| depth 65 (acyclic) | `BodyFormatError` (L2′: depth) | — | restorable | refused |
+| depth 64 (acyclic) | loads | valid if well-formed | — | — |
+| 5000-deep `[[[…]]]` | `BodyFormatError` (L1′: `RecursionError` contained) | — | restorable | refused |
+| an invalid YAML syntax class (revision-3 witnesses) | `BodyFormatError` | — | restorable | refused |
+
+**For every row:**
+- the read commands give a diagnostic and exit 1 when load or validation fails, and never a traceback;
+- `apply` on a failing current state makes zero writes;
+- the CLI `repair` exit codes match the table.
+
+**The grammar-based property** keeps aliases, cycles and depth as explicit generator dimensions: it generates YAML with anchors and back-references, including self-, indirect and shared references, and depths around 64. The assertions are totality at every entry point, plus L2′ on every successful load.
+
+**Negative control:** the record will report results **per intended outcome**, each row × entry point against `e574d9f5`, not as one collective count. Rows whose intended outcome the old candidate already met, e.g. a valid implicit-date string as `updated_reason`, are reported as such: they are regressions guarding L3, not RED witnesses.
+
+### Checkpoint, revision 5
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 5)
+
+OPEN FINDINGS
+    PROC-L13-R003
+
+ROOT ABSTRACTION
+    load boundary = constructor pipeline (rev 4) + the loaded value is a graph:
+    L1' totality over load AND post-load check; L2' acyclic, depth <= 64, JSON-domain, iterative check;
+    L3 YAML 1.2 core resolver; L4 symmetry
+
+ACCEPTANCE WITNESSES
+    the split intended-outcome table x every entry point; graph/depth generator dimensions;
+    per-outcome results against e574d9f5
+
+NEXT_OWNER
+    Codex (checkpoint review; no implementation before APPROVED)
+```
