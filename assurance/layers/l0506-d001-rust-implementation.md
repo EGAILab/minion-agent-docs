@@ -225,3 +225,119 @@ INDEPENDENT CLOSURE REVIEW**; cross-language remains **NOT CLOSED** until the
 required review and accepted-branch integration. Transfer issue #88 to
 `CLOSURE_REVIEW`, `NEXT_OWNER: Claude` for exact-SHA verification of both PRs.
 No merge or later WP-13.2 implementation is performed in this pass.
+
+## RC001 remediation after independent closure review
+
+The preceding candidate assessment is historical. Independent review of code
+`2ed140396a956955588de4d9d70d8be45861d70d` / docs
+`5ae09b32d42ac9511299e6d38084375389c2cad9` found
+`L0506-D001-RC001` (`PI_PARITY_DEFECT`): the Rust validator applied numeric
+keywords to non-finite runtime values. That assessment did not certify Rust.
+Review: https://github.com/EGAILab/minion-agent-docs/pull/203#issuecomment-5922416518.
+
+### Accepted baseline and scope
+
+RC002's shared correction was independently approved and merged before this
+remediation started. Accepted defaults:
+
+- Code: `537304b23a53e592e690d33237b9b160a6bfe92d` (#96).
+- Docs: `b216eb6a2979e3273ef9105cefb71855250aef80` (#205).
+- Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
+
+Both default commits were verified remotely using GitHub's connector and merged
+into the existing local implementation/assurance branches without rewriting
+their history. Issue #88 explicitly authorizes Codex's RC001 remediation against
+these merged defaults. RC002 remains closed; I001/I002's settled shared/Python
+convergence rules are unchanged.
+
+This is RC001's first remediation attempt after the Rust closure finding, not
+another attempt at the settled Python convergence mechanism. Its observable
+rule and finite controls are fixed by the accepted RC002 contract. No new
+semantic decision, architectural mapping or lower-layer reopen is introduced.
+
+### Production and runner changes
+
+`RuntimeKeyword` now treats `minimum`, `maximum`, `exclusiveMinimum`,
+`exclusiveMaximum` and `multipleOf` as inapplicable to non-finite instances.
+The existing JSON Schema engine still owns composition, references and traversal:
+two successful bound branches make `oneOf` reject, and `not` reverses a successful
+bound. Explicit declared-type rejection remains unchanged. Finite instances use
+the existing keyword validator, including finite siblings in objects containing
+non-finites and older-draft exclusive-bound modifiers. No prepared value is
+clamped, projected, stringified or replaced.
+
+The thin canonical runner adds only the eight approved schema fixtures. It
+executes the actual preparation/validation/hook/execute seam; it does not
+implement applicability or branch verdicts. Aggregate failure reporting now
+evaluates every discovered case instead of stopping at the first mismatch.
+TOOL-041's Rust evidence pointer is updated to the 50-case corpus; shared rules,
+dispositions, Python production, schemas and expected outcomes are unchanged.
+
+### Discriminating evidence
+
+Before changing production, the new fixture dispatch and regression tests were
+run against the rejected Rust implementation's unchanged validator:
+
+- Canonical RED: four delta documents / 50 executed cases / 12 failed.
+  Failures were maximum (+Infinity, NaN), minimum (-Infinity, NaN),
+  exclusive maximum (+Infinity), exclusive minimum (-Infinity), multipleOf
+  (+Infinity, NaN), oneOf bounds (+Infinity, -Infinity), and not bounds
+  (+Infinity, NaN). This is the count for the new canonical corpus, not the
+  independent review's separate 49-cell matrix / 13-cell finding count.
+- Both focused validator tests were RED: non-finite -Infinity under minimum
+  was incorrectly rejected, and the oneOf bound witness incorrectly accepted.
+- Restored/fixed production GREEN: all 50 cases passed; both focused tests
+  passed. The full canonical target's four tests passed, including all six
+  permanent preparation/hook-loss negative controls.
+- Permanent validator evidence covers all three non-finites under all five
+  numeric keywords, finite rejection on both the JSON-only and extended paths,
+  `oneOf`, `not`, `anyOf`, `allOf`, declared-number rejection, references and
+  nested arrays. Prior declared-type/nullable, equality, tag-collision and
+  older-dialect tests remain in place.
+
+The known-bad production source is the validator from code PR #94 at
+`2ed140396a956955588de4d9d70d8be45861d70d`, unchanged by merging RC002.
+The earlier seventh declared-type mutation is historical evidence, not a
+newly-executed mutation claimed by this pass. The six permanent fixture controls
+and the new RC001 production RED/GREEN controls are freshly executed here.
+
+### Gate results and publication
+
+Final full gate results and exact candidate/publication state are recorded in
+the completion addendum below. Rust remains a remediation candidate pending
+Claude's independent targeted closure; RC001 is not self-declared closed.
+No Rust/Python WP-13.2 implementation or later-layer work is authorized here.
+
+### RC001 completion addendum
+
+Fresh gates on the remediated tree:
+
+- `cargo fmt --all -- --check`: PASS.
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`: PASS.
+- `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps`: PASS.
+- `cargo run -p xtask -- conformance verify`: PASS.
+- Shared schema/manifest validation: 307 passed.
+- Delta canonical target: 4 tests passed, 4 documents / 50 cases passed;
+  six permanent negative controls killed.
+- `cargo test --workspace --all-features --no-fail-fast --quiet`:
+  **427 passed / 9 failed**, exit 1. The full regression gate is NOT green.
+
+The failures are in unchanged execution tests: `execution_process` (2 Windows
+sharing-violation errors at temporary-directory cleanup),
+`execution_read_write_access` (2 ACL assertions returning success),
+`execution_readability` (2 ACL assertions returning success), and
+`execution_shell` (3 failures with WSL `E_ACCESSDENIED` output). The process
+target also reproduced both failures in an independent targeted retry. Git
+comparison against accepted main proves these tests and execution production
+sources are unchanged; this is not a claim that the accepted baseline was
+independently executed here. No unrelated execution patch or skipped test was
+used to manufacture a passing gate. This environment cannot establish full
+certification; the complete suite must be reproduced in a capable environment.
+
+GitHub read access verified the accepted defaults and open candidate heads.
+GitHub mutations are unavailable under this session's approval policy, and
+terminal fetch fails connecting to `github.com:443`. Completion/push status and
+exact local commit identities are therefore recorded separately in
+`.tmp/rc001-remediation/HANDOFF.md`. Local-only commits are not remote-reachable
+review candidates. RC001 awaits independent targeted closure; no certification,
+issue-state transition, merge, or later work is claimed.
