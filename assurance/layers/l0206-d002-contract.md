@@ -292,3 +292,20 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review; no implementation before APPROVED)
 ```
+
+### Implementation of checkpoint revision 2 (after AGREED FOR IMPLEMENTATION, Codex `#210` comment `5929956207`)
+
+- **Authority.** 5 new Pi number cases (characterization addendum 2). The number document grows from 10 to 15 cases, 38 in all.
+- **Runner** (`raw_arguments_runner.py`):
+  - **N2:** `number()` decodes through `float(token)`, and an integral spelling becomes `int(float(token))`.
+  - **N3':** `observe()` uses `is_binary64_int`. The float conversion's `OverflowError` is caught, and the marker is `{"non_binary64_int": hex(v)}`. Hex is exempt from the digit limit, and no process-wide setting is touched.
+  - **N4:** `check()` compares against `expect(case["arguments"])`, which is computed from the scenario text.
+- **Witnesses** (`tests/session/test_raw_arguments_negative_controls.py`):
+  - **Totality:** 12 out-of-domain ints, covering both signs at the float-overflow midpoint and the 4300-digit boundaries, and `10**5000`. Each yields the hex marker without raising, and the digit limit is unchanged.
+  - **Exact ints:** 4 exact binary64 ints render as their tokens.
+  - **Decoder mutant** (`int(token)`): killed by the canonical `number/±1000000000000000100` cases, and GREEN without the mutant.
+  - **Lossy observer:** killed by direct units on `±1000000000000000100` and `9007199254740993`.
+  - **Single-seam wrong values:** `1000000000000000100` delivered where `…128` is due, at the hook, execute, start, update event, update delivery and replay. Each is refused by the strict runner, and the seam's own observation differs.
+  - **Demonstration:** the hook-seam wrong value is refused with the strict observer and accepted with the lossy observer monkeypatched in.
+  - The earlier R002 witnesses (preflight, schema, the `2^53+1` hook) remain.
+- **Status:** R002 is REMEDIATED against the revision-2 agreement, pending §11.8.7 targeted closure. R001 stays provisionally closed.

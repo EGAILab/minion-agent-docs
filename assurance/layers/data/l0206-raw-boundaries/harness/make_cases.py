@@ -43,6 +43,12 @@ NUMBERS = {
     "underflow-to-zero": "1e-400",
     "negative-underflow": "-1e-400",
     "smallest-subnormal": "5e-324",
+    # CE-L0206-D002-01 (R002): integer-looking spellings whose exact binary64 value differs, and their controls
+    "exact-1e18": "1000000000000000000",
+    "non-exact-integer-spelling": "1000000000000000100",
+    "non-exact-integer-spelling-negative": "-1000000000000000100",
+    "integral-exponent-1e21": "1e21",
+    "fraction-0.1": "0.1",
 }
 # K1 (L0206-D001) decision sections 2/3: key neighborhood; nested objects
 KEYS = {

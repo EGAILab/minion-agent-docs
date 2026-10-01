@@ -128,6 +128,26 @@
   "text": "{\"n\":5e-324}"
  },
  {
+  "id": "number/exact-1e18",
+  "text": "{\"n\":1000000000000000000}"
+ },
+ {
+  "id": "number/non-exact-integer-spelling",
+  "text": "{\"n\":1000000000000000100}"
+ },
+ {
+  "id": "number/non-exact-integer-spelling-negative",
+  "text": "{\"n\":-1000000000000000100}"
+ },
+ {
+  "id": "number/integral-exponent-1e21",
+  "text": "{\"n\":1e21}"
+ },
+ {
+  "id": "number/fraction-0.1",
+  "text": "{\"n\":0.1}"
+ },
+ {
   "id": "keys/mixed-index-first",
   "text": "{\"b\":1,\"2\":2,\"1\":3,\"a\":4}"
  },

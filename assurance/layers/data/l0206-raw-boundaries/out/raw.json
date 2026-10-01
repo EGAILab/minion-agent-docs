@@ -2753,6 +2753,371 @@
    }
   },
   {
+   "id": "number/exact-1e18",
+   "decode": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1000000000000000000"
+      }
+     ]
+    ]
+   },
+   "persisted_line": "{\"type\":\"message\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"toolCall\",\"id\":\"call-1\",\"name\":\"probe\",\"arguments\":{\"n\":1000000000000000000}}]}}",
+   "persisted_utf8_hex": "7b2274797065223a226d657373616765222c226d657373616765223a7b22726f6c65223a22617373697374616e74222c22636f6e74656e74223a5b7b2274797065223a22746f6f6c43616c6c222c226964223a2263616c6c2d31222c226e616d65223a2270726f6265222c22617267756d656e7473223a7b226e223a313030303030303030303030303030303030307d7d5d7d7d0a",
+   "replay": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1000000000000000000"
+      }
+     ]
+    ]
+   },
+   "pipeline": {
+    "outcome": "prepared",
+    "hook": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1000000000000000000"
+       }
+      ]
+     ]
+    },
+    "execute": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1000000000000000000"
+       }
+      ]
+     ]
+    },
+    "update_events": [
+     {
+      "o": [
+       [
+        [
+         110
+        ],
+        {
+         "n": "1000000000000000000"
+        }
+       ]
+      ]
+     }
+    ],
+    "update_args_is_raw_object": true,
+    "hook_is_raw_object": false,
+    "execute_is_hook_object": true
+   }
+  },
+  {
+   "id": "number/non-exact-integer-spelling",
+   "decode": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1000000000000000100"
+      }
+     ]
+    ]
+   },
+   "persisted_line": "{\"type\":\"message\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"toolCall\",\"id\":\"call-1\",\"name\":\"probe\",\"arguments\":{\"n\":1000000000000000100}}]}}",
+   "persisted_utf8_hex": "7b2274797065223a226d657373616765222c226d657373616765223a7b22726f6c65223a22617373697374616e74222c22636f6e74656e74223a5b7b2274797065223a22746f6f6c43616c6c222c226964223a2263616c6c2d31222c226e616d65223a2270726f6265222c22617267756d656e7473223a7b226e223a313030303030303030303030303030303130307d7d5d7d7d0a",
+   "replay": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1000000000000000100"
+      }
+     ]
+    ]
+   },
+   "pipeline": {
+    "outcome": "prepared",
+    "hook": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1000000000000000100"
+       }
+      ]
+     ]
+    },
+    "execute": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1000000000000000100"
+       }
+      ]
+     ]
+    },
+    "update_events": [
+     {
+      "o": [
+       [
+        [
+         110
+        ],
+        {
+         "n": "1000000000000000100"
+        }
+       ]
+      ]
+     }
+    ],
+    "update_args_is_raw_object": true,
+    "hook_is_raw_object": false,
+    "execute_is_hook_object": true
+   }
+  },
+  {
+   "id": "number/non-exact-integer-spelling-negative",
+   "decode": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "-1000000000000000100"
+      }
+     ]
+    ]
+   },
+   "persisted_line": "{\"type\":\"message\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"toolCall\",\"id\":\"call-1\",\"name\":\"probe\",\"arguments\":{\"n\":-1000000000000000100}}]}}",
+   "persisted_utf8_hex": "7b2274797065223a226d657373616765222c226d657373616765223a7b22726f6c65223a22617373697374616e74222c22636f6e74656e74223a5b7b2274797065223a22746f6f6c43616c6c222c226964223a2263616c6c2d31222c226e616d65223a2270726f6265222c22617267756d656e7473223a7b226e223a2d313030303030303030303030303030303130307d7d5d7d7d0a",
+   "replay": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "-1000000000000000100"
+      }
+     ]
+    ]
+   },
+   "pipeline": {
+    "outcome": "prepared",
+    "hook": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "-1000000000000000100"
+       }
+      ]
+     ]
+    },
+    "execute": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "-1000000000000000100"
+       }
+      ]
+     ]
+    },
+    "update_events": [
+     {
+      "o": [
+       [
+        [
+         110
+        ],
+        {
+         "n": "-1000000000000000100"
+        }
+       ]
+      ]
+     }
+    ],
+    "update_args_is_raw_object": true,
+    "hook_is_raw_object": false,
+    "execute_is_hook_object": true
+   }
+  },
+  {
+   "id": "number/integral-exponent-1e21",
+   "decode": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1e+21"
+      }
+     ]
+    ]
+   },
+   "persisted_line": "{\"type\":\"message\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"toolCall\",\"id\":\"call-1\",\"name\":\"probe\",\"arguments\":{\"n\":1e+21}}]}}",
+   "persisted_utf8_hex": "7b2274797065223a226d657373616765222c226d657373616765223a7b22726f6c65223a22617373697374616e74222c22636f6e74656e74223a5b7b2274797065223a22746f6f6c43616c6c222c226964223a2263616c6c2d31222c226e616d65223a2270726f6265222c22617267756d656e7473223a7b226e223a31652b32317d7d5d7d7d0a",
+   "replay": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "1e+21"
+      }
+     ]
+    ]
+   },
+   "pipeline": {
+    "outcome": "prepared",
+    "hook": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1e+21"
+       }
+      ]
+     ]
+    },
+    "execute": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "1e+21"
+       }
+      ]
+     ]
+    },
+    "update_events": [
+     {
+      "o": [
+       [
+        [
+         110
+        ],
+        {
+         "n": "1e+21"
+        }
+       ]
+      ]
+     }
+    ],
+    "update_args_is_raw_object": true,
+    "hook_is_raw_object": false,
+    "execute_is_hook_object": true
+   }
+  },
+  {
+   "id": "number/fraction-0.1",
+   "decode": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "0.1"
+      }
+     ]
+    ]
+   },
+   "persisted_line": "{\"type\":\"message\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"toolCall\",\"id\":\"call-1\",\"name\":\"probe\",\"arguments\":{\"n\":0.1}}]}}",
+   "persisted_utf8_hex": "7b2274797065223a226d657373616765222c226d657373616765223a7b22726f6c65223a22617373697374616e74222c22636f6e74656e74223a5b7b2274797065223a22746f6f6c43616c6c222c226964223a2263616c6c2d31222c226e616d65223a2270726f6265222c22617267756d656e7473223a7b226e223a302e317d7d5d7d7d0a",
+   "replay": {
+    "o": [
+     [
+      [
+       110
+      ],
+      {
+       "n": "0.1"
+      }
+     ]
+    ]
+   },
+   "pipeline": {
+    "outcome": "prepared",
+    "hook": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "0.1"
+       }
+      ]
+     ]
+    },
+    "execute": {
+     "o": [
+      [
+       [
+        110
+       ],
+       {
+        "n": "0.1"
+       }
+      ]
+     ]
+    },
+    "update_events": [
+     {
+      "o": [
+       [
+        [
+         110
+        ],
+        {
+         "n": "0.1"
+        }
+       ]
+      ]
+     }
+    ],
+    "update_args_is_raw_object": true,
+    "hook_is_raw_object": false,
+    "execute_is_hook_object": true
+   }
+  },
+  {
    "id": "keys/mixed-index-first",
    "decode": {
     "o": [
