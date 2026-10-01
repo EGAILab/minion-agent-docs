@@ -189,3 +189,10 @@ Both were recorded by Owner decision (§13 of each), and both were caught **befo
 - A test enforces that no runner reads `$PI/package-lock.json`.
 - `runner_witness.sh` reproduces the attack on a disposable shared clone. It FAILS with no authority output on all four fixed runners, and PASSES with the correct artifact. It is RED against the pre-fix runner (`91e6d56`), where it reproduces Codex's forged SRI `qwBwh73i…` and the authority runs.
 - All four authorities remain byte-identical in offline host mode, including WP-13.2's `mutants.json`.
+
+## Post-merge evidence: `WP132-RUST-C002`, the tool-result domain, found at Rust implementation
+
+- **Incident.** Rust WP-13.2's resume, after `L0506-D002` certified the prepared-string domain, found that a successful `edit`'s `details.diff`/`details.patch` keep the prepared `newText`'s unpaired surrogate (file bytes `EF BF BD`, details D800). Rust's `AgentToolResult.details: serde_json::Value` cannot hold it (Codex, `minion-agent#49` comment `5933146445`).
+- **Why it was not caught earlier.** The D002 matrix audited the value as it **enters** `execute` (prepared instance), and its four-domain table (§1.1) had no row for values a tool **returns**. The result carrier, which flows through the after-hook, `tool_execution_end`, `ToolResultMessage` and persistence, was nobody's row.
+- **Resolution.** Owner decision `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`): a separate delta `L0506-D003` (`minion-agent#112`) at the shared tool-result boundary. Its §6 lets same-carrier neighbors (surrogate keys, `NaN`/±Infinity) fold in at once, instead of being found one review at a time (C002 → C003 → C004).
+- **Lesson (§18).** This is the fourth time a language-native JSON type was narrower than the JavaScript runtime domain: raw, prepared, schema, result. The feasibility template's §1.1 now lists six carriers: raw input, prepared, schema, tool result, persistence projection, provider projection. It asks the Owner's six questions for every public/runtime value carrier. Hazard family F7 gains the TOOL RESULT row.
