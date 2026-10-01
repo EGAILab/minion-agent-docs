@@ -50,6 +50,69 @@ returned stream, cooperatively, matching pinned Pi's own `streamFunction(model, 
 signal})`. Actual transport cancellation remains deferred to `PROV-004`. See `spec/agent.md`'s own
 "Active abort propagation" section for the complete consumer/settlement matrix this signal serves.
 
+## Raw tool-call argument value domain (`AI-003`, cross-layer delta `L0206-D002`)
+
+**Status (`minion-agent#103`):** CONTRACT_DRAFT. Python: conforms at every certified boundary, with no production change (pending contract review). Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decision on `L0506-D002-Q001`, Option 1 (`minion-agent#99` comment `5926162818`). This is a separate cross-layer post-certification delta. It is not part of `L0506-D002` (prepared strings) or `L0206-D001` (key order, K1). No intentional divergence; deferring to Layer 11 was rejected; no whole-layer reopen.
+- **The rule.** `ToolCall.arguments` is not constrained to what a host JSON library or native string type can hold. It holds the value pinned Pi's `JSON.parse` produces from a provider's argument text (`parseStreamingJson` → `parseJsonWithRepair`). That is a JavaScript value:
+
+```text
+string   a JavaScript String: any sequence of UTF-16 code units -- BMP values, valid surrogate
+         pairs, unpaired high or low surrogates at any position, empty, NUL -- in values and keys
+number   a binary64 value as JSON.parse yields it: -0 (sign kept, also from a negative underflow),
+         +Infinity / -Infinity (from an overflowing literal), correctly rounded otherwise
+         (9007199254740993 -> 9007199254740992)
+object / array / true / false / null   as JSON
+```
+
+Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
+
+**Boundaries.** The exact value MUST survive, unchanged, through every certified boundary:
+
+| Boundary | Owner | Rule |
+|---|---|---|
+| construction of a `ToolCall` (and of the `AssistantMessage` holding it) | Layer 02 | accepted as given; no validation, replacement or normalization of strings or numbers |
+| session append | Layer 03 | the log accepts it (the "JSON-safe" check admits the domain above) |
+| session replay / projection | Layer 03 | returns the identical value |
+| `tool_execution_start` / `tool_execution_update` arguments | Layer 06 | the raw value (`IR-L06-005`) |
+| `tool_execution_end` | Layer 06 | carries no arguments: N/A |
+| Layer-06 input | Layer 06 | for a tool **without** `prepare_arguments`, the `tools/pre-execute` listener and `execute` observe exactly the raw value |
+
+**Projections are separate boundaries.**
+- **Pinned Pi's persisted session file** (`coding-agent` `session-manager.ts`, `JSON.stringify` per line):
+  - it escapes an unpaired surrogate as `\udXXX` and round-trips strings exactly;
+  - it writes `-0` as `0` and ±Infinity as `null`, so a reloaded file holds `0`/`null`.
+
+  No Minion layer maps that file today. Minion's certified Layer-03 log is not a byte form: it keeps and replays the live value. A future persisted form MUST reproduce Pi's projection there, and only there.
+- No U+FFFD replacement occurs anywhere on the raw path. Replacement belongs to UTF-8 file encoding (`spec/tools.md` String semantics).
+
+**Decoder requirement** (for the first raw decoder, e.g. Layer 11 providers, which consume this contract):
+- Decoding provider argument text MUST be `JSON.parse`-equivalent: binary64 rounding, `-0`, overflow to ±Infinity, and unpaired escaped surrogates kept.
+- A general-purpose decoder that keeps exact big integers, decodes `-0` as integer `0`, or rejects or replaces lone surrogates does not satisfy it. Python's `json.loads` does the first two.
+
+**Representation.** The contract fixes values, not types.
+- **Python.** A `str` (valid pairs combined, unpaired surrogates as surrogate code points). An `int` for an integral finite value decoded as an integer; a `float` for every other number, including `-0.0` and ±`inf`.
+- **Rust.** It needs a raw argument value able to hold this domain in `ToolCall.arguments`, the session log and the event payloads. `serde_json::Value` is not the semantic authority: it cannot hold an unpaired surrogate or ±Infinity. The type design is delegated to contract and implementation review (decision §7). Host JSON library limitations are not semantic authority.
+
+**Evidence.**
+- **Authority:** `minion-agent-docs` `assurance/layers/data/l0206-raw-boundaries/` (characterization `l0206-d002-characterization.md`).
+- **Canonical scenarios:** `minion-agent` `conformance/agent/raw-arguments/` (shape `raw-arguments-scenario.schema.json`), 38 cases: 22 string, 15 number, 1 key. The runner observes the value at every boundary above. The tool reports exactly one partial result, so the `tools/update` payload and the `on_execution_update` delivery are observed too (`L0206-D002-R001`).
+- **Number tokens in canonical cases** (`L0206-D002-R002`). A number is a named `+Infinity`, `-Infinity` or `-0`, or a finite literal that is exactly its binary64 value's ECMAScript `Number::toString`. A language-neutral preflight enforces this before dispatch, so no binding rounds or widens a fixture. `NaN` is outside the raw domain, because `JSON.parse` cannot produce it.
+  - **Convergence `CE-L0206-D002-01`, agreed.**
+    - **N1/N2.** A token names the **binary64 value** it parses to, not its spelled digits. For example `1000000000000000100` is the value `1000000000000000128`, which is what `JSON.parse` yields. A binding decodes a fixture through binary64, and an integral spelling becomes that value's exact integer.
+    - **N3'.** Observation is strict and total. A runtime integer that is not exactly a binary64 value is reported as a controlled out-of-domain marker, never rounded and never raising.
+    - **N4.** The expected observation is computed from the scenario text, never through the fixture decoder.
+- **Negative controls** (decision §11):
+  - the raw lone surrogate rejected;
+  - replaced with U+FFFD at decode;
+  - the session's encoding unable to hold it (a strict-JSON log);
+  - session decode normalizing it;
+  - the event payload seeing a normalized value;
+  - correct until persistence but lost on replay (Pi's JSON projection applied to the log).
+
+**WP-13.2** (decision §10): non-blocking. Its rules are total for any string a binding receives, and its `unpaired_surrogate_arguments` cases already defer raw decoding to this hazard.
+
 ## Provider abstraction (Layer 10)
 
 This section covers the GENERIC seam between the Agent/tool layers and a concrete model provider;

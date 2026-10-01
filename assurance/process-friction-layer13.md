@@ -145,3 +145,16 @@ Review: `minion-agent-docs#204`, published verbatim on Codex's behalf (comment `
 - **Fix (`coordination-state.md` §10.2).** `FINAL_CONTRACT_REVIEW -> CLOSED` is legal for a process-only WP. `minion-process apply` enforces the mechanical facts: `requirements: []`, no open finding, and every candidate's `merged_sha` recorded (§4.3). A WP owning any product requirement still closes only through `CLOSURE_REVIEW`.
 - **Lesson.** The table was reconciled against product WP histories (#49, #79, #88) only. A new *kind* of work package needs its own lifecycle replayed end to end before its first closure, not only its convergence states.
 
+## Post-merge evidence: `L0506-D002-Q001` and `L0506-D002-R001`, two more domains found at the contract checkpoint
+
+Both were recorded by Owner decision (§13 of each), and both were caught **before implementation**, by the feasibility matrix and the independent contract review.
+
+- **`Q001`, raw domain** (`minion-agent#99` comment `5926162818`; delta `L0206-D002`, `#103`).
+  - **The gap.** Pinned Pi's provider `JSON.parse` already puts unpaired surrogates, `-0` and ±Infinity into **raw** `ToolCall.arguments`. They reach `tool_execution_*` and the hook without any `prepare_arguments`. Rust's raw `serde_json::Value` cannot hold them.
+  - **How it was found.** The D002 author's characterization asked "is another hole visible?" (decision §7) and probed the raw decode boundary.
+- **`R001`, schema domain** (`minion-agent#99` comment `5926416181`; delta `L05-D001`, `#104`).
+  - **The gap.** D002's `enum-lone` case put a lone surrogate in the **schema**. Rust's certified schema seam (`Map<String, serde_json::Value>`) cannot hold it. D002's matrix had audited only the instance.
+  - **How it was found.** Codex's contract review, `L0506-D002-R001`.
+  - **The fix.** D002 keeps only scalar schema literals, adds the `enum: [U+FFFD]` discriminator, and moves `enum-lone` to `L05-D001`.
+
+**Lesson.** "String" is four domains, not one: instance, schema, raw/wire and serialized/projected. A matrix that audits only the instance misses the other three. The feasibility template now asks all four (§1.1). The reusable hazard family `F7 SCHEMA_RUNTIME_DOMAIN` (`process/hazard-families.md`) carries the probe list. Its canonical-case audit catches a schema literal in a case before review.

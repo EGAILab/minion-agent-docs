@@ -388,7 +388,7 @@ This targets sequences like WP-13.2's *huge integer → `-0` → Infinity* and L
 
 ### 9.5 Reusable hazard families
 
-- **Families are consulted up front.** `process/hazard-families.md` holds the reusable runtime hazard families: JS Number, JS String/UTF-16, Unicode/ICU, Async/order, Error/coercion projection and ECMAScript object order. The feasibility matrix (§4.1.1) and neighborhood expansion (§9.4) consult them instead of rediscovering them.
+- **Families are consulted up front.** `process/hazard-families.md` holds the reusable runtime hazard families: JS Number, JS String/UTF-16, Unicode/ICU, Async/order, Error/coercion projection, ECMAScript object order and the schema runtime domain. The feasibility matrix (§4.1.1) and neighborhood expansion (§9.4) consult them instead of rediscovering them.
 - **Generalizable hazards are added.** When a finding reveals a generalizable hazard class, its remediation also adds the member or family there. The long-term trend is: *a model discovers a class once → the harness remembers it → future work gets the probes automatically.*
 - **Executable harnesses** live under `reference/pi-characterization/families/<family>/` (non-normative, §9.3).
 
