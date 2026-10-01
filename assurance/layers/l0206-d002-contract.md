@@ -240,3 +240,55 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review; no implementation before APPROVED)
 ```
+
+### Checkpoint revision 2: response to C-L0206-D002-01-01 / -02 (Codex, REJECTED revision 1)
+
+- **Review:** docs #210 comment `5927266982`, published verbatim.
+- **Accepted:** both findings.
+- **Unchanged:** N1, N2, N4 and N5, the scope, and R001's provisional closure.
+
+**C-01: a second observer exception boundary.**
+- Python limits int ↔ decimal-string conversion to 4300 digits by default, so `str(±10**4300)` raises `ValueError`, independently of the float-overflow boundary at `2^1024 - 2^970`.
+- Re-probed (Python 3.13.5): `str(10**4299)` succeeds; `str(10**4300)`, `str(-(10**4300))` and `str(10**5000)` raise; `hex()` succeeds on all of them. Power-of-two bases are not subject to the digit limit.
+
+**N3′ (replacing N3).** A runtime number observes as `{"number": Number::toString(binary64)}` exactly when it **is** a binary64 value. That means a float (finite or named), or an int whose float conversion succeeds and converts back to the same integer.
+- Every other int observes as `{"non_binary64_int": hex(value)}`: signed hexadecimal, `-0x…` for negatives.
+- The observer is non-throwing for every int. It catches the float conversion's `OverflowError`, and it never converts an invalid int to a decimal string.
+- No process-wide setting (`sys.set_int_max_str_digits`) is touched.
+- Two exception boundaries are witnessed independently:
+  - float overflow: `2^1024 - 2^970 - 1`, `2^1024 - 2^970`, `2^1024`, `2^1024 + 1`;
+  - decimal-digit limit: `±10**4299` and `±10**4300` (both signs), and `10**5000`.
+
+  Each observes as the hex marker without raising, and `±1000000000000000128`, `2^53` and `1e18` observe as numbers.
+- Rust has no digit limit and needs no counterpart. The language-neutral rule is "total, controlled marker for an out-of-domain integer"; the hex spelling is Python's own.
+
+**C-02: what kills each mutant.** This table replaces the revision-1 "independent expectation" row:
+
+| Mutant | Killed by | Not claimed |
+|---|---|---|
+| **decoder** `int(token)` (spelled digits); observer correct; expectation independent (N4) | the new canonical cases `number/±1000000000000000100`: the strict observer sees `…100`, which is not a binary64 value, and reports the hex marker ≠ the expected token | not killed by `number/integer-2p53-plus-1`, whose token `9007199254740992` is exact |
+| **observer** coercing ints through `float()` (lossy) | direct unit witnesses: the observer applied to `1000000000000000100`, `-1000000000000000100` and `9007199254740993` must yield `non_binary64_int`. The lossy observer yields the number token instead, so those units go RED | not killed by any correct canonical run: with a correct decoder the delivered value is the exact binary64 int, and both observers agree |
+| **wrong value at one seam** (hook, execute, start, update event, update delivery, replay), delivering `1000000000000000100` where `…128` is due | the strict runner refuses each: the case fails at that seam's observation | — |
+| **the lossy observer defeats the seam refusal** (demonstration) | a permanent witness runs the hook-seam wrong-value mutant twice: with the strict observer the case fails; with the lossy observer monkeypatched in, it passes. The witness asserts both, recording that the strict observer is what refuses the wrong value | — |
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 2)
+
+OPEN FINDINGS
+    L0206-D002-R002
+
+ROOT ABSTRACTION
+    unchanged N1/N2/N4/N5; N3' total strict observation (hex marker, both exception boundaries)
+
+ACCEPTANCE WITNESSES
+    5 new Pi-authority canonical cases; N3' totality units at the float-overflow and decimal-digit boundaries (both
+    signs); the C-02 mutant table (decoder -> canonical +/-1000000000000000100; lossy observer -> direct units;
+    single-seam wrong values -> strict runner; lossy-observer demonstration)
+
+NORMATIVE DELTAS
+    spec/llm.md number-token rule; raw-arguments-scenario.schema.json $defs.token; raw_arguments_runner.py; Pi probe
+
+NEXT_OWNER
+    Codex (checkpoint review; no implementation before APPROVED)
+```
