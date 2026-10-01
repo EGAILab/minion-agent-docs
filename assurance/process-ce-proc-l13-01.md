@@ -478,3 +478,45 @@ ACCEPTANCE WITNESSES
 NEXT_OWNER
     Codex (checkpoint review; no implementation before APPROVED)
 ```
+
+---
+
+## Implementation of revision 5 (after AGREED FOR IMPLEMENTATION, Codex `#204` comment `5925476157`)
+
+**Mechanism** (`process/tools/minion_process/model.py`): `load_state` is now the single YAML entry, used by `split_body`, and through it by every read command, `apply` (current, intended, pre-write and remote) and repair (current and baseline).
+- **L1′:** any `Exception` from loading or from the graph check becomes `BodyFormatError`.
+- **L2′:** `_check_graph` is iterative, uses an explicit stack, and is memoized per node:
+  - a cycle is a node met again on its own ancestor path;
+  - string keys only, and JSON scalar types only;
+  - container depth ≤ `MAX_DEPTH = 64`, counted from the root mapping as 1;
+  - children are visited in document order.
+- **L3:** `_StateLoader` uses only the YAML 1.2 core implicit resolvers, each a subset of the YAML 1.1 pattern `safe_dump` quotes against.
+- **L4:** the pre-write round trip goes through the same loader.
+
+**Live compatibility:** all seven live state bodies (#35 #49 #50 #51 #95 #99 #100) load to objects **identical** to the previous loader's, and round-trip.
+
+### Two same-root additions, flagged for the targeted closure
+
+Both were found by applying the neighborhood rule to the agreed post-load graph boundary. Codex may reject either as outside the checkpoint.
+
+1. **Expanded-size bound** (`MAX_NODES = 100 000`, each shared alias counted per reference).
+   - **The hazard:** an *acyclic* "alias bomb" loads instantly because PyYAML shares nodes, and `deepcopy`/`safe_dump` survive it through memoization. But **equality between two independently loaded graphs** (the remote round-trip check) walks the expansion. Measured on 9-way sharing: 6 levels take 0.0005 s, 8 levels 0.04 s, and 10 levels 3.55 s, about ×9 per level, so 14 levels would take hours.
+   - **The bound:** it is computed from the memoized subtree sizes, in linear time. Live bodies expand to at most 362 nodes.
+2. **A shared alias counts at its deepest reference.** A deep node anchored shallowly and referenced deeper exceeds the depth bound only through the memoized height, because the walk never re-descends it. The rule and its witness pin that L2′ is enforced on **every** path, not only the first one walked.
+
+### Correction requested by the checkpoint review (non-blocking)
+
+Revision 5's negative-control paragraph wrongly gave "a valid implicit-date string as `updated_reason`" as a row the old candidate already met. It did not: at `e574d9f5` the exact `2026-02-30` row raises `ValueError`, and an ordinary implicit date constructs a `date`. The classification below is **measured**, not taken from that example.
+
+### Witnesses and per-outcome negative control
+
+`process/tools/tests/test_ce_proc_l13_01_rev5.py`: 33 tests, all GREEN here. Against `e574d9f5`, using a scratch copy where `load_state` is routed through the old `split_body`:
+
+| Outcome at `e574d9f5` | Rows / tests |
+|---|---|
+| **RED (24)** | `implicit-date-in-updated_reason`, `implicit-date-as-work_package-string` (old: `ValueError`); `tagged-invalid-timestamp`, `tagged-valid-timestamp`, `tagged-bad-int`, `tagged-bad-float`, `tagged-bad-bool`; `binary`, `binary-garbage`, `set`, `omap`, `pairs`; `tagged-int-key`, `tagged-bool-key`, `tagged-null-key`; `self-map-cycle`, `self-list-cycle`, `indirect-cycle`; `depth-65`, `deep-5000`; the depth convention; the alias-bomb bound; a shared alias at its deepest reference; the grammar-based property |
+| **Regression guards: same observable outcome at both SHAs (9)** | `depth-64`, `shared-acyclic-alias`, `unclosed-flow` (already fixed at `e574d9f5`). Four L3 rows where the old loader's different *value* is not observable through any entry point: `yes-top-level-string-key` (a `True` key outside `workflow`), `sexagesimal-string` and `leading-zero-string` (ints in an unchecked field), and `merge-literal-key` (quoted). Plus `no-as-next_owner-string` (old `False`, new `"no"`: both invalid owners), and live-body compatibility |
+
+**Gates:** 283 tool tests pass, statement coverage 100%, ruff and strict mypy clean. The grammar property and the alias tests also pass at 2000 examples.
+
+**Status:** PROC-L13-R003 is REMEDIATED against the revision-5 agreement, pending Codex §11.8.7 targeted closure. R001, R002 and R004 stay provisionally closed. One §11.8.8 final complete review of #204 follows.

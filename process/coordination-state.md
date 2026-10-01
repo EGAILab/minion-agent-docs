@@ -683,3 +683,20 @@ The field table and the entry-point table in `assurance/process-ce-proc-l13-01.m
   - validation and the read-only operations are total, reporting diagnostics and never raising;
   - a mutation refuses an invalid *current* or *intended* state with zero writes, and refuses a state YAML cannot carry unchanged;
   - an invalid current state is repaired only by restoring, byte for byte, an earlier valid revision from the issue's own GitHub edit history, then making changes with a normal checked mutation.
+
+### 13.6 The state-block load boundary (normative, CE-PROC-L13-01 revision 5)
+
+A state block is loaded as a **graph**, not just parsed:
+
+- **L1′ (totality).** Any `Exception` raised while loading the fenced YAML, or while checking the loaded graph, is malformed content and is reported as a body-format error. A non-`Exception` `BaseException` is not caught.
+- **L2′ (shape).** The loaded state must be an **acyclic** graph of JSON-domain nodes: mappings with string keys, lists, strings, ints, floats, bools, null.
+  - **Depth:** container depth at most **64**. The root mapping is 1, and each nested mapping or list adds 1; a shared alias counts at its deepest reference.
+  - **Size:** expanded size at most **100 000** nodes, each shared alias counted once per reference.
+  - **Implementation:** the check is iterative.
+- **L3 (resolver).** Implicit scalars resolve only per the YAML 1.2 core / JSON schema:
+  - **resolved:** `true`/`false`, decimal ints without leading zeros, floats with a `.` (and `.inf`/`.nan`), and `null`/`~`/empty;
+  - **left as strings:** `yes`/`no`/`on`/`off`, sexagesimal numbers, implicit timestamps and leading-zero numbers;
+  - **left literal:** the `<<` merge key.
+
+  Explicit tags still construct their types, and L2′ then rejects the non-JSON ones.
+- **L4 (symmetry).** Writes are checked with the same loader: a state that would not read back unchanged is never written.

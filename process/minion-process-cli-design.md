@@ -55,6 +55,16 @@ Each is covered offline by `process/tools/tests/` (fake `gh`, 100% statement cov
 - The field/class table, the refined witnesses, CLI v1/v2 positives, the mutation boundary, scope controls, and every repair positive and refusal.
 - Bounded Hypothesis totality over 30 consumed paths × every entry point. A 3000-example search found and pinned two defects: a YAML-unsafe key written before detection, and `pr: 0`.
 
+### 1.2 The load boundary (CE-PROC-L13-01 revision 5, `coordination-state.md` §13.6)
+
+`model.load_state` is the one entry to YAML. It applies:
+- L1′ totality (any load or graph-check `Exception` becomes `BodyFormatError`);
+- L2′ (an acyclic JSON-domain graph, depth ≤ 64, expanded size ≤ 100 000; an iterative, memoized check visited in document order);
+- L3 (`_StateLoader`: YAML 1.2 core implicit resolvers only, each pattern a subset of the YAML 1.1 resolver that `yaml.safe_dump` quotes against);
+- L4 (the pre-write round trip uses the same loader).
+
+**Evidence:** `tests/test_ce_proc_l13_01_rev5.py`. It contains the split intended-outcome table × every entry point (body boundary, read commands, `apply`, repair-current, repair-baseline), the depth convention, a shared alias at its deepest reference, the alias-bomb bound, live-body compatibility, and a grammar-based property over implicit scalars, tags, anchors/aliases (cycles) and depth.
+
 ## 2. Phase C2 — next (design)
 
 | Command | Enforces |
