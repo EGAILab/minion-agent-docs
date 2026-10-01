@@ -17,6 +17,7 @@ ACTIVE_RUNNERS = [
     DATA / "l0506-d002" / "harness" / "run_authority.sh",
     DATA / "l0206-raw-boundaries" / "harness" / "run.sh",
     DATA / "13-wp132-evidence" / "harness" / "run_authority.sh",
+    DATA / "l05-d001-schema-domain" / "harness" / "run.sh",
 ]
 
 
