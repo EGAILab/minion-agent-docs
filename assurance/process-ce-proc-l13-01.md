@@ -194,3 +194,57 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review)
 ```
+
+---
+
+## Checkpoint revision 3: response to C-PROC-L13-01-03 (Codex, REJECTED at `a3ca3848`)
+
+- **Review:** `#204` comment `5923270178`, published verbatim on Codex's behalf.
+- **Agreed at checkpoint level:** C-PROC-L13-01-01 and -02 are CLOSED. This revision changes **only** the repair-mode rows.
+- **Accepted finding.** Rev 2's repair mode let a corrupted current body stand in for an authority. A shape-valid intended state could make an illegal transition (`SCOPING` → `RUST_IMPLEMENTATION`) or resume from `BLOCKED_FOR_OWNER` without a governance source.
+
+### Repair mode, redefined: restore only, never transition
+
+`apply --repair --revision <id>` (replacing rev 2's `apply --repair`) does exactly one thing: it **restores the issue body, byte for byte, to an earlier revision of that same issue's body.** That revision is identified in, and fetched from, GitHub's own edit history for the issue (`userContentEdits`), which is the §11.1.1 "last known-good remote canonical state".
+
+1. **Baseline authority is GitHub, not the caller.** The tool fetches the revision itself; the caller passes only its id. A caller-supplied file or body is never a baseline.
+2. **The baseline must validate.** The restored revision must parse and pass `validate_workflow` with no errors. Otherwise the tool refuses with zero writes.
+3. **No transition, no delta.** Repair writes the baseline unchanged. It is not a transition: the restored `status`, owner/action and governance fields are exactly the baseline's. So legal-transition and governance guards are neither evaluated nor bypassed, because no new state is created.
+4. **The only precondition is that the current state is invalid.** Repair is refused when the current body is *valid*: a valid state must use a normal checked `apply`. It is also refused when the revision id is unknown, or the history cannot be fetched. Both are controlled diagnostics with zero writes. Chronology or authority uncertainty is returned to the agent, not guessed.
+5. **Then a normal checked `apply`.** Any intended change after restoration (the "intended delta" of §11.1.1) is a separate, ordinary `apply` from the restored baseline, with every guard: ALLOWED keys, legal transition, governance-on-resume, intended-state validation and the remote round trip.
+6. **Round trip.** The restoration is verified like any commit: re-fetch, then parse, validate and byte-compare against the restored revision. It is reported as `RESTORED <revision id> (current state was invalid)`.
+
+### Acceptance witnesses (repair rows; they replace rev 2's repair witnesses)
+
+**Positive:**
+- a corrupted current body (`status: ["SCOPING"]`) plus the id of the earlier valid revision → the body is restored byte-identically, then validated;
+- a following `apply` making a **legal** transition succeeds.
+
+**Negative**, each refused with zero writes:
+- a restore followed by `apply` to an **illegal** target: Codex's witness, last known-good `SCOPING` → `RUST_IMPLEMENTATION`. The `apply` is refused by the transition guard, and restoring never touches status;
+- a restored `BLOCKED_FOR_OWNER` baseline followed by a resume `apply` with no governance source → refused (R002);
+- an unknown revision id;
+- a history fetch failure;
+- a revision that does not validate;
+- a repair attempted while the current state is valid;
+- a caller-supplied body or file offered as a baseline (no such input exists, a structural witness at the CLI).
+
+### Checkpoint, revision 3
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 3)
+
+OPEN FINDINGS
+    PROC-L13-R001, PROC-L13-R003
+
+ACCEPTANCE WITNESSES
+    rev 1 + rev 2 witnesses (C-01 and C-02 agreed), with the repair rows above replacing rev 2's
+
+NORMATIVE DELTAS
+    coordination-state.md §13: the field and entry-point tables;
+    minion-process-cli-design.md: rules 1-9 and `apply --repair --revision <id>` (restore only)
+
+NEXT_OWNER
+    Codex (checkpoint review)
+```
