@@ -139,6 +139,9 @@ The same textual type, "string" or "number", lives in four value domains whose r
 | SCHEMA | Which values can the schema itself hold (property names, `required`, `const`/`enum` literals, `pattern`), what operation does Pi perform on each role, and can each binding's **schema** seam express it? |
 | RAW/WIRE | What does wire decoding (`JSON.parse`) produce into the raw value, and can the raw type hold it? |
 | SERIALIZED/PROJECTED | What does each serialization boundary (`JSON.stringify`, UTF-8 encoding, provider sanitizing) project, and where exactly? |
+| TOOL RESULT (`WP132-RUST-C002`, `L0506-D003`) | Which values can a tool result carry in `content` text and recursively in `details` (leaves, nesting, **keys**, `-0`/±Infinity/`NaN`), and do the after-hook, `tool_execution_end`, `ToolResultMessage` and session replay carry them losslessly? |
+
+The feasibility template (§1.1) splits these into six carriers, separating persistence projection from provider projection.
 
 | Member | Probe |
 |---|---|

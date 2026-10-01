@@ -158,3 +158,41 @@ Both were recorded by Owner decision (§13 of each), and both were caught **befo
   - **The fix.** D002 keeps only scalar schema literals, adds the `enum: [U+FFFD]` discriminator, and moves `enum-lone` to `L05-D001`.
 
 **Lesson.** "String" is four domains, not one: instance, schema, raw/wire and serialized/projected. A matrix that audits only the instance misses the other three. The feasibility template now asks all four (§1.1). The reusable hazard family `F7 SCHEMA_RUNTIME_DOMAIN` (`process/hazard-families.md`) carries the probe list. Its canonical-case audit catches a schema literal in a case before review.
+
+## Post-merge evidence: authority execution coupled to live Docker/npm (TOOLING / HARNESS FRICTION)
+
+- **Category:** TOOLING / HARNESS FRICTION.
+- **Incident.** L0506-D002's and L0206-D002's final reviews found no contract defect, yet were withheld (REVIEW_BLOCKED). The independent reviewer's sandbox could reach neither Docker nor the npm registry, so it could not re-execute the pinned-Pi authority. The author's own byte-identical runs were rightly not accepted as a substitute.
+- **Root cause.** Authority execution was unnecessarily coupled to live Docker and npm access. The runners acquired `typebox`/`diff` only through `npm pack`, and ran only inside `node:22.15.1-alpine` with container-fixed paths.
+- **Assurance-preserving correction** (Owner decisions `minion-agent#99` comments `5930365971` and `5930377491`): cryptographically pinned offline dependency injection plus independent reviewer execution.
+  - The exact tarball was supplied to the review workspace and verified by the reviewer against pinned Pi's lockfile SRI.
+  - The reviewer executed the authority itself on a host proving Node v22.15.1.
+  - Both final reviews then approved at their unchanged SHAs.
+- **Made standing** in `process/authority-dependencies.md`:
+  - the shared `acquire_npm_pinned.sh` (offline and network acquisition converge on one verification path);
+  - runners that execute in a container or on a host;
+  - negative controls (`process/tools/authority/selftest.sh`).
+- **Lesson.** Remove friction that does not carry assurance (where the bytes come from), and keep exactly what does: digest verification against the authoritative pin, exact runtime identity, and independent execution and judgment.
+
+### Remediation: `PROC-AUTHDEP-R001`, pin bound to the commit, not the working tree
+
+**Trigger check.**
+- Trigger A has not fired: R001 has survived one independent review (Codex, docs #212 comment `5932645986`).
+- Trigger B has not fired: no successor finding.
+- Trigger C has not fired: the work package has one rejection.
+- Ordinary remediation.
+
+**The defect (accepted).** The runners read the expected digest from Pi's **working-tree** `package-lock.json`, which the cleanliness check (`packages/` only) did not cover. Codex showed a coherent forgery passing the unchanged runner and executing all 198 cases: tarball padded with 512 zero bytes, plus a lockfile edited to its SHA-512.
+
+**The fix.**
+- All four runners extract the lockfile from the verified pinned commit (`git show <pin>:package-lock.json`).
+- A test enforces that no runner reads `$PI/package-lock.json`.
+- `runner_witness.sh` reproduces the attack on a disposable shared clone. It FAILS with no authority output on all four fixed runners, and PASSES with the correct artifact. It is RED against the pre-fix runner (`91e6d56`), where it reproduces Codex's forged SRI `qwBwh73i…` and the authority runs.
+- All four authorities remain byte-identical in offline host mode, including WP-13.2's `mutants.json`.
+
+## Post-merge evidence: `WP132-RUST-C002`, the tool-result domain, found at Rust implementation
+
+- **Incident.** Rust WP-13.2's resume, after `L0506-D002` certified the prepared-string domain, found that a successful `edit`'s `details.diff`/`details.patch` keep the prepared `newText`'s unpaired surrogate (file bytes `EF BF BD`, details D800). Rust's `AgentToolResult.details: serde_json::Value` cannot hold it (Codex, `minion-agent#49` comment `5933146445`).
+- **Why it was not caught earlier.** The D002 matrix audited the value as it **enters** `execute` (prepared instance), and its four-domain table (§1.1) had no row for values a tool **returns**. The result carrier, which flows through the after-hook, `tool_execution_end`, `ToolResultMessage` and persistence, was nobody's row.
+- **Resolution.** Owner decision `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`): a separate delta `L0506-D003` (`minion-agent#112`) at the shared tool-result boundary. Its §6 lets same-carrier neighbors (surrogate keys, `NaN`/±Infinity) fold in at once, instead of being found one review at a time (C002 → C003 → C004).
+- **Lesson (§18).** This is the fourth time a language-native JSON type was narrower than the JavaScript runtime domain: raw, prepared, schema, result. The feasibility template's §1.1 now lists six carriers: raw input, prepared, schema, tool result, persistence projection, provider projection. It asks the Owner's six questions for every public/runtime value carrier. Hazard family F7 gains the TOOL RESULT row.

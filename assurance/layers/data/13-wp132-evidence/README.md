@@ -171,3 +171,5 @@ The queue scenarios cover:
 - write and edit sharing one queue.
 
 **`conformance/agent/fixtures/wp132-fuzzy-normalize/fuzzy_normalize.json`** holds the 5 `normalizeForFuzzyMatch` results. Each binding replays them against its own `fuzzy_normalize`.
+
+**Offline / host replay** (`process/authority-dependencies.md`). Set `DIFF_TGZ=<path to the exact tarball>`, and it is verified against pinned Pi's lockfile before use. To run without Docker on a host proving the runtime pins, set `PI_DIR`, `OUT_DIR` and, if needed, `PYTHON`, and run the same harness runner directly.

@@ -33,16 +33,29 @@ UTF-16 code units          valid surrogate pair  lone surrogate (high / low)
 Unicode normalization / version
 ```
 
-### 1.1 Four value domains (F7, `L0506-D002-R001`)
+### 1.1 Value-domain carriers (F7: `L0506-D002-R001`, `WP132-RUST-C002`)
 
-Answer each separately for every validation or value feature. The same textual type does not imply the same representability in all four:
+Answer each separately for every validation or value feature. The same textual type does not imply the same representability in every carrier. This is the Owner's list (`minion-agent#49` comment `5937380474` §18):
 
-| Domain | Pi repr | Python repr | Rust repr | Owning seam | Lossless across all? |
+| Carrier | Pi repr | Python repr | Rust repr | Owning seam | Lossless across all? |
 |---|---|---|---|---|---|
-| INSTANCE (prepared/runtime value) | | | | | |
-| SCHEMA (property names, `required`, `const`/`enum`, `pattern`) | | | | | |
-| RAW/WIRE (decoded provider value) | | | | | |
-| SERIALIZED/PROJECTED (`JSON.stringify`, UTF-8, provider sanitizing) | | | | | |
+| RAW INPUT VALUE DOMAIN (decoded provider `ToolCall.arguments`, `L0206-D002`) | | | | | |
+| PREPARED VALUE DOMAIN (prepared/runtime instance, `L0506-D001`/`D002`) | | | | | |
+| SCHEMA VALUE DOMAIN (property names, `required`, `const`/`enum`, `pattern`; `L05-D001`) | | | | | |
+| TOOL RESULT VALUE DOMAIN (`content` text, recursive `details`: after-hook, `tool_execution_end`, `ToolResultMessage`; `L0506-D003`) | | | | | |
+| PERSISTENCE PROJECTION (session log/file: `JSON.stringify`, reload) | | | | | |
+| PROVIDER PROJECTION (outbound payloads: provider sanitizing, serialization) | | | | | |
+
+For **every public/runtime value carrier** the WP touches, answer the Owner's six questions in the row:
+
+1. What values can Pi produce?
+2. Can Python represent them?
+3. Can Rust represent them?
+4. What do hooks/events see?
+5. How are they serialized?
+6. Where is lossy projection actually allowed?
+
+A language-native JSON type (`serde_json::Value`, `String`, Python `json`) is never the semantic authority. It has been narrower than the JavaScript runtime domain four times (raw, prepared, schema, result).
 
 **Canonical-case audit:** list every canonical case whose *schema* holds a value outside the scalar/JSON domain. Each one needs the SCHEMA row answered.
 
