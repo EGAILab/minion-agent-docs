@@ -1,0 +1,298 @@
+{
+ "max0/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "max0/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "max0/2": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "min0/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "min0/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "min0/2": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "exmax0/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "exmax0/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "exmin0/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "exmin0/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "multipleOf2/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "multipleOf2/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "not-number/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "not-number/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "type-number-null/0": {
+  "verdict": "reject"
+ },
+ "type-number-null/1": {
+  "verdict": "reject"
+ },
+ "type-number-null/2": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ "const-null/0": {
+  "verdict": "reject"
+ },
+ "const-null/1": {
+  "verdict": "reject"
+ },
+ "enum/0": {
+  "verdict": "reject"
+ },
+ "enum/1": {
+  "verdict": "reject"
+ },
+ "anyOf-number-empty/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "allOf-empty-number/0": {
+  "verdict": "reject"
+ },
+ "items-number/0": {
+  "verdict": "reject"
+ },
+ "uniqueItems/0": {
+  "verdict": "reject"
+ },
+ "uniqueItems/1": {
+  "verdict": "reject"
+ },
+ "uniqueItems/2": {
+  "verdict": "accept",
+  "value": {
+   "n": [
+    {
+     "$num": "+Infinity"
+    },
+    {
+     "$num": "-Infinity"
+    },
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ "type-string/0": {
+  "verdict": "accept",
+  "value": {
+   "n": "Infinity"
+  }
+ },
+ "type-null/0": {
+  "verdict": "reject"
+ },
+ "x-exmax0-negzero/0": {
+  "verdict": "reject"
+ },
+ "x-exmin0-negzero/0": {
+  "verdict": "reject"
+ },
+ "x-max0-negzero/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ "x-const0-negzero/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ "x-enum0-negzero/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ "x-unique-0-negzero/0": {
+  "verdict": "accept",
+  "value": {
+   "n": [
+    0,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ "x-multipleOf-negzero/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ "x-number-max/0": {
+  "verdict": "reject"
+ },
+ "x-number-max/1": {
+  "verdict": "reject"
+ },
+ "x-number-max/2": {
+  "verdict": "reject"
+ },
+ "x-integer-min/0": {
+  "verdict": "reject"
+ },
+ "x-ifthen/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "x-ifthen/1": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "x-oneOf/0": {
+  "verdict": "reject"
+ },
+ "x-oneOf/1": {
+  "verdict": "reject"
+ },
+ "x-oneOf/2": {
+  "verdict": "reject"
+ },
+ "x-anyOf-max-string/0": {
+  "verdict": "accept",
+  "value": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "x-items-max/0": {
+  "verdict": "accept",
+  "value": {
+   "n": [
+    {
+     "$num": "+Infinity"
+    },
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ "x-not-max/0": {
+  "verdict": "reject"
+ },
+ "x-const-1e308/0": {
+  "verdict": "reject"
+ }
+}

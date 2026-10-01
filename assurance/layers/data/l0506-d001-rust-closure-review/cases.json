@@ -1,0 +1,901 @@
+[
+ {
+  "id": "max0/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "max0/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "max0/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "min0/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "minimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "min0/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "minimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "min0/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "minimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "exmax0/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMaximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "exmax0/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMaximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "exmin0/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMinimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "exmin0/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMinimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "multipleOf2/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "multipleOf": 2
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "multipleOf2/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "multipleOf": 2
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "not-number/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "not": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "not-number/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "not": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "type-number-null/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "type-number-null/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "type-number-null/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "const-null/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "const": null
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "const-null/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "const": null
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "enum/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "enum": [
+      null,
+      "Infinity",
+      0
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "enum/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "enum": [
+      null,
+      "Infinity",
+      0
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "anyOf-number-empty/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {}
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "allOf-empty-number/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "allOf": [
+      {},
+      {
+       "type": "number"
+      }
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "items-number/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "uniqueItems/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "uniqueItems": true
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    {
+     "$num": "+Infinity"
+    },
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ {
+  "id": "uniqueItems/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "uniqueItems": true
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    {
+     "$num": "NaN"
+    },
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "uniqueItems/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "uniqueItems": true
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    {
+     "$num": "+Infinity"
+    },
+    {
+     "$num": "-Infinity"
+    },
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "type-string/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "string"
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "type-null/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "null"
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-exmax0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMaximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-exmin0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "exclusiveMinimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-max0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-const0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "const": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-enum0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "enum": [
+      0
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-unique-0-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "uniqueItems": true
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    0,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ {
+  "id": "x-multipleOf-negzero/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "multipleOf": 2
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-0"
+   }
+  }
+ },
+ {
+  "id": "x-number-max/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "number",
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-number-max/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "number",
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-number-max/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "number",
+     "maximum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "x-integer-min/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-ifthen/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "if": {
+      "type": "number"
+     },
+     "then": {
+      "maximum": 0
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-ifthen/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "if": {
+      "type": "number"
+     },
+     "then": {
+      "maximum": 0
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "x-oneOf/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "oneOf": [
+      {
+       "maximum": 0
+      },
+      {
+       "minimum": 1
+      }
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-oneOf/1",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "oneOf": [
+      {
+       "maximum": 0
+      },
+      {
+       "minimum": 1
+      }
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "NaN"
+   }
+  }
+ },
+ {
+  "id": "x-oneOf/2",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "oneOf": [
+      {
+       "maximum": 0
+      },
+      {
+       "minimum": 1
+      }
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-anyOf-max-string/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "anyOf": [
+      {
+       "maximum": 0
+      },
+      {
+       "type": "string"
+      }
+     ]
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-items-max/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "array",
+     "items": {
+      "maximum": 0
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": [
+    {
+     "$num": "+Infinity"
+    },
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ {
+  "id": "x-not-max/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "not": {
+      "maximum": 0
+     }
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ {
+  "id": "x-const-1e308/0",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "const": 1e+308
+    }
+   }
+  },
+  "arguments": {
+   "n": {
+    "$num": "+Infinity"
+   }
+  }
+ }
+]

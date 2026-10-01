@@ -1,0 +1,35 @@
+// Scratch probe used by the closure review (appended to minion-agent-rust/crates/minion-agent/src/tools/prepared_validation.rs
+// in a throwaway worktree of 2ed140396a956955588de4d9d70d8be45861d70d; never committed). Run:
+//   REVIEW_PROBE_DIR=<this dir> cargo test -p minion-agent --lib review_probe -- --nocapture
+#[cfg(test)]
+mod review_probe {
+    use super::*;
+    fn dec(v: &Value) -> PreparedValue {
+        match v {
+            Value::Object(o) if o.contains_key("$num") => match o["$num"].as_str().unwrap() {
+                "+Infinity" => PreparedValue::number(f64::INFINITY),
+                "-Infinity" => PreparedValue::number(f64::NEG_INFINITY),
+                "NaN" => PreparedValue::number(f64::NAN),
+                "-0" => PreparedValue::number(-0.0),
+                _ => unreachable!(),
+            },
+            Value::Object(o) => PreparedValue::Object(o.iter().map(|(k, x)| (k.clone(), dec(x))).collect()),
+            Value::Array(a) => PreparedValue::Array(a.iter().map(dec).collect()),
+            other => PreparedValue::from(other.clone()),
+        }
+    }
+    #[test]
+    fn probe() {
+        let dir = std::env::var("REVIEW_PROBE_DIR").unwrap();
+        let cases: Vec<Value> = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/cases.json")).unwrap()).unwrap();
+        let pi: Value = serde_json::from_str(&std::fs::read_to_string(format!("{dir}/out/pi.json")).unwrap()).unwrap();
+        let mut differ = 0;
+        for c in &cases {
+            let id = c["id"].as_str().unwrap();
+            let rust = if validate_prepared(&c["schema"], &dec(&c["arguments"])).is_ok() { "accept" } else { "reject" };
+            let want = pi[id]["verdict"].as_str().unwrap();
+            if rust != want { differ += 1; println!("RUST DIFFERS {id} pi={want} rust={rust}"); }
+        }
+        println!("rust differs: {differ} of {}", cases.len());
+    }
+}
