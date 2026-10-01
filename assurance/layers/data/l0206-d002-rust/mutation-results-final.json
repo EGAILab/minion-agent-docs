@@ -1,0 +1,103 @@
+{
+  "command": "cargo +1.97.1 test -p minion-agent --all-features --test raw_arguments_conformance --offline --config <verified-vendor-config>",
+  "mutations": [
+    [
+      "decode-replace",
+      "llm/raw.rs",
+      "            JsJsonValue::String(value) => Self::String(value),",
+      "            JsJsonValue::String(value) => Self::from(Value::String(String::from_utf16_lossy(value.code_units()))),"
+    ],
+    [
+      "strict-json-log",
+      "session/mod.rs",
+      "            BTreeMap::from([(\"message\".into(), SessionField::Message(Box::new(message)))]),",
+      "            BTreeMap::from([(\"message\".into(), SessionField::Json(serde_json::to_value(message).expect(\"strict JSON mutant\")))]),"
+    ],
+    [
+      "replay-loss",
+      "session/mod.rs",
+      "                    SessionField::Message(message) => Ok(*message),",
+      "                    SessionField::Message(mut message) => { if let Message::Assistant(m) = message.as_mut() { for block in &mut m.content { if let crate::llm::AssistantContentBlock::ToolCall(call) = block { call.arguments = crate::llm::RawValue::Null; } } } Ok(*message) },"
+    ],
+    [
+      "start-loss",
+      "tools/execution.rs",
+      "        arguments: arguments_value(&call.arguments),",
+      "        arguments: crate::llm::RawValue::Null,"
+    ],
+    [
+      "update-event-only",
+      "tools/execution.rs",
+      "                let _ = events.emit(&update_spec, &event, scope.as_ref());",
+      "                let mut wrong = event.clone(); wrong.arguments = crate::llm::RawValue::Null;\n                let _ = events.emit(&update_spec, &wrong, scope.as_ref());"
+    ],
+    [
+      "update-delivery-only",
+      "tools/execution.rs",
+      "                    reservation.dispatch(callback(event));",
+      "                    let mut wrong = event; wrong.arguments = crate::llm::RawValue::Null;\n                    reservation.dispatch(callback(wrong));"
+    ],
+    [
+      "execute-only",
+      "tools/execution.rs",
+      "            params: arguments,",
+      "            params: PreparedValue::Null,"
+    ],
+    [
+      "hook-input-loss",
+      "tools/execution.rs",
+      "            arguments: params,",
+      "            arguments: PreparedValue::Null,"
+    ]
+  ],
+  "results": [
+    {
+      "name": "decode-replace",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.64s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (15108) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:162:5:\nassertion `left == right` failed: decoder \"string/adjacent-highs\"\n  left: Object {\"$keys\": Array [Array [Array [Number(115)], Object {\"utf16\": Array [Number(65533), Number(65533)]}]]}\n right: Object {\"$keys\": Array [Array [Array [Number(115)], Object {\"utf16\": Array [Number(55296), Number(55296)]}]]}\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "strict-json-log",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.26s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (49468) panicked at crates\\minion-agent\\src\\session\\mod.rs:248:97:\nstrict JSON mutant: Error(\"raw value is not representable by serde_json\", line: 0, column: 0)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "replay-loss",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.36s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (39232) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:181:5:\nassertion `left == right` failed\n  left: [Assistant(AssistantMessage { role: Assistant, content: [ToolCall(ToolCall { kind: ToolCall, id: \"call\", name: \"probe\", arguments: Null, thought_signature: None, namespace: None })], api: \"model\", provider: \"mock\", model: \"mock\", response_model: None, response_id: None, diagnostics: None, usage: Usage { input: 0, output: 0, cache_read: 0, cache_write: 0, cache_write_1h: None, reasoning: None, total_tokens: 0, cost: Cost { input: 0.0, output: 0.0, cache_read: 0.0, cache_write: 0.0, total: 0.0 } }, stop_reason: ToolUse, deferred: None, error_message: None, raw_stop_reason: None, end_turn: None, timestamp: 0.0 })]\n right: [Assistant(AssistantMessage { role: Assistant, content: [ToolCall(ToolCall { kind: ToolCall, id: \"call\", name: \"probe\", arguments: Object({JsString([56320]): Number(RawNumber(1.0)), JsString([55296]): Number(RawNumber(2.0)), JsString([55357, 56832]): Number(RawNumber(3.0)), JsString([97]): Number(RawNumber(4.0))}), thought_signature: None, namespace: None })], api: \"model\", provider: \"mock\", model: \"mock\", response_model: None, response_id: None, diagnostics: None, usage: Usage { input: 0, output: 0, cache_read: 0, cache_write: 0, cache_write_1h: None, reasoning: None, total_tokens: 0, cost: Cost { input: 0.0, output: 0.0, cache_read: 0.0, cache_write: 0.0, total: 0.0 } }, stop_reason: ToolUse, deferred: None, error_message: None, raw_stop_reason: None, end_turn: None, timestamp: 0.0 })]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "start-loss",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.43s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (5052) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:285:9:\nassertion `left == right` failed: \"keys/surrogate-keys\" start\n  left: [Null]\n right: [Object {\"$keys\": Array [Array [Array [Number(97)], Object {\"number\": String(\"4\")}], Array [Array [Number(55296)], Object {\"number\": String(\"2\")}], Array [Array [Number(55357), Number(56832)], Object {\"number\": String(\"3\")}], Array [Array [Number(56320)], Object {\"number\": String(\"1\")}]]}]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "update-event-only",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.84s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (41208) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:285:9:\nassertion `left == right` failed: \"keys/surrogate-keys\" update-event\n  left: [Null]\n right: [Object {\"$keys\": Array [Array [Array [Number(97)], Object {\"number\": String(\"4\")}], Array [Array [Number(55296)], Object {\"number\": String(\"2\")}], Array [Array [Number(55357), Number(56832)], Object {\"number\": String(\"3\")}], Array [Array [Number(56320)], Object {\"number\": String(\"1\")}]]}]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "update-delivery-only",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.84s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (8592) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:285:9:\nassertion `left == right` failed: \"keys/surrogate-keys\" update-delivery\n  left: [Null]\n right: [Object {\"$keys\": Array [Array [Array [Number(97)], Object {\"number\": String(\"4\")}], Array [Array [Number(55296)], Object {\"number\": String(\"2\")}], Array [Array [Number(55357), Number(56832)], Object {\"number\": String(\"3\")}], Array [Array [Number(56320)], Object {\"number\": String(\"1\")}]]}]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "execute-only",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: unused variable: `arguments`\n   --> crates\\minion-agent\\src\\tools\\execution.rs:952:9\n    |\n952 |         arguments,\n    |         ^^^^^^^^^ help: try ignoring the field: `arguments: _`\n    |\n    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: `minion-agent` (lib) generated 1 warning (run `cargo fix --lib -p minion-agent` to apply 1 suggestion)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.48s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (41676) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:285:9:\nassertion `left == right` failed: \"keys/surrogate-keys\" execute\n  left: [Null]\n right: [Object {\"$keys\": Array [Array [Array [Number(97)], Object {\"number\": String(\"4\")}], Array [Array [Number(55296)], Object {\"number\": String(\"2\")}], Array [Array [Number(55357), Number(56832)], Object {\"number\": String(\"3\")}], Array [Array [Number(56320)], Object {\"number\": String(\"1\")}]]}]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    },
+    {
+      "name": "hook-input-loss",
+      "exit": 1,
+      "killed": true,
+      "output": "   Compiling minion-agent v0.1.0 (E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\minion-agent\\.worktrees\\raw-d002-rust\\minion-agent-rust\\crates\\minion-agent)\nwarning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library\n  |\n  = note: `#[warn(linker_messages)]` on by default\n\nwarning: `minion-agent` (test \"raw_arguments_conformance\") generated 1 warning\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.25s\n     Running tests\\raw_arguments_conformance.rs (target\\debug\\deps\\raw_arguments_conformance-55ca4cc64967f18d.exe)\n\nrunning 1 test\ntest raw_arguments_canonical_live_boundaries ... FAILED\n\nfailures:\n\n---- raw_arguments_canonical_live_boundaries stdout ----\nraw argument delta gate: 38 cases\n\nthread 'raw_arguments_canonical_live_boundaries' (1904) panicked at crates\\minion-agent\\tests\\raw_arguments_conformance.rs:285:9:\nassertion `left == right` failed: \"keys/surrogate-keys\" execute\n  left: [Null]\n right: [Object {\"$keys\": Array [Array [Array [Number(97)], Object {\"number\": String(\"4\")}], Array [Array [Number(55296)], Object {\"number\": String(\"2\")}], Array [Array [Number(55357), Number(56832)], Object {\"number\": String(\"3\")}], Array [Array [Number(56320)], Object {\"number\": String(\"1\")}]]}]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    raw_arguments_canonical_live_boundaries\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\nerror: test failed, to rerun pass `-p minion-agent --test raw_arguments_conformance`\n"
+    }
+  ]
+}
