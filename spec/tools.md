@@ -154,6 +154,47 @@ error. What a caller does with that absence (e.g. a model-facing error
 result) is Layer 06, not certified here.
 ```
 
+### Runtime-validation schema string domain (`TOOL-016` / `TOOL-003`, post-certification delta `L05-D001`)
+
+**Status (`minion-agent#104`):** CONTRACT_DRAFT. Python: conforms with no production change (pending contract review). Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decision on `L0506-D002-R001`, Option 1 (`minion-agent#99` comment `5926416181`). This is a separate Layer-05 delta. It is distinct from `L0506-D002` (prepared instance strings), `L0206-D002` (raw arguments) and `L0206-D001` (key order). No intentional divergence; no whole-Layer-05 reopen.
+- **The rule.** A tool's `parameters` schema is a JavaScript object in pinned Pi. Wherever runtime argument validation (`TOOL-003`) consumes one of its string values or object keys, that string is a JavaScript String: any UTF-16 code units, unpaired surrogates included. Registration MUST accept such a schema, and validation MUST honor it as pinned Pi's `validateToolArguments` does, per role:
+
+| Schema-string role | Pinned Pi operation (characterized) |
+|---|---|
+| `properties` keys and `required` entries | exact UTF-16 identity with the instance key |
+| a declared property under `additionalProperties: false` | admits exactly the identical instance key |
+| `const`, `enum` literals | exact code-unit sequence equality |
+| `propertyNames: {const: S}` | exact code-unit equality of each key |
+| `dependentRequired` keys | trigger on the exact instance key |
+| `pattern` (anchored or not) and `patternProperties` keys | a **Unicode-mode RegExp**, not code-unit equality. A valid pair is one code point, so neither half matches inside it (e.g. pattern `\uD83D` does not match the instance `😀`). An unpaired surrogate matches where it genuinely occurs |
+
+Documentary fields (`title`, `description`, `examples`) are not consumed by validation and are outside this rule. `default` is not filled in by Pi's validator.
+
+**Not changed.** Provider/wire schema transport (model-facing schema serialization, Layer 11). The four-domain split (`process/hazard-families.md` F7):
+
+| Domain | Delta |
+|---|---|
+| this schema domain | `L05-D001` |
+| the instance | `L0506-D002` / `L0206-D002` |
+| the raw/wire values | `L0206-D002` |
+| projections | their own boundaries |
+
+**Representation.**
+- **Python.** A `dict` schema holding `str` keys and values (valid pairs combined, unpaired surrogates as surrogate code points). Its validator (`TOOL-003`, Draft 2020-12 via `jsonschema`) already matches pinned Pi on every characterized cell.
+- **Rust.** The certified `ToolDefinition.parameters` (`JsonSchemaObject(Map<String, serde_json::Value>)`) cannot hold an unpaired surrogate as a key or string value. A runtime-validation schema representation with a JavaScript-string-capable key and value domain is required. Its validator MUST implement the per-role operations above, including the Unicode-mode `pattern`. The type design is delegated to contract and implementation review (decision §8). `serde_json` limitations are not schema semantic authority.
+
+**Evidence.**
+- **Authority:** `minion-agent-docs` `assurance/layers/data/l05-d001-schema-domain/` (characterization `l05-d001-characterization.md`).
+- **Canonical scenarios:** `minion-agent` `conformance/agent/schema-domain/` (shape `schema-domain-scenario.schema.json`): 729 cases, which is 9 roles × 9 schema members × 9 instance members. Each case carries its literal schema and arguments as UTF-16 code units, and the runner observes only accept/reject through the real Layer-06 pipeline.
+- **Negative controls:**
+  - a schema seam that rejects a lone surrogate at registration;
+  - schema literals replaced with U+FFFD;
+  - a code-unit (non-Unicode) `pattern` search;
+  - instance property-name normalization.
+- **WP-13.2:** independent. The `write`/`edit` schemas hold only ASCII names and unconstrained `Type.String` slots.
+
 ### Explicitly not certified by Layer 05
 
 `prepare_arguments`'s actual invocation timing/ordering, `execute`'s actual invocation
