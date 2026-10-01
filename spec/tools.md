@@ -1865,7 +1865,7 @@ restated here.
 
 ### WP-13.2 — Filesystem mutation tools (`write`, `edit`) and the shared mutation queue
 
-**Status: CONTRACT_DRAFT (`minion-agent#49`).**
+**Status (`minion-agent#49`): CERTIFIED_CLOSED.** Python: code #87 → `53290de4`, docs #191 → `fba5a6f3`. Rust: code #98 → `299c2b9e`, docs #207 → `8b4c89ad`, closure review on `minion-agent-docs#207`. The lower-layer deltas it depended on are all CERTIFIED_CLOSED: `L0506-D001` (#88), `L0506-D002` (#99), `L0506-D003` (#112) and `EXEC-009` (#79).
 
 **Requirements:**
 - `TOOL-029`: `write`;
