@@ -553,6 +553,8 @@ prepared runtime arguments     Pi's JavaScript runtime values after prepare_argu
    -> execute)                  and execute receives
 ```
 
+> **Corrected by `L0206-D002`** (`minion-agent#103`; Owner decision `L0506-D002-Q001`). The "raw ToolCall arguments: JSON-compatible" line above is superseded. Pinned Pi's raw arguments are `JSON.parse`'s JavaScript value: unpaired surrogates, `-0` and ±Infinity can already be raw, reaching `tool_execution_*` and the hook with no `prepare_arguments` (`spec/llm.md`, "Raw tool-call argument value domain"). The line is kept as the historical D001 text; D001's prepared-domain rules are unchanged.
+
 A number in the prepared runtime domain is one of:
 
 ```text
