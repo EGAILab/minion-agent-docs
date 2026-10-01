@@ -1,0 +1,1808 @@
+[
+ {
+  "id": "open/ascii",
+  "verdict": "accept",
+  "units": [
+   65,
+   66
+  ],
+  "json": "\"AB\"",
+  "utf8": "4142",
+  "length": 2
+ },
+ {
+  "id": "string/ascii",
+  "verdict": "accept",
+  "units": [
+   65,
+   66
+  ],
+  "json": "\"AB\"",
+  "utf8": "4142",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/ascii",
+  "verdict": "accept",
+  "units": [
+   65,
+   66
+  ],
+  "json": "\"AB\"",
+  "utf8": "4142",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/ascii",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/ascii",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/ascii",
+  "verdict": "accept",
+  "units": [
+   65,
+   66
+  ],
+  "json": "\"AB\"",
+  "utf8": "4142",
+  "length": 2
+ },
+ {
+  "id": "const-pair/ascii",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/ascii",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/bmp",
+  "verdict": "accept",
+  "units": [
+   233,
+   20013
+  ],
+  "json": "\"é中\"",
+  "utf8": "c3a9e4b8ad",
+  "length": 2
+ },
+ {
+  "id": "string/bmp",
+  "verdict": "accept",
+  "units": [
+   233,
+   20013
+  ],
+  "json": "\"é中\"",
+  "utf8": "c3a9e4b8ad",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/bmp",
+  "verdict": "accept",
+  "units": [
+   233,
+   20013
+  ],
+  "json": "\"é中\"",
+  "utf8": "c3a9e4b8ad",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/bmp",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/bmp",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/bmp",
+  "verdict": "accept",
+  "units": [
+   233,
+   20013
+  ],
+  "json": "\"é中\"",
+  "utf8": "c3a9e4b8ad",
+  "length": 2
+ },
+ {
+  "id": "const-pair/bmp",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/bmp",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/pair",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880",
+  "length": 2
+ },
+ {
+  "id": "string/pair",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have fewer than 2 characters | "
+ },
+ {
+  "id": "max-length-1/pair",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880",
+  "length": 2
+ },
+ {
+  "id": "pattern-one-char/pair",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880",
+  "length": 2
+ },
+ {
+  "id": "pattern-two-chars/pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/pair",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880",
+  "length": 2
+ },
+ {
+  "id": "enum-lone/pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-high-start",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "string/lone-high-start",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/lone-high-start",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/lone-high-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-high-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-high-start",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "const-pair/lone-high-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-high-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-high-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296,
+   66
+  ],
+  "json": "\"A\\ud800B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "string/lone-high-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296,
+   66
+  ],
+  "json": "\"A\\ud800B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "min-length-2/lone-high-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296,
+   66
+  ],
+  "json": "\"A\\ud800B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "max-length-1/lone-high-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-high-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-high-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/lone-high-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-high-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-high-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296
+  ],
+  "json": "\"A\\ud800\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "string/lone-high-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296
+  ],
+  "json": "\"A\\ud800\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/lone-high-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296
+  ],
+  "json": "\"A\\ud800\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/lone-high-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-high-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-high-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   55296
+  ],
+  "json": "\"A\\ud800\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "const-pair/lone-high-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-high-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-high-only",
+  "verdict": "accept",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "string/lone-high-only",
+  "verdict": "accept",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "min-length-2/lone-high-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have fewer than 2 characters | "
+ },
+ {
+  "id": "max-length-1/lone-high-only",
+  "verdict": "accept",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "pattern-one-char/lone-high-only",
+  "verdict": "accept",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "pattern-two-chars/lone-high-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/lone-high-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-high-only",
+  "verdict": "accept",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "open/lone-low-start",
+  "verdict": "accept",
+  "units": [
+   56320,
+   65
+  ],
+  "json": "\"\\udc00A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "string/lone-low-start",
+  "verdict": "accept",
+  "units": [
+   56320,
+   65
+  ],
+  "json": "\"\\udc00A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/lone-low-start",
+  "verdict": "accept",
+  "units": [
+   56320,
+   65
+  ],
+  "json": "\"\\udc00A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/lone-low-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-low-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-low-start",
+  "verdict": "accept",
+  "units": [
+   56320,
+   65
+  ],
+  "json": "\"\\udc00A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "const-pair/lone-low-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-low-start",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-low-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320,
+   66
+  ],
+  "json": "\"A\\udc00B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "string/lone-low-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320,
+   66
+  ],
+  "json": "\"A\\udc00B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "min-length-2/lone-low-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320,
+   66
+  ],
+  "json": "\"A\\udc00B\"",
+  "utf8": "41efbfbd42",
+  "length": 3
+ },
+ {
+  "id": "max-length-1/lone-low-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-low-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-low-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/lone-low-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-low-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-low-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320
+  ],
+  "json": "\"A\\udc00\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "string/lone-low-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320
+  ],
+  "json": "\"A\\udc00\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/lone-low-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320
+  ],
+  "json": "\"A\\udc00\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/lone-low-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-low-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-low-end",
+  "verdict": "accept",
+  "units": [
+   65,
+   56320
+  ],
+  "json": "\"A\\udc00\"",
+  "utf8": "41efbfbd",
+  "length": 2
+ },
+ {
+  "id": "const-pair/lone-low-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-low-end",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-low-only",
+  "verdict": "accept",
+  "units": [
+   56320
+  ],
+  "json": "\"\\udc00\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "string/lone-low-only",
+  "verdict": "accept",
+  "units": [
+   56320
+  ],
+  "json": "\"\\udc00\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "min-length-2/lone-low-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have fewer than 2 characters | "
+ },
+ {
+  "id": "max-length-1/lone-low-only",
+  "verdict": "accept",
+  "units": [
+   56320
+  ],
+  "json": "\"\\udc00\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "pattern-one-char/lone-low-only",
+  "verdict": "accept",
+  "units": [
+   56320
+  ],
+  "json": "\"\\udc00\"",
+  "utf8": "efbfbd",
+  "length": 1
+ },
+ {
+  "id": "pattern-two-chars/lone-low-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/lone-low-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-low-only",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/adjacent-highs",
+  "verdict": "accept",
+  "units": [
+   55296,
+   55296
+  ],
+  "json": "\"\\ud800\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "string/adjacent-highs",
+  "verdict": "accept",
+  "units": [
+   55296,
+   55296
+  ],
+  "json": "\"\\ud800\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/adjacent-highs",
+  "verdict": "accept",
+  "units": [
+   55296,
+   55296
+  ],
+  "json": "\"\\ud800\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/adjacent-highs",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/adjacent-highs",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/adjacent-highs",
+  "verdict": "accept",
+  "units": [
+   55296,
+   55296
+  ],
+  "json": "\"\\ud800\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "const-pair/adjacent-highs",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/adjacent-highs",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/adjacent-lows",
+  "verdict": "accept",
+  "units": [
+   56320,
+   56320
+  ],
+  "json": "\"\\udc00\\udc00\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "string/adjacent-lows",
+  "verdict": "accept",
+  "units": [
+   56320,
+   56320
+  ],
+  "json": "\"\\udc00\\udc00\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/adjacent-lows",
+  "verdict": "accept",
+  "units": [
+   56320,
+   56320
+  ],
+  "json": "\"\\udc00\\udc00\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/adjacent-lows",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/adjacent-lows",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/adjacent-lows",
+  "verdict": "accept",
+  "units": [
+   56320,
+   56320
+  ],
+  "json": "\"\\udc00\\udc00\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "const-pair/adjacent-lows",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/adjacent-lows",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/high-then-non-low",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "string/high-then-non-low",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/high-then-non-low",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/high-then-non-low",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/high-then-non-low",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/high-then-non-low",
+  "verdict": "accept",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41",
+  "length": 2
+ },
+ {
+  "id": "const-pair/high-then-non-low",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/high-then-non-low",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/low-then-high",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55296
+  ],
+  "json": "\"\\udc00\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "string/low-then-high",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55296
+  ],
+  "json": "\"\\udc00\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "min-length-2/low-then-high",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55296
+  ],
+  "json": "\"\\udc00\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "max-length-1/low-then-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/low-then-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/low-then-high",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55296
+  ],
+  "json": "\"\\udc00\\ud800\"",
+  "utf8": "efbfbdefbfbd",
+  "length": 2
+ },
+ {
+  "id": "const-pair/low-then-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/low-then-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/pair-then-lone-high",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832,
+   55296
+  ],
+  "json": "\"😀\\ud800\"",
+  "utf8": "f09f9880efbfbd",
+  "length": 3
+ },
+ {
+  "id": "string/pair-then-lone-high",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832,
+   55296
+  ],
+  "json": "\"😀\\ud800\"",
+  "utf8": "f09f9880efbfbd",
+  "length": 3
+ },
+ {
+  "id": "min-length-2/pair-then-lone-high",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832,
+   55296
+  ],
+  "json": "\"😀\\ud800\"",
+  "utf8": "f09f9880efbfbd",
+  "length": 3
+ },
+ {
+  "id": "max-length-1/pair-then-lone-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/pair-then-lone-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/pair-then-lone-high",
+  "verdict": "accept",
+  "units": [
+   55357,
+   56832,
+   55296
+  ],
+  "json": "\"😀\\ud800\"",
+  "utf8": "f09f9880efbfbd",
+  "length": 3
+ },
+ {
+  "id": "const-pair/pair-then-lone-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/pair-then-lone-high",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/lone-low-then-pair",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55357,
+   56832
+  ],
+  "json": "\"\\udc00😀\"",
+  "utf8": "efbfbdf09f9880",
+  "length": 3
+ },
+ {
+  "id": "string/lone-low-then-pair",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55357,
+   56832
+  ],
+  "json": "\"\\udc00😀\"",
+  "utf8": "efbfbdf09f9880",
+  "length": 3
+ },
+ {
+  "id": "min-length-2/lone-low-then-pair",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55357,
+   56832
+  ],
+  "json": "\"\\udc00😀\"",
+  "utf8": "efbfbdf09f9880",
+  "length": 3
+ },
+ {
+  "id": "max-length-1/lone-low-then-pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/lone-low-then-pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/lone-low-then-pair",
+  "verdict": "accept",
+  "units": [
+   56320,
+   55357,
+   56832
+  ],
+  "json": "\"\\udc00😀\"",
+  "utf8": "efbfbdf09f9880",
+  "length": 3
+ },
+ {
+  "id": "const-pair/lone-low-then-pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/lone-low-then-pair",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/empty",
+  "verdict": "accept",
+  "units": [],
+  "json": "\"\"",
+  "utf8": "",
+  "length": 0
+ },
+ {
+  "id": "string/empty",
+  "verdict": "accept",
+  "units": [],
+  "json": "\"\"",
+  "utf8": "",
+  "length": 0
+ },
+ {
+  "id": "min-length-2/empty",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have fewer than 2 characters | "
+ },
+ {
+  "id": "max-length-1/empty",
+  "verdict": "accept",
+  "units": [],
+  "json": "\"\"",
+  "utf8": "",
+  "length": 0
+ },
+ {
+  "id": "pattern-one-char/empty",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/empty",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/empty",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/empty",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/nul",
+  "verdict": "accept",
+  "units": [
+   0
+  ],
+  "json": "\"\\u0000\"",
+  "utf8": "00",
+  "length": 1
+ },
+ {
+  "id": "string/nul",
+  "verdict": "accept",
+  "units": [
+   0
+  ],
+  "json": "\"\\u0000\"",
+  "utf8": "00",
+  "length": 1
+ },
+ {
+  "id": "min-length-2/nul",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have fewer than 2 characters | "
+ },
+ {
+  "id": "max-length-1/nul",
+  "verdict": "accept",
+  "units": [
+   0
+  ],
+  "json": "\"\\u0000\"",
+  "utf8": "00",
+  "length": 1
+ },
+ {
+  "id": "pattern-one-char/nul",
+  "verdict": "accept",
+  "units": [
+   0
+  ],
+  "json": "\"\\u0000\"",
+  "utf8": "00",
+  "length": 1
+ },
+ {
+  "id": "pattern-two-chars/nul",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/nul",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/nul",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "open/nul-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   0,
+   66
+  ],
+  "json": "\"A\\u0000B\"",
+  "utf8": "410042",
+  "length": 3
+ },
+ {
+  "id": "string/nul-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   0,
+   66
+  ],
+  "json": "\"A\\u0000B\"",
+  "utf8": "410042",
+  "length": 3
+ },
+ {
+  "id": "min-length-2/nul-middle",
+  "verdict": "accept",
+  "units": [
+   65,
+   0,
+   66
+  ],
+  "json": "\"A\\u0000B\"",
+  "utf8": "410042",
+  "length": 3
+ },
+ {
+  "id": "max-length-1/nul-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must not have more than 1 characters | "
+ },
+ {
+  "id": "pattern-one-char/nul-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^.$\" | "
+ },
+ {
+  "id": "pattern-two-chars/nul-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must match pattern \"^..$\" | "
+ },
+ {
+  "id": "const-pair/nul-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to constant | "
+ },
+ {
+  "id": "enum-lone/nul-middle",
+  "verdict": "reject",
+  "message": "Validation failed for tool \"probe\": |   - text: must be equal to one of the allowed values | "
+ },
+ {
+  "id": "edit/ascii",
+  "verdict": "prepared",
+  "units": [
+   65,
+   66
+  ],
+  "json": "\"AB\"",
+  "utf8": "4142"
+ },
+ {
+  "id": "edit/bmp",
+  "verdict": "prepared",
+  "units": [
+   233,
+   20013
+  ],
+  "json": "\"é中\"",
+  "utf8": "c3a9e4b8ad"
+ },
+ {
+  "id": "edit/pair",
+  "verdict": "prepared",
+  "units": [
+   55357,
+   56832
+  ],
+  "json": "\"😀\"",
+  "utf8": "f09f9880"
+ },
+ {
+  "id": "edit/lone-high-start",
+  "verdict": "prepared",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41"
+ },
+ {
+  "id": "edit/lone-high-middle",
+  "verdict": "prepared",
+  "units": [
+   65,
+   55296,
+   66
+  ],
+  "json": "\"A\\ud800B\"",
+  "utf8": "41efbfbd42"
+ },
+ {
+  "id": "edit/lone-high-end",
+  "verdict": "prepared",
+  "units": [
+   65,
+   55296
+  ],
+  "json": "\"A\\ud800\"",
+  "utf8": "41efbfbd"
+ },
+ {
+  "id": "edit/lone-high-only",
+  "verdict": "prepared",
+  "units": [
+   55296
+  ],
+  "json": "\"\\ud800\"",
+  "utf8": "efbfbd"
+ },
+ {
+  "id": "edit/lone-low-start",
+  "verdict": "prepared",
+  "units": [
+   56320,
+   65
+  ],
+  "json": "\"\\udc00A\"",
+  "utf8": "efbfbd41"
+ },
+ {
+  "id": "edit/lone-low-middle",
+  "verdict": "prepared",
+  "units": [
+   65,
+   56320,
+   66
+  ],
+  "json": "\"A\\udc00B\"",
+  "utf8": "41efbfbd42"
+ },
+ {
+  "id": "edit/lone-low-end",
+  "verdict": "prepared",
+  "units": [
+   65,
+   56320
+  ],
+  "json": "\"A\\udc00\"",
+  "utf8": "41efbfbd"
+ },
+ {
+  "id": "edit/lone-low-only",
+  "verdict": "prepared",
+  "units": [
+   56320
+  ],
+  "json": "\"\\udc00\"",
+  "utf8": "efbfbd"
+ },
+ {
+  "id": "edit/adjacent-highs",
+  "verdict": "prepared",
+  "units": [
+   55296,
+   55296
+  ],
+  "json": "\"\\ud800\\ud800\"",
+  "utf8": "efbfbdefbfbd"
+ },
+ {
+  "id": "edit/adjacent-lows",
+  "verdict": "prepared",
+  "units": [
+   56320,
+   56320
+  ],
+  "json": "\"\\udc00\\udc00\"",
+  "utf8": "efbfbdefbfbd"
+ },
+ {
+  "id": "edit/high-then-non-low",
+  "verdict": "prepared",
+  "units": [
+   55296,
+   65
+  ],
+  "json": "\"\\ud800A\"",
+  "utf8": "efbfbd41"
+ },
+ {
+  "id": "edit/low-then-high",
+  "verdict": "prepared",
+  "units": [
+   56320,
+   55296
+  ],
+  "json": "\"\\udc00\\ud800\"",
+  "utf8": "efbfbdefbfbd"
+ },
+ {
+  "id": "edit/pair-then-lone-high",
+  "verdict": "prepared",
+  "units": [
+   55357,
+   56832,
+   55296
+  ],
+  "json": "\"😀\\ud800\"",
+  "utf8": "f09f9880efbfbd"
+ },
+ {
+  "id": "edit/lone-low-then-pair",
+  "verdict": "prepared",
+  "units": [
+   56320,
+   55357,
+   56832
+  ],
+  "json": "\"\\udc00😀\"",
+  "utf8": "efbfbdf09f9880"
+ },
+ {
+  "id": "edit/empty",
+  "verdict": "prepared",
+  "units": [],
+  "json": "\"\"",
+  "utf8": ""
+ },
+ {
+  "id": "edit/nul",
+  "verdict": "prepared",
+  "units": [
+   0
+  ],
+  "json": "\"\\u0000\"",
+  "utf8": "00"
+ },
+ {
+  "id": "edit/nul-middle",
+  "verdict": "prepared",
+  "units": [
+   65,
+   0,
+   66
+  ],
+  "json": "\"A\\u0000B\"",
+  "utf8": "410042"
+ },
+ {
+  "id": "keys/integer-like-order",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    49
+   ],
+   [
+    50
+   ],
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    98
+   ],
+   [
+    97
+   ]
+  ],
+  "prepared_keys": [
+   [
+    49
+   ],
+   [
+    50
+   ],
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    98
+   ],
+   [
+    97
+   ]
+  ],
+  "own_proto": false,
+  "json": "{\"1\":3,\"2\":2,\"oldText\":\"a\",\"newText\":\"b\",\"b\":1,\"a\":4}"
+ },
+ {
+  "id": "keys/lone-surrogate-key",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    55296
+   ]
+  ],
+  "prepared_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    55296
+   ]
+  ],
+  "own_proto": false,
+  "json": "{\"oldText\":\"a\",\"newText\":\"b\",\"\\ud800\":1}"
+ },
+ {
+  "id": "keys/pair-key",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    55357,
+    56832
+   ]
+  ],
+  "prepared_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    55357,
+    56832
+   ]
+  ],
+  "own_proto": false,
+  "json": "{\"oldText\":\"a\",\"newText\":\"b\",\"😀\":1}"
+ },
+ {
+  "id": "keys/proto-key",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    95,
+    95,
+    112,
+    114,
+    111,
+    116,
+    111,
+    95,
+    95
+   ]
+  ],
+  "prepared_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    95,
+    95,
+    112,
+    114,
+    111,
+    116,
+    111,
+    95,
+    95
+   ]
+  ],
+  "own_proto": true,
+  "json": "{\"oldText\":\"a\",\"newText\":\"b\",\"__proto__\":{\"x\":1}}"
+ },
+ {
+  "id": "keys/duplicate-key",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    107
+   ]
+  ],
+  "prepared_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    107
+   ]
+  ],
+  "own_proto": false,
+  "json": "{\"oldText\":\"a\",\"newText\":\"b\",\"k\":2}"
+ },
+ {
+  "id": "keys/empty-key",
+  "verdict": "observed",
+  "parsed_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   []
+  ],
+  "prepared_keys": [
+   [
+    111,
+    108,
+    100,
+    84,
+    101,
+    120,
+    116
+   ],
+   [
+    110,
+    101,
+    119,
+    84,
+    101,
+    120,
+    116
+   ],
+   []
+  ],
+  "own_proto": false,
+  "json": "{\"oldText\":\"a\",\"newText\":\"b\",\"\":1}"
+ }
+]
