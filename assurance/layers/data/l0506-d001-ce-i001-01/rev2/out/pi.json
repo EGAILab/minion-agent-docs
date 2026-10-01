@@ -1,0 +1,745 @@
+{
+ "scalar/+Infinity": {
+  "verdict": "reject"
+ },
+ "scalar/-Infinity": {
+  "verdict": "reject"
+ },
+ "scalar/NaN": {
+  "verdict": "reject"
+ },
+ "scalar/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "scalar/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "nullable-numeric-first/+Infinity": {
+  "verdict": "reject"
+ },
+ "nullable-numeric-first/-Infinity": {
+  "verdict": "reject"
+ },
+ "nullable-numeric-first/NaN": {
+  "verdict": "reject"
+ },
+ "nullable-numeric-first/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "nullable-numeric-first/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "nullable-none-first/+Infinity": {
+  "verdict": "reject"
+ },
+ "nullable-none-first/-Infinity": {
+  "verdict": "reject"
+ },
+ "nullable-none-first/NaN": {
+  "verdict": "reject"
+ },
+ "nullable-none-first/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "nullable-none-first/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "numeric-or-string/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": "Infinity"
+  }
+ },
+ "numeric-or-string/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": "-Infinity"
+  }
+ },
+ "numeric-or-string/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": "NaN"
+  }
+ },
+ "numeric-or-string/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "numeric-or-string/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "string-or-numeric/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": "Infinity"
+  }
+ },
+ "string-or-numeric/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": "-Infinity"
+  }
+ },
+ "string-or-numeric/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": "NaN"
+  }
+ },
+ "string-or-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "string-or-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "numeric-or-any/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "numeric-or-any/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "numeric-or-any/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "numeric-or-any/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "numeric-or-any/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "any-or-numeric/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "any-or-numeric/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "any-or-numeric/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "any-or-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "any-or-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "numeric-or-object/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "numeric-or-object/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "numeric-or-object/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "numeric-or-object/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "numeric-or-object/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "list-numeric/+Infinity": {
+  "verdict": "reject"
+ },
+ "list-numeric/-Infinity": {
+  "verdict": "reject"
+ },
+ "list-numeric/NaN": {
+  "verdict": "reject"
+ },
+ "list-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ "list-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    1e+308
+   ]
+  }
+ },
+ "list-numeric-or-list-any/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ "list-numeric-or-list-any/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "-Infinity"
+    }
+   ]
+  }
+ },
+ "list-numeric-or-list-any/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ "list-numeric-or-list-any/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ "list-numeric-or-list-any/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    1e+308
+   ]
+  }
+ },
+ "list-any-or-list-numeric/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "+Infinity"
+    }
+   ]
+  }
+ },
+ "list-any-or-list-numeric/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "-Infinity"
+    }
+   ]
+  }
+ },
+ "list-any-or-list-numeric/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "NaN"
+    }
+   ]
+  }
+ },
+ "list-any-or-list-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    {
+     "$num": "-0"
+    }
+   ]
+  }
+ },
+ "list-any-or-list-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": [
+    1,
+    1e+308
+   ]
+  }
+ },
+ "dict-numeric/+Infinity": {
+  "verdict": "reject"
+ },
+ "dict-numeric/-Infinity": {
+  "verdict": "reject"
+ },
+ "dict-numeric/NaN": {
+  "verdict": "reject"
+ },
+ "dict-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "dict-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ "dict-numeric-or-dict-any/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ "dict-numeric-or-dict-any/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ "dict-numeric-or-dict-any/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ "dict-numeric-or-dict-any/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "dict-numeric-or-dict-any/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ "dict-any-or-dict-numeric/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ "dict-any-or-dict-numeric/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ "dict-any-or-dict-numeric/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ "dict-any-or-dict-numeric/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "dict-any-or-dict-numeric/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "k": 1e+308
+   }
+  }
+ },
+ "model/+Infinity": {
+  "verdict": "reject"
+ },
+ "model/-Infinity": {
+  "verdict": "reject"
+ },
+ "model/NaN": {
+  "verdict": "reject"
+ },
+ "model/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "model/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ "model-or-dict-any/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ "model-or-dict-any/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ "model-or-dict-any/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ "model-or-dict-any/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "model-or-dict-any/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ "dict-any-or-model/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "+Infinity"
+    }
+   }
+  }
+ },
+ "dict-any-or-model/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "-Infinity"
+    }
+   }
+  }
+ },
+ "dict-any-or-model/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "NaN"
+    }
+   }
+  }
+ },
+ "dict-any-or-model/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "dict-any-or-model/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "y": 1e+308
+   }
+  }
+ },
+ "typeddict/+Infinity": {
+  "verdict": "reject"
+ },
+ "typeddict/-Infinity": {
+  "verdict": "reject"
+ },
+ "typeddict/NaN": {
+  "verdict": "reject"
+ },
+ "typeddict/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "w": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "typeddict/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "w": 1e+308
+   }
+  }
+ },
+ "dataclass/+Infinity": {
+  "verdict": "reject"
+ },
+ "dataclass/-Infinity": {
+  "verdict": "reject"
+ },
+ "dataclass/NaN": {
+  "verdict": "reject"
+ },
+ "dataclass/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "x": {
+     "$num": "-0"
+    }
+   }
+  }
+ },
+ "dataclass/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "x": 1e+308
+   }
+  }
+ },
+ "any/+Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "+Infinity"
+   }
+  }
+ },
+ "any/-Infinity": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-Infinity"
+   }
+  }
+ },
+ "any/NaN": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "NaN"
+   }
+  }
+ },
+ "any/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "any/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ },
+ "opaque-sibling/+Infinity": {
+  "verdict": "reject"
+ },
+ "opaque-sibling/-Infinity": {
+  "verdict": "reject"
+ },
+ "opaque-sibling/NaN": {
+  "verdict": "reject"
+ },
+ "opaque-sibling/-0": {
+  "verdict": "accept",
+  "value": {
+   "field": {
+    "$num": "-0"
+   }
+  }
+ },
+ "opaque-sibling/1e308": {
+  "verdict": "accept",
+  "value": {
+   "field": 1e+308
+  }
+ }
+}
