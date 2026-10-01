@@ -57,6 +57,15 @@ const SCHEMAS = {
   number: { type: "object", properties: { limit: { type: "number" } }, required: ["limit"] },
   integer: { type: "object", properties: { limit: { type: "integer" } }, required: ["limit"] },
   open: { type: "object", properties: {} },
+  // L0506-D001-RC002: numeric keywords without a declared type -- pinned Pi applies them to finite numbers only
+  "bound-maximum": { type: "object", properties: { limit: { maximum: 0 } } },
+  "bound-minimum": { type: "object", properties: { limit: { minimum: 0 } } },
+  "bound-exclusive-maximum": { type: "object", properties: { limit: { exclusiveMaximum: 0 } } },
+  "bound-exclusive-minimum": { type: "object", properties: { limit: { exclusiveMinimum: 0 } } },
+  "multiple-of": { type: "object", properties: { limit: { multipleOf: 2 } } },
+  "one-of-bounds": { type: "object", properties: { limit: { oneOf: [{ maximum: 0 }, { minimum: 1 }] } } },
+  "not-bound": { type: "object", properties: { limit: { not: { maximum: 0 } } } },
+  "number-bound": { type: "object", properties: { limit: { type: "number", maximum: 0 } } },
 };
 const decode = (t) => ({ "+Infinity": Infinity, "-Infinity": -Infinity, "-0": -0, NaN: NaN })[t] ?? Number(t);
 const token = (v) =>
