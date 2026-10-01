@@ -114,7 +114,8 @@ accepted baseline. Cargo.lock and dependency versions unchanged. No new dependen
 | shared schema + manifest pytest, focused --no-cov | **365 passed / 0 failed** |
 | git diff --check | PASS |
 
-All Cargo commands use --offline and the supplied verified vendor-config.toml.
+Cargo build/test/lint/doc/run commands use --offline and the supplied verified vendor-config.toml;
+the formatter does not take dependency-resolution options.
 The initial focused Python run also passed its tests but exited nonzero on the unrelated
 whole-package 100% coverage threshold; the explicit focused --no-cov rerun above is the shared
 schema/manifest gate, not a claim of a fresh full Python coverage run. No Python code changed.
