@@ -407,3 +407,101 @@ def test_cli_apply_with_a_patch_file(fake: FakeGitHub, tmp_path: Path) -> None:
     )
     assert main(["apply", "10", str(patch)], gh=GitHub(fake.run)) == 0
     assert split_body(fake.issues[(CODE, 10)]["body"]).workflow["status"] == "REMEDIATION"
+
+
+# ---- PROC-L13-F001: a process-only WP closes from FINAL_CONTRACT_REVIEW (coordination-state.md §10.2)
+
+
+def _process_wp(**changes: Any) -> dict[str, Any]:
+    state = {k: v for k, v in workflow(schema_version=2).items() if k not in ("code", "docs")}
+    state.update(
+        status="FINAL_CONTRACT_REVIEW",
+        requirements=[],
+        open_findings=[],
+        current_candidate={"docs": {"pr": 7, "sha": "a" * 40, "merged_sha": "b" * 40}},
+    )
+    state.update(changes)
+    return state
+
+
+def _close(state: dict[str, Any]) -> None:
+    from minion_process.github import GitHub
+    from minion_process.model import render_body
+    from minion_process.ops import commit_state
+
+    fake = FakeGitHub()
+    fake.issues[(CODE, 10)] = {"body": render_body({"workflow": state}, ""), "state": "OPEN", "title": "x"}
+
+    def mutate(w: dict[str, Any]) -> None:
+        w["status"] = "CLOSED"
+        w["next_owner"] = None
+        w["next_action"] = None
+
+    commit_state(GitHub(fake.run), CODE, 10, mutate, {"status", "next_owner", "next_action"}, dry_run=True)
+
+
+def test_a_process_only_wp_may_close_from_final_review() -> None:
+    assert check_transition("FINAL_CONTRACT_REVIEW", "CLOSED") is None
+    _close(_process_wp())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"requirements": ["TOOL-041"]}, "process-only"),
+        ({"open_findings": ["X-R001"]}, "open findings"),
+        ({"current_candidate": {"docs": {"pr": 7, "sha": "a" * 40}}}, "merged_sha"),
+        (
+            {
+                "current_candidate": {
+                    "docs": {"pr": 7, "sha": "a" * 40, "merged_sha": "b" * 40},
+                    "code": {"pr": 8, "sha": "c" * 40},
+                }
+            },
+            "merged_sha",
+        ),
+    ],
+    ids=["product-requirement", "open-finding", "unmerged", "one-candidate-unmerged"],
+)
+def test_process_closure_is_refused_unless_mechanically_complete(
+    changes: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(CheckFailed, match=message):
+        _close(_process_wp(**changes))
+
+
+def _close_for_real(state: dict[str, Any], clear_requirements: bool = False) -> FakeGitHub:
+    from minion_process.github import GitHub
+    from minion_process.model import render_body
+    from minion_process.ops import commit_state
+
+    fake = FakeGitHub()
+    fake.issues[(CODE, 10)] = {"body": render_body({"workflow": state}, ""), "state": "OPEN", "title": "x"}
+
+    def mutate(w: dict[str, Any]) -> None:
+        w["status"] = "CLOSED"
+        w["next_owner"] = None
+        w["next_action"] = None
+        if clear_requirements:
+            w["requirements"] = []
+
+    allowed = {"status", "next_owner", "next_action", "requirements"}
+    with pytest.raises(CheckFailed, match="explicit"):
+        commit_state(GitHub(fake.run), CODE, 10, mutate, allowed)
+    return fake
+
+
+@pytest.mark.parametrize(
+    ("scope", "clear"),
+    [("missing", False), (None, False), (["TOOL-041"], True)],
+    ids=["requirements-missing", "requirements-null", "closure-clears-product-requirements"],
+)
+def test_process_closure_needs_an_explicit_empty_scope_before_and_after(scope: object, clear: bool) -> None:
+    """PROC-L13-F001 refinement (Codex F001 review): each bypass is refused with ZERO writes."""
+    state = _process_wp()
+    if scope == "missing":
+        del state["requirements"]
+    else:
+        state["requirements"] = scope
+    fake = _close_for_real(state, clear_requirements=clear)
+    assert fake.edits == 0
