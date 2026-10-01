@@ -804,7 +804,7 @@ A rejection is Layer 06's certified immediate argument-validation error (`TOOL-0
 
 ### Tool-result runtime value domain (`AI-006` / `TOOL-005` / `TOOL-017` / `MINION-002`, post-certification delta `L0506-D003`)
 
-**Status (`minion-agent#112`):** AGREED FOR IMPLEMENTATION (Codex final review, `minion-agent-docs#216` comment `5939537679`). Contract code #116 → `708d93c1`, docs #216 → `7d73072c`. Python: conforms, including the `R001` Layer-08 replay fix. Rust: NOT_IMPLEMENTED (in progress).
+**Status (`minion-agent#112`):** CERTIFIED_CLOSED. Contract code #116 → `708d93c1`, docs #216 → `7d73072c` (Codex final review, `minion-agent-docs#216` comment `5939537679`). Python: conforms, including the `R001` Layer-08 replay fix. Rust: code #120 → `2bb8e688`, docs #223 → `bb3ab4a9`, closure review on `minion-agent-docs#223`.
 
 - **Authorization.** Owner decision on `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`).
   - This is a separate, scoped post-certification delta at the shared tool-result boundary.
