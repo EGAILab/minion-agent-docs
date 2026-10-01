@@ -252,8 +252,8 @@ the transitive audit exposed the boundary below.
 does not normalize the in-memory result strings. D002 certifies prepared
 arguments, not a widened tool-result/details domain.
 
-**Content-addressed source:** [edit.ts execute](https://github.com/badlogic/pi-mono/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit.ts)
-and [edit-diff.ts generateDiffString / generateUnifiedPatch](https://github.com/badlogic/pi-mono/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit-diff.ts).
+**Content-addressed source:** [edit.ts execute](https://github.com/earendil-works/pi/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit.ts)
+and [edit-diff.ts generateDiffString / generateUnifiedPatch](https://github.com/earendil-works/pi/blob/b7bb00b936dbe21b8e160b3e89efdec361846699/packages/coding-agent/src/core/tools/edit-diff.ts).
 The probe uses their exact functions (only TypeScript erasure), Node 22.15.1
 and diff 8.0.4 bytes independently verified against pinned Pi's committed
 lockfile SHA-512. Complete actual Pi checkout cleanliness is checked.
