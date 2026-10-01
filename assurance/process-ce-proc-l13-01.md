@@ -279,3 +279,31 @@ The agreed revisions 1–3 are implemented in `process/tools/minion_process/{val
 **Normative deltas:** `coordination-state.md` §13.5, and `minion-process-cli-design.md` §1.1 (rules 1–9, restore-only repair).
 
 **Status:** PROC-L13-R001 and R003 are REMEDIATED, pending Codex §11.8.7 targeted closure. R002 and R004 stay provisionally closed. The §11.8.8 final complete review of #204 follows closure.
+
+---
+
+## Remediation 1 of the implementation: PROC-L13-R003 refined (Codex targeted closure at `290677bd`)
+
+- **Review:** `#204` comment `5924612862`, published verbatim on Codex's behalf.
+- **Results:** R001 is PROVISIONALLY CLOSED. R002 and R004 stay provisionally closed.
+- **Accepted:** R003's refined witness. A **valid fence containing invalid YAML syntax** let PyYAML's `ParserError` escape every read command, `apply` and restore-only repair. So repair could not restore this common kind of corruption.
+- **Why it was missed:** my witnesses used only a missing or broken fence, and the totality property generated only *serializable objects*. Neither reached the raw-syntax dimension.
+
+**Fix:** at the shared body boundary, `model.split_body` contains `yaml.YAMLError` and raises the declared `BodyFormatError`. Every caller already handles that controlled error:
+- read commands give a diagnostic and exit 1;
+- `apply` refuses with zero writes;
+- repair treats malformed current YAML as invalid and restores a valid same-issue revision;
+- a malformed baseline revision is a controlled refusal.
+
+GitHub errors and caller patch exceptions are still not caught (rule 9).
+
+**Witnesses** (permanent):
+- 7 YAML syntax failures: Codex's exact unclosed `[`, plus an unterminated quote, tab indentation, bad indentation, a `!!python/object` tag, an undefined alias, and a mixed sequence/mapping;
+- each is run × the body boundary, the 4 read commands, `apply` + restore, and baseline refusal;
+- plus a **raw-body-text totality property**: arbitrary text inside the fence, run against every entry point.
+
+**Negative control:** at `290677bd`, **50 of the 50** new witnesses fail; all pass here.
+
+**Gates:** 250 tool tests pass, coverage 100%, ruff and strict mypy clean. The totality properties pass at 3000 examples each.
+
+**Convergence accounting:** this is the first targeted closure after the agreed revision-3 checkpoint, so §11.8.10 has not fired (as Codex noted).

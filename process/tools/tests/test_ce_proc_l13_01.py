@@ -4,6 +4,7 @@ repair. FakeGitHub only -- never a real GitHub write."""
 
 from __future__ import annotations
 
+import contextlib
 import copy
 from pathlib import Path
 from typing import Any
@@ -561,3 +562,75 @@ def test_issue_revisions_follow_pagination() -> None:
 
     assert GitHub(run).issue_revisions(CODE, 10) == [("A", "a"), ("B", "b")]
     assert "c=C1" in seen[1]
+
+
+# --- PROC-L13-R003 refinement (Codex targeted closure at 290677bd): invalid YAML inside a valid fence ----
+
+FENCE = "```yaml" + chr(10)
+CLOSE = chr(10) + "```" + chr(10)
+NL = chr(10)
+YAML_SYNTAX_FAILURES = [
+    FENCE + "workflow:" + NL + "  status: [" + CLOSE,  # Codex's exact witness: unclosed flow sequence
+    FENCE + "workflow:" + NL + '  status: "open' + CLOSE,  # unterminated quote
+    FENCE + "workflow:" + NL + chr(9) + "status: SCOPING" + CLOSE,  # tab indentation
+    FENCE + "workflow:" + NL + "  a: 1" + NL + " b: 2" + CLOSE,  # bad indentation
+    FENCE + "workflow: !!python/object:os.system {}" + CLOSE,  # a tag safe_load refuses
+    FENCE + "workflow: *missing" + CLOSE,  # undefined alias
+    FENCE + "workflow:" + NL + "  - a" + NL + "  b: c" + CLOSE,  # mixed sequence/mapping
+]
+
+
+def _raw_fake(body: str) -> FakeGitHub:
+    fake = FakeGitHub()
+    fake.issues[(CODE, 10)] = {"body": body, "state": "OPEN", "title": "x"}
+    fake.revisions[(CODE, 10)] = [("GOOD", render_body({"workflow": workflow()}, ""))]
+    return fake
+
+
+@pytest.mark.parametrize("body", YAML_SYNTAX_FAILURES)
+def test_invalid_yaml_is_a_controlled_body_error(body: str) -> None:
+    with pytest.raises(BodyFormatError):
+        split_body(body)
+
+
+@pytest.mark.parametrize("body", YAML_SYNTAX_FAILURES)
+@pytest.mark.parametrize("command", ["status", "validate", "candidate-check", "handoff-check"])
+def test_invalid_yaml_is_a_controlled_read_refusal(command: str, body: str) -> None:
+    fake = _raw_fake(body)
+    assert main([command, "10"], gh=GitHub(fake.run)) == 1
+    assert fake.edits == 0
+
+
+@pytest.mark.parametrize("body", YAML_SYNTAX_FAILURES)
+def test_invalid_yaml_current_state_is_refused_by_apply_and_restorable(body: str) -> None:
+    fake = _raw_fake(body)
+    with pytest.raises((CheckFailed, BodyFormatError)):
+        commit_state(GitHub(fake.run), CODE, 10, lambda w: None, set())
+    assert fake.edits == 0
+    expected = fake.revisions[(CODE, 10)][0][1]
+    assert restore_revision(GitHub(fake.run), CODE, 10, "GOOD") == expected
+    assert fake.edits == 1 and fake.issues[(CODE, 10)]["body"] == expected
+
+
+@pytest.mark.parametrize("body", YAML_SYNTAX_FAILURES)
+def test_an_invalid_yaml_baseline_is_a_controlled_refusal(body: str) -> None:
+    fake = _raw_fake("flattened garbage")
+    fake.revisions[(CODE, 10)] = [("BAD", body)]
+    with pytest.raises(CheckFailed, match="does not parse"):
+        restore_revision(GitHub(fake.run), CODE, 10, "BAD")
+    assert fake.edits == 0
+
+
+@SETTINGS
+@given(inner=st.text(max_size=60), prose=st.text(max_size=10))
+def test_raw_body_text_is_total_for_every_entry_point(inner: str, prose: str) -> None:
+    """The raw-body dimension the object-level property cannot reach: arbitrary text inside the fence."""
+    body = FENCE + inner + CLOSE + prose
+    fake = _raw_fake(body)
+    gh = GitHub(fake.run)
+    for command in ("status", "validate", "candidate-check", "handoff-check"):
+        assert main([command, "10"], gh=gh) in (0, 1)
+    with contextlib.suppress(CheckFailed, BodyFormatError):
+        commit_state(gh, CODE, 10, lambda w: None, set())
+    with contextlib.suppress(CheckFailed):
+        restore_revision(gh, CODE, 10, "GOOD")

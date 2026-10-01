@@ -83,7 +83,10 @@ def split_body(body: str) -> IssueBody:
     end = text.find(FENCE_CLOSE, len(FENCE_OPEN))
     if end < 0:
         raise BodyFormatError("unterminated ```yaml state block")
-    state = yaml.safe_load(text[len(FENCE_OPEN) : end])
+    try:
+        state = yaml.safe_load(text[len(FENCE_OPEN) : end])
+    except yaml.YAMLError as error:  # malformed coordination content, contained at the body boundary
+        raise BodyFormatError(f"state block is not valid YAML: {error}") from error
     if not isinstance(state, dict):
         raise BodyFormatError("state block is not a YAML mapping")
     rest = text[end + len(FENCE_CLOSE) :]
