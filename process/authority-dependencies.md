@@ -64,6 +64,8 @@ external authority dependency
   - `l0506-d002`
   - `l0206-raw-boundaries`
   - `13-wp132-evidence`
+  - `l05-d001-schema-domain`
+  - `l0506-d003-characterization`
 
   OS tools (`git`, `python3`) are installed only when missing. A fully offline container needs an image providing them; otherwise the runner fails with an explicit message.
 - **Historical harnesses** (characterization passes, WP-13.1 differentials) keep their recorded network acquisition. A re-run applies this pattern.
