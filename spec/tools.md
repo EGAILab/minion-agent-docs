@@ -614,7 +614,10 @@ NaN                  reachable ONLY through a tool's own prepare_arguments (belo
 - Pydantic's own coercion stays the certified, disclosed Layer-06 divergence. In particular, an `int` field coerces `-0.0` to `0`; this is pre-existing and unchanged here, and is disclosed.
 
 **Disclosed cells under the existing `TOOL-003` mapping** ("arguments conform to the supplied JSON Schema", not TypeBox's exact pipeline). These are recorded by `L0506-D001-RC002`; no new divergence is introduced:
-- **Number/string coercion.** In `{type: string}` or a `number | string` union, pinned Pi coerces a non-finite number to the string `"Infinity"`, `"-Infinity"` or `"NaN"`, and coerces a finite number such as `5` to `"5"`. Both bindings reject; neither reproduces TypeBox coercion.
+- **Number/string coercion**, by exact schema shape and value class:
+  - `{type: string}`: pinned Pi coerces any number to its string, a finite `5` to `"5"` and a non-finite value to `"Infinity"`, `"-Infinity"` or `"NaN"`. Both bindings reject.
+  - `{anyOf: [{type: number}, {type: string}]}`, in either branch order: a **finite** number already matches the numeric branch, and Pi (`validation.ts` `coerceWithUnionSchema` checks the original value against each branch first), Python and the contract all **accept it unchanged** as a number (e.g. `5`, `1e308`). A **non-finite** number matches no branch, and Pi coerces it to `"Infinity"`, `"-Infinity"` or `"NaN"`. Both bindings reject: these are the six characterized cells (`assurance/layers/data/l0506-d001-ce-i001-01/rev2/`).
+  - Other spellings of a numeric/string union (e.g. `type: [number, string]`, which `validation.ts` handles through a distinct `matchesUnionMember` path) are not characterized here, and no claim is made for them.
 - **`uniqueItems` with `[0, -0]`.** Pinned Pi accepts, because TypeBox equality distinguishes `-0`. Both bindings reject, as JSON Schema's numeric equality does: `0` and `-0` are equal. `uniqueItems` over repeated ±Infinity or NaN rejects in Pi and in both bindings.
 
 **Evidence** (`assurance/layers/data/l0506-d001/`).
