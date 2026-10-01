@@ -1,0 +1,8102 @@
+[
+ {
+  "id": "properties-required/ascii/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/ascii/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/ascii/pair",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/ascii/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/ascii/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/ascii/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/ascii/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/ascii/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/ascii/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/bmp/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/bmp/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/bmp/pair",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/bmp/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/bmp/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/bmp/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/bmp/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/bmp/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/bmp/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/pair/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/pair/pair",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/pair/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/pair/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/pair/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/pair",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/lone-high/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/pair",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/lone-low/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/pair",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/pair-then-lone-high/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/fffd/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/fffd/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/fffd/pair",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/fffd/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/fffd/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/fffd/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/fffd/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/fffd/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/fffd/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/pair",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/pair-high-half/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/ascii",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/bmp",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/pair",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/lone-low",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/pair-then-lone-high",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/fffd",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/pair-high-half",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "properties-required/pair-low-half/pair-low-half",
+  "role": "properties-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/ascii/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/bmp/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-high/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/lone-low/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-then-lone-high/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/fffd/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-high-half/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/ascii",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/bmp",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/pair",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/lone-low",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/pair-then-lone-high",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/fffd",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/pair-high-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "additional-properties-false/pair-low-half/pair-low-half",
+  "role": "additional-properties-false",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/ascii/ascii",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/ascii/bmp",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/ascii/pair",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/ascii/lone-high",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/ascii/lone-low",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/ascii/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/ascii/fffd",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/ascii/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/ascii/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/bmp/ascii",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/bmp/bmp",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/bmp/pair",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/bmp/lone-high",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/bmp/lone-low",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/bmp/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/bmp/fffd",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/bmp/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/bmp/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/pair/ascii",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/pair/bmp",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/pair/pair",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/pair/lone-high",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/pair/lone-low",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/pair/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/pair/fffd",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/pair/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/pair/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/lone-high/ascii",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/lone-high/bmp",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/lone-high/pair",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/lone-high/lone-high",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/lone-high/lone-low",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/lone-high/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/lone-high/fffd",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/lone-high/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/lone-high/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/lone-low/ascii",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/lone-low/bmp",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/lone-low/pair",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/lone-low/lone-high",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/lone-low/lone-low",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/lone-low/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/lone-low/fffd",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/lone-low/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/lone-low/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/ascii",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/bmp",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/pair",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/lone-high",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/lone-low",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/fffd",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/pair-then-lone-high/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/fffd/ascii",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/fffd/bmp",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/fffd/pair",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/fffd/lone-high",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/fffd/lone-low",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/fffd/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/fffd/fffd",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/fffd/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/fffd/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-high-half/ascii",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/pair-high-half/bmp",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/pair-high-half/pair",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-high-half/lone-high",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-high-half/lone-low",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/pair-high-half/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-high-half/fffd",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/pair-high-half/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/pair-high-half/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-low-half/ascii",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "const/pair-low-half/bmp",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "const/pair-low-half/pair",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "const/pair-low-half/lone-high",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-low-half/lone-low",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "const/pair-low-half/pair-then-lone-high",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "const/pair-low-half/fffd",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "const/pair-low-half/pair-high-half",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "const/pair-low-half/pair-low-half",
+  "role": "const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/ascii/ascii",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/ascii/bmp",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/ascii/pair",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/ascii/lone-high",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/ascii/lone-low",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/ascii/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/ascii/fffd",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/ascii/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/ascii/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/bmp/ascii",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/bmp/bmp",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/bmp/pair",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/bmp/lone-high",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/bmp/lone-low",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/bmp/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/bmp/fffd",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/bmp/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/bmp/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair/ascii",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/pair/bmp",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/pair/pair",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair/lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair/lone-low",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/pair/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair/fffd",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/pair/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/pair/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/lone-high/ascii",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/lone-high/bmp",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/lone-high/pair",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/lone-high/lone-high",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/lone-high/lone-low",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/lone-high/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/lone-high/fffd",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/lone-high/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/lone-high/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/lone-low/ascii",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/lone-low/bmp",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/lone-low/pair",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/lone-low/lone-high",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/lone-low/lone-low",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/lone-low/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/lone-low/fffd",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/lone-low/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/lone-low/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/ascii",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/bmp",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/pair",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/lone-low",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/fffd",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/pair-then-lone-high/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/fffd/ascii",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/fffd/bmp",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/fffd/pair",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/fffd/lone-high",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/fffd/lone-low",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/fffd/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/fffd/fffd",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/fffd/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/fffd/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/ascii",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/bmp",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/pair",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/lone-low",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/fffd",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/pair-high-half/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/ascii",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/bmp",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/pair",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/lone-high",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/lone-low",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/pair-then-lone-high",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/fffd",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/pair-high-half",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "enum/pair-low-half/pair-low-half",
+  "role": "enum",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/ascii/ascii",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/ascii/bmp",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/ascii/pair",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/ascii/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/ascii/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/ascii/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/ascii/fffd",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/ascii/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/ascii/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/bmp/ascii",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/bmp/bmp",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/bmp/pair",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/bmp/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/bmp/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/bmp/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/bmp/fffd",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/bmp/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/bmp/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair/ascii",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/pair/bmp",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/pair/pair",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/pair/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair/fffd",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/pair/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/pair/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/lone-high/ascii",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/lone-high/bmp",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/lone-high/pair",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/lone-high/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/lone-high/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/lone-high/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/lone-high/fffd",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/lone-high/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/lone-high/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/lone-low/ascii",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/lone-low/bmp",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/lone-low/pair",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/lone-low/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/lone-low/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/lone-low/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/lone-low/fffd",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/lone-low/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/lone-low/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/ascii",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/bmp",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/pair",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/fffd",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/pair-then-lone-high/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/fffd/ascii",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/fffd/bmp",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/fffd/pair",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/fffd/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/fffd/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/fffd/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/fffd/fffd",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/fffd/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/fffd/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/ascii",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/bmp",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/pair",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/fffd",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/pair-high-half/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/ascii",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/bmp",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/pair",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/lone-high",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/lone-low",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/pair-then-lone-high",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/fffd",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/pair-high-half",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern/pair-low-half/pair-low-half",
+  "role": "pattern",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/ascii/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/bmp/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-high/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/lone-low/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-then-lone-high/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/fffd/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-high-half/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/ascii",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/bmp",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/pair",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/lone-low",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/pair-then-lone-high",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/fffd",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/pair-high-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-unanchored/pair-low-half/pair-low-half",
+  "role": "pattern-unanchored",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/ascii/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/bmp/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/pair/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-high/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/lone-low/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-then-lone-high/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/fffd/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-high-half/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/ascii",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/bmp",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/pair",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/lone-low",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/pair-then-lone-high",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/fffd",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/pair-high-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "pattern-properties/pair-low-half/pair-low-half",
+  "role": "pattern-properties",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/ascii/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/bmp/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/pair/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/pair/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/pair/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/pair/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/pair/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/lone-high/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/lone-low/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/pair-then-lone-high/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/fffd/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/pair-high-half/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/ascii",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/bmp",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/pair",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/lone-low",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/pair-then-lone-high",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/fffd",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/pair-high-half",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "property-names-const/pair-low-half/pair-low-half",
+  "role": "property-names-const",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/ascii/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   97,
+   98
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/bmp/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   233,
+   20013
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/pair/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/pair/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/pair/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/pair/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/pair/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/lone-high/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/lone-low/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   56320
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/pair-then-lone-high/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357,
+   56832,
+   55296
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/fffd/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   65533
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/pair-high-half/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   55357
+  ],
+  "instance_units": [
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/ascii",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   97,
+   98
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/bmp",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   233,
+   20013
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/pair",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/lone-low",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56320
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/pair-then-lone-high",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357,
+   56832,
+   55296
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/fffd",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   65533
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/pair-high-half",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   55357
+  ]
+ },
+ {
+  "id": "dependent-required/pair-low-half/pair-low-half",
+  "role": "dependent-required",
+  "schema_units": [
+   56832
+  ],
+  "instance_units": [
+   56832
+  ]
+ }
+]
