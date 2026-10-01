@@ -2036,11 +2036,11 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
 **Evidence inventory (candidate for contract review).** The evidence lives in `assurance/layers/data/13-wp132-evidence/`, whose `README.md` gives the pins, the reproduction commands and the results.
 
 - **Items 1 and 4, corpus half.**
-  - The pinned-Pi authority run covers 379 cases: 60 curated edit cases, 300 seeded random edit cases, 9 `prepareEditArguments` cases, 5 write cases and 5 `normalizeForFuzzyMatch` cases.
+  - The pinned-Pi authority run covers 380 cases: 60 curated edit cases, 300 seeded random edit cases, 10 `prepareEditArguments` cases, 5 write cases and 5 `normalizeForFuzzyMatch` cases.
   - The corpus-level negative controls are 13 single-point mutants of copies of pinned `edit-diff.ts`, the `edit.ts`/`write.ts` glue and `diff` 8.0.4. All 13 are killed.
 - **Item 3's ordering authority.** Pinned `file-mutation-queue.ts` runs unmodified, with a scripted `realpath`, across 9 traced scenarios.
 - **Item 2 and item 3's scenarios.** They live in `minion-agent` `conformance/agent/builtin-mutation/`, in their own shape, `conformance/schema/builtin-mutation-scenario.schema.json` (key `builtin_mutation`). There are 26 documents:
-  - 8 are generated from the authority run and cover 373 cases. Expectations are pinned Pi's text, final bytes and details, verbatim. The one non-object `prepareEditArguments` input stays prepare-helper evidence (`L13-WP132-R005`).
+  - 8 are generated from the authority run and cover 374 cases. Expectations are pinned Pi's text, final bytes and details, verbatim. The one non-object `prepareEditArguments` input stays prepare-helper evidence (`L13-WP132-R005`).
   - 7 are hand-authored case documents covering the error sites, the FALLBACK and cancellation.
   - 11 are queue scenarios.
 

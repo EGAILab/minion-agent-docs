@@ -11,7 +11,7 @@ All files here are byte-exact (`.gitattributes`: `-text`). The hashes below hold
 | Pi | `b7bb00b936dbe21b8e160b3e89efdec361846699`; the source files are checked against `harness/pi_sources.sha256` and `file-mutation-queue.ts` sha256 `33cb06ac9bcdf32c8b84d9d12e33be44c503a7670f668e003a3262cd34294d11` |
 | Runtime | `node:22.15.1-alpine`. Node v22.15.1, V8 12.4.254.21-node.24, ICU 76.1, Unicode 16.0; checked at start, recorded in `out/runtime.txt` |
 | `diff` | 8.0.4, fetched with `npm pack`; its SHA-512 must equal the integrity in pinned Pi's `package-lock.json`: `sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==` |
-| Corpus | `cases.json`, regenerated deterministically by `harness/make_cases.py` (seeded). Its sha256 must equal `cases.sha256`: `aa4d57db6998ffc078a89e26ae1141f363337c72439d08d268eb552518f2141f` |
+| Corpus | `cases.json`, regenerated deterministically by `harness/make_cases.py` (seeded). Its sha256 must equal `cases.sha256`: `4fd3578ca1d5264cc0fe23fb9bbdde11bceccded7bd478eb893c4d01c93c18c7` |
 
 ## Reproduce
 
@@ -43,13 +43,13 @@ The glue between those functions is `edit.ts`'s and `write.ts`'s `execute` bodie
 
 `prepareEditArguments` and `validateEditInput` are copied verbatim, because `edit.ts` imports the TUI. For prepare cases, the prepared value is checked against `edit.ts`'s TypeBox schema. Only the verdict is recorded: the rejection text is Layer 06's.
 
-**Corpus: 379 cases.**
+**Corpus: 380 cases.**
 
 | Kind | Cases | What they exercise |
 |---|---|---|
 | edit, curated | 60 | spec rules; see below |
 | edit, seeded random | 300 | differential breadth |
-| `prepareEditArguments` coercions | 9 | argument preparation |
+| `prepareEditArguments` coercions | 10 | argument preparation, including a JSON number beyond binary64 (`L13-WP132-I002`) |
 | write | 5 | written length and bytes |
 | `normalizeForFuzzyMatch` | 5 | fuzzy normalization |
 
@@ -64,11 +64,11 @@ The curated edit cases cover:
 - the JavaScript whitespace set against NEL and U+001C;
 - line groups, astral characters in every position, and large Myers diffs.
 
-**Outcomes reached** (each of the 374 non-fuzzy cases counted once; the singular/plural split follows the templates):
+**Outcomes reached** (each of the 375 non-fuzzy cases counted once; the singular/plural split follows the templates):
 
 | Outcome | Count |
 |---|---|
-| edit success | 142 |
+| edit success | 143 |
 | write success | 5 |
 | `OVERLAP` | 57 |
 | `NOT_FOUND` | 13 singular + 44 plural |
@@ -137,7 +137,7 @@ Every queue scenario in the code repository cites the trace whose ordering it as
 ## 4. Canonical scenarios (`harness/make_scenarios.py`)
 
 These live in `minion-agent` `conformance/agent/builtin-mutation/` and use the shape `conformance/schema/builtin-mutation-scenario.schema.json`. There are 26 documents:
-- 8 corpus documents with 373 cases (the non-object `prepare-not-an-object` input stays prepare-helper evidence, `L13-WP132-R005`);
+- 8 corpus documents with 374 cases (the non-object `prepare-not-an-object` input stays prepare-helper evidence, `L13-WP132-R005`);
 - 7 hand-authored case documents with 43 cases;
 - 11 queue scenarios.
 
