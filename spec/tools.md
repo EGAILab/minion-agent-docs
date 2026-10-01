@@ -527,7 +527,7 @@ matches.
 
 ### Prepared runtime numeric domain (`TOOL-041`, post-certification delta `L0506-D001`)
 
-**Status (`minion-agent#88`):** Python/shared APPROVED and merged (code #90 → `a993f5d8`, docs #200 → `6076ad35`, final complete review on `minion-agent-docs#200`). Rust NOT_IMPLEMENTED. Cross-language NOT CLOSED.
+**Status (`minion-agent#88`):** CERTIFIED_CLOSED. Python: code #90 → `a993f5d8`, docs #200 → `6076ad35`; RC002 shared correction #96/#205. Rust: code #94 → `ee87245b`, docs #203 → `82184134`, closure review on `minion-agent-docs#203`.
 
 - **Authorization.** Owner decision `L13-WP132-I004`, Option 1 (`minion-agent#49` comment `5912178299`). This is a narrow post-certification extension of the Layer-05/06 runtime domain. Historical Layer-05/06 certification stands outside the surface below, and no intentional divergence is introduced.
 - **Origin.** Implementation-review finding `L13-WP132-I004` (`minion-agent-docs#194`):
