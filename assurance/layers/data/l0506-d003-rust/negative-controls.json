@@ -1,0 +1,23 @@
+{
+  "gate": "L0506-D003",
+  "cases": 142,
+  "target": "tool_result_domain_conformance",
+  "mutants_restored": true,
+  "results": [
+    {"mode": "return", "status": "KILLED", "failed_cases": 66, "first_boundary": {"hook": 64, "execution_end": 2}},
+    {"mode": "drop", "status": "KILLED", "failed_cases": 142, "first_boundary": {"message": 142}},
+    {"mode": "hook", "status": "KILLED", "failed_cases": 64, "first_boundary": {"hook": 64}},
+    {"mode": "end", "status": "KILLED", "failed_cases": 69, "first_boundary": {"execution_end": 69}},
+    {"mode": "message", "status": "KILLED", "failed_cases": 69, "first_boundary": {"message": 69}},
+    {"mode": "text", "status": "KILLED", "failed_cases": 17, "first_boundary": {"message": 17}},
+    {"mode": "nested", "status": "KILLED", "failed_cases": 45, "first_boundary": {"message": 45}},
+    {"mode": "keys", "status": "KILLED", "failed_cases": 14, "first_boundary": {"message": 14}},
+    {"mode": "numbers", "status": "KILLED", "failed_cases": 17, "first_boundary": {"message": 17}},
+    {"mode": "strict-log", "status": "KILLED", "failed_cases": null, "failure": "strict JSON storage refused non-scalar live message"},
+    {"mode": "log", "status": "KILLED", "failed_cases": 69, "first_boundary": {"session": 69}},
+    {"mode": "log-numbers", "status": "KILLED", "failed_cases": 17, "first_boundary": {"session": 17}},
+    {"mode": "derive", "status": "KILLED", "failed_cases": 69, "first_boundary": {"session": 69}}
+  ],
+  "not_applicable": ["event-replay-string-normalization", "event-replay-number-projection"],
+  "not_applicable_reason": "Rust has no log-to-Agent-event replay surface; Session derive_messages is covered."
+}
