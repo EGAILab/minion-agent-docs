@@ -1,6 +1,7 @@
 # L0506-D003: tool-result runtime value domain, contract
 
 **Work package:** `minion-agent#112`. **Status:** CONTRACT_DRAFT, which becomes CONTRACT_REVIEW at the exact heads named in #112.
+**Revision 2** (remediating contract review 1, `minion-agent-docs#216` comment `5938854630`): see §8, which supersedes the counts, runner description and Python claims of §4–§6.
 **Authorization:** Owner decision `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`).
 **Normative text:** `spec/tools.md` → "Tool-result runtime value domain".
 **Characterization:** `l0506-d003-characterization.md`, revision 2. Its authority is `out/result.json`, `97fa2ae9…`.
@@ -98,3 +99,47 @@ NOT_IMPLEMENTED. Codex's C002 handoff identifies the gap: `AgentToolResult.detai
 - **`WP132-RUST-C002`:** stays open until Rust certification.
 - **`ADJ-2`:** with the Owner. Non-blocking.
 - **K1 result-details key order:** recorded for `L0206-D001`.
+
+## 8. Contract review 1 remediation (revision 2)
+
+Codex's review (CHANGES REQUIRED, code `a5905040` / docs `03eb9bfd`) replayed the authority byte-identically and accepted the scope. It raised four blocking findings, all accepted.
+
+| Finding | Classification | Remediation |
+|---|---|---|
+| **R001**: falsy `details` lost by Python's replayed `tool_execution_end` | PI_PARITY_DEFECT | `agent/projection.py::_tool_result_from_message` now maps only `None` to `{}` (the `IR-L06-004` host mapping) and keeps every other value. **Witness:** on the old projection exactly 5 cases fail (`details-top-number/0`, `/-0`, `details-top-scalar/false`, `details-empty-array`, `details-top-string/empty`); all pass with the fix. Mutant `event-replay-truthiness-default` is killed. **Re-scope:** a top-level `null` is not distinguishable from absent in Python, so `details-top-scalar/null` leaves the gate with the ADJ-2 cases (nested `null` stays). |
+| **R002**: session observation bypassed production history replay | CONTRACT_ASSURANCE_DEFECT | The runner now drives the **real composed stack**. A scripted provider makes one tool call; the agent loop finalizes, builds the message, appends it and dispatches the events. The runner observes the after-hook, the live `tool_execution_end`, the live tool-result `MessageEnd`, committed-history replay (`derive_messages(log)`) and, where a binding rebuilds events from the log (Python `project`), the replayed `tool_execution_end`. Session mutants now patch the production seams: `agent_loop.driver.encode_message`, `session.derive.decode_message`, `agent.projection.decode_message`. The old runner-alias mutants no longer even install. |
+| **R003**: Session's admission domain excluded `NaN` | CONTRACT_ASSURANCE_DEFECT | `spec/session.md` now defines event data per carrier. Raw arguments stay `NaN`-free; tool-result data admits `NaN`. Replay means committed history, not a codec round trip. The MINION-002 rule is reconciled. |
+| **R004**: feasibility matrix absent | CONTRACT_ASSURANCE_DEFECT | `l0506-d003-feasibility-matrix.md`: the template's §1–§6 with the Owner's six carriers and questions, the lower-layer capability matrix (every Rust gap additive, inside the delta) and the full hazard checklist. Verdict: READY. |
+
+**Language-neutrality.** The replayed-event boundary is conditional. Rust has no log-to-event replay surface and is not required to add one. Message derivation from the log is mandatory for both bindings.
+
+**Corpus (regenerated, authority unchanged `97fa2ae9…`):**
+- 7 documents, **143** cases.
+- Gate L0506-D003: 142 cases (strings 80, keys 17, numbers 27, scalar/shape 7, after-hook 8, failure 3). Gate WP-13.2: 1 case.
+- Excluded: the 3 `undefined` cases and the top-level `null` case (ADJ-2).
+
+**Negative controls (revision 2).** These are real production seams; the unmodified pipeline fails 0/143.
+
+| Mutant | Seam | Failing cases / first failing boundary |
+|---|---|---|
+| unpaired surrogate → U+FFFD at tool return | `execute._finalize` input | 67: hook 65, execution_end 2 |
+| `details` dropped | `ToolResult.to_message` | 121: message |
+| hook receives U+FFFD | `register_after_tool_call_hook` | 65: hook |
+| `tool_execution_end` normalizes | `EventBus.emit(tools/execution-end)` | 70: execution_end |
+| message normalizes | `to_message` | 70: message |
+| only text normalized | `to_message` | 17: message |
+| only nested details strings normalized | `to_message` | 24: message |
+| keys replaced | `to_message` | 14: message |
+| JSON number projection at the message | `to_message` | 17: message |
+| strict UTF-8 JSON log storage | `driver.encode_message` | 80: message (the run fails before the message is dispatched) |
+| log stores U+FFFD | `driver.encode_message` | 70: session |
+| log stores Pi's file projection | `driver.encode_message` | 17: session |
+| committed-history replay returns U+FFFD | `session.derive.decode_message` | 70: session |
+| event replay returns U+FFFD | `agent.projection.decode_message` | 70: replayed_execution_end |
+| event replay defaults falsy `details` (R001) | `agent.projection._tool_result_from_message` | 5: replayed_execution_end |
+
+**Fresh Python gates** (code head on #112):
+- pytest 3857 passed / 17 skipped / 19 xfailed; coverage 100%;
+- mypy clean (97 files);
+- ruff check clean; changed files formatted;
+- manifest and schema validation pass.

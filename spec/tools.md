@@ -804,7 +804,7 @@ A rejection is Layer 06's certified immediate argument-validation error (`TOOL-0
 
 ### Tool-result runtime value domain (`AI-006` / `TOOL-005` / `TOOL-017` / `MINION-002`, post-certification delta `L0506-D003`)
 
-**Status (`minion-agent#112`):** CONTRACT_DRAFT. Python: no production change expected; canonical runner and negative controls in the paired code PR. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#112`):** CONTRACT_DRAFT, remediating contract review 1 (`L0506-D003-R001`–`R004`). Python: one production fix (`R001`, Layer-08 event replay), plus the canonical runner and negative controls in the paired code PR. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner decision on `WP132-RUST-C002-Q001`, Option 1 (`minion-agent#49` comment `5937380474`).
   - This is a separate, scoped post-certification delta at the shared tool-result boundary.
@@ -823,7 +823,8 @@ A rejection is Layer 06's certified immediate argument-validation error (`TOOL-0
 | failure conversion (a tool or hook throws) | Layer 06 | the error message becomes the result text with its code units unchanged; `details` is `{}` (`createErrorToolResult`, `IR-L06-004`) |
 | `tool_execution_end` (`tools/execution-end`) | Layer 06 | carries the final result's values (`TOOL-017`) |
 | `ToolResultMessage` (`content`, `details`) | Layer 02 vocabulary, produced by Layer 06 | the final result's values (`AI-006`) |
-| session append and replay | Layer 03 | the log accepts the message and replay returns the identical value (`MINION-002`) |
+| session append and committed-history replay | Layer 03 | the log accepts the message; message derivation from the log (`derive_messages`) returns the identical value (`MINION-002`, `spec/session.md`) |
+| replayed `tool_execution_end`, where a binding rebuilds events from the log (Python: Layer 08 `project`) | that binding's event replay | the rebuilt event carries the same values as the live `tool_execution_end`. A binding without such a surface has nothing to satisfy here; it is not required to add one. A falsy `details` (`0`, `-0`, `false`, `""`, `[]`) is not defaulted (`L0506-D003-R001`); only an absent/`null` one is the `IR-L06-004` host mapping |
 
 **The value domain.** The decision's §2 string domain, plus the same-carrier neighborhood folded under its §6:
 
@@ -842,7 +843,7 @@ other      null, true, false, arrays, objects; top-level details may be any of t
   - **Error text** interpolates `path`, a raw-domain string (`L0206-D002`), so it can hold one too.
   - **A custom tool or an after-hook replacement** can return every member above.
 - **Key enumeration order** is `L0206-D001`'s (K1, hazard family F6) and is not fixed here. Objects compare as key sets.
-- **`undefined` is outside this domain.** Absent/`undefined` versus `null` versus `{}` top-level details remains the certified host mapping of `IR-L06-004`/`CA-L06-007` (finding `ADJ-2`, raised with the Owner and not folded). Python and Rust have no `undefined`.
+- **`undefined`, and a top-level `null` `details`, are outside this domain.** Absent/`undefined` versus `null` versus `{}` **top-level** details remains the certified host mapping of `IR-L06-004`/`CA-L06-007` (finding `ADJ-2`, raised with the Owner and not folded). Python and Rust have no `undefined`, and Python's result type does not distinguish a top-level `null` from absent. A `null` **inside** `details` is in the domain.
 
 **A binding MUST NOT, anywhere between the tool's return and session replay:**
 - replace an unpaired surrogate (with U+FFFD or anything else), reject one, or re-encode a string through a lossy or strict UTF-8 conversion;
@@ -863,15 +864,18 @@ other      null, true, false, arrays, objects; top-level details may be any of t
 - **Provider-facing projection** of result text is out of scope (decision §12). It is a future-boundary obligation of the provider-owning layer (Layer 11). There, pinned Pi's `sanitizeSurrogates` deletes unpaired surrogates from outbound text (see `L0506-D002` above). `details` is not sent to the LLM.
 
 **Representation.** The contract fixes values, not types.
-- **Python.** `str` as in `L0506-D002` (valid pairs combined, unpaired surrogates as surrogate code points); `float` for `-0.0`, ±`inf` and `nan`; `ToolResult.details` / `ToolResultMessage.details` carry any value of the domain. Python already conforms at every boundary.
+- **Python.** `str` as in `L0506-D002` (valid pairs combined, unpaired surrogates as surrogate code points); `float` for `-0.0`, ±`inf` and `nan`; `ToolResult.details` / `ToolResultMessage.details` carry any value of the domain. Python conforms at every boundary after the `R001` fix (`agent/projection.py`: replay no longer defaults a falsy `details` to `{}`).
 - **Rust.** It needs a tool-result value able to hold this domain losslessly in `AgentToolResult`, the after-hook, `tool_execution_end`, `ToolResultMessage` and the session log. `serde_json::Value` and `String` are not the semantic authority: they cannot hold an unpaired surrogate, a surrogate key or a non-finite number. The type design is Rust's, delegated to its implementation review. Reusing the certified JS-compatible primitives (`L0506-D001`/`D002`, `L0206-D002`, `L05-D001`) is encouraged where ownership boundaries stay intact (decision §14). Note that `NaN` is in this domain but not in the raw domain.
 
 **Evidence.**
 - **Authority** (`minion-agent-docs` `assurance/layers/data/l0506-d003-characterization/`, record `l0506-d003-characterization.md`). It holds 146 pinned-Pi results under Node 22.15.1, with typebox 1.3.7 and diff 8.0.4 verified against the pinned lockfile, and runs host or container (`process/authority-dependencies.md`).
-- **Canonical scenarios** (`minion-agent` `conformance/agent/tool-result-domain/`, shape `tool-result-domain-scenario.schema.json`): 7 documents, 144 cases.
-  - **The certification gate, `L0506-D003`:** 6 documents, 143 cases. They cover strings (80), keys (17), numbers (27), scalars/shape (8), after-hook (8) and failure conversion (3). The string, key and number cases run with an observing after-hook.
+- **Canonical scenarios** (`minion-agent` `conformance/agent/tool-result-domain/`, shape `tool-result-domain-scenario.schema.json`): 7 documents, 143 cases.
+  - **The certification gate, `L0506-D003`:** 6 documents, 142 cases. They cover strings (80), keys (17), numbers (27), scalars/shape (7), after-hook (8) and failure conversion (3). The string, key and number cases run with an observing after-hook. The top-level-`null` case is excluded with the `undefined` ones (ADJ-2).
   - **Gate `WP-13.2`:** `gate-wp132-edit-result`, the decision §3 witness through the REAL `edit` tool. It is not part of this delta's certification. Rust WP-13.2's implementation review runs it once this delta is certified.
-  - The value grammar is `L0206-D002`'s plus `NaN`. The runner observes by value at the after-hook, `tool_execution_end`, the message and the session replay, and computes expectations from the scenario text.
+  - The value grammar is `L0206-D002`'s plus `NaN`.
+  - **The runner drives the real composed stack** (`L0506-D003-R002`). A scripted provider makes one tool call; the agent loop finalizes, builds the message, appends it to the log and dispatches its events.
+  - It observes by value at the after-hook, the live `tool_execution_end`, the live tool-result `MessageEnd`, committed-history replay (`derive_messages`) and, where the binding rebuilds events from the log (Python: `project`), the replayed `tool_execution_end`. That replayed event must equal the live one's expectation.
+  - Expectations are computed from the scenario text.
 - **The negative controls each binding runs** (decision §16). Each MUST fail the corpus at its own boundary while the unmodified pipeline passes:
   - an unpaired surrogate → U+FFFD at tool return;
   - `details` dropped;
@@ -885,7 +889,8 @@ other      null, true, false, arrays, objects; top-level details may be any of t
   - strict UTF-8 JSON session storage;
   - the session stores U+FFFD;
   - the session stores Pi's file projection;
-  - session reload returns U+FFFD.
+  - committed-history replay returns U+FFFD (the production replay decoder);
+  - for a binding with event replay: it returns U+FFFD (the production projection decoder), or defaults a falsy `details` to `{}` (the `R001` defect).
 
 ### Explicitly not certified by Layer 06
 

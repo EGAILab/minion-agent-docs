@@ -10,7 +10,9 @@ value (MINION-002 / spec/session.md; the L0206-D002 mapping). Pi's own session-F
 `pi_session_file` -- evidence for a future persisted form, asserted by no current runner.
 
 Excluded, with reasons recorded in the documents' notes:
-    details-*-undefined   ADJ-2 (Python and Rust have no undefined; certified IR-L06-004 host mapping)
+    details-*-undefined         ADJ-2 (Python and Rust have no undefined; certified IR-L06-004 host mapping)
+    details-top-scalar/null     ADJ-2 (top-level null vs absent details is the same unresolved host mapping;
+                                nested null stays in the domain) -- L0506-D003-R001 re-scope
 """
 
 from __future__ import annotations
@@ -93,8 +95,8 @@ DOCUMENTS = [
      "Details numbers are binary64 incl. -0, +/-Infinity and NaN (NaN/+/-Infinity folded under the Owner decision's "
      "section 6; -0 a required witness). Pi's session FILE writes -0 as 0 and non-finite as null (pi_session_file)."),
     ("tool-result-scalar-shape", lambda i: i.startswith(("details-scalar/", "details-top-scalar/", "details-empty-")),
-     "null/true/false as leaves and as the whole top-level details; empty object and array. Absent/undefined details "
-     "are excluded (ADJ-2: certified IR-L06-004 host mapping, not folded)."),
+     "null/true/false as leaves; true/false as the whole top-level details; empty object and array. Absent/undefined "
+     "details and a top-level null are excluded (ADJ-2: certified IR-L06-004 host mapping, not folded)."),
     ("tool-result-after-hook", lambda i: i.startswith(("hook-", "edit-witness/")),
      "The afterToolCall boundary: the hook observes the tool's own result; observe-only, same-values, {details: null} "
      "(Pi's `??` keeps the tool's details), replacement of details/text with domain values, and a throwing hook "
@@ -123,6 +125,8 @@ def main(cases_path, result_path, target):
         else:
             case = cases[rid]
         try:
+            if rid == "details-top-scalar/null":
+                raise Excluded
             doc = case_doc(case, result)
         except Excluded:
             excluded.append(rid)
@@ -133,7 +137,8 @@ def main(cases_path, result_path, target):
                 placed.add(rid)
                 break
     assert placed | set(excluded) == {r["id"] for r in results}, "every result is placed or excluded"
-    assert sorted(excluded) == ["details-array-undefined", "details-nested-undefined", "details-top-undefined"]
+    assert sorted(excluded) == ["details-array-undefined", "details-nested-undefined", "details-top-scalar/null",
+                                "details-top-undefined"]
     for name, _, notes in DOCUMENTS:
         write(target / f"{name}.json", {
             "name": name, "family": "agent", "authority": AUTHORITY, "pi_revision": PI,
