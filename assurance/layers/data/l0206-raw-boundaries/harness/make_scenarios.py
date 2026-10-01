@@ -67,6 +67,7 @@ def main():
                 continue
             p = r["pipeline"]
             assert p["outcome"] == "prepared" and p["hook"] == r["decode"] == p["execute"], cid
+            assert p["update_events"] == [r["decode"]] and p["update_args_is_raw_object"], cid  # L0206-D002-R001
             docs_cases.append({"id": cid, "provider_text": cases[cid]["text"], "arguments": value(r["decode"])})
         doc = {"name": name, "family": "agent", "authority": AUTH, "pi_revision": PI, "requirements": ["AI-003"],
                "witnesses": ["raw_tool_call_argument_value_domain"],

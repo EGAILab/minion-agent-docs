@@ -122,3 +122,7 @@ Python preserves insertion order at every seam: KEY-ORDER differences on `mixed-
   - the §11 negative controls;
   - canonical cases using a no-`prepare_arguments` tool.
 - Hand the contract to Codex for independent review.
+
+## Pass 1 addendum: the update boundary (`L0206-D002-R001`)
+
+The probe's tool now reports one partial result through `execute`'s `onUpdate`, and the probe records the events `executePreparedToolCall` emits. In all 39 cases, pinned Pi emits exactly one `tool_execution_update`, whose `args` **is** the raw `toolCall.arguments` object, with the observation equal to the decoded value. `cases.json` is unchanged. `out/raw.json` is now sha256 `101981dac450ddfaa60d4ad6ee7a58da437b42245a1ee487650801e821d2b483`; it superseded `239f777e…`, whose fields are all retained unchanged.

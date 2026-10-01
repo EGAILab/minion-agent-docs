@@ -97,7 +97,8 @@ Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
 
 **Evidence.**
 - **Authority:** `minion-agent-docs` `assurance/layers/data/l0206-raw-boundaries/` (characterization `l0206-d002-characterization.md`).
-- **Canonical scenarios:** `minion-agent` `conformance/agent/raw-arguments/` (shape `raw-arguments-scenario.schema.json`), 33 cases: 22 string, 10 number, 1 key. The runner observes the value at all six boundaries above.
+- **Canonical scenarios:** `minion-agent` `conformance/agent/raw-arguments/` (shape `raw-arguments-scenario.schema.json`), 33 cases: 22 string, 10 number, 1 key. The runner observes the value at every boundary above. The tool reports exactly one partial result, so the `tools/update` payload and the `on_execution_update` delivery are observed too (`L0206-D002-R001`).
+- **Number tokens in canonical cases** (`L0206-D002-R002`). A number is a named `+Infinity`, `-Infinity` or `-0`, or a finite literal that is exactly its binary64 value's ECMAScript `Number::toString`. A language-neutral preflight enforces this before dispatch, so no binding rounds or widens a fixture. `NaN` is outside the raw domain, because `JSON.parse` cannot produce it.
 - **Negative controls** (decision §11):
   - the raw lone surrogate rejected;
   - replaced with U+FFFD at decode;

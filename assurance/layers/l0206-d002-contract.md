@@ -116,3 +116,43 @@ FEASIBILITY
 - Python: conforms with no production change (33 cases, all six boundaries; §11 negative controls), PENDING contract review.
 - Rust: NOT_IMPLEMENTED.
 - WP-13.2: non-blocking (characterization §10 check).
+
+## Remediation 1: `L0206-D002-R001`, `L0206-D002-R002`
+
+**Trigger.** Codex's independent contract review (`minion-agent-docs#210` comment `5926939115`) REJECTED the draft with two evidence findings. Both are accepted.
+- Codex accepted draft decisions 1-5, including the numeric fold-in and the persisted-form N/A.
+- Codex verified Rust `-0` offline: `serde_json` 1.0.140 parses `-0`, `-0.0` and `-1e-400` as negative zero, and rejects `1e999`.
+- Codex flagged that `#103` recorded `requirements: []`. It is corrected to `[AI-003, MINION-002]`.
+
+### `L0206-D002-R001`: the update boundary had no evidence
+
+**The defect.** The contract named `tool_execution_update` arguments, but no case emitted an update. Codex instrumented the real emitter: 33 passes and zero `tools/update` emissions.
+
+**The fix.**
+- **Authority.** The Pi probe's tool now calls `onUpdate` once. Pinned Pi emits exactly one `tool_execution_update` per case, and its `args` is the raw object (characterization addendum; `raw.json` sha256 `101981da…`).
+- **Runner.** The canonical tool's `execute` takes Minion's `update` callback and reports one `ToolPartialResult`. The runner observes:
+  - the `tools/update` payload;
+  - the `on_execution_update` delivery passed to `execute_call`.
+
+  Each must hold exactly one observation, equal to the raw value. `tool_execution_end` stays N/A.
+- **Negative controls.** Two single-point source mutants normalize the raw argument at **one** update seam only: the `tools/update` emission, and the `on_execution_update` delivery. In each, construction, replay, start, hook and execute stay correct, and the case fails only on that update observation.
+
+### `L0206-D002-R002`: the numeric fixture grammar was lossy
+
+**The defect.** The schema admitted `9007199254740993`, which the Python decoder delivered unrounded while observation rounded it away. It admitted `1e999` as a "finite" token, and `NaN`, which is outside the raw domain.
+
+**The fix.**
+- **Schema.** A number token is either a NAMED `+Infinity`, `-Infinity` or `-0`, or a finite literal. `NaN` is removed.
+- **Preflight.** A language-neutral PREFLIGHT, run before dispatch and failing the document, requires a finite literal to denote a finite binary64 value **and** be exactly its ECMAScript `Number::toString`.
+- **Observation** is strict: an integer that is not exactly a binary64 value renders as `non_binary64_int`, never through a float.
+- **Witnesses:**
+  - the preflight refuses `9007199254740993`, `±1e999`, `NaN`, `-0.0`, `1.0`, `1E3` and `0.1000`;
+  - the preflight accepts the canonical `0`, `9007199254740992`, `1.7976931348623157e+308`, `5e-324`, `0.1`, `-1.5` and `1e+21`;
+  - the schema refuses `NaN`, `Infinity`, `1garbage`, `+1` and `01`;
+  - strict observation tells `9007199254740993` from `9007199254740992`;
+  - real hook-value witness: a pipeline delivering the unrounded integer fails `number/integer-2p53-plus-1`.
+- All 33 generated cases already used canonical tokens and are unchanged.
+
+**Gates:** 2554 passed, 17 skipped, 19 xfailed; 100% coverage; ruff and mypy clean.
+
+**Status:** R001 and R002 are REMEDIATED, pending targeted re-review.

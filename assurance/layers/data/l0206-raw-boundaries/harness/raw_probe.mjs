@@ -5,7 +5,8 @@
 //   persist  coding-agent session-manager.ts:1021 `${JSON.stringify(entry)}\n` (a message entry holding the call)
 //   replay   session-manager.ts:306 `JSON.parse(line)`
 //   pipeline agent-loop.ts prepareToolCall/executePreparedToolCall/finalizeExecutedToolCall, sliced from source,
-//            for a tool WITHOUT prepareArguments (open schema): what beforeToolCall / execute observe
+//            for a tool WITHOUT prepareArguments (open schema): what beforeToolCall / execute observe, and the
+//            tool_execution_update events its one partial result makes Pi emit (L0206-D002-R001)
 // Strings are rendered as UTF-16 code units, numbers as tokens ("+Infinity", "-0", Number::toString ...), and every
 // object as its key enumeration order (recursively), so K1 and Q001 read the same observations.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -55,15 +56,24 @@ for (const c of cases) {
   const replayed = JSON.parse(line).message.content[0].arguments;
   const seen = {};
   const tool = { name: "probe", parameters: { type: "object", properties: {} },
-                 execute: async (_id, args) => { seen.execute = args; return { content: [], details: {} }; } };
+                 // L0206-D002-R001: the tool reports one partial result, so Pi emits tool_execution_update
+                 execute: async (_id, args, _signal, onUpdate) => {
+                   seen.execute = args;
+                   onUpdate({ content: [{ type: "text", text: "partial" }], details: {} });
+                   return { content: [], details: {} };
+                 } };
   const config = { beforeToolCall: async ({ args }) => { seen.before = args; return undefined; } };
   const context = { systemPrompt: "", messages: [], tools: [tool] };
   const preparation = await loop.prepareToolCall(context, {}, call, config, undefined);
   let pipeline;
   if (preparation.kind === "prepared") {
-    const executed = await loop.executePreparedToolCall(preparation, undefined, async () => {});
+    const events = [];
+    const executed = await loop.executePreparedToolCall(preparation, undefined, async (e) => { events.push(e); });
     await loop.finalizeExecutedToolCall(context, {}, preparation, executed, config, undefined);
+    const updates = events.filter((e) => e.type === "tool_execution_update");
     pipeline = { outcome: "prepared", hook: obs(seen.before), execute: obs(seen.execute),
+                 update_events: updates.map((e) => obs(e.args)),
+                 update_args_is_raw_object: updates.every((e) => e.args === raw),
                  hook_is_raw_object: seen.before === raw, execute_is_hook_object: seen.execute === seen.before };
   } else {
     pipeline = { outcome: "error", message: preparation.result.content[0].text.split("\n")[0] };
