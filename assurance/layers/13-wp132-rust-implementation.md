@@ -302,3 +302,12 @@ certification remains valid. No output mutation or new semantics implemented.
 Rust WP-13.2 remains BLOCKED / NOT CERTIFIED; cross-language NOT CLOSED.
 Return C002 for contract resolution, not CLOSURE_REVIEW certification. Subsequent
 raw/schema implementation queue entries were not started during this pass.
+
+## Subsequent resume after L0506-D003 certification
+
+The preceding C002 blockade is historical. L0506-D003 was independently
+certified and merged before the subsequent WP-13.2 resume. See
+[the D003 integration record](13-wp132-rust-d003-integration.md) for the exact
+new candidate, lossless edit/result integration, complete corpus, K1 witness,
+fresh gates and remote-publication status. This addition does not rewrite the
+earlier review or retroactively claim certification of its blocked candidate.
