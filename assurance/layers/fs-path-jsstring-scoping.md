@@ -122,3 +122,40 @@ The Layer-12 path-resolution rules (`resolve_local_path`, `file://` handling) ne
 | WP-13.3 (#50, `bash`) | minimal: `bash` takes a command string, not a `ctx.fs` path. A `cwd` override, if Pi exposes one, would inherit the Layer-12 rule. No blocking |
 | WP-13.4 (#51, `find`/`grep`) | **direct**: path arguments and fd/rg output paths cross this seam. Agree Option 1 before WP-13.4's contract freezes, or WP-13.4 excludes it explicitly |
 | future filesystem tools | inherit the Layer-12 rule (Option 1); under Option 2 each must re-implement it |
+
+## 9. Owner decision and the follow-up characterization (L12-D001)
+
+The Owner selected **Option 1** (FSP-Q001, `minion-agent#123` comment `5943405192`). The work package is now **`L12-D001`**, an additive Layer-12 delta. The evidence below completes decision §6–§8 and §12 (FSP-D6). The Linux and Windows results are identical in every case.
+
+### 9.1 Alias, collision and queue key (`harness/alias_probe.mjs`)
+
+The probe uses Pi's own `getMutationQueueKey`, sliced unmodified from `file-mutation-queue.ts`. Outputs: `out/node-alias-win32.json` (`4868947b…`) and `out/node-alias-linux.json` (`44c9cb15…`). Spellings: A = `a\uD800`, B = `a\uDC00`, C = `a�`, each as a final component and as a directory component.
+
+| Step | Pinned Pi / Node |
+|---|---|
+| queue key, **missing** target | **raw** resolved path: A → `…a\uD800`, B → `…a\uDC00`, so **A ≠ B** |
+| write via A, then read via A / B / C | `first` / `first` / `first` |
+| queue key, **existing** target | realpath, the **projected** name `…a�`, the same for A, B and C |
+| second write via B, then read via A / B / C | `second` / `second` / `second` (B overwrote the file A created) |
+| `readdir` | exactly one entry, `a�` |
+| `realpath` of A, B or C | `…a�` |
+
+### 9.2 FSP-D6: `file://` (`harness/url_probe.mjs`, `harness/py_url_probe.py`)
+
+The same Node results come from `utils/paths.ts`'s unguarded `fileURLToPath` and the harness's guarded one.
+
+| Input (after `file:///…/`) | Pi / Node | Python strict conversion `file_url_to_path`, used by the certified TOOL-026 step 4 (R002-A) | Python `resolve_local_path` (suppressing wrapper, Layer 12) |
+|---|---|---|---|
+| raw lone high / low | U+FFFD (WHATWG URL parsing works on a scalar-value string) | **raises `UnicodeEncodeError`**, so the tool rejects ("invalid path") | the literal URL string is kept (fall-through) |
+| raw valid pair; raw pair + lone low | astral kept; the lone low becomes U+FFFD | pair OK; the mixed case raises | literal kept |
+| `%ED%A0%80`, `%ED%B0%80`, `%F0%9F` (truncated), `%C0%AF` (overlong) | `URIError: URI malformed` | raises `UnicodeDecodeError`, so step 4 rejects: **conforms** (R002-A) | literal kept: **conforms** to the harness's guarded resolver |
+| `%EF%BF%BD`, `%F0%9F%98%80` | decode to U+FFFD / U+1F600 | same | same |
+
+**FSP-D6 disposition.**
+- **Percent-encoded invalid UTF-8:** conforms (evidence only).
+- **A raw unpaired surrogate inside a `file://` string:** diverges. Pi converts the URL input to a scalar-value string (U+FFFD) before parsing, as the WHATWG URL Standard requires. Minion's conversion receives a string it cannot encode.
+- **The correction is additive.** It applies the URL Standard's scalar-value conversion to the input before the unchanged, delegated ada parse.
+  - This changes no certified scalar or `file://` result, because a scalar input is unaffected.
+  - It does not reverse `L12-R002`: ada stays the URL authority, and only its input domain widens.
+  - Rust's `file_url_to_path(&str, …)` needs the same conversion once paths are JavaScript strings.
+- **Owner return:** none required (decision §12).

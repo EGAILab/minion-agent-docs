@@ -1,0 +1,220 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "positions": {
+  "file": {
+   "missing_keys": {
+    "A": [
+     97,
+     55296
+    ],
+    "B": [
+     97,
+     56320
+    ],
+    "C": [
+     97,
+     65533
+    ]
+   },
+   "missing_keys_A_equals_B": false,
+   "read_after_write_A": {
+    "A": {
+     "ok": true,
+     "content": "first"
+    },
+    "B": {
+     "ok": true,
+     "content": "first"
+    },
+    "C": {
+     "ok": true,
+     "content": "first"
+    }
+   },
+   "existing_keys": {
+    "A": [
+     97,
+     65533
+    ],
+    "B": [
+     97,
+     65533
+    ],
+    "C": [
+     97,
+     65533
+    ]
+   },
+   "existing_keys_all_equal": true,
+   "read_after_write_B": {
+    "A": {
+     "ok": true,
+     "content": "second"
+    },
+    "B": {
+     "ok": true,
+     "content": "second"
+    },
+    "C": {
+     "ok": true,
+     "content": "second"
+    }
+   },
+   "listing": [
+    [
+     97,
+     65533
+    ]
+   ],
+   "realpath": {
+    "A": [
+     97,
+     65533
+    ],
+    "B": [
+     97,
+     65533
+    ],
+    "C": [
+     97,
+     65533
+    ]
+   }
+  },
+  "dir": {
+   "missing_keys": {
+    "A": [
+     100,
+     55296,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "B": [
+     100,
+     56320,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "C": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "missing_keys_A_equals_B": false,
+   "read_after_write_A": {
+    "A": {
+     "ok": true,
+     "content": "first"
+    },
+    "B": {
+     "ok": true,
+     "content": "first"
+    },
+    "C": {
+     "ok": true,
+     "content": "first"
+    }
+   },
+   "existing_keys": {
+    "A": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "B": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "C": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "existing_keys_all_equal": true,
+   "read_after_write_B": {
+    "A": {
+     "ok": true,
+     "content": "second"
+    },
+    "B": {
+     "ok": true,
+     "content": "second"
+    },
+    "C": {
+     "ok": true,
+     "content": "second"
+    }
+   },
+   "listing": [
+    [
+     100,
+     65533
+    ]
+   ],
+   "realpath": {
+    "A": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "B": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ],
+    "C": [
+     100,
+     65533,
+     92,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   }
+  }
+ }
+}
