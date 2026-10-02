@@ -124,3 +124,11 @@ FEASIBILITY
     Layer 11 consumes the rule). The binding gap (row 1 of section 2) is the delta's own subject:
     additive, authorized by decision section 9.
 ```
+
+## 7. Addendum: contract draft
+
+- **K1-F1, the typed-model path:** resolved in the contract (`spec/llm.md`). The keys present in the input keep the input's order by the rule. Defaulted keys follow, in declared order, each placed by the rule. Declared order is never imposed on input keys. There is no intentional divergence.
+- **K1-F2, the diagnostic text:** NOT_APPLICABLE. The `TOOL-003` mapping (Minion's validator message) is not reopened (`spec/tools.md`).
+- **Coercion** is characterized (`k1.json`: Pi keeps positions) but is not a canonical case, because Minion's validator does not coerce (`TOOL-003`).
+
+**Verdict:** READY for the contract checkpoint. Every row is AUDITED, NOT_APPLICABLE or DEFERRED_WITH_REASON. The binding gaps are this delta's own subject: additive, and authorized by decision §9.
