@@ -374,3 +374,23 @@ NEXT_OWNER
 | `ruff` / `mypy` | clean |
 
 **R004 stays open** until the targeted closure review (§11.8.7).
+
+## 15. Targeted closure 1 → remediation
+
+**Codex** (code `57b35bc4` / docs `073b5b72`; docs #228 comment `5949233413`): **R004 NOT CLOSED**, refined.
+- The agent-lifecycle preparation (`_order_event_arguments`) ordered only a `dict` root.
+- An **array-root** raw value, which the raw domain admits, skipped it. So a native child one lifecycle listener attached and mutated through its retained reference reached the next listener unordered.
+- Everything else was confirmed: 278 tests; the 49-case corpus; the authority replayed byte-identical; the 9 new cases fail at `92db98f9`.
+- §11.8.10's invalidation threshold is not met: this is the first targeted-closure failure.
+
+**Remediation:** code #128 @ `72249c62`.
+- Every lifecycle-event arguments root is ordered in place: an object, an array, or a primitive (left untouched).
+- **Sweep:** this was the only root-type gate on an observation path. The tools events' `_order_arguments`, `order_raw` and construction-time `adopt` already accept any root. The `edit` shim's `dict` check is its own input rule, as in Pi.
+
+**Permanent witnesses** (`tests/agent/test_key_order_lifecycle_array_root.py`), both with native observation (`json.dumps` of the retained child):
+- an array root through the real start delivery dispatching `agent/lifecycle-event`;
+- the update event at the declared lifecycle seam. The array root cannot reach a real update through validation, since an object schema rejects it, so this witness uses the seam directly.
+
+**Control:** reinstating the dict-only gate fails both witnesses. A primitive root is left untouched.
+
+**Gates:** `pytest` 4174 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
