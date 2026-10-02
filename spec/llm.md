@@ -66,7 +66,7 @@ number   a binary64 value as JSON.parse yields it: -0 (sign kept, also from a ne
 object / array / true / false / null   as JSON
 ```
 
-Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
+Object key **enumeration order** is `L0206-D001`'s (K1): see "Tool-argument object key order" below.
 
 **Boundaries.** The exact value MUST survive, unchanged, through every certified boundary:
 
@@ -112,6 +112,78 @@ Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
   - correct until persistence but lost on replay (Pi's JSON projection applied to the log).
 
 **WP-13.2** (decision §10): non-blocking. Its rules are total for any string a binding receives, and its `unpaired_surrogate_arguments` cases already defer raw decoding to this hazard.
+
+## Tool-argument object key order (`AI-003`, `TOOL-003`, cross-layer delta `L0206-D001`, K1)
+
+**Status (`minion-agent#100`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner K1 decision, Option 1 (`minion-agent#99` comment `5924847773`).
+  - This is a separate cross-layer post-certification delta (Layers 02/03, 05, 06). It is not part of `L0206-D002` (values) or `L0506-D002` (prepared strings).
+  - There is no intentional divergence.
+  - Revalidation is targeted (decision §9); no whole-layer reopen.
+- **Evidence.**
+  - Characterization: `assurance/layers/l0206-d001-characterization.md`.
+  - Feasibility: `l0206-d001-feasibility-matrix.md`.
+  - Authority: `assurance/layers/data/l0206-d001-k1/` (`out/k1-boundaries.json`, `out/k1.json`) and `data/l0206-raw-boundaries/`.
+
+**The rule.** At every boundary below, a tool-argument object, and every object nested in it at any depth (inside arrays too), enumerates its own keys in **ECMAScript `OrdinaryOwnPropertyKeys` order**:
+
+```text
+1. array-index keys, ascending numerically
+     an array index is the canonical decimal string of an integer 0 .. 4294967294:
+     "0", "7", "10", "4294967294" are indices;
+     "4294967295", "00", "01", "007", "-0", "-1", "+1", "1.0", "1e3", " 1", "0x1" and
+     "9007199254740993" are not
+2. every other key, in insertion order
+```
+
+- The order is a property of the object's **construction and mutation history**.
+  - **Duplicate keys** (decoding): a duplicate keeps its **first** position and takes the **last** value.
+  - **A key assigned later** (a hook's in-place mutation) joins by the same rule. A new index key goes to its ascending position among the indices; a new ordinary key goes last; an existing key keeps its position.
+  - **`__proto__` from decoding** is an ordinary own key.
+- **Nothing reorders**: no sorting, no schema order, no canonicalization, no coercion side effect.
+
+**Boundaries.**
+
+| Boundary | Owner | Rule |
+|---|---|---|
+| construction of `ToolCall.arguments` (decoding, adapters, any constructor) | Layer 02/03 | enumerates by the rule |
+| session append, replay and projection | Layer 03 | the replayed object enumerates as the appended one did |
+| `tool_execution_start` / `tool_execution_update` `args` | Layer 06 | the raw object's order |
+| `prepare_arguments` result (for example `edit`'s re-parse of `edits`) | Layer 05/06, the tool | the rule applies to the shim's object, including objects it decodes |
+| validation | Layer 06 | **does not reorder**: the validated object enumerates as its input did (pinned Pi `structuredClone` + `Value.Convert`). A declared property order is **not** imposed, and coercion (`"5"` → `5`) does not move a key |
+| `tools/pre-execute` listener (Pi `beforeToolCall`) | Layer 06 | sees the validated object's order. An **in-place mutation** is visible downstream, ordered by the rule |
+| a listener's **replacement** arguments (`Proceed(arguments=...)`, a Minion mapping: Pi's hook cannot replace) | Layer 06 | the replacement object enumerates by the rule applied to its own construction |
+| `execute` | Layer 06 | the object the hook saw, after any mutation, or the replacement |
+| every serialization of an argument object (a persisted session form, a provider payload) | Layer 03 / Layer 11 | emits keys in that order, as `JSON.stringify` does |
+
+**Typed-model parameters (K1-F1; the Minion `TOOL-003` pydantic mapping).** A tool whose parameters are a typed model receives the model's validated values, keyed and ordered as follows:
+- the keys present in the validated input, in the input's order (by the rule);
+- then any keys the model fills by default, in declared order, each placed by the rule.
+
+Declared field order is never imposed on keys the input supplied. (Pinned Pi has no defaulting step, so the defaulted keys are the mapping's own. Their placement follows the rule, as if assigned after the input's keys.)
+
+**Not in scope.**
+- **The validation-failure diagnostic text** (K1-F2). Minion's certified `TOOL-003` text is its validator's message, not Pi's `JSON.stringify(arguments, null, 2)` text (`spec/tools.md`). That text parity is not reopened, and its key order follows from it.
+- **Tool-result `details` key order**, the `L0506-D003` observation. The carrier is a tool result, not a tool-argument object (decision §1).
+- **Provider projection** is Layer 11's, the first binding to serialize arguments to a provider. It consumes this rule (row above).
+
+**Representation.** The contract fixes observable enumeration order, not types (decision §4).
+- **Python.** A `dict` iterates in insertion order. A binding must therefore keep every argument object it hands to an observer in the rule's order, **after** every construction and mutation. Insertion order alone is insufficient (decision §8), because a mutation appends.
+- **Rust.** The raw `IndexMap` (insertion) and the prepared `BTreeMap` (sorted) are both insufficient. The type design is Rust's.
+
+**Evidence and controls.**
+- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 29 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
+- **Negative controls.** Each MUST fail the corpus, while the conforming implementation passes:
+  - insertion order (Python today);
+  - sorted order (Rust prepared today);
+  - declared-schema order;
+  - reordering at the top level only;
+  - a non-canonical numeral treated as an index (`"01"`, `"4294967295"`);
+  - ordering applied at decode but lost after a hook mutation;
+  - ordering lost on replay.
+
+**WP-13.2** (decision §6) remains non-blocking. Its key-order independence witness exists on both sides, and WP-13.2 is CERTIFIED_CLOSED with K1 outside its owned surface.
 
 ## Provider abstraction (Layer 10)
 
