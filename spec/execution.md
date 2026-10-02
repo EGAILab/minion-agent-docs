@@ -2600,7 +2600,7 @@ Layer 13's provenance witnesses belong to `edit`'s integration (`TOOL-030`/`TOOL
 
 ## 14. Layer-12 post-certification delta `L12-D001` — filesystem path JavaScript-string domain
 
-**Status (`minion-agent#123`):** CONTRACT_DRAFT. Python: provider fix in the paired code PR. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#123`):** CONTRACT_DRAFT, remediating independent contract review 1 (`L12-D001-R001`, §14.8). Python: provider fix in the paired code PR. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner decision FSP-Q001, Option 1 (`minion-agent#123` comment `5943405192`). This is an **additive** extension of the certified Layer-12 `ctx.fs` seam.
   - Scalar-path certification (EXEC-001…009), WP-13.1 and WP-13.2 are not reopened, and every certified scalar claim stands.
@@ -2608,7 +2608,7 @@ Layer 13's provenance witnesses belong to `edit`'s integration (`TOOL-030`/`TOOL
 - **Owning seam.** The Layer-12 `ctx.fs` path seam, not individual tools. Layer-13 tools inherit the rule and implement no conversion of their own.
 - **Evidence.**
   - Characterization: `assurance/layers/fs-path-jsstring-scoping.md`, and `l12-d001-contract.md`.
-  - Authority: `assurance/layers/data/l12-d001/`. It runs pinned Pi's REAL harness `NodeExecutionEnv` (`packages/agent/src/harness/env/nodejs.ts`, imported unmodified) and Pi's coding-agent `getMutationQueueKey`, under Node v22.15.1. The output is identical on Linux and Windows.
+  - Authority: `assurance/layers/data/l12-d001/`. It runs pinned Pi's REAL harness `NodeExecutionEnv` (`packages/agent/src/harness/env/nodejs.ts`, imported unmodified) and Pi's coding-agent `getMutationQueueKey`, under Node v22.15.1. The path-domain cases are identical on Linux and Windows; the error-origin cases (§14.8) carry per-platform expectations where Node itself differs.
 
 ### 14.1 The domain and the two path values
 
@@ -2616,8 +2616,8 @@ A `ctx.fs` path argument is a **JavaScript string**: any UTF-16 code units, incl
 
 | Value | What it is | Where it is observable |
 |---|---|---|
-| **logical path** | the path string as given, after `resolve_local_path` (§3.2): code units unchanged | `absolute_path`; `FileInfo.name`/`path` from `file_info` (Pi's `fileInfoFromStats(resolved)`); the `target_key` **fallback** for a missing target (§14.3); abort errors and provider errors that do not come from the OS (`toFileError`'s fallback path) |
-| **native path** | the logical path projected for the host filesystem call | the filesystem name actually used; `canonical_path`; `list_dir` / `list_dir_raw` names; the path of an **OS-originated** `FsError` (Node's `err.path`) |
+| **logical path** | the path string as given, after `resolve_local_path` (§3.2): code units unchanged | `absolute_path`; `FileInfo.name`/`path` from `file_info` (Pi's `fileInfoFromStats(resolved)`); the `target_key` **fallback** for a missing target (§14.3); an `FsError` whose Node error names no path: aborts, a read of a directory, `remove`'s directory refusal (`toFileError`'s fallback, §14.8) |
+| **native path** | the logical path projected for the host filesystem call | the filesystem name actually used; `canonical_path`; `list_dir` / `list_dir_raw` names; an **OS-originated** `FsError`'s path: the native path **of the call that failed** (Node's `err.path`, §14.8), which is not always the operation's argument |
 
 **The native projection** happens only at the local provider's OS call, exactly where pinned Node converts a JavaScript string path at its fs binding:
 
@@ -2648,8 +2648,8 @@ everything else          ->  unchanged
 | `canonical_path` | the OS's real path of the native path: projected |
 | `file_info` | `name`/`path` are the **logical** path asked about; `kind`/size/mtime come from the native path |
 | `list_dir` | entries are the native directory's entries: names **projected**; each entry's `path` is the logical directory joined with the entry's (projected) name |
-| an OS-originated `FsError` | `path` = the native path (Node's `err.path`) |
-| an abort or non-OS `FsError` | `path` = the logical path (Pi's fallback) |
+| an OS-originated `FsError` | `path` = the native path of the native call that failed (Node's `err.path`; §14.8) |
+| an abort, or a failure whose Node error names no path | `path` = the logical path (Pi's fallback; §14.8) |
 
 ### 14.3 `FsTarget` / `target_key` (§4)
 
@@ -2682,16 +2682,18 @@ The contract fixes values, not types.
   - The `ctx.fs` path parameters, the file-URL conversion and the tools' path extraction need a lossless JavaScript-string path, reusing the certified JS-string primitive.
   - The tools must stop refusing a non-scalar path ("path is required"). `ls` must stop substituting `"."`, which listed the wrong directory (decision §9).
   - The type design is Rust's.
+  - Error origin (§14.8): parent and directory creation must follow Node's recursive-`mkdir` walk, which decides both the failing path and, for a file used as a component, the code. The platform's own "create all" primitive does not.
 
 ### 14.6 Platforms
 
-- Linux and Windows were observed and agree.
+- Linux and Windows were observed. They agree on the path domain. For error origin (§14.8), Node itself differs by platform, and each platform's expectation is pinned.
 - **macOS: DEFERRED_WITH_REASON.** It was not observed. Run the pinned probe on macOS before claiming macOS certification for this domain. Scalar-path certifications are unaffected.
 
 ### 14.7 Evidence and controls
 
 - **Canonical scenarios:** `minion-agent` `conformance/agent/fs-path-domain/`, shape `fs-path-domain-scenario.schema.json`, generated from the authority; Linux and Windows agree.
   - 4 `ctx.fs` documents, 56 cases: names × {final, directory} component, missing targets, aliases, `file://`.
+  - `fs-path-error-origin` (66 cases, §14.8): an ordinary and an unpaired-surrogate name through every error origin. A step whose answer differs by platform in pinned Node carries `expect_by_platform`. The 10 directory-open cases are `platforms: [linux]`, with a `platform_note` naming the recorded `minion-agent#67`.
   - One tool-level document (`fs-path-tools`, 5 cases, through the real `write`/`read`/`ls`/`edit`). It checks Pi's templates (path as given), reads via the U+FFFD spelling and the listing of the addressed directory.
 - **Negative controls (decision §19).** Each MUST fail the corpus, while the unmodified code passes:
   - early tool-level U+FFFD conversion;
@@ -2703,4 +2705,41 @@ The contract fixes values, not types.
   - a valid pair replaced;
   - a raw surrogate leaked in a directory component;
   - always-project-before-`target_key`;
-  - never-project-before-`target_key`.
+  - never-project-before-`target_key`;
+  - (`L12-D001-R001`) a write/append failure naming the requested target instead of the failing call's path;
+  - (`L12-D001-R001`) the platform's own recursive-create walk (Python `os.makedirs`) instead of Node's.
+  - The logical fallback for a read of a directory is witnessed by the Linux-only corpus cases, and by focused binding tests on every host.
+
+### 14.8 Error origin (`L12-D001-R001`)
+
+Pinned Pi's `toFileError(error, fallback)` (`nodejs.ts:97-121`) reports Node's `err.path` when the Node error carries one. Otherwise it reports the operation's fallback: the resolved **logical** path (for `rename_file`, the logical source).
+
+An `FsError`'s `path` is therefore decided by **which native call failed**, and by **whether Node's error for it names a path**. It is not decided by the operation's argument.
+
+Characterization: `assurance/layers/data/l12-d001/r001/`. It runs Pi's `NodeExecutionEnv` on both platforms and records Node's own `code` and whether its error had a path.
+
+| Failure | Node call that fails | `FsError.path` |
+|---|---|---|
+| `write_file` / `append_file` parent creation; `create_dir` (recursive) | Node's recursive `mkdir` walk (below) | the native path **the walk was at**. A file as the parent itself: that parent, `EEXIST` → `unknown`. A file further up: on Linux, the directory asked for (`mkdir` fails `ENOTDIR` at once); on Windows, the blocking file (`ENOENT` walks up to it, then `ENOTDIR`) |
+| non-recursive `create_dir`; a read, `file_info`, `exists`, `list_dir`, `canonical_path` or `remove` of a missing path or through a file component | the call on the argument | the native argument |
+| `rename_file` | `rename(source, destination)` | the native **source**, for every failure, including destination-side ones (Node's `err.dest` is not carried) |
+| `read_text_file` / `read_text_lines` / `read_binary_file` of a directory | the open succeeds; the read fails `EISDIR` with **no** path | the **logical** path (both platforms) |
+| `append_file` to a directory | Linux: the open fails `EISDIR`, naming the path. Windows: `EISDIR` with no path | Linux: native; Windows: logical |
+| `write_file` to a directory | the open fails `EISDIR`, naming the path | native |
+| `remove` of a directory without `recursive` | Node's own `rm` validation: `ERR_FS_EISDIR`, naming the string it was given | the **logical** path |
+| a `list_dir` entry vanishing between the listing and its `lstat` | `lstat(directory + entry name)` | the native entry path (a race, so not witnessable deterministically) |
+| abort | none | logical |
+
+**Node's recursive `mkdir` walk** (v22.15.1 `src/node_file.cc` `MKDirpAsync`, git blob `49816349d8bab37fea1d84e5326ee5a11acad7a2`):
+1. Pop a path and `mkdir` it.
+2. `ENOENT` pushes the path back, then its parent.
+3. `EACCES`, `EPERM` or `ENOTDIR` ends the walk.
+4. Any other error `stat`s the path. An existing directory is success. Otherwise the result is `ENOTDIR` for an intermediate path after `EEXIST`, and `EEXIST` in every other case.
+
+- **A provider MUST NOT** substitute the operation's target for the failing call's path, nor project a fallback.
+- Where a binding's native primitive names a path that Node's error does not (Python's `open` of a directory on POSIX), the provider reports Pi's fallback.
+- **Codes are unchanged (§2.1).** The corpus pins each platform's code as Pi reports it. This characterization found code differences outside this delta. They are recorded separately, not remediated here:
+  - Opening a directory as a file on Windows gives `permission_denied`: the recorded `minion-agent#67`. Its cases are Linux-only in the corpus (above). For read and append the path differs too, because Node's error names none.
+  - `remove` of a directory: pinned Pi answers `unknown` (`ERR_FS_EISDIR` is outside `toFileError`'s switch), while the Python binding answers `is_directory` on both platforms. Recorded as `L12-RM-DIRECTORY-CODE` (`minion-agent#125`); remediation is not authorized.
+- **Scalar paths.** §2–§3 specified `FsError` codes, never `FsError.path`. This section adds the path carrier for every path, scalar included. No certified scalar claim changes.
+  - Disclosed side effect: reproducing Node's walk aligns the Python binding's Windows code for a recursive creation through a file (`not_found` becomes Pi's `not_directory`). No certified test or scenario asserted the previous value.

@@ -5634,6 +5634,1363 @@
      ]
     }
    ]
+  },
+  {
+   "id": "error/scalar/parent-file/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/grandparent-file/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/grandparent-file/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/grandparent-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ],
+       [
+        121
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/create-dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing-parent/create-dir-nonrecursive",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/file-info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/canonical",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/parent-file/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-file/list-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing/read-lines",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing/read-binary",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing/file-info",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing/remove",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/missing-parent/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/missing-source",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/missing-source-named-dest",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/dest-parent-file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/dest-parent-missing",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/source-parent-file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/rename/dest-nonempty-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/grandparent-file/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/grandparent-file/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/grandparent-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ],
+       [
+        121
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-file/create-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/create-dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing-parent/create-dir-nonrecursive",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/file-info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/canonical",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/parent-file/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-file/list-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing/read-lines",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing/read-binary",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing/file-info",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing/remove",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/missing-parent/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/missing-source",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/missing-source-named-dest",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/dest-parent-file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/dest-parent-missing",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/source-parent-file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "not_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/rename/dest-nonempty-dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -1,6 +1,8 @@
 """Generate the L12-D001 canonical scenarios (minion-agent conformance/agent/fs-path-domain/) from the pinned-Pi
 authority's Linux AND Windows outputs, which must agree exactly (the contract is platform-neutral; macOS is
-DEFERRED_WITH_REASON, Owner decision FSP-Q001 section 13).
+DEFERRED_WITH_REASON, Owner decision FSP-Q001 section 13) -- except in the error-origin document (L12-D001-R001),
+where Node itself names a different code or path per platform: such a step carries `expect_by_platform` instead
+of `expect`.
 
     python make_scenarios.py <cases.json> <pi-linux.json> <pi-win32.json> <target dir>
 
@@ -34,6 +36,12 @@ DOCUMENTS = [
      "FSP-D6: a raw unpaired surrogate in a file:// string is U+FFFD after WHATWG URL parsing (before any fs call); "
      "valid percent-encoded sequences decode; percent-encoded invalid UTF-8 keeps the literal URL as an ordinary "
      "path at this Layer-12 seam (certified rule; the tool pipeline's R002-A rejection is TOOL-026's)."),
+    ("fs-path-error-origin", lambda i: i.startswith("error/"),
+     "L12-D001-R001: the path an OS-originated failure names is the path of the native call that failed, as Node's "
+     "err.path reports it -- a recursive directory creation's walk position (parent or blocking ancestor; it differs "
+     "by platform), a rename's source -- and the logical fallback where Node's error carries no path (a read of a "
+     "directory). Ordinary and unpaired-surrogate names alike. Codes and paths that differ by platform in pinned "
+     "Pi itself are per-platform expectations."),
 ]
 
 
@@ -41,15 +49,24 @@ def main(cases_path: str, linux_path: str, win_path: str, target: str) -> None:
     cases = {c["id"]: c for c in json.load(open(cases_path, encoding="utf-8"))}
     linux = {r["id"]: r["observed"] for r in json.load(open(linux_path, encoding="utf-8"))["results"]}
     win = {r["id"]: r["observed"] for r in json.load(open(win_path, encoding="utf-8"))["results"]}
-    assert linux == win, "Linux and Windows authority outputs must agree"
+    assert linux.keys() == win.keys()
+    assert all(linux[i] == win[i] for i in linux if not i.startswith("error/")), "Linux and Windows must agree"
     docs = {name: [] for name, _, _ in DOCUMENTS}
     for cid, case in cases.items():
-        observed = linux[cid]
-        assert len(observed) == len(case["steps"])
-        steps = [{**s, "expect": o} for s, o in zip(case["steps"], observed)]
+        assert len(linux[cid]) == len(win[cid]) == len(case["steps"])
+        platforms = case.get("platforms", ["linux", "win32"])
+        steps = []
+        for s, lo, wo in zip(case["steps"], linux[cid], win[cid]):
+            if "win32" not in platforms:
+                steps.append({**s, "expect": lo})
+            elif lo == wo:
+                steps.append({**s, "expect": lo})
+            else:
+                steps.append({**s, "expect_by_platform": {"linux": lo, "win32": wo}})
+        extra = {k: case[k] for k in ("platforms", "platform_note") if k in case}
         for name, match, _ in DOCUMENTS:
             if match(cid):
-                docs[name].append({"id": cid, "steps": steps})
+                docs[name].append({"id": cid, **extra, "steps": steps})
                 break
         else:
             raise AssertionError(f"unplaced case {cid}")

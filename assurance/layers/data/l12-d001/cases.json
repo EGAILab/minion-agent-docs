@@ -7072,5 +7072,1880 @@
     "observe": "last_component"
    }
   ]
+ },
+ {
+  "id": "error/scalar/parent-file/write",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/append",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/grandparent-file/write",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/grandparent-file/append",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/grandparent-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120,
+      47,
+      121
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/create-dir-nonrecursive",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120
+     ]
+    },
+    "recursive": false
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing-parent/create-dir-nonrecursive",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120
+     ]
+    },
+    "recursive": false
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/read",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_text_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/read-lines",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/read-binary",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/file-info",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "file_info",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/exists",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "exists",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/canonical",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "canonical_path",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/parent-file/remove",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "remove",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-file/list-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "list_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing/read-lines",
+  "steps": [
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing/read-binary",
+  "steps": [
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing/file-info",
+  "steps": [
+   {
+    "op": "file_info",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing/remove",
+  "steps": [
+   {
+    "op": "remove",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/missing-parent/canonical",
+  "steps": [
+   {
+    "op": "canonical_path",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      120
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/missing-source",
+  "steps": [
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "to": {
+     "utf16": [
+      100,
+      115,
+      116
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/missing-source-named-dest",
+  "steps": [
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/dest-parent-file",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/dest-parent-missing",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/source-parent-file",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "to": {
+     "utf16": [
+      100,
+      115,
+      116
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/rename/dest-nonempty-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98,
+      47,
+      102
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-dir/write",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-dir/append",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-dir/read",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_text_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-dir/read-lines",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/scalar/self-dir/read-binary",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      98
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      98
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/write",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/append",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/grandparent-file/write",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/grandparent-file/append",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/lone/grandparent-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120,
+      47,
+      121
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-file/create-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/create-dir-nonrecursive",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120
+     ]
+    },
+    "recursive": false
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing-parent/create-dir-nonrecursive",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120
+     ]
+    },
+    "recursive": false
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/read",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_text_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/read-lines",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/read-binary",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/file-info",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "file_info",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/exists",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "exists",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/canonical",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "canonical_path",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/parent-file/remove",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "remove",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-file/list-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "list_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing/read-lines",
+  "steps": [
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing/read-binary",
+  "steps": [
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing/file-info",
+  "steps": [
+   {
+    "op": "file_info",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing/remove",
+  "steps": [
+   {
+    "op": "remove",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/missing-parent/canonical",
+  "steps": [
+   {
+    "op": "canonical_path",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      120
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/missing-source",
+  "steps": [
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "to": {
+     "utf16": [
+      100,
+      115,
+      116
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/missing-source-named-dest",
+  "steps": [
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/dest-parent-file",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/dest-parent-missing",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/source-parent-file",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    },
+    "to": {
+     "utf16": [
+      100,
+      115,
+      116
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/rename/dest-nonempty-dir",
+  "steps": [
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "content": [
+     115
+    ]
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296,
+      47,
+      102
+     ]
+    },
+    "content": [
+     99
+    ]
+   },
+   {
+    "op": "rename_file",
+    "path": {
+     "utf16": [
+      115,
+      114,
+      99
+     ]
+    },
+    "to": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-dir/write",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "write_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-dir/append",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "append_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "content": [
+     99
+    ]
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-dir/read",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_text_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-dir/read-lines",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_text_lines",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "error/lone/self-dir/read-binary",
+  "platforms": [
+   "linux"
+  ],
+  "platform_note": "win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)",
+  "steps": [
+   {
+    "op": "create_dir",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    },
+    "recursive": true
+   },
+   {
+    "op": "read_binary_file",
+    "path": {
+     "utf16": [
+      97,
+      55296
+     ]
+    }
+   }
+  ]
  }
 ]

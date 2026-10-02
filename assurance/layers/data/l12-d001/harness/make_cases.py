@@ -9,6 +9,14 @@ plus target_key (Pi coding-agent getMutationQueueKey == Minion's FsTarget deriva
     write_file(path, content)   read_text_file(path)   list_dir(path)   canonical_path(path)
     absolute_path(path)         target_key(path)       exists(path)     file_info(path)
 
+and, for the error-origin cases (L12-D001-R001: WHICH path an OS-originated failure names):
+
+    append_file(path, content)  read_text_lines(path)  read_binary_file(path)
+    create_dir(path, recursive) remove(path)           rename_file(path, to)
+
+An error-origin case may carry `platforms` when a recorded Layer-12 finding makes a binding's answer on the other
+platform differ from pinned Pi for a reason outside this delta (`platform_note` names it).
+
     python make_cases.py <cases.json>
 """
 
@@ -125,8 +133,70 @@ def build() -> list[dict]:
         # last component is platform-neutral, so that is all the case observes.
         cases.append({"id": f"file-url/{name}", "steps": [step("absolute_path", {"file_url_tail": tail},
                                                                 observe="last_component")]})
+    cases += error_origin_cases()
     ids = [c["id"] for c in cases]
     assert len(ids) == len(set(ids))
+    return cases
+
+
+WIN_DIRECTORY_OPEN = ("win32 excluded: opening a directory as a file is refused on Windows before Node's own EISDIR, "
+                      "the recorded Layer-12 finding minion-agent#67 (code and, where Node's error has no path, path)")
+
+
+def error_origin_cases() -> list[dict]:
+    """L12-D001-R001: for each OS-originated failure, the path pinned Pi's toFileError reports -- Node's err.path,
+    i.e. the path of the native call that failed (a parent or an ancestor, a rename's source), else the logical
+    fallback -- for an ordinary name and for a name with an unpaired surrogate. `remove` of a directory is not
+    here: its code is the separately recorded L12 finding (Pi `unknown`, both bindings `is_directory`)."""
+    cases = []
+    for variant, n in {"scalar": u("b"), "lone": u("a") + [HI]}.items():
+        x, y, child = u("x"), u("y"), u("child")
+        blocker = step("write_file", p(n), content=u("c"))
+        directory = step("create_dir", p(n), recursive=True)
+        src = step("write_file", p(u("src")), content=u("s"))
+        programs = {
+            "parent-file/write": [blocker, step("write_file", p(n, child), content=u("c"))],
+            "parent-file/append": [blocker, step("append_file", p(n, child), content=u("c"))],
+            "grandparent-file/write": [blocker, step("write_file", p(n, x, child), content=u("c"))],
+            "grandparent-file/append": [blocker, step("append_file", p(n, x, child), content=u("c"))],
+            "parent-file/create-dir": [blocker, step("create_dir", p(n, x), recursive=True)],
+            "grandparent-file/create-dir": [blocker, step("create_dir", p(n, x, y), recursive=True)],
+            "self-file/create-dir": [blocker, step("create_dir", p(n), recursive=True)],
+            "parent-file/create-dir-nonrecursive": [blocker, step("create_dir", p(n, x), recursive=False)],
+            "missing-parent/create-dir-nonrecursive": [step("create_dir", p(n, x), recursive=False)],
+            "parent-file/read": [blocker, step("read_text_file", p(n, child))],
+            "parent-file/read-lines": [blocker, step("read_text_lines", p(n, child))],
+            "parent-file/read-binary": [blocker, step("read_binary_file", p(n, child))],
+            "parent-file/file-info": [blocker, step("file_info", p(n, child))],
+            "parent-file/exists": [blocker, step("exists", p(n, child))],
+            "parent-file/canonical": [blocker, step("canonical_path", p(n, child))],
+            "parent-file/remove": [blocker, step("remove", p(n, child))],
+            "self-file/list-dir": [blocker, step("list_dir", p(n))],
+            "missing/read-lines": [step("read_text_lines", p(n))],
+            "missing/read-binary": [step("read_binary_file", p(n))],
+            "missing/file-info": [step("file_info", p(n))],
+            "missing/remove": [step("remove", p(n))],
+            "missing-parent/canonical": [step("canonical_path", p(n, x))],
+            "rename/missing-source": [step("rename_file", p(n), to=p(u("dst")))],
+            "rename/missing-source-named-dest": [step("rename_file", p(u("src")), to=p(n))],
+            "rename/dest-parent-file": [src, blocker, step("rename_file", p(u("src")), to=p(n, child))],
+            "rename/dest-parent-missing": [src, step("rename_file", p(u("src")), to=p(n, child))],
+            "rename/source-parent-file": [blocker, step("rename_file", p(n, child), to=p(u("dst")))],
+            "rename/dest-nonempty-dir": [src, step("write_file", p(n, u("f")), content=u("c")),
+                                        step("rename_file", p(u("src")), to=p(n))],
+        }
+        linux_only = {
+            "self-dir/write": [directory, step("write_file", p(n), content=u("c"))],
+            "self-dir/append": [directory, step("append_file", p(n), content=u("c"))],
+            "self-dir/read": [directory, step("read_text_file", p(n))],
+            "self-dir/read-lines": [directory, step("read_text_lines", p(n))],
+            "self-dir/read-binary": [directory, step("read_binary_file", p(n))],
+        }
+        for name, steps in programs.items():
+            cases.append({"id": f"error/{variant}/{name}", "steps": steps})
+        for name, steps in linux_only.items():
+            cases.append({"id": f"error/{variant}/{name}", "platforms": ["linux"], "platform_note": WIN_DIRECTORY_OPEN,
+                          "steps": steps})
     return cases
 
 

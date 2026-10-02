@@ -114,3 +114,24 @@ FEASIBILITY
     The Python and Rust gaps are additive and inside the authorized delta. Deferred: macOS observation (decision
     section 13); the section-8 queue race (Pi parity, documented).
 ```
+
+## 7. Addendum: contract review 1 (`L12-D001-R001`)
+
+This addendum supersedes three rows above, which are kept as history: the "filesystem error path" row of §2, and the "Node/libuv error mapping" and "platform-specific path handling" rows of §3.
+
+| Dimension | Pi (observed) | Python with L12-D001 (remediated) | Rust required |
+|---|---|---|---|
+| filesystem error path | the native path **of the native call that failed** (Node `err.path`): the recursive-`mkdir` walk position, a rename's source, otherwise the argument. Where Node's error names no path, the logical fallback: a read of a directory, a Windows append to a directory, `remove`'s directory refusal, abort | the same (`_node_mkdirp`; logical fallback for path-less failures) | the same; reproduce Node's walk |
+| platform differences | path domain: none. Error origin: Node differs (walk position, codes); each platform is pinned | matches each platform, except the recorded code findings `#67` and `#125` | matches each platform |
+
+| JS/runtime row | Status | Note |
+|---|---|---|
+| Node/libuv error mapping | AUDITED | `toFileError`'s path choice per failing call (§14.8). Node's recursive `mkdir` is audited at source (`node_file.cc` blob `49816349…`). §2.1 code mapping is unchanged; the code differences found are recorded (`#67`, `#125`) |
+| platform-specific path handling | AUDITED | path domain: Linux = Windows. Error origin: per platform, from Node itself. macOS: DEFERRED_WITH_REASON |
+
+**Neighborhood expansion (F7, error origin).**
+- 39 failure programs × {ordinary, unpaired-surrogate} name, on both platforms (`r001/probe.mjs`).
+- 33 programs per name are canonical (66 cases).
+- The rest are already pinned elsewhere, or are the `#125` code (`l12-d001-contract.md` §7.3).
+
+**Verdict.** READY for contract re-review. Every row is AUDITED, NOT_APPLICABLE or DEFERRED_WITH_REASON. The remediation stays inside the authorized additive delta: it specifies `FsError.path`, which no scalar certification had specified.

@@ -1,0 +1,5 @@
+scalar/self-dir/remove                             pi=('unknown', 'b')  py=('is_directory', 'b')
+scalar/self-dir-nonempty/remove                    pi=('unknown', 'b')  py=('is_directory', 'b')
+lone/self-dir/remove                               pi=('unknown', 'a<D800>')  py=('is_directory', 'a<D800>')
+lone/self-dir-nonempty/remove                      pi=('unknown', 'a<D800>')  py=('is_directory', 'a<D800>')
+4 differ of 78

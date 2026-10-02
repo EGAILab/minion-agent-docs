@@ -56,6 +56,13 @@ async function run(c) {
         break; }
       case "exists": { const r = await env.exists(p); o = r.ok ? { ok: r.value } : observeError(cwd, r.error); break; }
       case "file_info": { const r = await env.fileInfo(p); o = r.ok ? { kind: r.value.kind, name: U(r.value.name) } : observeError(cwd, r.error); break; }
+      // L12-D001-R001 error-origin operations: only failure (and void success) is observed.
+      case "append_file": { const r = await env.appendFile(p, S(s.content)); o = r.ok ? { ok: null } : observeError(cwd, r.error); break; }
+      case "read_text_lines": { const r = await env.readTextLines(p); o = r.ok ? { ok: r.value.map(U) } : observeError(cwd, r.error); break; }
+      case "read_binary_file": { const r = await env.readBinaryFile(p); o = r.ok ? { ok: Array.from(r.value) } : observeError(cwd, r.error); break; }
+      case "create_dir": { const r = await env.createDir(p, { recursive: s.recursive }); o = r.ok ? { ok: null } : observeError(cwd, r.error); break; }
+      case "remove": { const r = await env.remove(p); o = r.ok ? { ok: null } : observeError(cwd, r.error); break; }
+      case "rename_file": { const r = await env.renameFile(p, arg(s.to)); o = r.ok ? { ok: null } : observeError(cwd, r.error); break; }
       default: throw new Error(`unknown op ${s.op}`);
     }
     observed.push(o);
