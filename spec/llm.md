@@ -115,11 +115,11 @@ Object key **enumeration order** is `L0206-D001`'s (K1): see "Tool-argument obje
 
 ## Tool-argument object key order (`AI-003`, `TOOL-003`, cross-layer delta `L0206-D001`, K1)
 
-**Status (`minion-agent#100`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#100`):** in final review (convergence `CE-L0206-D001-01`). Python: implemented in the paired code PR, not yet certified. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner K1 decision, Option 1 (`minion-agent#99` comment `5924847773`).
   - This is a separate cross-layer post-certification delta (Layers 02/03, 05, 06). It is not part of `L0206-D002` (values) or `L0506-D002` (prepared strings).
-  - There is no intentional divergence.
+  - **Divergence disposition (current).** The target is exact ECMAScript order, and Rust behaves exactly. The only intentional divergence is the bounded, Python-only native-alias interval approved by Owner decisions K1 Q1 and Q2 (`minion-agent#100` comments `5947071963`, `5948712829`; see "Every observer, every Minion-mediated access" below). The original K1 decision's "no intentional divergence" stands for everything else. Its history is kept in `assurance/layers/l0206-d001-convergence-ce01.md`.
   - Revalidation is targeted (decision §9); no whole-layer reopen.
 - **Evidence.**
   - Characterization: `assurance/layers/l0206-d001-characterization.md`.
@@ -204,7 +204,7 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
 - **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There were 37 cases at checkpoint 2; there are now 49, and each observes the recursive enumeration at every boundary above that the case reaches.
   - Among them are 7 hook **mutation programs** (`set`/`push`/`insert`/`get` with retained-reference handles, plus `ref` for one object placed twice) and a second listener's view.
   - Two long-decimal-key cases.
-  - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. The corpus now has 40 cases.
+  - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. That made 40 cases at checkpoint 2.
   - `update` is not asserted where a hook mutated nested objects. Whether such a mutation reaches the raw object is value isolation, not order: `L06-VALIDATION-SHALLOW-COPY`, `minion-agent#129`.
   - **`CE-L0206-D001-01` adds 9 cases, for 49:**
     - in-hook **read-back** through `args` after attachment (the `read` op, `hook_reads`);

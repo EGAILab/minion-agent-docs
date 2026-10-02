@@ -394,3 +394,25 @@ NEXT_OWNER
 **Control:** reinstating the dict-only gate fails both witnesses. A primitive root is left untouched.
 
 **Gates:** `pytest` 4174 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+## 16. Targeted closure 2 → final review 1 → Case A remediation
+
+**Codex targeted closure 2** (code `72249c62` / docs `aa53a7f9`): **R004 PROVISIONALLY CLOSED**.
+- The new witnesses fail at the rejected source `57b35bc4` (2 failed) and pass at the candidate.
+- 282 focused tests passed; the original reviewer probe is now ordered.
+- R001–R003 provisional closures and the C001/C002 Owner resolutions are preserved.
+
+**Codex final complete review 1** (same heads; docs #228 comment `5949499510`): **CHANGES REQUIRED**.
+- The semantic model, the mechanism and the R004 remediation are not rejected.
+- The authority replayed byte-identical. 282 focused tests passed. The broader selection gave 1574 passed / 1 failed; the failure was a reviewer-environment PyICU DLL prerequisite, not a K1 regression.
+- There are two documentary findings, both classified §11.8.8 **Case A**:
+  - **`L0206-D001-R005`** (CONTRACT_ASSURANCE_DEFECT): `spec/llm.md` still said "There is no intentional divergence." That contradicts the Q1/Q2-approved bounded Python interval in the same section.
+  - **`L0206-D001-R006`** (CONTRACT_ASSURANCE_DEFECT): `spec/tools.md` (tool-result runtime value domain) and manifest AI-006 delegated tool-result `details` key order to K1. K1 explicitly excludes tool-result details.
+- **Nonblocking:** the stale status line, the "now 40 cases" sentence, and the PR descriptions (28-case / failing-binding claims).
+
+**Case A remediation** (documentary only; no code behavior, corpus or authority change):
+- **R005:** the unconditional denial is replaced by the current disposition. The target is exact ECMAScript order, Rust is exact, and the only exception is the Q1/Q2 Python interval, with both decisions cited. The original decision's text survives in this record (§0 onward).
+- **R006:** both result-domain clauses (`spec/tools.md` and manifest AI-006) now state that tool-result `details` key order is not established and lies outside K1's certified surface. The D003 value domain and the key-set comparisons are unchanged.
+- **Nonblocking:** the status line now reads "in final review; Python implemented, not yet certified; Rust NOT_IMPLEMENTED". The 40-case sentence is now dated to checkpoint 2. The PR descriptions are updated.
+
+**Next:** §11.8.7 targeted closure of R005/R006 at the new exact heads, then the §11.8.8 final complete review.
