@@ -138,3 +138,115 @@ OPEN QUESTION
 NEXT_OWNER
     Codex (checkpoint review of exactly this proposal)
 ```
+
+---
+
+## 10. Checkpoint review 1 → Owner Q1 → revision 2
+
+**Codex.** Checkpoint review 1 (docs #228 comment `5945709684`) **REJECTED** the checkpoint on **`CE-L0206-D001-01-C001`**: same-observer read-after-attachment.
+- Codex's witness: a hook assigns `args.o = {b, "2", "1"}`, reads `args.o`'s keys and decides block or proceed.
+- Pi gives `1,2,b` and proceeds. The §3 latitude gives `b,2,1` and blocks.
+- Codex judged the Q1 latitude an observable divergence and escalated it.
+
+**Owner decision K1 Q1** (`#100` comment `5947071963`, verbatim): Option 1, strengthened. It **supersedes §3's latitude and §4's mechanism**:
+- **Required (exact parity):** every Minion-mediated attachment and observation of an object reachable through the tool-argument graph exposes ECMAScript order.
+  - **Attachment:** a plain `dict` attached through a Minion-owned seam is ordered **in place, before the operation returns**, and keeps its identity (`args["o"] is child`).
+  - **Reads:** every graph-mediated read orders what it exposes, in place, so a retained alias mutated out of order is repaired by the next read.
+  - The same-hook read-back (C001) is required parity.
+- **Approved `INTENTIONAL_BOUNDED_DIVERGENCE`, Python only.** A plain `dict` already attached, then mutated directly through a retained native alias and enumerated directly through that same alias, inside the same uninterrupted callback, before any further Minion-mediated graph operation, may show insertion order. It must not leak past the next framework boundary.
+- **Rejected:** Option 2 (`ctypes` type-pointer rewriting) and Option 3 (the wider latitude). Rust: exact parity.
+
+### 10.1 Revised rules (proposed normative text for `spec/llm.md`)
+
+> Objects reachable through the Minion tool-argument graph are normalized to ECMAScript own-property order at every Minion-mediated attachment and observation boundary: an object attached through a graph seam (object field assignment; array append, insert, replacement, extend; a hook's replacement result; nested attachment) is ordered in place before the operation returns, keeping its identity; every graph-mediated read (indexing, iteration, the next listener, validation and execute handoff, `tool_execution_*` observation, serialization and persistence, nested traversal) orders what it exposes, in place.
+>
+> Python cannot intercept arbitrary direct mutation and enumeration performed solely through an externally retained plain-dict alias during an uninterrupted callback; that narrow interval is an approved Python-specific divergence (Owner decision K1 Q1). Rust: no such interval.
+
+**Classification (decision §16):**
+
+| Part | Classification |
+|---|---|
+| the key-order target | DIRECT_PI_PARITY |
+| the Python graph-mediated mechanism | MINION_ARCHITECTURAL_MAPPING |
+| the retained-native-alias interval | INTENTIONAL_BOUNDED_DIVERGENCE (observable; it can change a hook decision) |
+| Rust | DIRECT_PI_PARITY |
+
+### 10.2 Revised mechanism (prototype, local branch `ce/k1-observer-chain` @ `f166140`, not a candidate)
+
+| Piece | Rule |
+|---|---|
+| `JsObject` | `__setitem__` orders the attached value in place (no copy). `__getitem__`, `get`, `values`, `items` and `setdefault` order what they return, in place. Its own index-key ordering is kept |
+| `JsArray` (new, a `list` subclass) | the array seam. `append`, `insert`, `extend`, `+=`, and element or slice replacement order the attached value in place. Element reads, slices and iteration order what they expose |
+| `adopt` at construction | the raw value's objects and arrays become `JsObject` / `JsArray` once, before the pipeline owns them. Afterwards no object is replaced |
+| framework boundaries (§4, unchanged) | `EventBus.before_each` before every listener in every dispatch mode; ordering before each live delivery, before `execute`, and at every serialization. These hold the "no leak past callback control" rule (decision §9) for anything a retained alias disordered |
+
+### 10.3 Evidence (decision §12–§14), prototype results
+
+**`tests/tools/test_key_order_observer_chain.py`** runs every witness through real hooks of the real `execute_call` pipeline.
+
+| Witness | Result |
+|---|---|
+| A | attach, then read through `args` → `1,2,b`, no block |
+| B | identity kept; a later alias mutation is visible at `execute` |
+| C | mutated alias, then read through `args` → repaired |
+| D | mutated alias, then the next listener → ordered |
+| E | mutated alias, then `execute` → ordered |
+| F | nested attachment → ordered at once |
+| G / H / I / J | array append, insert, replacement, extend: the element is ordered before the call returns, identity kept |
+| K | a hook replacement reaches `execute` ordered (same object) |
+| L | raw start and update deliveries after a listener mutation → ordered |
+
+**Divergence witness (documentary).**
+- A direct alias enumeration gives `b,2,1`: the approved gap, exactly bounded.
+- A read through `args` then gives `1,2,b`.
+- The alias, repaired in place, then gives `1,2,b`.
+
+**Controls (decision §14).** Each control kills at least one matrix witness:
+- copy-on-assignment;
+- normalize only before `execute`;
+- normalize only before the next listener;
+- normalize only during serialization;
+- top level but not nested;
+- array insertion bypass;
+- the same-hook `args` read returning insertion order;
+- identity loss.
+
+**Corpus (40) and its 10 controls:** all pass. The `raw-boundaries-unordered` control now also removes adoption, and kills 3.
+
+**Gates:** `pytest` 4146 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+**Not used:** no interpreter-object surgery (decision §10).
+
+### 10.4 Conformance delta (with the implementation)
+
+§6 is unchanged (`start_program` / `update_program`). In addition, the matrix's language-neutral rows A–K join the corpus as hook programs, observed both in-hook and downstream:
+- an in-hook read-back observation;
+- array `insert` / `replace` / `extend` ops in the op grammar.
+
+The divergence witness stays a Python binding test; it is not a corpus case.
+
+## 11. Convergence checkpoint (revision 2)
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 2; revision 1 REJECTED on C001)
+
+OPEN FINDINGS
+    L0206-D001-R004 (convergence root)
+    CE-L0206-D001-01-C001: REQUIRED PARITY, resolved by attachment + read normalization (Owner Q1)
+
+GOVERNANCE
+    Owner K1 Q1 (#100 comment 5947071963): bounded Python divergence approved; options 2/3 rejected
+
+ACCEPTANCE WITNESSES
+    matrix A-L + divergence witness + 8 controls (section 10.3)
+    corpus 40 + 10 controls; corpus extension (sections 6, 10.4)
+    R001-R003 closures preserved
+
+NORMATIVE DELTAS
+    spec/llm.md key-order section: section 10.1 wording + classification
+    manifest AI-003: evidence pointers and the divergence disclosure
+
+NEXT_OWNER
+    Codex (checkpoint re-review of exactly this revision)
+```
