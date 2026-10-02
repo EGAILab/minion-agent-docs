@@ -14,6 +14,12 @@ JSON.parse (CreateDataProperty, so "__proto__" is an ordinary own key). A case m
                                                                             T[k].splice(i, 0, V)
                 {"op": "get",    "target": T, "key": k, "as": h}               h = T[k]
               Instead of "value", an op may give "ref": h, placing the SAME object h again.
+              CE-L0206-D001-01 adds, for arrays: {"op": "extend", "target": T, "key": k, "values": [V, ...]}
+              (T[k].push(...values)) and {"op": "replace", "target": T, "key": k, "index": i, "value": V}
+              (T[k][i] = V); and an observation {"op": "read", "path": [k | i, ...]}: the value at that path
+              FROM THE ARGUMENTS OBJECT, observed at that point of the hook (recorded in order, `hook_reads`).
+    start_program / update_program (CE-L0206-D001-01) the same op grammar, run by a listener of the execution-start
+              (respectively update) event on the RAW arguments object; the live delivery after it is observed
               T is "args" or a handle; "as" names the object V builds (or T[k] for get), so a later op
               mutates THAT object through the retained reference. `observe_second` additionally
               observes the arguments after the program (a later listener's view).
@@ -122,6 +128,43 @@ CASES: list[dict] = [
     {"id": "raw/nested-raw-object-gains-index", "arguments": o(("o", o(("y", 1)))),
      "raw_program": [{"op": "get", "target": "args", "key": "o", "as": "inner"},
                      {"op": "set", "target": "inner", "key": "5", "value": 5}]},
+    {"id": "convergence/read-back-after-attach", "arguments": o(("b", 1)),
+     "program": [{"op": "set", "target": "args", "key": "o", "value": o(("b", 1), ("2", 2), ("1", 3))},
+                 {"op": "read", "path": ["o"]}]},
+    {"id": "convergence/native-list-append-then-read", "arguments": o(("b", 1)),
+     "program": [{"op": "set", "target": "args", "key": "a", "value": []},
+                 {"op": "push", "target": "args", "key": "a", "value": o(("b", 1), ("2", 2), ("1", 3))},
+                 {"op": "read", "path": ["a", 0]}]},
+    {"id": "convergence/native-list-insert-then-read", "arguments": o(("b", 1)),
+     "program": [{"op": "set", "target": "args", "key": "a", "value": [o(("x", 0))]},
+                 {"op": "insert", "target": "args", "key": "a", "index": 0,
+                  "value": o(("b", 1), ("2", 2), ("1", 3))},
+                 {"op": "read", "path": ["a", 0]}]},
+    {"id": "convergence/native-dict-nested-then-read", "arguments": o(("b", 1)),
+     "program": [{"op": "set", "target": "args", "key": "o", "value": o()},
+                 {"op": "get", "target": "args", "key": "o", "as": "outer"},
+                 {"op": "set", "target": "outer", "key": "n", "value": o(("b", 1), ("2", 2), ("1", 3))},
+                 {"op": "read", "path": ["o", "n"]}]},
+    {"id": "convergence/array-replace-then-read", "arguments": o(("a", [o(("x", 0))])),
+     "program": [{"op": "replace", "target": "args", "key": "a", "index": 0,
+                  "value": o(("b", 1), ("2", 2), ("1", 3))},
+                 {"op": "read", "path": ["a", 0]}]},
+    {"id": "convergence/array-extend-then-read", "arguments": o(("a", [o(("x", 0))])),
+     "program": [{"op": "extend", "target": "args", "key": "a",
+                  "values": [o(("b", 1), ("2", 2), ("1", 3)), o(("z", 1), ("0", 0))]},
+                 {"op": "read", "path": ["a", 1]}, {"op": "read", "path": ["a", 2]}]},
+    {"id": "convergence/start-listener-mutation", "arguments": o(("b", 1)),
+     "start_program": [{"op": "set", "target": "args", "key": "2", "value": 2},
+                       {"op": "set", "target": "args", "key": "1", "value": 3}]},
+    {"id": "convergence/update-listener-mutation", "arguments": o(("b", 1)),
+     "update_program": [{"op": "set", "target": "args", "key": "2", "value": 2},
+                        {"op": "set", "target": "args", "key": "1", "value": 3}]},
+    {"id": "convergence/start-listener-native-containers", "arguments": o(("b", 1)),
+     "start_program": [{"op": "set", "target": "args", "key": "a", "value": []},
+                       {"op": "push", "target": "args", "key": "a", "value": o(("z", 1), ("0", 0))},
+                       {"op": "set", "target": "args", "key": "o", "value": o()},
+                       {"op": "get", "target": "args", "key": "o", "as": "outer"},
+                       {"op": "set", "target": "outer", "key": "n", "value": o(("y", 1), ("4", 4))}]},
     {"id": "prepare/edit-nested-edits",
      "prepare": "edit",
      "schema": "edit",
@@ -134,7 +177,8 @@ def build() -> list[dict]:
     for case in CASES:
         c = {"id": case["id"], "provider_text": text(case["arguments"]), "arguments": case["arguments"]}
         c["schema"] = case.get("schema", OPEN)
-        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program", "start_program",
+                    "update_program"):
             if key in case:
                 c[key] = case[key]
         if "replace" in c:

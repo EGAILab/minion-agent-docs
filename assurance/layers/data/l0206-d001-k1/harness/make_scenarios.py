@@ -33,6 +33,8 @@ def main(cases_path: str, authority_path: str, target: str) -> None:
                   "execute": r["replacement"] if "replace" in c else r["execute"]}
         if "second" in r:
             expect["second"] = r["second"]
+        if "hook_reads" in r:
+            expect["hook_reads"] = r["hook_reads"]
         if "prepare" not in c:  # a shim's in-place raw mutation is the certified nonmutation mapping's (Python copies)
             expect["start"] = r["start"]
             # `update` (the raw object, observed during execute) only where no hook mutated: whether a hook's NESTED
@@ -41,7 +43,8 @@ def main(cases_path: str, authority_path: str, target: str) -> None:
             if not any(k in c for k in ("program", "mutate")):
                 expect["update"] = r["update"]
         case = {"id": c["id"], "provider_text": c["provider_text"], "arguments": c["arguments"], "schema": c["schema"]}
-        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program", "start_program",
+                    "update_program"):
             if key in c:
                 case[key] = c[key]
         case["expect"] = expect

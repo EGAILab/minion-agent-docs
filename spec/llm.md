@@ -147,6 +147,28 @@ Object key **enumeration order** is `L0206-D001`'s (K1): see "Tool-argument obje
   - Such an object enumerates by the rule at every later boundary: the next listener and `execute`. That holds at any depth, inside arrays too.
   - A binding MUST NOT copy an argument object to order it.
   - The **raw** `ToolCall.arguments` object is shared and mutable after construction too (`L0206-D001-R004`). Wherever it is observed or serialized later, it enumerates by the rule as it then stands: the session record and encoding, the execution-start payload, the update payload.
+- **Every observer, every Minion-mediated access** (convergence `CE-L0206-D001-01`; Owner decisions K1 Q1 and Q2, `minion-agent#100` comments `5947071963` and `5948712829`). Objects reachable through the Minion tool-argument graph are normalized to ECMAScript own-property order at every Minion-mediated attachment and observation boundary.
+  - **Attachment.** An object attached through a graph seam is ordered **in place** before the operation returns, keeping its identity. The graph seams are: object field assignment; array append, insert, replacement and extend; a hook's replacement result; nested attachment.
+  - **Reads.** Every graph-mediated read orders what it exposes, in place. That covers indexing, iteration and nested traversal; the next listener; the validation and `execute` handoffs; every `tool_execution_*` observation, including each live delivery after that event's listeners ran; serialization and persistence.
+  - **"Minion-mediated" (Q2 §15)** means that the mutation or read itself dispatches through a Minion-owned seam. Reaching a native container through `args` does not make an operation on that container's own native API mediated.
+  - **Semantic model (Q2 §12):**
+
+```text
+A. construction-owned containers                  -> ordered representation; exact Pi order
+B. native object attached through a Minion seam    -> same object; ordered in place immediately
+C. native parent container introduced later        -> identity retained (stays native)
+D. mutation through that parent's own native API   -> not intercepted (not Minion-mediated)
+E. any later Minion-mediated traversal/boundary    -> recursive in-place normalization before exposure
+F. direct native-alias observation in the D->E gap -> approved bounded Python divergence
+```
+
+  - **Approved `INTENTIONAL_BOUNDED_DIVERGENCE` (Python binding only; observable, since it can change a hook's decision).** Python cannot intercept arbitrary direct mutation and enumeration performed solely through an externally retained plain-`dict` or `list` alias during an uninterrupted callback. The interval covers two cases:
+    - **Q1:** a plain `dict` already attached, then mutated and enumerated directly through the retained alias;
+    - **Q2:** a child attached through a hook-introduced native container, then observed directly through the hook's own alias.
+
+    The divergence holds only before any further Minion-mediated graph operation, and only while control has not returned to the framework (all six conditions of Q2 §5). It never leaks past the next framework boundary: the next listener, `execute`, events, serialization and persistence are exact.
+  - **Rust:** no such interval. Rust holds the rule for every path (DIRECT_PI_PARITY).
+  - **Not used:** copying, identity-changing wrappers, or interpreter-object surgery.
 - **Any string is a key** (`L0206-D001-R003`). Index recognition is total: a decimal string longer than ten digits is an ordinary key, whatever its length.
 
 **Boundaries.**
@@ -175,15 +197,21 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
 - **Provider projection** is Layer 11's, the first binding to serialize arguments to a provider. It consumes this rule (row above).
 
 **Representation.** The contract fixes observable enumeration order, not types (decision §4).
-- **Python.** A `dict` iterates in insertion order. A binding must therefore keep every argument object it hands to an observer in the rule's order, **after** every construction and mutation. Insertion order alone is insufficient (decision §8), because a mutation appends. Ordering must preserve identity: no copies.
+- **Python.** A `dict` iterates in insertion order. The binding therefore orders argument objects through its own graph seams: ordered object and array types, adopted at construction, that order on attachment and on read. It also orders in place at every framework boundary. Identity is preserved: no copies. Insertion order alone is insufficient (decision §8), because a mutation appends. The one exception is the approved interval above.
 - **Rust.** The raw `IndexMap` (insertion) and the prepared `BTreeMap` (sorted) are both insufficient. The type design is Rust's.
 
 **Evidence and controls.**
-- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 37 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
+- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There were 37 cases at checkpoint 2; there are now 49, and each observes the recursive enumeration at every boundary above that the case reaches.
   - Among them are 7 hook **mutation programs** (`set`/`push`/`insert`/`get` with retained-reference handles, plus `ref` for one object placed twice) and a second listener's view.
   - Two long-decimal-key cases.
   - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. The corpus now has 40 cases.
   - `update` is not asserted where a hook mutated nested objects. Whether such a mutation reaches the raw object is value isolation, not order: `L06-VALIDATION-SHALLOW-COPY`, `minion-agent#129`.
+  - **`CE-L0206-D001-01` adds 9 cases, for 49:**
+    - in-hook **read-back** through `args` after attachment (the `read` op, `hook_reads`);
+    - attachment through hook-introduced native lists and dicts, then read through `args`;
+    - array `replace` / `extend`;
+    - `start_program` / `update_program`: an event listener's mutation of the raw object, observed at the live delivery.
+  - **Binding-level evidence** (Python): `tests/tools/test_key_order_observer_chain.py` (matrix A–L, the Q1 divergence witness, the Q1 controls) and `tests/tools/test_key_order_native_containers.py` (matrix M–V, the Q2 divergence witnesses, the Q2 controls). Both run through real hooks of the real pipeline.
 - **Negative controls.** Each MUST fail the corpus, while the conforming implementation passes:
   - insertion order (Python today);
   - sorted order (Rust prepared today);

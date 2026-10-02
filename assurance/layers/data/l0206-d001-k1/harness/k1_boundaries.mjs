@@ -30,14 +30,17 @@ const EDIT_SCHEMA = { type: "object", required: ["path", "edits"], properties: {
 const build = (v) => Array.isArray(v) ? v.map(build) : v && typeof v === "object"
   ? v.$o.reduce((acc, [k, x]) => { acc[k] = build(x); return acc; }, {}) : v;
 // The mutation program (make_cases.py): ops on the real arguments object, by target handle.
-function runProgram(args, program) {
+function runProgram(args, program, reads = []) {
   const handles = { args };
   for (const op of program ?? []) {
+    if (op.op === "read") { reads.push(obs(op.path.reduce((value, k) => value[k], args))); continue; }
     const target = handles[op.target];
+    if (op.op === "extend") { target[op.key].push(...op.values.map(build)); continue; }
     const value = "ref" in op ? handles[op.ref] : build(op.value);
     if (op.op === "set") target[op.key] = value;
     else if (op.op === "push") target[op.key].push(value);
     else if (op.op === "insert") target[op.key].splice(op.index, 0, value);
+    else if (op.op === "replace") target[op.key][op.index] = value;
     else if (op.op === "get") { handles[op.as] = target[op.key]; continue; }
     else throw new Error(`op ${op.op}`);
     if (op.as) handles[op.as] = value;
@@ -59,15 +62,19 @@ for (const c of cases) {
   const seen = {};
   const tool = { name: "probe", parameters: c.schema === "edit" ? EDIT_SCHEMA : c.schema,
     ...(c.prepare === "edit" ? { prepareArguments: prepareEditArguments } : {}),
-    execute: async (_id, args) => { seen.execute = obs(args); seen.update = obs(seen.prepared.toolCall.arguments);
+    execute: async (_id, args) => { seen.execute = obs(args);
+                                     runProgram(seen.prepared.toolCall.arguments, c.update_program);
+                                     seen.update = obs(seen.prepared.toolCall.arguments);
                                      return { content: [], details: {} }; } };
   const config = { beforeToolCall: async ({ args }) => {
     seen.hook = obs(args);
     for (const [k, v] of c.mutate ?? []) args[k] = v;
-    runProgram(args, c.program);
+    seen.reads = [];
+    runProgram(args, c.program, seen.reads);
     if (c.observe_second) seen.second = obs(args);
     return undefined; } };
   const call = { type: "toolCall", id: "c1", name: "probe", arguments: raw };
+  runProgram(call.arguments, c.start_program);  // a tool_execution_start listener's mutation of the raw object
   out.start = obs(call.arguments);  // tool_execution_start args: the raw object (agent-loop emits toolCall.arguments)
   const prep = await loop.prepareToolCall({ systemPrompt: "", messages: [], tools: [tool] }, {}, call, config, undefined);
   seen.prepared = prep;  // tool_execution_update args: prepared.toolCall.arguments
@@ -77,6 +84,7 @@ for (const c of cases) {
   out.execute = seen.execute;
   out.update = seen.update;
   if (c.observe_second) out.second = seen.second;
+  if (seen.reads.length) out.hook_reads = seen.reads;
   out.raw_unchanged_by_preparation = JSON.stringify(obs(call.arguments)) === JSON.stringify(out.raw);
   if (c.replace_text) out.replacement = obs(JSON.parse(c.replace_text));
   results.push(out);

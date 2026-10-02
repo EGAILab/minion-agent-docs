@@ -336,3 +336,41 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint re-review of exactly this revision)
 ```
+
+---
+
+## 14. Agreed checkpoint and implementation candidate
+
+**Checkpoint.**
+- Codex **APPROVED** checkpoint revision 3 (docs #228 comment `5948883823`).
+- The control record reads CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION (`#100` comment `5948884466`), recorded on that verdict.
+
+**Implementation candidate:** code #128 @ `57b35bc4`, a fast-forward from the reviewed `92db98f9`:
+- **Mechanism (§10.2 / §12.2):**
+  - `JsObject` / `JsArray` attach and read seams, adopted at construction;
+  - `EventBus.before_each`;
+  - ordering at the live deliveries, before `execute`, and at serialization.
+- **`spec/llm.md`:** the §10.1 wording, the §12.1 model, both divergence intervals and their classification.
+- **Manifest `AI-003`:** the divergence disclosure.
+- **Corpus, now 49 cases.** The §6 / §10.4 extension adds:
+  - the `read` op (in-hook read-back through `args`, `hook_reads`);
+  - array `replace` / `extend`;
+  - attachment through hook-introduced native lists and dicts;
+  - `start_program` / `update_program`, observed at the live deliveries.
+
+  The authority (`harness/run.sh`) regenerates the corpus, and `k1.json` is byte-unchanged.
+- **Runner:** observes natively (`dict` / `list` iteration), so the observer never orders anything. The live deliveries are the observation points for start and update.
+
+**Fresh results:**
+
+| Check | Result |
+|---|---|
+| corpus | **49/49**; reviewed head `92db98f9` fails exactly the 9 new cases |
+| corpus controls (10) | killed |
+| matrix A–L + M–V | pass |
+| controls Q1 (8) + Q2 (8) | killed |
+| documentary divergence witnesses | at the approved boundary |
+| `pytest` | **4170 passed**, 29 skipped, 19 xfailed; coverage **100.00%** |
+| `ruff` / `mypy` | clean |
+
+**R004 stays open** until the targeted closure review (§11.8.7).
