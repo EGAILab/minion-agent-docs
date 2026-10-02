@@ -1,0 +1,4 @@
+DIFF scalar/entry-vanish pi={'error': 'not_found', 'path': [[98], [99, 104, 105, 108, 100, 46, 116, 120, 116]]} py={'error': 'not_found', 'path': [[98]]}
+DIFF scalar/rm-readonly-file pi={'ok': True} py={'error': 'permission_denied', 'path': [[98]]}
+DIFF lone/entry-vanish pi={'error': 'not_found', 'path': [[97, 65533], [99, 104, 105, 108, 100, 46, 116, 120, 116]]} py={'error': 'not_found', 'path': [[97, 65533]]}
+DIFF lone/rm-readonly-file pi={'ok': True} py={'error': 'permission_denied', 'path': [[97, 65533]]}

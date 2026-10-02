@@ -1,0 +1,90 @@
+{
+ "platform": "win32",
+ "uid": null,
+ "results": [
+  {
+   "id": "scalar/entry-vanish",
+   "observed": {
+    "error": "not_found",
+    "path": [
+     [
+      98
+     ],
+     [
+      99,
+      104,
+      105,
+      108,
+      100,
+      46,
+      116,
+      120,
+      116
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/rm-readonly-file",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      98
+     ],
+     [
+      115,
+      117,
+      98
+     ],
+     [
+      102
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/entry-vanish",
+   "observed": {
+    "error": "not_found",
+    "path": [
+     [
+      97,
+      65533
+     ],
+     [
+      99,
+      104,
+      105,
+      108,
+      100,
+      46,
+      116,
+      120,
+      116
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/rm-readonly-file",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      97,
+      65533
+     ],
+     [
+      115,
+      117,
+      98
+     ],
+     [
+      102
+     ]
+    ]
+   }
+  }
+ ]
+}

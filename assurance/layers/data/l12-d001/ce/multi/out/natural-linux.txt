@@ -1,0 +1,8 @@
+Natural two-failure tallies (Linux, node:22.15.1-alpine / python:3.12-slim, non-root; 20 runs each; no injection).
+pinned Pi, sample 1 (two.mjs == natural.mjs, CE characterization): {"t/a/locked":17,"t/b/locked":3}
+pinned Pi, sample 2: pi {"t/a/locked":18,"t/b/locked":2}
+Python at 1738324b and with the CE prototype:
+1738324b:
+py {'t': 20}
+prototype:
+py {'t/a/locked': 20}

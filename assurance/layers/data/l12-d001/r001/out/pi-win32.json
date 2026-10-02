@@ -1,0 +1,1700 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "scalar/parent-file/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/grandparent-file/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/grandparent-file/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/grandparent-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/create-dir-nonrecursive",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/read",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/read-lines",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/read-binary",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/file-info",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/exists",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-file/list-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/canonical",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/parent-file/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/read",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ERR_FS_EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/self-dir-nonempty/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ERR_FS_EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/read",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/read-lines",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/read-binary",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/file-info",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/list-dir",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing/remove",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing-parent/create-dir-nonrecursive",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/missing-parent/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/missing-source",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       100,
+       115,
+       116
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/missing-source-lone-dst",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       98
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/dest-parent-file",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/dest-parent-missing",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/source-parent-file",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       100,
+       115,
+       116
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/dest-nonempty-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    },
+    {
+     "error": "permission_denied",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "EPERM",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       98
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalar/rename/source-in-lone-dir-dest-missing",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       98
+      ],
+      [
+       115
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       113
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/grandparent-file/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/grandparent-file/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/grandparent-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-file/create-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "EEXIST",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/create-dir-nonrecursive",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/read",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/read-lines",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/read-binary",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/file-info",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/exists",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "lone/self-file/list-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOTDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/canonical",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/parent-file/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/write",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/append",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/read",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "is_directory",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "EISDIR",
+     "node_has_path": false,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "ERR_FS_EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/self-dir-nonempty/remove",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "unknown",
+     "path": [
+      [
+       97,
+       55296
+      ]
+     ],
+     "node_code": "ERR_FS_EISDIR",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/read",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/read-lines",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/read-binary",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/file-info",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/list-dir",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing/remove",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing-parent/create-dir-nonrecursive",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/missing-parent/canonical",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       120
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": null
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/missing-source",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       100,
+       115,
+       116
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/missing-source-lone-dst",
+   "observed": [
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       97,
+       65533
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/dest-parent-file",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/dest-parent-missing",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/source-parent-file",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       100,
+       115,
+       116
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/dest-nonempty-dir",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "ok": true
+    },
+    {
+     "error": "permission_denied",
+     "path": [
+      [
+       115,
+       114,
+       99
+      ]
+     ],
+     "node_code": "EPERM",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       97,
+       65533
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lone/rename/source-in-lone-dir-dest-missing",
+   "observed": [
+    {
+     "ok": true
+    },
+    {
+     "error": "not_found",
+     "path": [
+      [
+       97,
+       65533
+      ],
+      [
+       115
+      ]
+     ],
+     "node_code": "ENOENT",
+     "node_has_path": true,
+     "node_dest": [
+      [
+       113
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

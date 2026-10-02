@@ -1,0 +1,76 @@
+{
+ "platform": "linux",
+ "node": "22.15.1",
+ "cases": {
+  "raw-lone-high": {
+   "ok": true,
+   "tail_units": [
+    97,
+    65533
+   ]
+  },
+  "raw-lone-low": {
+   "ok": true,
+   "tail_units": [
+    97,
+    65533
+   ]
+  },
+  "raw-pair": {
+   "ok": true,
+   "tail_units": [
+    97,
+    55357,
+    56832
+   ]
+  },
+  "raw-mixed": {
+   "ok": true,
+   "tail_units": [
+    97,
+    55357,
+    56832,
+    65533
+   ]
+  },
+  "pct-lone-high": {
+   "ok": false,
+   "name": "URIError",
+   "code": null,
+   "message": "URI malformed"
+  },
+  "pct-lone-low": {
+   "ok": false,
+   "name": "URIError",
+   "code": null,
+   "message": "URI malformed"
+  },
+  "pct-fffd": {
+   "ok": true,
+   "tail_units": [
+    97,
+    65533
+   ]
+  },
+  "pct-astral": {
+   "ok": true,
+   "tail_units": [
+    97,
+    55357,
+    56832
+   ]
+  },
+  "pct-truncated": {
+   "ok": false,
+   "name": "URIError",
+   "code": null,
+   "message": "URI malformed"
+  },
+  "pct-overlong": {
+   "ok": false,
+   "name": "URIError",
+   "code": null,
+   "message": "URI malformed"
+  }
+ }
+}

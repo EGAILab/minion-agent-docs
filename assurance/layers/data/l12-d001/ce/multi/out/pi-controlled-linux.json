@@ -1,0 +1,102 @@
+{
+ "platform": "linux",
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "scalar/settle-a-b",
+   "entered": [
+    "a",
+    "b"
+   ],
+   "settled": [
+    "a",
+    "b"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      114,
+      101,
+      101
+     ],
+     [
+      97
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/settle-b-a",
+   "entered": [
+    "a",
+    "b"
+   ],
+   "settled": [
+    "b",
+    "a"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      114,
+      101,
+      101
+     ],
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/settle-a-b",
+   "entered": [
+    "a",
+    "b"
+   ],
+   "settled": [
+    "a",
+    "b"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      65533
+     ],
+     [
+      97
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/settle-b-a",
+   "entered": [
+    "a",
+    "b"
+   ],
+   "settled": [
+    "b",
+    "a"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      65533
+     ],
+     [
+      98
+     ]
+    ]
+   }
+  }
+ ]
+}
