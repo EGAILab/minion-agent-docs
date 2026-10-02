@@ -17,6 +17,8 @@ JSON.parse (CreateDataProperty, so "__proto__" is an ordinary own key). A case m
               T is "args" or a handle; "as" names the object V builds (or T[k] for get), so a later op
               mutates THAT object through the retained reference. `observe_second` additionally
               observes the arguments after the program (a later listener's view).
+    raw_program (L0206-D001-R004) the same op grammar, run on the RAW arguments object after the call is
+              constructed (it is shared and mutable), before the call is persisted or executed
     replace   an insertion sequence a Minion pre-execute listener returns as REPLACEMENT arguments
               (Minion mapping: Pi's beforeToolCall cannot replace; the expectation is ECMAScript's own order
               for that object)
@@ -112,6 +114,14 @@ CASES: list[dict] = [
     {"id": "mutation/second-listener-sees-ordered", "arguments": o(("a", [])), "observe_second": True,
      "program": [{"op": "push", "target": "args", "key": "a", "value": o(("b", 1), ("0", 2))},
                  {"op": "set", "target": "args", "key": "3", "value": 3}]},
+    {"id": "raw/assign-index-keys-after-construction", "arguments": o(("b", 1)),
+     "raw_program": [{"op": "set", "target": "args", "key": "2", "value": 2},
+                     {"op": "set", "target": "args", "key": "1", "value": 3}]},
+    {"id": "raw/push-object-into-raw-array", "arguments": o(("a", [])),
+     "raw_program": [{"op": "push", "target": "args", "key": "a", "value": o(("z", 1), ("0", 2))}]},
+    {"id": "raw/nested-raw-object-gains-index", "arguments": o(("o", o(("y", 1)))),
+     "raw_program": [{"op": "get", "target": "args", "key": "o", "as": "inner"},
+                     {"op": "set", "target": "inner", "key": "5", "value": 5}]},
     {"id": "prepare/edit-nested-edits",
      "prepare": "edit",
      "schema": "edit",
@@ -124,7 +134,7 @@ def build() -> list[dict]:
     for case in CASES:
         c = {"id": case["id"], "provider_text": text(case["arguments"]), "arguments": case["arguments"]}
         c["schema"] = case.get("schema", OPEN)
-        for key in ("prepare", "mutate", "replace", "program", "observe_second"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program"):
             if key in case:
                 c[key] = case[key]
         if "replace" in c:

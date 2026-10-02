@@ -33,8 +33,15 @@ def main(cases_path: str, authority_path: str, target: str) -> None:
                   "execute": r["replacement"] if "replace" in c else r["execute"]}
         if "second" in r:
             expect["second"] = r["second"]
+        if "prepare" not in c:  # a shim's in-place raw mutation is the certified nonmutation mapping's (Python copies)
+            expect["start"] = r["start"]
+            # `update` (the raw object, observed during execute) only where no hook mutated: whether a hook's NESTED
+            # mutation reaches the raw object is value isolation (Pi validates a structuredClone), recorded separately
+            # as L06-VALIDATION-SHALLOW-COPY (minion-agent#129), not key order.
+            if not any(k in c for k in ("program", "mutate")):
+                expect["update"] = r["update"]
         case = {"id": c["id"], "provider_text": c["provider_text"], "arguments": c["arguments"], "schema": c["schema"]}
-        for key in ("prepare", "mutate", "replace", "program", "observe_second"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second", "raw_program"):
             if key in c:
                 case[key] = c[key]
         case["expect"] = expect

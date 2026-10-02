@@ -157,3 +157,44 @@ Because the order is held, not computed on read, iteration, `items`, `repr` and 
 | `ruff` / `mypy` | clean |
 
 **Disclosed test-hygiene change.** WP-13.2's key-order independence test built its variants from shared nested fixtures. In-place ordering at construction re-sequenced those shared fixtures, so the test's guard (that the variants enumerate differently) failed. The variants are now deep copies. WP-13.2's semantics and witness are unchanged.
+
+## 9. Checkpoint 2 → remediation (`R004`)
+
+**Codex** (code `9f8b240c` / docs `efc11aee`, published verbatim on docs #228): `R001`–`R003` are **CLOSED**. The new finding:
+- **`R004`:** the raw object, mutated after construction, reached session encoding and the execution-start payload unordered.
+
+**Trigger check (§11.8):**
+- **A:** not fired (`R004` is new).
+- **B:** not fired (one successor finding on the surface, not two).
+- **C:** not fired (two rejected reviews).
+
+This is ordinary remediation. To avoid a third round, **every** raw observation site was swept, not only the two named.
+
+**Python:**
+- `order_raw` (the raw-boundary seam) runs at:
+  - session encoding (`derive.encode_block`);
+  - the session tool-call record (`driver`);
+  - the execution-start emit and its delivery (`execute`, `batch`);
+  - the update emit and its delivery.
+- Prepare's input comes after the start ordering.
+
+**Runner (observation without side effects).** The in-memory session log holds the live value, and decoding it builds a call whose construction orders the same object in place. So the runner observes:
+- the **serialized** arguments, on an order-preserving deep copy;
+- the replay, from a deep copy.
+
+Before this, the replay step silently repaired the raw object, masking the gap. The reviewed head passed every case until the runner was corrected.
+
+**Evidence:**
+- The authority adds 3 raw mutation programs, for 40 cases, plus `start` and `update` observations. `k1.json` is unchanged.
+- `start` and `update` are asserted wherever there is no prepare shim. A shim's in-place raw mutation is under the certified design-spec §6 nonmutation mapping: Python passes the shim a copy.
+- `update` is also omitted where a hook mutated nested objects. That is value isolation, recorded as the new finding **`#129` `L06-VALIDATION-SHALLOW-COPY`**: Pi validates a `structuredClone`, Minion a shallow copy. It is not remediated here.
+
+**Results:**
+
+| Check | Result |
+|---|---|
+| corpus | **40/40**; reviewed head `9f8b240c` fails the 3 raw cases |
+| Codex's `R004` witness | encoded `{"1":3,"2":2,"b":1}`; start `['1','2','b']` |
+| controls (10) | single-seam `raw-boundaries-unordered` kills 3; insertion 34, sorted 18, replay lost 14, top-level only 12, construction only 11, non-canonical index 4, schema order 3, copy-on-assignment 2, converting index check 1 |
+| `pytest` | 4116 passed, 29 skipped, 19 xfailed; coverage **100.00%** |
+| `ruff` / `mypy` | clean |

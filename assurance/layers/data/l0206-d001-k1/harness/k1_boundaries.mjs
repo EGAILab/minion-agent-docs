@@ -52,13 +52,15 @@ const results = [];
 for (const c of cases) {
   const raw = JSON.parse(c.provider_text);
   const out = { id: c.id, raw: obs(raw) };
+  runProgram(raw, c.raw_program);  // L0206-D001-R004: the raw object mutated after construction
   const persisted = JSON.stringify(raw);
   out.persisted = persisted;
   out.replay = obs(JSON.parse(persisted));
   const seen = {};
   const tool = { name: "probe", parameters: c.schema === "edit" ? EDIT_SCHEMA : c.schema,
     ...(c.prepare === "edit" ? { prepareArguments: prepareEditArguments } : {}),
-    execute: async (_id, args) => { seen.execute = obs(args); return { content: [], details: {} }; } };
+    execute: async (_id, args) => { seen.execute = obs(args); seen.update = obs(seen.prepared.toolCall.arguments);
+                                     return { content: [], details: {} }; } };
   const config = { beforeToolCall: async ({ args }) => {
     seen.hook = obs(args);
     for (const [k, v] of c.mutate ?? []) args[k] = v;
@@ -66,11 +68,14 @@ for (const c of cases) {
     if (c.observe_second) seen.second = obs(args);
     return undefined; } };
   const call = { type: "toolCall", id: "c1", name: "probe", arguments: raw };
+  out.start = obs(call.arguments);  // tool_execution_start args: the raw object (agent-loop emits toolCall.arguments)
   const prep = await loop.prepareToolCall({ systemPrompt: "", messages: [], tools: [tool] }, {}, call, config, undefined);
+  seen.prepared = prep;  // tool_execution_update args: prepared.toolCall.arguments
   if (prep.kind !== "prepared") throw new Error(`${c.id}: not prepared: ${JSON.stringify(prep.result?.content)}`);
   await loop.executePreparedToolCall(prep, undefined, async () => {});
   out.hook = seen.hook;
   out.execute = seen.execute;
+  out.update = seen.update;
   if (c.observe_second) out.second = seen.second;
   out.raw_unchanged_by_preparation = JSON.stringify(obs(call.arguments)) === JSON.stringify(out.raw);
   if (c.replace_text) out.replacement = obs(JSON.parse(c.replace_text));

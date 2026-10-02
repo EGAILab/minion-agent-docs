@@ -1151,6 +1151,108 @@
   "observe_second": true
  },
  {
+  "id": "raw/assign-index-keys-after-construction",
+  "provider_text": "{\"b\":1}",
+  "arguments": {
+   "$o": [
+    [
+     "b",
+     1
+    ]
+   ]
+  },
+  "schema": {
+   "type": "object",
+   "properties": {}
+  },
+  "raw_program": [
+   {
+    "op": "set",
+    "target": "args",
+    "key": "2",
+    "value": 2
+   },
+   {
+    "op": "set",
+    "target": "args",
+    "key": "1",
+    "value": 3
+   }
+  ]
+ },
+ {
+  "id": "raw/push-object-into-raw-array",
+  "provider_text": "{\"a\":[]}",
+  "arguments": {
+   "$o": [
+    [
+     "a",
+     []
+    ]
+   ]
+  },
+  "schema": {
+   "type": "object",
+   "properties": {}
+  },
+  "raw_program": [
+   {
+    "op": "push",
+    "target": "args",
+    "key": "a",
+    "value": {
+     "$o": [
+      [
+       "z",
+       1
+      ],
+      [
+       "0",
+       2
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "id": "raw/nested-raw-object-gains-index",
+  "provider_text": "{\"o\":{\"y\":1}}",
+  "arguments": {
+   "$o": [
+    [
+     "o",
+     {
+      "$o": [
+       [
+        "y",
+        1
+       ]
+      ]
+     }
+    ]
+   ]
+  },
+  "schema": {
+   "type": "object",
+   "properties": {}
+  },
+  "raw_program": [
+   {
+    "op": "get",
+    "target": "args",
+    "key": "o",
+    "as": "inner"
+   },
+   {
+    "op": "set",
+    "target": "inner",
+    "key": "5",
+    "value": 5
+   }
+  ]
+ },
+ {
   "id": "prepare/edit-nested-edits",
   "provider_text": "{\"path\":\"f.txt\",\"edits\":\"[{\\\"newText\\\":\\\"b\\\",\\\"1\\\":\\\"i\\\",\\\"oldText\\\":\\\"a\\\"}]\"}",
   "arguments": {
