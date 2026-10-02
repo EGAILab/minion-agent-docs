@@ -11,6 +11,10 @@ JSON.parse (CreateDataProperty, so "__proto__" is an ordinary own key). A case m
               (Minion mapping: Pi's beforeToolCall cannot replace; the expectation is ECMAScript's own order
               for that object)
 
+Coercion (pinned Pi's Value.Convert turns "5" into 5 without moving the key) is characterized by k1_probe.mjs
+(`declared-number/convert`) but is not a canonical case: Minion's validator does not coerce (the disclosed TOOL-003
+mapping), so such a case would test validation, not order.
+
     python make_cases.py <cases.json>
 """
 
@@ -33,7 +37,6 @@ def text(value: object) -> str:
 
 
 S = {"type": "string"}
-N = {"type": "number"}
 OPEN = {"type": "object", "properties": {}}
 
 CASES: list[dict] = [
@@ -70,8 +73,6 @@ CASES: list[dict] = [
     {"id": "schema/declared-nested", "schema": {"type": "object", "properties": {
         "o": {"type": "object", "properties": {"z": S, "a": S}}}},
      "arguments": o(("o", o(("a", "x"), ("z", "y"), ("2", "i"))))},
-    {"id": "schema/coercion-does-not-reorder", "schema": {"type": "object", "properties": {"n": N, "a": S}},
-     "arguments": o(("a", "x"), ("n", "5"))},
     {"id": "hook/mutation-adds-index-and-name", "arguments": o(("1", 1), ("2", 2), ("b", 3)),
      "mutate": [["c", 4], ["0", 5]]},
     {"id": "hook/mutation-overwrites-existing", "arguments": o(("b", 1), ("a", 2)),

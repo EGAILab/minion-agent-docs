@@ -173,7 +173,7 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
 - **Rust.** The raw `IndexMap` (insertion) and the prepared `BTreeMap` (sorted) are both insufficient. The type design is Rust's.
 
 **Evidence and controls.**
-- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 29 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
+- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 28 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
 - **Negative controls.** Each MUST fail the corpus, while the conforming implementation passes:
   - insertion order (Python today);
   - sorted order (Rust prepared today);

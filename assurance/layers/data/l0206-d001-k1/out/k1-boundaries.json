@@ -2034,59 +2034,6 @@
    "raw_unchanged_by_preparation": true
   },
   {
-   "id": "schema/coercion-does-not-reorder",
-   "raw": {
-    "o": [
-     [
-      "a",
-      "x"
-     ],
-     [
-      "n",
-      "5"
-     ]
-    ]
-   },
-   "persisted": "{\"a\":\"x\",\"n\":\"5\"}",
-   "replay": {
-    "o": [
-     [
-      "a",
-      "x"
-     ],
-     [
-      "n",
-      "5"
-     ]
-    ]
-   },
-   "hook": {
-    "o": [
-     [
-      "a",
-      "x"
-     ],
-     [
-      "n",
-      5
-     ]
-    ]
-   },
-   "execute": {
-    "o": [
-     [
-      "a",
-      "x"
-     ],
-     [
-      "n",
-      5
-     ]
-    ]
-   },
-   "raw_unchanged_by_preparation": true
-  },
-  {
    "id": "hook/mutation-adds-index-and-name",
    "raw": {
     "o": [

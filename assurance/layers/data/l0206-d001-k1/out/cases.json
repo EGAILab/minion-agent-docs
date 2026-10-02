@@ -709,33 +709,6 @@
   }
  },
  {
-  "id": "schema/coercion-does-not-reorder",
-  "provider_text": "{\"a\":\"x\",\"n\":\"5\"}",
-  "arguments": {
-   "$o": [
-    [
-     "a",
-     "x"
-    ],
-    [
-     "n",
-     "5"
-    ]
-   ]
-  },
-  "schema": {
-   "type": "object",
-   "properties": {
-    "n": {
-     "type": "number"
-    },
-    "a": {
-     "type": "string"
-    }
-   }
-  }
- },
- {
   "id": "hook/mutation-adds-index-and-name",
   "provider_text": "{\"1\":1,\"2\":2,\"b\":3}",
   "arguments": {
