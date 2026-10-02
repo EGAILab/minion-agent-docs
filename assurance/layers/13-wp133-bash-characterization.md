@@ -162,3 +162,45 @@ The scoping classified these as mapping or extension *candidates* without a deci
 | **Q3** | **Extension surfaces.** `operations` (pluggable exec, for example SSH), `commandPrefix`, `spawnHook` and `shellPath`. Which are part of Minion's `bash` factory API, and does Minion's execution-world model replace `operations` with the `ctx.shell` / `ctx.subprocess` provider? |
 | **Q4** | **The process seam.** The scoping directs the kill/wait lifecycle to the certified `ctx.subprocess`. Pi's `bash` decodes both streams through **one** streaming decoder in arrival order. `ctx.shell.exec` decodes each stream separately, and `ctx.subprocess` gives raw bytes per stream. So exact interleaved decoding needs `ctx.subprocess` with merged raw chunks in arrival order. Arrival order across two pipes is itself scheduling-dependent. This is a feasibility row, not necessarily an Owner question. |
 | **Q5** | (informational, scoping open question 4) `bash` does not take part in the mutation queue. This is recorded as Pi's own behavior. |
+
+## 11. Executable characterization: results (pass 2)
+
+`data/13-wp133/harness/bash_probe.mjs` runs pinned Pi's own `truncate.ts` and `output-accumulator.ts` whole. It runs sliced, unmodified `shell.ts`, `child-process.ts` and `bash.ts` (`resolveTimeoutMs`, `createLocalBashOperations`, `resolveSpawnContext`, the tool's `execute` body). Only `getBinDir` is stubbed.
+
+The probe executes 36 real commands under Node v22.15.1:
+- **Windows 11:** Git Bash (`C:\Program Files\Git\bin\bash.exe`, `-c`), output `out/pi-win32.json`.
+- **Linux:** `node:22.15.1-bookworm-slim`, `/bin/bash`, as a non-root user, output `out/pi-linux.json`.
+
+`harness/show.py` summarizes either output.
+
+**The platforms agree on every observable except:**
+- **The update count in three truncation cases** (chunk timing). The update **sequence shape** is stable: an initial empty update, then snapshots.
+- **The missing-`cwd` message:** the path text.
+- **An external `SIGKILL`** (`kill -9 $$`). Linux: exit `null` → **success**, `(no output)`. Windows Git Bash reports exit `2304` → `Command exited with code 2304`.
+
+**Confirmed rules** (the §2–§8 source audit, now executed):
+- **Output is kept verbatim**, including a trailing newline (`hello\n`) and CRLF. Empty output becomes `(no output)`, and so does a failing command with no output: `(no output)\n\nCommand exited with code 255`.
+- **Non-zero exit:** `x\n\n\nCommand exited with code 1`. This is the output including its own newline, then `\n\n`, then the status.
+- **Decoding:**
+  - an invalid byte becomes U+FFFD (`x�y`);
+  - a character split across two writes is joined (`€`);
+  - a character interrupted by a stderr chunk becomes `�x��` (one U+FFFD, the stderr text, then one U+FFFD per orphaned continuation byte);
+  - an incomplete trailing sequence becomes U+FFFD (`ok�`).
+- **Truncation:**
+  - 2000 lines, not truncated;
+  - 2001 lines → `[Showing lines 2-2001 of 2001. Full output: <path>]` (the same with no trailing newline);
+  - exactly 51200 bytes, not truncated;
+  - 51201 bytes on one line → a partial line, `[Showing last 50.0KB of line 1 (line is 50.0KB). ...]`;
+  - 5000 short lines → by lines, 3001-5000;
+  - 369000 bytes → by bytes, `[Showing lines 7753-9000 of 9000 (50.0KB limit). ...]` through the rolling-tail trim;
+  - a multi-byte partial line → `(line is 146.5KB)`. The decoded line length counts 3 bytes per `€`.
+- **The temp file** is `pi-bash-<16 hex>.log`, holding the **raw** bytes (sizes and sha256 recorded).
+- **A failing command with truncated output:** the error text carries the truncation notice, then `\n\nCommand exited with code 3`, and **no** `details` (Pi throws).
+- **Timeouts:**
+  - `before\n\n\nCommand timed out after 0.5 seconds`; without output, `Command timed out after 0.5 seconds`; `0.25` renders as `0.25`;
+  - invalid values: `0`, `-1` and `Infinity` → `Invalid timeout: must be a finite number of seconds`; `2147483.648` → `Invalid timeout: maximum is 2147483.647 seconds`;
+  - `2147483.647` is accepted.
+- **Abort:** before spawn → `Command aborted`; during the command → `before\n\n\nCommand aborted`.
+- **Updates:** the sequence for `printf a; sleep .4; printf b` is `[content: [] (no text), "a", "ab"]`.
+
+This characterization pass needs no Owner input. The contract does: §10 Q1–Q3.
