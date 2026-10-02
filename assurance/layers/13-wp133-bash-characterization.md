@@ -237,3 +237,30 @@ This characterization pass needs no Owner input. The contract does: §10 Q1–Q3
 - With exposure enabled but no live context, the same holds: removed, not re-added.
 
 **Still open:** Q2 (partial updates) and Q3 (the factory surface).
+
+## 13. Owner decisions Q2 and Q3, recorded
+
+**Source:** `minion-agent#50` comment `5950860191` (verbatim).
+
+**Q2: partial updates.** The final result is core; partial-output updates are optional UX.
+- Pi's throttled updates (§7), its initial empty update and the 100 ms cadence are **not certified**. Zero intermediate `tool_execution_update` events is conforming. Synthetic updates must not be fabricated.
+- The final result **is** certified exactly: accumulation, exit status, abort, timeout, error text, tail truncation, limits, the temp file, and the final text and `details`.
+- Future streaming is `MINION_EXTENSION / OPTIONAL_UX`, carried by the existing event and update architecture. It must not change the final result.
+
+**Q3: factory surface.**
+
+| Pi option | Decision | Classification |
+|---|---|---|
+| `shellPath` | exposed as `shell_path`, optional. Truthy → scoping v4 branch 1; absent or falsy → platform discovery | PI_SOURCE_ALGORITHM, binding projection |
+| `exposeSessionEnvironment` | exposed, default `true` (§12) | MINION_ARCHITECTURAL_MAPPING |
+| `commandPrefix` | not exposed in core; future extension | unadopted Pi extension API |
+| `spawnHook` | not exposed in core; future extension | unadopted Pi extension API, not a divergence |
+| `operations` | no parameter; mapped to the execution context (`ctx.subprocess` for the process lifecycle, consuming Layer 12 unchanged; `ctx.fs` where required; session state) | MINION_ARCHITECTURAL_MAPPING / MINION_SHARED_CONTRACT |
+| managed-bin `PATH` prefix | none today; a future concern of the execution environment, with no WP-13.4 dependency | (§12) |
+
+**Feasibility.** `13-wp133-feasibility-matrix.md` maps the "execution context" Q3 names onto the certified seams. Three capabilities Pi's `bash` reads are missing below Layer 13:
+- `WP133-F1`: the world's environment (read; spawn with inherited keys removed);
+- `WP133-F2`: the world's platform;
+- `WP133-F3`: per-call live session state for a tool's `execute`.
+
+Their interface shapes go to the Owner before the contract can freeze.
