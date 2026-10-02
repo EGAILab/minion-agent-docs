@@ -142,6 +142,11 @@ Object key **enumeration order** is `L0206-D001`'s (K1): see "Tool-argument obje
   - **A key assigned later** (a hook's in-place mutation) joins by the same rule. A new index key goes to its ascending position among the indices; a new ordinary key goes last; an existing key keeps its position.
   - **`__proto__` from decoding** is an ordinary own key.
 - **Nothing reorders**: no sorting, no schema order, no canonicalization, no coercion side effect.
+- **Objects are shared by reference** (`L0206-D001-R001`/`R002`), as JavaScript objects are.
+  - An object a hook assigns, or appends or inserts into an array, is the object `execute` receives. A later mutation through a reference the hook kept is visible downstream.
+  - Such an object enumerates by the rule at every later boundary: the next listener and `execute`. That holds at any depth, inside arrays too.
+  - A binding MUST NOT copy an argument object to order it.
+- **Any string is a key** (`L0206-D001-R003`). Index recognition is total: a decimal string longer than ten digits is an ordinary key, whatever its length.
 
 **Boundaries.**
 
@@ -169,11 +174,13 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
 - **Provider projection** is Layer 11's, the first binding to serialize arguments to a provider. It consumes this rule (row above).
 
 **Representation.** The contract fixes observable enumeration order, not types (decision §4).
-- **Python.** A `dict` iterates in insertion order. A binding must therefore keep every argument object it hands to an observer in the rule's order, **after** every construction and mutation. Insertion order alone is insufficient (decision §8), because a mutation appends.
+- **Python.** A `dict` iterates in insertion order. A binding must therefore keep every argument object it hands to an observer in the rule's order, **after** every construction and mutation. Insertion order alone is insufficient (decision §8), because a mutation appends. Ordering must preserve identity: no copies.
 - **Rust.** The raw `IndexMap` (insertion) and the prepared `BTreeMap` (sorted) are both insufficient. The type design is Rust's.
 
 **Evidence and controls.**
-- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 28 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
+- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There are 37 cases, and each observes the recursive enumeration at every boundary above that the case reaches.
+  - Among them are 7 hook **mutation programs** (`set`/`push`/`insert`/`get` with retained-reference handles, plus `ref` for one object placed twice) and a second listener's view.
+  - Two long-decimal-key cases.
 - **Negative controls.** Each MUST fail the corpus, while the conforming implementation passes:
   - insertion order (Python today);
   - sorted order (Rust prepared today);
@@ -181,7 +188,9 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
   - reordering at the top level only;
   - a non-canonical numeral treated as an index (`"01"`, `"4294967295"`);
   - ordering applied at decode but lost after a hook mutation;
-  - ordering lost on replay.
+  - ordering lost on replay;
+  - copy-on-assignment (`R002`);
+  - an index check that converts any decimal key (`R003`).
 
 **WP-13.2** (decision §6) remains non-blocking. Its key-order independence witness exists on both sides, and WP-13.2 is CERTIFIED_CLOSED with K1 outside its owned surface.
 

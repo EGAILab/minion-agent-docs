@@ -31,8 +31,10 @@ def main(cases_path: str, authority_path: str, target: str) -> None:
         r = observed[c["id"]]
         expect = {"raw": r["raw"], "replay": r["replay"], "hook": r["hook"],
                   "execute": r["replacement"] if "replace" in c else r["execute"]}
+        if "second" in r:
+            expect["second"] = r["second"]
         case = {"id": c["id"], "provider_text": c["provider_text"], "arguments": c["arguments"], "schema": c["schema"]}
-        for key in ("prepare", "mutate", "replace"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second"):
             if key in c:
                 case[key] = c[key]
         case["expect"] = expect

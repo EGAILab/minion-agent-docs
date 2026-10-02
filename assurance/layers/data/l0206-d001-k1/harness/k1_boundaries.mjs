@@ -26,6 +26,24 @@ const S = { type: "string" };
 const EDIT_SCHEMA = { type: "object", required: ["path", "edits"], properties: { path: S, edits: { type: "array",
   items: { type: "object", required: ["oldText", "newText"], properties: { oldText: S, newText: S } } } } };
 
+// A case value in the insertion grammar ({"$o": [[k, v], ...]}) as a JavaScript value, objects built by assignment.
+const build = (v) => Array.isArray(v) ? v.map(build) : v && typeof v === "object"
+  ? v.$o.reduce((acc, [k, x]) => { acc[k] = build(x); return acc; }, {}) : v;
+// The mutation program (make_cases.py): ops on the real arguments object, by target handle.
+function runProgram(args, program) {
+  const handles = { args };
+  for (const op of program ?? []) {
+    const target = handles[op.target];
+    const value = "ref" in op ? handles[op.ref] : build(op.value);
+    if (op.op === "set") target[op.key] = value;
+    else if (op.op === "push") target[op.key].push(value);
+    else if (op.op === "insert") target[op.key].splice(op.index, 0, value);
+    else if (op.op === "get") { handles[op.as] = target[op.key]; continue; }
+    else throw new Error(`op ${op.op}`);
+    if (op.as) handles[op.as] = value;
+  }
+}
+
 const obs = (v) => Array.isArray(v) ? { a: v.map(obs) } : v && typeof v === "object"
   ? { o: Object.keys(v).map((k) => [k, obs(v[k])]) } : v;
 
@@ -44,6 +62,8 @@ for (const c of cases) {
   const config = { beforeToolCall: async ({ args }) => {
     seen.hook = obs(args);
     for (const [k, v] of c.mutate ?? []) args[k] = v;
+    runProgram(args, c.program);
+    if (c.observe_second) seen.second = obs(args);
     return undefined; } };
   const call = { type: "toolCall", id: "c1", name: "probe", arguments: raw };
   const prep = await loop.prepareToolCall({ systemPrompt: "", messages: [], tools: [tool] }, {}, call, config, undefined);
@@ -51,6 +71,7 @@ for (const c of cases) {
   await loop.executePreparedToolCall(prep, undefined, async () => {});
   out.hook = seen.hook;
   out.execute = seen.execute;
+  if (c.observe_second) out.second = seen.second;
   out.raw_unchanged_by_preparation = JSON.stringify(obs(call.arguments)) === JSON.stringify(out.raw);
   if (c.replace_text) out.replacement = obs(JSON.parse(c.replace_text));
   results.push(out);

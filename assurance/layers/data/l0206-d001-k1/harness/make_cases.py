@@ -7,6 +7,16 @@ JSON.parse (CreateDataProperty, so "__proto__" is an ordinary own key). A case m
     schema    the tool's declared parameters (validation runs against it; default: open {type: object})
     prepare   "edit": pinned Pi's edit prepareArguments (nested `edits` re-parsed from a JSON string)
     mutate    insertions a pre-execute hook makes IN PLACE on the arguments object (Pi's beforeToolCall)
+    program   (L0206-D001-R001/R002) a mutation program the pre-execute hook runs IN PLACE, op by op:
+                {"op": "set",    "target": T, "key": k, "value": V, "as"?: h}   T[k] = V
+                {"op": "push",   "target": T, "key": k, "value": V, "as"?: h}   T[k].push(V)
+                {"op": "insert", "target": T, "key": k, "index": i, "value": V, "as"?: h}
+                                                                            T[k].splice(i, 0, V)
+                {"op": "get",    "target": T, "key": k, "as": h}               h = T[k]
+              Instead of "value", an op may give "ref": h, placing the SAME object h again.
+              T is "args" or a handle; "as" names the object V builds (or T[k] for get), so a later op
+              mutates THAT object through the retained reference. `observe_second` additionally
+              observes the arguments after the program (a later listener's view).
     replace   an insertion sequence a Minion pre-execute listener returns as REPLACEMENT arguments
               (Minion mapping: Pi's beforeToolCall cannot replace; the expectation is ECMAScript's own order
               for that object)
@@ -79,6 +89,29 @@ CASES: list[dict] = [
      "mutate": [["b", 9], ["3", 3]]},
     {"id": "hook/replacement-object", "arguments": o(("a", 1)),
      "replace": o(("z", 1), ("2", 2), ("y", 3), ("1", 4))},
+    {"id": "key/long-decimal-is-ordinary", "arguments": o(("b", 1), ("9" * 5000, 2), ("1", 3))},
+    {"id": "key/eleven-digits-is-ordinary", "arguments": o(("b", 1), ("10000000000", 2), ("1", 3))},
+    {"id": "mutation/push-object-into-array", "arguments": o(("a", [])),
+     "program": [{"op": "push", "target": "args", "key": "a", "value": o(("b", 1), ("2", 2), ("1", 3))}]},
+    {"id": "mutation/insert-object-into-array", "arguments": o(("a", [o(("x", 1))])),
+     "program": [{"op": "insert", "target": "args", "key": "a", "index": 0, "value": o(("z", 1), ("0", 2))}]},
+    {"id": "mutation/retained-child-set-later", "arguments": o(("a", 1)),
+     "program": [{"op": "set", "target": "args", "key": "o", "value": o(("b", 1)), "as": "child"},
+                 {"op": "set", "target": "child", "key": "2", "value": 2}]},
+    {"id": "mutation/retained-array-element-set-later", "arguments": o(("a", [])),
+     "program": [{"op": "push", "target": "args", "key": "a", "value": o(("b", 1)), "as": "el"},
+                 {"op": "set", "target": "el", "key": "1", "value": 1},
+                 {"op": "set", "target": "el", "key": "c", "value": 3}]},
+    {"id": "mutation/nested-existing-gains-index", "arguments": o(("o", o(("z", 1), ("y", 2)))),
+     "program": [{"op": "get", "target": "args", "key": "o", "as": "inner"},
+                 {"op": "set", "target": "inner", "key": "0", "value": 0}]},
+    {"id": "mutation/shared-child-two-places", "arguments": o(("a", 1)),
+     "program": [{"op": "set", "target": "args", "key": "p", "value": o(("b", 1)), "as": "shared"},
+                 {"op": "set", "target": "args", "key": "q", "ref": "shared"},
+                 {"op": "set", "target": "shared", "key": "1", "value": 1}]},
+    {"id": "mutation/second-listener-sees-ordered", "arguments": o(("a", [])), "observe_second": True,
+     "program": [{"op": "push", "target": "args", "key": "a", "value": o(("b", 1), ("0", 2))},
+                 {"op": "set", "target": "args", "key": "3", "value": 3}]},
     {"id": "prepare/edit-nested-edits",
      "prepare": "edit",
      "schema": "edit",
@@ -91,7 +124,7 @@ def build() -> list[dict]:
     for case in CASES:
         c = {"id": case["id"], "provider_text": text(case["arguments"]), "arguments": case["arguments"]}
         c["schema"] = case.get("schema", OPEN)
-        for key in ("prepare", "mutate", "replace"):
+        for key in ("prepare", "mutate", "replace", "program", "observe_second"):
             if key in case:
                 c[key] = case[key]
         if "replace" in c:

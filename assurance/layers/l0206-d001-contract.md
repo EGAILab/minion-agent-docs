@@ -113,3 +113,47 @@ Because the order is held, not computed on read, iteration, `items`, `repr` and 
 | `pytest` | 3918 passed, 17 skipped, 19 xfailed; coverage **100.00%** |
 | `ruff check` / `mypy` | clean |
 | manifest | `AI-003` gains the `ecmascript_object_key_order` witness |
+
+## 8. Checkpoint 1 → remediation (`R001`–`R003`)
+
+**Codex CHANGES REQUIRED** at code `99dc310f` / docs `704cd3a0`, published verbatim on docs #228. The core rule and the authority replay were confirmed.
+
+**Findings:**
+- **`R001`, mutation through an array.** An object a hook appends into a list kept insertion order at `execute`.
+- **`R002`, copy-on-assignment.** The §7 "known mechanism note": a hook's later mutation through a retained reference was **lost**.
+- **`R003`, a long decimal key.** A 5000-digit key crashed construction (Python's int-string limit).
+
+**Trigger check (§11.8):** this is the first review, so A, B and C have not fired. This is ordinary remediation.
+
+**Contract (`spec/llm.md`).**
+- Objects are shared by reference: no copying to order.
+- The rule holds at every later boundary, the next listener and `execute`, at any depth, through arrays.
+- Index recognition is total.
+
+**Evidence.**
+- The authority adds 9 cases, for **37**; `k1.json` is unchanged.
+- **Mutation programs:**
+  - an object pushed or inserted into an array;
+  - a retained child set later;
+  - a retained array element set later;
+  - an existing nested object gaining an index key;
+  - one child placed twice and then mutated;
+  - a second listener's view.
+- **Keys:** the 5000-digit key, and an 11-digit key.
+
+**Python: identity-preserving in-place ordering.**
+- `order_in_place` re-sequences every reachable `dict` in place, recursively and through lists. Shared and cyclic objects are visited once, and no object is replaced.
+- It runs at construction, on a shim's result, on validation, **between pre-execute listeners** (the waterfall's `normalize_step`) and on the terminal decision before `execute`.
+- `JsObject` (the validated top level) keeps the rule on its own assignments and stores values **as given**.
+- `is_array_index` decides by length before converting.
+
+**Results:**
+
+| Check | Result |
+|---|---|
+| corpus | **37/37**; the reviewed head `99dc310f` fails **7** (the long key and six mutation cases) |
+| negative controls (9; the unmodified code fails 0) | insertion order 31, sorted 18, replay lost 14, top-level only 12, ordered at construction only 11, non-canonical index 4, schema order 3, copy-on-assignment 2, converting index check 1 |
+| `pytest` | 4112 passed, 29 skipped, 19 xfailed; coverage **100.00%** |
+| `ruff` / `mypy` | clean |
+
+**Disclosed test-hygiene change.** WP-13.2's key-order independence test built its variants from shared nested fixtures. In-place ordering at construction re-sequenced those shared fixtures, so the test's guard (that the variants enumerate differently) failed. The variants are now deep copies. WP-13.2's semantics and witness are unchanged.
