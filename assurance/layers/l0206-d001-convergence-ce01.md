@@ -250,3 +250,89 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint re-review of exactly this revision)
 ```
+
+---
+
+## 12. Checkpoint review 2 → Owner Q2 → revision 3
+
+**Codex.** Checkpoint revision-2 review (docs #228 comment `5947216500`) **REJECTED** the checkpoint on **`CE-L0206-D001-01-C002`**: containers introduced after construction.
+- Under the identity rule, a hook-introduced `dict` or `list` stays native.
+- So a child attached **through** it (`args["a"].append(child)`, `args["o"]["n"] = child`) is not ordered at its attachment.
+
+**Owner decision K1 Q2** (`#100` comment `5948712829`, verbatim): **Option 1.**
+- **"Minion-mediated" = the mutation itself dispatches through a Minion-owned seam:** `JsObject.__setitem__`, `JsArray` mutators, hook replacement processing, graph normalization or traversal. Merely reaching a native container through `args` does not make the operation mediated.
+- **Identity stays mandatory.**
+- **The approved bounded Python divergence is extended** to a child attached through a hook-introduced native container and observed directly through the hook's own alias before the next graph read or framework boundary. All six conditions of decision §5 are required.
+- **Reads through `args`, the next listener, validation, `execute`, events and persistence stay exact.**
+- **Copy, wrappers and interpreter surgery are rejected. Rust is exact.**
+
+### 12.1 Revised semantic model (decision §12), the normative basis for `spec/llm.md`
+
+```text
+A. construction-owned containers                  -> JsObject/JsArray; exact Pi order
+B. native object attached through a Minion seam    -> same object; ordered in place immediately
+C. native parent container introduced later        -> identity retained (stays native)
+D. mutation through that parent's own native API   -> not intercepted (not Minion-mediated)
+E. any later Minion-mediated traversal/boundary    -> recursive in-place normalization before exposure
+F. direct native-alias observation in the D->E gap -> approved bounded Python divergence
+```
+
+The §10.1 wording still holds, with "Minion-mediated" read per the decision §15 correction. The divergence paragraph covers both approved intervals: Q1's retained-alias interval and Q2's native-container interval. Rust has neither.
+
+### 12.2 Mechanism
+
+The mechanism is unchanged from §10.2: the prototype already realizes A–F.
+- `JsObject` / `JsArray` are the seams for A and B.
+- Recursive in-place `order_in_place` runs on every graph read (`JsObject.__getitem__` / `get` / `values` / `items`, `JsArray` reads and iteration) and at every framework boundary (E).
+
+The local prototype is `ce/k1-observer-chain` @ `f43432a`; it is not a candidate.
+
+### 12.3 Evidence (decision §13–§14), prototype results
+
+**`tests/tools/test_key_order_native_containers.py`** keeps matrix A–L and adds:
+
+| Witness | Pairs |
+|---|---|
+| M/N/T/U | a native list parent with `append`: the direct alias shows `b,2,1` (the approved divergence, documentary); the read through `args`, the next listener and `execute` are exact; identity is kept for both parent and child |
+| O / P / Q | `insert` / replacement / `extend` through a native list: the same pairs |
+| R/S/T/U | a native dict parent with a nested assignment: the same pairs |
+| deeper descendants | attached through native containers and repaired by one read through `args` |
+| V | event and serialization: a start-event listener builds native containers on the **raw** object and attaches through them, and the live start delivery is exact. A native attachment after construction, never read through the graph, is still ordered in the session encoding |
+
+**Controls (decision §14).** Each kills at least one witness of A–V:
+- copying hook-introduced parents;
+- identity-replacing wrappers;
+- normalize only at `execute`;
+- normalize only between listeners;
+- no recursive normalization on a graph read;
+- disorder leaking into `execute`;
+- dicts but not lists;
+- direct children but not deeper descendants.
+
+The Q1 controls (8) and the corpus controls (10) are kept.
+
+**Gates:** `pytest` 4161 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+## 13. Convergence checkpoint (revision 3)
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION (revision 3; revisions 1 and 2 REJECTED on C001 and C002)
+
+OPEN FINDINGS
+    L0206-D001-R004 (convergence root)
+    C001: RESOLVED by Owner Q1 (#100 comment 5947071963)
+    C002: RESOLVED by Owner Q2 semantic-boundary clarification (#100 comment 5948712829)
+
+ACCEPTANCE WITNESSES
+    matrix A-L (sections 10.3) + M-V (section 12.3) + the two documentary divergence witness families
+    controls: Q1 (8) + Q2 (8) + corpus (10); corpus 40 + extension (sections 6, 10.4)
+    R001-R003 closures preserved
+
+NORMATIVE DELTAS
+    spec/llm.md key-order section: section 10.1 wording + section 12.1 model + both divergence intervals
+    manifest AI-003: evidence pointers and the divergence disclosure
+
+NEXT_OWNER
+    Codex (checkpoint re-review of exactly this revision)
+```
