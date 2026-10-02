@@ -2597,3 +2597,110 @@ EXISTING OPERATIONS UNCHANGED (regression)
 Rows that need a non-root caller (permission-bit denials) are skipped, not faked, when the test host runs as root, and the skip is reported. Windows ACL rows are required on the Windows test host.
 
 Layer 13's provenance witnesses belong to `edit`'s integration (`TOOL-030`/`TOOL-033`), not to Layer 12 evidence. They cover: access fails, versus access ok followed by a read or write failure; the target changing after the check; the FALLBACK mode's readable-but-unwritable case at the write site; and the negative control that composes two probes.
+
+## 14. Layer-12 post-certification delta `L12-D001` — filesystem path JavaScript-string domain
+
+**Status (`minion-agent#123`):** CONTRACT_DRAFT. Python: provider fix in the paired code PR. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decision FSP-Q001, Option 1 (`minion-agent#123` comment `5943405192`). This is an **additive** extension of the certified Layer-12 `ctx.fs` seam.
+  - Scalar-path certification (EXEC-001…009), WP-13.1 and WP-13.2 are not reopened, and every certified scalar claim stands.
+  - No intentional Pi divergence.
+- **Owning seam.** The Layer-12 `ctx.fs` path seam, not individual tools. Layer-13 tools inherit the rule and implement no conversion of their own.
+- **Evidence.**
+  - Characterization: `assurance/layers/fs-path-jsstring-scoping.md`, and `l12-d001-contract.md`.
+  - Authority: `assurance/layers/data/l12-d001/`. It runs pinned Pi's REAL harness `NodeExecutionEnv` (`packages/agent/src/harness/env/nodejs.ts`, imported unmodified) and Pi's coding-agent `getMutationQueueKey`, under Node v22.15.1. The output is identical on Linux and Windows.
+
+### 14.1 The domain and the two path values
+
+A `ctx.fs` path argument is a **JavaScript string**: any UTF-16 code units, including unpaired surrogates (the raw/prepared domains of `L0206-D002` / `L0506-D002`). Two values exist and are never merged into one:
+
+| Value | What it is | Where it is observable |
+|---|---|---|
+| **logical path** | the path string as given, after `resolve_local_path` (§3.2): code units unchanged | `absolute_path`; `FileInfo.name`/`path` from `file_info` (Pi's `fileInfoFromStats(resolved)`); the `target_key` **fallback** for a missing target (§14.3); abort errors and provider errors that do not come from the OS (`toFileError`'s fallback path) |
+| **native path** | the logical path projected for the host filesystem call | the filesystem name actually used; `canonical_path`; `list_dir` / `list_dir_raw` names; the path of an **OS-originated** `FsError` (Node's `err.path`) |
+
+**The native projection** happens only at the local provider's OS call, exactly where pinned Node converts a JavaScript string path at its fs binding:
+
+```text
+unpaired high surrogate  ->  U+FFFD
+unpaired low surrogate   ->  U+FFFD
+valid surrogate pair     ->  its astral character (also when held as two separate surrogate characters)
+everything else          ->  unchanged
+```
+
+- It is the same on Linux and Windows: it happens before the platform-specific call, so it does not depend on the host's own path encoding.
+- **A provider MUST NOT** delegate this to the host language's default conversion. Python on POSIX raises `UnicodeEncodeError` (escaping the `Result` contract), and Python on Windows passes the raw surrogate to NTFS.
+- **No earlier projection** in path resolution, tools, result text or messages.
+
+**Consequences, all reproduced by pinned Pi:**
+- **Aliasing.** Distinct logical spellings that project alike, `a<U+D800>`, `a<U+DC00>` and `a<U+FFFD>`, address **one** native file.
+  - A write through one spelling is read back through any of them.
+  - A second write through another spelling overwrites that file.
+  - The listing shows one entry, `a<U+FFFD>`.
+- **A directory component** is projected the same way as a final component.
+
+### 14.2 Operations
+
+| Operation | Rule |
+|---|---|
+| every operation that reaches the OS (`read_text_file`, `read_text_lines`, `read_binary_file`, `write_file`, `append_file`, `rename_file` (both endpoints), `file_info`, `list_dir`, `list_dir_raw`, `probe_dir_entry`, `check_readable`, `check_read_write`, `canonical_path`, `create_dir`, `remove`, `exists`) | accepts the JavaScript-string domain and performs its OS call on the native path. Operation semantics, cancellation and `FsError` code mapping (§2.1) are unchanged |
+| `absolute_path`, `join_path` | logical: no projection |
+| `canonical_path` | the OS's real path of the native path: projected |
+| `file_info` | `name`/`path` are the **logical** path asked about; `kind`/size/mtime come from the native path |
+| `list_dir` | entries are the native directory's entries: names **projected**; each entry's `path` is the logical directory joined with the entry's (projected) name |
+| an OS-originated `FsError` | `path` = the native path (Node's `err.path`) |
+| an abort or non-OS `FsError` | `path` = the logical path (Pi's fallback) |
+
+### 14.3 `FsTarget` / `target_key` (§4)
+
+This is unchanged in form, and the rule is binding as Pi parity (decision §7–§8):
+
+```text
+existing target:  target_key = canonical_path(path)   -> the PROJECTED native name, shared by every spelling
+missing target:   target_key = absolute_path(path)    -> the RAW logical path; spellings differ
+```
+
+- **Concurrency consequence (decision §8).** Two operations on different raw spellings of one currently missing native file may receive distinct queue keys at first. That is pinned Pi's behavior, and the queue is not redesigned.
+- **Forbidden:** projecting before the fallback, and not projecting the canonical name.
+
+### 14.4 `file://` (FSP-D6)
+
+- **WHATWG URL parsing reads a scalar value string.** An unpaired surrogate inside a `file://` string is U+FFFD **before** parsing.
+  - The provider's file-URL conversion applies that conversion to its input, then the unchanged, delegated parse (`L12-R002`: ada stays the URL authority).
+  - The converted path then follows §14.1, and is already scalar.
+- **Valid percent-encoded sequences decode normally.**
+- **Percent-encoded invalid UTF-8** (e.g. `%ED%A0%80`, truncated, overlong) is a conversion failure.
+  - At this seam it keeps the literal URL as an ordinary path (the certified §3.2 rule, Pi's harness resolver).
+  - The tool pipeline's TOOL-026 step 4 (`R002-A`) rejects it before `ctx.fs`.
+  - Both behaviors are unchanged.
+
+### 14.5 Representation
+
+The contract fixes values, not types.
+- **Python:** `str` (`surrogatepass` canonical form). The provider applies one projection function (`native_path`) at every OS call.
+- **Rust:** `&str` cannot carry the domain.
+  - The `ctx.fs` path parameters, the file-URL conversion and the tools' path extraction need a lossless JavaScript-string path, reusing the certified JS-string primitive.
+  - The tools must stop refusing a non-scalar path ("path is required"). `ls` must stop substituting `"."`, which listed the wrong directory (decision §9).
+  - The type design is Rust's.
+
+### 14.6 Platforms
+
+- Linux and Windows were observed and agree.
+- **macOS: DEFERRED_WITH_REASON.** It was not observed. Run the pinned probe on macOS before claiming macOS certification for this domain. Scalar-path certifications are unaffected.
+
+### 14.7 Evidence and controls
+
+- **Canonical scenarios:** `minion-agent` `conformance/agent/fs-path-domain/`, shape `fs-path-domain-scenario.schema.json`, generated from the authority; Linux and Windows agree.
+  - 4 `ctx.fs` documents, 56 cases: names × {final, directory} component, missing targets, aliases, `file://`.
+  - One tool-level document (`fs-path-tools`, 5 cases, through the real `write`/`read`/`ls`/`edit`). It checks Pi's templates (path as given), reads via the U+FFFD spelling and the listing of the addressed directory.
+- **Negative controls (decision §19).** Each MUST fail the corpus, while the unmodified code passes:
+  - early tool-level U+FFFD conversion;
+  - tool text rewritten to U+FFFD;
+  - rejection before `ctx.fs`;
+  - `ls` `"."` substitution;
+  - raw OS passthrough (the Windows defect);
+  - a host-codec exception (the POSIX defect);
+  - a valid pair replaced;
+  - a raw surrogate leaked in a directory component;
+  - always-project-before-`target_key`;
+  - never-project-before-`target_key`.
