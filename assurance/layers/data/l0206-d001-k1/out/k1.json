@@ -1,0 +1,544 @@
+{
+ "node": "22.15.1",
+ "results": [
+  {
+   "id": "open/mixed",
+   "schema": "open",
+   "raw": {
+    "o": [
+     [
+      "1",
+      "z"
+     ],
+     [
+      "2",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ]
+    ]
+   },
+   "stringify": "{\"1\":\"z\",\"2\":\"y\",\"b\":\"x\"}",
+   "hook": {
+    "o": [
+     [
+      "1",
+      "z"
+     ],
+     [
+      "2",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "0",
+      "added-index"
+     ],
+     [
+      "1",
+      "z"
+     ],
+     [
+      "2",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ],
+     [
+      "c",
+      "added"
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-z-a/insertion-a-z",
+   "schema": "declared-z-a",
+   "raw": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "stringify": "{\"a\":\"x\",\"z\":\"y\"}",
+   "hook": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-z-a/insertion-z-a",
+   "schema": "declared-z-a",
+   "raw": {
+    "o": [
+     [
+      "z",
+      "y"
+     ],
+     [
+      "a",
+      "x"
+     ]
+    ]
+   },
+   "stringify": "{\"z\":\"y\",\"a\":\"x\"}",
+   "hook": {
+    "o": [
+     [
+      "z",
+      "y"
+     ],
+     [
+      "a",
+      "x"
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "z",
+      "y"
+     ],
+     [
+      "a",
+      "x"
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-z-a/with-extras",
+   "schema": "declared-z-a",
+   "raw": {
+    "o": [
+     [
+      "1",
+      "o"
+     ],
+     [
+      "10",
+      "t"
+     ],
+     [
+      "extra",
+      "e"
+     ],
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "stringify": "{\"1\":\"o\",\"10\":\"t\",\"extra\":\"e\",\"a\":\"x\",\"z\":\"y\"}",
+   "hook": {
+    "o": [
+     [
+      "1",
+      "o"
+     ],
+     [
+      "10",
+      "t"
+     ],
+     [
+      "extra",
+      "e"
+     ],
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "1",
+      "o"
+     ],
+     [
+      "10",
+      "t"
+     ],
+     [
+      "extra",
+      "e"
+     ],
+     [
+      "a",
+      "x"
+     ],
+     [
+      "z",
+      "y"
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-index/insertion",
+   "schema": "declared-index",
+   "raw": {
+    "o": [
+     [
+      "1",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ],
+     [
+      "c",
+      "z"
+     ]
+    ]
+   },
+   "stringify": "{\"1\":\"y\",\"b\":\"x\",\"c\":\"z\"}",
+   "hook": {
+    "o": [
+     [
+      "1",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ],
+     [
+      "c",
+      "z"
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "1",
+      "y"
+     ],
+     [
+      "b",
+      "x"
+     ],
+     [
+      "c",
+      "z"
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-nested/inner-reversed",
+   "schema": "declared-nested",
+   "raw": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "2",
+         "i"
+        ],
+        [
+         "a",
+         "x"
+        ],
+        [
+         "z",
+         "y"
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "stringify": "{\"o\":{\"2\":\"i\",\"a\":\"x\",\"z\":\"y\"}}",
+   "hook": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "2",
+         "i"
+        ],
+        [
+         "a",
+         "x"
+        ],
+        [
+         "z",
+         "y"
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "2",
+         "i"
+        ],
+        [
+         "a",
+         "x"
+        ],
+        [
+         "z",
+         "y"
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "declared-number/convert",
+   "schema": "declared-number",
+   "raw": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "n",
+      "5"
+     ]
+    ]
+   },
+   "stringify": "{\"a\":\"x\",\"n\":\"5\"}",
+   "hook": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "n",
+      5
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "a",
+      "x"
+     ],
+     [
+      "n",
+      5
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  },
+  {
+   "id": "invalid/diagnostic",
+   "schema": "declared-z-a",
+   "raw": {
+    "o": [
+     [
+      "1",
+      3
+     ],
+     [
+      "2",
+      2
+     ],
+     [
+      "b",
+      1
+     ],
+     [
+      "z",
+      {
+       "o": [
+        [
+         "0",
+         2
+        ],
+        [
+         "q",
+         1
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "stringify": "{\"1\":3,\"2\":2,\"b\":1,\"z\":{\"0\":2,\"q\":1}}",
+   "error_text": "Validation failed for tool \"probe\":\n  - z: must be string\n\nReceived arguments:\n{\n  \"1\": 3,\n  \"2\": 2,\n  \"b\": 1,\n  \"z\": {\n    \"0\": 2,\n    \"q\": 1\n  }\n}"
+  },
+  {
+   "id": "edit/nested-edits-string",
+   "schema": "edit",
+   "raw": {
+    "o": [
+     [
+      "path",
+      "f.txt"
+     ],
+     [
+      "edits",
+      {
+       "a": [
+        {
+         "o": [
+          [
+           "1",
+           "i"
+          ],
+          [
+           "newText",
+           "b"
+          ],
+          [
+           "oldText",
+           "a"
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "stringify": "{\"path\":\"f.txt\",\"edits\":[{\"1\":\"i\",\"newText\":\"b\",\"oldText\":\"a\"}]}",
+   "hook": {
+    "o": [
+     [
+      "path",
+      "f.txt"
+     ],
+     [
+      "edits",
+      {
+       "a": [
+        {
+         "o": [
+          [
+           "1",
+           "i"
+          ],
+          [
+           "newText",
+           "b"
+          ],
+          [
+           "oldText",
+           "a"
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "path",
+      "f.txt"
+     ],
+     [
+      "edits",
+      {
+       "a": [
+        {
+         "o": [
+          [
+           "1",
+           "i"
+          ],
+          [
+           "newText",
+           "b"
+          ],
+          [
+           "oldText",
+           "a"
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_object": true,
+   "validated_is_raw_object": false
+  }
+ ]
+}
