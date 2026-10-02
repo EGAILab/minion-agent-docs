@@ -1,0 +1,118 @@
+# WP-12.E4: execution-world environment and platform — characterization
+
+**Work package:** `minion-agent#130` (CONTRACT_DRAFT), requirement `EXEC-010` (proposed).
+**Authorization:** Owner decision `WP133-F1` = A and `WP133-F2` = A (`minion-agent#50` comment `5951046523`).
+**Consumer:** WP-13.3 `bash` (`minion-agent#50`; `13-wp133-feasibility-matrix.md`).
+**Author:** Claude. This is characterization, not a contract.
+**Pinned Pi:** `b7bb00b936dbe21b8e160b3e89efdec361846699`, Node v22.15.1.
+
+## 1. What the consumer needs, and the Pi behavior it must reproduce
+
+Pinned Pi's `bash` touches the environment in three places:
+
+| Site | Pi source | Operation |
+|---|---|---|
+| Git Bash discovery | `utils/shell.ts:79-86` | `process.env.ProgramFiles`, `process.env["ProgramFiles(x86)"]` |
+| spawn-context build | `core/tools/bash.ts:169-182` | `env = {...getShellEnv()}`; `delete env.PI_*` (five keys); then set the live values |
+| spawn | `bash.ts:104-110` | `spawn(shell, args, {env})` |
+
+`getShellEnv` (`shell.ts:122-134`) is `{...process.env, [pathKey]: updatedPath}`. Minion adds no `PATH` entry today (Q1 §8), so Minion's equivalent of `getShellEnv()` is the world's base environment unchanged.
+
+The decision's composition (§6): `env = copy(base_env())`, remove the five `MINION_*` keys, inject the live values, then spawn with `inherit_env = false`. The question for this delta is what `base_env()` must hold, and what that composition must do on each platform, so that the child observes what pinned Pi's child observes.
+
+## 2. Windows: executable observations
+
+**Harness:** `data/12-wp12e4/harness/`. **Outputs:** `data/12-wp12e4/out/`.
+**Host:** Windows 11 (`10.0.26200`), Node v22.15.1, CPython 3.13.5, Git Bash 5.3.15 (`out/versions.txt`).
+
+### 2.1 Node (the authority)
+
+| # | Observation | Evidence |
+|---|---|---|
+| N1 | `process.env` keeps each name's **original case** and looks it up **case-insensitively**: a parent whose block holds `ProgramFiles` lists `ProgramFiles`, and `process.env.PROGRAMFILES` finds it | `node-dedup.json` `parentView` |
+| N2 | A spread copy `{...process.env}` is a plain object: **case-sensitive**. `copy.PROGRAMFILES` is `undefined` when the name is `ProgramFiles` | `parentView.copyUpper = null` |
+| N3 | When `spawn` receives an `env` object with names equal up to case, the child gets **exactly one** of them. It is the name that sorts **first by UTF-16 code units**, whatever the insertion order: `XK` beats `xk`; `xK` beats `xk`; `Xk` beats `xK` | `node-dedup.json`, `node-dedup2.json` |
+| N4 | Names keep their case into the child. Git Bash then upper-cases **some** well-known names (`ProgramFiles` → `PROGRAMFILES`, `Path` → `PATH`) but leaves `ProgramFiles(x86)` and `Minion_Session_Id` unchanged, so name case is observable to commands | `node-msys.json` |
+
+**Consequences for Pi `bash` on Windows:**
+- **Discovery** reads `ProgramFiles` and `ProgramFiles(x86)` case-insensitively (N1).
+- **The strip** deletes the five **exact-case** names from a case-sensitive copy (N2). An inherited case variant (`Pi_Session_Id`) survives the `delete`.
+- **When the live value is injected** under the exact upper-case name, N3 makes the upper-case name win at spawn: an all-upper-case name sorts before every case variant of itself. So **with a live value**, the child sees only the live value.
+- **When no live value is injected** (exposure disabled, no context, or that field absent), an inherited case variant **reaches the child** unchanged.
+
+### 2.2 CPython 3.13 (the Python binding's local provider today)
+
+| # | Observation | Evidence |
+|---|---|---|
+| P1 | `os.environ` **upper-cases every name** on Windows: `PROGRAMFILES(X86)`, `COMMONPROGRAMFILES(X86)` | `python-cpython313-win.json` `pyEnvironKeys` |
+| P2 | `subprocess` with an `env` mapping whose names are equal up to case passes them through, and the child gets the **last-inserted** one: `{XK, xk}` → `xk`; `{xk, XK}` → `XK` | `upperFirst`, `lowerFirst`, `lowerThenxK` |
+| P3 | A name's case reaches the child unchanged when there is no duplicate | `pfExact` |
+
+**P1 ≠ N1 and P2 ≠ N3.** The existing Python `LocalSubprocess` builds its inherited environment as `dict(os.environ)` (`execution/subprocess.py::_effective_env`). Its children therefore see upper-cased names where a Node-spawned child sees the original case, for example `PROGRAMFILES(X86)` against `ProgramFiles(x86)` (observable through Git Bash, N4).
+
+## 3. POSIX
+
+POSIX environment names are case-sensitive byte strings. Node and CPython keep names as they are, and a mapping cannot hold two equal names, so N1–N3 and P1–P2 have no POSIX counterpart.
+- **Discovery** never reads the environment on POSIX (`shell.ts:109-119`).
+- **The strip** is exact-name deletion.
+
+**DEFERRED_WITH_REASON (runtime confirmation):** a `node:22.15.1-bookworm-slim` probe of the same harness. The WP-13.3 Linux run already confirms POSIX `bash` end to end (`13-wp133-bash-characterization.md` §11). Trigger: the contract corpus run.
+
+## 4. What this means for `base_env()`
+
+**R1: identity of the snapshot.** `base_env()` returns the environment a spawn with `inherit_env = true` inherits in that world, before any overlay (decision §1). It is a snapshot taken when called (§4).
+- Its names carry the **case the provider's spawn would give the child**.
+- Lookup semantics follow the platform.
+
+**R2: Windows name semantics are platform semantics, not a binding choice (decision §5).** On `WINDOWS` the snapshot is a mapping with:
+- original-case names;
+- at most one entry per case-insensitive name;
+- case-insensitive lookup (N1).
+
+On `POSIX` it is an exact-name mapping.
+
+**R3: the duplicate rule belongs to spawn composition.** When a caller-built environment holds names equal up to case on `WINDOWS`, the child must receive the one that sorts first by UTF-16 code units (N3). This is Pi's observable behavior.
+- Python's `subprocess` does the opposite (P2), so the rule cannot be left to the binding's spawn library.
+- Decision §12 says E4 does not alter spawn or overlay semantics. The rule is therefore stated where Pi applies it: as part of the **consumer's** composition (WP-13.3 normalizes the environment it builds before `spawn`), with a shared helper. The certified `spawn` contract is untouched.
+
+**R4: Python binding representation (finding, see §5).** A Python `base_env()` derived from `os.environ` would carry upper-cased names (P1). Pi's child sees original case. To match, the Python local provider's base environment on Windows must come from the process environment block with original case:
+- `GetEnvironmentStringsW`, or an equivalent read;
+- that is the same source a `CreateProcess` call with a null environment would hand the child.
+
+Rust's `std::env::vars_os` already preserves case.
+
+**R5: platform.** It is provider-declared, from the closed set `WINDOWS | POSIX` (decision §8). A local provider declares its host's family. A remote or fake provider declares its world's family (decision §9). It is not part of `ExecutionWorldIdentity` (decision §10).
+
+## 5. Findings for the contract
+
+```text
+WP12E4-C001  CONTRACT_ASSURANCE (characterization)  Windows env name semantics
+    Node: original case, case-insensitive lookup, spawn keeps the first name by
+    UTF-16 order among case-equal duplicates. CPython: os.environ upper-cases
+    names, and subprocess keeps the last-inserted duplicate. The contract states
+    R2 (snapshot) and R3 (consumer composition); bindings MUST NOT rely on the
+    spawn library's duplicate handling.
+
+WP12E4-C002  PYTHON_BINDING (local provider)  base environment name case on Windows
+    The Python LocalSubprocess's inherit_env=true environment is dict(os.environ),
+    with upper-cased names. E4's base_env() is DEFINED as that environment
+    (decision section 1), so a faithful base_env() keeps the upper-casing unless
+    the local provider reads the original-case block. Proposed resolution: the
+    Python local provider sources its base environment, for both base_env() and
+    the inherit_env=true spawn, from the original-case block. This changes no
+    certified contract text: section 6 says only "the provider's own
+    base/inherited environment", and the name case was never specified or
+    witnessed. Flagged for the reviewer: if the reviewer judges it a
+    certified-behavior change, it goes to the Owner (#75 item 4).
+
+WP12E4-C003  WP-13.3 consequence (Pi parity, recorded)  case-variant inherited MINION_* names on Windows
+    With a live value injected, the child sees only the live value (N3). With no
+    live value, an inherited case variant (Minion_Session_Id) reaches the child,
+    exactly as Pi's PI_* case variants do (exact-case delete, N2). This is Pi's
+    behavior mapped (Q1 section 7: "map Pi's actual behavior carefully"). It is
+    not a new choice. The WP-13.3 contract states it, and witnesses it.
+```
+
+No finding here needs a new Owner decision.
+- **C001** and **C003** follow Pi.
+- **C002** is a binding-level representation fix. The decision delegated API spelling and representation (§§1, 5).
