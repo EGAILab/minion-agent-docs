@@ -1,6 +1,6 @@
 # L0206-D001 (K1): ECMAScript object key enumeration order — contract
 
-**Work package:** `minion-agent#100`. **Status:** CONTRACT_DRAFT, proposed for the contract checkpoint (workflow §4.1, §4.1.1).
+**Work package:** `minion-agent#100`. **Status:** CONTRACT_REVIEW requested (workflow §4.1, §4.1.1), with the Python implementation (§7).
 **Authorization:** Owner K1 decision, Option 1 (`minion-agent#99` comment `5924847773`).
 **Normative text:** `spec/llm.md`, "Tool-argument object key order".
 **Characterization:** `l0206-d001-characterization.md`. **Feasibility:** `l0206-d001-feasibility-matrix.md`.
@@ -81,3 +81,35 @@ Each must fail the corpus, while the conforming implementation passes:
 - The raw `IndexMap` and the prepared `BTreeMap` both need an ES-ordered object representation (or ES enumeration at every observation point), applied recursively.
 - Rust must pass the 28 cases and Rust equivalents of the §4 controls.
 - The type design is Rust's.
+
+## 7. Python implementation (paired with the contract for checkpoint review)
+
+Code #128 @ `81f7dc13`, following the L12-D001 precedent: the contract and the Python evidence are reviewed together.
+
+**`src/minion_agent/llm/js_object.py`: `JsObject`.** A `dict` whose own insertion order is the rule's order at all times:
+- a new array-index key moves to its ascending position;
+- any other new key appends;
+- an overwrite keeps its position;
+- `update`, `setdefault`, `|`, `|=` and `copy` keep the rule;
+- assigned values are converted.
+
+Because the order is held, not computed on read, iteration, `items`, `repr` and `json.dumps` follow without overrides. `js_object` converts recursively and keeps a list's identity.
+
+**Where it is applied:**
+- `ToolCallBlock.__post_init__`, so session decode is covered too;
+- `_prepare` (shim results);
+- `_validate`: the raw-schema path returns `JsObject(arguments)`, so nothing is reordered. The typed-model path is `_in_input_order` (K1-F1);
+- the pre-execute decision: replacement arguments are converted, and the terminal validated object is passed through by identity, so an in-place mutation stays visible.
+
+**Known mechanism note.** A plain `dict` assigned into a `JsObject` is stored as a converted copy, so a hook that keeps its own reference and mutates that dict later does not affect the stored copy. Pi's JavaScript objects have no such copy step. This is a binding mechanism, not a contract choice, and it is open to checkpoint review.
+
+**Results:**
+
+| Check | Result |
+|---|---|
+| `key-order` corpus | **28/28** (was 22/28 failing) |
+| `tests/llm/test_js_object.py` | 24 tests, including the index table, mutation, operators, recursion, JSON and the K1-F1 typed-model order |
+| negative controls (`test_key_order_negative_controls.py`; the unmodified code fails 0) | insertion order kills 22, sorted 15, order lost on replay 12, top-level only 5, declared-schema order 3, non-canonical numeral as index 3, ordered at construction only 2 |
+| `pytest` | 3918 passed, 17 skipped, 19 xfailed; coverage **100.00%** |
+| `ruff check` / `mypy` | clean |
+| manifest | `AI-003` gains the `ecmascript_object_key_order` witness |
