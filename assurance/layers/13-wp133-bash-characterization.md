@@ -204,3 +204,36 @@ The probe executes 36 real commands under Node v22.15.1:
 - **Updates:** the sequence for `printf a; sleep .4; printf b` is `[content: [] (no text), "a", "ab"]`.
 
 This characterization pass needs no Owner input. The contract does: §10 Q1–Q3.
+
+## 12. Owner decision Q1 (session environment), recorded
+
+**Decision:** Option 1, a Minion namespace (`minion-agent#50` comment `5945376145`, verbatim).
+
+**Variables:**
+- `MINION_SESSION_ID`
+- `MINION_SESSION_FILE`, only when a persisted session file exists; otherwise absent, never `""`
+- `MINION_PROVIDER`
+- `MINION_MODEL`
+- `MINION_REASONING_LEVEL`
+
+**Behavior:**
+- Exposure is on by default.
+- Inherited `MINION_*` copies are stripped, then rebuilt from live state.
+- Inherited `PI_*` variables are **not** touched.
+- There is no `PATH` change today. An optional managed-bin prefix hook exists for WP-13.4: it adds the directory once and never adds a placeholder.
+
+**Classification:**
+
+| Part | Classification |
+|---|---|
+| the mechanism | DIRECT_PI_PARITY / PI_SOURCE_ALGORITHM |
+| the namespace | MINION_ARCHITECTURAL_MAPPING |
+| the value source | MINION_SHARED_CONTRACT |
+| the managed-bin `PATH` | MINION_ARCHITECTURAL_MAPPING |
+
+**Disable mode** (decision §7, settled from source).
+- Pi's `resolveSpawnContext` (`bash.ts:169-174`) deletes the five session keys **unconditionally**. It re-adds them only when `exposeSessionEnvironment && ctx`.
+- Mapped: with exposure disabled, inherited `MINION_*` session variables are **removed** and nothing is injected.
+- With exposure enabled but no live context, the same holds: removed, not re-added.
+
+**Still open:** Q2 (partial updates) and Q3 (the factory surface).
