@@ -215,3 +215,28 @@ checkpoint blocker C001:      RESOLVED BY EXPLICIT SCOPE DISPOSITION
 **Deletion extent.** In the tested positions (the protected child first, middle and last among 20 siblings), Pi and Python both removed every sibling. No finding comes from this characterization. That does not imply the selection semantics are equivalent, and a future concurrent remediation must revalidate it (decision §8).
 
 **Unchanged.** Every other row of §5 remains an exact L12-D001 claim (decision §7): single-failure provenance, addressed paths, the parent `mkdir`, `rename`, the `list_dir` entry, projection, logical versus native, `canonical_path` and `target_key`.
+
+## 14. Agreed checkpoint and implementation candidate
+
+- **Checkpoint.**
+  - Codex returned CHECKPOINT REVIEW **APPROVED** on revision 2 at docs `5a440d85` (docs #227 comment `5944581656`).
+  - The control record reads CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION (`#123` comment `5944581961`), recorded on that verdict.
+- **Implementation candidate:** code #124 @ `542e5596`. It fast-forwards from `1738324b`:
+  - the §8 change (`list_dir` per-entry origin; recursive `remove` failing-call origin via `rmtree` `onexc` and the `_RemovalFailure` carrier);
+  - `tests/execution/test_fs_error_origin.py`, extended with:
+    - the witnesses: entry-vanish interleaving for both names; inner removal failure, forced on every host and real on non-root POSIX; the carrier;
+    - controls 1–4 of §7. Control 3 runs where `rmtree` uses fd functions (POSIX), the only place its quirk exists;
+  - manifest evidence pointers.
+- **Fresh results:**
+
+| Check | Result |
+|---|---|
+| `pytest` | **4037 passed**, 29 skipped, 19 xfailed; coverage **100.00%** |
+| `ruff check` | clean |
+| `mypy` | clean (97 files) |
+| touched files | formatted |
+| `test_fs_error_origin.py`, Linux container, non-root | **31/31** |
+| `ctx.fs` corpus, Linux, non-root | **122/122** |
+| ce probe (`ce/out/cmp-after-*.txt`) | Linux 0/10 differ; Windows 2/4 differ, both `#126` |
+
+- **R001 and R002 stay open** until the targeted closure review.
