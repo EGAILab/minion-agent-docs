@@ -1,0 +1,4 @@
+SAME scalar/entry-vanish 
+DIFF scalar/rm-readonly-file pi={'ok': True} py={'error': 'permission_denied', 'path': [[98], [115, 117, 98], [102]]}
+SAME lone/entry-vanish 
+DIFF lone/rm-readonly-file pi={'ok': True} py={'error': 'permission_denied', 'path': [[97, 65533], [115, 117, 98], [102]]}

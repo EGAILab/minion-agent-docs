@@ -180,3 +180,13 @@ Changes in `execution/filesystem.py`:
 In addition to §5:
 - Parent and directory creation must reproduce Node's walk (§14.5, §14.8). The platform's "create all" primitive is not enough.
 - The binding must pass the error-origin corpus on each platform it runs.
+
+## 8. Contract review 2 → convergence (`CE-L12-D001-01`)
+
+Codex's targeted re-review, at code `1738324b` / docs `ba093953`, returned **CHANGES REQUIRED**. It is published verbatim at docs #227 comment `5944258531`:
+- **`L12-D001-R001` was partly resolved.** The parent-creation path is confirmed fixed. `list_dir` still named the directory when an entry's own `lstat` failed; Codex showed this with a controlled interleaving.
+- **`L12-D001-R002` is new.** The §14.8 walk wording was wrong for a failed `stat`.
+
+Under workflow §11.8, triggers A and B fired, so #123 entered `CONTRACT_CONVERGENCE`. The episode record, `l12-d001-convergence-ce01.md`, holds the site-by-site sweep, the challenge pass and the checkpoint proposal.
+- The sweep found one more site: a recursive `remove` failing inside the tree.
+- It also recorded `#126`: on Windows, a recursive `remove` of a tree with a read-only file fails in Python, where Pi succeeds. That is an outcome difference, and remediation is not authorized.

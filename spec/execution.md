@@ -2710,13 +2710,16 @@ The contract fixes values, not types.
   - (`L12-D001-R001`) the platform's own recursive-create walk (Python `os.makedirs`) instead of Node's.
   - The logical fallback for a read of a directory is witnessed by the Linux-only corpus cases, and by focused binding tests on every host.
 
-### 14.8 Error origin (`L12-D001-R001`)
+### 14.8 Error origin (`L12-D001-R001`, `L12-D001-R002`; convergence `CE-L12-D001-01`)
 
 Pinned Pi's `toFileError(error, fallback)` (`nodejs.ts:97-121`) reports Node's `err.path` when the Node error carries one. Otherwise it reports the operation's fallback: the resolved **logical** path (for `rename_file`, the logical source).
 
 An `FsError`'s `path` is therefore decided by **which native call failed**, and by **whether Node's error for it names a path**. It is not decided by the operation's argument.
 
-Characterization: `assurance/layers/data/l12-d001/r001/`. It runs Pi's `NodeExecutionEnv` on both platforms and records Node's own `code` and whether its error had a path.
+Characterization:
+- `assurance/layers/data/l12-d001/r001/` runs Pi's `NodeExecutionEnv` on both platforms, recording Node's own `code` and whether its error had a path.
+- `assurance/layers/data/l12-d001/ce/` (convergence episode) covers the per-entry, recursive-removal and unsupported-type origins, the per-entry one through a controlled interleaving.
+- The table covers **every** `toFileError` / `FileError` site of `NodeExecutionEnv` (the site-by-site sweep is in `assurance/layers/l12-d001-convergence-ce01.md`).
 
 | Failure | Node call that fails | `FsError.path` |
 |---|---|---|
@@ -2727,19 +2730,25 @@ Characterization: `assurance/layers/data/l12-d001/r001/`. It runs Pi's `NodeExec
 | `append_file` to a directory | Linux: the open fails `EISDIR`, naming the path. Windows: `EISDIR` with no path | Linux: native; Windows: logical |
 | `write_file` to a directory | the open fails `EISDIR`, naming the path | native |
 | `remove` of a directory without `recursive` | Node's own `rm` validation: `ERR_FS_EISDIR`, naming the string it was given | the **logical** path |
-| a `list_dir` entry vanishing between the listing and its `lstat` | `lstat(directory + entry name)` | the native entry path (a race, so not witnessable deterministically) |
+| `remove` with `recursive`, failing inside the tree | Node's `rimraf` (v22.15.1 `lib/internal/fs/rimraf.js`, git blob `24bf3f46b878e711beadcdc8e1b08700d10aa3c5`): `lstat`; a directory is `rmdir`ed, and when not empty it is listed and each child removed the same way, then `rmdir`ed again | the native path of the call that failed: an entry **inside** the tree (for example the file a non-writable directory protects), or the directory whose listing or `rmdir` failed. Never the removal's own target unless that call failed |
+| a `list_dir` entry failing its own `lstat` (for example removed between the listing and the `lstat`) | `lstat(directory + entry name)`; Pi's per-entry `toFileError(error, entryPath)` | the native **entry** path, not the directory's. Deterministically witnessable by a controlled interleaving: remove the entry after the enumeration returns |
+| `file_info` of an unsupported file type (POSIX: a FIFO, socket or device) | none: Pi's `fileInfoFromStats` builds `FileError("invalid", ..., resolved)` | the **logical** path, code `invalid` |
 | abort | none | logical |
 
 **Node's recursive `mkdir` walk** (v22.15.1 `src/node_file.cc` `MKDirpAsync`, git blob `49816349d8bab37fea1d84e5326ee5a11acad7a2`):
 1. Pop a path and `mkdir` it.
 2. `ENOENT` pushes the path back, then its parent.
 3. `EACCES`, `EPERM` or `ENOTDIR` ends the walk.
-4. Any other error `stat`s the path. An existing directory is success. Otherwise the result is `ENOTDIR` for an intermediate path after `EEXIST`, and `EEXIST` in every other case.
+4. Any other error `stat`s the path. The outcome depends on the original error and the `stat` result:
+   - **Intermediate path after `EEXIST`** (paths remain on the stack): a successful `stat` of a directory continues the walk. A failed `stat`, or a non-directory, is `ENOTDIR`.
+   - **Otherwise:** a failed `stat` keeps the `stat`'s own error (for example `EACCES` → `permission_denied`). A successful `stat` of a directory is success: the walk ends. A successful `stat` of a non-directory is `EEXIST`.
+   - In every case the error names the path the walk was at.
 
 - **A provider MUST NOT** substitute the operation's target for the failing call's path, nor project a fallback.
 - Where a binding's native primitive names a path that Node's error does not (Python's `open` of a directory on POSIX), the provider reports Pi's fallback.
 - **Codes are unchanged (§2.1).** The corpus pins each platform's code as Pi reports it. This characterization found code differences outside this delta. They are recorded separately, not remediated here:
   - Opening a directory as a file on Windows gives `permission_denied`: the recorded `minion-agent#67`. Its cases are Linux-only in the corpus (above). For read and append the path differs too, because Node's error names none.
   - `remove` of a directory: pinned Pi answers `unknown` (`ERR_FS_EISDIR` is outside `toFileError`'s switch), while the Python binding answers `is_directory` on both platforms. Recorded as `L12-RM-DIRECTORY-CODE` (`minion-agent#125`); remediation is not authorized.
+  - An **outcome** difference, not a code: on Windows, Node's `rimraf` retries an `EPERM` `unlink` after `chmod 0o666` (`fixWinEPERM`), so a recursive `remove` of a tree holding a read-only file succeeds; the Python binding fails `permission_denied`, naming that file. Recorded as `L12-RM-READONLY-WINDOWS` (`minion-agent#126`); remediation is not authorized.
 - **Scalar paths.** §2–§3 specified `FsError` codes, never `FsError.path`. This section adds the path carrier for every path, scalar included. No certified scalar claim changes.
   - Disclosed side effect: reproducing Node's walk aligns the Python binding's Windows code for a recursive creation through a file (`not_found` becomes Pi's `not_directory`). No certified test or scenario asserted the previous value.
