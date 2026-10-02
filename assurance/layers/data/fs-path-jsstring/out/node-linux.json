@@ -1,0 +1,1484 @@
+{
+ "platform": "linux",
+ "node": "22.15.1",
+ "icu": "76.1",
+ "results": [
+  {
+   "id": "file/bmp",
+   "input": [
+    102,
+    233,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    233,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     233,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": true
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": true,
+    "errPath_has_fffd": false,
+    "message_has_input_units": true
+   }
+  },
+  {
+   "id": "dir/bmp",
+   "input": [
+    100,
+    233,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    233,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     233
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     233,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": true
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": true,
+    "errPath_has_fffd": false,
+    "message_has_input_units": true
+   }
+  },
+  {
+   "id": "file/pair",
+   "input": [
+    102,
+    55357,
+    56832,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    55357,
+    56832,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     55357,
+     56832,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": true
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": true,
+    "errPath_has_fffd": false,
+    "message_has_input_units": true
+   }
+  },
+  {
+   "id": "dir/pair",
+   "input": [
+    100,
+    55357,
+    56832,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    55357,
+    56832,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     55357,
+     56832
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     55357,
+     56832,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": true
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": true,
+    "errPath_has_fffd": false,
+    "message_has_input_units": true
+   }
+  },
+  {
+   "id": "file/lone-high-start",
+   "input": [
+    102,
+    55296,
+    97,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    55296,
+    97,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     65533,
+     97,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     65533,
+     97,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-high-start",
+   "input": [
+    100,
+    55296,
+    97,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    55296,
+    97,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     65533,
+     97
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     65533,
+     97,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/lone-high-middle",
+   "input": [
+    102,
+    97,
+    55296,
+    98,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    97,
+    55296,
+    98,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     97,
+     65533,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     97,
+     65533,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-high-middle",
+   "input": [
+    100,
+    97,
+    55296,
+    98,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    97,
+    55296,
+    98,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     97,
+     65533,
+     98
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     97,
+     65533,
+     98,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/lone-high-end",
+   "input": [
+    102,
+    97,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    97,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     97,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     97,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-high-end",
+   "input": [
+    100,
+    97,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    97,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     97,
+     65533
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     97,
+     65533,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/lone-low-start",
+   "input": [
+    102,
+    56320,
+    97,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    56320,
+    97,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     65533,
+     97,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     65533,
+     97,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-low-start",
+   "input": [
+    100,
+    56320,
+    97,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    56320,
+    97,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     65533,
+     97
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     65533,
+     97,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/lone-low-middle",
+   "input": [
+    102,
+    97,
+    56320,
+    98,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    97,
+    56320,
+    98,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     97,
+     65533,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     97,
+     65533,
+     98,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-low-middle",
+   "input": [
+    100,
+    97,
+    56320,
+    98,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    97,
+    56320,
+    98,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     97,
+     65533,
+     98
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     97,
+     65533,
+     98,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/lone-low-end",
+   "input": [
+    102,
+    97,
+    56320,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    97,
+    56320,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     97,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     97,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/lone-low-end",
+   "input": [
+    100,
+    97,
+    56320,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    97,
+    56320,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     97,
+     65533
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     97,
+     65533,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/mixed-pair-then-lone",
+   "input": [
+    102,
+    55357,
+    56832,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    55357,
+    56832,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     55357,
+     56832,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     55357,
+     56832,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/mixed-pair-then-lone",
+   "input": [
+    100,
+    55357,
+    56832,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    55357,
+    56832,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     55357,
+     56832,
+     65533
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     55357,
+     56832,
+     65533,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "file/low-then-high",
+   "input": [
+    102,
+    56320,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    102,
+    56320,
+    55296,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     102,
+     65533,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     102,
+     65533,
+     65533,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  },
+  {
+   "id": "dir/low-then-high",
+   "input": [
+    100,
+    56320,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_relative": [
+    100,
+    56320,
+    55296,
+    47,
+    102,
+    46,
+    116,
+    120,
+    116
+   ],
+   "resolved_unchanged": true,
+   "write": {
+    "ok": true,
+    "value": null
+   },
+   "listing": [
+    [
+     100,
+     65533,
+     65533
+    ]
+   ],
+   "listing_inner": [
+    [
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   ],
+   "read_same_string": {
+    "ok": true,
+    "value": true
+   },
+   "read_fffd_variant": {
+    "ok": true,
+    "value": true
+   },
+   "realpath_relative": {
+    "ok": true,
+    "value": [
+     100,
+     65533,
+     65533,
+     47,
+     102,
+     46,
+     116,
+     120,
+     116
+    ]
+   },
+   "queue_key_equals_resolved": {
+    "ok": true,
+    "value": false
+   },
+   "missing_error": {
+    "code": "ENOENT",
+    "errPath_relative_equal": false,
+    "errPath_has_fffd": true,
+    "message_has_input_units": false
+   }
+  }
+ ],
+ "collision": {
+  "listing": [
+   [
+    97,
+    65533
+   ]
+  ],
+  "read_a": "B",
+  "realpath_a_equals_realpath_b": true,
+  "resolve_a_equals_resolve_b": false
+ }
+}

@@ -1,0 +1,10 @@
+SAME scalar/entry-vanish 
+SAME scalar/rm-inner 
+SAME scalar/rm-unreadable-dir 
+SAME scalar/rm-readonly-parent 
+SAME scalar/fifo-file-info 
+SAME lone/entry-vanish 
+SAME lone/rm-inner 
+SAME lone/rm-unreadable-dir 
+SAME lone/rm-readonly-parent 
+SAME lone/fifo-file-info 

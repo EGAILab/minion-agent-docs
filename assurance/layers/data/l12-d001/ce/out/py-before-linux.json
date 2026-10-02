@@ -1,0 +1,121 @@
+{
+ "platform": "linux",
+ "uid": 1000,
+ "results": [
+  {
+   "id": "scalar/entry-vanish",
+   "observed": {
+    "error": "not_found",
+    "path": [
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/rm-inner",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/rm-unreadable-dir",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/rm-readonly-parent",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "scalar/fifo-file-info",
+   "observed": {
+    "error": "invalid",
+    "path": [
+     [
+      98
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/entry-vanish",
+   "observed": {
+    "error": "not_found",
+    "path": [
+     [
+      97,
+      65533
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/rm-inner",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      97,
+      65533
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/rm-unreadable-dir",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      97,
+      65533
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/rm-readonly-parent",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      97,
+      65533
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/fifo-file-info",
+   "observed": {
+    "error": "invalid",
+    "path": [
+     [
+      97,
+      55296
+     ]
+    ]
+   }
+  }
+ ]
+}

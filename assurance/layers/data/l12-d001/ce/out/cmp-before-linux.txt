@@ -1,0 +1,10 @@
+DIFF scalar/entry-vanish pi={'error': 'not_found', 'path': [[98], [99, 104, 105, 108, 100, 46, 116, 120, 116]]} py={'error': 'not_found', 'path': [[98]]}
+DIFF scalar/rm-inner pi={'error': 'permission_denied', 'path': [[98], [115, 117, 98], [102]]} py={'error': 'permission_denied', 'path': [[98]]}
+DIFF scalar/rm-unreadable-dir pi={'error': 'permission_denied', 'path': [[98], [115, 117, 98]]} py={'error': 'permission_denied', 'path': [[98]]}
+DIFF scalar/rm-readonly-parent pi={'error': 'permission_denied', 'path': [[98], [115, 117, 98]]} py={'error': 'permission_denied', 'path': [[98]]}
+SAME scalar/fifo-file-info 
+DIFF lone/entry-vanish pi={'error': 'not_found', 'path': [[97, 65533], [99, 104, 105, 108, 100, 46, 116, 120, 116]]} py={'error': 'not_found', 'path': [[97, 65533]]}
+DIFF lone/rm-inner pi={'error': 'permission_denied', 'path': [[97, 65533], [115, 117, 98], [102]]} py={'error': 'permission_denied', 'path': [[97, 65533]]}
+DIFF lone/rm-unreadable-dir pi={'error': 'permission_denied', 'path': [[97, 65533], [115, 117, 98]]} py={'error': 'permission_denied', 'path': [[97, 65533]]}
+DIFF lone/rm-readonly-parent pi={'error': 'permission_denied', 'path': [[97, 65533], [115, 117, 98]]} py={'error': 'permission_denied', 'path': [[97, 65533]]}
+SAME lone/fifo-file-info 

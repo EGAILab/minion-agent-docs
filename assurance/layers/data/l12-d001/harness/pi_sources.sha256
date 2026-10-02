@@ -1,0 +1,4 @@
+4891c01391d32fb7719494d4dc1c9ad9740b9dbbd313254a0d275c8da453cbf7 *packages/agent/src/harness/env/nodejs.ts
+c40d1cdbc27c32da21f64cec5697ece12792ad2e16cecb03275f36aaf5ff8a77 *packages/agent/src/harness/types.ts
+6e1b0480c827d4f79aed58b64d4750d44a32fc870fb3f1fb116333d8ab98daee *packages/agent/src/types.ts
+33cb06ac9bcdf32c8b84d9d12e33be44c503a7670f668e003a3262cd34294d11 *packages/coding-agent/src/core/tools/file-mutation-queue.ts
