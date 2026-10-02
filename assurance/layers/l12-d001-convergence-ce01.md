@@ -1,6 +1,6 @@
 # CE-L12-D001-01: `FsError` error-origin convergence (L12-D001, `minion-agent#123`)
 
-**Episode:** `CE-L12-D001-01`. **Status:** `CONTRACT_CONVERGENCE`, checkpoint PROPOSED FOR IMPLEMENTATION (§9).
+**Episode:** `CE-L12-D001-01`. **Status:** `CONTRACT_CONVERGENCE`, checkpoint PROPOSED FOR IMPLEMENTATION, revision 2 (§12; revision 1 was REJECTED on C001, resolved in §13).
 **Author:** Claude (characterization, challenge and proposal). **Independent checkpoint reviewer:** Codex.
 **Pinned Pi:** `b7bb00b936dbe21b8e160b3e89efdec361846699`, Node v22.15.1.
 
@@ -76,7 +76,8 @@ These are normative in `spec/execution.md` §14.8; this section summarizes them.
 | 13 | `createDir` catch | walk position (recursive), `mkdir(arg)` otherwise | `create_dir` | match | corpus, r001 |
 | 14 | `remove`, missing | `rm` validation `lstat` → native arg | `remove` | match | corpus |
 | 15 | `remove`, directory without `recursive` | `ERR_FS_EISDIR` → logical string | `remove` | path matches (code: `#125`) | r001 |
-| 16 | `remove` recursive, inner failure | `rimraf` failing call → native inner entry / directory | `remove` → `shutil.rmtree` | **DIFF**: names the target (R001, found here) | ce `rm-inner`, `rm-unreadable-dir`, `rm-readonly-parent` (Linux, non-root) |
+| 16 | `remove` recursive, **one** failing call inside | `rimraf` failing call → native inner entry / directory | `remove` → `shutil.rmtree` | **DIFF**: names the target (R001, found here) | ce `rm-inner`, `rm-unreadable-dir`, `rm-readonly-parent` (Linux, non-root) |
+| 16b | `remove` recursive, **several** failing children | the **first child failure to settle** (concurrent `_rmchildren`) | `remove` → `shutil.rmtree` (sequential: first-enumerated) | **excluded from L12-D001** (C001, Option 3): `#127` | scope-boundary witness `ce/multi/` (§13) |
 | 17 | abort sites (`abortResult(signal, resolved)`) | logical resolved | `_aborted(resolved)` | match (fixed in R001 remediation 1) | `test_fs_error_origin.py` |
 | 18 | `createTempDir` / `createTempFile` | no caller path; temp path | `create_temp_*` | n/a (no caller path) | — |
 | 19 | `readTextLines` `maxLines <= 0` | no call | — | n/a | — |
@@ -137,7 +138,7 @@ The Windows `EPERM` retry is `#126`. It is not adopted here.
 - `#67`: Windows opening a directory as a file (code and, for read/append, path).
 - `#125`: the code for `remove` of a directory without `recursive`.
 - `#126`: the outcome of a Windows recursive `remove` with a read-only entry.
-- Which failing child `rimraf` reports when **several** children fail concurrently. Node starts them together and reports the first to settle; a binding reports one failing child. Only single-failure trees are witnessed.
+- **Multi-failure selection** in a recursive `remove`: pinned Pi reports the **first child failure to settle**. This is excluded from L12-D001's certification by Owner decision C001, Option 3, and tracked as `#127` (§13). It is a known parity gap, not a licence to report any failing child.
 - macOS: DEFERRED_WITH_REASON (decision §13).
 
 ## 11. Challenge pass (workflow §11.8.4)
@@ -149,6 +150,7 @@ The Windows `EPERM` retry is `#126`. It is not adopted here.
 - **Can both bindings implement it idiomatically?** Yes.
   - Python: the prototype, §8.
   - Rust: an explicit removal walk and a per-entry error mapping over its JS-string path. No extensibility point exists in only one language; the interleaving seam is test-only on both sides.
+- **Is every excluded case traceable?** Yes. Multi-failure selection has its own scope-boundary witness (§13), an Owner disposition and a finding (`#127`). No other single-failure origin is excluded.
 - **Are all previous review findings represented by an acceptance criterion?**
   - R001 original: corpus `error/*/parent-file/*`, plus the "requested target" control.
   - R001 residue: `entry-vanish`, plus control 1.
@@ -164,9 +166,12 @@ CONVERGENCE CHECKPOINT
 OPEN FINDINGS
     L12-D001-R001 (residue: list_dir per-entry origin; recursive remove inner origin)
     L12-D001-R002 (section 14.8 walk step 4 wording)
+    CE-L12-D001-01-C001 (multi-failure selection): RESOLVED BY EXPLICIT SCOPE DISPOSITION (section 13)
 
 ACCEPTANCE WITNESSES
     authority: assurance/layers/data/l12-d001/ce/ (ce.mjs; out/pi-win32.json, out/pi-linux.json)
+    scope boundary (not acceptance; C001 Option 3): ce/multi/ -- Pi first-settled under controlled completion
+               order (both orders, both names, both platforms); Minion first-enumerated; natural 17/3, 18/2
     binding:   ce.py results equal to the authority on Linux (10/10) and on Windows except #126 (2/4 are #126)
     Python tests to add: entry-vanish interleaving (both names, every host); recursive-remove inner
                origin (real on non-root POSIX; forced on every host); the _RemovalFailure carrier
@@ -180,3 +185,33 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of exactly this proposal)
 ```
+
+## 13. C001: multi-failure selection (checkpoint revision 2)
+
+**Review.** Codex's checkpoint review (docs #227 comment `5944401954`) returned REJECTED on `CE-L12-D001-01-C001`. Revision 1 permitted "one failing child" where Pi's `_rmchildren` forwards the **first child failure to settle**. Codex's controlled witness showed it: entry order a, b, settlement b, a → `tree/b`.
+
+**Owner decision.** CE-L12-D001-01-C001, **Option 3** (`#123` comment `5944529920`, verbatim):
+- Carve multi-failure selection out of L12-D001 as its own finding.
+- Do not change the recursive-remove implementation for it.
+- Do not substitute a membership or arbitrary-child rule.
+
+```text
+Pi multi-failure selection:   CHARACTERIZED
+exact rule:                   FIRST_SETTLED
+current binding parity:       NOT CLAIMED
+L12-D001 scope:               EXCLUDES MULTI-FAILURE SELECTION
+separate finding:             RECORDED -- L12-RM-MULTI-FAILURE-SELECTION, minion-agent#127
+checkpoint blocker C001:      RESOLVED BY EXPLICIT SCOPE DISPOSITION
+```
+
+**Scope-boundary witness.** This is not an acceptance witness. It lives in `data/l12-d001/ce/multi/`.
+
+| Probe | What it shows | Result |
+|---|---|---|
+| `controlled.mjs` (adapted from Codex's probe): real pinned `NodeExecutionEnv` and Node's real `rimraf`. Two children whose `unlink` fails; instrumentation controls only the completion order | Pi selects first-settled | settlement a, b → `/a`; b, a → `/b`, for `tree` and `t<U+D800>` alike, on Windows and Linux (`out/pi-controlled-*.json`) |
+| `controlled.py`: the same tree through the Python binding | Minion does not guarantee first-settled: it has no completion order to follow | **prototype:** the first-enumerated child (Linux `/b`, Windows `/a`). **`1738324b`:** the target |
+| `natural.mjs` / `natural.py`: real failures, Linux, non-root, 20 runs | real scheduling variability; not the rule | Pi: 17/3 and 18/2 (`a`/`b`). Python: 20/20 `a` (prototype); 20/20 the target (`1738324b`) |
+
+**Deletion extent.** In the tested positions (the protected child first, middle and last among 20 siblings), Pi and Python both removed every sibling. No finding comes from this characterization. That does not imply the selection semantics are equivalent, and a future concurrent remediation must revalidate it (decision §8).
+
+**Unchanged.** Every other row of §5 remains an exact L12-D001 claim (decision §7): single-failure provenance, addressed paths, the parent `mkdir`, `rename`, the `list_dir` entry, projection, logical versus native, `canonical_path` and `target_key`.

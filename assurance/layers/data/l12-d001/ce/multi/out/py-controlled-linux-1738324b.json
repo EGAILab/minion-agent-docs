@@ -1,0 +1,37 @@
+{
+ "platform": "linux",
+ "results": [
+  {
+   "id": "scalar/two-failures",
+   "entered": [
+    "b"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      114,
+      101,
+      101
+     ]
+    ]
+   }
+  },
+  {
+   "id": "lone/two-failures",
+   "entered": [
+    "b"
+   ],
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     [
+      116,
+      65533
+     ]
+    ]
+   }
+  }
+ ]
+}
