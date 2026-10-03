@@ -1,0 +1,154 @@
+{
+ "runtime": "v22.15.1",
+ "values": {
+  "N_é": {
+   "nameUnits": [
+    "004e",
+    "005f",
+    "00e9"
+   ],
+   "valueUnits": [
+    "006e",
+    "0061",
+    "006d",
+    "0065",
+    "002d",
+    "0076",
+    "0061",
+    "006c",
+    "0069",
+    "0064"
+   ],
+   "childLineBytes": ""
+  },
+  "V_BOM": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0042",
+    "004f",
+    "004d"
+   ],
+   "valueUnits": [
+    "feff",
+    "0061"
+   ],
+   "childLineBytes": "565f424f4d3defbbbf610a"
+  },
+  "V_C0AF": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0043",
+    "0030",
+    "0041",
+    "0046"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd",
+    "fffd",
+    "0062"
+   ],
+   "childLineBytes": "565f433041463d61efbfbdefbfbd620a"
+  },
+  "V_E180": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0045",
+    "0031",
+    "0038",
+    "0030"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd"
+   ],
+   "childLineBytes": "565f453138303d61efbfbd0a"
+  },
+  "V_E180B": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0045",
+    "0031",
+    "0038",
+    "0030",
+    "0042"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd",
+    "0062"
+   ],
+   "childLineBytes": "565f45313830423d61efbfbd620a"
+  },
+  "V_EDA080": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0045",
+    "0044",
+    "0041",
+    "0030",
+    "0038",
+    "0030"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd",
+    "fffd",
+    "fffd",
+    "0062"
+   ],
+   "childLineBytes": "565f4544413038303d61efbfbdefbfbdefbfbd620a"
+  },
+  "V_F09080": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0046",
+    "0030",
+    "0039",
+    "0030",
+    "0038",
+    "0030"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd"
+   ],
+   "childLineBytes": "565f4630393038303d61efbfbd0a"
+  },
+  "V_FF": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "0046",
+    "0046"
+   ],
+   "valueUnits": [
+    "0061",
+    "fffd",
+    "0062"
+   ],
+   "childLineBytes": "565f46463d61efbfbd620a"
+  },
+  "V_MIX": {
+   "nameUnits": [
+    "0056",
+    "005f",
+    "004d",
+    "0049",
+    "0058"
+   ],
+   "valueUnits": [
+    "20ac",
+    "fffd",
+    "20ac"
+   ],
+   "childLineBytes": "565f4d49583de282acefbfbde282ac0a"
+  }
+ }
+}

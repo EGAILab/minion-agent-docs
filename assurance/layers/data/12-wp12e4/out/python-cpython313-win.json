@@ -1,0 +1,1 @@
+{"pyEnvironKeys": ["COMMONPROGRAMFILES", "COMMONPROGRAMFILES(X86)", "PROGRAMFILES", "PROGRAMFILES(X86)"], "upperFirst": ["xk=lower"], "lowerFirst": ["XK=upper"], "lowerThenxK": ["xK=m"], "pfExact": ["ProgramFiles=C:/PF"]}

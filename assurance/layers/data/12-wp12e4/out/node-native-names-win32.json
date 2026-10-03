@@ -1,0 +1,25 @@
+{
+ "runtime": "v22.15.1",
+ "listed": [
+  [
+   "0051 0049",
+   "ascii"
+  ],
+  [
+   "0051 0073 0073",
+   "ss"
+  ],
+  [
+   "0051 00df",
+   "sharp"
+  ],
+  [
+   "0051 0131",
+   "dotless"
+  ]
+ ],
+ "lookupQSS": "ss",
+ "lookupqi": "ascii",
+ "lookupSharp": "sharp",
+ "lookupDotless": "dotless"
+}

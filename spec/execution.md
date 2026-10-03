@@ -2753,3 +2753,206 @@ Characterization:
   - An **outcome** difference, not a code: on Windows, Node's `rimraf` retries an `EPERM` `unlink` after `chmod 0o666` (`fixWinEPERM`), so a recursive `remove` of a tree holding a read-only file succeeds; the Python binding fails `permission_denied`, naming that file. Recorded as `L12-RM-READONLY-WINDOWS` (`minion-agent#126`); remediation is not authorized.
 - **Scalar paths.** §2–§3 specified `FsError` codes, never `FsError.path`. This section adds the path carrier for every path, scalar included. No certified scalar claim changes.
   - Disclosed side effect: reproducing Node's walk aligns the Python binding's Windows code for a recursive creation through a file (`not_found` becomes Pi's `not_directory`). No certified test or scenario asserted the previous value.
+
+---
+
+## 15. Layer-12 additive extension `WP-12.E4` — execution-world environment and platform (`EXEC-010`)
+
+**Status (`minion-agent#130`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decisions `WP133-F1` = A and `WP133-F2` = A (`minion-agent#50` comment `5951046523`); `WP12E4-C002` = B (`minion-agent#130` comment `5966459749`). The routine lifecycle is delegated under `minion-agent#75`.
+- **Additivity.** Two capabilities are added to the `ctx.subprocess` provider (§6). Nothing else in §6 changes: spawn lifecycle, abort, `wait`, `terminate`, stdio, cwd resolution, the `env` overlay, `inherit_env = false`, and `ExecutionWorldIdentity` compatibility (§7).
+- **The single scoped amendment** is `WP12E4-C002`: the baseline source of the Python **Windows** local provider (§15.4). It is Owner-authorized and changes no other provider or platform.
+- **Consumer.** WP-13.3 `bash` (`minion-agent#50`). This extension does not certify that consumer.
+- **Evidence.** `assurance/layers/12-wp12e4-characterization.md` (§§1–8) and `assurance/layers/data/12-wp12e4/`.
+- **Classification.**
+  - Both capabilities: `MINION_EXTENSION`.
+  - The §15.5 consumer composition: the `MINION_ARCHITECTURAL_MAPPING` of pinned Pi's observable `process.env` / `process.platform` behavior. Pi's host APIs are not the Minion API authority; their observable guarantees are.
+
+### 15.1 Operations
+
+```text
+SubprocessProvider (section 6), additionally:
+
+platform -> Platform                 -- provider-declared, constant for the provider's lifetime
+Platform = WINDOWS | POSIX           -- closed for this extension (Owner F2, section 11)
+
+base_env() -> EnvSnapshot            -- a snapshot taken when called (Owner F1, section 4)
+```
+
+- The exact API spelling is the binding's choice (property or method, enum or constant).
+- **`base_env()` does not fail.** It returns the baseline the provider's own `inherit_env = true` spawn would use. A provider that cannot spawn at all reports that through `spawn`'s existing `spawn_error`, which is unchanged.
+- **`EnvSnapshot` is read-only and isolated** (Owner F1, sections 1, 2 and 12; `WP12E4-CON-R001`).
+  - The public API exposes **no mutator**. A binding may use an immutable owned value or a read-only view; a write is either impossible or refused.
+  - A snapshot is **isolated** from the provider:
+    - a later change to the provider's baseline does not change a snapshot already obtained, and a later `base_env()` sees the change;
+    - nothing done with a snapshot, or with a copy of it, changes the provider's baseline or a later `inherit_env = true` child.
+  - A consumer that needs to edit the environment makes its own **mutable copy** (F1 section 6) and edits that.
+
+### 15.2 `platform`
+
+- The provider declares its execution world's family, `WINDOWS` or `POSIX`.
+- A local provider declares its host's family.
+- A remote or fake provider declares **its world's** family. A Windows world on a POSIX host reports `WINDOWS` (Owner F2, section 9).
+- `platform` is **not** host-language introspection, and **not** part of `ExecutionWorldIdentity` (§7; Owner F2, section 10).
+- A later value (for example `LINUX` or `MACOS`) would be an additive refinement. Nothing here assumes one.
+
+### 15.3 `base_env()`
+
+**Definition (Owner F1, section 1).** The snapshot is exactly the environment that a `spawn(..., inherit_env = true)` of this provider would inherit **at the moment of the call**, before any `SpawnOptions.env` overlay. It must agree with the provider's own inheritance:
+
+```text
+for every provider P, at any moment:
+    entries(P.base_env())  ==  the baseline P's inherit_env=true spawn applies its overlay to
+```
+
+A binding MUST NOT derive one from one source and the other from another (Owner C002, section 2).
+
+**Snapshot timing.**
+- A snapshot is taken per call. A consumer obtains it per invocation and MUST NOT cache it across invocations (Owner F1, section 4).
+- What the baseline is follows the provider (§15.4).
+
+**Lossless representation.** Each entry carries its name and value in a form from which the native form is recoverable exactly:
+- `POSIX`: the name and value bytes;
+- `WINDOWS`: the name and value UTF-16 code units, lone surrogates included. Lengths, offsets and comparisons count **UTF-16 units**, never decoded code points (`WP12E4-I001`). A valid pair is one character whether it is held combined or as two surrogates (`WP12E4-I002`).
+
+The consumer's projection (§15.5) needs the native form. A binding that substitutes U+FFFD when it reads the environment does not conform.
+
+**Name semantics** (Owner F1, section 5; characterization §§2–3):
+
+| Platform | Snapshot entries | Lookup |
+|---|---|---|
+| `POSIX` | exact names; at most one entry per exact name | exact |
+| `WINDOWS` | **exactly the entries the native baseline holds**, with their spelling. E4 imposes no deduplication: the native block can hold names that differ only by a non-ASCII case distinction (`Qß` and `Qss`; `Qı` and `QI`), and they stay distinct entries (`WP12E4-CON-R002`) | the **native** Windows environment-name comparison, as the OS's own lookup applies it (Node's `process.env` read on Windows goes through it): names are equal when their **UTF-16 code units** are equal after each unit passes through the OS uppercase table (`RtlUpcaseUnicodeChar`), which maps `é` to `É` but leaves `ß` and `ı` unchanged. `ProgramFiles` finds `PROGRAMFILES` or any other ASCII case; `Qé` finds `QÉ`. The distinct native names above keep their own values. A declared `WINDOWS` world on a non-Windows host has no OS table to consult. It uses the table captured from Windows build 26200, committed with the implementation (`WP12E4-I003`). A difference between Windows builds' tables is a recorded hazard |
+
+Only ASCII names are looked up by the specified consumers (`ProgramFiles`, `ProgramFiles(x86)`, `PATH`), where every case-insensitive comparison agrees. The native comparison is named so that a binding does not substitute Node's consumer-stage key (§15.5) or a host casefold for it.
+
+**Entry order** in the snapshot is **not** normative, and no observable result may depend on it. Where Windows duplicate arbitration needs an order, §15.5 defines it.
+
+### 15.4 Local providers (Owner `WP12E4-C002` = B)
+
+| Binding / platform | Baseline, for both `inherit_env = true` and `base_env()` |
+|---|---|
+| Python, `WINDOWS` | **the live native process environment**, read when the snapshot or spawn is made. **Not** `dict(os.environ)`, which upper-cases every name and misses native-only entries. The mechanism (for example `GetEnvironmentStringsW`) is not the authority; the live native environment is. See the notes below |
+| Python, `POSIX` | unchanged: `os.environ` at call time. A non-UTF-8 byte is held as surrogateescape, which `os.fsencode` recovers losslessly |
+| Rust `LocalSubprocess` | unchanged: its configured baseline (`std::env::vars()` captured at construction, or the map given to `with_base_env`), which `base_env()` returns. See the notes below |
+
+**Python, `WINDOWS`.** The baseline keeps:
+- the original spelling;
+- every native entry, including one absent from `os.environ` (for example set through `os.putenv`);
+- the current values.
+
+**Rust `LocalSubprocess`.** Two recorded behaviors are **not** changed by E4: changing them would change certified Rust behavior (Owner C002, section 12).
+- A non-Unicode host environment panics at construction (characterization `E4-OBS-3`). So a constructed provider's baseline is always scalar, and therefore lossless.
+- A construction-time capture does not see later host changes (`E4-OBS-2`).
+
+The C002 amendment changes only the first row. Its consequences are intentionally accepted (Owner C002, section 4):
+- names keep their original case in Python Windows children;
+- native-only variables are now inherited;
+- a native removal is honored.
+
+### 15.5 Consumer composition: Pi's environment, reproduced
+
+This section is normative for every consumer that reproduces Pi's `process.env`. WP-13.3 applies it; it is stated here so every consumer applies the same rule.
+
+Pinned Pi's `bash` spawns with an explicit `env` built from `process.env`. Node's view of the native environment is:
+
+```text
+for each snapshot entry (name, value):
+  bytes(name), bytes(value):
+      POSIX    the native bytes
+      WINDOWS  generalized UTF-8 of the UTF-16 code units: a valid pair as its 4-byte sequence,
+               a lone surrogate as its 3-byte sequence (ED A0 80 for U+D800)
+  name:  if bytes(name) is not valid UTF-8          -> the entry is DROPPED
+  value: WHATWG UTF-8 decode with replacement        -> one U+FFFD per maximal invalid subpart;
+                                                        a BOM (EF BB BF) is KEPT, not stripped
+```
+
+**Executed authority** (characterization §8):
+
+| Input | Node's view |
+|---|---|
+| `E1 80` | one U+FFFD |
+| `F0 90 80` | one U+FFFD |
+| `ED A0 80` | three U+FFFD |
+| `C0 AF` | two U+FFFD |
+| a value starting with a BOM | the BOM is kept |
+| the name `N_\xFF` | dropped |
+| the name `N_é` | kept |
+| Windows value `a\uD800b` | `a`, three U+FFFD, `b` |
+| Windows name holding a lone surrogate | dropped |
+
+The consumer edits that view. For WP-13.3, it removes the five exact-spelling `MINION_*` names and injects the live values (Q1, C003). It then spawns with `inherit_env = false` and the full result.
+
+- **Strings to OS.** Every name and value in the built environment is a scalar string: the decoded view is scalar, and the injected values are Minion-generated.
+  - The JavaScript-string → OS projection (each unpaired surrogate → U+FFFD; WP-13.3 `WP133-AUD-R001`) is therefore the identity here.
+  - That projection is a **separate** boundary and must not be conflated with the decode above (WP-12.E4 audit 2).
+- **`WINDOWS` duplicate arbitration** (characterization N3, C001; `WP12E4-CON-R002`). This is Node v22.15.1's `normalizeSpawnArguments`, applied to the explicit `env` Pi passes.
+  - **The duplicate key is ECMAScript `String.prototype.toUpperCase(name)`.** It is full Unicode uppercasing, at the pinned runtime's Unicode version (Node v22.15.1, hazard family F3). It is **not** ASCII-only comparison, lowercase, a host casefold or the native lookup above. Under it, `Qß` and `Qss` collide (both `QSS`), and so do `Qı` and `QI` (both `QI`).
+  - Among names with the same key, the child receives exactly **one**: the name that sorts **first by UTF-16 code-unit order**, with its value. Insertion order does not matter. So `Qss` beats `Qß`, and `QI` beats `Qı`.
+  - This is a **consumer-stage** rule only. It must not be applied when the snapshot is captured or looked up.
+  - So an injected all-upper-case `MINION_SESSION_ID` wins over an inherited `Minion_Session_Id`, because an all-upper-case name sorts before every case variant of itself.
+  - A consumer MUST apply this itself before `spawn`. Neither binding's spawn library implements it: CPython keeps the last-inserted name (characterization P2).
+- **`POSIX`:** names are exact, so there is no arbitration.
+
+**Not part of this rule: case-insensitive removal.** Removing a name removes exactly that spelling (Pi's exact-case `delete`, characterization N2). A case variant survives when no live value is injected (C003). Broadening that requires a new decision.
+
+### 15.6 Acceptance witnesses (Owner F1, section 13; C002, sections 9 and 13)
+
+**Platform:**
+- a local Windows provider reports `WINDOWS`;
+- a local POSIX provider reports `POSIX`;
+- a fake provider declaring `WINDOWS`, on a POSIX host, reports `WINDOWS`. The §15.5 composition then follows Windows rules: case-insensitive `ProgramFiles` lookup and duplicate arbitration.
+
+**Baseline equivalence:**
+- `base_env()` holds the provider's environment, not the test runner's. A fake provider with a distinct environment shows this.
+- `base_env()` plus `inherit_env = false` reconstructs the `inherit_env = true` child environment exactly, absent removals.
+- Stale `MINION_*` are removed from a reconstruction, and unrelated variables survive.
+- A `ProgramFiles` lookup is answered from `base_env()`.
+- `PATH` reconstruction keeps the provider's `PATH`.
+
+**Python Windows (C002, section 9)**, each for both `base_env()` and an `inherit_env = true` child:
+- **A:** an original-case `ProgramFiles(x86)` appears as spelled;
+- **B:** a native-only variable (`os.putenv`) appears;
+- **C:** an `os.environ[...] =` update appears;
+- **D:** a natively removed variable is absent.
+
+**Snapshot authority (`WP12E4-CON-R001`):**
+- with a snapshot `S` holding `K = old`, the public API cannot change `S[K]`;
+- a consumer's mutable copy can be edited without changing `S` or the provider's baseline;
+- where the provider supports a baseline change: after `S` is obtained, `S` keeps `old` and a later `base_env()` sees the new value. Rust's configured baseline does not need to become live for this.
+
+**Windows name equivalence (`WP12E4-CON-R002`)**, each in both insertion orders:
+- consumer arbitration: `Qß`/`Qss` → only `Qss`; `Qı`/`QI` → only `QI`;
+- native snapshot: all four names are distinct entries with their own values, and an ASCII lookup (`QSS` → `Qss`'s value) is answered natively.
+
+**Composition (§15.5)**, on both platforms:
+- every characterization §8 row;
+- the dropped invalid name and the kept BOM;
+- the Windows lone-surrogate value and name;
+- duplicate arbitration in both insertion orders.
+
+**Negative controls.** Each must kill its witness:
+- `dict(os.environ)` as the Python Windows baseline;
+- upper-casing every key;
+- omitting a native-only variable;
+- `base_env()` and the inherit baseline from different sources (both directions);
+- a construction-time cache where a later snapshot is required (Python);
+- any change to `inherit_env = false`;
+- case-insensitive deletion of every `MINION_*` spelling;
+- reading the host `os.environ` / `std::env` instead of the provider (a fake Windows world on a POSIX host must catch it);
+- per-surrogate or per-byte replacement instead of the WHATWG decode;
+- stripping the BOM;
+- keeping an invalid-name entry;
+- last-inserted Windows arbitration;
+- a writable snapshot, or one aliased to the provider's baseline;
+- ASCII-only, lowercase or host-casefold arbitration instead of `toUpperCase` (killed by `Qß`/`Qss` and `Qı`/`QI`);
+- Node's arbitration applied at snapshot capture, which merges the distinct native entries.
+
+### 15.7 Not certified by WP-12.E4
+
+- Any platform value beyond `WINDOWS | POSIX`.
+- Rust's construction-time capture (`E4-OBS-2`) and its non-Unicode construction panic (`E4-OBS-3`).
+- Python POSIX's raw-byte inheritance in direct `inherit_env = true` children (`E4-OBS-1`). `bash` never reaches it: it spawns with `inherit_env = false` and the §15.5 view.
+- A managed-tool `PATH` entry. None exists today (Q1, Q3); when one exists, the execution environment supplies it through this baseline.
+- The WP-13.3 `bash` tool itself.
