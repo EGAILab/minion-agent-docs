@@ -1,5 +1,6 @@
 # WP-12.E4 audit 2 (WP12E4-AUD-R002), Windows: pinned Node's view of a native UTF-16 environment holding lone
-# surrogates (set here by CPython through _wputenv), and what a grandchild receives when Node passes an explicit env.
+# surrogates (supplied here as the explicit UTF-16 environment block CPython passes to CreateProcessW for the
+# Node child -- not through _wputenv), and what a grandchild receives when Node passes an explicit env.
 #   python envunits_win.py <node> <out.json>
 import json, os, subprocess, sys
 node, out = sys.argv[1], sys.argv[2]

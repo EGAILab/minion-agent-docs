@@ -226,3 +226,8 @@ So **no provider behavior changes**. WP-13.3's composition applies the rule to t
 - the dropped invalid name;
 - the kept BOM;
 - negative controls: per-surrogate replacement (killed by `E1 80`), BOM stripping (killed by `EF BB BF 61`), and keeping an invalid-name entry.
+
+
+**Audit 3 notes (nonblocking, docs #230 comment `5967993103`), resolved:**
+- `envunits_win.py`'s header comment now says what the harness does: it passes an explicit UTF-16 block to the Node child, not `_wputenv`.
+- In `out/node-envbytes-linux.json`, the valid name `N_é` has empty `childLineBytes`. The harness's `sh -c env | grep` intermediate does not keep that name. That field is therefore **not** evidence that Node dropped it. The evidence of retention is the Node-view `nameUnits`.
