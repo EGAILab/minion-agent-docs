@@ -414,3 +414,34 @@ OPEN FINDINGS
 NEXT_OWNER
     Codex (targeted closure review of the four findings, with known-bad checks)
 ```
+
+### 16.1 Targeted closure 1 and `N001`
+
+**Codex targeted closure 1** (docs #229 @ `9ddd59c8`, `.tmp/wp133-review/CLOSURE1.md`): `WP133-CON-R001`..`R004` are **all provisionally CLOSED**.
+- Codex's fresh run of `boundary_probe.mjs` was byte-identical to the committed blob.
+- Its known-bad checks:
+  - R001: the old empty text gives `Command exited with code 1` and `Command exited with code 255`, so both pinned no-output cases reject it;
+  - R002: always-drop fails three rows;
+  - R003: the raw product fails four timer rows and rounding fails two;
+  - R004: the active-feasibility assertions fail against `30972b61`.
+
+**`N001`** (non-blocking, control accounting): the spec's "never dropping" control was **not** killed by the seven rows, because every newline-bearing row ended in a line longer than 51200 bytes, which `truncateTail` cuts anyway.
+
+**Response: the control is observable, and it is now killed.** A search over a long fragment followed by `k` short lines (`k` from 1 to 2500) found 21 differing cases. Three are now permanent rows:
+
+| Row | Pinned content / truncation | Never-drop |
+|---|---|---|
+| `longLineThenNewline` (`a`×250000 + `\n`) | empty; `bytes`, totalLines 1, outputLines 0, outputBytes 0 | 51200 `a`, one partial line |
+| `longLineThenTenLines` | 9 lines, 18 bytes | one byte fewer: the fragment is kept and cut |
+| `longLineThen2001Lines` | `bytes`, 2000 lines, 4000 bytes | `truncatedBy` `"lines"`, 3999 bytes |
+
+- The probe now runs both controls itself, as subclasses of the pinned accumulator; Pi's source is unchanged. Results are in `boundary-win32.json` `controls`.
+- `longLineThenNewline` also records a Pi quirk that an implementation must reproduce: an empty snapshot with a truncation notice, `(no output)\n\n[Showing lines 2-1 of 1 (50.0KB limit). …]`.
+- The rule (§8, spec) is unchanged. This adds evidence only.
+
+```text
+CONVERGENCE (CE-WP133-01)
+    WP133-CON-R001..R004 PROVISIONALLY CLOSED (targeted closure 1); N001 answered with discriminating rows
+NEXT_OWNER
+    Codex (final complete exact-SHA contract review, section 11.8.8)
+```

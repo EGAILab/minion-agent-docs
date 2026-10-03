@@ -2537,7 +2537,9 @@ These are the rules of characterization §8, as executed (§§11, 14).
     - a 210000-byte line of `€` keeps 51198 bytes;
     - a cut mid-line with a later newline drops the partial line, whether that newline is in the same chunk or a later one;
     - a cut just after a newline drops nothing;
-    - exactly 204800 bytes is not trimmed.
+    - exactly 204800 bytes is not trimmed;
+    - a newline right after a line longer than the retained tail (`longLineThenNewline`, closure 1 `N001`) drops the whole fragment. The content is **empty**, with `totalLines 1` and `outputLines 0`, so the result is `(no output)\n\n[Showing lines 2-1 of 1 (50.0KB limit). Full output: ${path}]`, which is Pi's own text. With 10 or 2001 short lines after the fragment, only those lines remain (`longLineThenTenLines`, `longLineThen2001Lines`). Keeping the fragment changes the ten-line content, and turns the 2001-line `truncatedBy` into `"lines"`.
+  - Controls, run by the probe as subclasses of the pinned accumulator (`controls`): **always-drop** is killed by the three single-line rows, and **never-drop** by the three `longLineThen*` rows.
 - **The full-output file.** It is opened when raw bytes exceed 51200, decoded bytes exceed 51200, or lines exceed 2000. It is opened with `ctx.fs.create_temp_file("minion-bash-", ".log")`; the prefix follows Q1's namespace and is a mapping of Pi's `tmpdir()/pi-bash-<hex>.log`.
   - It receives the **raw** bytes: the earlier chunks first, then every accepted chunk, through `ctx.fs.append_file`.
   - It is complete before the result is returned.

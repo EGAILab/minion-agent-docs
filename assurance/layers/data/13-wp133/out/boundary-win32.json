@@ -154,6 +154,88 @@
     "maxBytes": 51200
    },
    "lastLineBytes": 204800
+  },
+  "longLineThenNewline": {
+   "content": {
+    "length": 0,
+    "utf8Bytes": 0,
+    "edges": "",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "truncationContentEqualsContent": true,
+   "truncation": {
+    "truncated": true,
+    "truncatedBy": "bytes",
+    "totalLines": 1,
+    "totalBytes": 250001,
+    "outputLines": 0,
+    "outputBytes": 0,
+    "lastLinePartial": false,
+    "firstLineExceedsLimit": false,
+    "maxLines": 2000,
+    "maxBytes": 51200
+   },
+   "lastLineBytes": 0
+  },
+  "longLineThenTenLines": {
+   "content": {
+    "length": 18,
+    "utf8Bytes": 18,
+    "edges": "x\nx\nx\n...x\nx\nx\n",
+    "sha256": "5b9b3c787454592f3451a0481a0f1932cfd6f068a25387a38f72c92cd26ac647"
+   },
+   "truncationContentEqualsContent": true,
+   "truncation": {
+    "truncated": true,
+    "truncatedBy": "bytes",
+    "totalLines": 10,
+    "totalBytes": 250020,
+    "outputLines": 9,
+    "outputBytes": 18,
+    "lastLinePartial": false,
+    "firstLineExceedsLimit": false,
+    "maxLines": 2000,
+    "maxBytes": 51200
+   },
+   "lastLineBytes": 0
+  },
+  "longLineThen2001Lines": {
+   "content": {
+    "length": 4000,
+    "utf8Bytes": 4000,
+    "edges": "x\nx\nx\n...x\nx\nx\n",
+    "sha256": "f0638055bf073e667cd81a7882b1cb807d0a4b7819f1d7f7af150b028c2c6f9a"
+   },
+   "truncationContentEqualsContent": true,
+   "truncation": {
+    "truncated": true,
+    "truncatedBy": "bytes",
+    "totalLines": 2001,
+    "totalBytes": 254002,
+    "outputLines": 2000,
+    "outputBytes": 4000,
+    "lastLinePartial": false,
+    "firstLineExceedsLimit": false,
+    "maxLines": 2000,
+    "maxBytes": 51200
+   },
+   "lastLineBytes": 0
+  }
+ },
+ "controls": {
+  "alwaysDrop": {
+   "killedBy": [
+    "singleLineOneChunk",
+    "singleLineManyChunks",
+    "singleLineMultibyte"
+   ]
+  },
+  "neverDrop": {
+   "killedBy": [
+    "longLineThenNewline",
+    "longLineThenTenLines",
+    "longLineThen2001Lines"
+   ]
   }
  },
  "timers": [
