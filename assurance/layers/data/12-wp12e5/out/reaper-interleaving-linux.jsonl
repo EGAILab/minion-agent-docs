@@ -1,0 +1,2 @@
+{"python": "3.13.15", "mode": "loop", "watcher": "default", "trace": [{"waitid": "running"}, {"reaped_inside_window": false}, {"signal": 15, "target": "unreaped child"}, {"reaped": 13, "on": "event-loop thread"}, {"final_exit_code": 7}]}
+{"python": "3.13.15", "mode": "threaded", "watcher": "ThreadedChildWatcher", "trace": [{"waitid": "running"}, {"reaped": 16, "on": "watcher thread"}, {"reaped_inside_window": true}, {"signal": 15, "target": "RELEASED PID"}, {"final_exit_code": 7}]}

@@ -131,3 +131,21 @@ The probe uses Node v22.15.1 on Windows 11 (build 26200) and on Linux in `node:2
 - Linux: **9/9 killed**. Windows: **4/4 killed**, unchanged.
 
 **Gates:** Linux, `test_terminate_child.py` plus `test_subprocess.py`: **45 passed, 8 skipped**. Windows (Python 3.13.5, pinned ICU): **4268 passed, 40 skipped, 19 xfailed**, coverage **100.00%**; `ruff`, `ruff format` and `mypy` clean; manifest validation 8 passed.
+
+## 8. Convergence CE-WP12E5-01 and supersession
+
+**Targeted closure 1** (Codex; code `e59cf8d3` / docs `546f5e0d`, docs #237 comment `5973527713`):
+- `WP12E5-I001` was NOT CLOSED: the pidfd-less fallback still signalled a PID that a threaded reaper had released.
+- New: `WP12E5-I002`, a `waitid` failure escaping the never-raise operation.
+- Trigger A fired, and convergence episode `CE-WP12E5-01` opened.
+
+**Characterization** (`harness/reaper_interleaving_probe.py`, `out/reaper-interleaving-linux.jsonl`, Python 3.13.15):
+- With asyncio's default `PidfdChildWatcher`, which reaps on the event-loop thread, no reap can fall inside the check-signal window.
+- With `ThreadedChildWatcher`, the reap lands inside it, and the signal targets a released PID.
+- `I002` was fixed (code `layer/12-e5-terminate-child`, preserved), and its witness is RED against `e59cf8d3`.
+- The Owner options packet is at `minion-agent#141` comment `5973550780`.
+
+**Supersession.** On 2026-10-04 the Owner adopted practical Pi compatibility and superseded WP-12.E5 before any option was chosen (`minion-agent#141` comment `5973628920`):
+- The WP-13.3 lookup difference became **DIV-001** (`assurance/pi-divergences.md`).
+- PRs #142 and #237 are closed **unmerged**. This branch and this record are preserved as valid, authorized, superseded work. They are not quarantined.
+- **Reconsideration trigger:** a real consumer independently needs a direct-child graceful termination primitive.
