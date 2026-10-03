@@ -892,6 +892,69 @@ other      null, true, false, arrays, objects; top-level details may be any of t
   - committed-history replay returns U+FFFD (the production replay decoder);
   - for a binding with event replay: it returns U+FFFD (the production projection decoder), or defaults a falsy `details` to `{}` (the `R001` defect).
 
+### Per-call tool execution context (`TOOL-042`, cross-layer delta `L0506-D004`)
+
+**Status (`minion-agent#131`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+- **Authorization:** Owner decision `WP133-F3` = A (`minion-agent#50` comment `5951046523`, §§14–29). The routine lifecycle is delegated under `minion-agent#75`.
+- **Additivity:** this is an additive Layer 05/06 seam. Every existing tool, every certified `execute` dispatch row (`wants_signal` × arity, above) and every hook contract is unchanged.
+- **Classification:** `MINION_ARCHITECTURAL_MAPPING` of pinned Pi's `ExtensionContext` delivery (F3 §27).
+- **Characterization:** `assurance/layers/l0506-d004-characterization.md`.
+
+**The value:**
+
+```text
+ToolExecutionContext              -- immutable snapshot; no setter; no agent reference (F3 sections 15-16)
+    session_id       string       -- the executing agent's session (SessionLog.session_id)
+    session_file     string?      -- the persisted session file; ABSENT today (no persisted form, F3 section 21)
+    provider         string?      -- the agent's current model identity: provider
+    model            string?      -- ... and model id
+    reasoning_level  string?      -- the agent's current thinking level, verbatim:
+                                     off | minimal | low | medium | high | xhigh | max
+```
+
+- `"off"` is a **present** value, not absent. Pinned Pi treats the thinking level as a truthy string, and its `bash` exports `off`.
+- `provider` and `model` are present whenever an agent executes the call: `AgentInstance.model` is always set. A field is absent only where the owning layer has no value. No placeholder string is ever substituted (Q1 §6).
+
+**Sources and snapshot point** (F3 §§17, 22):
+- The values are read from the executing agent's authoritative current state: `AgentInstance.log.session_id`, `AgentInstance.model`, `AgentInstance.thinking_level`.
+- They are **not** read from per-step provider overrides (`RunConfigUpdate`), nor from the process environment.
+- The snapshot is taken **when the pipeline invokes `execute`** for that call, after preflight, preparation, validation and the before-hooks. That is pinned Pi's point: `wrapToolDefinition` calls its context factory once per `execute` invocation (`tool-definition-wrapper.ts:17-18`).
+- Each call in a parallel batch gets its own snapshot.
+
+**Delivery:**
+- **Into the pipeline.** `execute_call` / `execute_batch` take an optional per-call **context provider**. The agent-loop driver supplies one bound to the executing agent; the pipeline calls it once per call, immediately before `execute`.
+  - The context is explicit, never ambient (F3 §19).
+  - With no provider (a generic pipeline call with no owning agent), the context is **absent** (F3 §20). That is valid, and it is never an error.
+- **Python, to the tool.** An explicit opt-in, `ToolDefinition.wants_context: bool = False`.
+  - When it is true, `execute` additionally receives `context=` as a **keyword** argument (`ToolExecutionContext | None`).
+  - Positional dispatch (`tool_call_id, arguments[, signal][, update]`) is unchanged for every combination, so no arity is reinterpreted (F3 §23).
+  - A tool with `wants_context=False` is called exactly as before (F3 §24).
+- **Rust, to the tool.** `ToolExecutionRequest.context: Option<ToolExecutionContext>`, or an equivalent typed field on the request. A tool that does not read it is unaffected.
+- **Hooks:** they receive nothing new (F3 §25). Before-hooks and after-hooks keep their certified payloads.
+
+**Witnesses (canonical where language-neutral; binding-level otherwise):**
+1. An agent-run call to a context-reading probe tool receives the agent's session id and `session_file` absent. It receives `provider` and `model` from `AgentInstance.model`, and `reasoning_level` verbatim. This includes `off`, and a non-default level set on the instance before the run.
+2. A change to the agent's `model` / `thinking_level` before a later call is reflected in that call's context. A snapshot taken by an earlier call is unchanged (immutability).
+3. Two agents sharing one tool registration each see their **own** context (F3 §18). This kills construction-time capture.
+4. A generic `execute_call` with no provider delivers the context as absent, and the tool runs normally.
+5. A tool without `wants_context` (Python), or one that ignores the field (Rust), behaves identically to before. All existing execute-dispatch tests stay unchanged.
+6. Hooks observe no context.
+
+**Negative controls.** Each must fail a witness:
+- capturing the context at tool registration;
+- an ambient or global variable instead of explicit delivery, which fails witness 3 under concurrent agents;
+- reading `RunConfigUpdate` instead of the instance;
+- substituting `""` / `"none"` for an absent field;
+- treating `off` as absent;
+- delivering `context` positionally, which breaks a `wants_signal` tool's dispatch;
+- snapshotting once per batch instead of per call, killed by witness 2 with an intervening change.
+
+**Not certified by `L0506-D004`:**
+- a persisted session file (a future session form);
+- exposure to hooks;
+- any consumer's use of the context. WP-13.3's `MINION_*` projection is certified there.
+
 ### Explicitly not certified by Layer 06
 
 Cancellation/abort propagation through `execute`/hooks was assurance Layer 09's territory, not
