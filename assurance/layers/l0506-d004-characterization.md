@@ -68,4 +68,4 @@ Its implementation reminders, and how they were met:
   - It holds no agent reference.
   - Two agents sharing one registration see their own contexts. The registration-time-capture control fails.
 
-**Python candidate:** code minion-agent/pull/137 @ `9ced384e`. Gates: `pytest` 4204 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+**Python candidate:** code `minion-agent#137` @ `9ced384e`. Gates: `pytest` 4204 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
