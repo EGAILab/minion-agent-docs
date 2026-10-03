@@ -162,6 +162,15 @@ E. any later Minion-mediated traversal/boundary    -> recursive in-place normali
 F. direct native-alias observation in the D->E gap -> approved bounded Python divergence
 ```
 
+  - **Container provenance (`L0206-D001-R007`, checkpoint revision 4).** Row A covers every container the **pipeline** produces before an observer receives it, not only the raw arguments as constructed. The pipeline's containers are:
+    - the raw arguments as a provider decoded them (construction);
+    - the graph a `prepare_arguments` shim returns. Its own plain containers are adopted. A container the shim takes from the raw arguments is already the pipeline's and is kept as is;
+    - typed-model validation's rebuilt objects and arrays, default-filled values included (the `TOOL-003` binding mapping).
+
+    Rows C and D apply only to a container an **observer** introduced after it received the arguments. A framework-produced container is never treated as observer-introduced, so the Q1/Q2 interval (row F) never covers it.
+    - Identity between a shim's own objects and what an observer receives is **not** preserved. Pinned Pi hands observers a `structuredClone` of the prepared value, never the shim's objects.
+    - Aliasing **within** the prepared value is preserved: a container the shim placed twice is one container.
+
   - **Approved `INTENTIONAL_BOUNDED_DIVERGENCE` (Python binding only; observable, since it can change a hook's decision).** Python cannot intercept arbitrary direct mutation and enumeration performed solely through an externally retained plain-`dict` or `list` alias during an uninterrupted callback. The interval covers two cases:
     - **Q1:** a plain `dict` already attached, then mutated and enumerated directly through the retained alias;
     - **Q2:** a child attached through a hook-introduced native container, then observed directly through the hook's own alias.
@@ -204,7 +213,7 @@ Declared field order is never imposed on keys the input supplied. (Pinned Pi has
 - **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There were 37 cases at checkpoint 2; there are now 49, and each observes the recursive enumeration at every boundary above that the case reaches.
   - Among them are 7 hook **mutation programs** (`set`/`push`/`insert`/`get` with retained-reference handles, plus `ref` for one object placed twice) and a second listener's view.
   - Two long-decimal-key cases.
-  - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. That made 40 cases at checkpoint 2.
+  - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. That made 40 cases at checkpoint 3.
   - `update` is not asserted where a hook mutated nested objects. Whether such a mutation reaches the raw object is value isolation, not order: `L06-VALIDATION-SHALLOW-COPY`, `minion-agent#129`.
   - **`CE-L0206-D001-01` adds 9 cases, for 49:**
     - in-hook **read-back** through `args` after attachment (the `read` op, `hook_reads`);

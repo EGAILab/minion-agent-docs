@@ -416,3 +416,74 @@ NEXT_OWNER
 - **Nonblocking:** the status line now reads "in final review; Python implemented, not yet certified; Rust NOT_IMPLEMENTED". The 40-case sentence is now dated to checkpoint 2. The PR descriptions are updated.
 
 **Next:** §11.8.7 targeted closure of R005/R006 at the new exact heads, then the §11.8.8 final complete review.
+
+## 17. Final review 2 → Case B → checkpoint revision 4
+
+**Codex final complete review 2** (code `08c01c27` / docs `04c2f879`; docs #228 comment `5965316121`, verbatim): **CHANGES REQUIRED**.
+- R005/R006 hold, and R001–R004 closures are preserved.
+- One new blocker, **`L0206-D001-R007`** (PI_PARITY_DEFECT, §11.8.8 **Case B**): containers the framework produced reached the before-hook as plain lists without the graph's mutation seams:
+  - typed-model validation rebuilt arrays as plain lists (`_in_input_order`);
+  - `_prepare` only ordered a shim's graph in place.
+
+  A hook that appends `{b, 2, 1}` and reads its keys sees `b,2,1`, and an order-based decision blocks the call. Pinned Pi gives `1,2,b` and executes.
+- Codex executed pinned `prepareToolCall` / `executePreparedToolCall` with real TypeBox validation. The Owner's Q2 interval does not apply: the parent was not introduced by the observer.
+
+**Characterization: container provenance.** Pinned Pi has no provenance dimension. Every JavaScript object enumerates by the rule intrinsically, and the hook receives `structuredClone(prepared)` (`validation.ts:317-320`). So Pi's order is the rule for every provenance below; the question is only which containers Minion's binding owns.
+
+| # | Provenance of the container the hook mutates | Before R007 | Pi | Revision 4 |
+|---|---|---|---|---|
+| P1 | raw arguments, constructed (`adopt` at `ToolCallBlock`) | graph-typed | rule | unchanged |
+| P2 | a shim's **new** container (`prepare_arguments` result) | plain; ordered once, no seams | rule | **adopted**: pipeline-owned |
+| P3 | a raw container the shim passes through | graph-typed | rule | unchanged; kept as is, identity kept |
+| P4 | a nested object in a shim's new container | plain | rule | adopted with its parent |
+| P5 | a container the shim places twice | one plain object | one object (structuredClone keeps aliasing) | one adopted container |
+| P6 | typed-model rebuilt array | plain `list` | rule | **`JsArray`** |
+| P7 | typed-model rebuilt object (nested included) | `JsObject` | rule | unchanged |
+| P8 | typed-model default-filled array (`default_factory`) | plain `list` | rule (a TypeBox default is a plain JS object) | **`JsArray`** |
+| P9 | a native container an **observer** attached (Q1/Q2) | plain; ordered on attachment | rule | unchanged: rows C/D/F, the approved interval |
+
+**Checkpoint revision 4.** Row A of the Q2 semantic model covers every container the pipeline produces before an observer receives it: P1–P8. Rows C/D/F cover only P9. `spec/llm.md`, "Container provenance", carries the normative text. Mechanism (Python):
+- `adopt` converts the **native frontier** only (a plain `dict`/`list` and its plain descendants), memoized, so aliasing and cycles survive. An existing `JsObject`/`JsArray` is kept as is, contents included, so nothing attached by an observer (P9) is ever replaced.
+- `_prepare` adopts the shim's result.
+- `_in_input_order` rebuilds arrays as `JsArray`.
+
+**Not changed (scope):**
+- prepare nonmutation;
+- `#129` value isolation: a shim-passed raw container (P3) is still shared, as before;
+- K1-F1 typed-model default placement;
+- K1-F2;
+- the Q1/Q2 interval and its controls;
+- result-details exclusion.
+
+**Evidence (code #128 @ `71af895b`):**
+- `tests/tools/test_key_order_container_provenance.py`, all through real `execute_call` with native observation:
+  - the two R007 witnesses (P6, P2);
+  - the neighbors P7 (nested), P8 (default-filled), P4 (prepare nested object), P5 (aliasing) and P1 (raw unchanged);
+  - controls: the pre-R007 `_in_input_order` and a pre-R007 `_prepare` (order without adopting). Each kills its witness.
+- Against the reviewed source `08c01c27`: **5 witnesses fail** (both R007 observations, plus P8, P4 and P5), as required.
+- `tests/llm/test_js_object.py`: `adopt` frontier, aliasing, cycles, and graph containers kept.
+- Reviewer probe `.tmp/k1-review/owned-container-probe.py`: raw, typed and prepare all `1,2,b`, `JsArray`, success.
+- `pytest` **4185 passed**, 29 skipped, 19 xfailed; coverage **100.00%**; `ruff` and `mypy` (98 files) clean.
+
+**Canonical corpus:** unchanged at 49. R007's discriminator is an observation through a retained native alias. The corpus's `read` op observes through the graph, which orders on read, so a language-neutral case could not discriminate. The witnesses are binding-level, like the Q1/Q2 witnesses. Rust has no provenance dimension: every object it builds follows the rule.
+
+**Also:** the 40-case label is corrected to checkpoint 3 (closure 3's nonblocking nit).
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED (revision 4; revision 3 AGREED, extended by the provenance dimension)
+
+OPEN FINDINGS
+    L0206-D001-R007 (Case B)
+    R001-R006: closures preserved; C001/C002: Owner Q1/Q2 preserved
+
+ACCEPTANCE WITNESSES
+    provenance P1-P9 (P2/P6 the R007 observations) + 2 controls; adopt unit tests;
+    matrices A-L, M-V; Q1/Q2 controls; corpus 49 + 10 controls; lifecycle array roots
+
+NORMATIVE DELTAS
+    spec/llm.md "Container provenance"; the 40-case label
+
+NEXT_OWNER
+    Codex (checkpoint review of revision 4)
+```
