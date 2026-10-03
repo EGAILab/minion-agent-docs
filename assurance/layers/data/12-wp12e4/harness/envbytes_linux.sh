@@ -5,7 +5,7 @@
 export V_FF="$(printf 'a\377b')" V_E180="$(printf 'a\341\200')" V_F09080="$(printf 'a\360\220\200')" \
   V_EDA080="$(printf 'a\355\240\200b')" V_C0AF="$(printf 'a\300\257b')" V_BOM="$(printf '\357\273\277a')" \
   V_MIX="$(printf '\342\202\254\341\200\342\202\254')" V_E180B="$(printf 'a\341\200b')"
-env "$(printf 'N_\377')=name-invalid" node -e '
+env "$(printf 'N_\377')=name-invalid" "$(printf 'N_\303\251')=name-valid" node -e '
 const {spawnSync}=require("child_process");
 const u=(s)=>[...Array(s.length).keys()].map(i=>s.charCodeAt(i).toString(16).padStart(4,"0"));
 const keys=Object.keys(process.env).filter(k=>/^(V_|N_)/.test(k)).sort();
