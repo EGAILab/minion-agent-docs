@@ -1,5 +1,6 @@
 // WP-13.3 contract review 1 (CON-R002, CON-R003): the pinned OutputAccumulator rolling-tail trim, and Node's
-// timer scheduling normalization.  node --experimental-strip-types --expose-internals boundary_probe.mjs <pi checkout> <out.json>
+// timer scheduling normalization.  Closure 1 N001: a newline after a long line, and the drop-rule controls.
+//  node --experimental-strip-types --expose-internals boundary_probe.mjs <pi checkout> <out.json>
 import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -10,8 +11,8 @@ const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const show = (s) => (s.length <= 16 ? s : `${s.slice(0, 6)}...${s.slice(-6)}`);
 
 // Each case is a list of chunks (strings, UTF-8 encoded).  The summary keeps the observables, not the 50 KB text.
-const rolling = async (chunks) => {
-  const a = new OutputAccumulator({ tempFilePrefix: "wp133-boundary" });
+const rolling = async (chunks, Accumulator = OutputAccumulator) => {
+  const a = new Accumulator({ tempFilePrefix: "wp133-boundary" });
   for (const c of chunks) a.append(Buffer.from(c, "utf8"));
   a.finish();
   const s = a.snapshot();
@@ -34,9 +35,31 @@ const cases = {
   cutMidLineNewlineInLaterChunk: [rep("a", 250000), "\n" + rep("b", 1000)],
   // at the trigger, no trim (204800 is not above 4 * 51200)
   atTriggerNoTrim: [rep("a", 204800)],
+  // closure 1 N001: a newline after a line longer than the retained tail.  Pi drops the whole fragment, so the
+  // content is empty (the result is "(no output)" plus the notice); never-drop would show 51200 bytes
+  longLineThenNewline: [rep("a", 250000) + "\n"],
+  longLineThenTenLines: [rep("a", 250000) + rep("x\n", 10)],
+  // with 2001 short lines after the fragment, keeping the fragment would change truncatedBy to "lines"
+  longLineThen2001Lines: [rep("a", 250000) + rep("x\n", 2001)],
 };
-const out = { node: process.version, rolling: {}, timers: [] };
+const out = { node: process.version, rolling: {}, controls: {}, timers: [] };
 for (const [name, chunks] of Object.entries(cases)) out.rolling[name] = await rolling(chunks);
+
+// Drop-rule controls: the pinned accumulator with getSnapshotText replaced (a subclass; Pi's source is untouched).
+// A row "kills" a control when its observables (content and truncation) differ from the pinned result.
+const controls = {
+  alwaysDrop: class extends OutputAccumulator { getSnapshotText() { if (this.tailStartsAtLineBoundary) return this.tailText;
+    const i = this.tailText.indexOf("\n"); return i === -1 ? "" : this.tailText.slice(i + 1); } },
+  neverDrop: class extends OutputAccumulator { getSnapshotText() { return this.tailText; } },
+};
+for (const [control, Accumulator] of Object.entries(controls)) {
+  const killedBy = [];
+  for (const [name, chunks] of Object.entries(cases)) {
+    const r = await rolling(chunks, Accumulator);
+    if (JSON.stringify(r) !== JSON.stringify(out.rolling[name])) killedBy.push(name);
+  }
+  out.controls[control] = { killedBy };
+}
 
 // The timer: setTimeout(fn, timeout * 1000).  Timeout clamps non-[1, TIMEOUT_MAX] to 1; insert() keys the timer
 // list by MathTrunc(msecs), the duration actually scheduled.  Read both from Node's own internals.
