@@ -477,3 +477,95 @@ OPEN FINDINGS
 NEXT_OWNER
     Codex (targeted closure of R005, then final complete review)
 ```
+
+## 18. Targeted closure 2 and convergence episode `CE-WP133-02` (the lookup lifecycle)
+
+**Codex targeted closure 2** (docs #229 @ `496872bf`, `.tmp/wp133-review/CLOSURE2.md`):
+- **`WP133-CON-R005` NOT CLOSED.** The budget amount, the combined accounting, the boundary, the lookup-only scope and the decoding were confirmed (8 rows byte-identical, both controls killed). But "overflow or time limit ⇒ not found" is wrong: Pi tests only `status === 0 && stdout`, and Node keeps a recorded exit status when a later error arrives.
+- **New: `WP133-CON-R006`.** `spawnSync` collects until exit **and** pipe completion, with no idle grace. A path written by a descendant after the parent exits is selected.
+- Codex corrected its own FINAL1 claim, "overflow always refuses", as too broad. That claim is kept as history.
+
+**Trigger check:**
+- **A has fired for R005:** it survived the final review and this targeted closure.
+- R006 is on the same coupled surface: parent exit, the pipes, resource interruption and selection.
+
+**Convergence episode `CE-WP133-02`** opens for the bounded **lookup-lifecycle** surface. `CE-WP133-01`'s findings (existence, `R001`..`R004`) stay provisionally closed and are not reopened.
+
+### 18.1 Sources audited
+
+- **Pinned `shell.ts` `findBashOnPath`**, both branches.
+- **Node v22.15.1 `src/spawn_sync.cc`** (fetched at tag `v22.15.1`, file SHA-1 `c6c9d2d0…`):
+  - `TryInitializeAndRunLoop`: `uv_run(UV_RUN_DEFAULT)`, which runs until the process handle and every pipe close;
+  - the kill timer: `uv_unref`, started at spawn for `timeout`;
+  - `OnRead`: stores the chunk, **then** `IncrementBufferSizeAndCheckOverflow`;
+  - `Kill()`: `uv_process_kill` (`SIGTERM`) **only if the process has not exited**, then `CloseStdioPipes()`;
+  - `OnExit`: records `exit_status_` and `term_signal_`;
+  - `SetError`: the first error wins and never clears the status;
+  - `BuildResultObject`: `status` is null only for a signal termination (or no start), else the exit code, **alongside** any `error`.
+
+### 18.2 Behaviour matrix (executed, `out/lookup-lifecycle-win32.json`)
+
+| Row | Lookup program | Pi `status` / `error` | Selected |
+|---|---|---|---|
+| `parentPathExit0` | the parent prints the path, exits 0 | 0 / — | path |
+| `parentPathExit1` | the same, exits 1 | 1 / — | — |
+| `descendantPathAfterExit` | the parent exits 0 at once; a descendant holding the pipes prints the path 250 ms later | 0 / — | **path** |
+| `descendantPathAfterExitParentExit1` | the same, the parent exits 1 | 1 / — | — |
+| `overflowWhileAlive` | path, then 2 MiB stderr, while alive | null (`SIGTERM`) / `ENOBUFS` | — |
+| `overflowAfterExit` | path, exit 0; a descendant floods 2 MiB stderr at 250 ms | 0 / `ENOBUFS` | **path** |
+| `overflowAfterExitParentExit1` | the same, exit 1 | 1 / `ENOBUFS` | — |
+| `timeoutWhileAlive` | path, then alive for 5400 ms | null (`SIGTERM`) / `ETIMEDOUT` | — |
+| `timeoutAfterExit` | path, exit 0; a descendant holds the pipes for 5400 ms | 0 / `ETIMEDOUT` | **path** |
+| `descendantPathAfterTimeout` | exit 0; a descendant prints the path at 5400 ms | 0 / `ETIMEDOUT` | — (stdout empty at the interruption) |
+| `descendantPathThenOverflow` | exit 0; a descendant prints the path at 250 ms, then floods at 350 ms | 0 / `ENOBUFS` | **path** |
+
+**Discriminating dimensions:**
+- whether the process exited before the interruption;
+- whether output comes after the exit;
+- which interruption, if any;
+- the exit code.
+
+The budget boundary itself is `lookup-win32.json` (8 rows, §17).
+
+### 18.3 Observable rules
+
+These are now in the spec, "The lookup":
+1. Collection ends at exit **plus** EOF on both pipes, with no idle grace; or at the budget, after storing the crossing chunk; or at 5000 ms.
+2. An interruption terminates only an unexited process, which then has no status. An exited process keeps its status.
+3. Selection is `status === 0 && stdout`, then the first line after `trim`, then the platform's existence rule. The interruption never forces "not found" by itself.
+4. Decoding is unchanged from §17.
+
+### 18.4 Minimal witnesses and negative controls
+
+The probe runs four asynchronous compositions over `child_process.spawn` against the pinned result:
+
+| Composition | Disagrees on |
+|---|---|
+| **the contract rule** (18.3) | **none** (`contractAgreesOnAllRows: true`) |
+| exit-only settlement | `descendantPathAfterExit`, `descendantPathThenOverflow` |
+| bash's 100 ms idle grace | `descendantPathAfterExit`, `descendantPathThenOverflow` |
+| fail on any interruption | `overflowAfterExit`, `timeoutAfterExit`, `descendantPathThenOverflow` |
+
+From `lookup-win32.json`: an unbounded budget is killed by the three over-budget rows, and a per-stream budget by the stderr and combined rows.
+
+The probe ran twice, with identical output. The timing margins are at least 250 ms around both the 100 ms grace and the 5000 ms limit.
+
+### 18.5 Implementation constraints, mapping and exclusions
+
+- **Feasibility:** the rules compose over the certified Layer 12 seams (`spawn`, concurrent `read_chunk`, `wait`, `terminate`, read cancellation), with no new API.
+- **Kill scope (`MINION_ARCHITECTURAL_MAPPING`):** Pi signals only the direct child; Minion's `terminate()` is a tree kill. Selection is the same, because an unexited lookup is not found either way. Descendants of an already-exited lookup are left alone in both.
+- **Out of scope:**
+  - exact capture sizes after a budget interruption, which depend on read chunking (only the first line matters to selection);
+  - a POSIX `which` run (the same `spawnSync` path; not executed on Linux in this pass);
+  - Pi's `windowsHide` (a console-window flag, not observable to the tool).
+
+```text
+CONVERGENCE CHECKPOINT (CE-WP133-02)
+    PROPOSED
+OPEN FINDINGS
+    WP133-CON-R005 (trigger A), WP133-CON-R006
+ROOT-CAUSE SURFACE
+    the where/which lookup lifecycle: process exit x pipe completion x budget/timer interruption x selection
+NEXT_OWNER
+    Codex (checkpoint review)
+```

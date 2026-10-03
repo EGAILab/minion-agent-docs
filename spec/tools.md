@@ -2495,14 +2495,25 @@ isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:
 
 - The Windows error message reproduces Pi's text exactly. The line breaks inside the block above wrap for display only; the real message is one string with the embedded `\n`. "Set shellPath in settings.json" is Pi's text, kept verbatim.
 - `trim` is ECMAScript `String.prototype.trim` (its whitespace set), and `lower` is ECMAScript `toLowerCase`.
-- **The lookup** (Pi `spawnSync` with `{encoding: "utf-8", timeout: 5000, windowsHide: true}` and Node's default `maxBuffer`; `WP133-CON-R005`):
-  - It spawns through `ctx.subprocess` with `inherit_env = true` and reads stdout and stderr concurrently until exit.
-  - **Output budget:** a single budget of **1048576 raw bytes, counted across stdout and stderr together**. When the running total exceeds it, the lookup terminates the probe and fails. A total of exactly 1048576 is allowed. A separate budget per stream is wrong: a short path on stdout plus 1048559 bytes of stderr fails.
-  - **Time limit:** 5000 ms, after which the lookup terminates the probe and fails.
-  - **Decoding:** stdout is decoded after exit as UTF-8 with WHATWG replacement (Node `Buffer#toString`). The BOM is **not** stripped by the decoder, but `trim` then removes a leading U+FEFF. Invalid bytes become U+FFFD and stay in the candidate path.
-  - **Failure:** any failure gives "not found" silently: a spawn error, an exit code other than 0 or no exit code, the time limit, the output budget, or empty stdout.
-  - The budget applies **only** to the lookup, never to the `bash` command's output.
-  - Evidence: `data/13-wp133/harness/lookup_probe.mjs` runs the pinned `findBashOnPath` body unchanged, with only the lookup program replaced → `out/lookup-win32.json`. Rows: stdout, stderr and combined at 1048576 (path selected) and at 1048577 (`ENOBUFS`, not found); a BOM before the path; an invalid byte in the path. Controls: an unbounded lookup is killed by the three over-budget rows, and a per-stream budget by the stderr and combined rows.
+- **The lookup** (Pi `spawnSync("where", ["bash.exe"] | "which", ["bash"], {encoding: "utf-8", timeout: 5000, windowsHide: true})`, Node's default `maxBuffer`; `WP133-CON-R005`, `R006`, convergence `CE-WP133-02`). It is its own composition and does **not** reuse the `bash` command's settlement.
+  - **Spawn** through `ctx.subprocess` with `inherit_env = true`. Read stdout and stderr concurrently from spawn. Start one 5000 ms timer at spawn.
+  - **Collection** ends at the first of these:
+    - **completion:** the process has exited **and** both pipes have reached EOF. There is **no idle grace**: a descendant that inherited the pipes keeps collection open, and its output still counts, until the pipes close or an interruption comes;
+    - **budget interruption:** the running total of raw bytes over **stdout and stderr together** exceeds **1048576**. The chunk that crosses the budget is kept, so the budget is checked after each chunk is stored. A total of exactly 1048576 is not an interruption;
+    - **time interruption:** the 5000 ms timer fires.
+  - **On interruption:**
+    - if the process has **not** exited yet, it is terminated, and the lookup has no exit status (Pi: killed, `status` null);
+    - if it **has** exited, nothing is terminated and its recorded exit status stands (Pi: `status` 0 with `error` `ENOBUFS` or `ETIMEDOUT`).
+    - Either way, reading stops, and later output is not captured.
+  - **Selection.** This is Pi's predicate alone; the interruption is **not** consulted. A path is selected iff the recorded exit status is 0 and the captured stdout, decoded, is non-empty. Its first line after `trim` is then checked as in the matrix above (Windows: `exists`; POSIX: trusted). Any other outcome is "not found", silently. That includes a spawn error, a non-zero exit, no exit status and empty stdout.
+  - **Decoding:** the captured stdout bytes are decoded as UTF-8 with WHATWG replacement (Node `Buffer#toString`). The BOM is **not** stripped by the decoder, but `trim` removes a leading U+FEFF. Invalid bytes become U+FFFD and stay in the candidate path.
+  - **Termination.** Pi's `Kill()` signals only the direct child (`SIGTERM`) and closes the pipes. A Minion lookup terminates through `Process.terminate()` (Layer 12 tree kill), so a descendant of an **unexited** lookup is also ended.
+    - This is a `MINION_ARCHITECTURAL_MAPPING`: Layer 12 has no single-process kill, and selection is unaffected (the lookup fails either way).
+    - A descendant still running after its parent has **exited** is never terminated, as in Pi.
+  - The budget and timer apply **only** to the lookup, never to the `bash` command.
+  - Evidence:
+    - `data/13-wp133/harness/lookup_probe.mjs` → `out/lookup-win32.json`: the budget boundary, at 1048576 and 1048577 on each stream mix, and the decoding rows.
+    - `harness/lookup_lifecycle_probe.mjs` → `out/lookup-lifecycle-win32.json`: 11 rows crossing exit status, a pipe-holding descendant, budget and timer. Each row runs the pinned `findBashOnPath` over the real `spawnSync`, and the contract rule above, composed over an asynchronous spawn, agrees with it on every row.
 
 **The cwd check (`CE-WP133-01`):**
 - `POSIX`: `probe_dir_entry(cwd)` is `Ok` (followed existence).
@@ -2599,7 +2610,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - the full-output file's raw bytes;
    - the missing cwd;
    - the shell-selection branches, using a fake world for the platform branches the host cannot run;
-   - the lookup rows of `lookup-win32.json` (`WP133-CON-R005`), through a fake lookup program that emits a path and then the given byte counts;
+   - the lookup rows of `lookup-win32.json` and `lookup-lifecycle-win32.json` (`WP133-CON-R005`, `R006`), through a fake lookup program. That includes a descendant that writes the path after its parent exits, and an overflow or a time limit after an exit with code 0, both of which still select;
 3. **Binding witnesses:**
    - the `CE-WP133-01` existence differential (descriptor path, dangling `shell_path`, Windows dangling-symlink cwd);
    - the command projection (lone high, lone low, reversed pair, valid pair; argv and stdin);
@@ -2632,6 +2643,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - always dropping the partial first line, or never dropping it (`WP133-CON-R002`);
    - scheduling the raw `ms`, or rounding it, instead of `max(1, trunc(ms))` (`WP133-CON-R003`);
    - an unbounded lookup, or a per-stream lookup budget (`WP133-CON-R005`);
+   - a lookup that settles at exit, or after a 100 ms idle grace; a lookup that fails on any interruption, even after an exit with code 0 (`WP133-CON-R005`, `R006`);
    - a `canonical_path` existence check;
    - an `exists`-based `existsSync`;
    - a following Windows cwd check;
