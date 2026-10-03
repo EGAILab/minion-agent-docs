@@ -1,0 +1,12 @@
+{
+ "python": "3.13.15",
+ "platform": "linux",
+ "live_at_interruption": true,
+ "cause": "explicit",
+ "wait_exit_code": 0,
+ "selected": "/valid/bash",
+ "control_interruption_forces_no_selection": {
+  "selected": null,
+  "killed": true
+ }
+}

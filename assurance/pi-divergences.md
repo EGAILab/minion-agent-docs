@@ -18,7 +18,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Affected:** WP-13.3 `bash` (`minion-agent#50`), shell discovery (`TOOL-034`). Only the `where` / `which` lookup that runs when no Git Bash candidate or `/bin/bash` is found (`spec/tools.md`, WP-13.3, "The lookup").
 - **Pi behaviour.** `findBashOnPath` uses `spawnSync`. When the lookup is still alive at its 5000 ms limit or at its 1 MiB combined output budget, Node sends a **direct-child `SIGTERM`**. On POSIX, a lookup can handle that signal, exit 0, and have its already-printed path **selected**.
 - **Minion behaviour.** The interruption calls the certified Layer 12 `Process.terminate()`, an uncatchable tree/group hard kill.
-  - The lookup then has no exit status (POSIX) or the OS code (Windows), and its path is **not** selected.
+  - When the kill is effective, the lookup then has no exit status (POSIX) or the OS code (Windows), and its path is **not** selected. A lookup that completes naturally before the kill reaches it keeps its real code and is read by the unchanged selection rule, as in Pi (`CE-WP133-02-C002`). That race is not part of this divergence.
   - Minion may also end descendants of the lookup that Pi would leave running.
   - Everything else is unchanged: the timer, the budget, settlement and selection for every outcome reachable under the hard kill.
 - **Classification:** intentional practical-parity divergence.

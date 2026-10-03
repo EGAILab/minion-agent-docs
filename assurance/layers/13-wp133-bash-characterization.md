@@ -581,7 +581,7 @@ NEXT_OWNER
 1. `CE-WP133-02-C001` = Option 1 (#50 comment `5973189849`): a new Layer 12 direct-child termination, WP-12.E5 (#141). E5 went through contract approval and a Python implementation. Its review exposed POSIX PID-reaping races on threaded-reaper hosts (`WP12E5-I001`).
 2. **Practical-parity cut-over** (#50 comment `5973629192`; #75 comment `5973629428`). WP-12.E5 is **superseded** (#141 closed; PRs #142/#237 closed unmerged and preserved). This difference is accepted as **`DIV-001`** (`assurance/pi-divergences.md`). The lookup interruption uses the certified `terminate()`.
 
-**Revised rule** (spec, "The lookup", "On interruption"): an interruption of an **unexited** lookup calls `terminate()`, and its status is what `wait()` reports, which is never 0. An exited lookup keeps its status. Selection and every other lifecycle rule (§18) are unchanged.
+**Revised rule** (spec, "The lookup", "On interruption"): an interruption of an **unexited** lookup calls `terminate()`, and its status is what `wait()` reports. That status is not 0 when the kill is effective (corrected in §19.1). An exited lookup keeps its status. Selection and every other lifecycle rule (§18) are unchanged.
 
 **Evidence: the 15-row lifecycle probe**, run on Windows and on Linux (`node:22.15.1-bookworm-slim`, twice, byte-identical).
 - **New rows:** four `SIGTERM`-response rows (`trapExit0OverflowWhileAlive`, `trapExit0TimeoutWhileAlive`, `trapExit7TimeoutWhileAlive`, `trapDelayedExit0TimeoutWhileAlive`).
@@ -605,3 +605,19 @@ OPEN FINDINGS
 NEXT_OWNER
     Codex (checkpoint re-review)
 ```
+
+### 19.1 Checkpoint re-review 2 and `CE-WP133-02-C002`
+
+**Codex checkpoint re-review 2** (docs #229 @ `64fc2110`, `.tmp/wp133-review/CE02-CHECKPOINT2.md`): CHANGES REQUIRED.
+- Codex replayed all 15 rows on both platforms, byte-identical. Minion differs from Pi on exactly the `DIV-001` rows, and every control is killed. `C001` is OWNER_RESOLVED.
+- **`CE-WP133-02-C002`** (CONTRACT_ASSURANCE_DEFECT): the text claimed that an interrupted, initially live lookup is "never" selected. But `terminate()` is best-effort, and §6/`L12-R020` keeps the real exit code. So a lookup that completes **naturally** with 0 after the interruption decision, and before the kill dispatch, is selected.
+- This is ordinary parity, not `DIV-001`. Pi's `Kill()` also checks the recorded exit first.
+
+**Remediation:**
+- The spec, matrix revision 6 and the `DIV-001` entry now say that an **effective** hard kill selects nothing, while a real code from a natural completion or an unsuccessful kill is read by the unchanged predicate.
+- New permanent witness `harness/lookup_termination_race.py` (from Codex's reviewer probe). It drives the accepted Layer 12 `LocalSubprocess` from `main` `a0ff3e47`. Its only control point is `_issue_kill`, which lets the real child exit 0 before forwarding the real tree-kill dispatch.
+
+| Host | Live at interruption | Cause | `wait()` code | Selected | Control (interruption forces "not found") |
+|---|---|---|---|---|---|
+| Windows (Python 3.13.5) | yes | `explicit` | `0` | `C:/valid/bash.exe` | killed |
+| Linux (Python 3.13.15) | yes | `explicit` | `0` | `/valid/bash` | killed |

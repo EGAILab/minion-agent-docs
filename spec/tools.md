@@ -2502,7 +2502,10 @@ isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:
     - **budget interruption:** the running total of raw bytes over **stdout and stderr together** exceeds **1048576**. The chunk that crosses the budget is kept, so the budget is checked after each chunk is stored. A total of exactly 1048576 is not an interruption;
     - **time interruption:** the 5000 ms timer fires.
   - **On interruption** (Owner practical-parity decision; **`DIV-001`**, `assurance/pi-divergences.md`):
-    - **If the process has not exited yet,** the lookup calls the certified `Process.terminate()` (§6: tree/group hard kill), and its exit status is whatever `wait()` then reports. That is none on POSIX (`SIGKILL`) and the OS code, commonly `1`, on Windows (`L12-R020`). Either way it is not `0`, so nothing is selected.
+    - **If the process has not exited yet,** the lookup calls the certified `Process.terminate()` (§6: tree/group hard kill), and its exit status is whatever `wait()` then reports (§6, `L12-R020`).
+      - An effective hard kill leaves no code on POSIX (`SIGKILL`), and the OS code, commonly `1`, on Windows. Neither is `0`, so nothing is selected.
+      - The kill is best-effort (`CE-WP133-02-C002`). A lookup that completes **naturally** after the interruption decision, but before the kill reaches it, keeps its real code. A real `0` with non-empty stdout is then **selected** by the unchanged predicate, as in Pi, whose `Kill()` also checks the recorded exit first.
+      - The interruption itself never forces "not found".
       - Pi sends a catchable direct-child `SIGTERM` instead. So on POSIX, a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **selected by Pi and not by Minion**. That is `DIV-001`, an accepted practical-parity divergence. Minion may also end descendants that Pi would leave running.
     - **If it has already exited,** nothing is terminated and its recorded exit status stands. Pi reports this as `status` 0 with `error` `ENOBUFS` or `ETIMEDOUT`.
     - **Either way,** reading stops, and later output is not captured.
@@ -2647,6 +2650,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - an unbounded lookup, or a per-stream lookup budget (`WP133-CON-R005`);
    - a lookup that settles at exit, or after a 100 ms idle grace; a lookup that fails on any interruption, even after an exit with code 0 (`WP133-CON-R005`, `R006`);
    - the `DIV-001` witness: a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **not** selected on POSIX. The implementation's own witness pins that its interruption is `terminate()`, not a direct `SIGTERM`;
+   - the `C002` witness: a lookup that completes naturally with 0 between the interruption decision and the kill dispatch **is** selected (`out/lookup-termination-race-{win32,linux}.json`); and its control, which discards that real 0 because an interruption was requested;
    - a `canonical_path` existence check;
    - an `exists`-based `existsSync`;
    - a following Windows cwd check;
