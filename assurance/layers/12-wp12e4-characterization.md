@@ -165,3 +165,64 @@ R4 and C002 in §4 and §5 above are superseded by this decision. The text is ke
    - **`E4-OBS-3` (Rust):** a non-Unicode host environment panics provider construction.
 
    Each changes certified behavior only if acted on. Under decision §12 they are not acted on in E4 without a separate decision. The Rust owner sees them through the handoff.
+
+## 8. Audit 2 and `WP12E4-AUD-R002`: how Node presents a non-Unicode environment
+
+**Codex audit re-review 2** (docs #230 @ `4cee5d58`; comment `5966930540`, verbatim):
+- `WP12E4-AUD-R001` is **CLOSED** (C002 integration).
+- **New, `WP12E4-AUD-R002`** (CONTRACT_ASSURANCE_DEFECT): §7's "each surrogateescape byte → U+FFFD" is wrong.
+  - CPython's surrogateescape keeps one surrogate per byte.
+  - Node's UTF-8 replacement groups a valid incomplete prefix: `E1 80` gives one U+FFFD where per-byte replacement gives two.
+  - An environment BOM is kept.
+
+**Characterization (executed):**
+
+- **POSIX** (`harness/envbytes_linux.sh`, `out/node-envbytes-linux.json`; `node:22.15.1-bookworm-slim`, uid 1000). Each value's raw bytes reach Node unchanged. `process.env` gives:
+
+  | Raw value bytes | `process.env` value | Child receives (explicit `env`, as Pi's `bash` passes) |
+  |---|---|---|
+  | `61 FF 62` | `a�b` | `61 EF BF BD 62` |
+  | `61 E1 80` | `a�` (**one**) | `61 EF BF BD` |
+  | `61 E1 80 62` | `a�b` | |
+  | `61 F0 90 80` | `a�` (**one**) | |
+  | `61 ED A0 80 62` | `a` + **three** U+FFFD + `b` | |
+  | `61 C0 AF 62` | `a` + **two** U+FFFD + `b` | |
+  | `E2 82 AC E1 80 E2 82 AC` | `€�€` | |
+  | `EF BB BF 61` | `﻿a` (**BOM kept**) | `EF BB BF 61` |
+
+  This is exactly WHATWG UTF-8 decoding with replacement (one U+FFFD per maximal invalid subpart), and no BOM stripping. An entry whose **name** is not valid UTF-8 (`N_\xFF`) is **absent** from `process.env`, so a child spawned with an explicit `env` does not receive it. A valid non-ASCII name (`N_é`) is kept.
+
+- **Windows** (`harness/envunits_win.py`, `out/node-envunits-win32.json`; Node v22.15.1, the native UTF-16 environment set through `_wputenv`):
+  - `a\uD800b` → `process.env` `a` + three U+FFFD + `b`. That is the generalized-UTF-8 bytes of the lone surrogate (`ED A0 80`) decoded with replacement, the same rule as POSIX.
+  - A valid pair is kept.
+  - An entry whose name holds a lone surrogate is **absent**.
+  - The grandchild receives exactly Node's view.
+
+**Rule (proposed for the E4 contract, replacing §7 disposition 1).** The environment Pi's `bash` passes to its child is Node's view of the native environment, which is:
+
+```text
+native entry (name, value)            POSIX: bytes;  WINDOWS: UTF-16 code units
+  -> bytes  (WINDOWS: generalized UTF-8 of the code units, lone surrogates as 3-byte sequences)
+  -> name:  not valid UTF-8  => the entry is dropped
+     value: WHATWG UTF-8 decode with replacement (maximal subpart), BOM kept
+```
+
+**Provenance boundaries (Codex's correction).** Two conversions must not be conflated:
+- **OS bytes or units → JS string:** the rule above. It groups, and can drop an entry.
+- **JS string → OS:** WP-13.3 `WP133-AUD-R001`, where each unpaired surrogate becomes U+FFFD. Applied after the first conversion, it is the identity: the decoded string is already scalar.
+
+**What `base_env()` must therefore carry.** The rule needs the native form, so the snapshot must be **lossless** with respect to the provider's baseline. The consumer applies the rule; the provider does not.
+
+| Binding / provider | Baseline | Lossless? |
+|---|---|---|
+| Python, POSIX | `os.environ` at call time (`str`, surrogateescape) | **yes**: `os.fsencode` recovers the bytes |
+| Python, Windows (C002) | the live native block (`str` with any lone surrogate) | **yes** |
+| Rust `LocalSubprocess` | the configured `BTreeMap<String, String>` | **yes, for every baseline it can hold**: a non-Unicode host panics at construction (`E4-OBS-3`), so no non-Unicode entry exists |
+
+So **no provider behavior changes**. WP-13.3's composition applies the rule to the `base_env()` snapshot before stripping, injecting and spawning with `inherit_env = false`. §7 disposition 1 ("each … surrogateescape byte → U+FFFD") is **superseded**; the text is kept as reviewed.
+
+**Witnesses for the contract:**
+- every row above, on both platforms;
+- the dropped invalid name;
+- the kept BOM;
+- negative controls: per-surrogate replacement (killed by `E1 80`), BOM stripping (killed by `EF BB BF 61`), and keeping an invalid-name entry.
