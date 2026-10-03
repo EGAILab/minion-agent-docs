@@ -2959,7 +2959,7 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 
 ## 16. Layer-12 additive extension `WP-12.E5` — direct-child termination (`EXEC-011`)
 
-**Status (`minion-agent#141`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#141`):** contract APPROVED (`minion-agent-docs#237` comment `5973294244`). Python: implementation candidate, `minion-agent#142`, pending independent review. Rust: NOT_IMPLEMENTED.
 
 - **Authorization.** Owner decision `CE-WP133-02-C001` = Option 1 (`minion-agent#50` comment `5973189849`). The routine lifecycle is delegated under `minion-agent#75`.
 - **Additivity.** One operation is added to `Process` (§6). Nothing else changes:

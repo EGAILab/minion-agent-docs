@@ -25,12 +25,13 @@ The probe uses Node v22.15.1 on Windows 11 (build 26200) and on Linux in `node:2
 | `handledExit0` | **`code 0`** | `code null, signal SIGTERM` (not interceptable) |
 | `handledExit7` | **`code 7`** | `code null, signal SIGTERM` |
 | `handledDelayedExit0` (exits 500 ms after the signal) | `code 0`, exit ≥ 400 ms after the request | `signal SIGTERM`, at once |
-| `ignoredThenSelfExit0` | `code 0`, exit ≥ 400 ms after the request | `signal SIGTERM`, at once |
+| `ignoredThenSelfExit0`* | `code 0`, exit ≥ 400 ms after the request | `signal SIGTERM`, at once |
 | `descendantNotTargeted` | parent `signal SIGTERM`; the descendant, **in the same process group**, writes its marker | parent `signal SIGTERM`; the descendant writes its marker |
 | `alreadyExited` (kill after exit) | `kill()` returns false; `code 3` stands | the same |
 | `spawnSyncTimeoutHandledExit0` (Pi's lookup shape) | **`status 0`**, `ETIMEDOUT`, stdout has the path | `status null`, `SIGTERM`, `ETIMEDOUT` |
 
 **Notes:**
+- \* **Label.** Despite its name, `ignoredThenSelfExit0` installs a handler that schedules the exit, so it is a second delayed-handler row (contract review 1, nonblocking). Node cannot set `SIG_IGN`. The truly ignored case is the Python witness `test_posix_ignored_sigterm_then_own_exit` (`SIG_IGN`, §6).
 - **A Windows confounder, controlled.** In the first Windows run, the descendant died with its parent. The cause was not `TerminateProcess`: a Node child puts the processes it spawns into its own kill-on-close job object, and that job closed when the child died. The descendant is now spawned detached (outside that job) on Windows, and it survives. A Minion `terminate_child()` must not reproduce that job behaviour: it is a property of the child program, not of the termination.
 - **A repeated `ChildProcess.kill()`** resends on POSIX (`true`) and does not on Windows (`false`, already exited). Pi's lookup goes through `spawn_sync`'s `Kill()`, which sends once. The contract follows that path.
 
@@ -55,3 +56,48 @@ The probe uses Node v22.15.1 on Windows 11 (build 26200) and on Linux in `node:2
 
 - **Windows `exit_code: None`.** This is the Node-faithful representation (§16.3), and it differs from `terminate()`'s preserved `1`. The WP-13.3 lookup selects nothing either way.
 - **POSIX witnesses on a Windows host.** The Python gate runs on Windows. The POSIX witnesses (1–5, 8) run in a Linux container against the same source, and are reported with the gate.
+
+## 6. Contract review 1 and the Python implementation
+
+**Contract review 1** (Codex; docs #237 @ `93c63141`, comment `5973294244`): **APPROVED**.
+- Codex replayed the kill probe unchanged on Windows and on Linux. All 8 rows matched on each platform.
+- The Windows `exit_code: None` choice was accepted.
+- Implementation reminders, all applied below:
+  - make the repeated-call witness acknowledged;
+  - exercise a later `terminate()` and a later abort after a request, through the real provider;
+  - a truly ignored `SIGTERM`.
+
+**Python candidate** (`minion-agent#142`):
+- `execution/subprocess.py`: `Process.terminate_child()`.
+  - **POSIX:** `os.kill(pid, SIGTERM)`. `Popen.send_signal` is not used, because its `poll()` can reap the child out from under asyncio's child watcher. The direct child leads its own session, so the group's other members are untouched.
+  - **Windows:** the transport's `Popen.terminate()`, which is `TerminateProcess(handle, 1)`. It is effective iff `returncode` stays unset; CPython maps an already-exited process's `ERROR_ACCESS_DENIED` to its real code. `wait()` reports an effective termination as `None`.
+  - **No-op** once exited, already called, or after `terminate()`. The first-claim `_kill_cause` is never touched.
+
+| Witness (`tests/execution/test_terminate_child.py`) | Host |
+|---|---|
+| default → `None`; handled → `0`, `7`; a 500 ms handler → not settled at 250 ms, then `0`; `SIG_IGN` then its own exit → not settled, then `0` | Linux container |
+| direct child only: an in-group descendant survives `terminate_child()`, and `terminate()` on a twin kills it | Linux container |
+| single delivery: the second call comes after the child acknowledges the first `SIGTERM` → count 1 | Linux container |
+| a later spawn-signal abort → `Err(aborted)`; a later `terminate()` → `SIGKILL`, `None` | Linux container |
+| effective termination → `None`; a descendant survives; `terminate()` still reports `1`; an exited-but-unobserved process is not effective (real `4`); terminate failure and missing transport are swallowed | Windows |
+| no-op after exit (real code kept), after `terminate()`, repeated calls | both |
+
+**Negative controls** (`scripts/e5_negative_controls.py`; each applies one fault to a copy of `src` and runs the witnesses):
+
+| Fault | Platform | Killed |
+|---|---|---|
+| `as-terminate` | both | yes (Linux 8, Windows 3 failing tests) |
+| `posix-sigkill` | POSIX | yes (7) |
+| `posix-killpg` | POSIX | yes (the descendant witness) |
+| `handled-exit-as-no-status` | both | yes (Linux 5, Windows 1) |
+| `delayed-exit-completed-at-request` | POSIX | yes (7) |
+| `resend-on-repeat` | POSIX | yes (the acknowledged count) |
+| `claims-the-cause` | POSIX | yes (the later-abort witness) |
+| `windows-synthesized-1` | Windows | yes (2) |
+| `windows-tree-kill` | Windows | yes (3) |
+
+- **The repeated-call witness was first vacuous.** With two back-to-back requests, the two `SIGTERM`s coalesced, because standard signals are not queued, and `resend-on-repeat` survived. The witness now waits for the child's acknowledgement before the second call, and the control is killed.
+
+**Gates:**
+- Windows (Python 3.13.5, pinned ICU): full `pytest` **4268 passed, 38 skipped, 19 xfailed**, coverage **100.00%**; `ruff` and `mypy` clean; manifest validation 8 passed.
+- Linux (`python:3.13`, Python 3.13.15): `test_terminate_child.py` plus the Layer 12 `test_subprocess.py` regression, **43 passed, 8 skipped** (Windows-only). The POSIX controls were run there.
