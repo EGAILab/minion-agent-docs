@@ -62,3 +62,25 @@ GATES
 NEXT_OWNER
     Codex (checkpoint review)
 ```
+
+## 4. Checkpoint review 1 and remediation
+
+**Codex checkpoint review 1** (code `0a3c816e` / docs `ef31a8e0`): **CHANGES REQUIRED**. It will be published verbatim on docs #230.
+
+- **Accepted:** the I001/I002/I003 mechanisms, including the pinned table (SHA-256 `78580c21…`, build 26200, 973 units). The table equals this host's live table across all 65,536 units.
+- **Reading of "never depends on the host":** it means removing the ASCII fallback. It does not claim that all Windows builds have the same table, and the spec records build differences as a hazard.
+- **`CE-WP12E4-01-C001`** (CONTRACT_ASSURANCE_DEFECT): the cross-host I003 test forced `win32` on every host. On a real POSIX host it would therefore have called a Windows API that does not exist (`ctypes.windll`) before reaching the pinned-table branch.
+
+**Known-bad accounting, corrected.** §3's "5 failed" overclaims. Against `cedf9bec`, the I001/I002/I003 selection gives **4 failed, 2 passed**:
+- three are behavioral failures: the truncated native snapshot, astral-name comparison and pair encoding;
+- the fourth fails only because the new `_pinned_upcase` helper is absent, so it is **not** an independent behavioral discriminator.
+
+Codex's separate old-versus-candidate fake-POSIX lookup probe confirms the I003 non-ASCII discrimination directly (old `None`, candidate `acute`).
+
+**Remediation** (code #138 @ `d2abf19c`, test-only):
+- **Portable test.** `test_i003_a_windows_world_on_a_non_windows_host_uses_the_pinned_table` runs on **every** host. It forces a non-Windows platform and replaces `_live_upcase` with a function that fails if reached, so the witness can only pass through the committed table.
+- **Live-table test.** `test_i003_a_windows_world_on_a_windows_host_uses_the_live_table` is Windows-only.
+- **Control.** The ASCII-only control now targets the portable witness.
+- **POSIX-shaped replay** (scratch, 2026-10-04): `ctypes.windll` deleted, `sys.platform = "linux"`, the real test file loaded with `runpy`. The portable witness **passes** without any Windows API.
+
+**Gates:** `pytest` 4238 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
