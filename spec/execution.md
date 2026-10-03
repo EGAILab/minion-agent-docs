@@ -2814,7 +2814,7 @@ A binding MUST NOT derive one from one source and the other from another (Owner 
 
 **Lossless representation.** Each entry carries its name and value in a form from which the native form is recoverable exactly:
 - `POSIX`: the name and value bytes;
-- `WINDOWS`: the name and value UTF-16 code units, lone surrogates included.
+- `WINDOWS`: the name and value UTF-16 code units, lone surrogates included. Lengths, offsets and comparisons count **UTF-16 units**, never decoded code points (`WP12E4-I001`). A valid pair is one character whether it is held combined or as two surrogates (`WP12E4-I002`).
 
 The consumer's projection (§15.5) needs the native form. A binding that substitutes U+FFFD when it reads the environment does not conform.
 
@@ -2823,7 +2823,7 @@ The consumer's projection (§15.5) needs the native form. A binding that substit
 | Platform | Snapshot entries | Lookup |
 |---|---|---|
 | `POSIX` | exact names; at most one entry per exact name | exact |
-| `WINDOWS` | **exactly the entries the native baseline holds**, with their spelling. E4 imposes no deduplication: the native block can hold names that differ only by a non-ASCII case distinction (`Qß` and `Qss`; `Qı` and `QI`), and they stay distinct entries (`WP12E4-CON-R002`) | the **native** Windows environment-name comparison, as the OS's own lookup applies it (Node's `process.env` read on Windows goes through it). `ProgramFiles` finds `PROGRAMFILES` or any other ASCII case. The distinct native names above keep their own values |
+| `WINDOWS` | **exactly the entries the native baseline holds**, with their spelling. E4 imposes no deduplication: the native block can hold names that differ only by a non-ASCII case distinction (`Qß` and `Qss`; `Qı` and `QI`), and they stay distinct entries (`WP12E4-CON-R002`) | the **native** Windows environment-name comparison, as the OS's own lookup applies it (Node's `process.env` read on Windows goes through it): names are equal when their **UTF-16 code units** are equal after each unit passes through the OS uppercase table (`RtlUpcaseUnicodeChar`), which maps `é` to `É` but leaves `ß` and `ı` unchanged. `ProgramFiles` finds `PROGRAMFILES` or any other ASCII case; `Qé` finds `QÉ`. The distinct native names above keep their own values. A declared `WINDOWS` world on a non-Windows host has no OS table to consult. It uses the table captured from Windows build 26200, committed with the implementation (`WP12E4-I003`). A difference between Windows builds' tables is a recorded hazard |
 
 Only ASCII names are looked up by the specified consumers (`ProgramFiles`, `ProgramFiles(x86)`, `PATH`), where every case-insensitive comparison agrees. The native comparison is named so that a binding does not substitute Node's consumer-stage key (§15.5) or a host casefold for it.
 
