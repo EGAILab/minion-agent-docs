@@ -1,0 +1,84 @@
+{
+ "runtime": "v22.15.1",
+ "uid": 1000,
+ "cases": [
+  {
+   "path": "$T/file",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/dir",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/dir/",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/l_file",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/l_dir",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/l_dangling",
+   "existsSync": false,
+   "accessF_OK": "ENOENT",
+   "realpath": "ENOENT"
+  },
+  {
+   "path": "$T/fifo",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/l_fifo",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true
+  },
+  {
+   "path": "$T/locked/inner",
+   "existsSync": false,
+   "accessF_OK": "EACCES",
+   "realpath": "EACCES"
+  },
+  {
+   "path": "$T/l_loop1",
+   "existsSync": false,
+   "accessF_OK": "ELOOP",
+   "realpath": "ELOOP"
+  },
+  {
+   "path": "$T/missing",
+   "existsSync": false,
+   "accessF_OK": "ENOENT",
+   "realpath": "ENOENT"
+  },
+  {
+   "path": "$T/file/child",
+   "existsSync": false,
+   "accessF_OK": "ENOTDIR",
+   "realpath": "ENOTDIR"
+  },
+  {
+   "path": "/proc/PID/fd/7",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": "ENOENT"
+  }
+ ]
+}

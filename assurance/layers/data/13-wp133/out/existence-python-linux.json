@@ -1,0 +1,71 @@
+{
+ "runtime": "3.12.15",
+ "uid": 65534,
+ "cases": [
+  {
+   "path": "$T/file",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/dir",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/dir/",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/l_file",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/l_dir",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/l_dangling",
+   "probe_dir_entry_ok": "ENOENT",
+   "canonical_path": "ENOENT"
+  },
+  {
+   "path": "$T/fifo",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/l_fifo",
+   "probe_dir_entry_ok": true,
+   "canonical_path": true
+  },
+  {
+   "path": "$T/locked/inner",
+   "probe_dir_entry_ok": "EACCES",
+   "canonical_path": "EACCES"
+  },
+  {
+   "path": "$T/l_loop1",
+   "probe_dir_entry_ok": "ELOOP",
+   "canonical_path": "ELOOP"
+  },
+  {
+   "path": "$T/missing",
+   "probe_dir_entry_ok": "ENOENT",
+   "canonical_path": "ENOENT"
+  },
+  {
+   "path": "$T/file/child",
+   "probe_dir_entry_ok": "ENOTDIR",
+   "canonical_path": "ENOTDIR"
+  },
+  {
+   "path": "/proc/PID/fd/7",
+   "probe_dir_entry_ok": true,
+   "canonical_path": "ENOENT"
+  }
+ ]
+}
