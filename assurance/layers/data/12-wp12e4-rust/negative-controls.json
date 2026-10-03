@@ -1,0 +1,77 @@
+{
+  "toolchain": "1.97.1",
+  "tests": "execution_environment and the two read-only compile-fail doctests",
+  "all_source_faults_restored": true,
+  "results": [
+    {
+      "name": "snapshot-public",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "platform-public",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "ascii-lookup",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "lowercase-arbitration",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "ascii-arbitration",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "host-baseline",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "per-surrogate-replacement",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "pair-uncombined",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "strip-bom",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "keep-invalid-name",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "last-name-wins",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "case-insensitive-removal",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "inherit-false-leaks-baseline",
+      "exit_code": 101,
+      "killed": true
+    },
+    {
+      "name": "casefold-arbitration",
+      "exit_code": 101,
+      "killed": true
+    }
+  ]
+}
