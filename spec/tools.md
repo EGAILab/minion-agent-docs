@@ -2478,14 +2478,14 @@ exists(p)  :=  ctx.fs.probe_dir_entry(p) is Ok        (Pi existsSync; any other 
        ProgramFiles      (truthy)  -> "${ProgramFiles}\Git\bin\bash.exe"
        ProgramFiles(x86) (truthy)  -> "${ProgramFiles(x86)}\Git\bin\bash.exe"
      first existing candidate -> config(it)
-     else findBashOnPath: spawn ["where", "bash.exe"] (5000 ms limit), and if it exits 0 with stdout:
+     else findBashOnPath: lookup ["where", "bash.exe"] (below), and if it exits 0 with stdout:
           first line of trim(stdout) split on /\r?\n/; if non-empty and exists(it) -> config(it)
      else Error "No bash shell found. Options:\n  1. Install Git for Windows: https://git-scm.com/download/win\n
                  2. Add your bash to PATH (Cygwin, MSYS2, etc.)\n  3. Set shellPath in settings.json\n\n
                  Searched Git Bash in:\n" + one "  <candidate>" line per candidate, joined by "\n"
    platform POSIX:
      exists("/bin/bash") -> config("/bin/bash")
-     else findBashOnPath: spawn ["which", "bash"] (5000 ms limit), and if it exits 0 with stdout:
+     else findBashOnPath: lookup ["which", "bash"] (below), and if it exits 0 with stdout:
           first line of trim(stdout) split on /\r?\n/; if non-empty -> config(it)   (no existence recheck)
      else {shell: "sh", args: ["-c"], transport: argv}                           (silent; no error)
 
@@ -2495,7 +2495,14 @@ isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:
 
 - The Windows error message reproduces Pi's text exactly. The line breaks inside the block above wrap for display only; the real message is one string with the embedded `\n`. "Set shellPath in settings.json" is Pi's text, kept verbatim.
 - `trim` is ECMAScript `String.prototype.trim` (its whitespace set), and `lower` is ECMAScript `toLowerCase`.
-- Any probe failure (spawn error, non-zero exit, timeout, empty output) gives "not found" silently. The probes spawn through `ctx.subprocess` with `inherit_env = true`.
+- **The lookup** (Pi `spawnSync` with `{encoding: "utf-8", timeout: 5000, windowsHide: true}` and Node's default `maxBuffer`; `WP133-CON-R005`):
+  - It spawns through `ctx.subprocess` with `inherit_env = true` and reads stdout and stderr concurrently until exit.
+  - **Output budget:** a single budget of **1048576 raw bytes, counted across stdout and stderr together**. When the running total exceeds it, the lookup terminates the probe and fails. A total of exactly 1048576 is allowed. A separate budget per stream is wrong: a short path on stdout plus 1048559 bytes of stderr fails.
+  - **Time limit:** 5000 ms, after which the lookup terminates the probe and fails.
+  - **Decoding:** stdout is decoded after exit as UTF-8 with WHATWG replacement (Node `Buffer#toString`). The BOM is **not** stripped by the decoder, but `trim` then removes a leading U+FEFF. Invalid bytes become U+FFFD and stay in the candidate path.
+  - **Failure:** any failure gives "not found" silently: a spawn error, an exit code other than 0 or no exit code, the time limit, the output budget, or empty stdout.
+  - The budget applies **only** to the lookup, never to the `bash` command's output.
+  - Evidence: `data/13-wp133/harness/lookup_probe.mjs` runs the pinned `findBashOnPath` body unchanged, with only the lookup program replaced → `out/lookup-win32.json`. Rows: stdout, stderr and combined at 1048576 (path selected) and at 1048577 (`ENOBUFS`, not found); a BOM before the path; an invalid byte in the path. Controls: an unbounded lookup is killed by the three over-budget rows, and a per-stream budget by the stderr and combined rows.
 
 **The cwd check (`CE-WP133-01`):**
 - `POSIX`: `probe_dir_entry(cwd)` is `Ok` (followed existence).
@@ -2591,7 +2598,8 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - a non-zero exit with no output, which gives `(no output)` (`WP133-CON-R001`);
    - the full-output file's raw bytes;
    - the missing cwd;
-   - the shell-selection branches, using a fake world for the platform branches the host cannot run.
+   - the shell-selection branches, using a fake world for the platform branches the host cannot run;
+   - the lookup rows of `lookup-win32.json` (`WP133-CON-R005`), through a fake lookup program that emits a path and then the given byte counts;
 3. **Binding witnesses:**
    - the `CE-WP133-01` existence differential (descriptor path, dangling `shell_path`, Windows dangling-symlink cwd);
    - the command projection (lone high, lone low, reversed pair, valid pair; argv and stdin);
@@ -2623,6 +2631,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - `""` as the empty text of a non-zero exit (`WP133-CON-R001`);
    - always dropping the partial first line, or never dropping it (`WP133-CON-R002`);
    - scheduling the raw `ms`, or rounding it, instead of `max(1, trunc(ms))` (`WP133-CON-R003`);
+   - an unbounded lookup, or a per-stream lookup budget (`WP133-CON-R005`);
    - a `canonical_path` existence check;
    - an `exists`-based `existsSync`;
    - a following Windows cwd check;

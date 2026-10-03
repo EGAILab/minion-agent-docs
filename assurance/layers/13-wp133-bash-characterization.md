@@ -445,3 +445,35 @@ CONVERGENCE (CE-WP133-01)
 NEXT_OWNER
     Codex (final complete exact-SHA contract review, section 11.8.8)
 ```
+
+## 17. Final complete review 1 and `WP133-CON-R005`
+
+**Codex final complete review 1** (§11.8.8; docs #229 @ `3ec675de`; comment `5971607011`, verbatim): **CHANGES REQUIRED**, one finding, classified **Case A**. `CON-R001`..`R004` and `N001` remain closed. Codex re-ran the boundary, projection and existence probes (byte-identical) and the 36-case Windows probe (equal except the fresh temporary path).
+
+- **`WP133-CON-R005`** (CONTRACT_ASSURANCE_DEFECT). Pinned `findBashOnPath` calls Node `spawnSync` with no `maxBuffer`. Node v22.15.1's default is `1024 * 1024`, and `spawn_sync.cc` counts it **across the captured streams**. Overflow kills the probe with `ENOBUFS`, so the lookup fails. The contract had no budget, so a lookup that prints a valid path followed by too much output was selectable.
+
+**Trigger check (§11.8):**
+- **A** has not fired: R005 is new.
+- **B** has not fired: the lookup's resource bound is a new surface, not output, timers, environment or existence.
+- **C:** this is the second rejected complete contract review, the fourth if both audits count. Codex's classification is Case A, so the next steps are narrow remediation, targeted closure, then the final complete review.
+
+**Pinned source re-audited:** `shell.ts` `findBashOnPath`, both branches, with options `{encoding: "utf-8", timeout: 5000, windowsHide: true}`.
+
+**Node, executed directly** (combined raw bytes → result): stdout only, 1048576 → status 0; 1048577 → `status null`, `ENOBUFS`. The same boundary holds for stderr only and for 524288 + 524288 versus 524289 + 524288.
+
+**Decoding, characterized while here:** `encoding: "utf-8"` is `Buffer#toString`, WHATWG replacement that keeps the BOM. `EF BB BF /b FF \n` decodes to `FEFF 002F 0062 FFFD 000A`, and `trim` removes the leading U+FEFF.
+
+**Remediation:** see spec "The lookup"; feasibility matrix revision 4, lookup row; new `harness/lookup_probe.mjs` → `out/lookup-win32.json`. The probe:
+- slices the pinned `findBashOnPath` and runs it unchanged;
+- replaces only the lookup program, with Pi's options captured and recorded;
+- has 8 rows and 2 controls, and fails on any child error other than `ENOBUFS`. A first draft passed megabytes on the command line, and its children failed with `ENAMETOOLONG`, which would have looked like a refusal; the guard catches that.
+
+The rule changes nothing else: the discovery order, time limit, first-line parsing, existence checks, error text and the `bash` command's own output are unchanged.
+
+```text
+CONVERGENCE (CE-WP133-01)
+OPEN FINDINGS
+    WP133-CON-R005 (remediated, pending targeted closure)
+NEXT_OWNER
+    Codex (targeted closure of R005, then final complete review)
+```
