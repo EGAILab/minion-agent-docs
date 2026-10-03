@@ -55,3 +55,17 @@ The values exist; only the delivery is missing. This is the feasibility gap `WP1
   - `provider: str | None` and `model: str | None` (present whenever an agent runs);
   - `reasoning_level: str | None`, the `ThinkingLevel` value: `"off"` is present, not absent.
   - The object is immutable.
+
+## 4. Contract checkpoint and Python implementation
+
+**Codex contract checkpoint review** (docs #233 @ `7b12f9d0`; comment `5969835839`, verbatim): **APPROVED**, no findings. Codex executed pinned Pi's real `tool-definition-wrapper.ts`. It found the factory called once per `execute`, the explicit-`ctx` path, and no context for a standalone tool.
+
+Its implementation reminders, and how they were met:
+- **Arity.** `_arity` excludes a `context` parameter only when `wants_context` is set. The context-only, update+context, signal+context and signal+update+context dispatch tests pass. A control that counts `context` as positional fails the context-only dispatch.
+- **Snapshot point.** A before-hook changes the source, and `execute` sees the post-hook value. The call order is hook, then provider, then execute. Between two agent-run calls, a change is reflected in the later call, and the earlier snapshot stays frozen. A blocked call never calls the provider. A tool that did not opt in never calls it either.
+- **Isolation.**
+  - `ToolExecutionContext` is a frozen dataclass: setting a field raises.
+  - It holds no agent reference.
+  - Two agents sharing one registration see their own contexts. The registration-time-capture control fails.
+
+**Python candidate:** code minion-agent/pull/137 @ `9ced384e`. Gates: `pytest` 4204 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
