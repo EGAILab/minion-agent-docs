@@ -78,7 +78,9 @@ The tool's `execute` builds the spawn context before calling `exec` (`resolveSpa
 | timeout (`timeout:N` thrown) | **error**: `${text ? text + "\n\n" : ""}Command timed out after ${N} seconds`, where `N` is the seconds value as given |
 | any other thrown error (invalid timeout, shell selection, missing `cwd`, spawn error) | **error**: the error's own message, unchanged. Output, if any, is discarded |
 
-- **Error output is formatted** before the status line (`finishOutput` + `formatOutput(snapshot, "")`), so a truncation notice can precede `Command aborted`.
+- **Error output is formatted** before the status line, so a truncation notice can precede it. **Corrected (`WP133-CON-R001`, §16):** there are two branches.
+  - Abort and timeout are caught and formatted with `formatOutput(snapshot, "")`.
+  - A non-zero exit is classified **after** the ordinary `formatOutput(snapshot)`, whose empty text is `(no output)`. So `exit 255` with no output gives `(no output)\n\nCommand exited with code 255`, as §11 records.
 - **An error result's `details`:** Pi throws, so the error result carries no truncation `details`. Under the certified Layer-06 rule, a thrown error becomes `{content: [text], details: {}}`.
 
 ## 7. Partial updates (`bash.ts:353-401`)
@@ -105,7 +107,7 @@ The tool's `execute` builds the spawn context before calling `exec` (`resolveSpa
 
 **The rolling tail.** The decoded text is kept as a tail.
 - Once over `4 × maxBytes` (204800), it is trimmed to the last `2 × maxBytes` (102400) bytes at a UTF-8 boundary.
-- If the cut is not at a line boundary, the snapshot drops the partial first line.
+- If the cut is not at a line boundary, the snapshot drops the partial first line. **Corrected (`WP133-CON-R002`, §16):** the drop happens only when the tail contains a `\n`. With no `\n`, the whole retained tail is the snapshot text (`getSnapshotText`: `firstNewline === -1 ? this.tailText : …`).
 
 **The temp file.** It is opened when `totalRawBytes > maxBytes`, `totalDecodedBytes > maxBytes` or `totalLines > maxLines`, or by a `persistIfTruncated` snapshot of truncated output.
 - Its path is `join(os.tmpdir(), "pi-bash-" + randomBytes(8).hex + ".log")`.
@@ -363,4 +365,52 @@ EVIDENCE
     out/existence-{node,python}-linux.json (13), out/existence-win32.json (9)
 NEXT_OWNER
     Codex (checkpoint review)
+```
+
+## 16. Contract review 1 and its remediation (`WP133-CON-R001`..`R004`)
+
+**Codex independent contract checkpoint review 1** (docs #229 @ `30972b61`; comment `5971240442`, verbatim): **CHANGES REQUIRED**, four `CONTRACT_ASSURANCE_DEFECT`s. Codex replayed the 36 Windows cases, the projection probe and the existence probe unchanged, and all matched the committed outputs.
+
+**Trigger check (§11.8):**
+- **A** has not fired: each finding is new in this review.
+- **B** is treated as fired: the output surface has produced successors after remediation. Audit 1 raised `R002` (BOM); this review raised `CON-R001` (formatting) and `CON-R002` (rolling tail).
+- **C** fires if the two audits count as complete reviews.
+- The work package is already in `CONTRACT_CONVERGENCE` (`CE-WP133-01`). The four findings are folded into that episode for targeted closure (§11.8.7), then one final complete review (§11.8.8). Codex's evidence narrows each finding to one rule, so a targeted correction can close it.
+
+**Pinned Pi re-audited** (`b7bb00b9`): `bash.ts` `formatOutput`, its caught branch and its completed branch; `output-accumulator.ts` `trimTail` and `getSnapshotText`; `bash.ts` `setTimeout(…, timeoutMs)`. **Node v22.15.1:** `internal/timers` `Timeout` (a delay outside `[1, TIMEOUT_MAX]` becomes 1) and `insert` (`MathTrunc(msecs)`), read from the host's own internals with `--expose-internals`.
+
+| Finding | Rule (now in `spec/tools.md` WP-13.3) | Evidence |
+|---|---|---|
+| `CON-R001` | an execution-completed result, including a non-zero exit, uses `(no output)`; only an abort or a timeout uses `""`; any other error discards output | `out/pi-*.json` `exit/255-no-output`, `exit/one-no-output` (already committed) |
+| `CON-R002` | the `starts_at_line_boundary` flag; a snapshot drops through the first `\n` only when one exists | new `harness/boundary_probe.mjs` → `out/boundary-win32.json` `rolling`: 7 cases on the pinned accumulator |
+| `CON-R003` | the timer is scheduled for `max(1, trunc(timeout × 1000))` whole ms; validation and the status text are unchanged | `out/boundary-win32.json` `timers`: 8 values, the scheduled duration read from Node's timer list |
+| `CON-R004` | the feasibility matrix reconciled (revision 3): F1–F3 resolved by `EXEC-010`/`TOOL-042`, Rust's configured baseline, verdict FEASIBLE; WP-12.E4 is closed in both languages (Rust `a0ff3e47`) | `13-wp133-feasibility-matrix.md` §§1, 2, 3, 6; the revision-2 verdict kept as §6.1 |
+
+**Rolling-tail rows** (`boundary-win32.json`):
+- a single 250000-byte line, in one chunk and in five: content 51200 bytes, one partial line;
+- a single line of `€`, 210000 bytes: 51198 bytes;
+- a mid-line cut with a later newline in the same chunk: the 60000-byte line, partial at 51200;
+- a mid-line cut with the newline in a later chunk: only the 1000-byte `b` line. Here `lastLinePartial` is false and `truncatedBy` is `"bytes"`, from the totals;
+- a cut just after a newline: nothing dropped;
+- exactly 204800 bytes: no trim.
+
+The accumulator and timers are pure JavaScript, so the rows are platform-independent; the Windows run is recorded.
+
+**Timer rows:**
+
+| seconds | 0.0005 | 0.000999 | 0.001 | 0.0019 | 0.0025 | 0.25 | 1.5 | 2147483.647 |
+|---|---|---|---|---|---|---|---|---|
+| scheduled ms | 1 | 1 | 1 | 1 | 2 | 250 | 1500 | 2147483647 |
+
+**New negative controls** (spec, witnesses §4):
+- `""` as a non-zero exit's empty text;
+- always or never dropping the partial first line;
+- scheduling the raw or rounded `ms`.
+
+```text
+CONVERGENCE (CE-WP133-01), targeted closure requested
+OPEN FINDINGS
+    WP133-CON-R001, WP133-CON-R002, WP133-CON-R003, WP133-CON-R004 (remediated, pending closure)
+NEXT_OWNER
+    Codex (targeted closure review of the four findings, with known-bad checks)
 ```

@@ -2509,7 +2509,10 @@ isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:
 - **The command is projected to its scalar form before either transport.** Each unpaired surrogate becomes U+FFFD and a valid pair is kept (`WP133-AUD-R001`; Pi behaves this way on both platforms). The raw-argument carrier is unchanged.
 
 **Run and settlement (`waitForChildProcess`, `EXIT_STDIO_GRACE_MS = 100`):**
-- **Timeout.** Given a timeout, after `ms` the call marks itself timed out and calls `Process.terminate()` (tree kill, Layer 12).
+- **Timeout.** Given a timeout, the call schedules one timer for **`D = max(1, trunc(ms))` whole milliseconds** (`WP133-CON-R003`), where `ms` is the validated binary64 product from step 2. When it fires, the call marks itself timed out and calls `Process.terminate()` (tree kill, Layer 12).
+  - This is Node's own normalization, observed in `data/13-wp133/out/boundary-win32.json` (`timers`). Node's `Timeout` clamps a delay below 1 ms to 1, and `insert` truncates the fractional part. So `0.0005` s and `0.0019` s both schedule 1 ms, and `0.0025` s schedules 2 ms.
+  - `D` affects only when the timer fires. Validation (step 2) and the status text still use the seconds **as given**: `Command timed out after 0.0019 seconds`.
+  - `D` is measured from when the timer is scheduled, after spawn. This WP does not certify how promptly the host fires it.
 - **Abort.** The tool's signal is the spawn-time signal, which kills the tree (Layer 12 §6). The call's own classification (step 8) checks the signal **first**, so an abort during the post-exit grace is "aborted".
 - **Output intake.** Both pipes are read concurrently. Each chunk is accepted in the order its read completes. Cross-pipe order is scheduler-dependent, as in Pi, while the order within each stream is preserved.
 - **Settlement.** The call settles when **both** streams reach EOF after exit, or when **100 ms pass after exit with no further data** (the timer is re-armed by each chunk). It does not settle on `wait()` alone. Pending reads are cancelled at settlement, and later chunks are dropped.
@@ -2525,7 +2528,16 @@ These are the rules of characterization §8, as executed (§§11, 14).
   - Raw bytes, as received.
   - Decoded bytes: the UTF-8 length of the decoded text.
   - Lines: the `\n` count, plus 1 if the last line is open.
-- **The rolling tail.** The decoded text is kept as a tail. Once it exceeds `4 × 51200` bytes it is trimmed to the last `2 × 51200` bytes at a UTF-8 boundary, and the snapshot then drops a partial first line.
+- **The rolling tail** (`trimTail`, `getSnapshotText`; `WP133-CON-R002`). The decoded text is kept as a tail, with a flag `starts_at_line_boundary`, initially true.
+  - **Trim.** When the tail's byte count exceeds `4 × 51200`, it is cut to its last `2 × 51200` bytes. The cut point moves forward to the next UTF-8 character start. If the cut point is past the start, the flag becomes "the byte just before the cut is `\n`"; otherwise it is unchanged. The flag persists across later appends and trims.
+  - **Snapshot.** If the flag is true, the snapshot text is the whole tail. Otherwise it is the tail after its **first `\n`**, and **the whole tail when the tail has no `\n`**. A tail that is one long line is therefore kept, never emptied.
+  - `truncateTail` then applies to that text (below).
+  - Pinned witnesses (`data/13-wp133/out/boundary-win32.json`, `rolling`):
+    - one 250000-byte line, in one chunk or in five, keeps its last 51200 bytes as one partial line;
+    - a 210000-byte line of `€` keeps 51198 bytes;
+    - a cut mid-line with a later newline drops the partial line, whether that newline is in the same chunk or a later one;
+    - a cut just after a newline drops nothing;
+    - exactly 204800 bytes is not trimmed.
 - **The full-output file.** It is opened when raw bytes exceed 51200, decoded bytes exceed 51200, or lines exceed 2000. It is opened with `ctx.fs.create_temp_file("minion-bash-", ".log")`; the prefix follows Q1's namespace and is a mapping of Pi's `tmpdir()/pi-bash-<hex>.log`.
   - It receives the **raw** bytes: the earlier chunks first, then every accepted chunk, through `ctx.fs.append_file`.
   - It is complete before the result is returned.
@@ -2535,7 +2547,11 @@ These are the rules of characterization §8, as executed (§§11, 14).
   - `truncated := lines > 2000 or decoded bytes > 51200`, computed from the **totals**;
   - `truncatedBy := tail's own value, else "bytes" if the byte limit was exceeded, else "lines"`;
   - `lastLinePartial`: the last line alone exceeded the byte limit and was cut at a UTF-8 boundary.
-- **The formatted text** is the snapshot content, or `emptyText` (`"(no output)"` on the success path, `""` on the error paths). When truncated, it is followed by:
+- **The formatted text** is the snapshot content, or `emptyText` if the content is empty (`WP133-CON-R001`). There are two formatting branches:
+  - **Execution completed** (the shell exited and settled, neither aborted nor timed out): `emptyText = "(no output)"`, **whatever the exit code**. A non-zero exit with no output is therefore `(no output)\n\nCommand exited with code 255`.
+  - **Aborted or timed out**: `emptyText = ""`, so a call with no output gives the bare status line, `Command timed out after 0.5 seconds`.
+  - Every other error discards the output and is never formatted.
+  - When truncated, the text is followed by:
   - **partial line:** `\n\n[Showing last ${formatSize(outputBytes)} of line ${totalLines} (line is ${formatSize(lastLineBytes)}). Full output: ${path}]`;
   - **by lines:** `\n\n[Showing lines ${start}-${totalLines} of ${totalLines}. Full output: ${path}]`;
   - **by bytes:** `\n\n[Showing lines ${start}-${totalLines} of ${totalLines} (50.0KB limit). Full output: ${path}]`;
@@ -2553,7 +2569,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
 | timed out | **error**: `${text ? text + "\n\n" : ""}Command timed out after ${timeout} seconds`, where `${timeout}` is ECMAScript `String(seconds as given)`, for example `0.25` |
 | any other error (steps 2, 4 and 5, spawn, the full-output file, a missing prerequisite) | **error**: the error's own message. Collected output is discarded |
 
-- The error paths format the output with `emptyText = ""`, so a truncation notice can precede the status line.
+- The status line is appended to the formatted text of its branch (`(no output)` for a non-zero exit, `""` for an abort or a timeout), so a truncation notice can precede it. Pinned authority: `exit/255-no-output` and `exit/one-no-output` are `(no output)\n\nCommand exited with code …`.
 - Error results carry `details: {}` (the certified Layer 06 thrown-error mapping); Pi throws, so it has no truncation `details`.
 - `details.truncation` is Pi's `TruncationResult`, a closed key set: `content, truncated, truncatedBy, totalLines, totalBytes, outputLines, outputBytes, lastLinePartial, firstLineExceedsLimit, maxLines, maxBytes`. `content` repeats the shown tail. Its key order is outside K1, so objects compare as key sets.
 - The Windows Git Bash external-`SIGKILL` exit code (`2304`) is a platform fact, not a binding choice (characterization §11).
@@ -2569,6 +2585,8 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - split, interrupted, invalid and trailing UTF-8;
    - the BOM rows;
    - the truncation boundaries (2000/2001 lines, 51200/51201 bytes, a partial last line, CRLF, the rolling trim at 369000 bytes);
+   - the rolling-tail rows of `boundary-win32.json`, including a single line above the trim trigger (`WP133-CON-R002`);
+   - a non-zero exit with no output, which gives `(no output)` (`WP133-CON-R001`);
    - the full-output file's raw bytes;
    - the missing cwd;
    - the shell-selection branches, using a fake world for the platform branches the host cannot run.
@@ -2584,6 +2602,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - `bash` lifecycle delegation to `ctx.subprocess` (a recording provider observes the spawn, terminate and signal);
    - zero partial updates with a correct final result;
    - a timeout during output, and an abort during the 100 ms grace;
+   - the scheduled timer duration (`WP133-CON-R003`) for `0.0005`, `0.001`, `0.0019` and `0.0025` seconds (1, 1, 1 and 2 ms), observed through a controllable timer, never by wall-clock latency;
    - a detached descendant holding the pipes, settling in about 100 ms;
    - a stdin-transport child that never reads, still timing out;
    - the factory without `command_prefix` or `spawn_hook`;
@@ -2599,6 +2618,9 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - decoded text written to the full-output file;
    - truncation computed from the tail;
    - status before the truncation notice;
+   - `""` as the empty text of a non-zero exit (`WP133-CON-R001`);
+   - always dropping the partial first line, or never dropping it (`WP133-CON-R002`);
+   - scheduling the raw `ms`, or rounding it, instead of `max(1, trunc(ms))` (`WP133-CON-R003`);
    - a `canonical_path` existence check;
    - an `exists`-based `existsSync`;
    - a following Windows cwd check;
