@@ -487,3 +487,46 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of revision 4)
 ```
+
+## 18. Checkpoint revision 4 review → revision 5
+
+**Codex checkpoint review of revision 4** (code `71af895b` / docs `6e193cbf`; docs #228 comment `5966930055`, verbatim): **CHANGES REQUIRED**.
+- **Agreed:** the P1–P9 provenance distinction, and both R007 witnesses now correct. 83 focused tests passed.
+- **New, `CE-L0206-D001-01-R4-C001`** (CONTRACT_ASSURANCE_DEFECT): references crossing the adopted-native / retained-graph frontier were split.
+  - Revision 4's memo covered only the native frontier. A native child reachable through a retained `JsObject`, and also returned by the shim through a new native parent, was copied there.
+  - Codex executed pinned Pi `prepareToolCall` with real validation: `equal=true`, and a change through one path shows through the other. The candidate gave `equal=false` and `[]`.
+
+**Characterization, extending P1–P9:**
+
+| # | Provenance | Pi | Revision 4 | Revision 5 |
+|---|---|---|---|---|
+| P10 | a container reachable through a retained graph container **and** through a new native parent the shim returned, either encounter order | one object | split (copied on the new path) | **one object, kept as is** |
+| P11 | a cycle crossing the frontier: a new native container points into the graph, and the graph's native contents point back | one object per container | the new container copied | **kept: reachable through the graph** |
+
+**Revision 5 mechanism:** `adopt` takes two passes.
+1. The first pass marks every container at or below any existing `JsObject`/`JsArray` in the value.
+2. The second converts only the unmarked native frontier, reusing each marked container wherever the value places it.
+
+This makes the result independent of encounter order. Observers' containers (P9) and graph containers (P1, P3) keep their identity, and nothing is copied or wrapped. A shim-produced container that the graph also reaches is therefore kept in its attached form (row C), never split.
+
+**Evidence (code #128 @ `19c32c72`):**
+- the crossing witness in both encounter orders, through real `execute_call` (`equal`, identity kept, propagation `["changed"]`);
+- a control reinstating revision 4's frontier-blind `adopt`, which gives `equal=False` and `[]`;
+- a cross-frontier cycle unit test;
+- the reviewer probe `.tmp/k1-review/provenance-crossing.py`: `direct_alias_equal: true`, `alias_equal: true`, `through_old: ["changed"]`;
+- `pytest` **4189 passed**, 29 skipped, 19 xfailed; coverage **100.00%**; `ruff` and `mypy` (98 files) clean.
+
+**Normative delta:** `spec/llm.md`, "Container provenance", gains the crossing-reference bullet.
+
+**§11.8 trigger check:** R4-C001 is the first successor finding of R007, so trigger B is not met. R007 has failed one review: final review 2 raised it, and revision 4 addressed it. Trigger A is not met.
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED (revision 5)
+OPEN FINDINGS
+    L0206-D001-R007, CE-L0206-D001-01-R4-C001
+ACCEPTANCE WITNESSES
+    provenance P1-P11 + 3 controls; adopt unit tests; all earlier matrices, controls and corpus
+NEXT_OWNER
+    Codex (checkpoint review of revision 5)
+```

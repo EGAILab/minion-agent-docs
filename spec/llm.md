@@ -170,6 +170,7 @@ F. direct native-alias observation in the D->E gap -> approved bounded Python di
     Rows C and D apply only to a container an **observer** introduced after it received the arguments. A framework-produced container is never treated as observer-introduced, so the Q1/Q2 interval (row F) never covers it.
     - Identity between a shim's own objects and what an observer receives is **not** preserved. Pinned Pi hands observers a `structuredClone` of the prepared value, never the shim's objects.
     - Aliasing **within** the prepared value is preserved: a container the shim placed twice is one container.
+    - This includes a reference that crosses the frontier (`CE-L0206-D001-01-R4-C001`). A container already reachable through a graph container the pipeline holds is kept as is, wherever else the shim also places it, and in either order. So a hook's change through one path shows through the other, as with Pi's `structuredClone`. Being reachable through the graph, it keeps the form it was attached in (row C).
 
   - **Approved `INTENTIONAL_BOUNDED_DIVERGENCE` (Python binding only; observable, since it can change a hook's decision).** Python cannot intercept arbitrary direct mutation and enumeration performed solely through an externally retained plain-`dict` or `list` alias during an uninterrupted callback. The interval covers two cases:
     - **Q1:** a plain `dict` already attached, then mutated and enumerated directly through the retained alias;
