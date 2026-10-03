@@ -2369,3 +2369,304 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
 - Pi's `WriteOperations`/`EditOperations` override seams: Minion's seam is `ctx.fs` (Layer 12).
 - Lone-surrogate argument decoding (Layer 02/05).
 - `bash` (`WP-13.3`) and `find`/`grep` (`WP-13.4`).
+
+### WP-13.3 — `bash` (`TOOL-034`, `TOOL-035`)
+
+**Status (`minion-agent#50`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+**Requirements:**
+- `TOOL-034`: the argument schema, the absence of a default timeout, shell selection, and command transport;
+- `TOOL-035`: output, meaning accumulation, tail truncation and the full-output file.
+
+**Authorities:**
+- Pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`:
+  - `packages/coding-agent/src/core/tools/{bash,output-accumulator,truncate}.ts`;
+  - `src/utils/{shell,child-process}.ts`.
+- Node v22.15.1.
+- The scoping v4 shell-selection matrix (`assurance/layers/13-built-in-tools-scoping-v4.md`).
+
+**Characterization and evidence:**
+- `assurance/layers/13-wp133-bash-characterization.md` §§1–15;
+- `13-wp133-feasibility-matrix.md` (revised);
+- `data/13-wp133/`.
+
+**Governance:**
+- Owner Q1 (`#50` comment `5945376145`): the session environment;
+- Owner Q2/Q3 (`5950860191`): the final result only; the factory surface;
+- Owner F1–F3 (`5951046523`);
+- `CE-WP133-01`, agreed (`minion-agent-docs#229` comment `5967992802`).
+
+The routine lifecycle is delegated under `minion-agent#75`.
+
+**Consumed lower layers (both CERTIFIED in Python):**
+- `WP-12.E4` (`spec/execution.md` §15): platform, `base_env()` and the §15.5 environment composition;
+- `L0506-D004` (Layer 06, "Per-call tool execution context"): `ToolExecutionContext`.
+
+Like every Layer 13 tool, `bash` reaches the host only through its execution-world seams. Pi's `BashOperations` maps to `ctx.subprocess` (the process lifecycle) and `ctx.fs` (existence checks and the full-output file) (`MINION_ARCHITECTURAL_MAPPING`, Q3 §5). `bash` consumes Layer 12's kill, wait, abort and timeout primitives and redefines none of them.
+
+#### Tool definition (`TOOL-034`)
+
+The model-visible strings are verbatim from pinned Pi.
+
+```text
+bash
+    name         "bash"
+    label        "bash"
+    description  "Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last 2000 lines or 50KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds."
+    parameters   object, required command:
+        command  string  "Bash command to execute"
+        timeout  number  "Timeout in seconds (optional, no default timeout)"   (optional)
+```
+
+- The schema is Pi's TypeBox object: no `additionalProperties` restriction and **no default timeout**.
+- `bash` takes no part in the mutation queue (`TOOL-032`), as in Pi.
+- `promptSnippet`, `promptGuidelines` (Pi's "inspect PI_* environment variables" guideline) and the TUI rendering are Layer 14 or UI concerns, and are not certified here.
+
+#### Factory (Owner Q3)
+
+```text
+create_bash_tool(*, shell_path = absent, expose_session_environment = true)
+    -- plus the execution world: ctx.subprocess and ctx.fs, which must report compatible world identities (section 7)
+```
+
+- **`shell_path`** is the explicit shell override, scoping v4 branch 1. When it is **truthy** (a non-empty string), branch 1 applies. When it is absent or `""`, platform discovery follows.
+- **`expose_session_environment`** defaults to `true` (Q1 + D004).
+- **Not exposed:** `command_prefix`, `spawn_hook` and a raw `operations` object. These are unadopted Pi extension APIs, not divergences.
+- **The working directory** is the `ctx.subprocess` provider's `cwd`. The command has no `cwd` argument.
+- **Activation.** The tool validates `fs` and `subprocess` world compatibility (§7 `validate`). An incompatible pair fails activation with the `ExecutionWorldError`.
+
+#### Execution, in order (`execute`; pinned `bash.ts:325-455`, `createLocalBashOperations.exec`)
+
+```text
+1. spawn context     env = WP-12.E4 section 15.5 composition over ctx.subprocess.base_env() (taken now):
+                       remove exactly MINION_SESSION_ID, MINION_SESSION_FILE, MINION_PROVIDER,
+                       MINION_MODEL, MINION_REASONING_LEVEL;
+                       inject (only if expose_session_environment AND a ToolExecutionContext is present):
+                         MINION_SESSION_ID      = context.session_id                (always)
+                         MINION_SESSION_FILE    = context.session_file              (only if present)
+                         MINION_PROVIDER        = context.provider                  (only if both provider
+                         MINION_MODEL           = context.model                      and model are present)
+                         MINION_REASONING_LEVEL = context.reasoning_level           (only if present and
+                                                                                     non-empty; "off" is present)
+                       then, on WINDOWS, the section 15.5 duplicate arbitration
+2. timeout           absent -> no timeout; non-finite or <= 0 (-0 included) -> Error
+                       "Invalid timeout: must be a finite number of seconds";
+                     timeout * 1000 > 2147483647 -> Error
+                       "Invalid timeout: maximum is 2147483.647 seconds"; else ms = timeout * 1000 (binary64)
+3. abort             a signal already aborted -> "aborted" (result: "Command aborted")
+4. shell             scoping v4 matrix (below) -> {shell, args, transport} | Error
+5. cwd               the cwd existence check (below) -> Error
+                       "Working directory does not exist: ${cwd}\nCannot execute bash commands."
+6. spawn             ctx.subprocess.spawn(argv, SpawnOptions{env, inherit_env=false, stdin, signal})
+7. run               output intake, timeout timer, settlement (below)
+8. classify          signal aborted -> "aborted"; else timed out -> "timeout:${timeout}"; else exit code
+9. result            (below)
+```
+
+- **Steps 2–5 follow Pi's `exec` precheck order.** An invalid timeout is reported before an abort, and an abort before shell or cwd errors. A pre-aborted call never reaches `execute` (Layer 06 preflight, `L13-WP132-R004`). Step 3 is reachable when an abort arrives after preflight.
+- **Q1 and the C003 consequence.** Removal is by exact spelling. An inherited case variant (`Minion_Session_Id`) therefore survives when nothing is injected. When a value is injected, the upper-case name wins Windows arbitration. Pi's `PI_*` variables are ordinary inherited variables and are untouched. No `PATH` entry is added today (Q1 §8).
+
+**Shell selection** (scoping v4, `getShellConfig`; existence per `CE-WP133-01`):
+
+```text
+exists(p)  :=  ctx.fs.probe_dir_entry(p) is Ok        (Pi existsSync; any other Err -> false)
+
+1. shell_path truthy:  exists(shell_path) -> config(shell_path)
+                       else Error "Custom shell path not found: ${shell_path}"
+2. platform WINDOWS (WP-12.E4 platform):
+     candidates, in order, built from base_env() lookups (native Windows comparison):
+       ProgramFiles      (truthy)  -> "${ProgramFiles}\Git\bin\bash.exe"
+       ProgramFiles(x86) (truthy)  -> "${ProgramFiles(x86)}\Git\bin\bash.exe"
+     first existing candidate -> config(it)
+     else findBashOnPath: lookup ["where", "bash.exe"] (below), and if it exits 0 with stdout:
+          first line of trim(stdout) split on /\r?\n/; if non-empty and exists(it) -> config(it)
+     else Error "No bash shell found. Options:\n  1. Install Git for Windows: https://git-scm.com/download/win\n
+                 2. Add your bash to PATH (Cygwin, MSYS2, etc.)\n  3. Set shellPath in settings.json\n\n
+                 Searched Git Bash in:\n" + one "  <candidate>" line per candidate, joined by "\n"
+   platform POSIX:
+     exists("/bin/bash") -> config("/bin/bash")
+     else findBashOnPath: lookup ["which", "bash"] (below), and if it exits 0 with stdout:
+          first line of trim(stdout) split on /\r?\n/; if non-empty -> config(it)   (no existence recheck)
+     else {shell: "sh", args: ["-c"], transport: argv}                           (silent; no error)
+
+config(p) := isLegacyWslBashPath(p) ? {p, ["-s"], stdin} : {p, ["-c"], argv}
+isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:system32|sysnative)\\bash\.exe$
+```
+
+- The Windows error message reproduces Pi's text exactly. The line breaks inside the block above wrap for display only; the real message is one string with the embedded `\n`. "Set shellPath in settings.json" is Pi's text, kept verbatim.
+- `trim` is ECMAScript `String.prototype.trim` (its whitespace set), and `lower` is ECMAScript `toLowerCase`.
+- **The lookup** (Pi `spawnSync("where", ["bash.exe"] | "which", ["bash"], {encoding: "utf-8", timeout: 5000, windowsHide: true})`, Node's default `maxBuffer`; `WP133-CON-R005`, `R006`, convergence `CE-WP133-02`). It is its own composition and does **not** reuse the `bash` command's settlement.
+  - **Spawn** through `ctx.subprocess` with `inherit_env = true`. Read stdout and stderr concurrently from spawn. Start one 5000 ms timer at spawn.
+  - **Collection** ends at the first of these:
+    - **completion:** the process has exited **and** both pipes have reached EOF. There is **no idle grace**: a descendant that inherited the pipes keeps collection open, and its output still counts, until the pipes close or an interruption comes;
+    - **budget interruption:** the running total of raw bytes over **stdout and stderr together** exceeds **1048576**. The chunk that crosses the budget is kept, so the budget is checked after each chunk is stored. A total of exactly 1048576 is not an interruption;
+    - **time interruption:** the 5000 ms timer fires.
+  - **On interruption** (Owner practical-parity decision; **`DIV-001`**, `assurance/pi-divergences.md`):
+    - **If the process has not exited yet,** the lookup calls the certified `Process.terminate()` (§6: tree/group hard kill), and its exit status is whatever `wait()` then reports (§6, `L12-R020`).
+      - An effective hard kill leaves no code on POSIX (`SIGKILL`), and the OS code, commonly `1`, on Windows. Neither is `0`, so nothing is selected.
+      - The kill is best-effort (`CE-WP133-02-C002`). A lookup that completes **naturally** after the interruption decision, but before the kill reaches it, keeps its real code. A real `0` with non-empty stdout is then **selected** by the unchanged predicate, as in Pi, whose `Kill()` also checks the recorded exit first.
+      - The interruption itself never forces "not found".
+      - Pi sends a catchable direct-child `SIGTERM` instead. So on POSIX, a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **selected by Pi and not by Minion**. That is `DIV-001`, an accepted practical-parity divergence. Minion may also end descendants that Pi would leave running.
+    - **If it has already exited,** nothing is terminated and its recorded exit status stands. Pi reports this as `status` 0 with `error` `ENOBUFS` or `ETIMEDOUT`.
+    - **Either way,** reading stops, and later output is not captured.
+  - **Selection.** This is Pi's predicate alone; the interruption is **not** consulted. A path is selected iff the recorded exit status is 0 and the captured stdout, decoded, is non-empty. Its first line after `trim` is then checked as in the matrix above (Windows: `exists`; POSIX: trusted). Any other outcome is "not found", silently. That includes a spawn error, a non-zero exit, no exit status and empty stdout.
+  - **Decoding:** the captured stdout bytes are decoded as UTF-8 with WHATWG replacement (Node `Buffer#toString`). The BOM is **not** stripped by the decoder, but `trim` removes a leading U+FEFF. Invalid bytes become U+FFFD and stay in the candidate path.
+  - **Termination scope.** A descendant still running after its parent has **exited** is never terminated, as in Pi: reading stops and the pipes are released. Only an unexited lookup is terminated, through `terminate()` (`DIV-001`).
+  - The budget and timer apply **only** to the lookup, never to the `bash` command.
+  - Evidence:
+    - `data/13-wp133/harness/lookup_probe.mjs` → `out/lookup-win32.json`: the budget boundary, at 1048576 and 1048577 on each stream mix, and the decoding rows.
+    - `harness/lookup_lifecycle_probe.mjs` → `out/lookup-lifecycle-{win32,linux}.json`.
+      - 15 rows crossing exit status, a pipe-holding descendant, budget, timer and the lookup's `SIGTERM` response. Each row runs the pinned `findBashOnPath` over the real `spawnSync`.
+      - The Minion rule above, composed over an asynchronous spawn with an uncatchable kill, **agrees with Pi on every row except exactly the `DIV-001` rows**: on Linux, the three rows where a trapped `SIGTERM` exits 0. On Windows it agrees on all 15.
+      - A Pi-faithful direct-`SIGTERM` composition is kept as characterization; it agrees everywhere.
+
+**The cwd check (`CE-WP133-01`):**
+- `POSIX`: `probe_dir_entry(cwd)` is `Ok` (followed existence).
+- `WINDOWS`: `file_info(cwd)` is `Ok` (non-following, which matches Node's Windows `access`). A dangling-symlink cwd passes, then fails at spawn.
+- Any other `Err` gives the Pi message in step 5.
+- **`not_supported`** from either probe is a **disclosed prerequisite error**, never absence. It produces `bash requires a filesystem provider that supports <operation>`, where `<operation>` is `probe_dir_entry` or `file_info`.
+
+**Transport and projection:**
+- **argv:** `argv = [shell, ...args, command]`, with stdin `null`.
+- **stdin:** `argv = [shell, ...args]`, with stdin `piped`. The command is written, then the pipe is closed. A write failure is ignored, as Pi's `on("error", () => {})` does. Writing and closing must not block the timeout, abort or output monitoring.
+- **The command is projected to its scalar form before either transport.** Each unpaired surrogate becomes U+FFFD and a valid pair is kept (`WP133-AUD-R001`; Pi behaves this way on both platforms). The raw-argument carrier is unchanged.
+
+**Run and settlement (`waitForChildProcess`, `EXIT_STDIO_GRACE_MS = 100`):**
+- **Timeout.** Given a timeout, the call schedules one timer for **`D = max(1, trunc(ms))` whole milliseconds** (`WP133-CON-R003`), where `ms` is the validated binary64 product from step 2. When it fires, the call marks itself timed out and calls `Process.terminate()` (tree kill, Layer 12).
+  - This is Node's own normalization, observed in `data/13-wp133/out/boundary-win32.json` (`timers`). Node's `Timeout` clamps a delay below 1 ms to 1, and `insert` truncates the fractional part. So `0.0005` s and `0.0019` s both schedule 1 ms, and `0.0025` s schedules 2 ms.
+  - `D` affects only when the timer fires. Validation (step 2) and the status text still use the seconds **as given**: `Command timed out after 0.0019 seconds`.
+  - `D` is measured from when the timer is scheduled, after spawn. This WP does not certify how promptly the host fires it.
+- **Abort.** The tool's signal is the spawn-time signal, which kills the tree (Layer 12 §6). The call's own classification (step 8) checks the signal **first**, so an abort during the post-exit grace is "aborted".
+- **Output intake.** Both pipes are read concurrently. Each chunk is accepted in the order its read completes. Cross-pipe order is scheduler-dependent, as in Pi, while the order within each stream is preserved.
+- **Settlement.** The call settles when **both** streams reach EOF after exit, or when **100 ms pass after exit with no further data** (the timer is re-armed by each chunk). It does not settle on `wait()` alone. Pending reads are cancelled at settlement, and later chunks are dropped.
+- **A spawn failure** (`spawn_error`) is an error result: `Failed to start the shell ${shell}` (Minion-defined; Pi surfaces Node's raw `spawn … ENOENT`).
+- **A pipe failure** (`pipe_error`) ends that stream's intake, as if at EOF. Pi has no handled equivalent.
+
+#### Output (`TOOL-035`; `OutputAccumulator`, `truncateTail`; DIRECT_PI_PARITY)
+
+These are the rules of characterization §8, as executed (§§11, 14).
+
+- **Decoding.** One streaming decoder over the merged chunk sequence: WHATWG UTF-8 with replacement. **Exactly one leading BOM of the whole stream is stripped**, even when split across chunks. A later BOM is kept (`WP133-AUD-R002`). The decoder is flushed at the end, and incomplete trailing bytes become U+FFFD.
+- **Counting.**
+  - Raw bytes, as received.
+  - Decoded bytes: the UTF-8 length of the decoded text.
+  - Lines: the `\n` count, plus 1 if the last line is open.
+- **The rolling tail** (`trimTail`, `getSnapshotText`; `WP133-CON-R002`). The decoded text is kept as a tail, with a flag `starts_at_line_boundary`, initially true.
+  - **Trim.** When the tail's byte count exceeds `4 × 51200`, it is cut to its last `2 × 51200` bytes. The cut point moves forward to the next UTF-8 character start. If the cut point is past the start, the flag becomes "the byte just before the cut is `\n`"; otherwise it is unchanged. The flag persists across later appends and trims.
+  - **Snapshot.** If the flag is true, the snapshot text is the whole tail. Otherwise it is the tail after its **first `\n`**, and **the whole tail when the tail has no `\n`**. A tail that is one long line is therefore kept, never emptied.
+  - `truncateTail` then applies to that text (below).
+  - Pinned witnesses (`data/13-wp133/out/boundary-win32.json`, `rolling`):
+    - one 250000-byte line, in one chunk or in five, keeps its last 51200 bytes as one partial line;
+    - a 210000-byte line of `€` keeps 51198 bytes;
+    - a cut mid-line with a later newline drops the partial line, whether that newline is in the same chunk or a later one;
+    - a cut just after a newline drops nothing;
+    - exactly 204800 bytes is not trimmed;
+    - a newline right after a line longer than the retained tail (`longLineThenNewline`, closure 1 `N001`) drops the whole fragment. The content is **empty**, with `totalLines 1` and `outputLines 0`, so the result is `(no output)\n\n[Showing lines 2-1 of 1 (50.0KB limit). Full output: ${path}]`, which is Pi's own text. With 10 or 2001 short lines after the fragment, only those lines remain (`longLineThenTenLines`, `longLineThen2001Lines`). Keeping the fragment changes the ten-line content, and turns the 2001-line `truncatedBy` into `"lines"`.
+  - Controls, run by the probe as subclasses of the pinned accumulator (`controls`): **always-drop** is killed by the three single-line rows, and **never-drop** by the three `longLineThen*` rows.
+- **The full-output file.** It is opened when raw bytes exceed 51200, decoded bytes exceed 51200, or lines exceed 2000. It is opened with `ctx.fs.create_temp_file("minion-bash-", ".log")`; the prefix follows Q1's namespace and is a mapping of Pi's `tmpdir()/pi-bash-<hex>.log`.
+  - It receives the **raw** bytes: the earlier chunks first, then every accepted chunk, through `ctx.fs.append_file`.
+  - It is complete before the result is returned.
+  - A failure to create it or append to it settles the call as an error, `Cannot write the full-output file: <cause>`, with the `R010-B` cause phrase for the `FsErrorCode`. The process is terminated first (Minion-defined: an unhandled stream error in Pi).
+- **Truncation:**
+  - `truncateTail(tail, maxLines 2000, maxBytes 51200)`;
+  - `truncated := lines > 2000 or decoded bytes > 51200`, computed from the **totals**;
+  - `truncatedBy := tail's own value, else "bytes" if the byte limit was exceeded, else "lines"`;
+  - `lastLinePartial`: the last line alone exceeded the byte limit and was cut at a UTF-8 boundary.
+- **The formatted text** is the snapshot content, or `emptyText` if the content is empty (`WP133-CON-R001`). There are two formatting branches:
+  - **Execution completed** (the shell exited and settled, neither aborted nor timed out): `emptyText = "(no output)"`, **whatever the exit code**. A non-zero exit with no output is therefore `(no output)\n\nCommand exited with code 255`.
+  - **Aborted or timed out**: `emptyText = ""`, so a call with no output gives the bare status line, `Command timed out after 0.5 seconds`.
+  - Every other error discards the output and is never formatted.
+  - When truncated, the text is followed by:
+  - **partial line:** `\n\n[Showing last ${formatSize(outputBytes)} of line ${totalLines} (line is ${formatSize(lastLineBytes)}). Full output: ${path}]`;
+  - **by lines:** `\n\n[Showing lines ${start}-${totalLines} of ${totalLines}. Full output: ${path}]`;
+  - **by bytes:** `\n\n[Showing lines ${start}-${totalLines} of ${totalLines} (50.0KB limit). Full output: ${path}]`;
+  - where `start = totalLines - outputLines + 1`.
+- **`formatSize`:** under 1024 → `${n}B`; under 1 MiB → `${(n/1024).toFixed(1)}KB`; else `${(n/1048576).toFixed(1)}MB` (ECMAScript `toFixed`).
+- **No partial updates (Owner Q2).** `bash` emits **zero** intermediate `tool_execution_update` events. Pi's initial empty update and its 100 ms throttled snapshots are not certified. A future streaming feature is a `MINION_EXTENSION` and must not change the final result.
+
+#### Result (`bash.ts:420-455`)
+
+| Outcome | Result |
+|---|---|
+| exit code `0`, or no exit code (killed by an external signal, with neither abort nor timeout) | **success**: the formatted text. `details` is `{truncation, fullOutputPath}` when truncated, else absent |
+| exit code non-zero | **error**: `${text ? text + "\n\n" : ""}Command exited with code ${code}` |
+| aborted | **error**: `${text ? text + "\n\n" : ""}Command aborted` |
+| timed out | **error**: `${text ? text + "\n\n" : ""}Command timed out after ${timeout} seconds`, where `${timeout}` is ECMAScript `String(seconds as given)`, for example `0.25` |
+| any other error (steps 2, 4 and 5, spawn, the full-output file, a missing prerequisite) | **error**: the error's own message. Collected output is discarded |
+
+- The status line is appended to the formatted text of its branch (`(no output)` for a non-zero exit, `""` for an abort or a timeout), so a truncation notice can precede it. Pinned authority: `exit/255-no-output` and `exit/one-no-output` are `(no output)\n\nCommand exited with code …`.
+- Error results carry `details: {}` (the certified Layer 06 thrown-error mapping); Pi throws, so it has no truncation `details`.
+- `details.truncation` is Pi's `TruncationResult`, a closed key set: `content, truncated, truncatedBy, totalLines, totalBytes, outputLines, outputBytes, lastLinePartial, firstLineExceedsLimit, maxLines, maxBytes`. `content` repeats the shown tail. Its key order is outside K1, so objects compare as key sets.
+- The Windows Git Bash external-`SIGKILL` exit code (`2304`) is a platform fact, not a binding choice (characterization §11).
+
+#### Witnesses and evidence (required before implementation approval)
+
+1. **Pinned-Pi authority.** `data/13-wp133/harness/bash_probe.mjs` runs Pi's own `truncate.ts` and `output-accumulator.ts`, and sliced `shell.ts`, `child-process.ts` and `bash.ts`, across 36 real commands on Windows (Git Bash) and Linux. Its results are the canonical expectations: text, `details`, the full-output file's bytes and size, and status. The update counts are not part of them (Q2).
+2. **Canonical `builtin_tool` scenarios** for `bash`, generated from (1), with per-platform expectations where Node differs. They cover:
+   - exit codes `0`/`1`/`255`;
+   - timeouts, including fractional, invalid and boundary values;
+   - abort before and during the command;
+   - stdout/stderr interleaving;
+   - split, interrupted, invalid and trailing UTF-8;
+   - the BOM rows;
+   - the truncation boundaries (2000/2001 lines, 51200/51201 bytes, a partial last line, CRLF, the rolling trim at 369000 bytes);
+   - the rolling-tail rows of `boundary-win32.json`, including a single line above the trim trigger (`WP133-CON-R002`);
+   - a non-zero exit with no output, which gives `(no output)` (`WP133-CON-R001`);
+   - the full-output file's raw bytes;
+   - the missing cwd;
+   - the shell-selection branches, using a fake world for the platform branches the host cannot run;
+   - the lookup rows of `lookup-win32.json` and `lookup-lifecycle-win32.json` (`WP133-CON-R005`, `R006`), through a fake lookup program. That includes a descendant that writes the path after its parent exits, and an overflow or a time limit after an exit with code 0, both of which still select;
+3. **Binding witnesses:**
+   - the `CE-WP133-01` existence differential (descriptor path, dangling `shell_path`, Windows dangling-symlink cwd);
+   - the command projection (lone high, lone low, reversed pair, valid pair; argv and stdin);
+   - the environment, through the real seams:
+     - stale `MINION_*` replaced when enabled and removed when disabled;
+     - unrelated variables preserved;
+     - `MINION_SESSION_FILE` absent;
+     - no context → removed, nothing injected;
+     - a case variant surviving when nothing is injected;
+   - `bash` lifecycle delegation to `ctx.subprocess` (a recording provider observes the spawn, terminate and signal);
+   - zero partial updates with a correct final result;
+   - a timeout during output, and an abort during the 100 ms grace;
+   - the scheduled timer duration (`WP133-CON-R003`) for `0.0005`, `0.001`, `0.0019` and `0.0025` seconds (1, 1, 1 and 2 ms), observed through a controllable timer, never by wall-clock latency;
+   - a detached descendant holding the pipes, settling in about 100 ms;
+   - a stdin-transport child that never reads, still timing out;
+   - the factory without `command_prefix` or `spawn_hook`;
+   - an incompatible `fs`/`subprocess` world failing activation.
+4. **Negative controls.** Each realistic wrong implementation must fail a witness:
+   - the `ctx.shell` precheck order;
+   - timeout-first classification;
+   - settling on `wait()` alone;
+   - waiting for EOF without grace;
+   - a decoder per stream;
+   - resetting the decoder per chunk;
+   - no BOM strip, or a per-chunk BOM strip;
+   - decoded text written to the full-output file;
+   - truncation computed from the tail;
+   - status before the truncation notice;
+   - `""` as the empty text of a non-zero exit (`WP133-CON-R001`);
+   - always dropping the partial first line, or never dropping it (`WP133-CON-R002`);
+   - scheduling the raw `ms`, or rounding it, instead of `max(1, trunc(ms))` (`WP133-CON-R003`);
+   - an unbounded lookup, or a per-stream lookup budget (`WP133-CON-R005`);
+   - a lookup that settles at exit, or after a 100 ms idle grace; a lookup that fails on any interruption, even after an exit with code 0 (`WP133-CON-R005`, `R006`);
+   - the `DIV-001` witness: a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **not** selected on POSIX. The implementation's own witness pins that its interruption is `terminate()`, not a direct `SIGTERM`;
+   - the `C002` witness: a lookup that completes naturally with 0 between the interruption decision and the kill dispatch **is** selected (`out/lookup-termination-race-{win32,linux}.json`); and its control, which discards that real 0 because an interruption was requested;
+   - a `canonical_path` existence check;
+   - an `exists`-based `existsSync`;
+   - a following Windows cwd check;
+   - case-insensitive `MINION_*` removal;
+   - injecting `"none"` or `""` for absent fields;
+   - partial updates emitted;
+   - projecting the command after transport, or using surrogateescape.
+
+#### Explicitly not certified by WP-13.3
+
+- Pi's TUI rendering, preview and elapsed-time display.
+- `promptSnippet` / `promptGuidelines` (Layer 14).
+- `constrainedSampling`.
+- Live partial updates (Q2).
+- `command_prefix`, `spawn_hook` and Pi's `BashOperations` (Q3).
+- A managed-tool `PATH` entry (Q1 §8).
+- macOS (not observed).
+- Pi's process-global `trackDetachedChildPid` shutdown tracking (not observable by one call).
+- `find`/`grep` (`WP-13.4`).

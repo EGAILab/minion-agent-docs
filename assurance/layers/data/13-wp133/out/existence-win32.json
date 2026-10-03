@@ -1,0 +1,74 @@
+{
+ "runtime": "v22.15.1",
+ "links": {
+  "l_file": "created",
+  "l_dir": "created",
+  "l_dangling": "created",
+  "j_dir": "created"
+ },
+ "cases": [
+  {
+   "path": "$T\\file",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\dir",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\dir\\",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\l_file",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\l_dir",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\l_dangling",
+   "existsSync": false,
+   "accessF_OK": true,
+   "realpath": "ENOENT",
+   "probe_dir_entry_ok": "ENOENT"
+  },
+  {
+   "path": "$T\\j_dir",
+   "existsSync": true,
+   "accessF_OK": true,
+   "realpath": true,
+   "probe_dir_entry_ok": true
+  },
+  {
+   "path": "$T\\missing",
+   "existsSync": false,
+   "accessF_OK": "ENOENT",
+   "realpath": "ENOENT",
+   "probe_dir_entry_ok": "ENOENT"
+  },
+  {
+   "path": "$T\\file\\child",
+   "existsSync": false,
+   "accessF_OK": "ENOENT",
+   "realpath": "ENOENT",
+   "probe_dir_entry_ok": "ENOENT"
+  }
+ ]
+}

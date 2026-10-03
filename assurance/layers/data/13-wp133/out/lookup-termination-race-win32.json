@@ -1,0 +1,12 @@
+{
+ "python": "3.13.5",
+ "platform": "win32",
+ "live_at_interruption": true,
+ "cause": "explicit",
+ "wait_exit_code": 0,
+ "selected": "C:/valid/bash.exe",
+ "control_interruption_forces_no_selection": {
+  "selected": null,
+  "killed": true
+ }
+}
