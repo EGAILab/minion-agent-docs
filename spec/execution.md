@@ -2956,3 +2956,118 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 - Python POSIX's raw-byte inheritance in direct `inherit_env = true` children (`E4-OBS-1`). `bash` never reaches it: it spawns with `inherit_env = false` and the §15.5 view.
 - A managed-tool `PATH` entry. None exists today (Q1, Q3); when one exists, the execution environment supplies it through this baseline.
 - The WP-13.3 `bash` tool itself.
+
+## 16. Layer-12 additive extension `WP-12.E5` — direct-child termination (`EXEC-011`)
+
+**Status (`minion-agent#141`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner decision `CE-WP133-02-C001` = Option 1 (`minion-agent#50` comment `5973189849`). The routine lifecycle is delegated under `minion-agent#75`.
+- **Additivity.** One operation is added to `Process` (§6). Nothing else changes:
+  - `Process.terminate()`, which stays the whole-tree/group hard kill;
+  - spawn, and spawn-time cancellation;
+  - `ctx.shell` timeout, abort and cleanup;
+  - stdio;
+  - cwd and environment;
+  - `ExecutionWorldIdentity`;
+  - WP-12.E4.
+
+  `wait()` changes only where §16.3 defines its interaction with the new operation.
+- **Consumer.** The WP-13.3 `bash` lookup interruption (`minion-agent#50`, convergence `CE-WP133-02`). This extension does not certify that consumer.
+- **Evidence.** `assurance/layers/12-wp12e5-characterization.md` and `assurance/layers/data/12-wp12e5/`.
+- **Classification** (Owner decision §10):
+  - the operation: `MINION_EXTENSION`;
+  - WP-13.3's use of it: `MINION_ARCHITECTURAL_MAPPING`;
+  - the lookup behaviour it reproduces: `DIRECT_PI_PARITY`.
+
+  Pi has no such seam. The operation reproduces the observable effect of Node's `uv_process_kill(process, SIGTERM)`, which is what Pi's `spawnSync` lookup interruption (`spawn_sync.cc` `Kill()`) and `ChildProcess.kill()` both call.
+
+### 16.1 Operation
+
+```text
+Process (section 6), additionally:
+
+terminate_child() -> None    -- a termination REQUEST to the directly spawned process only;
+                                best-effort, must not raise, idempotent
+```
+
+- The exact spelling is the binding's choice.
+- The operation is deliberately narrow, with no signal argument (Owner decision §4). A general `send_signal` would be a separate extension.
+
+### 16.2 Effect
+
+**POSIX:** one `SIGTERM` to the direct child's PID.
+- It never sends `SIGKILL`.
+- It never signals the process group: no `killpg`, no negative PID.
+- It never signals descendants.
+- The child decides what happens next. It may take the default action (terminated by the signal), handle the signal and exit with any code, delay, or ignore it and exit later or never.
+
+**WINDOWS:** termination of the direct child process (`TerminateProcess(handle, 1)`, as libuv's `uv__kill` does for `SIGTERM`).
+- There is no tree traversal and no job-object termination.
+- The process cannot intercept it.
+
+**Both platforms:**
+- **No-op cases.** The operation does nothing if the process has already exited (an exit already observed), if `terminate_child()` was already called, or if `terminate()` was already called.
+  - The first is what libuv returns as `ESRCH` without recording a signal. It also guarantees that a reaped PID is never signalled.
+- **Single delivery.** Only the first effective call sends. That matches Node's `spawn_sync` `Kill()` (`killed_`), which the Pi lookup uses. `ChildProcess.kill()` on POSIX would resend; that is not the authority.
+- **What it does not do:** close or drain stdio, cancel reads, or wait. A consumer that wants those composes them (§6).
+- **Platform.** Which branch applies is chosen by the provider's own `platform` (§15.2). A fake or remote provider implements the platform it declares.
+
+### 16.3 Interaction with `wait()`
+
+- **The final outcome is the child's own** (Owner decision §§5, 7). `wait()` still settles on process exit alone, and still never fabricates completion when a termination is requested.
+
+| Child after `terminate_child()` | `wait()` |
+|---|---|
+| POSIX, default `SIGTERM` action | `Ok(ExitStatus{exit_code: None})` (signal termination) |
+| POSIX, handles it and exits `K` | `Ok(ExitStatus{exit_code: K})`, including `0` |
+| POSIX, delays or ignores it | settles only when the child actually exits, with that outcome |
+| WINDOWS, the termination succeeded (the process was running) | `Ok(ExitStatus{exit_code: None})` |
+| either platform, the process had already exited (no-op) | its real exit code, unchanged |
+
+- **Windows reports no code, deliberately.** On Windows, `exit_code: None` after an effective `terminate_child()` matches Node, which records `exit_signal = SIGTERM` and reports `status: null, signal: "SIGTERM"`. The OS-synthesized code `1` is therefore **not** reported.
+  - This differs from `terminate()`'s Windows outcome (§6, `L12-R020`: the real, commonly `1`, code is preserved). The difference is intended: each operation's result follows its own authority.
+- **Cause classification (§6) is unchanged.** `terminate_child()` is a request, not a claim; it does not set the first-claim cause.
+  - A later abort of the spawn-time signal while the process is still running still claims `SIGNAL`, tree-kills, and `wait()` returns `Err(aborted)`.
+  - A later `terminate()` still claims `EXPLICIT` and tree-kills.
+  - With neither, `wait()` returns `Ok(...)` per the table.
+
+### 16.4 Acceptance witnesses (Owner decision §12)
+
+Each witness runs through the real local provider seam. POSIX rows run on a POSIX host; the Windows rows run on Windows.
+
+1. POSIX, default disposition → `exit_code: None`.
+2. POSIX, `SIGTERM` handled by exiting 0 → `0`.
+3. POSIX, handled by exiting 7 → `7`.
+4. POSIX, a handler that exits after 500 ms → `wait()` has not settled after the request, then settles with `0`. A child that ignores the signal and exits on its own later behaves the same.
+5. POSIX, direct child only: a descendant **in the child's own process group** survives `terminate_child()` (it writes a marker after the parent's exit), while `terminate()` on a twin child kills that descendant.
+6. `terminate()` is unchanged: the group/tree hard kill (the existing §10 witnesses still pass).
+7. WINDOWS: a running child → `exit_code: None`. A descendant spawned outside the child's job survives.
+8. Idempotence:
+   - a second `terminate_child()` sends nothing (POSIX: a child that counts `SIGTERM`s sees one);
+   - after the child exited, the call is a no-op and the real code stands;
+   - after `terminate()`, it is a no-op.
+9. The WP-13.3 discriminator, at the `bash` binding level (`minion-agent#50`): a lookup that prints a path, is still alive at the timer or budget, handles `SIGTERM` and exits 0 is **selected**. This is recorded here and certified by WP-13.3.
+
+**Authority evidence:** `data/12-wp12e5/harness/kill_probe.mjs`, run with Node v22.15.1 on Windows and on Linux (`node:22.15.1-bookworm-slim`), produces `out/kill-{win32,linux}.json`. Rows 1–5 and 7–8 match it.
+
+### 16.5 Negative controls (Owner decision §13)
+
+Each must fail a witness:
+- `terminate_child()` implemented as `terminate()`, killed by witnesses 2 and 5;
+- POSIX `SIGKILL` instead of `SIGTERM`, killed by 2, 3 and 4;
+- POSIX group signalling (`killpg` or a negative PID), killed by 5;
+- a handled exit 0 reported as no status, killed by 2;
+- a delayed exit reported as immediate completion, killed by 4;
+- resending on a repeated call, killed by 8;
+- Windows reporting the synthesized `1`, killed by 7;
+- a Windows tree or job kill, killed by 7's descendant;
+- `terminate_child()` claiming the cause, so that a later signal abort is not `Err(aborted)`, killed by a §16.3 interaction witness.
+
+The WP-13.3 controls (an interruption treated as unconditional failure, selection on liveness at interruption) belong to WP-13.3.
+
+### 16.6 Not certified by WP-12.E5
+
+- Any signal other than `SIGTERM`; a general signal API.
+- Termination of descendants by this operation.
+- Changes to `terminate()`, spawn-time cancellation or `ctx.shell`.
+- The WP-13.3 `bash` lookup itself.
