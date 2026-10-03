@@ -256,3 +256,26 @@ So **no provider behavior changes**. WP-13.3's composition applies the rule to t
   - `process.env['Qß']` reads `sharp` and `process.env['Qı']` reads `dotless`.
 
 These reproduce Codex's review probes independently.
+
+## 10. Contract re-review and Python implementation
+
+**Codex targeted re-review** (docs #230 @ `6d8572d2`; comment `5969835483`, verbatim): **APPROVED**. `WP12E4-CON-R001` and `R002` are closed contract-side, and the non-ASCII probes were replayed byte-identical.
+
+**Python implementation** (code `minion-agent#138` @ `cedf9bec`):
+
+- **Provider.**
+  - `Platform` and the read-only `EnvSnapshot`.
+  - `LocalSubprocess.base_env()` and `_effective_env` both read `local_baseline()`, which keeps the C002 invariant.
+  - On Windows that source is `GetEnvironmentStringsW`.
+  - The `=`-prefixed per-drive records (`=C:=C:\`) are **excluded**. They are not variables. Observed under `cmd.exe`, `os.environ` and Node's `process.env` both omit them (scratch probe 2026-10-04). Disclosed here for the reviewer.
+- **Windows lookup.** It uses the OS's `CompareStringOrdinal(ignoreCase)`. A fake Windows world on a POSIX host has no OS to ask, so it falls back to ASCII-only folding. That agrees with the native comparison on every ASCII name, and the specified consumers look up only ASCII names.
+- **Consumer composition** (`tools/builtin/environment.py`):
+  - Node's view, through UTF-8 with `surrogateescape` on POSIX and `surrogatepass` on Windows, then strict name decoding and `replace` value decoding.
+  - Removal by exact spelling, then injection.
+  - On Windows, arbitration keyed by `upper_unicode16`: ICU root full uppercase filtered to `[:age=16.0:]`, the same pattern as WP-13.2's NFKC. The UTF-16-first name wins.
+- **Evidence.**
+  - Pinned-Node rows: all POSIX values, invalid and valid names, Windows lone surrogates, and the non-ASCII and ASCII duplicate pairs in both orders.
+  - C002 witnesses A–D: a snapshot, an `inherit_env=True` child and a `base_env()+inherit_env=False` child, compared by reading the child's **native** block. The rebuilt child equals the inheriting child exactly.
+  - Isolation and per-drive records.
+  - The Owner's negative controls: the `os.environ` baseline, a mismatched inherit source, a construction-time cache, per-surrogate replacement, BOM stripping, keeping an invalid name, lowercase / casefold / ASCII-only equivalence, last-inserted arbitration, and reading the host environment.
+- **Gates.** `pytest` 4224 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` (100 files) clean.
