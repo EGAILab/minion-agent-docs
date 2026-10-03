@@ -530,3 +530,27 @@ ACCEPTANCE WITNESSES
 NEXT_OWNER
     Codex (checkpoint review of revision 5)
 ```
+
+## 19. Revision 5 agreed → targeted closure 4 → freeze
+
+**Codex checkpoint review of revision 5** (docs #228 comment `5967992499`): **APPROVED**, so revision 5 is AGREED.
+
+**Codex targeted closure 4** (code `19c32c72` / docs `17e37ed0`; docs #228 comment `5968076614`): **R007 and R4-C001 PROVISIONALLY CLOSED**.
+- Known-bad RED: at `08c01c27`, 5 failed (R007); at `71af895b`, 2 failed (R4-C001), both encounter orders.
+- 87 + 65 focused tests passed.
+
+**Disclosed gate:** `test_wp132_key_order_independence.py::test_an_order_dependent_output_is_detected` failed in the reviewer's environment, and at the rejected source too.
+- **Cause (reproduced):** it depends on the environment. Without the pinned ICU, `edit` cannot run, so every `edit` variant errors identically.
+  - The leaky-output control's `pytest.raises` is not met (DID NOT RAISE).
+  - Worse, the positive `edit` independence witnesses pass **vacuously**.
+  - With the pinned ICU, all of them pass and the control discriminates.
+- **Remediation** (code `minion-agent#128`, test-only): a prerequisite guard asserts that a real `edit` succeeds. It is used by the control and by a standalone `test_the_edit_witnesses_are_not_vacuous`. A missing ICU now fails loudly with the cause, and nothing passes vacuously.
+  - Results: no ICU gives 2 failed with the explicit message; pinned ICU gives 11 passed.
+- No production code changed. The K1 normalization was not weakened.
+
+**Frozen candidate for the §11.8.8 final complete review:**
+- code `minion-agent#128` (this commit's successor, recorded on #100);
+- docs `minion-agent-docs#228`, this section.
+
+**Gates:** `pytest` **4190 passed**, 29 skipped, 19 xfailed; coverage **100.00%**; `ruff` and `mypy` (98 files) clean.
+- The reviewer environment needs the pinned ICU (`scripts/pinned-icu/build.sh --env`) for the `edit`-dependent tests, as disclosed in final reviews 1 and 2.
