@@ -99,3 +99,16 @@ Codex's separate old-versus-candidate fake-POSIX lookup probe confirms the I003 
 - **Witness:** assigning `platform` raises `AttributeError`, and the declaration and later snapshots keep the original family.
 - **Known-bad:** at `d2abf19c` the witness fails (DID NOT RAISE).
 - **Gates:** `pytest` 4239 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+## 6. Post-closure note: the pinned table's digest (`E4-OBS-4`)
+
+The Rust closure review (docs #235 comment `5971298604`) found that the digest recorded in §5, `78580c21…`, is the SHA-256 of the table's **CRLF working-tree form** on a Windows checkout. It is not the hash of the committed Python blob.
+
+| Form | Bytes | SHA-256 |
+|---|---|---|
+| Python git blob (`minion-agent-python/src/minion_agent/execution/windows_upcase.json`, LF) | 15796 | `4569c25c4da8af98cbf25762f71d0b02a0cb1fe42aadb704c9acea7d993c1cf6` |
+| CRLF form: a Windows checkout of the Python file, and the Rust vendored copy (committed with `-text`) | 16776 | `78580c216df002802980880f491c6ef31dc594f8c8ca2cb23f27b0d90f637df8` |
+
+- **The pin's identity is the parsed table, not the file's bytes.** It is the 973-unit `map` plus `source`, `units_mapped` and `windows_build`, and the two forms are identical when parsed.
+- Python parses the JSON and never hashes it. Rust hashes its own `-text` copy, so its check is stable on every host.
+- No behaviour changes and no contract rule changes. This note corrects only how the digest was stated; §5 is kept as written.
