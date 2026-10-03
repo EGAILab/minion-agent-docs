@@ -69,3 +69,22 @@ Its implementation reminders, and how they were met:
   - Two agents sharing one registration see their own contexts. The registration-time-capture control fails.
 
 **Python candidate:** code `minion-agent#137` @ `9ced384e`. Gates: `pytest` 4204 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+## 5. Implementation review 1 and remediation
+
+**Codex Python implementation review 1** (code #137 @ `9ced384e` / docs #233 @ `e1cbb5c1`; comment `5969963662`, verbatim): **CHANGES REQUIRED**.
+
+- **`L0506-D004-I001`** (PI_PARITY_DEFECT): `context_provider()` ran before the `try` around `execute`, so a failing provider escaped `execute_call`. Pinned Pi calls the factory inside the wrapped `execute`, which `executePreparedToolCall` guards, so a factory failure is an ordinary per-call execution failure.
+- **`L0506-D004-I002`** (CONTRACT_ASSURANCE_DEFECT): the per-call evidence used separate batches, so a once-per-batch capture survived all 14 tests.
+
+**Remediation:** code #137 @ `fcb08ca0`.
+
+- **I001.** The provider is now evaluated inside the execute failure boundary, at the same snapshot point. Witnesses:
+  - a direct `execute_call` with a raising provider settles as an error result carrying the message; the tool body does not run, and `on_execution_end` runs with `is_error`;
+  - in a sequential batch, the first call's provider fails and only that call errors, while the healthy sibling runs.
+- **I001 control.** Evaluating the provider outside the boundary (the rejected placement) lets `RuntimeError` escape. Both I001 witnesses **fail at the rejected source `9ced384e`** (§11.8.7.1).
+- **I002.** Two calls in **one** sequential batch, through real `execute_batch`, observe `["first", "second"]` with the provider called twice. The once-per-batch control observes `["first", "first"]`, called once.
+- **I002, agent-driven variant.** One model reply carries two calls to a sequential tool, and the second call sees the model the first call set.
+- **Unchanged.** I002 needed no production change: the per-call sampling was already correct, as Codex observed.
+
+**Gates:** `pytest` 4210 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
