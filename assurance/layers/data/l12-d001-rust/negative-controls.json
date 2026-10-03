@@ -1,0 +1,196 @@
+{
+  "authority": "L12-D001 accepted contract; source mutations run individually and restored after each run",
+  "controls": [
+    {
+      "id": "early-tool-projection",
+      "file": "src/tools/builtin/paths.rs",
+      "before": "PreparedValue::String(path) => Some(FsPath::from_code_units(path.code_units().to_vec())),",
+      "after": "PreparedValue::String(path) => Some(String::from_utf16_lossy(path.code_units()).into()),",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (11832) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-tools\" / \"tools/lone-high-middle\" step 0\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.65s"
+      }
+    },
+    {
+      "id": "tool-text-projection",
+      "file": "src/tools/builtin/paths.rs",
+      "before": "    FsPath::from_code_units(units)\n}",
+      "after": "    String::from_utf16_lossy(&units).into()\n}",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (2940) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-tools\" / \"tools/lone-high-middle\" step 0\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.68s"
+      }
+    },
+    {
+      "id": "non-scalar-refusal",
+      "file": "src/tools/builtin/paths.rs",
+      "before": "PreparedValue::String(path) => Some(FsPath::from_code_units(path.code_units().to_vec())),",
+      "after": "PreparedValue::String(path) => path.as_str().map(FsPath::from),",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (15108) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-tools\" / \"tools/lone-high-middle\" step 0\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.67s"
+      }
+    },
+    {
+      "id": "ls-dot-substitution",
+      "file": "src/tools/builtin/ls.rs",
+      "before": "                    .and_then(argument_path)",
+      "after": "                    .and_then(argument_path)\n                    .filter(|path| path.as_str().is_some())",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (21592) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-tools\" / \"tools/lone-high-middle\" step 3\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.45s"
+      }
+    },
+    {
+      "id": "raw-native-units",
+      "file": "src/execution/path.rs",
+      "before": "    PathBuf::from(String::from_utf16_lossy(path.code_units()))",
+      "after": "    #[cfg(windows)] { use std::os::windows::ffi::OsStringExt; PathBuf::from(std::ffi::OsString::from_wide(path.code_units())) }\n    #[cfg(not(windows))] { PathBuf::from(String::from_utf16_lossy(path.code_units())) }",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (48568) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-alias\" / \"alias/file\" step 5\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      }
+    },
+    {
+      "id": "codec-exception",
+      "file": "src/execution/path.rs",
+      "before": "    PathBuf::from(String::from_utf16_lossy(path.code_units()))",
+      "after": "    PathBuf::from(String::from_utf16(path.code_units()).expect(\"host codec refused path\"))",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (6588) panicked at crates\\minion-agent\\src\\execution\\path.rs:12:57:\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      }
+    },
+    {
+      "id": "valid-pair-replacement",
+      "file": "src/execution/path.rs",
+      "before": "    PathBuf::from(String::from_utf16_lossy(path.code_units()))",
+      "after": "    let units: Vec<u16> = path.code_units().iter().map(|u| if (0xd800..=0xdfff).contains(u) { 0xfffd } else { *u }).collect();\n    PathBuf::from(String::from_utf16_lossy(&units))",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (42780) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-file-url\" / \"file-url/raw-pair\" step 2\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s"
+      }
+    },
+    {
+      "id": "raw-directory-component",
+      "file": "src/execution/path.rs",
+      "before": "    PathBuf::from(String::from_utf16_lossy(path.code_units()))",
+      "after": "    #[cfg(windows)] {\n        use std::os::windows::ffi::OsStringExt;\n        let units = path.code_units();\n        let split = units.iter().rposition(|u| *u == 47 || *u == 92).map_or(0, |i| i + 1);\n        let mut wrong = units[..split].to_vec();\n        wrong.extend(String::from_utf16_lossy(&units[split..]).encode_utf16());\n        PathBuf::from(std::ffi::OsString::from_wide(&wrong))\n    }\n    #[cfg(not(windows))] { PathBuf::from(String::from_utf16_lossy(path.code_units())) }",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (18372) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-alias\" / \"alias/dir\" step 5\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+      }
+    },
+    {
+      "id": "project-missing-key",
+      "file": "src/execution/filesystem.rs",
+      "before": "                absolute\n            }",
+      "after": "                from_native(&native(&absolute))\n            }",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (12536) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-alias\" / \"alias/file\" step 0\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      }
+    },
+    {
+      "id": "logical-existing-key",
+      "file": "src/execution/filesystem.rs",
+      "before": "            Ok(canonical) => canonical,",
+      "after": "            Ok(_canonical) => absolute.clone(),",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (1320) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-alias\" / \"alias/file\" step 7\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      }
+    },
+    {
+      "id": "requested-target-origin",
+      "file": "src/execution/filesystem.rs",
+      "before": "            node_mkdirp(parent)\n                .await\n                .map_err(|e| logical_fallback(e, &logical))?;",
+      "after": "            node_mkdirp(parent)\n                .await\n                .map_err(|e| e.with_path(from_native(&os)))?;",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (44532) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-error-origin\" / \"error/scalar/parent-file/write\" step 1\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+      }
+    },
+    {
+      "id": "platform-create-all",
+      "file": "src/execution/filesystem.rs",
+      "before": "    node_mkdirp_with(path, &TokioMkdirOperations).await",
+      "after": "    tokio::fs::create_dir_all(path).await.map_err(|e| native_error(e, path))",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (9744) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-error-origin\" / \"error/scalar/grandparent-file/write\" step 1\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s"
+      }
+    },
+    {
+      "id": "listing-directory-origin",
+      "file": "src/execution/filesystem.rs",
+      "before": "            entries.push(self.info_for(&entry_path).await?);",
+      "after": "            entries.push(self.info_for(&entry_path).await.map_err(|e| e.with_path(from_native(&os)))?);",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test execution::filesystem::tests::list_dir_failure_names_the_vanished_native_entry_not_the_directory ... FAILED\nthread 'execution::filesystem::tests::list_dir_failure_names_the_vanished_native_entry_not_the_directory' (17516) panicked at crates\\minion-agent\\src\\execution\\filesystem.rs:1329:9:\nassertion `left == right` failed\n  left: Some(ResultString { units: JsString([67, 58, 92, 85, 115, 101, 114, 115, 92, 101, 114, 105, 99, 107, 92, 65, 112, 112, 68, 97, 116, 97, 92, 76, 111, 99, 97, 108, 92, 84, 101, 109, 112, 92, 109, 105, 110, 105, 111, 110, 45, 108, 105, 115, 116, 45, 111, 114, 105, 103, 105, 110, 45, 49, 102, 50, 97, 53, 54, 49, 55, 45, 98, 99, 57, 101, 45, 52, 98, 97, 53, 45, 57, 98, 101, 102, 45, 102, 98, 52, 49, 51, 57, 51, 53, 99, 97, 56, 49, 92, 100, 65533]), scalar: Some(\"C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\minion-list-origin-1f2a5617-bc9e-4ba5-9bef-fb413935ca81\\\\d�\") })\n right: Some(ResultString { units: JsString([67, 58, 92, 85, 115, 101, 114, 115, 92, 101, 114, 105, 99, 107, 92, 65, 112, 112, 68, 97, 116, 97, 92, 76, 111, 99, 97, 108, 92, 84, 101, 109, 112, 92, 109, 105, 110, 105, 111, 110, 45, 108, 105, 115, 116, 45, 111, 114, 105, 103, 105, 110, 45, 49, 102, 50, 97, 53, 54, 49, 55, 45, 98, 99, 57, 101, 45, 52, 98, 97, 53, 45, 57, 98, 101, 102, 45, 102, 98, 52, 49, 51, 57, 51, 53, 99, 97, 56, 49, 92, 100, 65533, 92, 101, 110, 116, 114, 121]), scalar: Some(\"C:\\\\Users\\\\erick\\\\AppData\\\\Local\\\\Temp\\\\minion-list-origin-1f2a5617-bc9e-4ba5-9bef-fb413935ca81\\\\d�\\\\entry\") })\ntest result: FAILED. 10 passed; 1 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.02s"
+      }
+    },
+    {
+      "id": "failed-stat-exists",
+      "file": "src/execution/filesystem.rs",
+      "before": "                        return Err(FsError::new(FsErrorCode::NotDirectory, \"not a directory\")",
+      "after": "                        return Err(FsError::new(FsErrorCode::Unknown, \"already exists\")",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test execution::filesystem::tests::mkdir_walk_failed_stat_is_enotdir_only_with_pending_children ... FAILED\nthread 'execution::filesystem::tests::mkdir_walk_failed_stat_is_enotdir_only_with_pending_children' (24692) panicked at crates\\minion-agent\\src\\execution\\filesystem.rs:1357:9:\nassertion `left == right` failed\ntest result: FAILED. 10 passed; 1 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.02s"
+      }
+    },
+    {
+      "id": "enclosing-catch-carrier",
+      "file": "src/execution/filesystem.rs",
+      "before": "                if e.path.is_none() {",
+      "after": "                if true {",
+      "test": "corpus",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "test full_accepted_fs_path_domain_corpus ... FAILED\nthread 'full_accepted_fs_path_domain_corpus' (11488) panicked at crates\\minion-agent\\tests\\fs_path_domain_conformance.rs:191:17:\nassertion `left == right` failed: \"fs-path-error-origin\" / \"error/lone/parent-file/remove\" step 1\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s"
+      }
+    },
+    {
+      "id": "recursive-root-origin",
+      "file": "src/execution/filesystem.rs",
+      "before": "                    remove_addressed(&entry.path(), true, force).await?;",
+      "after": "                    remove_addressed(&entry.path(), true, force).await.map_err(|e| e.with_path(from_native(path)))?;",
+      "test": "non-root-linux",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "Real non-root Linux binding witness failed: returned t<FFFD>, expected t<FFFD>/x; other five focused tests passed. Canonical 127 cases still passed, showing this binding witness covers the missing interleaving/origin neighborhood."
+      }
+    },
+    {
+      "id": "nul-native-origin",
+      "file": "src/execution/filesystem.rs",
+      "mode": "replace_file_with_historical_blob",
+      "revision": "a55bfb118f4d27c6e919d26d8daf9db5098c6cd2",
+      "git_path": "minion-agent-rust/crates/minion-agent/src/execution/filesystem.rs",
+      "test": "cargo test --all-features --test fs_path_domain nul_binding_refusals",
+      "result": {
+        "exit": 101,
+        "killed": true,
+        "witness": "operation 0 (write_file), unchanged code Invalid: native U+FFFD in returned path, expected logical U+D800. Restored carrier fix passes all thirteen operations plus parent-mkdir and rename fallback witnesses."
+      }
+    }
+  ]
+}
