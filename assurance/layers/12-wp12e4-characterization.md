@@ -116,3 +116,52 @@ WP12E4-C003  WP-13.3 consequence (Pi parity, recorded)  case-variant inherited M
 No finding here needs a new Owner decision.
 - **C001** and **C003** follow Pi.
 - **C002** is a binding-level representation fix. The decision delegated API spelling and representation (§§1, 5).
+
+## 6. Independent audit 1 and Owner decision C002
+
+**Codex audit 1** (docs #230 @ `740c9a03`; comment `5965735488`, verbatim):
+- C001 and C003 are **confirmed**. All four probes reproduced.
+- **`WP12E4-AUD-R001`:** C002 changes certified Layer 12 behavior, so it went to the Owner.
+
+**Owner decision C002 = Option B** (`minion-agent#130` comment `5966459749`, verbatim). The baseline of the Python **Windows** local provider becomes the **live native process environment**, for `base_env()` and for `inherit_env = true` alike. This is a scoped amendment, not a divergence and not a Layer 12 reopen. POSIX is unchanged.
+- Original spelling is kept.
+- Native-only variables (`os.putenv`) are included.
+- Removals are honored.
+- The snapshot is taken per request.
+- §9's witnesses A–D and §13's negative controls bind the contract.
+
+R4 and C002 in §4 and §5 above are superseded by this decision. The text is kept as reviewed.
+
+## 7. Non-Unicode values and snapshot timing (audit 1, Rust note; decision C002 §12)
+
+**Node** is the authority here (`data/12-wp12e4/harness/nonutf8.sh`, `out/node-nonutf8-linux.json`, `node:22.15.1-bookworm-slim`).
+- A POSIX environment value with invalid UTF-8 (`61 FF 62`) is decoded **lossily** into `process.env`: `a�b`.
+- A child receives the re-encoded scalar form, `61 EF BF BD 62`. This holds for an explicit `env` object, which is what Pi's `bash` always passes, and for the default inherited environment.
+- Node also re-reads `process.env` live at each spawn.
+
+**CPython 3.12, POSIX** (`nonutf8py.sh`, `out/python-nonutf8-linux.json`):
+- `os.environ` keeps the byte through surrogateescape (`'a\udcffb'`).
+- `subprocess` hands the child the **raw** byte (`61 FF 62`).
+
+**Rust**, accepted `main` `4c735ed6` (read-only; audit 1):
+- `LocalSubprocess` captures `std::env::vars()` **once, at construction**, into `BTreeMap<String, String>`. `inherit_env = true` spawns `env_clear()` plus that map plus the overlay.
+- `vars()` **panics** if any host name or value is not Unicode.
+- `with_base_env` lets a test or fake world supply the map.
+
+**Disposition:**
+
+1. **The bash path needs no provider change.** WP-13.3 always spawns with `inherit_env = false` and the environment it built (decision §6). The WP-13.3 contract projects that environment's names and values to their **scalar form** (each unpaired surrogate or surrogateescape byte → U+FFFD) at the spawn boundary, as it does for `command` (`WP133-AUD-R001`).
+   - This reproduces Node's child-observed bytes on every platform.
+   - It changes no certified provider behavior.
+2. **`base_env()` reports the provider's baseline as it stands when called.** That baseline is:
+   - the live native environment for Python on Windows (C002);
+   - the current `os.environ` for Python on POSIX (unchanged);
+   - the configured map for Rust's `LocalSubprocess` (captured at construction, or supplied by `with_base_env`).
+
+   In every case `base_env()` equals what `inherit_env = true` would inherit at that moment, which is the decision §1/§2 invariant.
+3. **Recorded separately, per decision §6 and §12; not resolved here:**
+   - **`E4-OBS-1` (Python, POSIX):** direct `inherit_env = true` children receive raw non-UTF-8 bytes, where Node children receive U+FFFD. Not reached by `bash` (disposition 1).
+   - **`E4-OBS-2` (Rust):** the construction-time capture does not see host environment changes made later, while Node reads live. Rust Minion code is not known to mutate the host environment.
+   - **`E4-OBS-3` (Rust):** a non-Unicode host environment panics provider construction.
+
+   Each changes certified behavior only if acted on. Under decision §12 they are not acted on in E4 without a separate decision. The Rust owner sees them through the handoff.
