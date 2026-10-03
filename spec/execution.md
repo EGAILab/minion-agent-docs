@@ -2782,6 +2782,12 @@ base_env() -> EnvSnapshot            -- a snapshot taken when called (Owner F1, 
 
 - The exact API spelling is the binding's choice (property or method, enum or constant).
 - **`base_env()` does not fail.** It returns the baseline the provider's own `inherit_env = true` spawn would use. A provider that cannot spawn at all reports that through `spawn`'s existing `spawn_error`, which is unchanged.
+- **`EnvSnapshot` is read-only and isolated** (Owner F1, sections 1, 2 and 12; `WP12E4-CON-R001`).
+  - The public API exposes **no mutator**. A binding may use an immutable owned value or a read-only view; a write is either impossible or refused.
+  - A snapshot is **isolated** from the provider:
+    - a later change to the provider's baseline does not change a snapshot already obtained, and a later `base_env()` sees the change;
+    - nothing done with a snapshot, or with a copy of it, changes the provider's baseline or a later `inherit_env = true` child.
+  - A consumer that needs to edit the environment makes its own **mutable copy** (F1 section 6) and edits that.
 
 ### 15.2 `platform`
 
@@ -2817,9 +2823,9 @@ The consumer's projection (§15.5) needs the native form. A binding that substit
 | Platform | Snapshot entries | Lookup |
 |---|---|---|
 | `POSIX` | exact names; at most one entry per exact name | exact |
-| `WINDOWS` | the **spelling the baseline holds** is kept; at most one entry per **case-insensitive** name | case-insensitive |
+| `WINDOWS` | **exactly the entries the native baseline holds**, with their spelling. E4 imposes no deduplication: the native block can hold names that differ only by a non-ASCII case distinction (`Qß` and `Qss`; `Qı` and `QI`), and they stay distinct entries (`WP12E4-CON-R002`) | the **native** Windows environment-name comparison, as the OS's own lookup applies it (Node's `process.env` read on Windows goes through it). `ProgramFiles` finds `PROGRAMFILES` or any other ASCII case. The distinct native names above keep their own values |
 
-On `WINDOWS`, looking up `ProgramFiles` finds an entry spelled `PROGRAMFILES`, `ProgramFiles` or any other case. This is Node's `process.env` lookup (characterization N1).
+Only ASCII names are looked up by the specified consumers (`ProgramFiles`, `ProgramFiles(x86)`, `PATH`), where every case-insensitive comparison agrees. The native comparison is named so that a binding does not substitute Node's consumer-stage key (§15.5) or a host casefold for it.
 
 **Entry order** in the snapshot is **not** normative, and no observable result may depend on it. Where Windows duplicate arbitration needs an order, §15.5 defines it.
 
@@ -2881,8 +2887,10 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 - **Strings to OS.** Every name and value in the built environment is a scalar string: the decoded view is scalar, and the injected values are Minion-generated.
   - The JavaScript-string → OS projection (each unpaired surrogate → U+FFFD; WP-13.3 `WP133-AUD-R001`) is therefore the identity here.
   - That projection is a **separate** boundary and must not be conflated with the decode above (WP-12.E4 audit 2).
-- **`WINDOWS` duplicate arbitration** (characterization N3, C001).
-  - When the built environment holds names equal up to case, the child receives exactly **one**: the name that sorts **first by UTF-16 code-unit order**, with its value. Insertion order does not matter.
+- **`WINDOWS` duplicate arbitration** (characterization N3, C001; `WP12E4-CON-R002`). This is Node v22.15.1's `normalizeSpawnArguments`, applied to the explicit `env` Pi passes.
+  - **The duplicate key is ECMAScript `String.prototype.toUpperCase(name)`.** It is full Unicode uppercasing, at the pinned runtime's Unicode version (Node v22.15.1, hazard family F3). It is **not** ASCII-only comparison, lowercase, a host casefold or the native lookup above. Under it, `Qß` and `Qss` collide (both `QSS`), and so do `Qı` and `QI` (both `QI`).
+  - Among names with the same key, the child receives exactly **one**: the name that sorts **first by UTF-16 code-unit order**, with its value. Insertion order does not matter. So `Qss` beats `Qß`, and `QI` beats `Qı`.
+  - This is a **consumer-stage** rule only. It must not be applied when the snapshot is captured or looked up.
   - So an injected all-upper-case `MINION_SESSION_ID` wins over an inherited `Minion_Session_Id`, because an all-upper-case name sorts before every case variant of itself.
   - A consumer MUST apply this itself before `spawn`. Neither binding's spawn library implements it: CPython keeps the last-inserted name (characterization P2).
 - **`POSIX`:** names are exact, so there is no arbitration.
@@ -2909,6 +2917,15 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 - **C:** an `os.environ[...] =` update appears;
 - **D:** a natively removed variable is absent.
 
+**Snapshot authority (`WP12E4-CON-R001`):**
+- with a snapshot `S` holding `K = old`, the public API cannot change `S[K]`;
+- a consumer's mutable copy can be edited without changing `S` or the provider's baseline;
+- where the provider supports a baseline change: after `S` is obtained, `S` keeps `old` and a later `base_env()` sees the new value. Rust's configured baseline does not need to become live for this.
+
+**Windows name equivalence (`WP12E4-CON-R002`)**, each in both insertion orders:
+- consumer arbitration: `Qß`/`Qss` → only `Qss`; `Qı`/`QI` → only `QI`;
+- native snapshot: all four names are distinct entries with their own values, and an ASCII lookup (`QSS` → `Qss`'s value) is answered natively.
+
 **Composition (§15.5)**, on both platforms:
 - every characterization §8 row;
 - the dropped invalid name and the kept BOM;
@@ -2927,7 +2944,10 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 - per-surrogate or per-byte replacement instead of the WHATWG decode;
 - stripping the BOM;
 - keeping an invalid-name entry;
-- last-inserted Windows arbitration.
+- last-inserted Windows arbitration;
+- a writable snapshot, or one aliased to the provider's baseline;
+- ASCII-only, lowercase or host-casefold arbitration instead of `toUpperCase` (killed by `Qß`/`Qss` and `Qı`/`QI`);
+- Node's arbitration applied at snapshot capture, which merges the distinct native entries.
 
 ### 15.7 Not certified by WP-12.E4
 

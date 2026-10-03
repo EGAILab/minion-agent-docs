@@ -231,3 +231,28 @@ So **no provider behavior changes**. WP-13.3's composition applies the rule to t
 **Audit 3 notes (nonblocking, docs #230 comment `5967993103`), resolved:**
 - `envunits_win.py`'s header comment now says what the harness does: it passes an explicit UTF-16 block to the Node child, not `_wputenv`.
 - In `out/node-envbytes-linux.json`, the valid name `N_é` has empty `childLineBytes`. The harness's `sh -c env | grep` intermediate does not keep that name. That field is therefore **not** evidence that Node dropped it. The evidence of retention is the Node-view `nameUnits`.
+
+
+## 9. Contract review 1 and remediation
+
+**Codex contract checkpoint review 1** (docs #230 @ `166e32a4`; it will be published verbatim): **CHANGES REQUIRED**.
+
+- **`WP12E4-CON-R001`:** `EnvSnapshot` was never made read-only or isolated, as Owner F1 §§1, 2 and 12 require.
+- **`WP12E4-CON-R002`:** native Windows name lookup and Node's spawn deduplication are two **different** equivalence rules. "Equal up to case" left the second undefined.
+
+**Remediation:** `spec/execution.md` §§15.1, 15.3, 15.5 and 15.6.
+
+- **R001 fix.** The snapshot exposes no mutator and is isolated from the provider in both directions. A consumer edits its own mutable copy. There are witnesses and a writable or aliased snapshot control.
+- **R002 fix.** The native snapshot keeps exactly the native entries and uses the OS's own name comparison for lookup. The consumer-stage arbitration uses ECMAScript `toUpperCase` as the duplicate key, at the pinned runtime's Unicode version, and keeps the UTF-16-first name. There are wrong-equivalence controls.
+
+**Executed authority** (Windows 11, Node v22.15.1):
+
+- **Explicit `env` arbitration** (`harness/unicode_names.mjs`, `out/node-unicode-names-win32.json`), both insertion orders:
+  - `Qß`/`Qss`: the child receives only `Qss=ss`. Both names uppercase to `QSS`.
+  - `Qı`/`QI`: the child receives only `QI=ascii`. Both uppercase to `QI`.
+- **Native block** (`harness/native_names.py`, `out/node-native-names-win32.json`; CPython supplies the block to the Node child, so Node does no explicit-env arbitration):
+  - all **four** names enumerate as distinct entries;
+  - `process.env.QSS` reads `ss` and `process.env.qi` reads `ascii`, an ASCII lookup answered natively;
+  - `process.env['Qß']` reads `sharp` and `process.env['Qı']` reads `dotless`.
+
+These reproduce Codex's review probes independently.
