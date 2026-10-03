@@ -10,7 +10,14 @@
 
 **Revision 2 (audit 1 remediation, `WP133-AUD-R001`..`R003`): rows marked "revised". The reviewed revision is docs #229 @ `fafce487`.**
 
-**Verdict (§6): BLOCKED.** There are three lower-layer capability gaps, `WP133-F1` to `F3`. Each needs an additive lower-layer interface that does not exist yet. Under `minion-agent#75` items 5 and 6 the interface's shape is an Owner decision, as every earlier Layer 12 extension (`WP-12.E1` to `E3`) was. Everything else is `AUDITED`.
+**Revision 3 (contract review 1, `WP133-CON-R004`): the matrix is reconciled with the accepted lower-layer baselines.**
+- `WP133-F1`/`F2` were resolved by WP-12.E4 (`EXEC-010`, `spec/execution.md` §15). The Owner chose Option A (`minion-agent#50` comment `5951046523`). It is certified and closed in both languages (`minion-agent#130`): Python code `3f98a22a` / docs `31294d35`, Rust code `a0ff3e47` / docs `7343a0f7`.
+- `WP133-F3` was resolved by `L0506-D004` (`TOOL-042`, `spec/tools.md` "Per-call tool execution context"). It is approved and merged in both languages: Python code `0e2a04ca` / docs `20776f0f`, Rust code `5d8ddb06` / docs `7ed78270`.
+- The rows that revision 3 changed are marked "revision 3". The revision-2 blocked verdict is kept as history in §6.1.
+
+**Verdict (§6): FEASIBLE.** No lower-layer capability gap remains open. Every row is `AUDITED`, `NOT_APPLICABLE` or `DEFERRED_WITH_REASON`.
+- Python can implement against accepted `main`.
+- Rust can implement against accepted `main` too: Rust `EXEC-010` was accepted at `a0ff3e47` (closure review: docs #235 comment `5971298604`).
 
 ---
 
@@ -23,13 +30,13 @@
 | `timeout` argument | JSON number, optional | JS number (`-0`, ±Infinity reachable at runtime, `L0506-D001`) | `float`, `None` | `Option<f64>` | JSON number | **AUDITED**: `resolveTimeoutMs`, characterization §2 | `0`, `-0`, `-1`, `NaN`, ±Infinity, `2147483.647`/`.648`, `0.25`; the error text renders `MAX_TIMEOUT_MS / 1000` = `2147483.647` |
 | timeout in the status text `Command timed out after ${timeout} seconds` | — | `String(number)` of the **given** seconds | needs JS `Number#toString` | needs JS `Number#toString` | text | **AUDITED**: F1 rendering, already a shared helper (`_js.py` / Rust's JS-number formatter, used by WP-13.2) | `0.25`, `1e-7` → `1e-7`, `1.5`, `100`, `0.1+0.2` |
 | output bytes → text (**revised, audit 1 `WP133-AUD-R002`**) | raw `Buffer` chunks from both pipes | one streaming default `TextDecoder`: WHATWG UTF-8, non-fatal, **BOM-stripping**. Exactly one leading `EF BB BF` of the merged stream is dropped, including when split across chunks; a second leading BOM or a non-leading BOM is kept as U+FEFF (`projection-*.json`, `bom`) | `codecs.getincrementaldecoder("utf-8")(errors="replace")` matches the replacement cases but does **not** strip the BOM; `utf-8-sig` strips it | a streaming decoder with WHATWG replacement plus the BOM rule | text | **AUDITED, rule**: the contract names WHATWG streaming decode with BOM stripping over the merged chunk sequence. The stripped BOM counts in raw bytes (temp-file trigger, file contents) but not in decoded bytes, lines or text | split character; interrupted character; invalid byte; truncated tail; maximal subparts; BOM leading, split 1+2 and 1+1+1, doubled, non-leading, alone (→ `(no output)`), and a partial BOM `EF BB` + `61` → `\uFFFDa` |
-| line/byte counts, truncation | — | UTF-8 byte length of decoded text; `\n` count | ints | `usize` | numbers in `details.truncation` | **AUDITED**: integer counts; `truncate.ts` is already Layer 13's shared constant set (`TOOL-028`) | 2000/2001 lines, 51200/51201 bytes, rolling trim above 204800 |
+| line/byte counts, truncation (**revision 3, `WP133-CON-R002`**) | — | UTF-8 byte length of decoded text; `\n` count; the rolling tail with its line-boundary flag | ints | `usize` | numbers in `details.truncation` | **AUDITED**: integer counts; `truncate.ts` is already Layer 13's shared constant set (`TOOL-028`). The snapshot drops a partial first line only when the tail holds a `\n` (`data/13-wp133/out/boundary-win32.json`, `rolling`) | 2000/2001 lines, 51200/51201 bytes, rolling trim above 204800; a single line above the trigger; a cut just after a newline; a newline in a later chunk |
 | `formatSize` | — | `toFixed(1)` on `n/1024` | needs JS `toFixed` | needs JS `toFixed` | text | **AUDITED**: F1; `toFixed(1)` is exact decimal rounding of the binary64 value. The WP-13.1 `read` notice already uses the same helper | `(51201/1024).toFixed(1)`, `150016/1024`; a value at a `.x5` boundary |
 | `details.truncation` | — | `TruncationResult` object: `content, truncated, truncatedBy, totalLines, totalBytes, outputLines, outputBytes, lastLinePartial, firstLineExceedsLimit, maxLines, maxBytes` | `dict` | `serde_json::Value` / struct | JSON | **AUDITED**: closed key set; values are strings, bools, ints and `null` (`truncatedBy`). `content` repeats the shown tail **verbatim** | `details` equality on every truncation case; F6 key order is outside K1 (`spec/tools.md`), so compare as a key set |
 | `details.fullOutputPath` | — | JS string, `os.tmpdir()/pi-bash-<16 hex>.log` | `str` | `String` (a filesystem path, `L12-D001`) | JSON string | **AUDITED, mapping**: the path is random either way. The contract certifies its *construction* (row "temp file" in §2), and canonical cases normalize it | the temp file holds the raw bytes (sha256) |
 | `exitCode` | — | `number \| null` | `int \| None` (`ExitStatus.exit_code`) | `Option<i32>` | number in the status text | **AUDITED**: `null` → success (no status line). Windows Git Bash reports external SIGKILL as `2304` (characterization §11): a platform fact, not a binding choice | external kill per platform |
 | session env values (Q1) | — | JS strings from the session | `str` | `String` | env var values | **AUDITED for representation**: Windows environment values are UTF-16, and a Rust `String` cannot hold a lone surrogate. Session ids, provider and model ids and reasoning levels are Minion-generated ASCII. `MINION_SESSION_FILE` is a path (`L12-D001` domain), but no persisted session file exists today (Q1 §5: absent) | **DEFERRED_WITH_REASON**: a lone-surrogate session-file path. Trigger: the first persisted session-file form (`spec/session.md`, "future persisted form") |
-| inherited environment | — | `process.env` copy: a plain object, **case-sensitive** keys | `os.environ` (Windows: case-insensitive, upper-cased keys) | `std::env::vars_os` (Windows: case-preserving) | env block | **finding, part of `WP133-F1`**: strip semantics on Windows depend on key case. Pi deletes exact-case keys from a case-sensitive copy | `mInIoN_session_id` inherited on Windows |
+| inherited environment (**revision 3, `WP133-CON-R004`**) | — | `process.env` copy: a plain object, **case-sensitive** keys | `ctx.subprocess.base_env()` → `EnvSnapshot`. Per Owner decision C002 = B (`#130` comment `5966459749`), the Windows local baseline is the live native process environment, in UTF-16 units | `base_env()` returns the provider's configured baseline: `LocalSubprocess` captures `std::env::vars()` at construction, or uses `with_base_env` (`EXEC-010` §15.4; `E4-OBS-2`/`E4-OBS-3` recorded) | env block | **AUDITED** (`EXEC-010` §15.5): Node's view of the snapshot, removal by exact spelling, then Windows arbitration (ECMAScript `toUpperCase`, UTF-16-first name wins) | `Minion_Session_Id` inherited on Windows survives when nothing is injected; an injected upper-case name wins arbitration |
 
 ### 1.1 Four value domains (F7)
 
@@ -55,11 +62,11 @@
 | `existsSync(candidate)` (shell discovery) and `fsAccess(cwd, F_OK)` (cwd check): **revised again, CE-WP133-01 checkpoint, `WP133-AUD-R003`** | 12 | **`existsSync` ≡ EXEC-007 `probe_dir_entry(p)` is `Ok`** on both platforms (any `Err` ⇒ `false`). **`access(F_OK)`: POSIX ≡ `probe_dir_entry` `Ok`; Windows ≡ `file_info(p)` `Ok`** (non-following: Node's Windows `access` does not follow a symlink, so a dangling symlink passes), selected by the WP-12.E4 platform. Any `Err` ⇒ "Working directory does not exist". `canonical_path` is **not** used: it fails on an existing path (a Linux `/proc/<pid>/fd/<n>` of an unlinked file) | **YES**, by executed differential: Linux 13 cases and Windows 9 cases (`data/13-wp133/out/existence-{node,python}-linux.json`, `existence-win32.json`); every case agrees with pinned Node, including the descriptor path (`realpath` ENOENT, `existsSync` true) and the Windows dangling symlink (`access` true, `existsSync` false). `not_supported` from either probe is a disclosed prerequisite error, never absence | yes | yes | no | no |
 | (merged into the row above, audit 1 `WP133-AUD-R003`) | | | | | | | |
 | `where bash.exe` / `which bash` probe, 5000 ms, `status === 0 && stdout`, first line of `trim().split(/\r?\n/)` | 12 | `ctx.subprocess.spawn(["where","bash.exe"])` plus a composed 5 s timer → `terminate()`; decode stdout | **YES** as a composition. A `trim()` is the JS whitespace set (F2/F3: `\s` ≠ Python `str.strip()`; needs the shared JS-trim helper, as WP-13.2 already has) | yes | yes | no | no |
-| `process.platform === "win32"` for the discovery branch | 12 | **none**: `ExecutionWorldIdentity` is opaque | **NO** | — | — | **YES: `WP133-F2`** | no |
-| read world env values `ProgramFiles`, `ProgramFiles(x86)` (Node: case-insensitive lookup on Windows) | 12 | **none**: the provider's base environment is not readable | **NO** | — | — | **YES: `WP133-F1`** | no |
-| spawn env = base env minus `MINION_*` (exact case) plus live values | 12 | `SpawnOptions{env, inherit_env}` can only **overlay** the base env; it cannot remove a key. With `inherit_env=false` the caller must supply the whole env, which it cannot read | **NO** | — | — | **YES: `WP133-F1`** | no |
+| `process.platform === "win32"` for the discovery branch (**revision 3**) | 12 | `ctx.subprocess.platform`: `WINDOWS \| POSIX`, declared by the provider, read-only (`EXEC-010` §15.1) | **YES** (`WP133-F2` resolved) | yes | yes (`platform()`) | no | no |
+| read world env values `ProgramFiles`, `ProgramFiles(x86)` (Node: case-insensitive lookup on Windows) (**revision 3**) | 12 | a `ctx.subprocess.base_env()` lookup, with the native Windows comparison: `RtlUpcaseUnicodeChar` per UTF-16 unit, or the pinned build-26200 table off Windows (`EXEC-010` §15.3) | **YES** (`WP133-F1` resolved) | yes | yes | no | no |
+| spawn env = base env minus `MINION_*` (exact case) plus live values (**revision 3**) | 12 | the `EXEC-010` §15.5 composition over `base_env()`, then `spawn(…, SpawnOptions{env, inherit_env = false})` | **YES** (`WP133-F1` resolved) | yes | yes | no | no |
 | temp file for the full output: create, append raw bytes per chunk, close | 12 | `ctx.fs.create_temp_file(prefix, suffix)` (§3.7, private dir + unique name); `ctx.fs.append_file(path, bytes)` | **YES, mapping**: the path shape differs from Pi's `tmpdir()/pi-bash-<hex>.log` (random either way). Prefix `minion-bash-` follows Q1's namespace (`MINION_ARCHITECTURAL_MAPPING`). A creation or append failure has no Pi equivalent (Pi's unhandled stream `error` would crash the process): the contract defines it | yes | yes | no | no |
-| live session state: session id, persisted session file, model `provider`/`id`, thinking level, read at spawn-context time (`ExtensionContext` getters, `runner.ts:690-712`; `agent-session.ts:2539-2543`) | 05/06 (tool execution context), 07 (`AgentInstance`), 08 (session) | **none**. A tool's `execute(tool_call_id, args, signal?, update?)` gets no per-call context. `execute_call` receives `ctx=instance.ctx` but does not pass it on. The values exist (`AgentInstance.model`/`thinking_level`, `SessionLog.session_id`) | **NO** | — | — | **YES: `WP133-F3`** | no |
+| live session state: session id, persisted session file, model `provider`/`id`, thinking level, read at spawn-context time (`ExtensionContext` getters, `runner.ts:690-712`; `agent-session.ts:2539-2543`) (**revision 3**) | 05/06 (tool execution context), 07 (`AgentInstance`), 08 (session) | `ToolExecutionContext` (`session_id`, `session_file`, `provider`, `model`, `reasoning_level`), built once per call by the loop and passed to a tool whose definition asks for it (`TOOL-042`, `L0506-D004`). No persisted session file exists today, so `session_file` is absent | **YES** (`WP133-F3` resolved) | yes | yes | no | no |
 | world compatibility: `fs` and `subprocess` address the same cwd and temp file | 12 | `validate([("fs", …), ("subprocess", …)])` (§7) at the tool's activation | **YES** (`MINION_EXTENSION`; §7 names `bash` as the motivating consumer) | yes | yes | no | no |
 
 ## 3. Cross-runtime hazard checklist
@@ -79,7 +86,7 @@
 | Object property ordering (**revised, audit 1**) | AUDITED | On Windows, env key order **is** observable through duplicate arbitration: among case-equal names, the child gets the name first in UTF-16 code-unit order, regardless of insertion order (`12-wp12e4-characterization.md` N3, C001). POSIX names are exact, so no arbitration. `details` key order is outside K1 (`spec/tools.md`) |
 | Promise scheduling | AUDITED | §4: settlement, classification and output acceptance order |
 | `AbortSignal` | AUDITED | the pre-spawn check after timeout validation; an abort after spawn → tree kill; classification after settlement checks `signal.aborted` **first** (opposite to `ctx.shell` §5.4's timeout-first) |
-| `setTimeout` / timers | AUDITED | the timeout timer (ms, ≤ 2^31−1); the 100 ms idle grace; `where`/`which` 5000 ms. Pi's 100 ms update throttle is not certified (Q2) |
+| `setTimeout` / timers (**revision 3, `WP133-CON-R003`**) | AUDITED | the timeout timer is scheduled for `max(1, trunc(timeout × 1000))` whole ms: Node's `Timeout` clamp, then `insert`'s `MathTrunc` (`data/13-wp133/out/boundary-win32.json`, `timers`). The status text keeps the seconds as given. The 100 ms idle grace and the 5000 ms `where`/`which` limit are integers. Pi's 100 ms update throttle is not certified (Q2) |
 | Node/libuv error mapping | AUDITED | spawn and pipe errors → contract wrapper (§2); `where`/`which` failures are silent (scoping v4) |
 | filesystem access semantics | AUDITED | `existsSync` follows → `probe_dir_entry`; `access(F_OK)` follows on POSIX → `probe_dir_entry`, not on Windows → `file_info`; never `canonical_path` (§2, `WP133-AUD-R003`, CE-WP133-01) |
 | platform-specific path handling | AUDITED + finding | WSL matcher normalizes `/` → `\`; Windows Git Bash candidates are built with `\\` from env values (`WP133-F1`/`F2`) |
@@ -120,7 +127,19 @@
 | F6 ECMAScript object order | env object; `details` | source audit | outside K1 (`spec/tools.md`) |
 | F7 Schema runtime domain | the four domains | §1.1 | none |
 
-## 6. Verdict
+## 6. Verdict (revision 3)
+
+```text
+FEASIBILITY
+    FEASIBLE  no open lower-layer finding
+      WP133-F1  RESOLVED_BY_DEPENDENCY  WP-12.E4 / EXEC-010 (#130), Owner Option A
+      WP133-F2  RESOLVED_BY_DEPENDENCY  WP-12.E4 / EXEC-010 (#130), Owner Option A
+      WP133-F3  RESOLVED_BY_DEPENDENCY  L0506-D004 / TOOL-042 (#131), Owner Option A
+```
+
+These rows state contract rules, not lower-layer gaps: the argv/stdin projection, WHATWG streaming decode, the rolling tail, the timer duration and the temp-file failure rule.
+
+### 6.1 Revision-2 verdict (history, superseded)
 
 ```text
 FEASIBILITY
