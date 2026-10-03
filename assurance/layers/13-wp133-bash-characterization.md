@@ -327,7 +327,7 @@ Their interface shapes go to the Owner before the contract can freeze.
 |---|---|---|
 | `existsSync` vs `probe_dir_entry` `Ok` | **equal on all 13**, the descriptor path included | **equal on all 9** |
 | `access(F_OK)` vs `probe_dir_entry` `Ok` | **equal on all 13** | differs on the **dangling symlink**: `access` succeeds (Node's Windows `access` does not follow), `probe` ENOENT |
-| `access(F_OK)` vs non-following `lstat` (`file_info`) `Ok` | (differs on the dangling symlink, the FIFO-symlink equivalents) | **equal on all 9** |
+| `access(F_OK)` vs non-following `lstat` (`file_info`) `Ok` | not executed; inferred to differ on the dangling symlink and the symlink loop (`lstat` succeeds on any symlink). Not used on POSIX | **equal on all 9** |
 | `realpath` (`canonical_path`) vs `existsSync` | differs on the **descriptor path** | equal |
 
 **Checkpoint (proposed): the R003 disposition.**
