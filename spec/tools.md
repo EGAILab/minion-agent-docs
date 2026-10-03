@@ -2501,19 +2501,21 @@ isLegacyWslBashPath(p) := lower(p with "/" -> "\") matches ^[a-z]:\\windows\\(?:
     - **completion:** the process has exited **and** both pipes have reached EOF. There is **no idle grace**: a descendant that inherited the pipes keeps collection open, and its output still counts, until the pipes close or an interruption comes;
     - **budget interruption:** the running total of raw bytes over **stdout and stderr together** exceeds **1048576**. The chunk that crosses the budget is kept, so the budget is checked after each chunk is stored. A total of exactly 1048576 is not an interruption;
     - **time interruption:** the 5000 ms timer fires.
-  - **On interruption:**
-    - if the process has **not** exited yet, it is terminated, and the lookup has no exit status (Pi: killed, `status` null);
-    - if it **has** exited, nothing is terminated and its recorded exit status stands (Pi: `status` 0 with `error` `ENOBUFS` or `ETIMEDOUT`).
-    - Either way, reading stops, and later output is not captured.
+  - **On interruption** (Owner practical-parity decision; **`DIV-001`**, `assurance/pi-divergences.md`):
+    - **If the process has not exited yet,** the lookup calls the certified `Process.terminate()` (§6: tree/group hard kill), and its exit status is whatever `wait()` then reports. That is none on POSIX (`SIGKILL`) and the OS code, commonly `1`, on Windows (`L12-R020`). Either way it is not `0`, so nothing is selected.
+      - Pi sends a catchable direct-child `SIGTERM` instead. So on POSIX, a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **selected by Pi and not by Minion**. That is `DIV-001`, an accepted practical-parity divergence. Minion may also end descendants that Pi would leave running.
+    - **If it has already exited,** nothing is terminated and its recorded exit status stands. Pi reports this as `status` 0 with `error` `ENOBUFS` or `ETIMEDOUT`.
+    - **Either way,** reading stops, and later output is not captured.
   - **Selection.** This is Pi's predicate alone; the interruption is **not** consulted. A path is selected iff the recorded exit status is 0 and the captured stdout, decoded, is non-empty. Its first line after `trim` is then checked as in the matrix above (Windows: `exists`; POSIX: trusted). Any other outcome is "not found", silently. That includes a spawn error, a non-zero exit, no exit status and empty stdout.
   - **Decoding:** the captured stdout bytes are decoded as UTF-8 with WHATWG replacement (Node `Buffer#toString`). The BOM is **not** stripped by the decoder, but `trim` removes a leading U+FEFF. Invalid bytes become U+FFFD and stay in the candidate path.
-  - **Termination.** Pi's `Kill()` signals only the direct child (`SIGTERM`) and closes the pipes. A Minion lookup terminates through `Process.terminate()` (Layer 12 tree kill), so a descendant of an **unexited** lookup is also ended.
-    - This is a `MINION_ARCHITECTURAL_MAPPING`: Layer 12 has no single-process kill, and selection is unaffected (the lookup fails either way).
-    - A descendant still running after its parent has **exited** is never terminated, as in Pi.
+  - **Termination scope.** A descendant still running after its parent has **exited** is never terminated, as in Pi: reading stops and the pipes are released. Only an unexited lookup is terminated, through `terminate()` (`DIV-001`).
   - The budget and timer apply **only** to the lookup, never to the `bash` command.
   - Evidence:
     - `data/13-wp133/harness/lookup_probe.mjs` → `out/lookup-win32.json`: the budget boundary, at 1048576 and 1048577 on each stream mix, and the decoding rows.
-    - `harness/lookup_lifecycle_probe.mjs` → `out/lookup-lifecycle-win32.json`: 11 rows crossing exit status, a pipe-holding descendant, budget and timer. Each row runs the pinned `findBashOnPath` over the real `spawnSync`, and the contract rule above, composed over an asynchronous spawn, agrees with it on every row.
+    - `harness/lookup_lifecycle_probe.mjs` → `out/lookup-lifecycle-{win32,linux}.json`.
+      - 15 rows crossing exit status, a pipe-holding descendant, budget, timer and the lookup's `SIGTERM` response. Each row runs the pinned `findBashOnPath` over the real `spawnSync`.
+      - The Minion rule above, composed over an asynchronous spawn with an uncatchable kill, **agrees with Pi on every row except exactly the `DIV-001` rows**: on Linux, the three rows where a trapped `SIGTERM` exits 0. On Windows it agrees on all 15.
+      - A Pi-faithful direct-`SIGTERM` composition is kept as characterization; it agrees everywhere.
 
 **The cwd check (`CE-WP133-01`):**
 - `POSIX`: `probe_dir_entry(cwd)` is `Ok` (followed existence).
@@ -2644,6 +2646,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
    - scheduling the raw `ms`, or rounding it, instead of `max(1, trunc(ms))` (`WP133-CON-R003`);
    - an unbounded lookup, or a per-stream lookup budget (`WP133-CON-R005`);
    - a lookup that settles at exit, or after a 100 ms idle grace; a lookup that fails on any interruption, even after an exit with code 0 (`WP133-CON-R005`, `R006`);
+   - the `DIV-001` witness: a lookup that is alive at the interruption, handles `SIGTERM` and exits 0 is **not** selected on POSIX. The implementation's own witness pins that its interruption is `terminate()`, not a direct `SIGTERM`;
    - a `canonical_path` existence check;
    - an `exists`-based `existsSync`;
    - a following Windows cwd check;

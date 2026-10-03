@@ -2,7 +2,12 @@
 //   node lookup_lifecycle_probe.mjs <pi checkout> <out.json>
 // Authority: the pinned findBashOnPath body (sliced from shell.ts, run unchanged) over Node's real spawnSync. Only the
 // lookup program is replaced by a controlled Node parent, which may leave a detached descendant holding the pipes.
-// Compared with four asynchronous compositions over child_process.spawn: the contract rule, and three wrong rules.
+// Compared with asynchronous compositions over child_process.spawn:
+//   minion           -- the contract rule; an interruption of a live lookup is an uncatchable kill (Layer-12 tree
+//                       terminate(), SIGKILL on POSIX: DIV-001, assurance/pi-divergences.md)
+//   piDirectSigterm  -- characterization only: Pi's direct-child SIGTERM (agrees with Pi everywhere)
+//   exitOnly, idleGrace, unconditional -- wrong settlement/selection rules over the minion kill (controls)
+// DIV-001 is witnessed exactly: minion differs from Pi on the trap* rows where Pi selects, and nowhere else.
 import * as childProcess from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 const [piDir, outPath] = process.argv.slice(2);
@@ -18,12 +23,16 @@ const body = source.slice(start, end).replace("function findBashOnPath(): string
 const BUDGET = 1024 * 1024, LIMIT_MS = 5000, GRACE_MS = 100;
 const PATH = process.platform === "win32" ? "C:/valid/bash.exe" : "/valid/bash";
 // A parent step list and a descendant step list; each step is [delayMs, action].  Actions: "path" (stdout path line),
-// "flood" (2 MiB stderr), "exit:<code>" (parent only).  The descendant inherits the parent's stdout/stderr.
+// "flood" (2 MiB stderr), "exit:<code>" (parent only), "trap:<code>:<ms>" (on SIGTERM, exit <code> after <ms>; checkpoint
+// review 1, CE-WP133-02-C001).  The descendant inherits the parent's stdout/stderr.
 const program = (parent, descendant) => {
   const steps = (list, isParent) => list.map(([ms, a]) => {
     const act = a === "path" ? `process.stdout.write(${JSON.stringify(PATH + "\n")})`
-      : a === "flood" ? "process.stderr.write(Buffer.alloc(2 * 1024 * 1024, 0x79))"
+      // the flood completes (or fails, once the reader closes its pipe) before the next step: a following
+      // process.exit() must not discard a pending pipe write, and a write error must not crash the program
+      : a === "flood" ? "await new Promise((r) => { process.stderr.on(\"error\", () => r()); process.stderr.write(Buffer.alloc(2 * 1024 * 1024, 0x79), () => r()); })"
       : a.startsWith("exit:") ? `process.exit(${+a.slice(5)})`
+      : a.startsWith("trap:") ? `process.on("SIGTERM", () => setTimeout(() => process.exit(${+a.split(":")[1]}), ${+a.split(":")[2]}))`
       : a === "end" ? "process.exit(0)" : "";
     return `await new Promise((r) => setTimeout(r, ${ms})); ${act};`;
   }).join(" ");
@@ -42,6 +51,11 @@ const rows = {
   timeoutAfterExit: program([[0, "path"], [0, "exit:0"]], [[5400, "end"]]),
   descendantPathAfterTimeout: program([[0, "exit:0"]], [[5400, "path"], [0, "end"]]),
   descendantPathThenOverflow: program([[0, "exit:0"]], [[250, "path"], [100, "flood"], [0, "end"]]),
+  // the SIGTERM-response dimension: alive at the interruption, the lookup handles the direct-child SIGTERM (POSIX)
+  trapExit0OverflowWhileAlive: program([[0, "trap:0:0"], [0, "path"], [0, "flood"], [6000, "exit:3"]]),
+  trapExit0TimeoutWhileAlive: program([[0, "trap:0:0"], [0, "path"], [6000, "exit:3"]]),
+  trapExit7TimeoutWhileAlive: program([[0, "trap:7:0"], [0, "path"], [6000, "exit:3"]]),
+  trapDelayedExit0TimeoutWhileAlive: program([[0, "trap:0:300"], [0, "path"], [6000, "exit:3"]]),
 };
 
 let script = "";
@@ -49,7 +63,7 @@ let last = null;
 const pinned = new Function("spawnSync", "existsSync", "process", `${body}; return findBashOnPath;`)(
   (_cmd, _args, options) => (last = childProcess.spawnSync(process.execPath, ["-e", script], options)), () => true, process);
 
-// mode: "contract" | "exitOnly" | "idleGrace" | "unconditional"
+// mode: "minion" | "piDirectSigterm" | "exitOnly" | "idleGrace" | "unconditional"
 const compose = (mode) => new Promise((resolve) => {
   const c = childProcess.spawn(process.execPath, ["-e", script], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
   c.stdin.end();
@@ -74,7 +88,7 @@ const compose = (mode) => new Promise((resolve) => {
   const interrupt = () => {
     if (interrupted || done) return;
     interrupted = true;
-    if (!exited) c.kill(); // the direct child only, as Node's Kill()
+    if (!exited) c.kill(mode === "piDirectSigterm" ? "SIGTERM" : "SIGKILL"); // minion: uncatchable (DIV-001)
     c.stdout.destroy(); c.stderr.destroy(); // stop collecting: later chunks are not captured
     check();
   };
@@ -92,21 +106,30 @@ const compose = (mode) => new Promise((resolve) => {
 });
 
 const out = { node: process.version, platform: process.platform, budget: BUDGET, limitMs: LIMIT_MS, rows: {}, controls: {} };
-const modes = ["contract", "exitOnly", "idleGrace", "unconditional"];
-const killedBy = Object.fromEntries(modes.map((m) => [m, []]));
+// DIV-001 rows: the lookup is alive at the interruption and handles SIGTERM. Minion's expected selection is Pi's,
+// except that on these rows the uncatchable kill leaves no exit status (so nothing is selected).
+const DIV001 = new Set(Object.keys(rows).filter((name) => name.startsWith("trap")));
+const modes = ["minion", "piDirectSigterm", "exitOnly", "idleGrace", "unconditional"];
+const differs = Object.fromEntries(modes.map((m) => [m, []]));
+const killedBy = { exitOnly: [], idleGrace: [], unconditional: [] };
+const unexpected = [];
 for (const [name, s] of Object.entries(rows)) {
   script = s;
   const selected = pinned();
-  const row = { status: last.status, signal: last.signal, error: last.error?.code ?? null, selected };
+  const minionExpected = DIV001.has(name) ? null : selected;
+  const row = { status: last.status, signal: last.signal, error: last.error?.code ?? null, selected, minionExpected };
   for (const m of modes) {
     const got = await compose(m);
-    if (got !== selected) killedBy[m].push(name);
+    if (got !== selected) differs[m].push(name);
+    if (m === "minion" && got !== minionExpected) unexpected.push(name);
+    if (m in killedBy && got !== minionExpected) killedBy[m].push(name);
   }
   out.rows[name] = row;
 }
-out.contractAgreesOnAllRows = killedBy.contract.length === 0;
-out.contractDisagreements = killedBy.contract;
-delete killedBy.contract;
+out.minion = { agreesWithItsExpectationOnAllRows: unexpected.length === 0, unexpected, differsFromPi: differs.minion,
+  differencesAreExactlyDiv001: differs.minion.every((n) => DIV001.has(n)) };
+out.div001 = differs.minion.map((name) => ({ row: name, pi: out.rows[name].selected, minion: null }));
+out.piDirectSigterm = { agreesWithPiOnAllRows: differs.piDirectSigterm.length === 0, differsFromPi: differs.piDirectSigterm };
 out.controls = Object.fromEntries(Object.entries(killedBy).map(([m, k]) => [m, { killedBy: k }]));
 writeFileSync(outPath, JSON.stringify(out, null, 1) + "\n");
 console.log(JSON.stringify(out, null, 1));

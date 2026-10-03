@@ -569,3 +569,39 @@ ROOT-CAUSE SURFACE
 NEXT_OWNER
     Codex (checkpoint review)
 ```
+
+## 19. Checkpoint review 1 of `CE-WP133-02`, the Owner decisions, and `DIV-001`
+
+**Codex checkpoint review 1** (docs #229 @ `7e23ad62`; comment `5971794856`): CHANGES REQUIRED, `CE-WP133-02-C001`.
+- Pi's lookup interruption is a direct-child `SIGTERM`. On POSIX, a lookup that handles it and exits 0 keeps `status` 0 and is selected.
+- Minion's `terminate()` is an uncatchable group `SIGKILL`, so the earlier claim "selection unaffected" was disproved.
+- This is a governance question.
+
+**Owner decisions:**
+1. `CE-WP133-02-C001` = Option 1 (#50 comment `5973189849`): a new Layer 12 direct-child termination, WP-12.E5 (#141). E5 went through contract approval and a Python implementation. Its review exposed POSIX PID-reaping races on threaded-reaper hosts (`WP12E5-I001`).
+2. **Practical-parity cut-over** (#50 comment `5973629192`; #75 comment `5973629428`). WP-12.E5 is **superseded** (#141 closed; PRs #142/#237 closed unmerged and preserved). This difference is accepted as **`DIV-001`** (`assurance/pi-divergences.md`). The lookup interruption uses the certified `terminate()`.
+
+**Revised rule** (spec, "The lookup", "On interruption"): an interruption of an **unexited** lookup calls `terminate()`, and its status is what `wait()` reports, which is never 0. An exited lookup keeps its status. Selection and every other lifecycle rule (§18) are unchanged.
+
+**Evidence: the 15-row lifecycle probe**, run on Windows and on Linux (`node:22.15.1-bookworm-slim`, twice, byte-identical).
+- **New rows:** four `SIGTERM`-response rows (`trapExit0OverflowWhileAlive`, `trapExit0TimeoutWhileAlive`, `trapExit7TimeoutWhileAlive`, `trapDelayedExit0TimeoutWhileAlive`).
+- **A probe fix:** the `flood` step now completes, or fails quietly, before the next step. Before, a following `process.exit()` could discard a pending pipe write on Linux, and an `EPIPE` could crash the program, so two rows did not test what they were named for.
+
+| Composition | Windows | Linux |
+|---|---|---|
+| **Minion** (uncatchable kill on interruption) | agrees with Pi on all 15 | differs from Pi on **exactly** the 3 `DIV-001` rows (`trapExit0Overflow`, `trapExit0Timeout`, `trapDelayedExit0Timeout`: Pi selects, Minion does not). `trapExit7` agrees, because neither selects |
+| Pi-faithful direct `SIGTERM` (characterization) | agrees on all 15 | agrees on all 15 |
+| exit-only settlement (control) | killed by 2 rows | killed by 2 rows |
+| 100 ms idle grace (control) | killed by 2 rows | killed by 2 rows |
+| fail on any interruption (control) | killed by 3 rows | killed by 3 rows |
+
+The probe composes Minion's kill as a `SIGKILL` of the lookup process. That models the uncatchable kill. The tree scope is Layer 12's certified behaviour and does not affect selection.
+
+```text
+CONVERGENCE CHECKPOINT (CE-WP133-02), revised
+    PROPOSED
+OPEN FINDINGS
+    WP133-CON-R005, WP133-CON-R006 (lookup lifecycle), CE-WP133-02-C001 (resolved by Owner: DIV-001)
+NEXT_OWNER
+    Codex (checkpoint re-review)
+```
