@@ -264,3 +264,33 @@ This characterization pass needs no Owner input. The contract does: §10 Q1–Q3
 - `WP133-F3`: per-call live session state for a tool's `execute`.
 
 Their interface shapes go to the Owner before the contract can freeze.
+
+## 14. Independent audit 1 and remediation
+
+**Codex audit 1** (docs #229 @ `fafce487`; comment `5965735271`, verbatim): CHANGES REQUIRED. All 36 Windows cases replayed identically; only the random `cwd/missing` path differed. The gaps F1–F3 and the settlement composition were confirmed. There were three findings:
+
+- **`WP133-AUD-R001`** (CONTRACT_ASSURANCE_DEFECT): the matrix said Windows argv passes UTF-16 through verbatim. It does not.
+  - **Remediation:** `harness/projection_probe.mjs`, run under Node v22.15.1 on Windows 11 with Git Bash 5.3.15 and on `node:22.15.1-bookworm-slim` (`out/projection-{win32,linux}.json`).
+  - **Finding:** both platforms agree. Node replaces each unpaired surrogate with U+FFFD before the OS boundary on argv and on stdin alike:
+    - `a\uD800b` and `a\uDC80b` → child argv `0061 FFFD 0062`; bytes in bash `61 EF BF BD 62`;
+    - a reversed pair → two U+FFFD;
+    - a valid pair is kept.
+  - **Rule:** the command is projected to its scalar form before transport, on both platforms and both transports. The raw-argument carrier is unchanged.
+- **`WP133-AUD-R002`** (CONTRACT_ASSURANCE_DEFECT): Pi's default `TextDecoder` strips one leading BOM, and the decoder the matrix proposed did not.
+  - **Remediation:** the same probe drives pinned `OutputAccumulator` directly. Results on both platforms:
+    - `EF BB BF 61` → `a`, 1 decoded byte, whether given whole, split 1+2 or split 1+1+1;
+    - a doubled BOM keeps one U+FEFF;
+    - a non-leading BOM is kept (`x﻿a`, 5 bytes);
+    - a BOM alone → empty (so `(no output)`);
+    - `EF BB` then `61` → `�a`.
+  - The rule is stated in the matrix's output row.
+- **`WP133-AUD-R003`** (CONTRACT_ASSURANCE_DEFECT): `canonical_path` is followed existence only for a provider that canonicalizes; `not_supported` is not absence.
+  - **Disposition** (matrix §2, disclosed): `bash` requires a canonicalizing `ctx.fs`. `not_supported` settles the call with a disclosed Minion error, never "does not exist".
+  - No other certified operation gives followed existence: `exists` and `file_info` are `lstat`-based, and `check_readable` also requires readability.
+
+**Nonblocking audit notes, carried into the contract:**
+- **Settlement over `ctx.subprocess`:** do not settle on `wait()` alone, and do not wait indefinitely for EOF. The 100 ms idle grace re-arms on accepted data. `Err(aborted)` from `wait()` is the expected cancellation outcome, while the final classification checks abort first, including an abort during the post-exit grace. Pending reads are cancelled and released at settlement.
+- **Stdin transport:** writing and closing stdin must not block the timeout, output and exit monitoring. Pi's `stdin.end(command)` queues the write and closes; a child that never reads must still time out or abort. A write failure is ignored.
+- **Timer resolution:** Node's `setTimeout` coerces a delay below 1 ms to 1 ms and schedules at integer-millisecond libuv resolution. Fractional-millisecond timeouts (for example `0.0005` s) need boundary witnesses in the contract.
+- **Matrix §3:** Windows env key order is observable through duplicate arbitration (`12-wp12e4-characterization.md` C001). This is revised.
+- **Temp-file and raw-error wrappers:** the contract states their exact rules; they are not left as "generic".
