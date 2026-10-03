@@ -842,7 +842,7 @@ other      null, true, false, arrays, objects; top-level details may be any of t
   - **WP-13.2 `edit`** produces the string case: diff/patch hold the prepared `newText`'s unpaired surrogate.
   - **Error text** interpolates `path`, a raw-domain string (`L0206-D002`), so it can hold one too.
   - **A custom tool or an after-hook replacement** can return every member above.
-- **Key enumeration order** is `L0206-D001`'s (K1, hazard family F6) and is not fixed here. Objects compare as key sets.
+- **Key enumeration order of tool-result `details` is not established here and is outside `L0206-D001`'s certified surface.** K1 covers tool-*argument* objects only (`spec/llm.md`, "Not in scope"). A future work package needs its own scope and evidence. Objects compare as key sets.
 - **`undefined`, and a top-level `null` `details`, are outside this domain.** Absent/`undefined` versus `null` versus `{}` **top-level** details remains the certified host mapping of `IR-L06-004`/`CA-L06-007` (finding `ADJ-2`). **Owner disposition:** `CURRENT_CERTIFIED_MAPPING_RETAINED`, with no new semantic delta (`minion-agent#49` comment `5942146215`). Reopen only on new discriminating Pi evidence that absent/`undefined`/top-level `null` are observably distinct at an owned Minion boundary, where current Minion behavior violates the adopted contract. This disposition does not authorize normalizing nested `details`. Python and Rust have no `undefined`, and Python's result type does not distinguish a top-level `null` from absent. A `null` **inside** `details` is in the domain.
 
 **A binding MUST NOT, anywhere between the tool's return and session replay:**

@@ -66,7 +66,7 @@ number   a binary64 value as JSON.parse yields it: -0 (sign kept, also from a ne
 object / array / true / false / null   as JSON
 ```
 
-Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
+Object key **enumeration order** is `L0206-D001`'s (K1): see "Tool-argument object key order" below.
 
 **Boundaries.** The exact value MUST survive, unchanged, through every certified boundary:
 
@@ -112,6 +112,129 @@ Object key **enumeration order** is `L0206-D001`'s (K1) and is not fixed here.
   - correct until persistence but lost on replay (Pi's JSON projection applied to the log).
 
 **WP-13.2** (decision §10): non-blocking. Its rules are total for any string a binding receives, and its `unpaired_surrogate_arguments` cases already defer raw decoding to this hazard.
+
+## Tool-argument object key order (`AI-003`, `TOOL-003`, cross-layer delta `L0206-D001`, K1)
+
+**Status (`minion-agent#100`):** in final review (convergence `CE-L0206-D001-01`). Python: implemented in the paired code PR, not yet certified. Rust: NOT_IMPLEMENTED.
+
+- **Authorization.** Owner K1 decision, Option 1 (`minion-agent#99` comment `5924847773`).
+  - This is a separate cross-layer post-certification delta (Layers 02/03, 05, 06). It is not part of `L0206-D002` (values) or `L0506-D002` (prepared strings).
+  - **Divergence disposition (current).** The target is exact ECMAScript order, and Rust behaves exactly. The only intentional divergence is the bounded, Python-only native-alias interval approved by Owner decisions K1 Q1 and Q2 (`minion-agent#100` comments `5947071963`, `5948712829`; see "Every observer, every Minion-mediated access" below). The original K1 decision's "no intentional divergence" stands for everything else. Its history is kept in `assurance/layers/l0206-d001-convergence-ce01.md`.
+  - Revalidation is targeted (decision §9); no whole-layer reopen.
+- **Evidence.**
+  - Characterization: `assurance/layers/l0206-d001-characterization.md`.
+  - Feasibility: `l0206-d001-feasibility-matrix.md`.
+  - Authority: `assurance/layers/data/l0206-d001-k1/` (`out/k1-boundaries.json`, `out/k1.json`) and `data/l0206-raw-boundaries/`.
+
+**The rule.** At every boundary below, a tool-argument object, and every object nested in it at any depth (inside arrays too), enumerates its own keys in **ECMAScript `OrdinaryOwnPropertyKeys` order**:
+
+```text
+1. array-index keys, ascending numerically
+     an array index is the canonical decimal string of an integer 0 .. 4294967294:
+     "0", "7", "10", "4294967294" are indices;
+     "4294967295", "00", "01", "007", "-0", "-1", "+1", "1.0", "1e3", " 1", "0x1" and
+     "9007199254740993" are not
+2. every other key, in insertion order
+```
+
+- The order is a property of the object's **construction and mutation history**.
+  - **Duplicate keys** (decoding): a duplicate keeps its **first** position and takes the **last** value.
+  - **A key assigned later** (a hook's in-place mutation) joins by the same rule. A new index key goes to its ascending position among the indices; a new ordinary key goes last; an existing key keeps its position.
+  - **`__proto__` from decoding** is an ordinary own key.
+- **Nothing reorders**: no sorting, no schema order, no canonicalization, no coercion side effect.
+- **Objects are shared by reference** (`L0206-D001-R001`/`R002`), as JavaScript objects are.
+  - An object a hook assigns, or appends or inserts into an array, is the object `execute` receives. A later mutation through a reference the hook kept is visible downstream.
+  - Such an object enumerates by the rule at every later boundary: the next listener and `execute`. That holds at any depth, inside arrays too.
+  - A binding MUST NOT copy an argument object to order it.
+  - The **raw** `ToolCall.arguments` object is shared and mutable after construction too (`L0206-D001-R004`). Wherever it is observed or serialized later, it enumerates by the rule as it then stands: the session record and encoding, the execution-start payload, the update payload.
+- **Every observer, every Minion-mediated access** (convergence `CE-L0206-D001-01`; Owner decisions K1 Q1 and Q2, `minion-agent#100` comments `5947071963` and `5948712829`). Objects reachable through the Minion tool-argument graph are normalized to ECMAScript own-property order at every Minion-mediated attachment and observation boundary.
+  - **Attachment.** An object attached through a graph seam is ordered **in place** before the operation returns, keeping its identity. The graph seams are: object field assignment; array append, insert, replacement and extend; a hook's replacement result; nested attachment.
+  - **Reads.** Every graph-mediated read orders what it exposes, in place. That covers indexing, iteration and nested traversal; the next listener; the validation and `execute` handoffs; every `tool_execution_*` observation, including each live delivery after that event's listeners ran; serialization and persistence.
+  - **"Minion-mediated" (Q2 §15)** means that the mutation or read itself dispatches through a Minion-owned seam. Reaching a native container through `args` does not make an operation on that container's own native API mediated.
+  - **Semantic model (Q2 §12):**
+
+```text
+A. construction-owned containers                  -> ordered representation; exact Pi order
+B. native object attached through a Minion seam    -> same object; ordered in place immediately
+C. native parent container introduced later        -> identity retained (stays native)
+D. mutation through that parent's own native API   -> not intercepted (not Minion-mediated)
+E. any later Minion-mediated traversal/boundary    -> recursive in-place normalization before exposure
+F. direct native-alias observation in the D->E gap -> approved bounded Python divergence
+```
+
+  - **Container provenance (`L0206-D001-R007`, checkpoint revision 4).** Row A covers every container the **pipeline** produces before an observer receives it, not only the raw arguments as constructed. The pipeline's containers are:
+    - the raw arguments as a provider decoded them (construction);
+    - the graph a `prepare_arguments` shim returns. Its own plain containers are adopted. A container the shim takes from the raw arguments is already the pipeline's and is kept as is;
+    - typed-model validation's rebuilt objects and arrays, default-filled values included (the `TOOL-003` binding mapping).
+
+    Rows C and D apply only to a container an **observer** introduced after it received the arguments. A framework-produced container is never treated as observer-introduced, so the Q1/Q2 interval (row F) never covers it.
+    - Identity between a shim's own objects and what an observer receives is **not** preserved. Pinned Pi hands observers a `structuredClone` of the prepared value, never the shim's objects.
+    - Aliasing **within** the prepared value is preserved: a container the shim placed twice is one container.
+    - This includes a reference that crosses the frontier (`CE-L0206-D001-01-R4-C001`). A container already reachable through a graph container the pipeline holds is kept as is, wherever else the shim also places it, and in either order. So a hook's change through one path shows through the other, as with Pi's `structuredClone`. Being reachable through the graph, it keeps the form it was attached in (row C).
+
+  - **Approved `INTENTIONAL_BOUNDED_DIVERGENCE` (Python binding only; observable, since it can change a hook's decision).** Python cannot intercept arbitrary direct mutation and enumeration performed solely through an externally retained plain-`dict` or `list` alias during an uninterrupted callback. The interval covers two cases:
+    - **Q1:** a plain `dict` already attached, then mutated and enumerated directly through the retained alias;
+    - **Q2:** a child attached through a hook-introduced native container, then observed directly through the hook's own alias.
+
+    The divergence holds only before any further Minion-mediated graph operation, and only while control has not returned to the framework (all six conditions of Q2 §5). It never leaks past the next framework boundary: the next listener, `execute`, events, serialization and persistence are exact.
+  - **Rust:** no such interval. Rust holds the rule for every path (DIRECT_PI_PARITY).
+  - **Not used:** copying, identity-changing wrappers, or interpreter-object surgery.
+- **Any string is a key** (`L0206-D001-R003`). Index recognition is total: a decimal string longer than ten digits is an ordinary key, whatever its length.
+
+**Boundaries.**
+
+| Boundary | Owner | Rule |
+|---|---|---|
+| construction of `ToolCall.arguments` (decoding, adapters, any constructor) | Layer 02/03 | enumerates by the rule |
+| session append, replay and projection | Layer 03 | the replayed object enumerates as the appended one did |
+| `tool_execution_start` / `tool_execution_update` `args` | Layer 06 | the raw object's order |
+| `prepare_arguments` result (for example `edit`'s re-parse of `edits`) | Layer 05/06, the tool | the rule applies to the shim's object, including objects it decodes |
+| validation | Layer 06 | **does not reorder**: the validated object enumerates as its input did (pinned Pi `structuredClone` + `Value.Convert`). A declared property order is **not** imposed, and coercion (`"5"` → `5`) does not move a key |
+| `tools/pre-execute` listener (Pi `beforeToolCall`) | Layer 06 | sees the validated object's order. An **in-place mutation** is visible downstream, ordered by the rule |
+| a listener's **replacement** arguments (`Proceed(arguments=...)`, a Minion mapping: Pi's hook cannot replace) | Layer 06 | the replacement object enumerates by the rule applied to its own construction |
+| `execute` | Layer 06 | the object the hook saw, after any mutation, or the replacement |
+| every serialization of an argument object (a persisted session form, a provider payload) | Layer 03 / Layer 11 | emits keys in that order, as `JSON.stringify` does |
+
+**Typed-model parameters (K1-F1; the Minion `TOOL-003` pydantic mapping).** A tool whose parameters are a typed model receives the model's validated values, keyed and ordered as follows:
+- the keys present in the validated input, in the input's order (by the rule);
+- then any keys the model fills by default, in declared order, each placed by the rule.
+
+Declared field order is never imposed on keys the input supplied. (Pinned Pi has no defaulting step, so the defaulted keys are the mapping's own. Their placement follows the rule, as if assigned after the input's keys.)
+
+**Not in scope.**
+- **The validation-failure diagnostic text** (K1-F2). Minion's certified `TOOL-003` text is its validator's message, not Pi's `JSON.stringify(arguments, null, 2)` text (`spec/tools.md`). That text parity is not reopened, and its key order follows from it.
+- **Tool-result `details` key order**, the `L0506-D003` observation. The carrier is a tool result, not a tool-argument object (decision §1).
+- **Provider projection** is Layer 11's, the first binding to serialize arguments to a provider. It consumes this rule (row above).
+
+**Representation.** The contract fixes observable enumeration order, not types (decision §4).
+- **Python.** A `dict` iterates in insertion order. The binding therefore orders argument objects through its own graph seams: ordered object and array types, adopted at construction, that order on attachment and on read. It also orders in place at every framework boundary. Identity is preserved: no copies. Insertion order alone is insufficient (decision §8), because a mutation appends. The one exception is the approved interval above.
+- **Rust.** The raw `IndexMap` (insertion) and the prepared `BTreeMap` (sorted) are both insufficient. The type design is Rust's.
+
+**Evidence and controls.**
+- **Canonical scenarios:** `minion-agent` `conformance/agent/key-order/` (`key-order-scenario.schema.json`), generated from `out/k1-boundaries.json`. There were 37 cases at checkpoint 2; there are now 49, and each observes the recursive enumeration at every boundary above that the case reaches.
+  - Among them are 7 hook **mutation programs** (`set`/`push`/`insert`/`get` with retained-reference handles, plus `ref` for one object placed twice) and a second listener's view.
+  - Two long-decimal-key cases.
+  - 3 **raw mutation programs**, run on the constructed call's arguments, observed at the serialized form, `start` and `update`. That made 40 cases at checkpoint 3.
+  - `update` is not asserted where a hook mutated nested objects. Whether such a mutation reaches the raw object is value isolation, not order: `L06-VALIDATION-SHALLOW-COPY`, `minion-agent#129`.
+  - **`CE-L0206-D001-01` adds 9 cases, for 49:**
+    - in-hook **read-back** through `args` after attachment (the `read` op, `hook_reads`);
+    - attachment through hook-introduced native lists and dicts, then read through `args`;
+    - array `replace` / `extend`;
+    - `start_program` / `update_program`: an event listener's mutation of the raw object, observed at the live delivery.
+  - **Binding-level evidence** (Python): `tests/tools/test_key_order_observer_chain.py` (matrix A–L, the Q1 divergence witness, the Q1 controls) and `tests/tools/test_key_order_native_containers.py` (matrix M–V, the Q2 divergence witnesses, the Q2 controls). Both run through real hooks of the real pipeline.
+- **Negative controls.** Each MUST fail the corpus, while the conforming implementation passes:
+  - insertion order (Python today);
+  - sorted order (Rust prepared today);
+  - declared-schema order;
+  - reordering at the top level only;
+  - a non-canonical numeral treated as an index (`"01"`, `"4294967295"`);
+  - ordering applied at decode but lost after a hook mutation;
+  - ordering lost on replay;
+  - copy-on-assignment (`R002`);
+  - an index check that converts any decimal key (`R003`);
+  - raw boundaries left unordered after construction (`R004`, single seam).
+
+**WP-13.2** (decision §6) remains non-blocking. Its key-order independence witness exists on both sides, and WP-13.2 is CERTIFIED_CLOSED with K1 outside its owned surface.
 
 ## Provider abstraction (Layer 10)
 
