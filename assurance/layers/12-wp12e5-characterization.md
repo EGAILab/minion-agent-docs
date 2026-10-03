@@ -101,3 +101,33 @@ The probe uses Node v22.15.1 on Windows 11 (build 26200) and on Linux in `node:2
 **Gates:**
 - Windows (Python 3.13.5, pinned ICU): full `pytest` **4268 passed, 38 skipped, 19 xfailed**, coverage **100.00%**; `ruff` and `mypy` clean; manifest validation 8 passed.
 - Linux (`python:3.13`, Python 3.13.15): `test_terminate_child.py` plus the Layer 12 `test_subprocess.py` regression, **43 passed, 8 skipped** (Windows-only). The POSIX controls were run there.
+
+## 7. Implementation review 1 and `WP12E5-I001`
+
+**Implementation review 1** (Codex; code #142 @ `1ea5dad4` / docs #237 @ `eb855bbd`, comment `5973429690`): **CHANGES REQUIRED**, one finding. Every gate was otherwise green, and Codex replayed them all.
+
+- **`WP12E5-I001`** (PI_PARITY_DEFECT, high). On Linux, asyncio's default pidfd child watcher reaps the child (`waitpid`), then publishes the exit to the transport through a callback queued with `call_soon_threadsafe`. A task that runs in between sees `returncode is None`, and the candidate's `os.kill(pid, SIGTERM)` then targets a **released** PID. If the PID is reused, that is a different process. Codex's probe showed the signal request after reaping; it returned `ESRCH`, with no reuse in that run.
+- **Why the gates missed it:** the no-op-after-exit witness awaited `wait()` first, after the exit had been published.
+
+**Remediation** (`_posix_terminate_child`):
+1. `pidfd_open(pid)` first (Linux), pinning the process the PID names at that moment.
+2. `waitid(P_PID, pid, WEXITED | WNOHANG | WNOWAIT)`, which never reaps:
+   - `ChildProcessError`: already reaped, so do nothing;
+   - a result: exited and unreaped (a zombie), already finished, so do nothing;
+   - `None`: running and unreaped. Reaping is irreversible, so the pidfd from step 1 names this same child.
+3. `pidfd_send_signal(pidfd, SIGTERM)`. It is safe even if a reap follows, and gives `ESRCH`.
+
+- **Without pidfd** (Linux before 5.3, other POSIX systems), `os.kill` follows step 2 directly. asyncio's watcher then reaps on a thread, so a microsecond window remains there. This is disclosed. The certified hosts are Linux with pidfd and Windows.
+- **No other behaviour changes:** spawn, the watcher, cause classification, `terminate()`, stdio and the `wait()` outcomes are untouched.
+
+**New permanent witnesses** (Linux container, pidfd available, kernel 6.18):
+- `test_posix_released_pid_is_never_signalled`: Codex's technique, kept permanently. The request is scheduled from asyncio's own child-watcher callback, after the reap and before the exit is published. It asserts that the child was reaped, that `returncode` was still `None`, that **no** signal request was made through `os.kill` or `pidfd_send_signal`, and that the final code 7 is preserved.
+- `test_posix_exited_unreaped_child_is_not_signalled`: the event loop is blocked, so the exited child stays a zombie. No request is made, and the real code 5 stands.
+- **RED against the rejected `1ea5dad4`:** both fail.
+
+**Controls:**
+- New: `unsynchronized-kill` (the rejected candidate), killed by both new witnesses; `zombie-signalled`, killed by the zombie witness.
+- POSIX controls rewritten for the helper: `posix-sigkill` and `posix-killpg` patch both send paths.
+- Linux: **9/9 killed**. Windows: **4/4 killed**, unchanged.
+
+**Gates:** Linux, `test_terminate_child.py` plus `test_subprocess.py`: **45 passed, 8 skipped**. Windows (Python 3.13.5, pinned ICU): **4268 passed, 40 skipped, 19 xfailed**, coverage **100.00%**; `ruff`, `ruff format` and `mypy` clean; manifest validation 8 passed.
