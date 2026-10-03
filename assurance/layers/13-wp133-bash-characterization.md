@@ -294,3 +294,73 @@ Their interface shapes go to the Owner before the contract can freeze.
 - **Timer resolution:** Node's `setTimeout` coerces a delay below 1 ms to 1 ms and schedules at integer-millisecond libuv resolution. Fractional-millisecond timeouts (for example `0.0005` s) need boundary witnesses in the contract.
 - **Matrix §3:** Windows env key order is observable through duplicate arbitration (`12-wp12e4-characterization.md` C001). This is revised.
 - **Temp-file and raw-error wrappers:** the contract states their exact rules; they are not left as "generic".
+
+## 15. Audit 2 and convergence episode CE-WP133-01 (`WP133-AUD-R003`)
+
+**Codex audit re-review 2** (docs #229 @ `901d9798`; comment `5966930289`, verbatim):
+- R001 and R002 are **CLOSED**.
+- **R003 NOT CLOSED.** Requiring a canonicalizing provider does not make `canonical_path` equal to followed existence. Pinned `getShellConfig` on Linux selects and runs a shell at `/proc/<pid>/fd/<n>`, the descriptor of an unlinked file: `existsSync` is true, the shell runs and prints `ok`, while `realpath` is ENOENT.
+- Codex directed an audit of EXEC-007 `probe_dir_entry`.
+- R003 has now survived two independent reviews, so **§11.8 trigger A** has fired. This section is the convergence characterization and checkpoint.
+
+**Characterization: an executed differential.** Pinned Node's three predicates (`existsSync`, `access(F_OK)`, `realpath`) are compared with the certified EXEC-007 `probe_dir_entry` OS sequence: `lstat`, then `stat` if the entry is a symlink (`filesystem.py::_probe_dir_entry_sync`, `minion-agent` main `4c735ed6`). Python executes it on the same fixtures.
+
+- **Linux.** Harness `harness/existence_probe.sh`. Node runs in `node:22.15.1-bookworm-slim` (`node@sha256:ec318fe0…`) as uid 1000; CPython 3.12.15 runs in `python:3.12-slim` (`python@sha256:eeb8088e…`) as uid 65534. Outputs: `out/existence-{node,python}-linux.json`. There are 13 cases:
+  - a file, a directory and the directory with a trailing slash;
+  - symlinks to a file and to a directory;
+  - a dangling symlink;
+  - a FIFO and a symlink to a FIFO;
+  - a file under a mode-000 directory;
+  - a symlink loop;
+  - a missing path;
+  - `file/child`;
+  - `/proc/PID/fd/7`, an unlinked copy of `/bin/sh` held open.
+- **Windows 11.** Harness `harness/existence_probe_win.mjs`, Node v22.15.1 and CPython 3.13.5, output `out/existence-win32.json`. There are 9 cases:
+  - a file, a directory and the directory with a trailing separator;
+  - symlinks to a file and to a directory;
+  - a dangling symlink;
+  - a junction;
+  - a missing path;
+  - `file\child`.
+
+| Predicate | Linux (13) | Windows (9) |
+|---|---|---|
+| `existsSync` vs `probe_dir_entry` `Ok` | **equal on all 13**, the descriptor path included | **equal on all 9** |
+| `access(F_OK)` vs `probe_dir_entry` `Ok` | **equal on all 13** | differs on the **dangling symlink**: `access` succeeds (Node's Windows `access` does not follow), `probe` ENOENT |
+| `access(F_OK)` vs non-following `lstat` (`file_info`) `Ok` | (differs on the dangling symlink, the FIFO-symlink equivalents) | **equal on all 9** |
+| `realpath` (`canonical_path`) vs `existsSync` | differs on the **descriptor path** | equal |
+
+**Checkpoint (proposed): the R003 disposition.**
+- **Shell discovery** (`existsSync`, scoping v4 branches 1, 2a, 2b and 2c), on both platforms: the candidate exists iff `ctx.fs.probe_dir_entry(p)` is `Ok`. Any other `Err` means "not found", as `existsSync`'s catch-all `false` does.
+- **cwd check** (`fsAccess(cwd, F_OK)`):
+  - `POSIX`: `probe_dir_entry(cwd)` is `Ok`.
+  - `WINDOWS`: `file_info(cwd)` is `Ok`. It does not follow symlinks, matching Node's Windows `access`.
+  - The platform comes from WP-12.E4 (#130).
+  - Any other `Err` gives `Working directory does not exist: ${cwd}\nCannot execute bash commands.`
+  - On Windows, a dangling-symlink cwd passes the check, as in Pi, and then fails at spawn: the spawn-error wrapper.
+- **`not_supported`** from either operation is never treated as absence. It settles the call with the disclosed Minion error (contract §Error text). EXEC-007 lets a provider omit `probe_dir_entry`; every local provider supplies it.
+- **`canonical_path` is not used.**
+
+**Witnesses:** both differential harnesses become contract evidence. These cases carry over:
+- the Linux descriptor-path shell, which Pi selects and runs;
+- the dangling-symlink `shell_path`, which is not found;
+- the Windows dangling-symlink cwd, which passes the check and fails at spawn.
+
+**Negative controls (bash binding level):**
+- a `canonical_path`-based existence check, killed by the descriptor path;
+- an `exists`/`file_info`-based `existsSync`, killed by the dangling symlink;
+- a `probe_dir_entry`-based Windows cwd check, killed by the Windows dangling-symlink cwd.
+
+```text
+CONVERGENCE CHECKPOINT (CE-WP133-01)
+    PROPOSED
+OPEN FINDINGS
+    WP133-AUD-R003 (trigger A)
+DISPOSITION
+    existsSync -> probe_dir_entry Ok; access(F_OK) -> POSIX probe_dir_entry Ok, WINDOWS file_info Ok;
+    not_supported -> disclosed prerequisite error; canonical_path not used
+EVIDENCE
+    out/existence-{node,python}-linux.json (13), out/existence-win32.json (9)
+NEXT_OWNER
+    Codex (checkpoint review)
+```
