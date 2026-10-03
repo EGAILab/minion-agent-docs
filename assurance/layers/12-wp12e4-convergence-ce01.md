@@ -84,3 +84,18 @@ Codex's separate old-versus-candidate fake-POSIX lookup probe confirms the I003 
 - **POSIX-shaped replay** (scratch, 2026-10-04): `ctypes.windll` deleted, `sys.platform = "linux"`, the real test file loaded with `runpy`. The portable witness **passes** without any Windows API.
 
 **Gates:** `pytest` 4238 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
+
+## 5. Checkpoint agreed → closure → final review 2 → I004
+
+- **Checkpoint re-review** (revision 2; docs #230 comment `5970543182`): **APPROVED**, so the checkpoint is AGREED.
+- **Targeted closure** (`.tmp/e4-review/CLOSURE1.md`): I001, I002, I003 and `CE-WP12E4-01-C001` are **closed** (provisionally).
+- **Final complete review 2:** **CHANGES REQUIRED**. One new, narrow Case A finding:
+  - **`WP12E4-I004`** (CONTRACT_ASSURANCE_DEFECT): `LocalSubprocess.platform` was a public writable attribute. Assigning `Platform.POSIX` on Windows retagged every later snapshot and changed its lookup, against §15.1's "constant for the provider's lifetime".
+  - Codex: the UTF-16 checkpoint is not invalidated; remediate by Case A, then targeted closure, then the final complete review.
+
+**Remediation** (code #138 @ `a0580e46`):
+- `Subprocess.platform` is now a read-only protocol property.
+- `LocalSubprocess` stores the declaration privately (`_platform`, set once from the host) and exposes it through a read-only property.
+- **Witness:** assigning `platform` raises `AttributeError`, and the declaration and later snapshots keep the original family.
+- **Known-bad:** at `d2abf19c` the witness fails (DID NOT RAISE).
+- **Gates:** `pytest` 4239 passed, 29 skipped, 19 xfailed; coverage 100.00%; `ruff` and `mypy` clean.
