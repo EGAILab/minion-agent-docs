@@ -22,6 +22,12 @@ Minion Agent is one product with one language-neutral semantic contract and two 
 
 For Pi-derived behavior, reproduce Pi's observable semantics as closely as practical. Do not replace Pi behavior with a cleaner, more generalized, or more abstract design merely because it is easier to implement. Minion's plugin/runtime architecture may change ownership, registration, lifecycle, composition, and implementation mechanics; it does not by itself justify changing Pi-visible behavior.
 
+**Practical compatibility** (Owner decision, 2026-10-04: `minion-agent#75` comment `5973629428`).
+- Minion targets practical behavioral compatibility with Pi, not exhaustive emulation of incidental JavaScript, Node.js, operating-system or dependency-runtime behavior.
+- Core agent semantics and realistic operational behavior remain parity requirements.
+- The rule applies to unfinished work: WP-13.3, WP-13.4, Layers 14–18, and any lower-layer delta they surface. Already-certified work is not reopened because of it.
+- A divergence is accepted only through §6.1 and Owner governance.
+
 The adopted Pi revision is recorded by the frozen master design. At the time this file was introduced it is:
 
 `b7bb00b936dbe21b8e160b3e89efdec361846699`
@@ -181,6 +187,30 @@ Every material issue must use exactly one established classification:
 - `PARITY_CONSTRAINED_RISK`: fixing the issue would change Pi-visible behavior. Preserve the Pi-compatible baseline and record the risk unless governance explicitly approves a divergence.
 
 Do not invent softer labels to avoid a blocker.
+
+### 6.1 Practical-parity dispositions
+
+A reviewer still reports every confirmed Pi difference, with discriminating evidence and its usual classification.
+
+**Its disposition is one of:**
+- **required parity**: fix it;
+- **an existing approved architectural mapping**;
+- **an intentional practical-parity divergence**: this needs Owner governance.
+
+**Screening questions for a divergence candidate:**
+1. Is the behaviour part of Pi's intentional agent/tool abstraction?
+2. Can it realistically occur during normal documented usage?
+3. Would exact parity require substantial architecture or emulation primarily for this behaviour?
+
+**"No, no, yes" is a strong candidate**, but only the Owner accepts a divergence. The author brings an options packet and never self-accepts.
+
+**An accepted divergence must have all of:**
+- a deterministic, documented Minion behaviour;
+- a permanent witness showing exactly where Minion and Pi differ;
+- an entry in `assurance/pi-divergences.md`;
+- the manifest's existing `intentional divergence` disposition on its row.
+
+This relaxes the compatibility goal. It is **not** permission to leave an ordinary parity defect unfixed.
 
 ## 7. Contract-quality rule
 

@@ -9,6 +9,10 @@ The current semantic priority is:
 
 > **Pi behavioral fidelity first.**
 
+Minion targets practical behavioral compatibility with Pi rather than exhaustive emulation of
+incidental Node.js/runtime behavior. Approved divergences are explicitly tracked in
+`assurance/pi-divergences.md` and the parity manifest.
+
 Pi at the adopted revision is the default compatibility oracle for Pi-visible agent, LLM/provider,
 message-transformation, tool, session, and harness behavior. Minion's plugin/runtime architecture is
 the primary intentional architectural divergence.
