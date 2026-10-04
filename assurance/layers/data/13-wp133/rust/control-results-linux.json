@@ -1,0 +1,350 @@
+{
+  "candidate": "6df5a91a19af10bc030b237f01b9b60c855ec734",
+  "platform": "linux",
+  "killed": 49,
+  "controls": [
+    {
+      "control": "abort-before-timeout",
+      "witness": "bash_precheck_order_timeout_before_abort_before_shell_and_cwd",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_precheck_order_timeout_before_abort_before_shell_and_cwd' (311) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:652:9:\nassertion failed: error.message().as_str().unwrap().starts_with(\"Invalid timeout:\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "timeout-before-abort-classification",
+      "witness": "bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace' (607) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:890:9:\nassertion `left == right` failed\n  left: Some(\"Command timed out after 0.0005 seconds\")\n right: Some(\"Command aborted\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "settlement-at-exit-alone",
+      "witness": "bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes' (903) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:493:5:\nassertion `left == right` failed\n  left: \"(no output)\"\n right: \"ab\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "no-stdio-idle-grace",
+      "witness": "bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes' (1199) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:488:5:\nsettlement must not wait indefinitely for inherited pipes\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "command-keeps-pipes",
+      "witness": "bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes' (1495) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:495:5:\nassertion failed: process.stdout.closed.load(Ordering::SeqCst)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "decoder-reset-per-chunk",
+      "witness": "merged_decoder_bom_eof_and_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::merged_decoder_bom_eof_and_raw_bytes' (1791) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:332:9:\nassertion `left == right` failed\n  left: \"����\\u{feff}\\u{feff}\"\n right: \"€\\u{feff}\\u{feff}\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "per-chunk-bom-strip",
+      "witness": "merged_decoder_bom_eof_and_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::merged_decoder_bom_eof_and_raw_bytes' (2087) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:332:9:\nassertion `left == right` failed\n  left: \"€\\u{feff}\"\n right: \"€\\u{feff}\\u{feff}\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "no-bom-strip",
+      "witness": "merged_decoder_bom_eof_and_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::merged_decoder_bom_eof_and_raw_bytes' (2383) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:332:9:\nassertion `left == right` failed\n  left: \"\\u{feff}€\\u{feff}\\u{feff}\"\n right: \"€\\u{feff}\\u{feff}\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "bom-prefix-lost-at-eof",
+      "witness": "merged_decoder_bom_eof_and_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::merged_decoder_bom_eof_and_raw_bytes' (2679) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:318:13:\nassertion `left == right` failed\n  left: \"\"\n right: \"�\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "decoded-instead-of-raw-file",
+      "witness": "bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes' (2975) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:536:5:\nassertion `left == right` failed\n  left: [239, 187, 191, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, "
+    },
+    {
+      "control": "truncation-from-tail",
+      "witness": "pinned_boundary_probe_all_ten_rolling_rows",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::pinned_boundary_probe_all_ten_rolling_rows' (3271) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:283:13:\ncutMidLineNewlineInLaterChunk: total output requires truncation metadata even when the rolling tail fits\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "persistence-not-joined",
+      "witness": "bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes' (3567) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:514:47:\nnot joined: Ok(AgentToolResult { content: [Text(ResultTextBlock { kind: Text, text: ResultString { units: JsString([120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, "
+    },
+    {
+      "control": "abort-after-finalization",
+      "witness": "bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace' (3863) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:890:9:\nassertion `left == right` failed\n  left: Some(\"Command timed out after 0.0005 seconds\")\n right: Some(\"Command aborted\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "writer-orphaned-on-cancel",
+      "witness": "bash_cancel_drops_the_writer_future_and_no_write_outlives_the_call",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_cancel_drops_the_writer_future_and_no_write_outlives_the_call' (4159) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:597:5:\nassertion `left == right` failed\n  left: 1\n right: 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "always-drop-partial-line",
+      "witness": "pinned_boundary_probe_all_ten_rolling_rows",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::pinned_boundary_probe_all_ten_rolling_rows' (4455) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:294:13:\nassertion `left == right` failed: singleLineOneChunk\n  left: \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n right: \"1d82dbd42e36825e47ff7f0cc272901ca55b03965da120f1b3a2d935b3c767d5\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "never-drop-partial-line",
+      "witness": "pinned_boundary_probe_all_ten_rolling_rows",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::pinned_boundary_probe_all_ten_rolling_rows' (4751) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:294:13:\nassertion `left == right` failed: longLineThenNewline\n  left: \"1d82dbd42e36825e47ff7f0cc272901ca55b03965da120f1b3a2d935b3c767d5\"\n right: \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "timer-rounded-ms",
+      "witness": "bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace' (5047) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:894:9:\nassertion `left == right` failed\n  left: 102ms\n right: 101ms\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "timer-no-one-ms-minimum",
+      "witness": "bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace' (5343) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:894:9:\nassertion `left == right` failed\n  left: 100ms\n right: 101ms\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-unbounded",
+      "witness": "bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited' (5639) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:840:9:\nassertion failed: Instant::now() - began < Duration::from_secs(1)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-per-stream-budget",
+      "witness": "bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited' (5935) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:840:9:\nassertion failed: Instant::now() - began < Duration::from_secs(1)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-settles-at-exit",
+      "witness": "bash_lookup_waits_for_exit_and_both_eof_not_command_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_waits_for_exit_and_both_eof_not_command_grace' (6231) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:802:5:\nassertion `left == right` failed\n  left: \"sh\"\n right: \"/found\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-command-idle-grace",
+      "witness": "bash_lookup_waits_for_exit_and_both_eof_not_command_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_waits_for_exit_and_both_eof_not_command_grace' (6527) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:802:5:\nassertion `left == right` failed\n  left: \"sh\"\n right: \"/found\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-fails-on-interruption",
+      "witness": "bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited' (6823) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:838:9:\nassertion `left == right` failed\n  left: \"sh\"\n right: \"/found\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-keeps-pipes",
+      "witness": "bash_lookup_timeout_after_exit_keeps_zero_and_releases_pipes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_timeout_after_exit_keeps_zero_and_releases_pipes' (7119) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:996:5:\nassertion failed: lookup.stdout.closed.load(Ordering::SeqCst)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "existence-via-canonical",
+      "witness": "bash_empty_override_falls_through_custom_missing_fails_and_windows_lookup_probes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_empty_override_falls_through_custom_missing_fails_and_windows_lookup_probes' (7415) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1009:5:\nprovider probe success must not be replaced with canonical-path/exists semantics\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "windows-cwd-follows",
+      "witness": "bash_windows_probe_selection_and_nonfollowing_cwd_are_distinct",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_windows_probe_selection_and_nonfollowing_cwd_are_distinct' (7712) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:871:5:\nassertion failed: calls[1].starts_with(\"info \")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "inject-none-for-absent-file",
+      "witness": "bash_context_env_is_explicit_clean_and_provider_snapshot_is_per_call",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_context_env_is_explicit_clean_and_provider_snapshot_is_per_call' (8008) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:771:5:\nassertion failed: !env.contains_key(\"MINION_SESSION_FILE\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "legacy-shell-uses-argv",
+      "witness": "bash_legacy_stdin_does_not_block_timeout_and_command_uses_usv_projection",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_legacy_stdin_does_not_block_timeout_and_command_uses_usv_projection' (8304) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:717:5:\nassertion `left == right` failed\n  left: [\"C:/Windows/System32/bash.exe\", \"-c\", \"�\"]\n right: [\"C:/Windows/System32/bash.exe\", \"-s\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "spawn-error-raw-text",
+      "witness": "bash_spawn_failure_has_own_text_and_zero_updates",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_spawn_failure_has_own_text_and_zero_updates' (8600) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1061:5:\nassertion `left == right` failed\n  left: Some(\"spawn failure /bin/bash\")\n right: Some(\"Failed to start the shell /bin/bash\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "late-pre-spawn-abort-is-spawn-error",
+      "witness": "bash_abort_arriving_during_discovery_is_not_a_spawn_failure",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_abort_arriving_during_discovery_is_not_a_spawn_failure' (8896) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:558:5:\nassertion `left == right` failed\n  left: Some(\"Failed to start the shell /bin/bash\")\n right: Some(\"Command aborted\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "file-error-does-not-terminate",
+      "witness": "bash_file_failure_kills_before_own_error_and_discards_output",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_file_failure_kills_before_own_error_and_discards_output' (9192) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:625:5:\nassertion `left == right` failed\n  left: 0\n right: 1\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "unexpected-partial-update",
+      "witness": "bash_spawn_failure_has_own_text_and_zero_updates",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_spawn_failure_has_own_text_and_zero_updates' (9488) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1097:5:\nassertion `left == right` failed\n  left: 1\n right: 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "command-lone-surrogate-dropped",
+      "witness": "bash_command_projection_argv_and_stdin_preserves_pairs_replaces_lone_units",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_command_projection_argv_and_stdin_preserves_pairs_replaces_lone_units' (9784) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:963:17:\nassertion `left == right` failed\n  left: [\"custom\", \"-c\", \"\"]\n right: [\"custom\", \"-c\", \"�\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "raw-threshold-ignored",
+      "witness": "raw_threshold_opens_a_log_even_when_bom_stripping_avoids_truncation",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash_output::tests::raw_threshold_opens_a_log_even_when_bom_stripping_avoids_truncation' (10080) panicked at crates/minion-agent/src/tools/builtin/bash_output.rs:357:9:\nassertion `left == right` failed\n  left: []\n right: [239, 187, 191, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97,"
+    },
+    {
+      "control": "timer-raw-fractional-ms",
+      "witness": "bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace' (10376) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:894:9:\nassertion `left == right` failed\n  left: 102ms\n right: 101ms\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "disabled-context-still-injected",
+      "witness": "bash_disabled_context_is_removed_signal_delegated_and_worlds_checked",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_disabled_context_is_removed_signal_delegated_and_worlds_checked' (10672) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1135:5:\nassertion failed: !calls[0].1.env.keys().any(|k| k.starts_with(\"MINION_\"))\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "signal-not-delegated",
+      "witness": "bash_disabled_context_is_removed_signal_delegated_and_worlds_checked",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_disabled_context_is_removed_signal_delegated_and_worlds_checked' (10968) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1139:5:\nassertion failed: delegated.aborted()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "pipe-release-kills-descendants",
+      "witness": "bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes' (11264) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:497:5:\nassertion `left == right` failed\n  left: 1\n right: 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-crossing-chunk-discarded",
+      "witness": "bash_lookup_retains_the_budget_crossing_stdout_chunk",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_retains_the_budget_crossing_stdout_chunk' (11560) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1209:5:\nassertion `left == right` failed\n  left: \"sh\"\n right: \"/crossing\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "unsupported-prerequisite-fabricated",
+      "witness": "bash_append_failure_uses_own_error_and_prerequisites_are_not_fabricated",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_append_failure_uses_own_error_and_prerequisites_are_not_fabricated' (11856) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1177:9:\nassertion `left == right` failed\n  left: Some(\"Working directory does not exist: /tmp/.tmpjisyB2\\nCannot execute bash commands.\")\n right: Some(\"bash requires a filesystem provider that supports probe_dir_entry\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "baseline-recaptured",
+      "witness": "bash_precheck_order_timeout_before_abort_before_shell_and_cwd",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_precheck_order_timeout_before_abort_before_shell_and_cwd' (12152) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:677:5:\nassertion `left == right` failed\n  left: 16\n right: 8\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "timer-active-through-finalization",
+      "witness": "bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes' (12448) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:519:5:\nsettled success must await persistence without running its expired timer\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "abort-classified-after-finalization",
+      "witness": "bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes' (12744) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:530:5:\nsettled success must not be reclassified by output finalization\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "persistence-inline-in-intake",
+      "witness": "bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes' (13040) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:525:5:\nreleased persistence must finish without an intake deadlock\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "decoder-per-stream",
+      "witness": "bash_stdout_stderr_share_one_decoder_in_read_completion_order",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_stdout_stderr_share_one_decoder_in_read_completion_order' (13336) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1226:5:\nassertion `left == right` failed\n  left: \"��\"\n right: \"€\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "empty-nonzero-output",
+      "witness": "bash_nonzero_empty_output_and_notice_precede_the_status",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_nonzero_empty_output_and_notice_precede_the_status' (13632) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1246:9:\nassertion `left == right` failed\n  left: Some(\"Command exited with code 1\")\n right: Some(\"(no output)\\n\\nCommand exited with code 1\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "status-before-truncation-notice",
+      "witness": "bash_nonzero_empty_output_and_notice_precede_the_status",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_nonzero_empty_output_and_notice_precede_the_status' (13928) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1246:9:\nassertion `left == right` failed\n  left: Some(\"Command exited with code 1\\n\\n(no output)\")\n right: Some(\"(no output)\\n\\nCommand exited with code 1\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "case-insensitive-minion-removal",
+      "witness": "bash_context_env_is_explicit_clean_and_provider_snapshot_is_per_call",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_context_env_is_explicit_clean_and_provider_snapshot_is_per_call' (14224) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:772:5:\nassertion `left == right` failed\n  left: None\n right: Some(\"keep\")\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lookup-nonzero-is-success",
+      "witness": "bash_lookup_selection_uses_real_status_truthiness_and_buffer_utf8",
+      "killed": true,
+      "test_exit": 101,
+      "diagnostic": "thread 'tools::builtin::bash::tests::bash_lookup_selection_uses_real_status_truthiness_and_buffer_utf8' (14520) panicked at crates/minion-agent/src/tools/builtin/bash_tests.rs:1300:9:\nassertion `left == right` failed\n  left: \"/found\"\n right: \"sh\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    }
+  ]
+}
