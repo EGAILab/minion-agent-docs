@@ -2372,7 +2372,7 @@ TOOL-026 step-4 rejection (R002-A)            (as for read)                     
 
 ### WP-13.3 — `bash` (`TOOL-034`, `TOOL-035`)
 
-**Status (`minion-agent#50`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#50`):** CERTIFIED_CLOSED (cross-language). Contract: docs #229 → `a805f6ed`. Python: #146 → `649927a2`, record docs #240 → `ce0aa9a2`. Rust: #150 → `62f0c129`, record docs #245 → `e6a52fd0`. Reviews: Python final `minion-agent#146` comment `5977177480`; Rust closure `minion-agent#150` comment `5979787676`.
 
 **Requirements:**
 - `TOOL-034`: the argument schema, the absence of a default timeout, shell selection, and command transport;
