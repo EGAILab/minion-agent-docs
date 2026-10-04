@@ -2971,7 +2971,7 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 
 ## 16. Layer-12 delta `L12-D002` — `wait()` settles on exit; `ReadableStream.close()`; the amended disposal model (`EXEC-005`, `EXEC-012`)
 
-**Status (`minion-agent#144`):** CONTRACT_DRAFT. Python: implementation candidate (`minion-agent#143`). Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#144`):** CERTIFIED_CLOSED (cross-language). Contract: docs #239 → `ac5bd045`. Python: #143 → `c06e1c7a`. Rust: #145 → `62caa152`, assurance docs #241 → `de60179e`. Closure review: `minion-agent#145` comment `5976898729`.
 
 - **Origin.** Found by the WP-13.3 Python implementation (`minion-agent#50`).
   - **Defect:** on **Windows** the certified Python `Process.wait()` did not settle on the process's own exit while a descendant held an inherited pipe. asyncio wakes `wait()` only after every pipe disconnects. This contradicted §6.
