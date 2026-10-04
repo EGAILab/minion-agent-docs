@@ -2979,7 +2979,7 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
   - Making `wait()` settle at exit exposed a disposal contradiction (`L12-D002-I002`): `wait()` alone could no longer both keep output readable and release a pipe a descendant still holds.
   - WP-13.3 `bash` needed the same missing operation, to release its pipes at settlement as Pi does.
 - **Authorization.** Owner decision `L12-D002` = Option A (`minion-agent#144` comment `5975624637`): a narrow additive `ReadableStream.close()` plus the amended disposal model, in both bindings, with no practical-parity divergence. The routine lifecycle is delegated under `minion-agent#75`.
-- **Classification.** `MINION_EXTENSION` (§6's own seam). The bash use reproduces Pi's settlement (`waitForChildProcess`: `child.stdout?.destroy(); child.stderr?.destroy()`) and its lookup (`spawn_sync.cc` `Kill()` → `CloseStdioPipes()`).
+- **Classification.** `MINION_EXTENSION` (§6's own seam). Manifest disposition: `intentional divergence`, which classifies the seam only, like `EXEC-005` (`L12-R008`). It is not a practical-parity behavioral divergence; none is approved for this surface. The bash use reproduces Pi's settlement (`waitForChildProcess`: `child.stdout?.destroy(); child.stderr?.destroy()`) and its lookup (`spawn_sync.cc` `Kill()` → `CloseStdioPipes()`).
 
 ### 16.1 `wait()` settles on the process's own exit
 - **Unchanged rule, restored on Windows:** `wait()` settles when the directly spawned process settles. It never waits for stdio, including a pipe a descendant holds.
