@@ -37,6 +37,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Permanent witnesses:**
   - `assurance/layers/data/13-wp133/harness/lookup_lifecycle_probe.mjs` → `out/lookup-lifecycle-{win32,linux}.json`. Minion's rule differs from pinned Pi on exactly the `trapExit0OverflowWhileAlive`, `trapExit0TimeoutWhileAlive` and `trapDelayedExit0TimeoutWhileAlive` rows on Linux, and nowhere on Windows (`div001`, `minion.differencesAreExactlyDiv001`).
   - The WP-13.3 implementation witnesses: the interruption is `terminate()`, and such a lookup is not selected.
-- **Manifest:** a dedicated `TOOL-034` lookup-interruption row with the `intentional divergence` disposition, added with the WP-13.3 code candidate. The WP-13.3 manifest rows arrive with that candidate.
+    - Python: `tests/tools/builtin/test_bash_shell.py::test_div001_interruption_is_terminate_not_sigterm`, plus `test_lookup_lifecycle_rows` (the probe's Minion column).
+    - The negative control `lookup-direct-sigterm` in `scripts/wp133_bash_negative_controls.py`.
+- **Manifest:** row `TOOL-034-DIV-001` (lookup interruption), disposition `intentional divergence`, added with the WP-13.3 Python code candidate, beside `TOOL-034` and `TOOL-035`.
 - **Governance:** Owner practical-parity decision, 2026-10-04 (`minion-agent#50` comment `5973629192`; `#141` comment `5973628920`; `#75` comment `5973629428`). It supersedes Owner decision `CE-WP133-02-C001` = Option 1 (`#50` comment `5973189849`).
 - **Reconsideration trigger:** a real Minion consumer independently needs a direct-child graceful termination primitive for a normal operational requirement. Future tests reproducing this contrived lookup difference are **not** a trigger.
