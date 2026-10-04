@@ -154,3 +154,31 @@ The control runner now refuses to count a collection or setup error as a kill. A
 | Full Linux suite (`python:3.13`, pinned ICU 78.3, PyICU 2.16.2) | 4403 passed, 96 skipped, 19 xfailed |
 | `ruff check .` / `mypy src tests/typing` | clean / clean (107 files) |
 | Negative controls, Windows / Linux | 37/37 and 37/37 killed, each by a test-level failure |
+
+## Remediation 2 (after Codex targeted closure 1)
+
+Targeted closure 1 (`.tmp/wp133-review/CLOSURE1.md`) provisionally closed WP133-I001 and WP133-I002, and found **`WP133-I003`** (PI_PARITY_DEFECT). Remediation 1 had moved the writer join inside `settle()`, so the timeout timer, cancelled only after `settle()` returned, stayed active during full-output finalization. Pi clears the timer and removes its abort listener in `exec`'s `finally`, before `finishOutput()` awaits `closeTempFile()`.
+
+**Fix.** The run now has two phases.
+- `_Run.settle()` ends the command: exit, grace, and the read ends released.
+- `run_command` then disposes of the timer and background tasks, and records `aborted` and `timed_out` at that point.
+- Only after that does `finish_output()` join the accepted-write writer and flush.
+- If the call is cancelled with a write still in flight, the writer is discarded.
+
+**Witnesses** (each uses a gated, conforming `append_file`):
+- the 0.3 s timeout passes during finalization, the result is success, and nothing is terminated;
+- an abort during finalization does not change the classification;
+- a call cancelled mid-run with a write in flight writes nothing afterwards.
+
+**Controls added:** `timer-active-through-finalization`, `abort-classified-after-finalization` and `writer-orphaned-on-cancel`. The timeout-first and join anchors follow the new code.
+
+The branch also merged main `62caa152`, which brought the Rust EXEC-012 changes and the manifest pointer.
+
+**Remediated candidate:** code PR `EGAILab/minion-agent#146` @ `ffec4056abd053b6bf143c22f2a427dd4feb90bd`.
+
+| Gate at this head | Result |
+|---|---|
+| Full Windows suite, warning-strict, pinned ICU | 4472 passed, 30 skipped, 19 xfailed; 100.00% coverage |
+| Full Linux suite (`python:3.13`, pinned ICU 78.3, PyICU 2.16.2) | 4406 passed, 96 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (107 files) |
+| Negative controls, Windows / Linux | 40/40 and 40/40 killed, each by a test-level failure |
