@@ -117,3 +117,40 @@ Everything in spec WP-13.3 "Explicitly not certified" stays out of scope. Also o
 
 ## Requested review
 An independent exact-SHA implementation review of code PR `EGAILab/minion-agent#146` @ `65febdbe329a5020c7833688656e27fabc5b7767` against `spec/tools.md` WP-13.3, spec/execution.md §16.4, and this record.
+
+## Remediation 1 (after Codex implementation review 1)
+
+Review 1 (`minion-agent#146` comment `5976399232`) at `65febdbe` / `9699a417` returned CHANGES REQUIRED with two findings. Both were accepted as stated.
+
+**`WP133-I001`: an incomplete leading BOM at EOF was dropped** (PI_PARITY_DEFECT).
+- CPython's incremental `utf-8-sig` decoder silently discards an incomplete initial `EF` or `EF BB` on its final flush. Pi's `TextDecoder` emits U+FFFD (3 decoded bytes).
+- **Fix:** decode with the plain incremental `utf-8` decoder in replacement mode, and strip one U+FEFF only when it is the stream's first decoded character. Only a complete leading `EF BB BF` produces that character.
+- **Witnesses** (accumulator): `EF`, `EF BB` and a split `EF`|`BB` give U+FFFD and 3 bytes. A complete or split BOM still gives empty output, and a lone `E2` still gives U+FFFD.
+- **Witness** (public tool): `printf '\357'` and `printf '\357\273'` produce U+FFFD, not `(no output)`.
+- The pinned BOM rows stay green.
+
+**`WP133-I002`: settlement cancelled an in-flight full-output write** (PI_PARITY_DEFECT).
+- Each pump both read and persisted. Cancelling it at the end of the grace cancelled an accepted write whose bytes had already left the backlog.
+- **Fix:** intake (read, accumulate, enqueue) is synchronous after the read, so cancelling a pump can only cancel a pending read. One ordered writer persists the accepted chunks, and settlement joins it before finishing. This matches Pi's `finishOutput()` awaiting `closeTempFile()`.
+- Cancelling the tool call propagates into the awaited writer, so no write outlives the call.
+- **Witnesses**, each with an event-gated, conforming `append_file`:
+  - **success:** the run does not return while the write is held, and then every one of the 51,201 bytes is in the file;
+  - **delayed error:** the file-error classification is kept;
+  - **cancelled call:** no write completes after the call is gone.
+
+**Controls added:**
+- `bom-prefix-dropped-at-eof` (the I001 regression);
+- `settlement-cancels-persistence` and `persist-inline-in-pump` (the I002 regression);
+- `per-chunk-bom-strip`, now injectable and no longer structural;
+- the decoder fault anchors updated to match the new decoder.
+
+The control runner now refuses to count a collection or setup error as a kill. A mis-indented fault had briefly been credited that way.
+
+**Remediated candidate:** code PR `EGAILab/minion-agent#146` @ `52d9fd490306d67771c2e3de721f02734c4c9657`.
+
+| Gate at the remediated head | Result |
+|---|---|
+| Full Windows suite, warning-strict, pinned ICU | 4469 passed, 30 skipped, 19 xfailed; 100.00% coverage |
+| Full Linux suite (`python:3.13`, pinned ICU 78.3, PyICU 2.16.2) | 4403 passed, 96 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (107 files) |
+| Negative controls, Windows / Linux | 37/37 and 37/37 killed, each by a test-level failure |
