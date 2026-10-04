@@ -913,6 +913,8 @@ WritableStream
 
 ReadableStream
     read_chunk() -> Result[bytes | None, SubprocessError]   -- None chunk means EOF
+    close() -> None                  -- L12-D002 (EXEC-012, section 16): best-effort, idempotent,
+                                         never raises; releases this stream's local read end only
 ```
 
 Binding requirements:
@@ -981,7 +983,7 @@ Binding requirements:
   signal-terminated case). This is the SAME code-preserving rule `ctx.shell`'s own
   cleanup()-triggered settlement already uses (§5.7) -- deliberately UNIFIED, not two different
   rules for what is architecturally the same underlying kill mechanism.
-- **`wait()` is independent of stdio state.** `wait()` settles on the PROCESS's own exit alone --
+- **`wait()` is independent of stdio state** (Windows conformance restored at `L12-D002`, §16). `wait()` settles on the PROCESS's own exit alone --
   it does not wait for, and is not affected by, the state of `stdout`/`stderr`/`stdin`. A caller
   wanting BOTH "the process exited" and "I have drained all output" does both explicitly (`wait()`
   plus continued `read_chunk()` calls until each configured stream reports EOF). `ctx.shell`'s own
@@ -993,12 +995,22 @@ Binding requirements:
   call repeatedly, including after the process has already exited or already been terminated --
   every call after the first is a no-op, matching `cleanup()`'s own best-effort/never-raise
   discipline (§3.8, §5).
-- **Process/stream ownership and disposal (convergence `CE-L12-01-01`).** A `Process` value OWNS
-  its own stdio handles and underlying OS process handle. Calling `wait()` or `terminate()` is the
-  ONLY guaranteed-safe disposal path, in EITHER language equally -- this is a CALLER obligation,
-  not an implicit-cleanup guarantee. Dropping/disposing a `Process` value without having called
-  either first is UNDEFINED behavior (a caller bug), not a scenario this API promises to handle
-  safely: an unconditional "MUST NOT leak the OS process" on implicit disposal is not achievable in
+- **Process/stream ownership and disposal (convergence `CE-L12-01-01`; amended at `L12-D002`,
+  Owner decision, §16.3).** A `Process` value OWNS its own stdio handles and underlying OS process
+  handle. **Disposal is complete only when the process has settled AND every owned piped handle has
+  been released** -- a CALLER obligation, in EITHER language equally, not an implicit-cleanup
+  guarantee. The earlier statement that `wait()` alone is a guaranteed-safe complete disposal path
+  is withdrawn (a descendant can hold an inherited output pipe past the process's exit).
+  - The process settles through `wait()` or `terminate()`.
+  - A readable stream is released by its natural EOF, by `ReadableStream.close()`, or -- when
+    `terminate()` is called on a process that has already settled -- by `terminate()`, which then
+    releases every owned handle still open. For a process still running, `terminate()` keeps its
+    existing tree/group termination: the streams reach EOF as the tree dies, or the caller closes
+    them.
+  - Writable stdin is released by its existing `WritableStream.close()` / lifecycle rules.
+
+  Dropping/disposing a `Process` value without completing disposal is UNDEFINED behavior (a caller
+  bug), not a scenario this API promises to handle safely: an unconditional "MUST NOT leak the OS process" on implicit disposal is not achievable in
   idiomatic Rust, since `Drop` cannot `await` asynchronous cleanup, so this contract does not make
   that promise. Python MAY additionally offer an async context-manager form whose `__aexit__` calls
   `terminate()` as an ergonomic convenience, but the underlying contract does not depend on it, and
@@ -2956,3 +2968,81 @@ The consumer edits that view. For WP-13.3, it removes the five exact-spelling `M
 - Python POSIX's raw-byte inheritance in direct `inherit_env = true` children (`E4-OBS-1`). `bash` never reaches it: it spawns with `inherit_env = false` and the §15.5 view.
 - A managed-tool `PATH` entry. None exists today (Q1, Q3); when one exists, the execution environment supplies it through this baseline.
 - The WP-13.3 `bash` tool itself.
+
+## 16. Layer-12 delta `L12-D002` — `wait()` settles on exit; `ReadableStream.close()`; the amended disposal model (`EXEC-005`, `EXEC-012`)
+
+**Status (`minion-agent#144`):** CONTRACT_DRAFT. Python: implementation candidate (`minion-agent#143`). Rust: NOT_IMPLEMENTED.
+
+- **Origin.** Found by the WP-13.3 Python implementation (`minion-agent#50`).
+  - **Defect:** on **Windows** the certified Python `Process.wait()` did not settle on the process's own exit while a descendant held an inherited pipe. asyncio wakes `wait()` only after every pipe disconnects. This contradicted §6.
+  - Accepted Python `main` also lost output a descendant wrote after the parent's exit, because it closed the process transport.
+  - Making `wait()` settle at exit exposed a disposal contradiction (`L12-D002-I002`): `wait()` alone could no longer both keep output readable and release a pipe a descendant still holds.
+  - WP-13.3 `bash` needed the same missing operation, to release its pipes at settlement as Pi does.
+- **Authorization.** Owner decision `L12-D002` = Option A (`minion-agent#144` comment `5975624637`): a narrow additive `ReadableStream.close()` plus the amended disposal model, in both bindings, with no practical-parity divergence. The routine lifecycle is delegated under `minion-agent#75`.
+- **Classification.** `MINION_EXTENSION` (§6's own seam). Manifest disposition: `intentional divergence`, which classifies the seam only, like `EXEC-005` (`L12-R008`). It is not a practical-parity behavioral divergence; none is approved for this surface. The bash use reproduces Pi's settlement (`waitForChildProcess`: `child.stdout?.destroy(); child.stderr?.destroy()`) and its lookup (`spawn_sync.cc` `Kill()` → `CloseStdioPipes()`).
+
+### 16.1 `wait()` settles on the process's own exit
+- **Unchanged rule, restored on Windows:** `wait()` settles when the directly spawned process settles. It never waits for stdio, including a pipe a descendant holds.
+- `wait()` closes nothing. Readable streams stay usable after `wait()` until they reach EOF or are closed.
+- Cancelling one caller of `wait()` cancels that caller only. Every other or later `wait()` still returns the settled result (`L12-D002-I001`).
+
+### 16.2 `ReadableStream.close() -> None` (`EXEC-012`)
+- **Effect.** It is best-effort, idempotent and never raises. It releases **only Minion's local read end of this stream**.
+  - It never signals or terminates the process.
+  - It never affects a sibling stream: closing stdout leaves stderr open, and the reverse.
+  - It affects a descendant only through the ordinary OS consequence of its future writes meeting a closed reader (EPIPE/SIGPIPE; a broken pipe on Windows).
+- **Reads after `close()`:**
+  - a pending `read_chunk()` settles as EOF (`Ok(None)`);
+  - every later `read_chunk()` returns `Ok(None)`;
+  - neither returns `pipe_error` for this intentional close.
+- **Unread output.** `close()` abandons any output not yet consumed. It does not drain buffered or future output first.
+- **Binding spelling.** It follows each language's conventions (Python `async def close()`; Rust a method on its stream type), with the same observable semantics.
+
+### 16.3 Disposal model
+This restates §6's amended paragraph.
+- **Complete disposal** = the process has settled, **and** every owned piped handle has been released.
+- **Readable stream:** released by natural EOF, by `close()`, or by `terminate()` called on an already-settled process.
+- **Writable stdin:** released by its existing `WritableStream.close()` / lifecycle rules.
+- **`terminate()`:** its tree/group termination is unchanged. When the process had already settled before the call, it also releases every owned handle still open, so `wait()` then `terminate()` is a complete disposal.
+
+### 16.4 Consumer: WP-13.3 `bash`
+- **At settlement** (exit plus EOF, or the 100 ms idle grace), `bash` closes stdout and stderr. It never uses `terminate()` to release pipes.
+  - A background descendant (`npm run dev &`) survives the command.
+  - Its later writes meet a closed reader.
+  - Its late output is not accumulated.
+- **The `where`/`which` lookup** closes its streams when collection completes or is interrupted. The interruption itself follows `DIV-001` (`terminate()` for an unexited lookup).
+
+### 16.5 Required witnesses (Owner decision §11)
+1. `wait()` settles at the direct child's exit while a descendant holds stdout/stderr.
+2. Output can still be read after `wait()`.
+3. A natural EOF is a normal EOF.
+4. `close()` makes a pending read settle as EOF.
+5. Reads after `close()` return EOF.
+6. A repeated `close()` is harmless.
+7. `close()` never terminates the child or a descendant.
+8. Closing stdout leaves stderr readable, and the reverse.
+9. `terminate()` semantics are unchanged (the existing §10 witnesses).
+10. Windows event-loop shutdown raises no leaked-pipe or destructor warning after correct release. This includes wait-only disposal followed by `close()` of the still-held streams, and `wait()` then `terminate()`.
+11. A cancelled `wait()` caller does not poison later `wait()`s.
+12. `bash`: the foreground command completes, the background descendant stays alive, the result settles, `bash` releases its read ends, and late descendant output is not accumulated.
+
+### 16.6 Negative controls (Owner decision §12)
+Each must fail a witness:
+- `wait()` waiting for descendant-held pipes;
+- `wait()` closing the streams, which destroys read after `wait()`;
+- `close()` killing the process or tree;
+- `close()` affecting both streams;
+- a pending read hanging after `close()`;
+- a read after `close()` reporting `pipe_error`;
+- `bash` using `terminate()` to release pipes, which kills background jobs;
+- `bash` leaving its pipes owned indefinitely;
+- a cancelled waiter cancelling the shared exit notification.
+
+### 16.7 Not changed by L12-D002
+- Spawn and spawn-time cancellation.
+- Cause classification (first-claim).
+- `L12-R020` exit-code preservation.
+- `terminate()`'s tree/group kill.
+- `ctx.shell`.
+- `WritableStream`.
+- Environment and platform (§15).
