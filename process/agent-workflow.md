@@ -421,6 +421,70 @@ The expansion is characterization, not speculative production code. Members that
 
 This targets sequences like WP-13.2's *huge integer → `-0` → Infinity* and L0506-D001's *union → callback → sibling → numeric-looking string*, where each adjacent member cost a separate review cycle.
 
+**Re-check the neighbourhood after every fix.** The expansion above happens *before* remediation. A fix also has to be checked *after* it changes behaviour. Verifying only the exact point that failed is not enough. After changing behaviour, the remediation owner re-checks the nearest rules that share the changed mechanism, representation, lifecycle boundary or error path, and records that re-check with the remediation.
+- **Keep it proportional.** Use the smallest coherent semantic neighbourhood that the change could plausibly have affected. This is not a requirement to rerun a whole work-package review after every patch. Examples:
+  - decoder fix → the neighbouring EOF, BOM and replacement behaviour;
+  - timer fix → the ordering of success, timeout and abort;
+  - stream-disposal fix → how wait, read, close and terminate interact;
+  - error-mapping fix → every other source of the same error code;
+  - cancellation fix → races before, during and after completion;
+  - filesystem mutation fix → sibling operations that use the same path or error mechanism.
+- **An unexpected change is new evidence.** If a neighbouring rule changes unexpectedly, treat that as new evidence. Don't assume the original fix stayed local.
+- WP-13.3 shows the cost of skipping this. Its `WP133-I002` fix (joining full-output persistence at settlement) moved that join inside the timeout window. That produced `WP133-I003`, a settled success misreported as a timeout, which the timer and abort ordering neighbourhood would have caught.
+
+### 9.6 Event-driven witnesses
+
+When the behaviour under test has a meaningful observable event or synchronization boundary, a test coordinates on that event. It does not infer the event from elapsed wall-clock time. Such events include:
+- process exit;
+- stream EOF;
+- callback entry;
+- write start or completion;
+- cancellation propagation;
+- queue acquisition or release;
+- listener invocation;
+- an explicit readiness signal, such as a marker file, a stdin handshake or a gated fake provider.
+
+Timed sleeps remain acceptable in two cases:
+- when wall-clock timing is itself the contract (for example a 100 ms grace or a timeout);
+- as bounded safety timeouts that stop a hung test from hanging the suite.
+
+Don't use an arbitrary sleep as the primary discriminator when an event-driven synchronization point is available. The aim is to reduce race-dependent false passes, sensitivity to host speed, CI flakiness and accidental dependence on scheduler timing.
+
+In WP-13.3, two settlement witnesses that slept a fixed time flaked under load, and one flake masked a negative control's real killer. Both became event-driven: the parent exits only once its descendant is running. The L12-D002 Rust witnesses used stdin handshakes from the start.
+
+### 9.7 A negative control is caught only by its intended witness
+
+A negative-control mutation counts as killed only when the test or witness meant to discriminate that defect actually fails, and fails for the expected reason (§11.8.7.1). It is not enough that:
+- some unrelated test fails;
+- the full suite becomes red somewhere else;
+- the mutation crashes, or fails to import, collect or compile, before the intended semantic assertion is reached;
+- another pre-existing invariant happens to detect the mutation;
+- a missing environment prerequisite (for example an unloaded pinned ICU) fails tests regardless of the mutation.
+
+For each control, the evidence record identifies:
+- the mutation;
+- the intended witness or test;
+- the expected discriminating failure;
+- the observed discriminating failure.
+
+A mutation that produces only unrelated failures does not show that the claimed permanent witness protects the rule. Fix the witness, or add one, before claiming the control. Control runners should reject collection, setup and compile failures as kills mechanically, and report the identity of each killing test so a reviewer can check it.
+
+### 9.8 Reproducible platform evidence
+
+When Linux evidence (or any second-platform evidence) materially supports a review, closure or certification, record enough of the environment that another reviewer can reproduce it without reconstructing the setup from chat history. As applicable, record:
+- the distribution or container image, and the architecture;
+- language and runtime versions;
+- relevant kernel or capability assumptions, including any seccomp or capability requirement;
+- required system packages and pinned toolchains (for example the pinned ICU build and its identity file, and PyICU);
+- exact commands and environment variables;
+- mounted paths and repository setup, including any line-ending normalization of a Windows checkout;
+- platform-specific skips;
+- expected test and witness counts.
+
+Prefer a committed script or a documented command sequence to prose where practical. The recipe must describe the environment actually used for the claimed evidence, not an approximate equivalent.
+
+A missing prerequisite is disclosed as such and is never reported as a passing gate. In L12-D002, a Rust EXEC-010 test failed only because its image lacked Node.js, and the WP-13.3 property tests did not collect without `hypothesis`.
+
 ### 9.5 Reusable hazard families
 
 - **Families are consulted up front.** `process/hazard-families.md` holds the reusable runtime hazard families: JS Number, JS String/UTF-16, Unicode/ICU, Async/order, Error/coercion projection, ECMAScript object order and the schema runtime domain. The feasibility matrix (§4.1.1) and neighborhood expansion (§9.4) consult them instead of rediscovering them.
@@ -1678,7 +1742,9 @@ Ask:
 - Did the work package create more coordination/review artifacts than the assurance value justified?
 - After convergence fired, were targeted closure reviews used until every blocker was provisionally closed?
 - Did any final review re-open a previously settled root-cause surface because the convergence matrix was incomplete?
-- Did every executable closure witness demonstrate a realistic negative control?
+- Did every executable closure witness demonstrate a realistic negative control, killed by its intended witness (§9.7)?
+- Were witnesses event-driven wherever a synchronization point existed (§9.6), and was second-platform evidence reproducible from a recorded recipe (§9.8)?
+- After each fix, was the semantic neighbourhood re-checked (§9.4), or did an adjacent finding surface in the next review?
 - Did the current-state block remain synchronized with comments/PR state?
 - Should any deferred work have been represented as `WAITING_FOR_TRIGGER` instead of active/open workflow?
 
