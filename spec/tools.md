@@ -2841,7 +2841,12 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
    Append "--", effective, searchPath.
 6. Spawn through ctx.subprocess: argv [fd binary, ...args]; stdin null; stdout and stderr piped;
    inherit_env true (Pi's spawn default environment).
-   Abort while running -> terminate the process and settle "Operation aborted" at once (Pi's onAbort).
+   Abort observation (CE-L13-WP134-01): find's listener exists from the call's start (after the
+   step-1 pre-check) until ENGINE COMPLETION -- the process has exited AND stdout and stderr have both
+   reached end of input (Node's child "close"). An abort inside that window terminates the process
+   and settles "Operation aborted" at once (Pi's onAbort). The outcome is decided at completion,
+   before any asynchronous release of local stream resources; an abort after completion is not
+   observed (Pi's close handler removes the listener and settles synchronously).
 7. stdout: decode as UTF-8 with replacement, split into lines as Node readline does (LF, CRLF and CR all end a line).
    stderr: accumulate as UTF-8 text.
 8. On exit (after both streams end):
@@ -2873,6 +2878,18 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
 - The required witnesses include this scope check.
 - The contract fixes no particular rewrite. Python and Rust may normalize differently, provided the shared witnesses agree.
 
+**Recursive components and Pi-scope constructs (CE-L13-WP134-01).**
+- On Windows the pattern is judged as the pinned fd reads **Pi's rewritten text**: there is no backslash escape (`\` is an ordinary character), and a class (`[`, an optional `!`/`^`, a leading `]` as a member, up to the next `]`) may absorb part of Pi's `[/\\]`. Separators are the standalone `[/\\]` tokens of that reading.
+- A **recursive component** is a `**` (exactly two `*`, not part of a longer run of `*`) that is followed by a separator and is preceded by a separator or begins a brace alternative (directly after `{` or `,`, whatever precedes the group). This is the token the pinned fd treats as recursive on Linux. The pattern-initial `**/` is not affected: matched against an absolute path it never stands for zero levels.
+- Every recursive component keeps its zero-or-more meaning, including adjacent ones (`**/**/`), ones inside nested braces, and ones at the start of an alternative. For these patterns the Windows result equals Linux's (`DIV-002`).
+- Everything else keeps the meaning Pi's rewrite gives it on the pinned fd. This includes:
+  - the single-`*` crossing (F-2, above);
+  - a `**` that is not a recursive component (`src/**b.spec.ts`, `{src/sub/**,none}/x`);
+  - a construct Pi's rewrite reshapes, for example `src/[!]/**/*.spec.ts`, which is a valid pattern on Windows (Pi's results) and rejected on Linux;
+  - the absence of escapes (`x\/**/b`).
+- **Engine-rejected patterns.** When the pinned fd rejects the pattern, the result is exactly Pi's: fd's diagnostic for **Pi's own rewritten text**, verbatim. A Minion-generated pattern text never appears in a result or error.
+- The pinned fd 10.4.2 accepts nested alternation. An empty alternative (`{,x}`) is accepted but never matches the empty string, so it cannot express a zero-directory form. These are characterization facts (`data/13-wp134-ce01/`), not a prescribed rewrite.
+
 #### `grep` (`TOOL-037`): execution, in order (`grep.ts` `execute`, default operations)
 
 ```text
@@ -2891,7 +2908,13 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
           + ["--glob", glob] if glob is truthy (a non-empty string)
           + ["--", pattern, searchPath]
    There is no --no-require-git: outside a git repository, rg ignores .gitignore (characterization F-3).
-7. Spawn rg as in find, step 6. Abort while running: terminate; settle "Operation aborted" after the process exits.
+7. Spawn rg as in find, step 6, except for the abort window (CE-L13-WP134-01; grep.ts registers its
+   listener after spawn and removes it first thing in its close handler):
+     abort before the listener exists (engine resolution, the path probe, spawn) -> not observed;
+       the call completes as if no abort occurred and rg is not stopped
+     abort from spawn's return until ENGINE COMPLETION (find, step 6) -> terminate rg; at completion
+       the call settles "Operation aborted", whatever the limit stop, exit code or matches
+     abort after completion (including during context re-reads and formatting) -> not observed
 8. stdout lines (as in find, step 7). For each line, while match_count < L:
      blank (trim() == "") -> skip; not valid JSON -> skip
      event.type == "match":
@@ -2959,6 +2982,14 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
 - a pattern with two `**/` components;
 - a pattern written with platform-native separators, as applicable;
 - a non-`**` full-path pattern (`src/*.spec.ts`) whose Windows result stays exactly Pi's. This is the scope check.
+- CE-L13-WP134-01:
+  - adjacent components;
+  - components inside braces, at an alternative start (including nested and after a literal), and after `***`;
+  - a `**` that is not a component;
+  - the class-reshaped scope rows;
+  - the engine-rejected rows (invalid range, unclosed and unopened brace), whose Windows text is Pi's diagnostic.
+
+  These are the harness `components` cases (`data/13-wp134/out/components-{win32,linux}.json`), classified per case as `div002` (Windows equals Linux) or `pi` (Windows equals Pi).
 
 Pi's Windows output remains reproducible as the reference side, from the characterization harness.
 
@@ -2970,6 +3001,7 @@ Pi's Windows output remains reproducible as the reference side, from the charact
 | engine not provisioned or failed verification; uncertified platform | the `TOOL-038` templates above | Minion (`DIV-003`) |
 | `grep` path not found | `Path not found: <abs>` | Pi |
 | engine failure with stderr | the engine's stderr, trimmed, verbatim | pinned engine |
+| `find` pattern rejected by the engine (Windows, any rewrite) | fd's diagnostic for Pi's own rewritten text, trimmed, verbatim (CE-L13-WP134-01) | pinned engine |
 | engine failure without stderr | `fd exited with code <code>` / `ripgrep exited with code <code>` | Pi |
 | spawn failure | `Failed to run fd: <cause>` / `Failed to run ripgrep: <cause>`, where `<cause>` is the Layer-12 spawn error's message | Pi template; Minion cause |
 | no results | `No files found matching pattern` / `No matches found` | Pi |

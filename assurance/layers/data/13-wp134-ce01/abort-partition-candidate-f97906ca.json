@@ -1,0 +1,16 @@
+{
+ "find/spawn": "ERR Operation aborted",
+ "find/stdout_data": "ERR Operation aborted",
+ "find/stdout_eof": "ERR Operation aborted",
+ "find/stderr_eof": "ERR Operation aborted",
+ "find/wait": "ERR Operation aborted",
+ "find/stdout_close": "ERR Operation aborted",
+ "find/stderr_close": "ERR Operation aborted",
+ "grep/spawn": "a.ts:1: x",
+ "grep/stdout_data": "ERR Operation aborted",
+ "grep/stdout_eof": "ERR Operation aborted",
+ "grep/stderr_eof": "ERR Operation aborted",
+ "grep/wait": "ERR Operation aborted",
+ "grep/stdout_close": "ERR Operation aborted",
+ "grep/stderr_close": "ERR Operation aborted"
+}

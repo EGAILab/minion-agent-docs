@@ -244,6 +244,25 @@ const COMPONENTS = [
   ["brace-before-doublestar", { pattern: "{src,nope}/**/*.spec.ts" }],
   ["doublestar-in-brace-after", { pattern: "src/**/{er/**/e,b}.spec.ts" }],
   ["brace-scope-no-doublestar", { pattern: "{src/*.spec.ts,none}" }],
+  // CE-L13-WP134-01 (convergence characterization): alternative-start components, non-component
+  // `**`, constructs Pi's Windows rewrite reshapes, and engine-rejected syntax. The third element
+  // classifies the Windows expectation: "div002" (equals Linux) or "pi" (Pi's Windows result or
+  // diagnostic). The first five rows above are classified by the default rule (all "div002" except
+  // the last, "pi").
+  ["alt-start-doublestar", { pattern: "src/{**/b.spec.ts,none}" }, "div002"],
+  ["alt-start-second", { pattern: "src/{none,**/*.spec.ts}" }, "div002"],
+  ["alt-start-nested", { pattern: "src/{a.ts,{**/b.spec.ts}}" }, "div002"],
+  ["alt-start-adjacent", { pattern: "src/{**/**/b.spec.ts,none}" }, "div002"],
+  ["alt-start-after-literal", { pattern: "src{**/b.spec.ts,none}" }, "div002"],
+  ["three-star-component", { pattern: "src/***/**/*.spec.ts" }, "div002"],
+  ["doublestar-at-alt-end", { pattern: "{src/sub/**,none}/d.spec.ts" }, "pi"],
+  ["non-component-doublestar", { pattern: "src/**b.spec.ts" }, "pi"],
+  ["class-reshaped-negated", { pattern: "src/[!]/**/*.spec.ts" }, "pi"],
+  ["class-reshaped-empty", { pattern: "src/[]/**/*.spec.ts" }, "pi"],
+  ["class-reshaped-unclosed", { pattern: "src/[/**/*.spec.ts" }, "pi"],
+  ["rejected-invalid-range", { pattern: "src/[z-a]/**/b.spec.ts" }, "pi"],
+  ["rejected-unclosed-brace", { pattern: "src/{a/**/b.spec.ts" }, "pi"],
+  ["rejected-unopened-brace", { pattern: "src/a}/**/b.spec.ts" }, "pi"],
 ];
 
 function summary(r) {
@@ -301,7 +320,8 @@ if (mode === "components") {
     engines: Object.fromEntries(Object.entries(ENGINES).map(([k, p]) => [k, spawnSync(p, ["--version"]).stdout.toString().split("\n")[0]])),
     find: {} };
   const { root } = build("plain");
-  for (const [name, args] of COMPONENTS) out.find[`plain/${name}`] = { args, ...(await run("find", root, args)) };
+  for (const [name, args, expectWin32] of COMPONENTS)
+    out.find[`plain/${name}`] = { args, ...(expectWin32 ? { expectWin32 } : {}), ...(await run("find", root, args)) };
   rmSync(root, { recursive: true, force: true });
   writeFileSync(outPath, JSON.stringify(out, null, 1) + "\n");
   console.log(`wrote ${Object.keys(out.find).length} component find observations`);

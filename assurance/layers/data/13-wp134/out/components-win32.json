@@ -46,6 +46,129 @@
    "ok": true,
    "text": "src/b.spec.ts\nsrc/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
    "details": null
+  },
+  "plain/alt-start-doublestar": {
+   "args": {
+    "pattern": "src/{**/b.spec.ts,none}"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "plain/alt-start-second": {
+   "args": {
+    "pattern": "src/{none,**/*.spec.ts}"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "src/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/alt-start-nested": {
+   "args": {
+    "pattern": "src/{a.ts,{**/b.spec.ts}}"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "src/a.ts",
+   "details": null
+  },
+  "plain/alt-start-adjacent": {
+   "args": {
+    "pattern": "src/{**/**/b.spec.ts,none}"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "plain/alt-start-after-literal": {
+   "args": {
+    "pattern": "src{**/b.spec.ts,none}"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "src/b.spec.ts",
+   "details": null
+  },
+  "plain/three-star-component": {
+   "args": {
+    "pattern": "src/***/**/*.spec.ts"
+   },
+   "expectWin32": "div002",
+   "ok": true,
+   "text": "src/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/doublestar-at-alt-end": {
+   "args": {
+    "pattern": "{src/sub/**,none}/d.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "plain/non-component-doublestar": {
+   "args": {
+    "pattern": "src/**b.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "src/b.spec.ts",
+   "details": null
+  },
+  "plain/class-reshaped-negated": {
+   "args": {
+    "pattern": "src/[!]/**/*.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "src/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/class-reshaped-empty": {
+   "args": {
+    "pattern": "src/[]/**/*.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "plain/class-reshaped-unclosed": {
+   "args": {
+    "pattern": "src/[/**/*.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "plain/rejected-invalid-range": {
+   "args": {
+    "pattern": "src/[z-a]/**/b.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": false,
+   "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
+  },
+  "plain/rejected-unclosed-brace": {
+   "args": {
+    "pattern": "src/{a/**/b.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": false,
+   "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+  },
+  "plain/rejected-unopened-brace": {
+   "args": {
+    "pattern": "src/a}/**/b.spec.ts"
+   },
+   "expectWin32": "pi",
+   "ok": false,
+   "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
   }
  }
 }

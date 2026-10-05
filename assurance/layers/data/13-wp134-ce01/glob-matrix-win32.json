@@ -1,0 +1,1470 @@
+{
+ "platform": "win32",
+ "fd": "fd 10.4.2",
+ "corpus": [
+  "src/b.spec.ts",
+  "src/sub/b.spec.ts",
+  "src/sub/deep/b.spec.ts",
+  "src/a/b.spec.ts",
+  "lib/b.spec.ts",
+  "x/b",
+  "x/q/b",
+  "x/c",
+  "x/q/c",
+  "xb",
+  "x/ab",
+  "x/bc"
+ ],
+ "rows": {
+  "src/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src/**/b.spec.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]{src[/\\\\]**[/\\\\]b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts,**[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src,lib}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]{src,lib}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src,lib}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src,lib}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts,**[/\\\\]lib[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]lib[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/{deep/**/b,b}.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]{deep[/\\\\]**[/\\\\]b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}{deep{[/\\\\],[/\\\\]**[/\\\\]}b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}{deep{[/\\\\],[/\\\\]**[/\\\\]}b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/*/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}*{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}*{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]*[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/a**/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]a**[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]a**{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]a**{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]a**[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a**[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/***/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]***[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]***{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]***{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]***[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]***[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[a-]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][a-][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][a-]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][a-]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][a-][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][a-][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{a,{b}}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/{}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[/]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[]]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][]][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][]][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][]][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x/{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]x[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{c,**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]c,**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{a,{**/b}}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b,b}}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**{[/\\\\],[/\\\\]**[/\\\\]}b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]x[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{q,{**/b}}/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b,b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/b,c}/**/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}[/\\\\]**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}{[/\\\\],[/\\\\]**[/\\\\]}c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}{[/\\\\],[/\\\\]**[/\\\\]}c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x{**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x{**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/a{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/ab"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x/{a,b{**/c}}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c,c}}",
+    "exit": 0,
+    "results": [
+     "x/bc"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]**[/\\\\]b,**[/\\\\]b,**[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "**/{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]**[/\\\\]b,**[/\\\\]b,**[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "{x/**,y}/b": {
+   "pi": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]y[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{q/**,nope}/b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]q[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]q[/\\\\]b,**[/\\\\]x[/\\\\]nope[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**}/b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{a**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/*.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/**b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/b**/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[!]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][!][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x\\/**/b": {
+   "pi": {
+    "text": "**[/\\\\]x\\[/\\\\]**[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x\\{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x\\{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x\\[/\\\\]**[/\\\\]b,**[/\\\\]x\\[/\\\\]b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[z-a]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][z-a][/\\\\]b.spec.ts}",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '{**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][z-a][/\\\\]b.spec.ts}': invalid range; 'z' > 'a'"
+   }
+  },
+  "src/{a/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   }
+  },
+  "src/a}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]a[}][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a[}][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  }
+ }
+}

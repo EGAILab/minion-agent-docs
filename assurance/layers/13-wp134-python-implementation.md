@@ -272,3 +272,17 @@ These are as the contract lists:
 - Python WP-13.4: REMEDIATION CANDIDATE, pending independent re-review. `5caed2f6` was not approved.
 - Rust WP-13.4: NOT_IMPLEMENTED.
 - WP-13.4 cross-language: NOT CLOSED.
+
+---
+
+## Re-review 1 (Codex): CHANGES REQUESTED, convergence entered
+
+- **Reviewed pair:** code `f97906ca` / docs `598ca21b`.
+- **Verdict:** published verbatim on `minion-agent#153` (issuecomment-5992624087).
+- **Outcome:**
+  - `WP134-IMPL-R003`: PROVISIONALLY CLOSED @ `f97906ca`.
+  - `WP134-IMPL-R001` (abort after engine completion) and `WP134-IMPL-R002` (engine-rejected glob diagnostics): NOT CLOSED.
+- **Workflow §11.8 trigger A fired.** The work package is in `CONTRACT_CONVERGENCE`, episode `CE-L13-WP134-01`. Its record is `assurance/layers/13-wp134-ce01-convergence.md`.
+- **Correction (preserving the text above).** Remediation 1's R002 design notes say "fd's glob has no nested alternation". That premise is **false** for the pinned fd 10.4.2, which accepts nested alternation, and it is the abstraction the remediation missed. The convergence characterization:
+  - replaces the design basis: rule 4 reads Pi's rewritten text as fd lexes it;
+  - records the 41-row matrix that discriminates the designs.
