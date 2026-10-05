@@ -374,3 +374,84 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of exactly this revision)
 ```
+
+---
+
+## Checkpoint review 3 (Codex): APPROVED; AGREED FOR IMPLEMENTATION
+
+- **Reviewed proposal:** revision 2 @ docs `e985a008`.
+- **Verdict:** published verbatim on `minion-agent-docs#248` (issuecomment-5993289268).
+- **Outcome:** C001 and C002 resolved for checkpoint purposes. The control record became `CONVERGENCE CONTRACT — AGREED FOR IMPLEMENTATION` (workflow §11.8.5 step 3, recorded on `#51`).
+- **Non-blocking wording note:** "`,` or `}` outside any brace group is an ordinary character" overstated the case for an unmatched `}`, which the pinned fd rejects. Fixed in `spec/tools.md` (this head): a literal `,` is ordinary; an unmatched `}` is engine-rejected, so the rejected-pattern rule gives Pi's diagnostic.
+
+## Convergence implementation (§11.8.6)
+- **Candidate:** code `minion-agent#153` @ `5730ff101ee377bc67302d3ed923666abf50e876`. The docs head is this PR's next head.
+
+**R001: the abort window ends at engine completion.**
+- `_search.AbortWindow` models Pi's listener lifetime. `EngineRun.run(on_line, on_complete)` calls `on_complete` at exit plus EOF on both pipes, synchronously and before the asynchronous release of the streams. The window latches there.
+- **`find`:**
+  - its window opens at the call's start, after the pre-check;
+  - its own race (`_race_window`) answers an in-window abort at once, leaving the work to stop the engine;
+  - it stops racing once the window has closed.
+- **`grep`:** its window opens at spawn's return. An abort before that is never observed.
+- `race_abort` (WP-13.1 `read`/`ls`, certified) is untouched.
+
+**R002: the Windows rewrite reads Pi's text as fd does.**
+- `find._lex` is context-aware:
+  - classes may absorb Pi's `[/\\]`;
+  - `,` and `}` are syntax only inside braces;
+  - there is no backslash escape.
+- `find._windows_full_path` changes only recursive components:
+  - `SEP ** SEP` → `{SEP,SEP**SEP}`, with adjacent components collapsing;
+  - an alternative-start `** SEP rest` → `** SEP rest,rest`.
+- **Rule 5:** when the corrected pattern is rejected (non-zero exit, no output), fd runs again with Pi's text, and that outcome stands. The abort window spans both runs.
+- On all 54 matrix rows the implementation's text equals the agreed construction's (byte for byte), and its outcome equals the independent oracle.
+- **Bug found and fixed before review:** the first wiring keyed the re-run on the abort window being open, so a call **without a signal** never re-ran. The re-run decision is now recorded at completion independently of the window. Witness: `test_a_rejected_corrected_pattern_reports_pis_diagnostic`, which calls without a signal.
+
+**Conformance.**
+- The generator reads the harness `components` cases with their classification: a `pi` case keeps Pi's Windows observation; a union case takes `windowsUnion`. Where `linux: true` it asserts the union equals Linux; where `linux: false`, that it does not.
+- 28 scenarios in corpus kind `components` (the plain corpus plus `COMPONENT_FILES`), 219 scenarios in all. 15 `components` scenarios carry `TOOL-036-DIV-002` with Pi's Windows result in `notes`.
+
+**Negative-control evidence (§11.8.7.1).**
+- Method: `scripts/wp134_search_negative_controls.py` at `5730ff10`.
+- Controls: 32 single-point mutants, 12 of them new or re-targeted for this episode.
+- A control counts only when its intended witness fails, with collection and setup errors rejected.
+- Results: `data/13-wp134-ce01/controls-{win32,linux}-5730ff10.json`.
+
+| Finding | Control (known-bad mutation) | Expected failure | Observed (Windows / Linux) |
+|---|---|---|---|
+| R001 | `find_decides_after_release` | `find` after-completion cells give `Operation aborted` | killed by `partition[stdout_close-find]`, `[stderr_close-find]` / same |
+| R001 | `grep_decides_after_release` | `grep` after-completion cells give `Operation aborted` | killed by `partition[stdout_close-grep]`, `[stderr_close-grep]` / same |
+| R001 | `grep_latch_lost_at_completion` | an in-window abort unseen by the poller gives the match | killed by `test_grep_keeps_an_abort_…`, `partition[stdout_data-grep]` / same |
+| R001 | `grep_observes_pre_registration_abort` | an abort during spawn aborts | killed by `partition[spawn-grep]`, `test_grep_ignores_…` / same |
+| R002 | `zero_directory_left_broken` (Pi's text) | `src/**/a*.ts` misses two files | killed by the unit witness and the `mixed-star-crossing` and `full-path-spec` scenarios / unit |
+| R002 C001 | `whole_pattern_linux_conversion` | `src/a/sub/b.ts` dropped | killed by `mixed-star-crossing` / n/a (Windows-only witness) |
+| R002 | `alt_start_not_recursive` | `src/{**/b.spec.ts,none}` misses the direct file | killed by the unit witness and `alt-start-doublestar` / unit |
+| R002 | `adjacent_components_not_collapsed` | wrong text for `**/**/` | killed by the unit witness / unit |
+| R002 | `empty_alternative_zero_form` | the direct file is missed | killed by the unit witness and `brace-alternative-doublestar` / unit |
+| R002 | `lex_original_pattern` (the rejected design) | the reshaped class is corrected | killed by the unit witness / unit |
+| R002 rule 5 | `diagnostics_from_corrected_text` | generated text in the diagnostic | killed by `test_a_rejected_corrected_…` and `rejected-invalid-range` / unit |
+| R002 | `literal_brace_wrapping` (the `f97906ca` shape) | an unmatched `}` turns Pi's error into a success | killed by `rejected-unopened-brace` / n/a |
+
+- **Known-bad SHA check.** The same witnesses run against `f97906ca`'s source fail exactly on the 4 after-completion partition cells (R001). Against that source the R002 matrix rows already recorded in this episode fail: 13 of 54.
+- **"Every comma is an alternative start".** This mutation is **not observable in the binding.** The construction rewrites an alternative-start component only when the alternative closes at depth 0, so a stray comma is never rewritten. Its discriminating witness is the characterization's hand-counted `EXPECTED_COMPONENTS` check of the oracle finder. The reviewer's checkpoint-3 replay of the rejected revision-1 source showed it failing there. The canonical `comma-literal` scenarios guard the binding's outcome.
+
+**Fresh gates at `5730ff10`.**
+
+| Gate | Result |
+|---|---|
+| Windows full suite, warning-strict, pinned ICU 78.3, engines provisioned | 4973 passed, 31 skipped, 19 xfailed; 100.00% coverage |
+| Linux full suite (`python:3.13`, tree copied into the container), warning-strict | 4907 passed, 97 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (113 source files) |
+| Negative controls | Windows 32/32 killed by the intended witness; Linux 29/29, with 3 not applicable (Windows-only witnesses) |
+| Abort partition, all 14 cells | equal to pinned Pi (`abort-partition-pi.json`) |
+| Glob matrix, 54 rows (`glob_matrix.py` with the candidate column) | outcome = oracle 54/54; text = agreed construction 54/54 |
+
+**Previously closed findings re-run (§11.8.6).**
+- R003's comparator controls pass at `5730ff10`.
+- The earlier 20 controls (R001-R003 and the original WP-13.4 list) are all killed.
+
+## Status
+- `WP134-IMPL-R001` and `WP134-IMPL-R002`: implemented at `5730ff10`; ready for targeted convergence closure review (§11.8.7).
+- `WP134-IMPL-R003`: PROVISIONALLY CLOSED @ `f97906ca`; unaffected.
+- Rust WP-13.4: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
