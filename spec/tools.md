@@ -2990,6 +2990,10 @@ Pi's Windows output remains reproducible as the reference side, from the charact
    - `grep` flag combinations;
    - non-integer limits rendered with `Number::toString`.
    This witness, not result comparison, guards "no sort flag" and Pi's argument shape.
+5. **Number and string edge cases:**
+   - `limit` and `context` of `-0` and `1e999` (+Infinity);
+   - `truncateLine` cutting through a surrogate pair, which yields a lone high surrogate in the result text (`L0506-D003`);
+   - an unpaired surrogate in `pattern`, which reaches the engine as U+FFFD (the WP-13.3 argv projection rule).
 6. **Order preservation within one invocation** (WP134-CON-R003): a scripted engine (an explicit test override) emits a fixed, deliberately unsorted stream, and the tool must reproduce it exactly.
    - For `find`, the stream is `<root>/z.ts` then `<root>/a.ts`, and the result is exactly `z.ts\na.ts`.
    - For `grep`, the stream is a `rg --json` match stream for files `z` then `a`, and the per-match order is kept.
@@ -2998,10 +3002,6 @@ Pi's Windows output remains reproducible as the reference side, from the charact
 7. **Repository walk and duplicates:**
    - a Windows dangling `.git` junction is treated as present, so the result has no `--no-require-git` and a parent `.gitignore` is not applied (`data/13-wp134/out/search-win32.json`, `edges`);
    - a Linux trailing-space name collision gives both entries (`search-linux.json`, `edges`).
-5. **Number and string edge cases:**
-   - `limit` and `context` of `-0` and `1e999` (+Infinity);
-   - `truncateLine` cutting through a surrogate pair, which yields a lone high surrogate in the result text (`L0506-D003`);
-   - an unpaired surrogate in `pattern`, which reaches the engine as U+FFFD (the WP-13.3 argv projection rule).
 
 **Negative controls.** Each realistic wrong implementation must fail a witness:
 - sorting results after collection (killed by witness 6);
