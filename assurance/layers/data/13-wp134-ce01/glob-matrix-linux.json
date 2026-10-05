@@ -19,7 +19,9 @@
   "src/a/sub/b.ts",
   "src/x/b.ts",
   "src/q/r/x/b.ts",
-  "src/q/r/x/s/b.ts"
+  "src/q/r/x/s/b.ts",
+  "x,b",
+  "x,q/b"
  ],
  "rows": {
   "src/**/b.spec.ts": {
@@ -247,6 +249,7 @@
    "linux": {
     "exit": 0,
     "results": [
+     "x,q/b",
      "x/b",
      "x/q/b",
      "xb"
@@ -259,6 +262,7 @@
    "linux": {
     "exit": 0,
     "results": [
+     "x,q/b",
      "x/b",
      "x/q/b",
      "xb"
@@ -291,6 +295,7 @@
    "linux": {
     "exit": 0,
     "results": [
+     "x,q/b",
      "x/b",
      "x/c",
      "x/q/b",
@@ -304,6 +309,7 @@
    "linux": {
     "exit": 0,
     "results": [
+     "x,q/b",
      "x/b",
      "x/c",
      "x/q/b",
@@ -550,6 +556,58 @@
      "src/sub/a.ts"
     ],
     "stderr": ""
+   }
+  },
+  "x,**/b": {
+   "text": "**/x,**/b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x,{**/b}": {
+   "text": "**/x,{**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,b",
+     "x,q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x,**/b{a,b}": {
+   "text": "**/x,**/b{a,b}",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "{x,**/b}": {
+   "text": "**/{x,**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x}/**/b": {
+   "text": "**/x}/**/b",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/x}/**/b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
    }
   }
  }

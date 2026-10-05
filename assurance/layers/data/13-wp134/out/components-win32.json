@@ -392,6 +392,43 @@
    "text": "No files found matching pattern",
    "details": null,
    "windowsUnion": []
+  },
+  "components/comma-literal": {
+   "args": {
+    "pattern": "x,**/b"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "x,q/b",
+   "details": null
+  },
+  "components/comma-literal-before-brace": {
+   "args": {
+    "pattern": "x,**/b{a,b}"
+   },
+   "expectWin32": "pi",
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null
+  },
+  "components/comma-then-brace-alt-start": {
+   "args": {
+    "pattern": "x,{**/b}"
+   },
+   "expectWin32": {
+    "union": [
+     "x,{**/b}",
+     "x,{b}"
+    ],
+    "linux": true
+   },
+   "ok": true,
+   "text": "x,q/b",
+   "details": null,
+   "windowsUnion": [
+    "x,b",
+    "x,q/b"
+   ]
   }
  },
  "componentFiles": [
@@ -399,6 +436,8 @@
   "src/a/sub/b.ts",
   "src/x/b.ts",
   "src/q/r/x/b.ts",
-  "src/q/r/x/s/b.ts"
+  "src/q/r/x/s/b.ts",
+  "x,b",
+  "x,q/b"
  ]
 }

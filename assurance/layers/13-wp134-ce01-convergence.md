@@ -309,3 +309,68 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of exactly this revision)
 ```
+
+---
+
+## Checkpoint review 2 (Codex): REJECTED
+
+- **Reviewed proposal:** revision 1 @ docs `eb486836`.
+- **Verdict:** published verbatim on `minion-agent-docs#248` (issuecomment-5993144178).
+- **C001 (composition):** resolved for checkpoint purposes, within Owner Q1 / DIV-002.
+- **Missing dimension, `CE-L13-WP134-01-C002`** (medium, `CONTRACT_ASSURANCE_DEFECT`): a literal comma outside braces versus a comma that begins a brace alternative.
+  - The oracle's component finder took every `,` as an alternative start.
+  - For `x,**/b` it unioned the unauthorized branch `x,b`, while Pi, Linux and the construction all give `x,q/b`.
+  - Its independence from the construction was sufficient for the submitted cases but did not validate the component predicate itself.
+
+## Revision 2 (C002)
+- **Context-aware lexing.** `,` and `}` are syntax only inside an open brace group; outside braces they are ordinary characters. This applies to `glob_matrix.py` `lex`, which both the oracle's finder and the proposal construction use.
+- **Spec.** The recursive-component definition now says it explicitly, with the `x,**/b` / `x,{**/b}` pair.
+- **Independent validation of the finder.** `EXPECTED_COMPONENTS` gives every matrix row's recursive-component count, counted **by hand** from rule 4 and not by the finder. Each row records `components: {expected_by_hand, found, agree}`. All 54 rows agree.
+  - The pre-revision finder disagrees on `x,**/b` and `x,**/b{a,b}` (1 instead of 0). That is the reviewer's failure.
+- **Matrix.** It has 54 rows: the comma witnesses `x,**/b`, `x,{**/b}`, `x,**/b{a,b}`, `{x,**/b}` and `x}/**/b`, plus the corpus files `x,b` and `x,q/b`.
+
+  | Measure (fresh, both platforms) | Result |
+  |---|---|
+  | proposal outcome = oracle | **54 / 54**. The rejected rows' raw diagnostics differ; rule 5 closes them with Pi's diagnostic |
+  | oracle = Linux | 42; the 12 others are the 6 Pi-scope and 6 mixed rows |
+  | finder = hand counts | 54 / 54 |
+  | `x,**/b` | Pi = Linux = proposal = oracle = `x,q/b` |
+  | `x,{**/b}` | Pi `x,q/b`; Linux = proposal = oracle = `x,b`, `x,q/b` |
+
+- **Canonical authority.** The harness `components` mode has 28 cases. The new ones are:
+  - `comma-literal` (`pi`);
+  - `comma-literal-before-brace` (`pi`);
+  - `comma-then-brace-alt-start` (union `x,{**/b}`, `x,{b}`; equals Linux).
+
+  `COMPONENT_FILES` gains `x,b` and `x,q/b`. All 28 relations hold on fresh Windows and Linux runs.
+- **Control added to the plan:** "every comma is an alternative start". It is killed by `components/comma-literal` on Windows: the construction or oracle adds `x,b`.
+
+## CONVERGENCE CHECKPOINT (revision 2)
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION   (revision 2, superseding revision 1 at eb486836)
+
+EPISODE
+    CE-L13-WP134-01
+
+OPEN FINDINGS
+    WP134-IMPL-R001, WP134-IMPL-R002 (incl. C001 resolved-for-checkpoint, C002)
+    (WP134-IMPL-R003 PROVISIONALLY CLOSED @ f97906ca)
+
+ACCEPTANCE WITNESSES
+    data/13-wp134-ce01/abort-partition-pi.json            (14 cells; binding witnesses per cell, both tools)
+    data/13-wp134-ce01/glob-matrix-{win32,linux}.json     (54 rows; independent oracle; hand-counted components)
+    data/13-wp134/out/components-{win32,linux}.json       (28 classified canonical cases; windowsUnion)
+    negative controls: the earlier plan + "zero-directory left broken", "whole-pattern Linux conversion",
+                       "every comma is an alternative start"
+
+NORMATIVE DELTAS
+    spec/tools.md WP-13.4 CE-L13-WP134-01 passages (composition rule; brace-alternative context)
+    assurance/pi-divergences.md DIV-002 "Composition" clarification
+    harness components mode
+    manifest tests lists, conformance generator and corpus kind (with the implementation)
+
+NEXT_OWNER
+    Codex (checkpoint review of exactly this revision)
+```

@@ -244,7 +244,8 @@ const GREP = [
 //                                 every combination, written out by hand), recorded as `windowsUnion`; `linux`
 //                                 states whether that union is expected to equal Linux's result (false only
 //                                 where a retained Pi-scope construct is composed with a recursive component).
-const COMPONENT_FILES = ["src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts"];
+const COMPONENT_FILES = ["src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts",
+  "x,b", "x,q/b"];
 const u = (linux, ...union) => ({ union, linux });
 const COMPONENTS = [
   ["adjacent-doublestar", { pattern: "src/**/**/*.spec.ts" },
@@ -284,6 +285,10 @@ const COMPONENTS = [
   ["mixed-class-then-component", { pattern: "src/[!]/**/x/**/b.ts" },
     u(false, "src/[!]/**/x/**/b.ts", "src/[!]/**/x/b.ts")],
   ["mixed-component-then-class", { pattern: "src/**/[!]/b.ts" }, u(false, "src/**/[!]/b.ts", "src/[!]/b.ts")],
+  // Checkpoint review 2, C002: a comma outside braces is an ordinary character, not an alternative start.
+  ["comma-literal", { pattern: "x,**/b" }, "pi"],
+  ["comma-literal-before-brace", { pattern: "x,**/b{a,b}" }, "pi"],
+  ["comma-then-brace-alt-start", { pattern: "x,{**/b}" }, u(true, "x,{**/b}", "x,{b}")],
 ];
 
 function summary(r) {

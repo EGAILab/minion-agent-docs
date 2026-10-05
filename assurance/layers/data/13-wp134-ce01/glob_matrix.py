@@ -30,7 +30,9 @@ SEP = "[/\\\\]"  # Pi's String.raw`[/\\]`
 FILES = ["src/b.spec.ts", "src/sub/b.spec.ts", "src/sub/deep/b.spec.ts", "src/a/b.spec.ts", "lib/b.spec.ts",
          "x/b", "x/q/b", "x/c", "x/q/c", "xb", "x/ab", "x/bc",
          # checkpoint review 1 (C001): mixed recursive / Pi-scope witnesses
-         "src/a.ts", "src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts"]
+         "src/a.ts", "src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts",
+         # checkpoint review 2 (C002): literal comma vs alternative separator
+         "x,b", "x,q/b"]
 PATTERNS = [
     # genuine recursive components
     "src/**/b.spec.ts", "src/**/**/b.spec.ts", "{src/**/b.spec.ts,none}", "{src,lib}/**/b.spec.ts",
@@ -48,7 +50,30 @@ PATTERNS = [
     # mixed: a recursive component composed with a retained Pi-scope construct (C001)
     "src/**/a*.ts", "{src/**/a*.ts,none}", "src/**/x/*.ts", "src/[!]/**/x/**/b.ts", "src/**/[!]/b.ts",
     "src/*/**/b.ts", "src/**/**b.ts", "src/{**/a*.ts,none}",
+    # literal comma outside braces vs a comma or "{" that begins an alternative (C002)
+    "x,**/b", "x,{**/b}", "x,**/b{a,b}", "{x,**/b}", "x}/**/b",
 ]
+
+# Recursive components per row, counted BY HAND from rule 4 (independent of the finder below):
+# the pattern-initial `**/` never counts; a class can absorb Pi's "[/\\]"; "," and "}" are
+# syntax only inside braces.
+EXPECTED_COMPONENTS = {
+    "src/**/b.spec.ts": 1, "src/**/**/b.spec.ts": 2, "{src/**/b.spec.ts,none}": 1,
+    "{src,lib}/**/b.spec.ts": 1, "src/**/{deep/**/b,b}.spec.ts": 2, "src/**/*/**/b.spec.ts": 2,
+    "src/a**/**/b.spec.ts": 1, "src/***/**/b.spec.ts": 1, "src/[a-]/**/b.spec.ts": 1,
+    "src/{a,{b}}/**/b.spec.ts": 1, "src/{}/**/b.spec.ts": 1, "src/[/]/**/b.spec.ts": 1,
+    "src/[]]/**/b.spec.ts": 1,
+    "x/{**/b,c}": 1, "x/{c,**/b}": 1, "x/{**/b}": 1, "x/{a,{**/b}}": 1, "x/{**/**/b,c}": 2,
+    "x/{q,{**/b}}/c": 1, "x/{**/b,c}/**/c": 2, "x{**/b,c}": 1, "x{**/b}": 1, "x/a{**/b,c}": 1,
+    "x/{a,b{**/c}}": 1, "{**/b,c}": 1, "**/{**/b,c}": 1,
+    "{x/**,y}/b": 0, "x/{q/**,nope}/b": 0, "x/{**}/b": 0, "x/{a**/b,c}": 0, "src/**": 0,
+    "src/*.spec.ts": 0, "x/**b": 0, "x/b**/c": 0, "src/[]/**/b.spec.ts": 0, "src/[!]/**/b.spec.ts": 0,
+    "src/[/**/b.spec.ts": 0, "x\\/**/b": 1,
+    "src/[z-a]/**/b.spec.ts": 1, "src/{a/**/b.spec.ts": 1, "src/a}/**/b.spec.ts": 1,
+    "src/**/a*.ts": 1, "{src/**/a*.ts,none}": 1, "src/**/x/*.ts": 1, "src/[!]/**/x/**/b.ts": 1,
+    "src/**/[!]/b.ts": 1, "src/*/**/b.ts": 1, "src/**/**b.ts": 1, "src/{**/a*.ts,none}": 1,
+    "x,**/b": 0, "x,{**/b}": 1, "x,**/b{a,b}": 0, "{x,**/b}": 1, "x}/**/b": 1,
+}
 
 
 def recursive_components(e: str) -> list[int]:
@@ -110,8 +135,11 @@ def effective(pattern: str) -> str:
 def lex(text: str) -> list[tuple[str, str]]:
     """Glob text as the pinned fd lexes it on Windows (no backslash escape): a class is "[", an
     optional "!" or "^", a leading "]" taken as a member, then up to the next "]" (an unclosed
-    "[" is a literal); "{" "," "}" "*" are syntax; anything else is a literal character."""
-    tokens, index = [], 0
+    "[" is a literal); "{" and "*" are syntax; "," and "}" are syntax only inside an open brace
+    group (checkpoint review 2, C002) -- outside braces they are ordinary characters; anything else
+    is a literal character."""
+    tokens: list[tuple[str, str]] = []
+    index, depth = 0, 0
     while index < len(text):
         char = text[index]
         if char == "[":
@@ -125,7 +153,15 @@ def lex(text: str) -> list[tuple[str, str]]:
                 tokens.append(("class", text[index : end + 1]))
                 index = end + 1
                 continue
-        tokens.append(({"{": "open", ",": "comma", "}": "close", "*": "star"}.get(char, "lit"), char))
+        if char == "{":
+            kind, depth = "open", depth + 1
+        elif char == "}" and depth:
+            kind, depth = "close", depth - 1
+        elif char == "," and depth:
+            kind = "comma"
+        else:
+            kind = "star" if char == "*" else "lit"
+        tokens.append((kind, char))
         index += 1
     return tokens
 
@@ -255,6 +291,10 @@ def main() -> None:
             texts["candidate"] = candidate(e)
         rows[pattern] = {name: {"text": text, **run(fd, text, root)} for name, text in texts.items()}
         rows[pattern]["oracle"] = oracle(fd, e, root)  # type: ignore[index]
+        found = len(recursive_components(e))
+        rows[pattern]["components"] = {  # type: ignore[index]
+            "expected_by_hand": EXPECTED_COMPONENTS[pattern], "found": found,
+            "agree": found == EXPECTED_COMPONENTS[pattern]}
     Path(out_path).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
