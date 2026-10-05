@@ -1,0 +1,11 @@
+{
+ "rule": "the GitHub 'latest' release on pinned Pi's commit date 2026-08-19 (pinned Pi b7bb00b936dbe21b8e160b3e89efdec361846699, tools-manager.ts stage 3)",
+ "engines": {
+  "fd": {"version": "10.4.2", "tag": "v10.4.2", "repo": "sharkdp/fd", "platforms": {
+   "win32-x64": {"artifact": "fd-v10.4.2-x86_64-pc-windows-msvc.zip", "url": "https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-pc-windows-msvc.zip", "artifactSha256": "b2816e506390a89941c63c9187d58a3cc10e9a55f2ef0685f9ea0eccaf7c98c8", "member": "fd-v10.4.2-x86_64-pc-windows-msvc/fd.exe", "binarySha256": "4c9d082ee20f0d9e44881ac4e92adf765efc314d82103c53d7f576bd78dc5761", "version": "fd 10.4.2"},
+   "linux-x64": {"artifact": "fd-v10.4.2-x86_64-unknown-linux-gnu.tar.gz", "url": "https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-unknown-linux-gnu.tar.gz", "artifactSha256": "def59805cd14b5651b68990855f426ad087f3b96881296d963910431ba3143c8", "member": "fd-v10.4.2-x86_64-unknown-linux-gnu/fd", "binarySha256": "0dff4a420feb3e57fd1d4402d3e29f46115aa38d962467d2f3b72e7439d3ada8", "version": "fd 10.4.2"}}},
+  "rg": {"version": "15.2.0", "tag": "15.2.0", "repo": "BurntSushi/ripgrep", "platforms": {
+   "win32-x64": {"artifact": "ripgrep-15.2.0-x86_64-pc-windows-msvc.zip", "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-pc-windows-msvc.zip", "artifactSha256": "71b2fef860abe467217a538ff31de02f5258807c0129f771846f87bd029aafc5", "member": "ripgrep-15.2.0-x86_64-pc-windows-msvc/rg.exe", "binarySha256": "14231169855ec5205cf5a1b6f1db358ff4aed4247c86b69ce8aae647c77f6680", "version": "ripgrep 15.2.0 (rev e89fff89ac)"},
+   "linux-x64": {"artifact": "ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz", "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz", "artifactSha256": "33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c", "member": "ripgrep-15.2.0-x86_64-unknown-linux-musl/rg", "binarySha256": "e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849", "version": "ripgrep 15.2.0 (rev e89fff89ac)"}}}
+ }
+}
