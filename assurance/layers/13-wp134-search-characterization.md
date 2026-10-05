@@ -58,7 +58,7 @@ The bulk corpus has 1,200 files for `find`'s 1000/50 KB limits and a 120-line wi
 - `out/search-win32.json`: Windows 11, Node v22.15.1;
 - `out/search-linux.json`: `node:22.15.1-bookworm-slim`, x86_64.
 
-There are 79 `find` and 93 `grep` observations per platform, plus the bulk summaries. The corpus root is normalized to `<ROOT>`.
+There are 93 `find` and 93 `grep` observations per platform, plus the bulk summaries. The corpus root is normalized to `<ROOT>`.
 
 ```text
 node --experimental-strip-types harness/search_probe.mjs <pi checkout> <engine dir> <scratch dir> <out.json>
@@ -80,6 +80,12 @@ docker run --rm -v <pi>:/pi:ro -v <linux engines>:/eng-ro:ro -v <this dir>:/w no
 - A pattern containing `/` gets `--full-path` and a `**/` prefix. On Windows, Pi then rewrites every `/` to `[/\\]`.
 - That rewrite breaks globset's special `/**/` component, which can match zero directories. So `src/**/*.spec.ts` returns `src/sub/d.spec.ts` but not `src/b.spec.ts` on Windows, while Linux returns both (`find/*/full-path-spec`).
 - This is a realistic pattern. Pi's behaviour here is a Windows defect.
+- **Two `**` components** (`src/**/er/**/*.spec.ts`) find nothing on Windows; Linux finds `e.spec.ts`.
+- **A second, distinct Windows behaviour.** On Windows, the pinned `fd`'s full-path matching lets a single-segment `*` match across `\`, so Pi's `src/*.spec.ts` also returns `src/sub/d.spec.ts` and `src/sub/deep/er/e.spec.ts` (`full-path-star`, `full-path-star-sub`, `path-sub-fullpath`).
+  - Correcting it would need Minion-owned glob translation, which `TOOL-038` forbids.
+  - It therefore stays at parity. `DIV-002` (§4) is scoped to the `**/` zero-directory meaning only.
+- **Agreements.** A trailing `/**` agrees on both platforms. A backslash-separator pattern (`src\**\*.spec.ts`) contains no `/`, so it is a basename glob in which `\` escapes, and it matches nothing on either platform.
+- **DIV-002 feasibility** (`harness/div002_probe.mjs`, `out/div002-win32.json`): on Windows, one candidate normalization makes the `**/` cases equal Linux and leaves the `*` cases exactly as Pi has them.
 
 **F-3. `.gitignore` handling differs between `find` and `grep` outside a git repository.**
 - `find` passes `--no-require-git` when no ancestor has `.git`, so `.gitignore` applies.
@@ -124,9 +130,11 @@ docker run --rm -v <pi>:/pi:ro -v <linux engines>:/eng-ro:ro -v <this dir>:/w no
 
 **F-6. Platform differences are path separators in error text, plus F-1 and F-2.** Nothing else differs.
 
-## 4. Owner questions raised (`minion-agent#51`)
-- **Q1 (F-2).** Reproduce Pi's Windows full-path `**` defect, or correct it as a bounded practical-parity divergence.
-- **Q2 (F-1).** Specify cross-file order as engine-defined and unspecified, keeping Pi's exact argument vectors, or impose a deterministic order.
-- **Q3 (`TOOL-038`).** When does engine acquisition happen: lazily at first use, as in Pi but pinned and verified, or only through explicit provisioning, with no network access at tool-call time?
+## 4. Owner decisions (`minion-agent#51` comment `5988502021`)
 
-Everything else in §3 follows from the binding decisions and the default DIRECT_PI_PARITY classification of Pi's wrapper logic.
+The questions were raised in comment `5987537391`.
+- **Q1: Option A, `DIV-002`.** Windows full-path `**/` keeps its zero-directory meaning. Only the observable behaviour is specified, and the scope is the `**/` meaning only (§3, F-2).
+- **Q2: Option A.** Cross-file order is `ENGINE_DEFINED_UNSPECIFIED`. There is no sorting, and conformance is order-insensitive.
+- **Q3: Option B, `DIV-003`.** Engines are provisioned explicitly only. There is no network access from a tool call, the binary hash is verified at use time, and the unavailable-engine text is Minion-owned.
+- **Pins and scope.** fd v10.4.2 and ripgrep 15.2.0 are approved, subject to independent review of the hashes and evidence. Windows x64 and Linux x64 are certified, there is no `PATH` fallback, and an explicit uncertified override is allowed.
+- **Characterized Pi quirks** stay exact unless reproducing one proves disproportionate.

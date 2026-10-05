@@ -67,6 +67,7 @@ function build(kind) {
   file(root, "src/b.spec.ts", "describe foo\n");
   file(root, "src/sub/c.ts", "const foo = 1;\n");
   file(root, "src/sub/d.spec.ts", "it foo\n");
+  file(root, "src/sub/deep/er/e.spec.ts", "deep it\n");
   file(root, "src/.hidden.ts", "hidden foo\n");
   file(root, ".hiddendir/e.ts", "hidden dir foo\n");
   file(root, "data/x.json", "{\"foo\": 1}\n");
@@ -143,6 +144,13 @@ const FIND = [
   ["case-json-upper", { pattern: "*.JSON" }],
   ["full-path-spec", { pattern: "src/**/*.spec.ts" }],
   ["any-depth-spec", { pattern: "**/*.spec.ts" }],
+  ["full-path-star", { pattern: "src/*.spec.ts" }],
+  ["full-path-star-sub", { pattern: "src/sub/*.spec.ts" }],
+  ["full-path-deep", { pattern: "src/sub/**/*.spec.ts" }],
+  ["full-path-question", { pattern: "src/?.spec.ts" }],
+  ["full-path-two-doublestar", { pattern: "src/**/er/**/*.spec.ts" }],
+  ["full-path-trailing-doublestar", { pattern: "src/sub/**" }],
+  ["native-separator", { pattern: "src\\**\\*.spec.ts" }],
   ["hidden-glob", { pattern: ".hidden*" }],
   ["keep-boundary", { pattern: "keep.ts" }],
   ["inner-nested-ignore", { pattern: "inner.ts" }],
