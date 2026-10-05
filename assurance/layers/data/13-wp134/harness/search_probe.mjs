@@ -255,6 +255,35 @@ async function bulk() {
   return r;
 }
 
+// Contract review 1 edge cases (WP134-CON-R001, R002), each in its own corpus.
+async function edges() {
+  const r = {};
+  if (process.platform === "win32") {
+    // R001: a dangling .git junction. Pi's access(F_OK) reports it as present, so the walk finds a repository and
+    // omits --no-require-git; a following stat would report it absent.
+    const root = realpathSync(mkdtempSync(join(scratchDir, "wp134-junction-")));
+    file(root, "src/same.ts", "x\n");
+    file(root, ".gitignore", "src/same*\n");
+    const target = join(root, "gone-target");
+    mkdirSync(target);
+    symlinkSync(target, join(root, ".git"), "junction");
+    rmSync(target, { recursive: true, force: true });
+    let followingStat;
+    try { statSync(join(root, ".git")); followingStat = "exists"; } catch (e) { followingStat = e.code; }
+    r["find/dangling-git-junction"] = { followingStatOfGit: followingStat, accessOfGit: await pathExists(join(root, ".git")),
+      ...(await run("find", root, { pattern: "same*", path: "src" })) };
+    rmSync(root, { recursive: true, force: true });
+  } else {
+    // R002: two distinct names that Pi's trim() makes identical; the formatted output keeps both.
+    const root = realpathSync(mkdtempSync(join(scratchDir, "wp134-dup-")));
+    file(root, "src/same.ts", "x\n");
+    file(root, "src/same.ts ", "x\n");
+    r["find/trailing-space-duplicate"] = await run("find", root, { pattern: "same.ts*", path: "src" });
+    rmSync(root, { recursive: true, force: true });
+  }
+  return r;
+}
+
 const out = { pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", node: process.version, platform: process.platform,
   engines: Object.fromEntries(Object.entries(ENGINES).map(([k, p]) => [k, spawnSync(p, ["--version"]).stdout.toString().split("\n")[0]])),
   corpora: {}, find: {}, grep: {} };
@@ -270,5 +299,6 @@ for (const kind of ["plain", "repo"]) {
   rmSync(root, { recursive: true, force: true });
 }
 out.bulk = await bulk();
+out.edges = await edges();
 writeFileSync(outPath, JSON.stringify(out, null, 1) + "\n");
 console.log(`wrote ${Object.keys(out.find).length} find + ${Object.keys(out.grep).length} grep observations`);

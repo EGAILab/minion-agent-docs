@@ -138,3 +138,15 @@ The questions were raised in comment `5987537391`.
 - **Q3: Option B, `DIV-003`.** Engines are provisioned explicitly only. There is no network access from a tool call, the binary hash is verified at use time, and the unavailable-engine text is Minion-owned.
 - **Pins and scope.** fd v10.4.2 and ripgrep 15.2.0 are approved, subject to independent review of the hashes and evidence. Windows x64 and Linux x64 are certified, there is no `PATH` fallback, and an explicit uncertified override is allowed.
 - **Characterized Pi quirks** stay exact unless reproducing one proves disproportionate.
+
+## 5. Contract review 1 remediation
+
+Codex's contract review 1 is on docs #247, comment `5990256976`. It independently verified every engine artifact, member and binary hash, and replayed both probes. It found three defects, all accepted as stated:
+
+- **`WP134-CON-R001`: the `.git` walk.** Pi's `pathExists` is `access(F_OK)`. On Windows that is non-following, so a dangling `.git` junction *exists*. The walk now uses WP-13.3's mapping: Windows `file_info`, POSIX following `probe_dir_entry`. `grep`'s directory check keeps the following probe.
+  - New evidence (`edges`, Windows): following `stat` gives ENOENT, `access` gives true, and Pi's result is `same.ts`, with the parent `.gitignore` not applied.
+- **`WP134-CON-R002`: duplicates.** Pi trims each `fd` line, so `same.ts` and `same.ts ` both print `same.ts`.
+  - `find` conformance now compares as a multiset, and limited results as a sub-multiset.
+  - New evidence (`edges`, Linux): `same.ts\nsame.ts`.
+  - A leading-space basename stays inside the absolute path and is kept (` lead.ts`). The earlier matrix claim that it was trimmed away was wrong and has been corrected.
+- **`WP134-CON-R003`: post-sort.** A scripted, unsorted engine stream must be reproduced exactly within one invocation. That kills a wrapper post-sort without fixing any engine order (Owner Q2 unchanged).

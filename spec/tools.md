@@ -2708,7 +2708,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
 - The approved divergences are `DIV-002` and `DIV-003` (`assurance/pi-divergences.md`).
 
 **Consumed lower layers (all CERTIFIED):**
-- `ctx.fs`: `probe_dir_entry` (§11.4, follows symlinks), `read_binary_file` and the `TOOL-026` path pipeline.
+- `ctx.fs`: `probe_dir_entry` (§11.4, follows symlinks), `file_info` (§3, non-following), `read_binary_file` and the `TOOL-026` path pipeline.
 - `ctx.subprocess` (§6, §16): `spawn`, `read_chunk`, `wait`, `terminate`, `ReadableStream.close()`; and the execution-world compatibility check (§7).
 
 Pi's `FindOperations` and `GrepOperations` (custom `glob`/`exists` and `isDirectory`/`readFile`) are unadopted extension APIs, not divergences. The certified tools always run the pinned engines through `ctx.subprocess`.
@@ -2821,7 +2821,12 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
    Signal aborted after this step -> "Operation aborted".
 4. args = ["--glob", "--color=never", "--hidden"]
    Repository: for current = searchPath, then dirname(current), ... until dirname(current) == current:
-       ctx.fs.probe_dir_entry(join(current, ".git")) is Ok -> inside a repository; stop.
+       exists(join(current, ".git")) -> inside a repository; stop.
+     exists(x) is Pi's pathExists, access(F_OK), mapped as WP-13.3 maps it (CE-WP133-01; WP134-CON-R001):
+       WINDOWS: ctx.fs.file_info(x) is Ok      (non-following: a dangling junction or symlink EXISTS)
+       POSIX:   ctx.fs.probe_dir_entry(x) is Ok (following)
+       any Err -> false
+     (grep's directory check, step 4 of grep, keeps the following probe_dir_entry: Pi uses fs.stat there.)
    Not inside a repository -> append "--no-require-git".
    Append "--max-results", Number::toString(L)       (2.5 -> "2.5", -1 -> "-1", 0 -> "0")
 5. Pattern:
@@ -2939,9 +2944,9 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
 
 **Conformance comparison.**
 - **Unlimited results:**
-  - `find` entries are compared as a set (an entry occurs at most once);
+  - `find` entries are compared as a **multiset** of formatted entries. Two distinct paths can format identically: Pi trims each line, so `same.ts` and `same.ts ` both print `same.ts` (WP134-CON-R002). Multiplicity is kept;
   - `grep` output is compared as a multiset of per-file blocks, each block exact and in order, because duplicate lines between blocks are meaningful.
-- **Limited results:** compare the result count, that each returned member belongs to the unlimited result set, and the notices, truncation and details exactly.
+- **Limited results:** compare the result count, and that the returned entries are a sub-multiset of the unlimited result (no entry more often than it is available). Compare the notices, truncation and details exactly. No particular subset is required.
 - **Comparisons must still catch** a missing result, an extra result, a lost duplicate and wrong within-file order.
 
 #### `DIV-002`: Windows full-path `**` (Owner Q1)
@@ -2985,13 +2990,23 @@ Pi's Windows output remains reproducible as the reference side, from the charact
    - `grep` flag combinations;
    - non-integer limits rendered with `Number::toString`.
    This witness, not result comparison, guards "no sort flag" and Pi's argument shape.
+6. **Order preservation within one invocation** (WP134-CON-R003): a scripted engine (an explicit test override) emits a fixed, deliberately unsorted stream, and the tool must reproduce it exactly.
+   - For `find`, the stream is `<root>/z.ts` then `<root>/a.ts`, and the result is exactly `z.ts\na.ts`.
+   - For `grep`, the stream is a `rg --json` match stream for files `z` then `a`, and the per-match order is kept.
+   - A post-collection sort fails this witness.
+   - The real-engine corpus stays order-insensitive (Owner Q2). This fixes no engine order; it only forbids the wrapper from reordering what the engine emitted.
+7. **Repository walk and duplicates:**
+   - a Windows dangling `.git` junction is treated as present, so the result has no `--no-require-git` and a parent `.gitignore` is not applied (`data/13-wp134/out/search-win32.json`, `edges`);
+   - a Linux trailing-space name collision gives both entries (`search-linux.json`, `edges`).
 5. **Number and string edge cases:**
    - `limit` and `context` of `-0` and `1e999` (+Infinity);
    - `truncateLine` cutting through a surrogate pair, which yields a lone high surrogate in the result text (`L0506-D003`);
    - an unpaired surrogate in `pattern`, which reaches the engine as U+FFFD (the WP-13.3 argv projection rule).
 
 **Negative controls.** Each realistic wrong implementation must fail a witness:
-- sorting results;
+- sorting results after collection (killed by witness 6);
+- deduplicating `find` entries (killed by witness 7 and the multiset comparison);
+- a following probe for the `.git` walk on Windows (killed by witness 7);
 - passing `--no-require-git` to `rg`, or omitting it for `fd` outside a repository;
 - merging context windows;
 - integer-coercing `context` or `limit`;

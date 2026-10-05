@@ -28,7 +28,7 @@
 | context file bytes → text | file bytes | `fs.readFile(p, "utf-8")`: WHATWG replacement, **BOM kept** | `read_binary_file` + `decode("utf-8", "replace")` (no BOM strip) | `read_binary_file` + `String::from_utf8_lossy` (maximal subparts, BOM kept) | text | **AUDITED** | `bom-context` (U+FEFF kept), `bad-utf8-context` |
 | `truncateLine` | — | `line.length > 500` → `slice(0, 500)`, measured in **UTF-16 code units**, so a cut can split a surrogate pair | needs UTF-16 measurement (the WP-13.2 `_utf16` helpers) | needs UTF-16 measurement over a JS-string-capable text (`L0506-D003`) | result text | **AUDITED**: the result text may then hold a lone high surrogate, which `L0506-D003` (CERTIFIED_CLOSED) carries losslessly in both bindings | an astral character straddling code unit 500: `...` + lone `D83D` + `... [truncated]`; a line of 499 units plus a pair |
 | result text, `details` | — | strings; `details` keys `resultLimitReached`/`matchLimitReached` (JS numbers, possibly fractional), `truncation` (`TruncationResult`), `linesTruncated` | per `L0506-D003` | per `L0506-D003` | JSON | **AUDITED**: the camelCase keys are Pi's verbatim, as bash does; `TruncationResult` is the certified `truncateHead` result | `details` equality, compared as a key set |
-| relativized `find` entries | — | Node `path.relative` / `path.sep` for the **platform**; `win32.relative` is case-insensitive and returns the absolute `to` across drives | needs Node-exact `path.win32`/`posix` functions (`ntpath.relpath` differs) | the same | text | **AUDITED, rule** (spec "Path functions") | case-differing root on Windows; trailing separators (`/` and `\`); the leading-space name (trimmed away) |
+| relativized `find` entries | — | Node `path.relative` / `path.sep` for the **platform**; `win32.relative` is case-insensitive and returns the absolute `to` across drives | needs Node-exact `path.win32`/`posix` functions (`ntpath.relpath` differs) | the same | text | **AUDITED, rule** (spec "Path functions") | case-differing root on Windows; trailing separators (`/` and `\`); a **leading**-space basename is kept, because it is inside the absolute path and not at the trim boundary (` lead.ts`); a **trailing**-space collision gives a duplicate entry (`edges`, **revised `WP134-CON-R002`**) |
 
 ### 1.1 Value-domain carriers (F7)
 
@@ -46,7 +46,7 @@
 | Required semantic operation | Owning lower layer | Existing certified seam/API | Expresses exact Pi semantics? | Python sufficient? | Rust sufficient? | New additive extension? | Non-additive reopen? |
 |---|---|---|---|---|---|---|---|
 | resolve `path` | Layer 13 (`TOOL-026`) | the shared path pipeline | yes | yes | yes | no | no |
-| `.git` existence walk (`access F_OK`, following) | Layer 12 | `ctx.fs.probe_dir_entry` (§11.4, follows) | yes: `Ok` means exists, as WP-13.3's existence mapping (`CE-WP133-01`) | yes | yes | no | no |
+| `.git` existence walk (`access F_OK`) (**revised, `WP134-CON-R001`**) | Layer 12 | WINDOWS: `ctx.fs.file_info` (§3, non-following); POSIX: `ctx.fs.probe_dir_entry` (§11.4, following). `Ok` means exists | yes: WP-13.3's `CE-WP133-01` mapping. A dangling junction exists on Windows, as `access` says (`edges` witness) | yes | yes | no | no |
 | `grep` directory check (`fs.stat().isDirectory()`, following) | Layer 12 | `probe_dir_entry`: `directory` / `symlink_to_directory` | yes; any `Err` → "Path not found" | yes | yes | no | no |
 | context re-read (`readFile utf-8`) | Layer 12 | `read_binary_file` + decode | yes (row above) | yes | yes | no | no |
 | spawn the engine with argv; null stdin; piped stdout/stderr; inherited env | Layer 12 | `ctx.subprocess.spawn` (§6, `EXEC-010` §15) | yes | yes | yes | no | no |
@@ -94,7 +94,7 @@
 | formatting happens after the engine exits; blocks are never merged | merged windows / streaming formatting | `context-overlap` |
 | an exit code is ignored when killed for the limit | treating the kill as an error | `limit-3` on many matches |
 | notices in Pi's order | reordered notices | bulk limits + truncation + `linesTruncated` |
-| no sort | sorting | an order-insensitive comparison still catches extra, missing and duplicate results; a sorted implementation passes conformance, so the control is code review plus the argument-vector witness (the engine argv recorded by a fake engine) |
+| no sort (**revised, `WP134-CON-R003`**) | a sort flag; a post-collection sort; deduplication | the recording-argv witness (sort flags); the scripted unsorted-stream witness (`z.ts` then `a.ts`, compared exactly); the trailing-space duplicate plus multiset comparison (deduplication) |
 
 ## 5. Neighborhood expansion record
 
