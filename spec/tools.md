@@ -2670,3 +2670,363 @@ These are the rules of characterization §8, as executed (§§11, 14).
 - macOS (not observed).
 - Pi's process-global `trackDetachedChildPid` shutdown tracking (not observable by one call).
 - `find`/`grep` (`WP-13.4`).
+
+### WP-13.4 — `find`, `grep` (`TOOL-036`, `TOOL-037`, `TOOL-038`)
+
+**Status (`minion-agent#51`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+
+**Requirements:**
+- `TOOL-036`: `find`'s schema, its argument vector to `fd`, its scoping and path relativization, and its result formatting;
+- `TOOL-037`: `grep`'s schema, its argument vector to `rg`, Pi's own match collection, context reconstruction, line and output truncation, and result formatting;
+- `TOOL-038`: the pinned match engines, their explicit provisioning, and verification at use time.
+
+**Authorities:**
+- Pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`:
+  - `packages/coding-agent/src/core/tools/{find,grep,truncate,path-utils}.ts`;
+  - `src/utils/{tools-manager,paths}.ts`.
+- Node v22.15.1.
+- The pinned engines `fd 10.4.2` and `ripgrep 15.2.0` are the delegated authority for **which** paths and lines match (`TOOL-038`).
+
+**Characterization and evidence:**
+- `assurance/layers/13-wp134-search-characterization.md`;
+- `13-wp134-feasibility-matrix.md`;
+- `data/13-wp134/` (`engines.json`, `harness/search_probe.mjs`, `out/search-{win32,linux}.json`).
+
+**Governance:**
+- **`TOOL-038` = `EXACT_MINION_PINNED_ENGINES`.** The Owner's binding decision is in #51's state block.
+- **Owner Q1–Q3** (#51 comment `5988502021`):
+  - Q1: `DIV-002`, the Windows full-path zero-directory `**`;
+  - Q2: cross-file order is `ENGINE_DEFINED_UNSPECIFIED`;
+  - Q3: `DIV-003`, explicit provisioning;
+  - the pins are fd v10.4.2 and ripgrep 15.2.0, subject to independent review of the hashes and evidence;
+  - Windows x64 and Linux x64 are the certified platforms.
+- The routine lifecycle is delegated under `minion-agent#75`.
+
+**Classification.**
+- Pi's wrapper logic is DIRECT_PI_PARITY: argument vectors, scoping, relativization, collection, context, truncation, notices and the quirks recorded in characterization §3.
+- Matching itself is delegated to the pinned engines (`MINION_EXTENSION` with exact pinned delegated authority). Minion never reimplements `fd` glob semantics or ripgrep's regex semantics.
+- The approved divergences are `DIV-002` and `DIV-003` (`assurance/pi-divergences.md`).
+
+**Consumed lower layers (all CERTIFIED):**
+- `ctx.fs`: `probe_dir_entry` (§11.4, follows symlinks), `file_info` (§3, non-following), `read_binary_file` and the `TOOL-026` path pipeline.
+- `ctx.subprocess` (§6, §16): `spawn`, `read_chunk`, `wait`, `terminate`, `ReadableStream.close()`; and the execution-world compatibility check (§7).
+
+Pi's `FindOperations` and `GrepOperations` (custom `glob`/`exists` and `isDirectory`/`readFile`) are unadopted extension APIs, not divergences. The certified tools always run the pinned engines through `ctx.subprocess`.
+
+#### Engines and provisioning (`TOOL-038`; `DIV-003`)
+
+**Pins (normative).** The exact identity of each certified engine is the set of values below. The machine-readable copy is `assurance/layers/data/13-wp134/engines.json`, and an implementation ships that same data. An engine upgrade is an explicit contract change, never silent.
+
+| Engine | Version | Platform | Official artifact | Artifact SHA-256 | Member | Binary SHA-256 |
+|---|---|---|---|---|---|---|
+| `fd` | 10.4.2 | win32-x64 | `sharkdp/fd` release `v10.4.2`, `fd-v10.4.2-x86_64-pc-windows-msvc.zip` | `b2816e506390a89941c63c9187d58a3cc10e9a55f2ef0685f9ea0eccaf7c98c8` | `fd-v10.4.2-x86_64-pc-windows-msvc/fd.exe` | `4c9d082ee20f0d9e44881ac4e92adf765efc314d82103c53d7f576bd78dc5761` |
+| `fd` | 10.4.2 | linux-x64 | `fd-v10.4.2-x86_64-unknown-linux-gnu.tar.gz` | `def59805cd14b5651b68990855f426ad087f3b96881296d963910431ba3143c8` | `fd-v10.4.2-x86_64-unknown-linux-gnu/fd` | `0dff4a420feb3e57fd1d4402d3e29f46115aa38d962467d2f3b72e7439d3ada8` |
+| `rg` | 15.2.0 | win32-x64 | `BurntSushi/ripgrep` release `15.2.0`, `ripgrep-15.2.0-x86_64-pc-windows-msvc.zip` | `71b2fef860abe467217a538ff31de02f5258807c0129f771846f87bd029aafc5` | `ripgrep-15.2.0-x86_64-pc-windows-msvc/rg.exe` | `14231169855ec5205cf5a1b6f1db358ff4aed4247c86b69ce8aae647c77f6680` |
+| `rg` | 15.2.0 | linux-x64 | `ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz` | `33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c` | `ripgrep-15.2.0-x86_64-unknown-linux-musl/rg` | `e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849` |
+
+**Platforms.** Managed engines are certified for the **local** execution world only.
+- There, the platform is the host's operating system and architecture: `win32-x64` or `linux-x64`.
+- Layer 12's `platform` (WINDOWS/POSIX) carries no OS family or architecture, and none is needed for the local world.
+- Every other host platform is NOT_CERTIFIED, and so is every non-local execution world.
+- In those cases the managed engine is unavailable and there is no `PATH` fallback. Only an explicit override (below, uncertified) can supply an engine.
+
+**Engine store.**
+- A Minion-managed directory holds at most one installed binary per engine, under a fixed name: `fd[.exe]` and `rg[.exe]`.
+- Each binding exposes a default location and accepts an explicit one. The exact public name is a binding concern; the semantics below are shared.
+
+**`provision_search_engines(store, *, source = official)`** is the one explicit operation. Thin adapters (a CLI command, a CI script) may wrap it. For each engine, for the current certified platform only:
+1. Obtain the pinned artifact. `source` is either the official upstream URL, or a local directory holding the artifact under its official file name. Neither the source nor its location is authority; the artifact's identity is.
+2. **Verify the artifact's SHA-256 before trusting or extracting anything.** On a mismatch, fail and install nothing.
+3. Extract **only** the recorded member.
+4. **Verify the binary's SHA-256.** On a mismatch, fail and install nothing.
+5. Install atomically: write a temporary file inside the store, then rename it to the fixed name, setting the executable bit on POSIX. A partial or interrupted provisioning never leaves a file at the fixed name that would verify.
+6. Repeating the operation is safe. A store whose binary already verifies is left as it is.
+
+Provisioning is the only code that touches the network. **A `find` or `grep` call never acquires an engine.**
+
+**Verification at use time.**
+- Before every spawn, the tool computes the SHA-256 of the store's binary for that engine and compares it with the pinned value.
+- A cache of earlier verifications is allowed only if it cannot weaken this invariant, and it needs independent review. "The file exists, therefore trust it" is never acceptable.
+
+**Unavailable engine (Minion-owned text, `DIV-003`; it replaces Pi's "could not be downloaded").** The tool fails promptly with no spawn and no network access. The text is exactly:
+
+```text
+<name> is not provisioned: the certified <engine> <version> engine is missing or failed verification. Run provision_search_engines() to provision it.
+<name> is not available on this platform: no certified <engine> engine for <platform>.
+```
+
+In these templates:
+- `<name>` is `fd` or `ripgrep (rg)`, Pi's own names;
+- `<engine> <version>` is `fd 10.4.2` or `ripgrep 15.2.0`;
+- `<platform>` is the platform string, for example `darwin-arm64`.
+
+**Explicit override (uncertified Minion extension).**
+- A factory option may name an engine executable explicitly.
+- Such a tool instance is **not** the certified `TOOL-038` backend: it is not hash-verified, and it does not inherit certification because its executable names itself `fd` or `rg`.
+- It must be explicitly selected and never becomes a fallback.
+
+#### Tool definitions (`TOOL-036`, `TOOL-037`)
+
+The model-visible strings are verbatim from pinned Pi. `DEFAULT_MAX_BYTES / 1024` renders as `50`.
+
+```text
+find
+    name         "find"
+    label        "find"
+    description  "Search for files by glob pattern. Returns matching file paths relative to the search directory. Respects .gitignore. Output is truncated to 1000 results or 50KB (whichever is hit first)."
+    parameters   object, required pattern:
+        pattern  string  "Glob pattern to match files, e.g. '*.ts', '**/*.json', or 'src/**/*.spec.ts'"
+        path     string  "Directory to search in (default: current directory)"   (optional)
+        limit    number  "Maximum number of results (default: 1000)"            (optional)
+
+grep
+    name         "grep"
+    label        "grep"
+    description  "Search file contents for a pattern. Returns matching lines with file paths and line numbers. Respects .gitignore. Output is truncated to 100 matches or 50KB (whichever is hit first). Long lines are truncated to 500 chars."
+    parameters   object, required pattern:
+        pattern     string   "Search pattern (regex or literal string)"
+        path        string   "Directory or file to search (default: current directory)"            (optional)
+        glob        string   "Filter files by glob pattern, e.g. '*.ts' or '**/*.spec.ts'"          (optional)
+        ignoreCase  boolean  "Case-insensitive search (default: false)"                             (optional)
+        literal     boolean  "Treat pattern as literal string instead of regex (default: false)"    (optional)
+        context     number   "Number of lines to show before and after each match (default: 0)"     (optional)
+        limit       number   "Maximum number of matches to return (default: 100)"                   (optional)
+```
+
+- Both schemas are Pi's TypeBox objects with no `additionalProperties` restriction.
+- Numbers keep `R003`'s unconstrained JSON number domain: fractional and negative values are honoured literally, as below.
+- Neither tool joins the mutation queue.
+- `promptSnippet` and TUI rendering are Layer 14 and UI concerns.
+
+**Factory.**
+```text
+create_find_tool(fs, subprocess, engines)
+create_grep_tool(fs, subprocess, engines)
+```
+- `engines` is the certified engine store, or an explicit override (uncertified, above).
+- The working directory is the `ctx.subprocess` provider's `cwd`.
+- Activation validates that `fs` and `subprocess` are in compatible worlds (§7).
+
+**Path functions.** `dirname`, `join`, `relative`, `basename`, `isAbsolute` and `sep` below are Node's `path` functions for the execution world's platform: `path.win32` on WINDOWS and `path.posix` on POSIX. They are pure string functions, and do not touch the filesystem.
+
+On Windows, `path.win32.relative` compares the two paths **case-insensitively**, as Node does.
+
+#### `find` (`TOOL-036`): execution, in order (`find.ts` `execute`, default operations)
+
+```text
+1. Signal already aborted -> "Operation aborted".
+2. searchPath = TOOL-026 pipeline(path || ".")      (Pi resolveToCwd; "" behaves as omitted; "@" prefix stripped)
+   L = limit ?? 1000                                (nullish only: 0, negatives and fractions are kept)
+3. Engine: resolve fd from the store (TOOL-038). Unavailable -> its error text.
+   Signal aborted after this step -> "Operation aborted".
+4. args = ["--glob", "--color=never", "--hidden"]
+   Repository: for current = searchPath, then dirname(current), ... until dirname(current) == current:
+       exists(join(current, ".git")) -> inside a repository; stop.
+     exists(x) is Pi's pathExists, access(F_OK), mapped as WP-13.3 maps it (CE-WP133-01; WP134-CON-R001):
+       WINDOWS: ctx.fs.file_info(x) is Ok      (non-following: a dangling junction or symlink EXISTS)
+       POSIX:   ctx.fs.probe_dir_entry(x) is Ok (following)
+       any Err -> false
+     (grep's directory check, step 4 of grep, keeps the following probe_dir_entry: Pi uses fs.stat there.)
+   Not inside a repository -> append "--no-require-git".
+   Append "--max-results", Number::toString(L)       (2.5 -> "2.5", -1 -> "-1", 0 -> "0")
+5. Pattern:
+     no "/" in pattern -> effective = pattern (fd matches the basename)
+     otherwise         -> append "--full-path";
+                          effective = pattern if it starts with "/" or "**/", or equals "**";
+                          otherwise "**/" + pattern.
+                          WINDOWS: every "/" must also accept "\" (Pi rewrites it to [/\\]), AND each
+                          "**/" component keeps its ordinary meaning of zero or more whole directory
+                          levels (DIV-002). Every other glob construct keeps the meaning that Pi's
+                          rewrite gives it on the pinned fd (see "Windows full-path scope", below).
+   Append "--", effective, searchPath.
+6. Spawn through ctx.subprocess: argv [fd binary, ...args]; stdin null; stdout and stderr piped;
+   inherit_env true (Pi's spawn default environment).
+   Abort while running -> terminate the process and settle "Operation aborted" at once (Pi's onAbort).
+7. stdout: decode as UTF-8 with replacement, split into lines as Node readline does (LF, CRLF and CR all end a line).
+   stderr: accumulate as UTF-8 text.
+8. On exit (after both streams end):
+     aborted                                      -> "Operation aborted"
+     output = the raw lines joined with "\n"
+     exit code != 0 and output == ""              -> error: stderr.trim() || "fd exited with code <code>"
+                                                     (fd's own stderr text is passed through verbatim, for example
+                                                      "[fd error]: Search path '<abs>' is not a directory.")
+     output == ""                                 -> "No files found matching pattern", details absent
+     (exit code != 0 with output != "" continues as success, as Pi does)
+9. For each raw line: strip one trailing "\r", then ECMAScript trim(). Skip it if empty. Otherwise relativize:
+     had_trailing_sep = it ends with sep (or, on WINDOWS, with "/")
+     rel = isAbsolute(line) ? relative(searchPath, line) : line
+     rel = rel split on sep, joined with "/"; re-append "/" if had_trailing_sep and rel lacks it
+10. limit_reached = count >= L
+    body = relativized lines joined with "\n"; truncateHead(body, maxLines = MAX_SAFE_INTEGER, maxBytes = DEFAULT_MAX_BYTES)
+    Notices, in this order, only those that apply, joined with ". ":
+      "<L> results limit reached. Use limit=<2L> for more, or refine pattern"  -> details.resultLimitReached = L
+      "50.0KB limit reached"                                                  -> details.truncation = TruncationResult
+    text = truncated body + ("\n\n[" + notices + "]" when any notice applies)
+    details: absent when no notice applies; otherwise only the keys that apply, with Pi's camelCase names.
+    L and 2L render with Number::toString in IEEE-754 double arithmetic. limit 0 therefore prints
+    "0 results limit reached. Use limit=0 ...", because fd treats --max-results 0 as unlimited.
+```
+
+**Windows full-path scope (characterization F-2; `DIV-002` boundary).**
+- `DIV-002` corrects **only** the zero-directory meaning of `**/`.
+- On Windows, the pinned `fd`'s full-path matching lets a single-segment `*` match across `\`. So on Windows Pi's `src/*.spec.ts` also returns nested files, and so does Minion. This is parity, not a divergence.
+- The required witnesses include this scope check.
+- The contract fixes no particular rewrite. Python and Rust may normalize differently, provided the shared witnesses agree.
+
+#### `grep` (`TOOL-037`): execution, in order (`grep.ts` `execute`, default operations)
+
+```text
+1. Signal already aborted -> "Operation aborted".
+2. Engine: resolve rg from the store (TOOL-038). Unavailable -> its error text. (Pi checks the engine before the path.)
+3. searchPath = TOOL-026 pipeline(path || ".")
+4. is_directory: ONE ctx.fs.probe_dir_entry(searchPath) (follows symlinks, like Pi's fs.stat):
+     Ok, kind in {directory, symlink_to_directory} -> true
+     Ok, any other kind                            -> false
+     Err (any code)                                -> error "Path not found: <searchPath>"
+5. C = (context truthy and context > 0) ? context : 0       (JS truthiness; fractions kept)
+   L = max(1, limit ?? 100)                                  (JS Math.max)
+6. args = ["--json", "--line-number", "--color=never", "--hidden"]
+          + ["--ignore-case"] if ignoreCase is truthy
+          + ["--fixed-strings"] if literal is truthy
+          + ["--glob", glob] if glob is truthy (a non-empty string)
+          + ["--", pattern, searchPath]
+   There is no --no-require-git: outside a git repository, rg ignores .gitignore (characterization F-3).
+7. Spawn rg as in find, step 6. Abort while running: terminate; settle "Operation aborted" after the process exits.
+8. stdout lines (as in find, step 7). For each line, while match_count < L:
+     blank (trim() == "") -> skip; not valid JSON -> skip
+     event.type == "match":
+       match_count += 1
+       file  = event.data.path.text    (absent when rg reports the path as bytes)
+       line  = event.data.line_number
+       text  = event.data.lines.text   (absent when rg reports the line as bytes)
+       file truthy and line a number -> collect {file, line, text}
+       match_count >= L -> limit_reached; terminate rg (killed for the limit)
+   The count includes matches that were not collected (characterization F-4: a non-UTF-8 path).
+9. On exit:
+     aborted                                         -> "Operation aborted"
+     not killed for the limit and code not in {0, 1} -> error: stderr.trim() || "ripgrep exited with code <code>"
+                                                        (rg's stderr verbatim, for example "rg: regex parse error: ...";
+                                                         <code> renders as JS String(code), so a missing code is "null")
+     match_count == 0                                -> "No matches found", details absent
+10. Format each collected match, in collection order:
+     rel(file) = is_directory and r = relative(searchPath, file) is non-empty and does not start with ".."
+                   ? r with "\" replaced by "/" : basename(file)
+     C == 0 and text present:
+        s = text with "\r\n" -> "\n", then every "\r" removed, then one trailing "\n" removed
+        emit "<rel>:<line>: " + truncateLine(s)
+     otherwise, the block:
+        lines = file_lines(file)       (cached once per file)
+          = ctx.fs.read_binary_file(file) decoded as Node's "utf-8": WHATWG replacement, BOM KEPT;
+            then "\r\n" -> "\n", "\r" -> "\n", split on "\n". A read error gives [].
+        lines empty -> emit "<rel>:<line>: (unable to read file)"
+        start = C > 0 ? max(1, line - C) : line;  end = C > 0 ? min(len(lines), line + C) : line
+        for current = start; current <= end; current += 1:  (JS numbers, so a fractional C gives fractional lines)
+           t = (lines[current - 1] ?? "") with "\r" removed  (a non-integer index reads as absent, giving "")
+           emit (current == line ? "<rel>:<current>: " : "<rel>-<current>- ") + truncateLine(t)
+     Overlapping windows are NOT merged: each match emits its own block (characterization F-4).
+     truncateLine: when the UTF-16 length > 500, keep the first 500 UTF-16 code units + "... [truncated]",
+     and set lines_truncated.
+11. body = emitted lines joined with "\n" (it may be "", for example when no match was collected);
+    truncateHead as in find, step 10.
+    Notices, in this order, only those that apply, joined with ". ":
+      "<L> matches limit reached. Use limit=<2L> for more, or refine pattern" -> details.matchLimitReached = L
+      "50.0KB limit reached"                                                 -> details.truncation
+      "Some lines truncated to 500 chars. Use read tool to see full lines"   -> details.linesTruncated = true
+    text and details as in find, step 10.
+```
+
+#### Result order (Owner Q2: `ENGINE_DEFINED_UNSPECIFIED`)
+
+- **Across entries or files, order is unspecified.** It is whatever order the pinned engine emits; there is no post-sort and no sort flag. This is not a divergence: Pi has no stable cross-file order either.
+- **Under a limit, which entries survive is unspecified too.** The count, notices and details are exact.
+- **`grep` within a file:** one file's collected matches are contiguous and in ascending line order, as the pinned `rg` emits them. A file's context block follows its match.
+- **Pi-owned per-line formatting and per-match block order are exact.**
+
+**Conformance comparison.**
+- **Unlimited results:**
+  - `find` entries are compared as a **multiset** of formatted entries. Two distinct paths can format identically: Pi trims each line, so `same.ts` and `same.ts ` both print `same.ts` (WP134-CON-R002). Multiplicity is kept;
+  - `grep` output is compared as a multiset of per-file blocks, each block exact and in order, because duplicate lines between blocks are meaningful.
+- **Limited results:** compare the result count, and that the returned entries are a sub-multiset of the unlimited result (no entry more often than it is available). Compare the notices, truncation and details exactly. No particular subset is required.
+- **Comparisons must still catch** a missing result, an extra result, a lost duplicate and wrong within-file order.
+
+#### `DIV-002`: Windows full-path `**` (Owner Q1)
+
+- **Pi on Windows:** `src/**/*.spec.ts` returns `src/sub/d.spec.ts` and `src/sub/deep/er/e.spec.ts` but not `src/b.spec.ts`.
+- **Minion on Windows** returns all three, as Pi and Minion do on Linux.
+
+**Required witnesses** (both platforms, through the real `find`):
+- direct, one-level and deeper nesting under a `/**/` pattern;
+- a pattern with two `**/` components;
+- a pattern written with platform-native separators, as applicable;
+- a non-`**` full-path pattern (`src/*.spec.ts`) whose Windows result stays exactly Pi's. This is the scope check.
+
+Pi's Windows output remains reproducible as the reference side, from the characterization harness.
+
+#### Errors and text ownership
+
+| Situation | Text | Owner |
+|---|---|---|
+| already aborted / aborted during the call | `Operation aborted` | Pi |
+| engine not provisioned or failed verification; uncertified platform | the `TOOL-038` templates above | Minion (`DIV-003`) |
+| `grep` path not found | `Path not found: <abs>` | Pi |
+| engine failure with stderr | the engine's stderr, trimmed, verbatim | pinned engine |
+| engine failure without stderr | `fd exited with code <code>` / `ripgrep exited with code <code>` | Pi |
+| spawn failure | `Failed to run fd: <cause>` / `Failed to run ripgrep: <cause>`, where `<cause>` is the Layer-12 spawn error's message | Pi template; Minion cause |
+| no results | `No files found matching pattern` / `No matches found` | Pi |
+
+#### Witnesses and evidence (required before implementation approval)
+
+1. **Canonical scenarios.** Shared YAML is generated from the pinned-Pi outputs (`out/search-{win32,linux}.json`) and run through the real Layer 06 pipeline. Expectations are per platform, with ordering compared as specified above. The scenarios cover every characterization row except the observations recorded as platform facts, and cover both `plain` and `repo` corpora.
+2. **`DIV-002` witnesses** (above). **`DIV-003` witnesses:**
+   - an unprovisioned store gives the exact text, with no spawn and no network access;
+   - a binary whose hash does not match is refused at use time;
+   - provisioning from a local source with a wrong artifact hash installs nothing;
+   - an interrupted install leaves nothing that verifies;
+   - repeated provisioning is idempotent;
+   - an uncertified platform gives its text.
+3. **Pinned-engine identity:** both bindings check `--version` and the binary hash of the store they test against.
+4. **Argument vectors:** a recording fake engine (an explicit test override) captures the exact `fd` and `rg` argv for these cases:
+   - every `find` scoping branch: basename, full path, leading `/`, `**/`, `**`, repository and non-repository;
+   - `grep` flag combinations;
+   - non-integer limits rendered with `Number::toString`.
+   This witness, not result comparison, guards "no sort flag" and Pi's argument shape.
+5. **Number and string edge cases:**
+   - `limit` and `context` of `-0` and `1e999` (+Infinity);
+   - `truncateLine` cutting through a surrogate pair, which yields a lone high surrogate in the result text (`L0506-D003`);
+   - an unpaired surrogate in `pattern`, which reaches the engine as U+FFFD (the WP-13.3 argv projection rule).
+6. **Order preservation within one invocation** (WP134-CON-R003): a scripted engine (an explicit test override) emits a fixed, deliberately unsorted stream, and the tool must reproduce it exactly.
+   - For `find`, the stream is `<root>/z.ts` then `<root>/a.ts`, and the result is exactly `z.ts\na.ts`.
+   - For `grep`, the stream is a `rg --json` match stream for files `z` then `a`, and the per-match order is kept.
+   - A post-collection sort fails this witness.
+   - The real-engine corpus stays order-insensitive (Owner Q2). This fixes no engine order; it only forbids the wrapper from reordering what the engine emitted.
+7. **Repository walk and duplicates:**
+   - a Windows dangling `.git` junction is treated as present, so the result has no `--no-require-git` and a parent `.gitignore` is not applied (`data/13-wp134/out/search-win32.json`, `edges`);
+   - a Linux trailing-space name collision gives both entries (`search-linux.json`, `edges`).
+
+**Negative controls.** Each realistic wrong implementation must fail a witness:
+- sorting results after collection (killed by witness 6);
+- deduplicating `find` entries (killed by witness 7 and the multiset comparison);
+- a following probe for the `.git` walk on Windows (killed by witness 7);
+- passing `--no-require-git` to `rg`, or omitting it for `fd` outside a repository;
+- merging context windows;
+- integer-coercing `context` or `limit`;
+- dropping the uncollected-match count;
+- stripping the BOM in context lines;
+- treating CR as a non-break in `readline` splitting;
+- measuring `truncateLine` in code points;
+- trimming before the empty-output test;
+- Pi's Windows `**` rewrite (`DIV-002`);
+- a `PATH` fallback;
+- trusting an existing file without verifying its hash;
+- a network download from a tool call;
+- an install path that leaves a verifiable partial file;
+- relativizing case-sensitively on Windows.
+
+#### Explicitly not certified by WP-13.4
+
+- `FindOperations` / `GrepOperations` custom backends.
+- The explicit engine override.
+- Engine acquisition timing as Pi does it (`DIV-003`).
+- Platforms other than win32-x64 and linux-x64, including Pi's darwin/x64 `fd 10.3.0` exception.
+- `promptSnippet`, TUI rendering and the `find` 20-line preview.
+- The pinned engines' own internal behaviour beyond what the witnesses observe. Matching is delegated authority.

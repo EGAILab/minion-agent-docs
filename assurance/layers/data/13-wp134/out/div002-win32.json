@@ -1,0 +1,208 @@
+{
+ "fd": "fd 10.4.2",
+ "cases": {
+  "full-path-spec": {
+   "pattern": "src/**/*.spec.ts",
+   "linux": [
+    "src/b.spec.ts",
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]**[/\\\\]*.spec.ts",
+    "results": [
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}*.spec.ts",
+    "results": [
+     "src/b.spec.ts",
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "full-path-star": {
+   "pattern": "src/*.spec.ts",
+   "linux": [
+    "src/b.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "results": [
+     "src/b.spec.ts",
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "results": [
+     "src/b.spec.ts",
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   }
+  },
+  "full-path-star-sub": {
+   "pattern": "src/sub/*.spec.ts",
+   "linux": [
+    "src/sub/d.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]sub[/\\\\]*.spec.ts",
+    "results": [
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src[/\\\\]sub[/\\\\]*.spec.ts",
+    "results": [
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   }
+  },
+  "full-path-deep": {
+   "pattern": "src/sub/**/*.spec.ts",
+   "linux": [
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]sub[/\\\\]**[/\\\\]*.spec.ts",
+    "results": [
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": false
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src[/\\\\]sub{[/\\\\],[/\\\\]**[/\\\\]}*.spec.ts",
+    "results": [
+     "src/sub/d.spec.ts",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "full-path-question": {
+   "pattern": "src/?.spec.ts",
+   "linux": [
+    "src/b.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]?.spec.ts",
+    "results": [
+     "src/b.spec.ts"
+    ],
+    "equalsLinux": true
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src[/\\\\]?.spec.ts",
+    "results": [
+     "src/b.spec.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "full-path-two-doublestar": {
+   "pattern": "src/**/er/**/*.spec.ts",
+   "linux": [
+    "src/sub/deep/er/e.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]**[/\\\\]er[/\\\\]**[/\\\\]*.spec.ts",
+    "results": [],
+    "equalsLinux": false
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}er{[/\\\\],[/\\\\]**[/\\\\]}*.spec.ts",
+    "results": [
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "full-path-trailing-doublestar": {
+   "pattern": "src/sub/**",
+   "linux": [
+    "src/sub/c.ts",
+    "src/sub/d.spec.ts",
+    "src/sub/deep/",
+    "src/sub/deep/er/",
+    "src/sub/deep/er/e.spec.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]src[/\\\\]sub[/\\\\]**",
+    "results": [
+     "src/sub/c.ts",
+     "src/sub/d.spec.ts",
+     "src/sub/deep/",
+     "src/sub/deep/er/",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": true
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]src[/\\\\]sub[/\\\\]**",
+    "results": [
+     "src/sub/c.ts",
+     "src/sub/d.spec.ts",
+     "src/sub/deep/",
+     "src/sub/deep/er/",
+     "src/sub/deep/er/e.spec.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "space-dir": {
+   "pattern": "space dir/*.ts",
+   "linux": [
+    "space dir/f.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]space dir[/\\\\]*.ts",
+    "results": [
+     "space dir/f.ts"
+    ],
+    "equalsLinux": true
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]space dir[/\\\\]*.ts",
+    "results": [
+     "space dir/f.ts"
+    ],
+    "equalsLinux": true
+   }
+  },
+  "unicode-dir-fullpath": {
+   "pattern": "ünïcode/*.ts",
+   "linux": [
+    "ünïcode/文件.ts"
+   ],
+   "pi": {
+    "pattern": "**[/\\\\]ünïcode[/\\\\]*.ts",
+    "results": [
+     "ünïcode/文件.ts"
+    ],
+    "equalsLinux": true
+   },
+   "candidate": {
+    "pattern": "**[/\\\\]ünïcode[/\\\\]*.ts",
+    "results": [
+     "ünïcode/文件.ts"
+    ],
+    "equalsLinux": true
+   }
+  }
+ }
+}
