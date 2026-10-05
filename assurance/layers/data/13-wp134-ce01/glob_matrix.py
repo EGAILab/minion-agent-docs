@@ -28,7 +28,9 @@ from pathlib import Path
 
 SEP = "[/\\\\]"  # Pi's String.raw`[/\\]`
 FILES = ["src/b.spec.ts", "src/sub/b.spec.ts", "src/sub/deep/b.spec.ts", "src/a/b.spec.ts", "lib/b.spec.ts",
-         "x/b", "x/q/b", "x/c", "x/q/c", "xb", "x/ab", "x/bc"]
+         "x/b", "x/q/b", "x/c", "x/q/c", "xb", "x/ab", "x/bc",
+         # checkpoint review 1 (C001): mixed recursive / Pi-scope witnesses
+         "src/a.ts", "src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts"]
 PATTERNS = [
     # genuine recursive components
     "src/**/b.spec.ts", "src/**/**/b.spec.ts", "{src/**/b.spec.ts,none}", "{src,lib}/**/b.spec.ts",
@@ -43,7 +45,60 @@ PATTERNS = [
     "src/[]/**/b.spec.ts", "src/[!]/**/b.spec.ts", "src/[/**/b.spec.ts", "x\\/**/b",
     # engine-rejected syntax
     "src/[z-a]/**/b.spec.ts", "src/{a/**/b.spec.ts", "src/a}/**/b.spec.ts",
+    # mixed: a recursive component composed with a retained Pi-scope construct (C001)
+    "src/**/a*.ts", "{src/**/a*.ts,none}", "src/**/x/*.ts", "src/[!]/**/x/**/b.ts", "src/**/[!]/b.ts",
+    "src/*/**/b.ts", "src/**/**b.ts", "src/{**/a*.ts,none}",
 ]
+
+
+def recursive_components(e: str) -> list[int]:
+    """Indices in the effective pattern `e` of each recursive component's `**` (rule 4: read on
+    Pi's rewritten text as the pinned fd lexes it; a `**` followed by a separator and preceded by a
+    separator or an alternative start; the pattern-initial `**` excluded). Positions map back to
+    `e` because Pi's rewrite replaces each "/" by a fixed five-character token."""
+    pi_text, origin = [], []
+    for index, char in enumerate(e):
+        piece = SEP if char == "/" else char
+        pi_text.append(piece)
+        origin.extend([index] * len(piece))
+    text = "".join(pi_text)
+    tokens, starts, index = [], [], 0
+    for kind, value in lex(text):
+        tokens.append((kind, value))
+        starts.append(index)
+        index += len(value)
+
+    def is_sep(k: int) -> bool:
+        return 0 <= k < len(tokens) and tokens[k] == ("class", SEP)
+
+    found = []
+    for k in range(1, len(tokens) - 2):
+        two = tokens[k][0] == "star" and tokens[k + 1][0] == "star"
+        alone = tokens[k - 1][0] != "star" and (k + 2 >= len(tokens) or tokens[k + 2][0] != "star")
+        if two and alone and is_sep(k + 2) and (is_sep(k - 1) or tokens[k - 1][0] in ("open", "comma")):
+            found.append(origin[starts[k]])
+    return found
+
+
+def oracle(fd: str, e: str, root: Path) -> dict[str, object]:
+    """The composition rule's expected Windows outcome, derived from Pi's own rewrite only: if fd
+    rejects Pi's text, Pi's outcome; otherwise the union, over every keep/remove choice of each
+    recursive component (removing exactly its `**/`), of Pi's Windows result for that pattern."""
+    pi = run(fd, e.replace("/", SEP), root)
+    if pi["exit"] != 0:
+        return {"variants": [e], **pi}
+    components = recursive_components(e)
+    variants, results = [], set()
+    for mask in range(1 << len(components)):
+        drop = {components[b] for b in range(len(components)) if mask >> b & 1}
+        variant = "".join(ch for i, ch in enumerate(e)
+                          if not any(start <= i < start + 3 for start in drop))
+        variants.append(variant)
+        r = run(fd, variant.replace("/", SEP), root)
+        if r["exit"] != 0:
+            return {"variants": variants, "exit": r["exit"], "results": [], "stderr": "variant rejected: " + r["stderr"]}
+        results.update(r["results"])  # type: ignore[arg-type]
+    return {"variants": variants, "exit": 0, "results": sorted(results), "stderr": ""}
 
 
 def effective(pattern: str) -> str:
@@ -199,6 +254,7 @@ def main() -> None:
         if candidate is not None:
             texts["candidate"] = candidate(e)
         rows[pattern] = {name: {"text": text, **run(fd, text, root)} for name, text in texts.items()}
+        rows[pattern]["oracle"] = oracle(fd, e, root)  # type: ignore[index]
     Path(out_path).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 

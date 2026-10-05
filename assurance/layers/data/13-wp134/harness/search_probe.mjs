@@ -236,25 +236,38 @@ const GREP = [
   ["dot-path", { pattern: "alpha", path: "." }],
 ];
 
-// WP134-IMPL-R002: genuine `**/` components adjacent to another or inside a brace alternative, with brace and
-// non-`**` scope checks. Pattern only; the plain corpus as for FIND.
+// WP134-IMPL-R002 / CE-L13-WP134-01: Windows full-path find cases over the plain corpus plus COMPONENT_FILES.
+// The third element gives the Windows expectation independently of any binding's rewrite:
+//   "pi"                       -> Pi's Windows result or diagnostic, as observed;
+//   { union: [...], linux }    -> the composition rule: the union of Pi's own Windows results for the listed
+//                                 variants (the pattern with each recursive component `**/` kept or removed,
+//                                 every combination, written out by hand), recorded as `windowsUnion`; `linux`
+//                                 states whether that union is expected to equal Linux's result (false only
+//                                 where a retained Pi-scope construct is composed with a recursive component).
+const COMPONENT_FILES = ["src/sub/a.ts", "src/a/sub/b.ts", "src/x/b.ts", "src/q/r/x/b.ts", "src/q/r/x/s/b.ts"];
+const u = (linux, ...union) => ({ union, linux });
 const COMPONENTS = [
-  ["adjacent-doublestar", { pattern: "src/**/**/*.spec.ts" }],
-  ["brace-alternative-doublestar", { pattern: "{src/**/b.spec.ts,none}" }],
-  ["brace-before-doublestar", { pattern: "{src,nope}/**/*.spec.ts" }],
-  ["doublestar-in-brace-after", { pattern: "src/**/{er/**/e,b}.spec.ts" }],
-  ["brace-scope-no-doublestar", { pattern: "{src/*.spec.ts,none}" }],
-  // CE-L13-WP134-01 (convergence characterization): alternative-start components, non-component
-  // `**`, constructs Pi's Windows rewrite reshapes, and engine-rejected syntax. The third element
-  // classifies the Windows expectation: "div002" (equals Linux) or "pi" (Pi's Windows result or
-  // diagnostic). The first five rows above are classified by the default rule (all "div002" except
-  // the last, "pi").
-  ["alt-start-doublestar", { pattern: "src/{**/b.spec.ts,none}" }, "div002"],
-  ["alt-start-second", { pattern: "src/{none,**/*.spec.ts}" }, "div002"],
-  ["alt-start-nested", { pattern: "src/{a.ts,{**/b.spec.ts}}" }, "div002"],
-  ["alt-start-adjacent", { pattern: "src/{**/**/b.spec.ts,none}" }, "div002"],
-  ["alt-start-after-literal", { pattern: "src{**/b.spec.ts,none}" }, "div002"],
-  ["three-star-component", { pattern: "src/***/**/*.spec.ts" }, "div002"],
+  ["adjacent-doublestar", { pattern: "src/**/**/*.spec.ts" },
+    u(true, "src/**/**/*.spec.ts", "src/**/*.spec.ts", "src/*.spec.ts")],
+  ["brace-alternative-doublestar", { pattern: "{src/**/b.spec.ts,none}" },
+    u(true, "{src/**/b.spec.ts,none}", "{src/b.spec.ts,none}")],
+  ["brace-before-doublestar", { pattern: "{src,nope}/**/*.spec.ts" },
+    u(true, "{src,nope}/**/*.spec.ts", "{src,nope}/*.spec.ts")],
+  ["doublestar-in-brace-after", { pattern: "src/**/{er/**/e,b}.spec.ts" },
+    u(true, "src/**/{er/**/e,b}.spec.ts", "src/{er/**/e,b}.spec.ts", "src/**/{er/e,b}.spec.ts", "src/{er/e,b}.spec.ts")],
+  ["brace-scope-no-doublestar", { pattern: "{src/*.spec.ts,none}" }, "pi"],
+  ["alt-start-doublestar", { pattern: "src/{**/b.spec.ts,none}" },
+    u(true, "src/{**/b.spec.ts,none}", "src/{b.spec.ts,none}")],
+  ["alt-start-second", { pattern: "src/{none,**/*.spec.ts}" },
+    u(true, "src/{none,**/*.spec.ts}", "src/{none,*.spec.ts}")],
+  ["alt-start-nested", { pattern: "src/{a.ts,{**/b.spec.ts}}" },
+    u(true, "src/{a.ts,{**/b.spec.ts}}", "src/{a.ts,{b.spec.ts}}")],
+  ["alt-start-adjacent", { pattern: "src/{**/**/b.spec.ts,none}" },
+    u(true, "src/{**/**/b.spec.ts,none}", "src/{**/b.spec.ts,none}", "src/{b.spec.ts,none}")],
+  ["alt-start-after-literal", { pattern: "src{**/b.spec.ts,none}" },
+    u(true, "src{**/b.spec.ts,none}", "src{b.spec.ts,none}")],
+  ["three-star-component", { pattern: "src/***/**/*.spec.ts" },
+    u(true, "src/***/**/*.spec.ts", "src/***/*.spec.ts")],
   ["doublestar-at-alt-end", { pattern: "{src/sub/**,none}/d.spec.ts" }, "pi"],
   ["non-component-doublestar", { pattern: "src/**b.spec.ts" }, "pi"],
   ["class-reshaped-negated", { pattern: "src/[!]/**/*.spec.ts" }, "pi"],
@@ -263,6 +276,14 @@ const COMPONENTS = [
   ["rejected-invalid-range", { pattern: "src/[z-a]/**/b.spec.ts" }, "pi"],
   ["rejected-unclosed-brace", { pattern: "src/{a/**/b.spec.ts" }, "pi"],
   ["rejected-unopened-brace", { pattern: "src/a}/**/b.spec.ts" }, "pi"],
+  // Checkpoint review 1, C001: a recursive component composed with a retained Pi-scope construct.
+  ["mixed-star-crossing", { pattern: "src/**/a*.ts" }, u(false, "src/**/a*.ts", "src/a*.ts")],
+  ["mixed-star-in-brace", { pattern: "{src/**/a*.ts,none}" }, u(false, "{src/**/a*.ts,none}", "{src/a*.ts,none}")],
+  ["mixed-star-alt-start", { pattern: "src/{**/a*.ts,none}" }, u(false, "src/{**/a*.ts,none}", "src/{a*.ts,none}")],
+  ["mixed-star-after-component", { pattern: "src/**/x/*.ts" }, u(false, "src/**/x/*.ts", "src/x/*.ts")],
+  ["mixed-class-then-component", { pattern: "src/[!]/**/x/**/b.ts" },
+    u(false, "src/[!]/**/x/**/b.ts", "src/[!]/**/x/b.ts")],
+  ["mixed-component-then-class", { pattern: "src/**/[!]/b.ts" }, u(false, "src/**/[!]/b.ts", "src/[!]/b.ts")],
 ];
 
 function summary(r) {
@@ -320,8 +341,23 @@ if (mode === "components") {
     engines: Object.fromEntries(Object.entries(ENGINES).map(([k, p]) => [k, spawnSync(p, ["--version"]).stdout.toString().split("\n")[0]])),
     find: {} };
   const { root } = build("plain");
-  for (const [name, args, expectWin32] of COMPONENTS)
-    out.find[`plain/${name}`] = { args, ...(expectWin32 ? { expectWin32 } : {}), ...(await run("find", root, args)) };
+  for (const f of COMPONENT_FILES) file(root, f, "x\n");
+  out.componentFiles = COMPONENT_FILES;
+  const entries = (r) => (r.ok && r.text !== "No files found matching pattern" ? r.text.split("\n") : []);
+  for (const [name, args, expect] of COMPONENTS) {
+    const row = { args, expectWin32: expect === "pi" ? "pi" : { union: expect.union, linux: expect.linux },
+      ...(await run("find", root, args)) };
+    if (expect !== "pi" && process.platform === "win32") { // the Windows expectation
+      const union = new Set();
+      for (const pattern of expect.union) {
+        const r = await run("find", root, { ...args, pattern });
+        if (!r.ok) throw new Error(`union variant ${pattern} rejected: ${r.error}`);
+        for (const e of entries(r)) union.add(e);
+      }
+      row.windowsUnion = [...union].sort();
+    }
+    out.find[`components/${name}`] = row;
+  }
   rmSync(root, { recursive: true, force: true });
   writeFileSync(outPath, JSON.stringify(out, null, 1) + "\n");
   console.log(`wrote ${Object.keys(out.find).length} component find observations`);

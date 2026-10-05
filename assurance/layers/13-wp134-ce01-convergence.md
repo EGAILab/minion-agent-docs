@@ -224,3 +224,88 @@ NORMATIVE DELTAS
 NEXT_OWNER
     Codex (checkpoint review of exactly this proposal)
 ```
+
+---
+
+## Checkpoint review 1 (Codex): REJECTED
+
+- **Reviewed proposal:** docs `a7acf903`.
+- **Verdict:** published verbatim on `minion-agent-docs#248` (issuecomment-5992972939).
+- **Missing dimension, `CE-L13-WP134-01-C001`** (medium, `CONTRACT_ASSURANCE_DEFECT`): the composition of a recursive component with a retained Pi-scope construct in one pattern.
+  - Rule 4 said both "the Windows result equals Linux's" and "everything else keeps Pi's meaning". For `src/**/a*.ts` these cannot both hold.
+  - A `div002` selector that copies the whole Linux result cannot express the composition, and expectations must not come from the proposal's own construction.
+- **Confirmed by the reviewer:**
+  - R001: the partition, both tools, with all 14 cells and the 4 candidate failures reproduced;
+  - R002: the lexical characterization and the diagnostic rule, with the 41-row and 19-case outputs reproduced exactly;
+  - no lower layer is reopened.
+
+## Revision 1 (C001)
+
+**Composition rule (component-local).** Every recursive component keeps its zero-or-more meaning, and nothing else changes.
+- The Windows result is the **union**, over every keep/remove choice of each recursive component (removing exactly its `**/`), of **Pi's own Windows result** for the resulting pattern.
+- It equals Linux's result exactly when no retained Pi-scope construct is composed with a component.
+- This is the reading the Owner's DIV-002 scope already states ("only the zero-directory meaning of `**/` changes; every other construct keeps exactly Pi's Windows meaning"). It needs no new Owner decision.
+- The spec and the DIV-002 disclosure now state it explicitly (`spec/tools.md` WP-13.4; `assurance/pi-divergences.md` DIV-002 "Composition").
+
+**Independent oracle.** `data/13-wp134-ce01/glob_matrix.py` gained an `oracle` column, derived from Pi's rewrite only:
+- if fd rejects Pi's text, the outcome is Pi's;
+- otherwise it is the union of fd's results for Pi's rewrite of every keep/remove variant.
+
+Components are located by rule 4. Results never come from the construction.
+
+The matrix now has **49 rows**: 8 mixed rows, including the reviewer's exact three-file witness `src/**/a*.ts` and `src/[!]/**/x/**/b.ts`, plus 6 corpus files.
+
+| Measure (fresh, both platforms) | Result |
+|---|---|
+| proposal outcome = oracle | **49 / 49** (the 3 rejected rows' raw diagnostics differ, which rule 5 closes: Pi's diagnostic) |
+| oracle = Linux | 37; the 12 others are the 6 Pi-scope rows and the 6 mixed rows |
+| reviewer witness `src/**/a*.ts` | Pi Windows `src/sub/a.ts`; oracle = proposal `src/a.ts`, `src/a/sub/b.ts`, `src/sub/a.ts`; Linux `src/a.ts`, `src/sub/a.ts` |
+| candidate `f97906ca` != oracle (results or diagnostics) | 11, as before; it passes the mixed rows, being component-local itself |
+
+**Canonical authority (harness `components` mode).**
+- The 25 cases run over the plain corpus plus `COMPONENT_FILES` (5 files) and are keyed `components/<name>`.
+- Each non-`pi` case lists its keep/remove variants **by hand**. On Windows the harness records the union of pinned Pi's results for them (`windowsUnion`), and `linux: true|false` states the expected relation to Linux.
+- All 25 relations hold on the fresh Windows and Linux runs. There are 6 mixed cases:
+  - star crossing, in a brace, at an alternative start, and after a component;
+  - class then component;
+  - component then class.
+- **Generator delta (with the implementation):**
+  - a `pi` case uses Pi's Windows observation;
+  - a union case uses `windowsUnion` for unlimited results;
+  - the generator asserts `windowsUnion == linux` where `linux: true`;
+  - a new corpus kind `components` = plain + `COMPONENT_FILES`.
+
+**Controls added to the plan.** Both of the reviewer's plausible wrong choices are killed by `components/mixed-star-crossing` (Windows):
+
+| Control | Wrong result |
+|---|---|
+| zero-directory left broken (Pi's text) | `src/sub/a.ts` only |
+| whole-pattern Linux conversion | `src/a.ts`, `src/sub/a.ts`, missing `src/a/sub/b.ts` |
+
+## CONVERGENCE CHECKPOINT (revision 1)
+
+```text
+CONVERGENCE CHECKPOINT
+    PROPOSED FOR IMPLEMENTATION   (revision 1, superseding the proposal at a7acf903)
+
+EPISODE
+    CE-L13-WP134-01
+
+OPEN FINDINGS
+    WP134-IMPL-R001, WP134-IMPL-R002 (incl. CE-L13-WP134-01-C001)   (WP134-IMPL-R003 PROVISIONALLY CLOSED @ f97906ca)
+
+ACCEPTANCE WITNESSES
+    data/13-wp134-ce01/abort-partition-pi.json            (14 cells; binding witnesses per cell, both tools)
+    data/13-wp134-ce01/glob-matrix-{win32,linux}.json     (49 rows incl. the independent oracle column)
+    data/13-wp134/out/components-{win32,linux}.json       (25 classified canonical cases, 6 mixed; windowsUnion)
+    negative controls: the earlier plan plus "zero-directory left broken" and "whole-pattern Linux conversion"
+
+NORMATIVE DELTAS
+    spec/tools.md WP-13.4 CE-L13-WP134-01 passages incl. the composition rule (this docs head)
+    assurance/pi-divergences.md DIV-002 "Composition" clarification (this docs head)
+    harness components mode with hand-written union variants (this docs head)
+    manifest tests lists and the conformance generator / corpus kind (with the implementation)
+
+NEXT_OWNER
+    Codex (checkpoint review of exactly this revision)
+```

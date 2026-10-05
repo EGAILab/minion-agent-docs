@@ -2881,7 +2881,13 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
 **Recursive components and Pi-scope constructs (CE-L13-WP134-01).**
 - On Windows the pattern is judged as the pinned fd reads **Pi's rewritten text**: there is no backslash escape (`\` is an ordinary character), and a class (`[`, an optional `!`/`^`, a leading `]` as a member, up to the next `]`) may absorb part of Pi's `[/\\]`. Separators are the standalone `[/\\]` tokens of that reading.
 - A **recursive component** is a `**` (exactly two `*`, not part of a longer run of `*`) that is followed by a separator and is preceded by a separator or begins a brace alternative (directly after `{` or `,`, whatever precedes the group). This is the token the pinned fd treats as recursive on Linux. The pattern-initial `**/` is not affected: matched against an absolute path it never stands for zero levels.
-- Every recursive component keeps its zero-or-more meaning, including adjacent ones (`**/**/`), ones inside nested braces, and ones at the start of an alternative. For these patterns the Windows result equals Linux's (`DIV-002`).
+- **Composition rule (component-local; checkpoint review 1, C001).**
+  - Every recursive component keeps its zero-or-more meaning, and nothing else changes.
+  - The Windows result is the **union**, over every choice of keeping or removing each recursive component (removing exactly its `**/`), of the result Pi's own Windows rewrite gives that pattern on the pinned fd.
+  - Adjacent components (`**/**/`), components inside nested braces, and components at an alternative start are all included.
+  - When the pattern has no other construct whose Windows meaning differs from Linux's, the result equals Linux's (`DIV-002`).
+  - When the pattern also contains a retained Pi-scope construct (below), that construct keeps its Windows meaning in every branch. For example, `src/**/a*.ts` also returns `src/a/sub/b.ts` on Windows, through the zero-directory branch `src/a*.ts` and the single-`*` crossing; Linux does not.
+  - Expected results are derived this way, from Pi's rewrite, never from a binding's construction.
 - Everything else keeps the meaning Pi's rewrite gives it on the pinned fd. This includes:
   - the single-`*` crossing (F-2, above);
   - a `**` that is not a recursive component (`src/**b.spec.ts`, `{src/sub/**,none}/x`);
@@ -2989,7 +2995,9 @@ On Windows, `path.win32.relative` compares the two paths **case-insensitively**,
   - the class-reshaped scope rows;
   - the engine-rejected rows (invalid range, unclosed and unopened brace), whose Windows text is Pi's diagnostic.
 
-  These are the harness `components` cases (`data/13-wp134/out/components-{win32,linux}.json`), classified per case as `div002` (Windows equals Linux) or `pi` (Windows equals Pi).
+  These are the harness `components` cases (`data/13-wp134/out/components-{win32,linux}.json`), each classified as one of:
+  - `pi`: Windows equals Pi's result or diagnostic;
+  - a union: the hand-written keep/remove variants and the recorded `windowsUnion` of Pi's results for them, with a statement of whether it equals Linux. It does not where a Pi-scope construct is composed with a component, as in the mixed cases.
 
 Pi's Windows output remains reproducible as the reference side, from the characterization harness.
 

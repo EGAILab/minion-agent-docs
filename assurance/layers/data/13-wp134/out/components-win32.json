@@ -7,101 +7,209 @@
   "rg": "ripgrep 15.2.0 (rev e89fff89ac)"
  },
  "find": {
-  "plain/adjacent-doublestar": {
+  "components/adjacent-doublestar": {
    "args": {
     "pattern": "src/**/**/*.spec.ts"
    },
+   "expectWin32": {
+    "union": [
+     "src/**/**/*.spec.ts",
+     "src/**/*.spec.ts",
+     "src/*.spec.ts"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/sub/deep/er/e.spec.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts",
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ]
   },
-  "plain/brace-alternative-doublestar": {
+  "components/brace-alternative-doublestar": {
    "args": {
     "pattern": "{src/**/b.spec.ts,none}"
    },
+   "expectWin32": {
+    "union": [
+     "{src/**/b.spec.ts,none}",
+     "{src/b.spec.ts,none}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "No files found matching pattern",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts"
+   ]
   },
-  "plain/brace-before-doublestar": {
+  "components/brace-before-doublestar": {
    "args": {
     "pattern": "{src,nope}/**/*.spec.ts"
    },
+   "expectWin32": {
+    "union": [
+     "{src,nope}/**/*.spec.ts",
+     "{src,nope}/*.spec.ts"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts",
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ]
   },
-  "plain/doublestar-in-brace-after": {
+  "components/doublestar-in-brace-after": {
    "args": {
     "pattern": "src/**/{er/**/e,b}.spec.ts"
    },
+   "expectWin32": {
+    "union": [
+     "src/**/{er/**/e,b}.spec.ts",
+     "src/{er/**/e,b}.spec.ts",
+     "src/**/{er/e,b}.spec.ts",
+     "src/{er/e,b}.spec.ts"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "No files found matching pattern",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ]
   },
-  "plain/brace-scope-no-doublestar": {
+  "components/brace-scope-no-doublestar": {
    "args": {
     "pattern": "{src/*.spec.ts,none}"
    },
+   "expectWin32": "pi",
    "ok": true,
    "text": "src/b.spec.ts\nsrc/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
    "details": null
   },
-  "plain/alt-start-doublestar": {
+  "components/alt-start-doublestar": {
    "args": {
     "pattern": "src/{**/b.spec.ts,none}"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src/{**/b.spec.ts,none}",
+     "src/{b.spec.ts,none}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "No files found matching pattern",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts"
+   ]
   },
-  "plain/alt-start-second": {
+  "components/alt-start-second": {
    "args": {
     "pattern": "src/{none,**/*.spec.ts}"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src/{none,**/*.spec.ts}",
+     "src/{none,*.spec.ts}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts",
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ]
   },
-  "plain/alt-start-nested": {
+  "components/alt-start-nested": {
    "args": {
     "pattern": "src/{a.ts,{**/b.spec.ts}}"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src/{a.ts,{**/b.spec.ts}}",
+     "src/{a.ts,{b.spec.ts}}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/a.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/a.ts",
+    "src/b.spec.ts"
+   ]
   },
-  "plain/alt-start-adjacent": {
+  "components/alt-start-adjacent": {
    "args": {
     "pattern": "src/{**/**/b.spec.ts,none}"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src/{**/**/b.spec.ts,none}",
+     "src/{**/b.spec.ts,none}",
+     "src/{b.spec.ts,none}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "No files found matching pattern",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts"
+   ]
   },
-  "plain/alt-start-after-literal": {
+  "components/alt-start-after-literal": {
    "args": {
     "pattern": "src{**/b.spec.ts,none}"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src{**/b.spec.ts,none}",
+     "src{b.spec.ts,none}"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/b.spec.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/b.spec.ts"
+   ]
   },
-  "plain/three-star-component": {
+  "components/three-star-component": {
    "args": {
     "pattern": "src/***/**/*.spec.ts"
    },
-   "expectWin32": "div002",
+   "expectWin32": {
+    "union": [
+     "src/***/**/*.spec.ts",
+     "src/***/*.spec.ts"
+    ],
+    "linux": true
+   },
    "ok": true,
    "text": "src/sub/deep/er/e.spec.ts",
-   "details": null
+   "details": null,
+   "windowsUnion": [
+    "src/sub/d.spec.ts",
+    "src/sub/deep/er/e.spec.ts"
+   ]
   },
-  "plain/doublestar-at-alt-end": {
+  "components/doublestar-at-alt-end": {
    "args": {
     "pattern": "{src/sub/**,none}/d.spec.ts"
    },
@@ -110,7 +218,7 @@
    "text": "No files found matching pattern",
    "details": null
   },
-  "plain/non-component-doublestar": {
+  "components/non-component-doublestar": {
    "args": {
     "pattern": "src/**b.spec.ts"
    },
@@ -119,7 +227,7 @@
    "text": "src/b.spec.ts",
    "details": null
   },
-  "plain/class-reshaped-negated": {
+  "components/class-reshaped-negated": {
    "args": {
     "pattern": "src/[!]/**/*.spec.ts"
    },
@@ -128,7 +236,7 @@
    "text": "src/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
    "details": null
   },
-  "plain/class-reshaped-empty": {
+  "components/class-reshaped-empty": {
    "args": {
     "pattern": "src/[]/**/*.spec.ts"
    },
@@ -137,7 +245,7 @@
    "text": "No files found matching pattern",
    "details": null
   },
-  "plain/class-reshaped-unclosed": {
+  "components/class-reshaped-unclosed": {
    "args": {
     "pattern": "src/[/**/*.spec.ts"
    },
@@ -146,7 +254,7 @@
    "text": "No files found matching pattern",
    "details": null
   },
-  "plain/rejected-invalid-range": {
+  "components/rejected-invalid-range": {
    "args": {
     "pattern": "src/[z-a]/**/b.spec.ts"
    },
@@ -154,7 +262,7 @@
    "ok": false,
    "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
   },
-  "plain/rejected-unclosed-brace": {
+  "components/rejected-unclosed-brace": {
    "args": {
     "pattern": "src/{a/**/b.spec.ts"
    },
@@ -162,13 +270,135 @@
    "ok": false,
    "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
   },
-  "plain/rejected-unopened-brace": {
+  "components/rejected-unopened-brace": {
    "args": {
     "pattern": "src/a}/**/b.spec.ts"
    },
    "expectWin32": "pi",
    "ok": false,
    "error": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+  },
+  "components/mixed-star-crossing": {
+   "args": {
+    "pattern": "src/**/a*.ts"
+   },
+   "expectWin32": {
+    "union": [
+     "src/**/a*.ts",
+     "src/a*.ts"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "src/sub/a.ts",
+   "details": null,
+   "windowsUnion": [
+    "src/a.ts",
+    "src/a/sub/b.ts",
+    "src/sub/a.ts"
+   ]
+  },
+  "components/mixed-star-in-brace": {
+   "args": {
+    "pattern": "{src/**/a*.ts,none}"
+   },
+   "expectWin32": {
+    "union": [
+     "{src/**/a*.ts,none}",
+     "{src/a*.ts,none}"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "src/sub/a.ts",
+   "details": null,
+   "windowsUnion": [
+    "src/a.ts",
+    "src/a/sub/b.ts",
+    "src/sub/a.ts"
+   ]
+  },
+  "components/mixed-star-alt-start": {
+   "args": {
+    "pattern": "src/{**/a*.ts,none}"
+   },
+   "expectWin32": {
+    "union": [
+     "src/{**/a*.ts,none}",
+     "src/{a*.ts,none}"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "src/sub/a.ts",
+   "details": null,
+   "windowsUnion": [
+    "src/a.ts",
+    "src/a/sub/b.ts",
+    "src/sub/a.ts"
+   ]
+  },
+  "components/mixed-star-after-component": {
+   "args": {
+    "pattern": "src/**/x/*.ts"
+   },
+   "expectWin32": {
+    "union": [
+     "src/**/x/*.ts",
+     "src/x/*.ts"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "src/q/r/x/b.ts\nsrc/q/r/x/s/b.ts",
+   "details": null,
+   "windowsUnion": [
+    "src/q/r/x/b.ts",
+    "src/q/r/x/s/b.ts",
+    "src/x/b.ts"
+   ]
+  },
+  "components/mixed-class-then-component": {
+   "args": {
+    "pattern": "src/[!]/**/x/**/b.ts"
+   },
+   "expectWin32": {
+    "union": [
+     "src/[!]/**/x/**/b.ts",
+     "src/[!]/**/x/b.ts"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "src/q/r/x/s/b.ts",
+   "details": null,
+   "windowsUnion": [
+    "src/q/r/x/b.ts",
+    "src/q/r/x/s/b.ts"
+   ]
+  },
+  "components/mixed-component-then-class": {
+   "args": {
+    "pattern": "src/**/[!]/b.ts"
+   },
+   "expectWin32": {
+    "union": [
+     "src/**/[!]/b.ts",
+     "src/[!]/b.ts"
+    ],
+    "linux": false
+   },
+   "ok": true,
+   "text": "No files found matching pattern",
+   "details": null,
+   "windowsUnion": []
   }
- }
+ },
+ "componentFiles": [
+  "src/sub/a.ts",
+  "src/a/sub/b.ts",
+  "src/x/b.ts",
+  "src/q/r/x/b.ts",
+  "src/q/r/x/s/b.ts"
+ ]
 }

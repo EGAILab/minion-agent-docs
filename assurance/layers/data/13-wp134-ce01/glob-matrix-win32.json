@@ -13,7 +13,13 @@
   "x/q/c",
   "xb",
   "x/ab",
-  "x/bc"
+  "x/bc",
+  "src/a.ts",
+  "src/sub/a.ts",
+  "src/a/sub/b.ts",
+  "src/x/b.ts",
+  "src/q/r/x/b.ts",
+  "src/q/r/x/s/b.ts"
  ],
  "rows": {
   "src/**/b.spec.ts": {
@@ -51,6 +57,20 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/b.spec.ts",
+     "**/src/b.spec.ts"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts",
@@ -102,6 +122,22 @@
      "src/sub/deep/b.spec.ts"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/**/b.spec.ts",
+     "**/src/**/b.spec.ts",
+     "**/src/**/b.spec.ts",
+     "**/src/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "{src/**/b.spec.ts,none}": {
@@ -139,6 +175,20 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts,**[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src/**/b.spec.ts,none}",
+     "**/{src/b.spec.ts,none}"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts",
@@ -195,6 +245,21 @@
      "src/sub/deep/b.spec.ts"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src,lib}/**/b.spec.ts",
+     "**/{src,lib}/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "src/**/{deep/**/b,b}.spec.ts": {
@@ -232,6 +297,22 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/{deep/**/b,b}.spec.ts",
+     "**/src/{deep/**/b,b}.spec.ts",
+     "**/src/**/{deep/b,b}.spec.ts",
+     "**/src/{deep/b,b}.spec.ts"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts",
@@ -278,6 +359,21 @@
      "src/sub/deep/b.spec.ts"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/*/**/b.spec.ts",
+     "**/src/*/**/b.spec.ts",
+     "**/src/**/*/b.spec.ts",
+     "**/src/*/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "src/a**/**/b.spec.ts": {
@@ -305,6 +401,17 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\]a**[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a**[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/a**/**/b.spec.ts",
+     "**/src/a**/b.spec.ts"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts"
@@ -350,6 +457,19 @@
      "src/sub/deep/b.spec.ts"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/***/**/b.spec.ts",
+     "**/src/***/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "src/[a-]/**/b.spec.ts": {
@@ -377,6 +497,17 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\][a-][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][a-][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[a-]/**/b.spec.ts",
+     "**/src/[a-]/b.spec.ts"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts"
@@ -412,6 +543,17 @@
     "exit": 0,
     "results": [],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{a,{b}}/**/b.spec.ts",
+     "**/src/{a,{b}}/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "src/{}/**/b.spec.ts": {
@@ -435,6 +577,15 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{}/**/b.spec.ts",
+     "**/src/{}/b.spec.ts"
+    ],
     "exit": 0,
     "results": [],
     "stderr": ""
@@ -464,6 +615,15 @@
     "exit": 0,
     "results": [],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[/]/**/b.spec.ts",
+     "**/src/[/]/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
    }
   },
   "src/[]]/**/b.spec.ts": {
@@ -487,6 +647,15 @@
    },
    "candidate": {
     "text": "{**[/\\\\]src[/\\\\][]][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][]][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[]]/**/b.spec.ts",
+     "**/src/[]]/b.spec.ts"
+    ],
     "exit": 0,
     "results": [],
     "stderr": ""
@@ -523,6 +692,19 @@
    },
    "candidate": {
     "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]x[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b,c}",
+     "**/x/{b,c}"
+    ],
     "exit": 0,
     "results": [
      "x/b",
@@ -570,6 +752,19 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{c,**/b}",
+     "**/x/{c,b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
    }
   },
   "x/{**/b}": {
@@ -600,6 +795,18 @@
    },
    "candidate": {
     "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b}",
+     "**/x/{b}"
+    ],
     "exit": 0,
     "results": [
      "x/b",
@@ -638,6 +845,18 @@
     "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
     "exit": 0,
     "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a,{**/b}}",
+     "**/x/{a,{b}}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
      "x/q/b"
     ],
     "stderr": ""
@@ -680,6 +899,21 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/**/b,c}",
+     "**/x/{**/b,c}",
+     "**/x/{**/b,c}",
+     "**/x/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
    }
   },
   "x/{q,{**/b}}/c": {
@@ -714,6 +948,17 @@
      "x/q/c"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{q,{**/b}}/c",
+     "**/x/{q,{b}}/c"
+    ],
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
    }
   },
   "x/{**/b,c}/**/c": {
@@ -737,6 +982,17 @@
    },
    "candidate": {
     "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b,c}/**/c",
+     "**/x/{b,c}/**/c",
+     "**/x/{**/b,c}/c",
+     "**/x/{b,c}/c"
+    ],
     "exit": 0,
     "results": [],
     "stderr": ""
@@ -779,6 +1035,19 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x{**/b,c}",
+     "**/x{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
    }
   },
   "x{**/b}": {
@@ -818,6 +1087,19 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x{**/b}",
+     "**/x{b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
    }
   },
   "x/a{**/b,c}": {
@@ -846,6 +1128,17 @@
     "exit": 0,
     "results": [],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/a{**/b,c}",
+     "**/x/a{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/ab"
+    ],
+    "stderr": ""
    }
   },
   "x/{a,b{**/c}}": {
@@ -873,6 +1166,17 @@
     "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
     "exit": 0,
     "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a,b{**/c}}",
+     "**/x/{a,b{c}}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/bc"
+    ],
     "stderr": ""
    }
   },
@@ -912,6 +1216,20 @@
    },
    "candidate": {
     "text": "{**[/\\\\]**[/\\\\]b,**[/\\\\]b,**[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{**/b,c}",
+     "**/{b,c}"
+    ],
     "exit": 0,
     "results": [
      "x/b",
@@ -966,6 +1284,20 @@
      "x/q/c"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{**/b,c}",
+     "**/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
    }
   },
   "{x/**,y}/b": {
@@ -1001,6 +1333,16 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{x/**,y}/b"
+    ],
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
    }
   },
   "x/{q/**,nope}/b": {
@@ -1028,6 +1370,14 @@
     "results": [
      "x/q/b"
     ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{q/**,nope}/b"
+    ],
+    "exit": 0,
+    "results": [],
     "stderr": ""
    }
   },
@@ -1061,6 +1411,16 @@
     "exit": 0,
     "results": [
      "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**}/b"
+    ],
+    "exit": 0,
+    "results": [
      "x/q/b"
     ],
     "stderr": ""
@@ -1098,6 +1458,16 @@
      "x/c"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a**/b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
    }
   },
   "src/**": {
@@ -1106,12 +1476,24 @@
     "exit": 0,
     "results": [
      "src/a",
+     "src/a.ts",
      "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
      "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
      "src/sub",
+     "src/sub/a.ts",
      "src/sub/b.spec.ts",
      "src/sub/deep",
-     "src/sub/deep/b.spec.ts"
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
     ],
     "stderr": ""
    },
@@ -1120,12 +1502,24 @@
     "exit": 0,
     "results": [
      "src/a",
+     "src/a.ts",
      "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
      "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
      "src/sub",
+     "src/sub/a.ts",
      "src/sub/b.spec.ts",
      "src/sub/deep",
-     "src/sub/deep/b.spec.ts"
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
     ],
     "stderr": ""
    },
@@ -1134,12 +1528,24 @@
     "exit": 0,
     "results": [
      "src/a",
+     "src/a.ts",
      "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
      "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
      "src/sub",
+     "src/sub/a.ts",
      "src/sub/b.spec.ts",
      "src/sub/deep",
-     "src/sub/deep/b.spec.ts"
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
     ],
     "stderr": ""
    },
@@ -1148,12 +1554,52 @@
     "exit": 0,
     "results": [
      "src/a",
+     "src/a.ts",
      "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
      "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
      "src/sub",
+     "src/sub/a.ts",
      "src/sub/b.spec.ts",
      "src/sub/deep",
-     "src/sub/deep/b.spec.ts"
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
     ],
     "stderr": ""
    }
@@ -1194,6 +1640,19 @@
    },
    "candidate": {
     "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/*.spec.ts"
+    ],
     "exit": 0,
     "results": [
      "src/a/b.spec.ts",
@@ -1244,6 +1703,18 @@
      "x/q/b"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/**b"
+    ],
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
    }
   },
   "x/b**/c": {
@@ -1270,6 +1741,14 @@
     "exit": 0,
     "results": [],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/b**/c"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
    }
   },
   "src/[]/**/b.spec.ts": {
@@ -1293,6 +1772,14 @@
    },
    "candidate": {
     "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[]/**/b.spec.ts"
+    ],
     "exit": 0,
     "results": [],
     "stderr": ""
@@ -1334,6 +1821,18 @@
      "src/sub/deep/b.spec.ts"
     ],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[!]/**/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
    }
   },
   "src/[/**/b.spec.ts": {
@@ -1357,6 +1856,14 @@
    },
    "candidate": {
     "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[/**/b.spec.ts"
+    ],
     "exit": 0,
     "results": [],
     "stderr": ""
@@ -1386,6 +1893,15 @@
     "exit": 0,
     "results": [],
     "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x\\/**/b",
+     "**/x\\/b"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
    }
   },
   "src/[z-a]/**/b.spec.ts": {
@@ -1412,6 +1928,14 @@
     "exit": 1,
     "results": [],
     "stderr": "[fd error]: error parsing glob '{**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][z-a][/\\\\]b.spec.ts}': invalid range; 'z' > 'a'"
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[z-a]/**/b.spec.ts"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
    }
   },
   "src/{a/**/b.spec.ts": {
@@ -1435,6 +1959,14 @@
    },
    "candidate": {
     "text": "**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{a/**/b.spec.ts"
+    ],
     "exit": 1,
     "results": [],
     "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
@@ -1463,6 +1995,436 @@
     "text": "{**[/\\\\]src[/\\\\]a[}][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a[}][/\\\\]b.spec.ts}",
     "exit": 0,
     "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/a}/**/b.spec.ts"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   }
+  },
+  "src/**/a*.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]a*.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/a*.ts",
+     "**/src/a*.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src/**/a*.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]{src[/\\\\]**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts,**[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src/**/a*.ts,none}",
+     "**/{src/a*.ts,none}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/x/*.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]x[/\\\\]*.ts,**[/\\\\]src[/\\\\]x[/\\\\]*.ts}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/x/*.ts",
+     "**/src/x/*.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[!]/**/x/**/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]**[/\\\\]b.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}x{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}x{[/\\\\],[/\\\\]**[/\\\\]}b.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]x[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]x[/\\\\]b.ts}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[!]/**/x/**/b.ts",
+     "**/src/[!]/**/x/b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/[!]/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\][!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}[!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}[!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\][!][/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]b.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/[!]/b.ts",
+     "**/src/[!]/b.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/*/**/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]*{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]*{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\]*[/\\\\]b.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/*/**/b.ts",
+     "**/src/*/b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/**b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]**b.ts,**[/\\\\]src[/\\\\]**b.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/**b.ts",
+     "**/src/**b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{**/a*.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts,**[/\\\\]src[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{**/a*.ts,none}",
+     "**/src/{a*.ts,none}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
     "stderr": ""
    }
   }

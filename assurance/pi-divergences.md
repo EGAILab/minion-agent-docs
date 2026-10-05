@@ -59,6 +59,12 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Scope.** Only the zero-directory meaning of `**/` changes.
   - Every other construct keeps exactly Pi's Windows meaning on the pinned `fd`. Notably, a single-segment `*` crosses `\` there, so on Windows `src/*.spec.ts` also returns nested files, in Pi and in Minion alike. That is parity, recorded in characterization F-2.
   - Linux is unchanged.
+  - **Composition (clarification, `CE-L13-WP134-01`, adding no scope).** The correction is component-local.
+    - The Windows result is the union, over keeping or removing each recursive `**/` component, of Pi's own Windows result for the resulting pattern.
+    - "Windows results equal Linux results" therefore holds for patterns whose other constructs mean the same on both platforms.
+    - Where a retained Pi-scope construct is composed with a recursive component, that construct keeps its Windows meaning in every branch, and Windows can differ from Linux. For example, `src/**/a*.ts` also returns `src/a/sub/b.ts` on Windows through the single-`*` crossing.
+    - When fd rejects the pattern, the result is Pi's diagnostic.
+    - Rules and evidence: `spec/tools.md`, WP-13.4, "Recursive components and Pi-scope constructs"; `assurance/layers/13-wp134-ce01-convergence.md`.
 - **Classification:** intentional practical-parity divergence.
 - **Practical-parity assessment (Owner):**
   - Pi's intentional abstraction: no (a separator-rewrite defect).

@@ -13,7 +13,13 @@
   "x/q/c",
   "xb",
   "x/ab",
-  "x/bc"
+  "x/bc",
+  "src/a.ts",
+  "src/sub/a.ts",
+  "src/a/sub/b.ts",
+  "src/x/b.ts",
+  "src/q/r/x/b.ts",
+  "src/q/r/x/s/b.ts"
  ],
  "rows": {
   "src/**/b.spec.ts": {
@@ -350,12 +356,24 @@
     "exit": 0,
     "results": [
      "src/a",
+     "src/a.ts",
      "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
      "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
      "src/sub",
+     "src/sub/a.ts",
      "src/sub/b.spec.ts",
      "src/sub/deep",
-     "src/sub/deep/b.spec.ts"
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
     ],
     "stderr": ""
    }
@@ -446,6 +464,92 @@
     "exit": 1,
     "results": [],
     "stderr": "[fd error]: error parsing glob '**/src/a}/**/b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   }
+  },
+  "src/**/a*.ts": {
+   "text": "**/src/**/a*.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src/**/a*.ts,none}": {
+   "text": "**/{src/**/a*.ts,none}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/x/*.ts": {
+   "text": "**/src/**/x/*.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[!]/**/x/**/b.ts": {
+   "text": "**/src/[!]/**/x/**/b.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[!]/**/x/**/b.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/**/[!]/b.ts": {
+   "text": "**/src/**/[!]/b.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/**/[!]/b.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/*/**/b.ts": {
+   "text": "**/src/*/**/b.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/**b.ts": {
+   "text": "**/src/**/**b.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{**/a*.ts,none}": {
+   "text": "**/src/{**/a*.ts,none}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
    }
   }
  }
