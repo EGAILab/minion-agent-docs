@@ -1,0 +1,51 @@
+{
+ "pi": "b7bb00b936dbe21b8e160b3e89efdec361846699",
+ "node": "v22.15.1",
+ "platform": "linux",
+ "engines": {
+  "fd": "fd 10.4.2",
+  "rg": "ripgrep 15.2.0 (rev e89fff89ac)"
+ },
+ "find": {
+  "plain/adjacent-doublestar": {
+   "args": {
+    "pattern": "src/**/**/*.spec.ts"
+   },
+   "ok": true,
+   "text": "src/b.spec.ts\nsrc/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/brace-alternative-doublestar": {
+   "args": {
+    "pattern": "{src/**/b.spec.ts,none}"
+   },
+   "ok": true,
+   "text": "src/b.spec.ts",
+   "details": null
+  },
+  "plain/brace-before-doublestar": {
+   "args": {
+    "pattern": "{src,nope}/**/*.spec.ts"
+   },
+   "ok": true,
+   "text": "src/b.spec.ts\nsrc/sub/d.spec.ts\nsrc/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/doublestar-in-brace-after": {
+   "args": {
+    "pattern": "src/**/{er/**/e,b}.spec.ts"
+   },
+   "ok": true,
+   "text": "src/b.spec.ts\nsrc/sub/deep/er/e.spec.ts",
+   "details": null
+  },
+  "plain/brace-scope-no-doublestar": {
+   "args": {
+    "pattern": "{src/*.spec.ts,none}"
+   },
+   "ok": true,
+   "text": "src/b.spec.ts",
+   "details": null
+  }
+ }
+}

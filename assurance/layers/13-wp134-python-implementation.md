@@ -171,3 +171,104 @@ These are as the contract lists:
 - the `DIV-002` rewrite's scope, and that outside `/**/` it equals Pi's text;
 - the engine store's no-`PATH`/no-download guarantees;
 - that each control's kill is by its intended witness.
+
+---
+
+## Implementation review 1 (Codex): CHANGES REQUESTED
+
+- **Reviewed pair:** code `5caed2f6` / docs `dc79b3b1`.
+- **Verdict:** published verbatim on `minion-agent#153` (issuecomment-5991838966).
+- **Findings:**
+  - `WP134-IMPL-R001` (high, `PI_PARITY_DEFECT`): grep loses a fast post-spawn abort;
+  - `WP134-IMPL-R002` (medium, `PI_PARITY_DEFECT`): `DIV-002` incomplete for adjacent and brace-alternative `**/` components;
+  - `WP134-IMPL-R003` (medium, `CONTRACT_ASSURANCE_DEFECT`): bulk conformance ignores result identity.
+- None changes the accepted contract or the Owner's divergence decisions.
+
+## Remediation 1
+- **Candidate:** code PR `minion-agent#153` @ `f97906ca279b551a6f1cc9ae1d3a902637a51e31`. The docs head is this PR's next head.
+
+**`WP134-IMPL-R001`.**
+- Pi's listener, registered after spawn, sets `aborted` synchronously, and the close handler reads it. The candidate's 10 ms watcher could still be asleep when the engine finished, so the abort was lost.
+- At the completion decision, `grep` now also reads the signal when the abort was not already present at registration. It records the abort and stops the child, as Pi's `onAbort` does.
+- An abort before registration is still not observed, as in Pi.
+- **Witnesses** (`test_search.py`):
+  - `test_grep_keeps_an_abort_that_lands_just_before_completion`: a scripted in-memory engine whose first stdout read aborts, then completes before any polling tick. It makes the window deterministic;
+  - `test_grep_ignores_an_abort_before_its_listener_registration`: the abort comes during spawn.
+- **Known-bad check:** against `5caed2f6`'s `grep.py`, the new witness fails (`a.ts:1: x` instead of `Operation aborted`) and the registration witness passes.
+- **Control:** `abort_flag_lost_at_completion`.
+- **Neighbourhood (section 9.4):** `find` already reads `signal.aborted` synchronously after the engine completes (Pi's close handler) and races the abort for the immediate settle. No change.
+
+**`WP134-IMPL-R002`.**
+- The Windows effective pattern is rebuilt from the pattern's structure:
+  1. fd's one level of `{a,b}` alternation is distributed into brace-free alternatives;
+  2. each alternative is split into `/`-separated components;
+  3. every genuine `**/` component becomes optional. A genuine component is a plain `**` component followed by a separator, except the pattern-initial one, which, matched against an absolute path, never stands for zero directories;
+  4. adjacent genuine components collapse, since `**/**/` means `**/`;
+  5. the variants are joined as one top-level alternation, because fd's glob has no nested alternation.
+- A plain `,` `{` or `}` is written as a one-character class inside the generated alternation, so it keeps its literal meaning.
+- Without any genuine component, or when braces or a class are not well formed, the text is exactly Pi's `replaceAll`. Every non-`**/` construct, and every error, therefore stays as Pi's rewrite gives it.
+- **Correction to finding 1 of this record:** fd's glob on Windows has **no backslash escape** (`\` is an ordinary character there). The tokenizer now treats `\` as plain. `\/` still yields Pi's `\[/\\]`.
+- **Real-engine evidence.** The pinned-Pi harness gained an opt-in `components` mode: `search_probe.mjs ... components`, with the default run unchanged. It ran on Windows and Linux (Node v22.15.1, pinned fd/rg) into `data/13-wp134/out/components-{win32,linux}.json`:
+
+  | Pattern | Pi Windows | Linux = Minion both platforms |
+  |---|---|---|
+  | `src/**/**/*.spec.ts` | `src/sub/deep/er/e.spec.ts` | all three spec files |
+  | `{src/**/b.spec.ts,none}` | none | `src/b.spec.ts` |
+  | `{src,nope}/**/*.spec.ts` | the two nested | all three |
+  | `src/**/{er/**/e,b}.spec.ts` | none | `src/b.spec.ts`, `src/sub/deep/er/e.spec.ts` |
+  | `{src/*.spec.ts,none}` (scope check, no `**`) | all three, through Pi's single-`*` crossing (F-2) | Windows keeps Pi's result; Linux `src/b.spec.ts` |
+
+- These are 5 new canonical scenarios. The four divergent ones carry `TOOL-036-DIV-002`, with Pi's Windows result in `notes`, so 10 scenarios carry `DIV-002`.
+- Codex's three-file probe (`src/b`, `src/sub/b`, `src/sub/deep/b`) now gives all three files for all three of its patterns on Windows through the real `find`.
+- **Witness:** `test_windows_full_path_normalization` now covers the alternation structure, adjacent collapse, brace distribution, literal `,` `{` `}`, and 12 Pi-text scope patterns: trailing `/**`, leading-only, nested and unclosed braces, unclosed class, classes, backslashes.
+- **Controls:**
+  - `doublestar_in_braces_left_to_pi`;
+  - `adjacent_doublestar_not_optional`;
+  - `pi_windows_doublestar_rewrite`, re-anchored to the new seam.
+
+**`WP134-IMPL-R003`.**
+- The `summary` mode is removed.
+- The bulk cases now use the ordinary modes over **derived** members. The generator derives the formatted members from the bulk corpus, then asserts every recorded observation against the derivation before using it:
+  - Pi's `truncation.content` entries are a sub-multiset;
+  - the line count, body bytes and last line agree.
+- **`find` bulk:** `find_subset`, with count 867 out of 1200 allowed distinct entries.
+- **`grep` bulk:** `grep_by_file`, with the exact 100-line `w.txt` block.
+- **In every mode:**
+  - details are exact except `truncation.content`, which expectations omit and which must equal the returned body;
+  - `grep` blocks stay exact and contiguous. Only under a match limit or byte truncation may the last block be a prefix and the set of files be partial, and an unlimited result must contain every file.
+- **Comparator controls** (`test_builtin_search_conformance.py`):
+  - **`find` bulk:** a different valid subset in another order is accepted. Rejected:
+    - the reviewer's 867 fabricated `Q` x 58 entries;
+    - a duplicate the corpus lacks;
+    - a missing entry;
+    - an extra entry;
+    - `truncation.content` = `incorrect`;
+    - omitted content.
+  - **`grep` bulk:** rejected:
+    - swapped within-file order;
+    - a missing match;
+    - a fabricated line;
+    - a duplicate;
+    - an extra file;
+    - a missing file and a split block (unlimited).
+  - **`find` multiset:** a lost duplicate is rejected.
+
+**Remediation evidence (fresh, at `f97906ca`).**
+
+| Evidence | Result |
+|---|---|
+| Canonical scenarios | 196 (191 + 5), all schema-valid; generated from the committed outputs plus `components-*.json` |
+| Full Windows suite, warning-strict, pinned ICU 78.3, engines provisioned | 4910 passed, 31 skipped, 19 xfailed; 100.00% coverage |
+| Full Linux suite (`python:3.13`), warning-strict | 4844 passed, 97 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (113 source files) |
+| Negative controls, Windows (`data/13-wp134-python/wp134-controls-win32-rem1.json`) | 24/24 killed by the intended witness |
+| Negative controls, Linux (`...-linux-rem1.json`) | 23/23 killed by the intended witness; 1 not applicable (the Windows-only junction) |
+
+**Linux recipe note.** The tree is **copied into the container's own filesystem** (`cp -r /src /r`) before the run. A Windows-backed bind mount cannot represent the Linux raw-byte filename `raw-ff.txt` (the reviewer saw it become U+FFFD), and its CRLF checkout breaks the ICU shell script. Both explain the reviewer's three Linux failures on the bind mount. Neither is a candidate defect.
+
+**Review note (PATH control).** On Windows the planted `.exe` is rejected by the OS (WinError 216), so the control proves an attempted `PATH` execution, as the reviewer notes. On Linux the planted script runs (`planted`).
+
+## Status (remediation 1)
+- Python WP-13.4: REMEDIATION CANDIDATE, pending independent re-review. `5caed2f6` was not approved.
+- Rust WP-13.4: NOT_IMPLEMENTED.
+- WP-13.4 cross-language: NOT CLOSED.

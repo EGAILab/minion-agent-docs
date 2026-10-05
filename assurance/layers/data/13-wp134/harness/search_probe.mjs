@@ -9,6 +9,8 @@
 // Each case runs the real tool execute against a freshly built corpus; observations: the result text (or thrown error
 // message) and details, with the corpus root normalized to <ROOT>.
 //   node --experimental-strip-types search_probe.mjs <pi checkout> <engine dir with fd[.exe], rg[.exe]> <scratch dir> <out.json>
+// With a fifth argument `components` (added for WP134-IMPL-R002), only the COMPONENTS full-path find cases run, on the
+// plain corpus, into their own output (out/components-<platform>.json); the default run is unchanged.
 import { spawn, spawnSync } from "node:child_process";
 import { accessSync, constants, mkdirSync, mkdtempSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { access, readFile as fsReadFile, stat as fsStat } from "node:fs/promises";
@@ -18,7 +20,7 @@ import { createInterface } from "node:readline";
 import { stripTypeScriptTypes } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const [piDir, engineDir, scratchDir, outPath] = process.argv.slice(2);
+const [piDir, engineDir, scratchDir, outPath, mode] = process.argv.slice(2);
 const SRC = `${piDir}/packages/coding-agent/src`;
 const EXE = process.platform === "win32" ? ".exe" : "";
 const ENGINES = { fd: join(engineDir, `fd${EXE}`), rg: join(engineDir, `rg${EXE}`) };
@@ -234,6 +236,16 @@ const GREP = [
   ["dot-path", { pattern: "alpha", path: "." }],
 ];
 
+// WP134-IMPL-R002: genuine `**/` components adjacent to another or inside a brace alternative, with brace and
+// non-`**` scope checks. Pattern only; the plain corpus as for FIND.
+const COMPONENTS = [
+  ["adjacent-doublestar", { pattern: "src/**/**/*.spec.ts" }],
+  ["brace-alternative-doublestar", { pattern: "{src/**/b.spec.ts,none}" }],
+  ["brace-before-doublestar", { pattern: "{src,nope}/**/*.spec.ts" }],
+  ["doublestar-in-brace-after", { pattern: "src/**/{er/**/e,b}.spec.ts" }],
+  ["brace-scope-no-doublestar", { pattern: "{src/*.spec.ts,none}" }],
+];
+
 function summary(r) {
   if (!r.ok) return r;
   const [body, ...notice] = r.text.split("\n\n[");
@@ -282,6 +294,18 @@ async function edges() {
     rmSync(root, { recursive: true, force: true });
   }
   return r;
+}
+
+if (mode === "components") {
+  const out = { pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", node: process.version, platform: process.platform,
+    engines: Object.fromEntries(Object.entries(ENGINES).map(([k, p]) => [k, spawnSync(p, ["--version"]).stdout.toString().split("\n")[0]])),
+    find: {} };
+  const { root } = build("plain");
+  for (const [name, args] of COMPONENTS) out.find[`plain/${name}`] = { args, ...(await run("find", root, args)) };
+  rmSync(root, { recursive: true, force: true });
+  writeFileSync(outPath, JSON.stringify(out, null, 1) + "\n");
+  console.log(`wrote ${Object.keys(out.find).length} component find observations`);
+  process.exit(0);
 }
 
 const out = { pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", node: process.version, platform: process.platform,
