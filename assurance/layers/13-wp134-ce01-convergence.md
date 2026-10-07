@@ -455,3 +455,61 @@ NEXT_OWNER
 - `WP134-IMPL-R001` and `WP134-IMPL-R002`: implemented at `5730ff10`; ready for targeted convergence closure review (§11.8.7).
 - `WP134-IMPL-R003`: PROVISIONALLY CLOSED @ `f97906ca`; unaffected.
 - Rust WP-13.4: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
+
+---
+
+## Targeted closure review 1 (Codex)
+
+- **Reviewed pair:** code `5730ff10` / docs `dce874f6`.
+- **Verdict:** published verbatim on `minion-agent#153` (issuecomment-6036701979).
+- **`WP134-IMPL-R002`:** PROVISIONALLY CLOSED @ `5730ff101ee377bc67302d3ed923666abf50e876`.
+- **`WP134-IMPL-R003`:** prior provisional closure preserved.
+- **`WP134-IMPL-R001`:** NOT CLOSED (high, `PI_PARITY_DEFECT`, a same-root refinement).
+  - `EngineRun.run` joined a limit-stop's asynchronous termination acknowledgement **before** reading the already-ready exit and running `on_complete`. That kept the window open after exit and both EOFs.
+  - The reviewer's held-acknowledgement witness: grep `limit: 1`, both EOFs, exit ready, acknowledgement held, abort, release. The candidate gave `Operation aborted`; Pi gives the limit result.
+  - Pi's `stopChild(true)` is synchronous, and its `close` handler removes the listener without waiting for any kill acknowledgement.
+- **Gate disclosure from the reviewer:** Docker became unavailable in its sandbox mid-pass. Its Linux run on a copied tree hit an unrelated CRLF build-script failure. Both are its environment, recorded as such.
+- **§11.8.10 count:** this is R001's first targeted-closure failure after the agreed checkpoint, so checkpoint invalidation (two failures) has not fired.
+
+## Remediation (targeted closure 1)
+- **Candidate:** code `minion-agent#153` @ `e5be3c2afee16097e23f1425e52eece7dda1417a`.
+- **`_search.EngineRun.run`:** decides completion first (gather to EOF on both pipes, `wait()`, then `on_complete`). Joining a stop request's termination acknowledgement moves into the cleanup, together with the stream release. The termination stays owned and joined by the run. It no longer extends the listener window. Layer-12 termination semantics are unchanged.
+- **Neighbourhood (§9.4):** only `grep` has a limit stop. In both tools, the abort-kill issued by the window's watcher is joined in cleanup after the window has latched. No other site joins asynchronous work between exit+EOF and the decision.
+- **Permanent witness:** `test_a_held_stop_acknowledgement_does_not_extend_the_window`, parametrized:
+
+  | Mode | Expected (Pi) | `e5be3c2a` | known-bad `5730ff10` |
+  |---|---|---|---|
+  | no abort | limit result | pass | pass |
+  | abort while only the stop acknowledgement is pending | limit result | pass | **FAIL** (`Operation aborted`) |
+  | abort before EOF (inside the window) | `Operation aborted` | pass | pass |
+
+  - The witness uses event-gated EOF and an event-held acknowledgement.
+  - The abort is placed after the event "both EOF read" plus event-loop rendezvous, not a wall-clock wait.
+  - It passed three consecutive runs.
+- **Control:** `stop_ack_join_before_completion` re-joins before `wait()`. It is killed by the held-acknowledgement witness on both platforms.
+
+**§11.8.7.1 record.**
+
+| Item | Value |
+|---|---|
+| Finding | `WP134-IMPL-R001` |
+| Negative-control method | the witness run against `5730ff10`'s source; plus the single-point mutant `stop_ack_join_before_completion` |
+| Expected failure | `Operation aborted` instead of the limit result when an abort lands while only the stop acknowledgement is pending |
+| Observed failure | exactly that case fails on `5730ff10`; the mutant is killed by that test id |
+| Candidate | `e5be3c2a` |
+| Observed pass | all three modes pass; the 14-cell partition still equals Pi |
+
+**Fresh gates at `e5be3c2a`.**
+
+| Gate | Result |
+|---|---|
+| Windows full suite, warning-strict, pinned ICU 78.3, engines provisioned | 4976 passed, 31 skipped, 19 xfailed; 100.00% coverage |
+| Linux full suite (`python:3.13`; tree copied into the container; CR stripped from every `*.sh` in the copy) | 4910 passed, 97 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (113 source files) |
+| Negative controls (`data/13-wp134-ce01/controls-{win32,linux}-e5be3c2a.json`) | Windows 33/33 killed by the intended witness; Linux 30/30, with 3 not applicable (Windows-only witnesses) |
+
+## Status
+- `WP134-IMPL-R001`: remediated at `e5be3c2a`; requests targeted closure review 2.
+- `WP134-IMPL-R002`: PROVISIONALLY CLOSED @ `5730ff10`.
+- `WP134-IMPL-R003`: PROVISIONALLY CLOSED.
+- The R002 surface is unchanged by `e5be3c2a`: only `_search.py`'s completion order, plus a test and a control, changed.

@@ -1,0 +1,501 @@
+{
+ "os": "linux",
+ "results": [
+  {
+   "name": "sort_find_results",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_reproduces_an_unsorted_engine_stream"
+   ],
+   "expected": "witness 6: z.ts then a.ts comes back as a.ts then z.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_reproduces_an_unsorted_engine_stream": "AssertionError: assert ('a.ts\\nz.ts', {}) == ('z.ts\\na.ts', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.25s"
+  },
+  {
+   "name": "sort_grep_results",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_reproduces_an_unsorted_engine_stream"
+   ],
+   "expected": "witness 6: the engine's z.ts/a.ts/z.ts stream is reordered",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_reproduces_an_unsorted_engine_stream": "AssertionError: assert ('a.ts:1: x\\n....ts:2: x', {}) == ('z.ts:2: x\\n....ts:1: x', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.25s"
+  },
+  {
+   "name": "dedupe_find_entries",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_keeps_entries_that_format_identically",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-duplicate-trailing-space-duplicate]"
+   ],
+   "expected": "witness 7: `same.ts` and `same.ts ` give one entry instead of two",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_keeps_entries_that_format_identically": "AssertionError: assert ('src/same.ts', {}) == ('src/same.ts.../same.ts', {})",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-duplicate-trailing-space-duplicate]": "AssertionError: assert ['same.ts'] == ['same.ts', 'same.ts']"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "2 failed, 282 passed, 1 skipped in 7.52s"
+  },
+  {
+   "name": "following_git_probe_on_windows",
+   "not_applicable": "witness exists on win32 only"
+  },
+  {
+   "name": "no_require_git_passed_to_rg",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_argument_vectors"
+   ],
+   "expected": "witness 4: rg's argv gains --no-require-git",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_argument_vectors": "AssertionError: assert ['--json', '-...t', '--', ...] == ['--json', '-...', 'foo', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-gitignored]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-glob-negated]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-glob-ts]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-nested-keep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-regex-foo]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-nested-keep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-regex-foo]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "8 failed, 276 passed, 1 skipped in 7.24s"
+  },
+  {
+   "name": "no_require_git_omitted_for_fd",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors"
+   ],
+   "expected": "witness 4: fd's argv outside a repository lacks --no-require-git",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors": "AssertionError: assert ['--glob', '-...0', '--', ...] == ['--glob', '-..., '1000', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-dot-path]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-double-star]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-keep-boundary]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-limit-zero]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-log-ignored]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-question-mark]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-ts-basename]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "8 failed, 276 passed, 1 skipped in 7.16s"
+  },
+  {
+   "name": "merge_context_windows",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-overlap]"
+   ],
+   "expected": "overlapping windows print each line once instead of once per match",
+   "observed": {
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-overlap]": "AssertionError: ctx.txt: block differs"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-clamp]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-clamp]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-overlap]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "4 failed, 280 passed, 1 skipped in 7.30s"
+  },
+  {
+   "name": "integer_find_limit",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors"
+   ],
+   "expected": "witness 5: limit 2.5 reaches fd as --max-results 2",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors": "AssertionError: assert ['--glob', '-...ts', '2', ...] == ['--glob', '-...', '2.5', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-limit-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-limit-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.20s"
+  },
+  {
+   "name": "integer_grep_limit",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_limits_and_kill_for_limit"
+   ],
+   "expected": "witness 5: limit 2.5 stops at 2 matches with a `2 matches` notice",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_limits_and_kill_for_limit": "AssertionError: a.ts:1: x"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-limit-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-limit-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.27s"
+  },
+  {
+   "name": "integer_grep_context",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction"
+   ],
+   "expected": "witness 5: context 0.5 prints the matched line instead of the fractional 1.5/2.5 window",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction": "AssertionError: assert 'c.txt:2: x' == 'c.txt-1.5- \\nc.txt-2.5- '"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.27s"
+  },
+  {
+   "name": "drop_uncollected_match_count",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_counts_uncollected_matches_and_skips_noise"
+   ],
+   "expected": "a match without path text gives `No matches found` instead of an empty result",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_counts_uncollected_matches_and_skips_noise": "AssertionError: assert ('No matches found', {}) == ('', {})"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-raw-name]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-raw-name]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.35s"
+  },
+  {
+   "name": "strip_bom_in_context",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction"
+   ],
+   "expected": "the first context line loses its U+FEFF",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction": "AssertionError: assert 'c.txt-1- L1\\...\\nc.txt-3- L3' == 'c.txt-1- \\uf...\\nc.txt-3- L3'"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-bom-context]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-bom-context]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.11s"
+  },
+  {
+   "name": "cr_not_a_line_break",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_readline_splitting"
+   ],
+   "expected": "a lone CR no longer ends a line",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_readline_splitting": "AssertionError: assert [] == ['a']"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.30s"
+  },
+  {
+   "name": "truncate_line_in_code_points",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_line_truncation_and_notices"
+   ],
+   "expected": "witness 5: the cut keeps the whole emoji instead of splitting its surrogate pair at unit 500",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_line_truncation_and_notices": "AssertionError: assert 'a.ts:1: aaaa...e full lines]' == 'a.ts:1: aaaa...e full lines]'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.23s"
+  },
+  {
+   "name": "trim_before_empty_test",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_tests_emptiness_before_trimming"
+   ],
+   "expected": "whitespace-only output with exit 1 becomes the stderr error",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_tests_emptiness_before_trimming": "AssertionError: assert ('ERR warn', {}) == ('', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.22s"
+  },
+  {
+   "name": "path_fallback",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path"
+   ],
+   "expected": "DIV-003: the planted PATH executable runs instead of the not-provisioned error",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path": "AssertionError: planted"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.31s"
+  },
+  {
+   "name": "download_from_tool_call",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path"
+   ],
+   "expected": "DIV-003: DownloadAttemptedError -- the tool call fetched an artifact",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path": "tests.tools.builtin.test_search.DownloadAttemptedError: https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-unknown-linux-gnu.tar.gz"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "2 failed, 282 passed, 1 skipped in 8.78s"
+  },
+  {
+   "name": "trust_existing_file",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts"
+   ],
+   "expected": "DIV-003: a file at the fixed name that fails its SHA-256 is used",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts": "Failed: DID NOT RAISE BuiltinToolError"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 6.67s"
+  },
+  {
+   "name": "non_atomic_install",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_the_fixed_name_appears_only_by_the_atomic_rename"
+   ],
+   "expected": "DIV-003: the fixed name exists (partly written) before the rename",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_the_fixed_name_appears_only_by_the_atomic_rename": "AssertionError: /tmp/pytest-of-root/pytest-18/test_the_fixed_name_appears_on0/store/fd existed before the atomic rename"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.29s"
+  },
+  {
+   "name": "case_sensitive_windows_relativize",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_relativize_and_node_paths"
+   ],
+   "expected": "`c:\\R\\a\\` under `C:\\r` relativizes through `..` instead of to `a/`",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_relativize_and_node_paths": "AssertionError: assert '../../c:/R/a/' == 'a/'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.30s"
+  },
+  {
+   "name": "find_decides_after_release",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-find]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-find]"
+   ],
+   "expected": "R001: an abort during the stream release, after engine completion, gives `Operation aborted` instead of a.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-find]": "AssertionError: find abort at stdout_close",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-find]": "AssertionError: find abort at stderr_close"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "2 failed, 282 passed, 1 skipped in 7.30s"
+  },
+  {
+   "name": "grep_decides_after_release",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-grep]"
+   ],
+   "expected": "R001: an abort during the stream release, after engine completion, gives `Operation aborted` instead of the match",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-grep]": "AssertionError: grep abort at stdout_close",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-grep]": "AssertionError: grep abort at stderr_close"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_a_held_stop_acknowledgement_does_not_extend_the_window[while_only_the_stop_ack_is_pending]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.28s"
+  },
+  {
+   "name": "stop_ack_join_before_completion",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_held_stop_acknowledgement_does_not_extend_the_window[while_only_the_stop_ack_is_pending]"
+   ],
+   "expected": "R001 (targeted closure 1): joining the limit-stop acknowledgement before completion keeps the window open, so an abort while only the acknowledgement is pending gives `Operation aborted` instead of the limit result",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_held_stop_acknowledgement_does_not_extend_the_window[while_only_the_stop_ack_is_pending]": "AssertionError: assert ('ERR Operation aborted', {}) == ('a.ts:1: x\\n...tReached': 1})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.27s"
+  },
+  {
+   "name": "grep_latch_lost_at_completion",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_keeps_an_abort_that_lands_just_before_completion",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_data-grep]"
+   ],
+   "expected": "R001: an abort inside the window, unseen by the polling watcher, gives the match",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_keeps_an_abort_that_lands_just_before_completion": "AssertionError: assert ('a.ts:1: x', {}) == ('ERR Operation aborted', {})",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_data-grep]": "AssertionError: grep abort at stdout_data"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_eof-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_eof-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[wait-grep]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "5 failed, 279 passed, 1 skipped in 7.31s"
+  },
+  {
+   "name": "grep_observes_pre_registration_abort",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[spawn-grep]",
+    "tests/tools/builtin/test_search.py::test_grep_ignores_an_abort_before_its_listener_registration"
+   ],
+   "expected": "R001: an abort before grep's listener exists aborts the call",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[spawn-grep]": "AssertionError: grep abort at spawn",
+    "tests/tools/builtin/test_search.py::test_grep_ignores_an_abort_before_its_listener_registration": "AssertionError: assert ('ERR Operation aborted', {}) == ('a.ts:1: x', {})"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_grep_does_not_observe_an_abort_before_spawn"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "3 failed, 281 passed, 1 skipped in 7.29s"
+  },
+  {
+   "name": "zero_directory_left_broken",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-spec]"
+   ],
+   "expected": "DIV-002: Pi's Windows text; `src/**/a*.ts` misses src/a.ts and src/a/sub/b.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]src...\\\\\\]*.spec.ts' == '**[/\\\\\\\\]src...\\\\]}*.spec.ts'"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "2 failed, 282 passed, 1 skipped in 7.32s"
+  },
+  {
+   "name": "whole_pattern_linux_conversion",
+   "not_applicable": "witness exists on win32 only"
+  },
+  {
+   "name": "alt_start_not_recursive",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-doublestar]"
+   ],
+   "expected": "R002: `src/{**/b.spec.ts,none}` misses src/b.spec.ts on Windows",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]x[/...**[/\\\\\\\\]b,c}' == '**[/\\\\\\\\]x[/...[/\\\\\\\\]b,b,c}'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.27s"
+  },
+  {
+   "name": "adjacent_components_not_collapsed",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-adjacent-doublestar]"
+   ],
+   "expected": "R002: `src/**/**/*.spec.ts` loses a branch on Windows",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]x[/...*[/\\\\\\\\]}b,c}' == '**[/\\\\\\\\]x[/...[/\\\\\\\\]b,b,c}'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.27s"
+  },
+  {
+   "name": "empty_alternative_zero_form",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-alternative-doublestar]"
+   ],
+   "expected": "R002: the empty alternative never matches, so the direct file is missed",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]src...\\\\]}*.spec.ts' == '**[/\\\\\\\\]src...\\\\]}*.spec.ts'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.26s"
+  },
+  {
+   "name": "lex_original_pattern",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-class-reshaped-negated]"
+   ],
+   "expected": "R002: a class Pi's rewrite reshapes (`src/[!]/**/...`) is corrected instead of keeping Pi's Windows meaning",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: **/src/[!]/**/x"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.25s"
+  },
+  {
+   "name": "diagnostics_from_corrected_text",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-invalid-range]"
+   ],
+   "expected": "R002 rule 5: fd's diagnostic shows the generated pattern text instead of Pi's",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic": "AssertionError: assert ('ERR [fd err...ted text', {}) == ('ERR [fd err...[/\\\\\\\\]b', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "1 failed, 283 passed, 1 skipped in 7.21s"
+  },
+  {
+   "name": "literal_brace_wrapping",
+   "not_applicable": "witness exists on win32 only"
+  }
+ ]
+}
