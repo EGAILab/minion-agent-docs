@@ -66,3 +66,30 @@ Full final Windows/Linux gates and the complete control batches are in progress.
 The candidate is not yet handed off for independent closure. Final fresh counts,
 exact heads, reproducible commands and control transcripts will be appended only
 after those runs finish. Earlier green runs are not substituted for final gates.
+
+## Neighborhood checks after the progress checkpoint
+
+The actual find/grep factories now independently exercise all 14 abort partition
+cells, in addition to the shared stream seam. The held limit-stop witness covers
+three modes: no abort, an abort while the stop acknowledgement is held, and an
+abort during subsequent stream disposal. Synchronization is event-driven; the
+timeout is a deadlock safety guard, not an assertion sleep.
+
+A Windows path-comparison check found that Rust 1.97.1's native Unicode lowercase
+does not reproduce Node 22.15.1's Unicode 16 mappings (U+A7CE, U+A7D2 and U+16EA0
+are discriminators). The implementation now uses an exhaustive pinned-Node
+lowercase/property table and the contextual Final_Sigma rule, retaining unpaired
+UTF-16 units. No ICU dependency or new runtime prerequisite is introduced.
+`scripts/search-node-lower-table.mjs` checks Node/Unicode versions and regenerates
+the exact bytes of `search_node_lower.json`:
+
+```text
+Node v22.15.1; Unicode 16.0
+29228 bytes (LF-terminated committed artifact)
+SHA-256 423cf36e0e4bd149e83993eb67fea7941bb781032fb00c783d2e8be4ce9cab7c
+```
+
+The discriminator also covers contextual sigma, U+0130 expansion and an unpaired
+surrogate between cased characters. A native-Rust-lowercase control must fail
+that permanent witness. This is implementation fidelity to the existing path
+contract, not a shared semantic amendment.
