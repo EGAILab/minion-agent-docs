@@ -1,0 +1,350 @@
+{
+  "gate_logs": [
+    "windows-gates-final3.log",
+    "windows-gates-recovery.log",
+    "windows-controls-utf8.log"
+  ],
+  "tests": {
+    "passed": 593,
+    "failed": 0,
+    "ignored": 0
+  },
+  "controls_killed": 46,
+  "controls_not_applicable": 1,
+  "controls": [
+    {
+      "control": "unc-share-forced-absolute",
+      "witness": "logical_surrogate_root_is_not_its_native_replacement",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_paths::tests::logical_surrogate_root_is_not_its_native_replacement' (53420) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_paths.rs:236:9:\nassertion `left == right` failed\n  left: \"\\\\\\\\server\\\\b\\\\x\"\n right: \"..\\\\b\\\\x\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "automatic-call-time-provisioning",
+      "witness": "managed_store_verifies_every_use_and_provisioning_is_idempotent",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::managed_store_verifies_every_use_and_provisioning_is_idempotent' (37920) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:354:5:\nassertion failed: store.resolve(SearchEngine::Fd,\n            &ExecutionWorldIdentity::local()).await.is_err()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "decision-after-disposal",
+      "witness": "real_factories_reproduce_the_fourteen_pi_abort_partition_cells",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::real_factories_reproduce_the_fourteen_pi_abort_partition_cells' (20352) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:197:13:\nassertion `left == right` failed: find stdout_close: Err(ToolCapabilityError { message: ResultString { units: JsString([79, 112, 101, 114, 97, 116, 105, 111, 110, 32, 97, 98, 111, 114, 116, 101, 100]), scalar: Some(\"Operation aborted\") } })\n  left: true\n right: false\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "adjacent-recursive-not-collapsed",
+      "witness": "canonical:builtin-search-find-components-adjacent-doublestar",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-find-components-adjacent-doublestar\"\n\nthread 'canonical_search_real_engines_and_layer_six' (36740) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:166:32:\nassertion `left == right` failed\n  left: {\"src/sub/d.spec.ts\": 1, \"src/sub/deep/er/e.spec.ts\": 1}\n right: {\"src/b.spec.ts\": 1, \"src/sub/d.spec.ts\": 1, \"src/sub/deep/er/e.spec.ts\": 1}\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "empty-alternative-zero-form",
+      "witness": "canonical:builtin-search-find-components-brace-alternative-doublestar",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-find-components-brace-alternative-doublestar\"\n\nthread 'canonical_search_real_engines_and_layer_six' (49924) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:166:32:\nassertion `left == right` failed\n  left: {\"No files found matching pattern\": 1}\n right: {\"src/b.spec.ts\": 1}\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lex-original-pattern",
+      "witness": "canonical:builtin-search-find-components-brace-alternative-doublestar",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-find-components-brace-alternative-doublestar\"\n\nthread 'canonical_search_real_engines_and_layer_six' (46660) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:166:32:\nassertion `left == right` failed\n  left: {\"No files found matching pattern\": 1}\n right: {\"src/b.spec.ts\": 1}\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "literal-brace-wrapping",
+      "witness": "separators_classes_and_alternation_context",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_glob::tests::separators_classes_and_alternation_context' (42148) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_glob.rs:149:9:\nassertion `left == right` failed\n  left: \"{**[/\\\\\\\\]x,**[/\\\\\\\\]b}\"\n right: \"**[/\\\\\\\\]x,**[/\\\\\\\\]b\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "whole-pattern-windows-conversion-on-linux",
+      "not_applicable": "platform-specific production branch"
+    },
+    {
+      "control": "context-windows-merged",
+      "witness": "canonical:builtin-search-grep-plain-context-overlap",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-plain-context-overlap\"\n\nthread 'canonical_search_real_engines_and_layer_six' (35452) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:221:25:\nassertion `left == right` failed\n  left: [\"ctx.txt-1- L1\", \"ctx.txt:2: L2 MATCH\", \"ctx.txt-3- L3 MATCH\", \"ctx.txt-4- L4\"]\n right: [\"ctx.txt-1- L1\", \"ctx.txt:2: L2 MATCH\", \"ctx.txt-3- L3 MATCH\", \"ctx.txt-4- L4\", \"ctx.txt-1- L1\", \"ctx.txt-2- L2 MATCH\", \"ctx.txt:3: L3 MATCH\", \"ctx.txt-4- L4\", \"ctx.txt-5- L5\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "find-abort-result-lost",
+      "witness": "real_factories_reproduce_the_fourteen_pi_abort_partition_cells",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::real_factories_reproduce_the_fourteen_pi_abort_partition_cells' (41380) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:197:13:\nassertion `left == right` failed: find spawn: Ok(AgentToolResult { content: [Text(ResultTextBlock { kind: Text, text: ResultString { units: JsString([97, 46, 116, 115]), scalar: Some(\"a.ts\") }, text_signature: None })], details: Object({}), usage: None, added_tool_names: None, terminate: None })\n  left: false\n right: true\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "grep-abort-result-lost",
+      "witness": "real_factories_reproduce_the_fourteen_pi_abort_partition_cells",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::real_factories_reproduce_the_fourteen_pi_abort_partition_cells' (51848) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:197:13:\nassertion `left == right` failed: grep stdout_data: Ok(AgentToolResult { content: [Text(ResultTextBlock { kind: Text, text: ResultString { units: JsString([97, 46, 116, 115, 58, 49, 58, 32, 120]), scalar: Some(\"a.ts:1: x\") }, text_signature: None })], details: Object({}), usage: None, added_tool_names: None, terminate: None })\n  left: false\n right: true\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "logical-path-projected-too-early",
+      "witness": "logical_surrogate_root_is_not_its_native_replacement",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_paths::tests::logical_surrogate_root_is_not_its_native_replacement' (23096) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_paths.rs:211:9:\nassertion `left == right` failed\n  left: \"child/a.ts\"\n right: \"../�/child/a.ts\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "following-windows-git-probe",
+      "witness": "canonical:builtin-search-find-junction-dangling-git-junction",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-find-junction-dangling-git-junction\"\n\nthread 'canonical_search_real_engines_and_layer_six' (21916) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:166:32:\nassertion `left == right` failed\n  left: {\"No files found matching pattern\": 1}\n right: {\"same.ts\": 1}\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "fixed-name-staging",
+      "witness": "staging_cannot_publish_a_partial_binary_at_the_fixed_name",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_engines::tests::staging_cannot_publish_a_partial_binary_at_the_fixed_name' (15088) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_engines.rs:276:9:\nassertion failed: !store.root.join(SearchEngine::Fd.executable()).exists()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "rg-no-require-git",
+      "witness": "grep_counts_uncollected_matches_without_reordering",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::grep_counts_uncollected_matches_without_reordering' (44884) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:105:13:\nassertion failed: !argv.contains(&\"--no-require-git\".into())\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "literal-flag-omitted",
+      "witness": "canonical:builtin-search-grep-repo-literal-dot",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-repo-literal-dot\"\n\nthread 'canonical_search_real_engines_and_layer_six' (49656) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:221:25:\nassertion `left == right` failed\n  left: [\"src/a.ts:3: foo bar\", \"src/a.ts:4: foo.bar\"]\n right: [\"src/a.ts:4: foo.bar\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "ignore-case-omitted",
+      "witness": "canonical:builtin-search-grep-repo-ignore-case",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-repo-ignore-case\"\n\nthread 'canonical_search_real_engines_and_layer_six' (56256) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:212:26:\nunexpected file\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "grep-hidden-omitted",
+      "witness": "canonical:builtin-search-grep-repo-hidden",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-repo-hidden\"\n\nthread 'canonical_search_real_engines_and_layer_six' (52060) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:212:26:\nunexpected file\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "cr-not-readline-delimiter",
+      "witness": "readline_handles_cr_and_utf8_chunks_without_stripping_bom",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::readline_handles_cr_and_utf8_chunks_without_stripping_bom' (59348) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:389:9:\nassertion `left == right` failed\n  left: []\n right: [\"\\u{feff}A\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "brace-alt-start-not-recursive",
+      "witness": "separators_classes_and_alternation_context",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_glob::tests::separators_classes_and_alternation_context' (57996) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_glob.rs:150:9:\nassertion `left != right` failed\n  left: \"**[/\\\\\\\\]x,{**[/\\\\\\\\]b}\"\n right: \"**[/\\\\\\\\]x,{**[/\\\\\\\\]b}\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "integer-find-limit",
+      "witness": "canonical:builtin-search-find-repo-limit-fraction",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-find-repo-limit-fraction\"\n\nthread 'canonical_search_real_engines_and_layer_six' (57692) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:152:5:\nassertion `left == right` failed\n  left: false\n right: true\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "integer-grep-limit",
+      "witness": "canonical:builtin-search-grep-repo-limit-fraction",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-repo-limit-fraction\"\n\nthread 'canonical_search_real_engines_and_layer_six' (17764) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:227:21:\nassertion `left == right` failed\n  left: 2\n right: 3\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "integer-context",
+      "witness": "canonical:builtin-search-grep-repo-context-fraction",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-repo-context-fraction\"\n\nthread 'canonical_search_real_engines_and_layer_six' (3548) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:221:25:\nassertion `left == right` failed\n  left: [\"ctx.txt-1- L1\", \"ctx.txt:2: L2 MATCH\", \"ctx.txt-3- L3 MATCH\", \"ctx.txt-2- L2 MATCH\", \"ctx.txt:3: L3 MATCH\", \"ctx.txt-4- L4\"]\n right: [\"ctx.txt-1- L1\", \"ctx.txt:2: L2 MATCH\", \"ctx.txt-3- L3 MATCH\", \"ctx.txt-1.5- \", \"ctx.txt-2.5- \", \"ctx.txt-3.5- \", \"ctx.txt-4.5- \"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "context-bom-dropped",
+      "witness": "canonical:builtin-search-grep-plain-bom-context",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "search case \"builtin-search-grep-plain-bom-context\"\n\nthread 'canonical_search_real_engines_and_layer_six' (3440) panicked at crates\\minion-agent\\tests\\builtin_search_conformance.rs:221:25:\nassertion `left == right` failed\n  left: [\"bom.txt-1- first match\", \"bom.txt:2: second\", \"bom.txt-3- \"]\n right: [\"bom.txt-1- \\u{feff}first match\", \"bom.txt:2: second\", \"bom.txt-3- \"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "fd-no-require-git-omitted",
+      "witness": "find_stream_order_duplicates_and_untrimmed_empty_decision",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision' (51652) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:312:5:\nassertion failed: spawn.argv.lock().await[0].contains(&\"--no-require-git\".into())\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "abort-not-observed",
+      "witness": "every_exit_and_eof_abort_is_inside_the_window_but_close_is_outside",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::every_exit_and_eof_abort_is_inside_the_window_but_close_is_outside' (11500) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:340:17:\nassertion `left == right` failed: find spawn\n  left: false\n right: true\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "grep-preexisting-abort-observed",
+      "witness": "every_exit_and_eof_abort_is_inside_the_window_but_close_is_outside",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::every_exit_and_eof_abort_is_inside_the_window_but_close_is_outside' (51380) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:340:17:\nassertion `left == right` failed: grep spawn\n  left: true\n right: false\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "exit-only-completion",
+      "witness": "completion_requires_exit_and_both_eofs",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::completion_requires_exit_and_both_eofs' (55644) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:315:9:\nassertion `left == right` failed\n  left: []\n right: [\"a.ts\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "stop-ack-before-completion",
+      "witness": "held_limit_stop_acknowledgement_does_not_extend_completion",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::held_limit_stop_acknowledgement_does_not_extend_completion' (53660) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:374:14:\ncalled `Result::unwrap()` on an `Err` value: Elapsed(())\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "per-chunk-decoder",
+      "witness": "readline_handles_cr_and_utf8_chunks_without_stripping_bom",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::readline_handles_cr_and_utf8_chunks_without_stripping_bom' (52016) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:391:9:\nassertion `left == right` failed\n  left: [\"��\", \"B\", \"C\"]\n right: [\"😀\", \"B\", \"C\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "strip-bom",
+      "witness": "readline_handles_cr_and_utf8_chunks_without_stripping_bom",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_run::tests::readline_handles_cr_and_utf8_chunks_without_stripping_bom' (57432) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_run.rs:389:9:\nassertion `left == right` failed\n  left: [\"A\"]\n right: [\"\\u{feff}A\"]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "utf16-cut-off-by-one",
+      "witness": "surrogate_cut_and_empty_body_do_not_lossily_serialize",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_text::tests::surrogate_cut_and_empty_body_do_not_lossily_serialize' (57332) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_text.rs:94:9:\nassertion `left == right` failed\n  left: 516\n right: 515\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "lossy-result",
+      "witness": "surrogate_cut_and_empty_body_do_not_lossily_serialize",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_text::tests::surrogate_cut_and_empty_body_do_not_lossily_serialize' (54748) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_text.rs:99:17:\nassertion `left == right` failed\n  left: 65533\n right: 55357\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "case-sensitive-windows-relative",
+      "witness": "windows_relative_is_case_insensitive_not_prefix_matching",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching' (21916) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_paths.rs:243:9:\nassertion `left == right` failed\n  left: \"c:\\\\rOOT\\\\A.ts\"\n right: \"A.ts\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "host-unicode-lowercase",
+      "witness": "node_unicode16_lowercase_is_not_host_unicode17",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17' (10912) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_node_lower.rs:69:9:\nassertion `left == right` failed\n  left: [42959, 42963, 55323, 57019, 959, 962, 32, 959, 963, 945, 32, 959, 962, 769, 32, 105, 775]\n right: [42958, 42962, 55323, 56992, 959, 962, 32, 959, 963, 945, 32, 959, 962, 769, 32, 105, 775]\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "sort-find-output",
+      "witness": "find_stream_order_duplicates_and_untrimmed_empty_decision",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision' (30624) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:304:5:\nassertion `left == right` failed\n  left: \"a.ts\\na.ts\\nz.ts\\n\\n[3 results limit reached. Use limit=6 for more, or refine pattern]\"\n right: \"z.ts\\na.ts\\na.ts\\n\\n[3 results limit reached. Use limit=6 for more, or refine pattern]\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "deduplicate-find-output",
+      "witness": "find_stream_order_duplicates_and_untrimmed_empty_decision",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision' (36312) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:304:5:\nassertion `left == right` failed\n  left: \"z.ts\\na.ts\"\n right: \"z.ts\\na.ts\\na.ts\\n\\n[3 results limit reached. Use limit=6 for more, or refine pattern]\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "trim-before-empty-decision",
+      "witness": "find_stream_order_duplicates_and_untrimmed_empty_decision",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision' (9192) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:317:5:\nwhitespace-only nonempty stdout must be success, not status error: Err(ToolCapabilityError { message: ResultString { units: JsString([102, 100, 32, 101, 120, 105, 116, 101, 100, 32, 119, 105, 116, 104, 32, 99, 111, 100, 101, 32, 50]), scalar: Some(\"fd exited with code 2\") } })\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "omit-find-trim",
+      "witness": "find_stream_order_duplicates_and_untrimmed_empty_decision",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision' (35820) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:304:5:\nassertion `left == right` failed\n  left: \"z.ts\\na.ts \\na.ts\\n\\n[3 results limit reached. Use limit=6 for more, or refine pattern]\"\n right: \"z.ts\\na.ts\\na.ts\\n\\n[3 results limit reached. Use limit=6 for more, or refine pattern]\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "rerun-not-reverified",
+      "witness": "diagnostic_rerun_is_verified_again_and_preserves_pi_text",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::diagnostic_rerun_is_verified_again_and_preserves_pi_text' (28820) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:277:9:\nassertion `left == right` failed\n  left: 1\n right: 2\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "diagnostic-is-generated-pattern",
+      "witness": "diagnostic_rerun_is_verified_again_and_preserves_pi_text",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::diagnostic_rerun_is_verified_again_and_preserves_pi_text' (10576) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:281:13:\nassertion `left == right` failed\n  left: \"**[/\\\\\\\\]src{[/\\\\\\\\],[/\\\\\\\\]**[/\\\\\\\\]}[\"\n right: \"**[/\\\\\\\\]src[/\\\\\\\\]**[/\\\\\\\\][\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "count-only-collected-matches",
+      "witness": "grep_counts_uncollected_matches_without_reordering",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::grep_counts_uncollected_matches_without_reordering' (36128) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:330:5:\nassertion `left == right` failed\n  left: \"b.ts:2: second\\na.ts:1: first\\n\\n[2 matches limit reached. Use limit=4 for more, or refine pattern]\"\n right: \"b.ts:2: second\\n\\n[2 matches limit reached. Use limit=4 for more, or refine pattern]\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "collected-output-sorted",
+      "witness": "grep_counts_uncollected_matches_without_reordering",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::grep_counts_uncollected_matches_without_reordering' (2612) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:338:5:\nassertion `left == right` failed\n  left: \"a.ts:1: first\\nb.ts:2: second\"\n right: \"b.ts:2: second\\na.ts:1: first\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "store-existence-is-verification",
+      "witness": "managed_store_verifies_every_use_and_provisioning_is_idempotent",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::managed_store_verifies_every_use_and_provisioning_is_idempotent' (18712) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:377:9:\nassertion failed: store.resolve(engine, &ExecutionWorldIdentity::local()).await.is_err()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "artifact-not-verified",
+      "witness": "managed_store_verifies_every_use_and_provisioning_is_idempotent",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::managed_store_verifies_every_use_and_provisioning_is_idempotent' (57420) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:401:5:\nassertion `left == right` failed\n  left: \"search engine binary failed verification\"\n right: \"search engine artifact failed verification\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "missing-store-fallback",
+      "witness": "managed_store_verifies_every_use_and_provisioning_is_idempotent",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_tests::managed_store_verifies_every_use_and_provisioning_is_idempotent' (51356) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_tests.rs:354:5:\nassertion failed: store.resolve(SearchEngine::Fd,\n            &ExecutionWorldIdentity::local()).await.is_err()\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    },
+    {
+      "control": "recursive-composition-removed",
+      "witness": "separators_classes_and_alternation_context",
+      "expected": "intended semantic assertion fails (not compilation/setup)",
+      "killed": true,
+      "diagnostic": "thread 'tools::builtin::search_glob::tests::separators_classes_and_alternation_context' (39680) panicked at crates\\minion-agent\\src\\tools\\builtin\\search_glob.rs:150:9:\nassertion `left != right` failed\n  left: \"**[/\\\\\\\\]x,{**[/\\\\\\\\]b}\"\n right: \"**[/\\\\\\\\]x,{**[/\\\\\\\\]b}\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    }
+  ],
+  "implementation_commit": "9ccae76ccaee833541508e61e66f7b6c263af8dc",
+  "resolved_setup_failure": {
+    "command": "cargo test --workspace --all-features",
+    "error": "Doctest linking: LNK1181 cannot open icudt.lib",
+    "repair": "RUSTDOCFLAGS=-D warnings -L native=<pinned ICU lib64>; all four workspace/all-feature doctests rerun successfully",
+    "unit_and_integration_passed": 589,
+    "doctests_passed": 4
+  }
+}
