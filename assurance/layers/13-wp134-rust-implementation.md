@@ -324,3 +324,97 @@ been changed, and this candidate is offered for **R001 targeted closure only**.
 R005 alignment must follow its own approved contract; full certification remains
 blocked by the remaining findings. No Python, shared contract, canonical data,
 engine pin or Rust manifest semantics were changed in this remediation.
+
+## WP134-CON-R005 alignment (2026-10-08)
+
+Shared-owner docs PR #250 was independently APPROVED at
+`ed8216bc41059eb9a7146f687b99ae34542b64fd` and merged into master
+`801d6eed2aec7742c038704d7e7e8c99eb9d415c`. The earlier R001 handoff's
+pending status above is historical, not the current R005 disposition.
+This branch merges the accepted master without modifying its contract.
+
+Rust alignment source: `75e7408603194e41d6b43d13e79eb0f96b6e702c`.
+`SearchEngineStore::resolve` rejects a non-local world before platform pin
+selection or any binary verification/read. It renders the exact unavailable-
+platform template with the world's identity and literal suffix. Local platform,
+provisioning, hash verification and explicitly uncertified overrides are unchanged.
+The only execution-world plumbing is a crate-private borrowed identity accessor;
+opaque public Debug output and world compatibility remain unchanged.
+
+The permanent `non_local_world_has_exact_text_without_store_consultation` test
+checks fd and rg separately for exact text and zero verification calls. A
+test-only per-store counter observes the real verification entry; a local lookup
+then increments it, preventing a vacuous zero-count assertion. There is no
+production counter, callback or alternate resolver authority.
+
+Known-bad replay substitutes the exact rejected `ce89793f` production resolver
+implementation into a disposable source copy, retaining the witness and its
+test-only instrumentation. It must reach the intended exact-text assertion and
+report the old `is not provisioned` result; compilation/setup failure is rejected.
+Two permanent controls independently replace the non-local template with
+provisioning wording and introduce a store verification/read before rejection.
+Each must fail this named witness for its intended assertion. The existing
+call-time provisioning control's anchor is updated to the unchanged local
+verification branch; its semantic mutation and killing witness are unchanged.
+
+R001's listener/retry implementation, DIV-002, comparison modes, canonical
+corpus and pinned engine artifacts are untouched. R001's independent review
+continues at the earlier detached pair, not implicitly at this successor.
+The first text control was too broad: its source replacement also changed the
+witness's expected literal, and it survived. No kill was credited. A control-only
+commit `e52fe98a7e627b75cd196149e994f6881978df2a` restricts that replacement to
+the production return expression. All Rust crate sources and Cargo.lock are
+byte-identical to `75e74086`; the full control batch was rerun, not just the
+new control. Author alignment is not independent closure.
+
+Linux positive gates: **597 passed, 0 failed, 1 root-only ignored**, plus the
+ignored recursive-remove permission witness independently **1 passed** as UID
+65534. Formatting, strict clippy, warning-strict rustdoc and canonical verification
+passed with the same pinned ICU/Node/container recipe above. All **49 applicable
+controls** were killed, **4 Windows-only N/A**. The exact `ce89793f` resolver
+substituted into a disposable copy failed the intended message assertion with
+`is not provisioned` instead of the certified non-local text. The candidate
+itself was not modified by controls or the known-bad replay. Fresh shared
+manifest/schema validation: **661 passed**. Full named control diagnostics are
+in `data/13-wp134-rust/r005-gates-linux.json`.
+
+Windows clean G3 gates passed: **598 passed, 0 failed, 0 ignored**; formatting,
+strict clippy, warning-strict rustdoc and canonical verification passed. All
+**52 applicable controls** were killed, **1 Linux-only N/A**. The exact old
+`ce89793f` resolver failed the intended exact-text assertion on Windows too.
+See `data/13-wp134-rust/r005-gates-win32.json` for every named control and actual
+diagnostic. All evidence is at `e52fe98a7e627b75cd196149e994f6881978df2a` (the
+Linux positive crate sources are byte-identical as disclosed above).
+
+Initial
+attempts shared `.tmp/claude-rust-target` with the parallel detached review:
+two links failed with LNK1104 while that review ran the same executables, and
+another search-conformance run observed the exact `context-bom-dropped` mutant
+behavior despite unchanged candidate grep source. These are not credited as
+positive evidence or treated as a product fix. Verification was moved to a
+dedicated E: `.tmp/wp134-r005-target`, with only copied dependency caches and
+freshly built test executables. The first isolated run repeated the BOM control
+because the cache seed had also imported Minion's own library/fingerprints.
+`cargo clean -p minion-agent` in the task-only target removed 20.8 GiB of
+reproducible outputs; rebuilding the unchanged source then passed the exact
+BOM case. Thus no product BOM change was made. All positive gates and the
+full controls are rerun from that clean package build. No reviewer processes
+or files were modified, and no source/history was deleted. None of the
+contaminated runs is credited as passing evidence.
+
+For reproducibility, use the Windows environment recorded above, but set
+`CARGO_TARGET_DIR=E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/wp134-r005-target`.
+Use an exclusive target, and clean Minion's own package before a positive run
+if that cache has seen mutation tests; imported crate fingerprints can otherwise
+reuse an earlier mutant. Commands are the full fmt/clippy/test/doc/xtask gates,
+then `python scripts/search-negative-controls.py` (all 53 entries). The known-bad
+check keeps the new test-only counter and substitutes only the old production
+`impl SearchEngines for SearchEngineStore`, not a proxy of its behavior.
+The unchanged adapter passes 218 applicable search documents per host, 219
+jointly. Existing manifest Rust pointers already identify this source/test file,
+control script and assurance record; no manifest rule/disposition update is needed.
+
+This candidate is ready for independent **R005 targeted closure**. R001 is already
+closed by Claude at the earlier detached pair according to issue #51; its
+implementation is unchanged here. Author does not self-close R005, certify or
+merge WP-13.4. No Python or unapproved shared semantics were changed.
