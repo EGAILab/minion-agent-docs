@@ -894,7 +894,7 @@ other      null, true, false, arrays, objects; top-level details may be any of t
 
 ### Per-call tool execution context (`TOOL-042`, cross-layer delta `L0506-D004`)
 
-**Status (`minion-agent#131`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#131`):** CERTIFIED_CLOSED (cross-language). Contract and Python record: docs #233 → `20776f0f`. Python: #137 → `0e2a04ca`. Rust: #139 → `5d8ddb06`, record docs #234 → `7ed78270`. Reviews: Python final `minion-agent-docs#233` issuecomment-5970150389; Rust closure `minion-agent-docs#234` issuecomment-5970678438.
 
 - **Authorization:** Owner decision `WP133-F3` = A (`minion-agent#50` comment `5951046523`, §§14–29). The routine lifecycle is delegated under `minion-agent#75`.
 - **Additivity:** this is an additive Layer 05/06 seam. Every existing tool, every certified `execute` dispatch row (`wants_signal` × arity, above) and every hook contract is unchanged.
