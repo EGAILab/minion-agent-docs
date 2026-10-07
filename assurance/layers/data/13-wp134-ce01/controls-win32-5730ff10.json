@@ -1,0 +1,591 @@
+{
+ "os": "win32",
+ "results": [
+  {
+   "name": "sort_find_results",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_reproduces_an_unsorted_engine_stream"
+   ],
+   "expected": "witness 6: z.ts then a.ts comes back as a.ts then z.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_reproduces_an_unsorted_engine_stream": "AssertionError: assert ('a.ts\\nz.ts', {}) == ('z.ts\\na.ts', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_find_reproduces_an_unsorted_engine_stream - AssertionError: assert ('a.ts\\nz.ts', {}) == ('z.ts\\na.ts', {})"
+  },
+  {
+   "name": "sort_grep_results",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_reproduces_an_unsorted_engine_stream"
+   ],
+   "expected": "witness 6: the engine's z.ts/a.ts/z.ts stream is reordered",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_reproduces_an_unsorted_engine_stream": "AssertionError: assert ('a.ts:1: x\\n....ts:2: x', {}) == ('z.ts:2: x\\n....ts:1: x', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_grep_reproduces_an_unsorted_engine_stream - AssertionError: assert ('a.ts:1: x\\n....ts:2: x', {}) == ('z.ts:2: x\\n....ts:1: x', {})"
+  },
+  {
+   "name": "dedupe_find_entries",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_keeps_entries_that_format_identically",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-duplicate-trailing-space-duplicate]"
+   ],
+   "expected": "witness 7: `same.ts` and `same.ts ` give one entry instead of two",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_keeps_entries_that_format_identically": "AssertionError: assert ('src/same.ts', {}) == ('src/same.ts.../same.ts', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_find_keeps_entries_that_format_identically - AssertionError: assert ('src/same.ts', {}) == ('src/same.ts.../same.ts', {})"
+  },
+  {
+   "name": "following_git_probe_on_windows",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-junction-dangling-git-junction]"
+   ],
+   "expected": "witness 7: a dangling .git junction reads as absent, so --no-require-git applies the parent .gitignore",
+   "observed": {
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-junction-dangling-git-junction]": "AssertionError: assert ['No files fo...hing pattern'] == ['same.ts']"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-junction-dangling-git-junction] - AssertionError: assert ['No files fo...hing pattern'] == ['same.ts']"
+  },
+  {
+   "name": "no_require_git_passed_to_rg",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_argument_vectors"
+   ],
+   "expected": "witness 4: rg's argv gains --no-require-git",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_argument_vectors": "AssertionError: assert ['--json', '-...t', '--', ...] == ['--json', '-...', 'foo', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-gitignored]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-glob-negated]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-glob-ts]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-nested-keep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-regex-foo]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-nested-keep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-regex-foo]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-regex-foo] - AssertionError: missing files"
+  },
+  {
+   "name": "no_require_git_omitted_for_fd",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors"
+   ],
+   "expected": "witness 4: fd's argv outside a repository lacks --no-require-git",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors": "AssertionError: assert ['--glob', '-...0', '--', ...] == ['--glob', '-..., '1000', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-dot-path]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-double-star]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-keep-boundary]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-limit-2]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-limit-zero]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-log-ignored]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-question-mark]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-ts-basename]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-ts-basename] - AssertionError: assert [' lead.ts', ...keep.ts', ...] == [' lead.ts', ...dden.ts', ...]"
+  },
+  {
+   "name": "merge_context_windows",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-overlap]"
+   ],
+   "expected": "overlapping windows print each line once instead of once per match",
+   "observed": {
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-overlap]": "AssertionError: ctx.txt: block differs"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-clamp]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-clamp]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-overlap]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-overlap] - AssertionError: ctx.txt: block differs"
+  },
+  {
+   "name": "integer_find_limit",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors"
+   ],
+   "expected": "witness 5: limit 2.5 reaches fd as --max-results 2",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_argument_vectors": "AssertionError: assert ['--glob', '-...ts', '2', ...] == ['--glob', '-...', '2.5', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-limit-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-limit-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-limit-fraction] - assert False == True"
+  },
+  {
+   "name": "integer_grep_limit",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_limits_and_kill_for_limit"
+   ],
+   "expected": "witness 5: limit 2.5 stops at 2 matches with a `2 matches` notice",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_limits_and_kill_for_limit": "AssertionError: a.ts:1: x"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-limit-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-limit-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-limit-fraction] - AssertionError: assert '[2 matches l...fine pattern]' == '[2.5 matches...fine pattern]'"
+  },
+  {
+   "name": "integer_grep_context",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction"
+   ],
+   "expected": "witness 5: context 0.5 prints the matched line instead of the fractional 1.5/2.5 window",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction": "AssertionError: assert 'c.txt:2: x' == 'c.txt-1.5- \\nc.txt-2.5- '"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-context-fraction]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-fraction]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-context-fraction] - AssertionError: ctx.txt: block differs"
+  },
+  {
+   "name": "drop_uncollected_match_count",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_counts_uncollected_matches_and_skips_noise"
+   ],
+   "expected": "a match without path text gives `No matches found` instead of an empty result",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_counts_uncollected_matches_and_skips_noise": "AssertionError: assert ('No matches found', {}) == ('', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_grep_counts_uncollected_matches_and_skips_noise - AssertionError: assert ('No matches found', {}) == ('', {})"
+  },
+  {
+   "name": "strip_bom_in_context",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction"
+   ],
+   "expected": "the first context line loses its U+FEFF",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_context_reconstruction": "AssertionError: assert 'c.txt-1- L1\\...\\nc.txt-3- L3' == 'c.txt-1- \\uf...\\nc.txt-3- L3'"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-plain-bom-context]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-bom-context]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-grep-repo-bom-context] - AssertionError: bom.txt: block differs"
+  },
+  {
+   "name": "cr_not_a_line_break",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_readline_splitting"
+   ],
+   "expected": "a lone CR no longer ends a line",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_readline_splitting": "AssertionError: assert [] == ['a']"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_readline_splitting - AssertionError: assert [] == ['a']"
+  },
+  {
+   "name": "truncate_line_in_code_points",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_line_truncation_and_notices"
+   ],
+   "expected": "witness 5: the cut keeps the whole emoji instead of splitting its surrogate pair at unit 500",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_line_truncation_and_notices": "AssertionError: assert 'a.ts:1: aaaa...e full lines]' == 'a.ts:1: aaaa...e full lines]'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_grep_line_truncation_and_notices - AssertionError: assert 'a.ts:1: aaaa...e full lines]' == 'a.ts:1: aaaa...e full lines]'"
+  },
+  {
+   "name": "trim_before_empty_test",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_find_tests_emptiness_before_trimming"
+   ],
+   "expected": "whitespace-only output with exit 1 becomes the stderr error",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_find_tests_emptiness_before_trimming": "AssertionError: assert ('ERR warn', {}) == ('', {})"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_find_tests_emptiness_before_trimming - AssertionError: assert ('ERR warn', {}) == ('', {})"
+  },
+  {
+   "name": "path_fallback",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path"
+   ],
+   "expected": "DIV-003: the planted PATH executable runs instead of the not-provisioned error",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path": "AssertionError: ERR Failed to run fd: [WinError 216] This version of %1 is not compatible with the version of Windows you're running. Check your computer's system information and then contact the software publisher"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path - AssertionError: ERR Failed to run fd: [WinError 216] This version of %1 is not compatible with the version of Windows you're running. Check your computer's system information and then contact the software publisher"
+  },
+  {
+   "name": "download_from_tool_call",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path"
+   ],
+   "expected": "DIV-003: DownloadAttemptedError -- the tool call fetched an artifact",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path": "tests.tools.builtin.test_search.DownloadAttemptedError: https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-pc-windows-msvc.zip"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_a_tool_call_never_downloads_or_uses_path - tests.tools.builtin.test_search.DownloadAttemptedError: https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-pc-windows-msvc.zip"
+  },
+  {
+   "name": "trust_existing_file",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts"
+   ],
+   "expected": "DIV-003: a file at the fixed name that fails its SHA-256 is used",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_unprovisioned_store_texts": "Failed: DID NOT RAISE BuiltinToolError"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_unprovisioned_store_texts - Failed: DID NOT RAISE BuiltinToolError"
+  },
+  {
+   "name": "non_atomic_install",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_the_fixed_name_appears_only_by_the_atomic_rename"
+   ],
+   "expected": "DIV-003: the fixed name exists (partly written) before the rename",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_the_fixed_name_appears_only_by_the_atomic_rename": "AssertionError: <BASETEMP>\\test_the_fixed_name_appears_on0\\store\\fd existed before the atomic rename"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_the_fixed_name_appears_only_by_the_atomic_rename - AssertionError: <BASETEMP>\\test_the_fixed_name_appears_on0\\store\\fd existed before the atomic rename"
+  },
+  {
+   "name": "case_sensitive_windows_relativize",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_relativize_and_node_paths"
+   ],
+   "expected": "`c:\\R\\a\\` under `C:\\r` relativizes through `..` instead of to `a/`",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_relativize_and_node_paths": "AssertionError: assert '../../c:/R/a/' == 'a/'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_relativize_and_node_paths - AssertionError: assert '../../c:/R/a/' == 'a/'"
+  },
+  {
+   "name": "find_decides_after_release",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-find]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-find]"
+   ],
+   "expected": "R001: an abort during the stream release, after engine completion, gives `Operation aborted` instead of a.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-find]": "AssertionError: find abort at stdout_close",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-find]": "AssertionError: find abort at stderr_close"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-find] - AssertionError: find abort at stderr_close"
+  },
+  {
+   "name": "grep_decides_after_release",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-grep]"
+   ],
+   "expected": "R001: an abort during the stream release, after engine completion, gives `Operation aborted` instead of the match",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_close-grep]": "AssertionError: grep abort at stdout_close",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-grep]": "AssertionError: grep abort at stderr_close"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_close-grep] - AssertionError: grep abort at stderr_close"
+  },
+  {
+   "name": "grep_latch_lost_at_completion",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_grep_keeps_an_abort_that_lands_just_before_completion",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_data-grep]"
+   ],
+   "expected": "R001: an abort inside the window, unseen by the polling watcher, gives the match",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_grep_keeps_an_abort_that_lands_just_before_completion": "AssertionError: assert ('a.ts:1: x', {}) == ('ERR Operation aborted', {})",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_data-grep]": "AssertionError: grep abort at stdout_data"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stderr_eof-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[stdout_eof-grep]",
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[wait-grep]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_abort_window_partition[wait-grep] - AssertionError: grep abort at wait"
+  },
+  {
+   "name": "grep_observes_pre_registration_abort",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[spawn-grep]",
+    "tests/tools/builtin/test_search.py::test_grep_ignores_an_abort_before_its_listener_registration"
+   ],
+   "expected": "R001: an abort before grep's listener exists aborts the call",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_abort_window_partition[spawn-grep]": "AssertionError: grep abort at spawn",
+    "tests/tools/builtin/test_search.py::test_grep_ignores_an_abort_before_its_listener_registration": "AssertionError: assert ('ERR Operation aborted', {}) == ('a.ts:1: x', {})"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_grep_does_not_observe_an_abort_before_spawn"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/tools/builtin/test_search.py::test_abort_window_partition[spawn-grep] - AssertionError: grep abort at spawn"
+  },
+  {
+   "name": "zero_directory_left_broken",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-spec]"
+   ],
+   "expected": "DIV-002: Pi's Windows text; `src/**/a*.ts` misses src/a.ts and src/a/sub/b.ts",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]src...\\\\\\]*.spec.ts' == '**[/\\\\\\\\]src...\\\\]}*.spec.ts'",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]": "AssertionError: assert ['src/sub/a.ts'] == ['src/a.ts', ...src/sub/a.ts']",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-spec]": "AssertionError: assert ['src/sub/d.s...er/e.spec.ts'] == ['src/b.spec....er/e.spec.ts']"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-adjacent-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-adjacent]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-nested]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-second]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-alternative-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-before-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-comma-then-brace-alt-start]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-doublestar-in-brace-after]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-class-then-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-after-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-alt-start]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-in-brace]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-three-star-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-deep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-two-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-deep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-spec]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-two-doublestar]",
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-two-doublestar] - AssertionError: assert ['No files fo...hing pattern'] == ['src/sub/deep/er/e.spec.ts']"
+  },
+  {
+   "name": "whole_pattern_linux_conversion",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]"
+   ],
+   "expected": "C001: Linux semantics for the whole pattern drops src/a/sub/b.ts (the retained single-* crossing)",
+   "observed": {
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]": "AssertionError: assert ['src/a.ts', 'src/sub/a.ts'] == ['src/a.ts', ...src/sub/a.ts']"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-adjacent]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-after-literal]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-nested]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-second]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-alternative-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-before-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-scope-no-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-class-reshaped-negated]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-comma-then-brace-alt-start]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-doublestar-in-brace-after]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-class-then-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-after-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-alt-start]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-in-brace]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-star-sub]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-star]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-path-sub-fullpath]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-recursive-json]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-star-sub]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-star]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-path-sub-fullpath]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-recursive-json]",
+    "tests/tools/builtin/test_search.py::test_no_rerun_when_the_corrected_pattern_succeeds_or_is_pis"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-recursive-json] - AssertionError: assert ['data/x.json'] == ['data/x.json', 'data/y.JSON']"
+  },
+  {
+   "name": "alt_start_not_recursive",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-doublestar]"
+   ],
+   "expected": "R002: `src/{**/b.spec.ts,none}` misses src/b.spec.ts on Windows",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]x[/...**[/\\\\\\\\]b,c}' == '**[/\\\\\\\\]x[/...[/\\\\\\\\]b,b,c}'",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-doublestar]": "AssertionError: assert ['No files fo...hing pattern'] == ['src/b.spec.ts']"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-adjacent]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-nested]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-second]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-comma-then-brace-alt-start]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-alt-start]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-alt-start] - AssertionError: assert ['src/sub/a.ts'] == ['src/a.ts', ...src/sub/a.ts']"
+  },
+  {
+   "name": "adjacent_components_not_collapsed",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-adjacent-doublestar]"
+   ],
+   "expected": "R002: `src/**/**/*.spec.ts` loses a branch on Windows",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]x[/...*[/\\\\\\\\]}b,c}' == '**[/\\\\\\\\]x[/...[/\\\\\\\\]b,b,c}'"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-adjacent]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-alt-start-adjacent] - AssertionError: assert ['No files fo...hing pattern'] == ['src/b.spec.ts']"
+  },
+  {
+   "name": "empty_alternative_zero_form",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-alternative-doublestar]"
+   ],
+   "expected": "R002: the empty alternative never matches, so the direct file is missed",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: assert '**[/\\\\\\\\]src...\\\\]}*.spec.ts' == '**[/\\\\\\\\]src...\\\\]}*.spec.ts'",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-alternative-doublestar]": "AssertionError: assert ['No files fo...hing pattern'] == ['src/b.spec.ts']"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-adjacent-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-brace-before-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-doublestar-in-brace-after]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-class-then-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-after-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-crossing]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-star-in-brace]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-three-star-component]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-deep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-spec]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-plain-full-path-two-doublestar]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-deep]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-spec]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-two-doublestar]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-repo-full-path-two-doublestar] - AssertionError: assert ['No files fo...hing pattern'] == ['src/sub/deep/er/e.spec.ts']"
+  },
+  {
+   "name": "lex_original_pattern",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-class-reshaped-negated]"
+   ],
+   "expected": "R002: a class Pi's rewrite reshapes (`src/[!]/**/...`) is corrected instead of keeping Pi's Windows meaning",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization": "AssertionError: **/src/[!]/**/x"
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-class-then-component]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-mixed-class-then-component] - AssertionError: assert ['src/q/r/x/s/b.ts'] == ['src/q/r/x/b...q/r/x/s/b.ts']"
+  },
+  {
+   "name": "diagnostics_from_corrected_text",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-invalid-range]"
+   ],
+   "expected": "R002 rule 5: fd's diagnostic shows the generated pattern text instead of Pi's",
+   "observed": {
+    "tests/tools/builtin/test_search.py::test_a_rejected_corrected_pattern_reports_pis_diagnostic": "AssertionError: assert ('ERR [fd err...ted text', {}) == ('ERR [fd err...[/\\\\\\\\]b', {})",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-invalid-range]": "assert \"[fd error]: ...ge; 'z' > 'a'\" == \"[fd error]: ...ge; 'z' > 'a'\""
+   },
+   "other_failures": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unclosed-brace]",
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unopened-brace]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unopened-brace] - assert \"[fd error]: ... with '[}]'?)\" == \"[fd error]: ... with '[}]'?)\""
+  },
+  {
+   "name": "literal_brace_wrapping",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unopened-brace]"
+   ],
+   "expected": "R002: an unmatched `}` made literal turns Pi's `unopened alternate group` error into a success",
+   "observed": {
+    "tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unopened-brace]": "assert False == True"
+   },
+   "other_failures": [
+    "tests/tools/builtin/test_search.py::test_windows_full_path_normalization"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_builtin_search_conformance.py::test_builtin_search_scenario[builtin-search-find-components-rejected-unopened-brace] - assert False == True"
+  }
+ ]
+}

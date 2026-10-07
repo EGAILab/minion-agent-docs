@@ -1,0 +1,614 @@
+{
+ "platform": "linux",
+ "fd": "fd 10.4.2",
+ "corpus": [
+  "src/b.spec.ts",
+  "src/sub/b.spec.ts",
+  "src/sub/deep/b.spec.ts",
+  "src/a/b.spec.ts",
+  "lib/b.spec.ts",
+  "x/b",
+  "x/q/b",
+  "x/c",
+  "x/q/c",
+  "xb",
+  "x/ab",
+  "x/bc",
+  "src/a.ts",
+  "src/sub/a.ts",
+  "src/a/sub/b.ts",
+  "src/x/b.ts",
+  "src/q/r/x/b.ts",
+  "src/q/r/x/s/b.ts",
+  "x,b",
+  "x,q/b"
+ ],
+ "rows": {
+  "src/**/b.spec.ts": {
+   "text": "**/src/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/**/b.spec.ts": {
+   "text": "**/src/**/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src/**/b.spec.ts,none}": {
+   "text": "**/{src/**/b.spec.ts,none}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src,lib}/**/b.spec.ts": {
+   "text": "**/{src,lib}/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/{deep/**/b,b}.spec.ts": {
+   "text": "**/src/**/{deep/**/b,b}.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/*/**/b.spec.ts": {
+   "text": "**/src/**/*/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/a**/**/b.spec.ts": {
+   "text": "**/src/a**/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/***/**/b.spec.ts": {
+   "text": "**/src/***/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[a-]/**/b.spec.ts": {
+   "text": "**/src/[a-]/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{a,{b}}/**/b.spec.ts": {
+   "text": "**/src/{a,{b}}/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{}/**/b.spec.ts": {
+   "text": "**/src/{}/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[/]/**/b.spec.ts": {
+   "text": "**/src/[/]/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[]]/**/b.spec.ts": {
+   "text": "**/src/[]]/**/b.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x/{**/b,c}": {
+   "text": "**/x/{**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{c,**/b}": {
+   "text": "**/x/{c,**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/b}": {
+   "text": "**/x/{**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{a,{**/b}}": {
+   "text": "**/x/{a,{**/b}}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/**/b,c}": {
+   "text": "**/x/{**/**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{q,{**/b}}/c": {
+   "text": "**/x/{q,{**/b}}/c",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{**/b,c}/**/c": {
+   "text": "**/x/{**/b,c}/**/c",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x{**/b,c}": {
+   "text": "**/x{**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   }
+  },
+  "x{**/b}": {
+   "text": "**/x{**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/a{**/b,c}": {
+   "text": "**/x/a{**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/ab"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{a,b{**/c}}": {
+   "text": "**/x/{a,b{**/c}}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/bc"
+    ],
+    "stderr": ""
+   }
+  },
+  "{**/b,c}": {
+   "text": "**/{**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "**/{**/b,c}": {
+   "text": "**/{**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "{x/**,y}/b": {
+   "text": "**/{x/**,y}/b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{q/**,nope}/b": {
+   "text": "**/x/{q/**,nope}/b",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "x/{**}/b": {
+   "text": "**/x/{**}/b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/{a**/b,c}": {
+   "text": "**/x/{a**/b,c}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**": {
+   "text": "**/src/**",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/*.spec.ts": {
+   "text": "**/src/*.spec.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/b.spec.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/**b": {
+   "text": "**/x/**b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x/b**/c": {
+   "text": "**/x/b**/c",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "src/[]/**/b.spec.ts": {
+   "text": "**/src/[]/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[]/**/b.spec.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/[!]/**/b.spec.ts": {
+   "text": "**/src/[!]/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[!]/**/b.spec.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/[/**/b.spec.ts": {
+   "text": "**/src/[/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[/**/b.spec.ts': unclosed character class; missing ']'"
+   }
+  },
+  "x\\/**/b": {
+   "text": "**/x\\/**/b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[z-a]/**/b.spec.ts": {
+   "text": "**/src/[z-a]/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[z-a]/**/b.spec.ts': invalid range; 'z' > 'a'"
+   }
+  },
+  "src/{a/**/b.spec.ts": {
+   "text": "**/src/{a/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/{a/**/b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   }
+  },
+  "src/a}/**/b.spec.ts": {
+   "text": "**/src/a}/**/b.spec.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/a}/**/b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   }
+  },
+  "src/**/a*.ts": {
+   "text": "**/src/**/a*.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "{src/**/a*.ts,none}": {
+   "text": "**/{src/**/a*.ts,none}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/x/*.ts": {
+   "text": "**/src/**/x/*.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/[!]/**/x/**/b.ts": {
+   "text": "**/src/[!]/**/x/**/b.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/[!]/**/x/**/b.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/**/[!]/b.ts": {
+   "text": "**/src/**/[!]/b.ts",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/src/**/[!]/b.ts': unclosed character class; missing ']'"
+   }
+  },
+  "src/*/**/b.ts": {
+   "text": "**/src/*/**/b.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/**/**b.ts": {
+   "text": "**/src/**/**b.ts",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "src/{**/a*.ts,none}": {
+   "text": "**/src/{**/a*.ts,none}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   }
+  },
+  "x,**/b": {
+   "text": "**/x,**/b",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x,{**/b}": {
+   "text": "**/x,{**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "x,b",
+     "x,q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x,**/b{a,b}": {
+   "text": "**/x,**/b{a,b}",
+   "linux": {
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   }
+  },
+  "{x,**/b}": {
+   "text": "**/{x,**/b}",
+   "linux": {
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   }
+  },
+  "x}/**/b": {
+   "text": "**/x}/**/b",
+   "linux": {
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**/x}/**/b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   }
+  }
+ }
+}

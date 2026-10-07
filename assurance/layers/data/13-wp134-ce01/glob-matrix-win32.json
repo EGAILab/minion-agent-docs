@@ -1,0 +1,2953 @@
+{
+ "platform": "win32",
+ "fd": "fd 10.4.2",
+ "corpus": [
+  "src/b.spec.ts",
+  "src/sub/b.spec.ts",
+  "src/sub/deep/b.spec.ts",
+  "src/a/b.spec.ts",
+  "lib/b.spec.ts",
+  "x/b",
+  "x/q/b",
+  "x/c",
+  "x/q/c",
+  "xb",
+  "x/ab",
+  "x/bc",
+  "src/a.ts",
+  "src/sub/a.ts",
+  "src/a/sub/b.ts",
+  "src/x/b.ts",
+  "src/q/r/x/b.ts",
+  "src/q/r/x/s/b.ts",
+  "x,b",
+  "x,q/b"
+ ],
+ "rows": {
+  "src/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/b.spec.ts",
+     "**/src/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/**/b.spec.ts",
+     "**/src/**/b.spec.ts",
+     "**/src/**/b.spec.ts",
+     "**/src/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 2,
+    "found": 2,
+    "agree": true
+   }
+  },
+  "{src/**/b.spec.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]{src[/\\\\]**[/\\\\]b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts,**[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src/**/b.spec.ts,none}",
+     "**/{src/b.spec.ts,none}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "{src,lib}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]{src,lib}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src,lib}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src,lib}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts,**[/\\\\]lib[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]lib[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src,lib}/**/b.spec.ts",
+     "**/{src,lib}/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "lib/b.spec.ts",
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/{deep/**/b,b}.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]{deep[/\\\\]**[/\\\\]b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}{deep{[/\\\\],[/\\\\]**[/\\\\]}b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}{deep{[/\\\\],[/\\\\]**[/\\\\]}b,b}.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]deep[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/{deep/**/b,b}.spec.ts",
+     "**/src/{deep/**/b,b}.spec.ts",
+     "**/src/**/{deep/b,b}.spec.ts",
+     "**/src/{deep/b,b}.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 2,
+    "found": 2,
+    "agree": true
+   }
+  },
+  "src/**/*/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}*{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}*{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]**[/\\\\]*[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]*[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/*/**/b.spec.ts",
+     "**/src/*/**/b.spec.ts",
+     "**/src/**/*/b.spec.ts",
+     "**/src/*/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 2,
+    "found": 2,
+    "agree": true
+   }
+  },
+  "src/a**/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]a**[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]a**{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]a**{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]a**[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a**[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/a**/**/b.spec.ts",
+     "**/src/a**/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/***/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]***[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]***{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]***{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]***[/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]***[/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/***/**/b.spec.ts",
+     "**/src/***/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/[a-]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][a-][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][a-]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][a-]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][a-][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][a-][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[a-]/**/b.spec.ts",
+     "**/src/[a-]/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/{a,{b}}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]{a,{b}}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{a,{b}}/**/b.spec.ts",
+     "**/src/{a,{b}}/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/{}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{}/**/b.spec.ts",
+     "**/src/{}/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/[/]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][[/\\\\]][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[/]/**/b.spec.ts",
+     "**/src/[/]/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/[]]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][]][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][]]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][]][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][]][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[]]/**/b.spec.ts",
+     "**/src/[]]/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]x[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b,c}",
+     "**/x/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{c,**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{c,**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]c,**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{c,**/b}",
+     "**/x/{c,b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b}",
+     "**/x/{b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{a,{**/b}}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b,b}}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a,{**[/\\\\]b}}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a,{**/b}}",
+     "**/x/{a,{b}}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{**/**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**{[/\\\\],[/\\\\]**[/\\\\]}b,c}",
+    "exit": 0,
+    "results": [
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]x[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/**/b,c}",
+     "**/x/{**/b,c}",
+     "**/x/{**/b,c}",
+     "**/x/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/c",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 2,
+    "found": 2,
+    "agree": true
+   }
+  },
+  "x/{q,{**/b}}/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b,b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{q,{**[/\\\\]b}}[/\\\\]c",
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{q,{**/b}}/c",
+     "**/x/{q,{b}}/c"
+    ],
+    "exit": 0,
+    "results": [
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{**/b,c}/**/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}[/\\\\]**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,c}{[/\\\\],[/\\\\]**[/\\\\]}c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**[/\\\\]b,b,c}{[/\\\\],[/\\\\]**[/\\\\]}c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]**[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]b[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]**[/\\\\]c,**[/\\\\]x[/\\\\]c[/\\\\]c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**/b,c}/**/c",
+     "**/x/{b,c}/**/c",
+     "**/x/{**/b,c}/c",
+     "**/x/{b,c}/c"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 2,
+    "found": 2,
+    "agree": true
+   }
+  },
+  "x{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x{**/b,c}",
+     "**/x{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x{**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x{**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x{**/b}",
+     "**/x{b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/q/b",
+     "xb"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/a{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x/ab"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]a{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/a{**/b,c}",
+     "**/x/a{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/ab"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x/{a,b{**/c}}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c,c}}",
+    "exit": 0,
+    "results": [
+     "x/bc"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a,b{**[/\\\\]c}}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a,b{**/c}}",
+     "**/x/{a,b{c}}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/bc"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]**[/\\\\]b,**[/\\\\]b,**[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{**/b,c}",
+     "**/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "**/{**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{**[/\\\\]b,b,c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]**[/\\\\]b,**[/\\\\]b,**[/\\\\]c}",
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{**/b,c}",
+     "**/{b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x,q/b",
+     "x/b",
+     "x/c",
+     "x/q/b",
+     "x/q/c"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "{x/**,y}/b": {
+   "pi": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{x[/\\\\]**,y}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b,**[/\\\\]y[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{x/**,y}/b"
+    ],
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x/{q/**,nope}/b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{q[/\\\\]**,nope}[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]q[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]q[/\\\\]b,**[/\\\\]x[/\\\\]nope[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{q/**,nope}/b"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x/{**}/b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{**}[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[/\\\\]**[/\\\\]b,**[/\\\\]x[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{**}/b"
+    ],
+    "exit": 0,
+    "results": [
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x/{a**/b,c}": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]{a**[/\\\\]b,c}",
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/{a**/b,c}"
+    ],
+    "exit": 0,
+    "results": [
+     "x/c"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "src/**": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]**",
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a",
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub",
+     "src/a/sub/b.ts",
+     "src/b.spec.ts",
+     "src/q",
+     "src/q/r",
+     "src/q/r/x",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s",
+     "src/q/r/x/s/b.ts",
+     "src/sub",
+     "src/sub/a.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep",
+     "src/sub/deep/b.spec.ts",
+     "src/x",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "src/*.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]*.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/*.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x/**b": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]**b",
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/**b"
+    ],
+    "exit": 0,
+    "results": [
+     "x/ab",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x/b**/c": {
+   "pi": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x[/\\\\]b**[/\\\\]c",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x/b**/c"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "src/[]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\][][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[]/**/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "src/[!]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][!][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[!]/**/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/b.spec.ts",
+     "src/sub/b.spec.ts",
+     "src/sub/deep/b.spec.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "src/[/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\][[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[/**/b.spec.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x\\/**/b": {
+   "pi": {
+    "text": "**[/\\\\]x\\[/\\\\]**[/\\\\]b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x\\{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x\\{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x\\[/\\\\]**[/\\\\]b,**[/\\\\]x\\[/\\\\]b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x\\/**/b",
+     "**/x\\/b"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/[z-a]/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a]{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][z-a][/\\\\]b.spec.ts}",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '{**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\][z-a][/\\\\]b.spec.ts}': invalid range; 'z' > 'a'"
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[z-a]/**/b.spec.ts"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][z-a][/\\\\]**[/\\\\]b.spec.ts': invalid range; 'z' > 'a'"
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/{a/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "candidate": {
+    "text": "**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{a/**/b.spec.ts"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]{a[/\\\\]**[/\\\\]b.spec.ts': unclosed alternate group; missing '}' (maybe escape '{' with '[{]'?)"
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/a}/**/b.spec.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}{[/\\\\],[/\\\\]**[/\\\\]}b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]a[}][/\\\\]**[/\\\\]b.spec.ts,**[/\\\\]src[/\\\\]a[}][/\\\\]b.spec.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/a}/**/b.spec.ts"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\]a}[/\\\\]**[/\\\\]b.spec.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/a*.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]a*.ts",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/a*.ts",
+     "**/src/a*.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "{src/**/a*.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]{src[/\\\\]**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{src{[/\\\\],[/\\\\]**[/\\\\]}a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts,**[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{src/**/a*.ts,none}",
+     "**/{src/a*.ts,none}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/x/*.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}x[/\\\\]*.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]x[/\\\\]*.ts,**[/\\\\]src[/\\\\]x[/\\\\]*.ts}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/x/*.ts",
+     "**/src/x/*.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/[!]/**/x/**/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]**[/\\\\]b.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}x{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]src[/\\\\][!]{[/\\\\],[/\\\\]**[/\\\\]}x{[/\\\\],[/\\\\]**[/\\\\]}b.ts': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]x[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]**[/\\\\]x[/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]x[/\\\\]b.ts}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/[!]/**/x/**/b.ts",
+     "**/src/[!]/**/x/b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/[!]/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\][!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}[!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}[!][/\\\\]b.ts",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\][!][/\\\\]b.ts,**[/\\\\]src[/\\\\][!][/\\\\]b.ts}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/[!]/b.ts",
+     "**/src/[!]/b.ts"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/*/**/b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]*{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]*{[/\\\\],[/\\\\]**[/\\\\]}b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]*[/\\\\]**[/\\\\]b.ts,**[/\\\\]src[/\\\\]*[/\\\\]b.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/*/**/b.ts",
+     "**/src/*/b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/**/**b.ts": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]**[/\\\\]**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src{[/\\\\],[/\\\\]**[/\\\\]}**b.ts",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]**b.ts,**[/\\\\]src[/\\\\]**b.ts}",
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/**/**b.ts",
+     "**/src/**b.ts"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a/sub/b.ts",
+     "src/q/r/x/b.ts",
+     "src/q/r/x/s/b.ts",
+     "src/x/b.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "src/{**/a*.ts,none}": {
+   "pi": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]src[/\\\\]{**[/\\\\]a*.ts,a*.ts,none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]src[/\\\\]**[/\\\\]a*.ts,**[/\\\\]src[/\\\\]a*.ts,**[/\\\\]src[/\\\\]none}",
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/src/{**/a*.ts,none}",
+     "**/src/{a*.ts,none}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/a.ts",
+     "src/a/b.spec.ts",
+     "src/a/sub/b.ts",
+     "src/sub/a.ts"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x,**/b": {
+   "pi": {
+    "text": "**[/\\\\]x,**[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x,**[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x,**[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x,**[/\\\\]b",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x,**/b"
+    ],
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "x,{**/b}": {
+   "pi": {
+    "text": "**[/\\\\]x,{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x,{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x,{**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "x,b",
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x,{**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x,{**/b}",
+     "**/x,{b}"
+    ],
+    "exit": 0,
+    "results": [
+     "x,b",
+     "x,q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x,**/b{a,b}": {
+   "pi": {
+    "text": "**[/\\\\]x,**[/\\\\]b{a,b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]x,**[/\\\\]b{a,b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]x,**[/\\\\]b{a,b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "**[/\\\\]x,**[/\\\\]b{a,b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x,**/b{a,b}"
+    ],
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 0,
+    "found": 0,
+    "agree": true
+   }
+  },
+  "{x,**/b}": {
+   "pi": {
+    "text": "**[/\\\\]{x,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "rejected": {
+    "text": "**[/\\\\]{x,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "proposal": {
+    "text": "**[/\\\\]{x,**[/\\\\]b,b}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x,**[/\\\\]**[/\\\\]b,**[/\\\\]b}",
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/{x,**/b}",
+     "**/{x,b}"
+    ],
+    "exit": 0,
+    "results": [
+     "src/q/r/x",
+     "src/x",
+     "x",
+     "x,q/b",
+     "x/b",
+     "x/q/b"
+    ],
+    "stderr": ""
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  },
+  "x}/**/b": {
+   "pi": {
+    "text": "**[/\\\\]x}[/\\\\]**[/\\\\]b",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]x}[/\\\\]**[/\\\\]b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "rejected": {
+    "text": "**[/\\\\]x}{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]x}{[/\\\\],[/\\\\]**[/\\\\]}b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "proposal": {
+    "text": "**[/\\\\]x}{[/\\\\],[/\\\\]**[/\\\\]}b",
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]x}{[/\\\\],[/\\\\]**[/\\\\]}b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "candidate": {
+    "text": "{**[/\\\\]x[}][/\\\\]**[/\\\\]b,**[/\\\\]x[}][/\\\\]b}",
+    "exit": 0,
+    "results": [],
+    "stderr": ""
+   },
+   "oracle": {
+    "variants": [
+     "**/x}/**/b"
+    ],
+    "exit": 1,
+    "results": [],
+    "stderr": "[fd error]: error parsing glob '**[/\\\\]x}[/\\\\]**[/\\\\]b': unopened alternate group; missing '{' (maybe escape '}' with '[}]'?)"
+   },
+   "components": {
+    "expected_by_hand": 1,
+    "found": 1,
+    "agree": true
+   }
+  }
+ }
+}
