@@ -2673,7 +2673,7 @@ These are the rules of characterization §8, as executed (§§11, 14).
 
 ### WP-13.4 — `find`, `grep` (`TOOL-036`, `TOOL-037`, `TOOL-038`)
 
-**Status (`minion-agent#51`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#51`):** CERTIFIED_CLOSED (cross-language). Contract: docs #247 → `f3ae3ced`; CE-L13-WP134-01 deltas in #248 → `26a4bbf8`; WP134-CON-R005 #250 → `801d6eed`. Python: #153 → `01ec8339`, record docs #248 → `26a4bbf8`. Rust: #154 → `7e678628`, record docs #249 → `09e343f2`. Reviews: Python final `minion-agent#153` issuecomment-6038145224; Rust final closure `minion-agent#154` issuecomment-6048860925. Manifest status sync: #155 → `023ebb21`.
 
 **Requirements:**
 - `TOOL-036`: `find`'s schema, its argument vector to `fd`, its scoping and path relativization, and its result formatting;
