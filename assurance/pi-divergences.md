@@ -54,7 +54,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - `src/**/*.spec.ts` returns `src/sub/d.spec.ts` and `src/sub/deep/er/e.spec.ts` but **not** `src/b.spec.ts`.
   - `src/**/er/**/*.spec.ts` returns nothing.
   - On Linux, the same patterns return the expected files.
-- **Minion behaviour.** On Windows, each `**/` component keeps its ordinary meaning, zero or more whole directory levels, while still accepting either separator. Windows results then equal Linux results for these patterns.
+- **Minion behaviour.** On Windows, each `**/` component keeps its ordinary meaning, zero or more whole directory levels, while still accepting either separator. Windows results then equal Linux results for ordinary recursive patterns such as these; where a retained Pi-Windows construct is composed with a component, see **Composition** below (WP134-IMPL-R005).
   - The contract specifies only this observable behaviour. Python and Rust may normalize differently, provided the shared witnesses agree.
 - **Scope.** Only the zero-directory meaning of `**/` changes.
   - Every other construct keeps exactly Pi's Windows meaning on the pinned `fd`. Notably, a single-segment `*` crosses `\` there, so on Windows `src/*.spec.ts` also returns nested files, in Pi and in Minion alike. That is parity, recorded in characterization F-2.

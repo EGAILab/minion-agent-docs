@@ -513,3 +513,64 @@ NEXT_OWNER
 - `WP134-IMPL-R002`: PROVISIONALLY CLOSED @ `5730ff10`.
 - `WP134-IMPL-R003`: PROVISIONALLY CLOSED.
 - The R002 surface is unchanged by `e5be3c2a`: only `_search.py`'s completion order, plus a test and a control, changed.
+
+---
+
+## Final complete review 1 (Codex): CHANGES REQUIRED (Case A)
+
+- **Reviewed pair:** code `e5be3c2a` / docs `f1f3e994`.
+- **Verdict:** published verbatim on `minion-agent#153` (issuecomment-6037402825).
+- **`WP134-IMPL-R001`-`R003`:** remain provisionally closed.
+- **Two narrow, independent blockers.** Both are §11.8.8 Case A: no new convergence episode and no Owner decision.
+  - **`WP134-IMPL-R004`** (high, `CONTRACT_ASSURANCE_DEFECT`): `find` verified the engine once, then reused that argv for the rule-5 re-run with Pi's text. That second spawn was not preceded by its own verification, against TOOL-038 "Verification at use time".
+  - **`WP134-IMPL-R005`** (medium, `CONTRACT_ASSURANCE_DEFECT`): the manifest's `TOOL-036-DIV-002` rule still said Windows results equal Linux results, unconditionally. That contradicts the agreed component-local composition.
+
+## Case A remediation
+- **Candidate:** code `minion-agent#153` @ `a4b915f4dfb19db698f94dc615e69d4fee223e60`. The docs head is this PR's next head.
+
+**R004.**
+- Before the rule-5 re-run, `find` resolves and verifies the engine again through the same `resolve_engine` call. A failed verification is the governed not-provisioned error: no second spawn, no network access.
+- Abort window, completion and diagnostic semantics are unchanged.
+- **Neighbourhood (§9.4):** `grep`'s single spawn and `find`'s first spawn each follow their own resolution. The re-run was the only spawn without one.
+- **Witness:** `test_the_diagnostic_rerun_spawn_is_verified_too`, parametrized. It uses a store provisioned from verified artifacts (fake pins), the production `find`, and a scripted Windows engine whose first-run completion optionally replaces the stored binary.
+
+  | Mode | Expected | `a4b915f4` | known-bad `e5be3c2a` |
+  |---|---|---|---|
+  | unchanged binary | Pi's diagnostic from the re-run; 2 spawns, the second at the store path | pass | pass |
+  | replaced between runs | `fd is not provisioned: ...`; 1 spawn | pass | **FAIL** (spawned again) |
+
+- **Control:** `rerun_spawn_not_reverified` removes the re-verification. It is killed by `[True]` on both platforms.
+- **§11.8.7.1 record:**
+  - finding: R004;
+  - method: the witness against `e5be3c2a`'s source, plus the single-point mutant;
+  - expected failure: a second, unverified spawn instead of the not-provisioned error;
+  - observed failure: exactly that, on the replaced mode;
+  - candidate: `a4b915f4`;
+  - observed pass: both modes.
+
+**R005.**
+- **Manifest:** `TOOL-036-DIV-002.rule` now states:
+  - the component-local union over keep/remove of each recursive component of Pi's own Windows result;
+  - every other construct keeps Pi's Windows meaning;
+  - a rejected pattern gives Pi's diagnostic;
+  - Linux equality holds only where no retained Pi-Windows construct is composed with a component, with the example `src/**/a*.ts` → `src/a/sub/b.ts`.
+- **Neighbourhood (§9.4).** The active normative text was searched for unconditional equality claims.
+  - The DIV-002 disclosure's "Minion behaviour" sentence (`assurance/pi-divergences.md`) is now explicitly scoped to ordinary recursive patterns, with a pointer to its Composition bullet (this head).
+  - `spec/tools.md` already states the conditional rule.
+  - The generator's legacy note covers only the six full-path rows, where equality holds.
+- **Negative control:** NOT_APPLICABLE. This is documentary/traceability-only; the implementation already agreed with the union oracle on all 54 matrix rows.
+
+**Fresh gates at `a4b915f4`.**
+
+| Gate | Result |
+|---|---|
+| Windows full suite, warning-strict, pinned ICU 78.3, engines provisioned | 4978 passed, 31 skipped, 19 xfailed; 100.00% coverage |
+| Linux full suite (`python:3.13`; tree copied into the container; CR stripped from `*.sh` in the copy) | 4912 passed, 97 skipped, 19 xfailed |
+| `ruff check .` / `mypy src tests/typing` | clean / clean (113 source files) |
+| Manifest validation | pass |
+| Negative controls (`data/13-wp134-ce01/controls-{win32,linux}-a4b915f4.json`) | Windows 34/34 killed by the intended witness; Linux 31/31, with 3 not applicable (Windows-only witnesses) |
+
+## Status
+- `WP134-IMPL-R004` and `R005`: remediated at `a4b915f4`; request targeted implementation review (Case A), then `FINAL_CONTRACT_REVIEW`.
+- `WP134-IMPL-R001`-`R003`: provisionally closed; the R001-R003 surfaces are unchanged.
+- Rust WP-13.4: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
