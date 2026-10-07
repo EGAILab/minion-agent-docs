@@ -2758,7 +2758,7 @@ Provisioning is the only code that touches the network. **A `find` or `grep` cal
 In these templates:
 - `<name>` is `fd` or `ripgrep (rg)`, Pi's own names;
 - `<engine> <version>` is `fd 10.4.2` or `ripgrep 15.2.0`;
-- `<platform>` is the platform string, for example `darwin-arm64`.
+- `<platform>` is the platform string, for example `darwin-arm64`. In a non-local execution world it is that world's identity followed by ` (non-local execution world)`, so the text is, for example, `fd is not available on this platform: no certified fd engine for remote-box (non-local execution world).` The "not provisioned" template is never used for a non-local world: the store is not consulted there (WP134-CON-R005).
 
 **Explicit override (uncertified Minion extension).**
 - A factory option may name an engine executable explicitly.
