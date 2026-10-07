@@ -195,3 +195,132 @@ comparison modes and comparator rejection controls run inside the full suite.
 Status: Rust WP-13.4 **IMPLEMENTED / INDEPENDENT CLOSURE PENDING**. Python/shared
 approval is the accepted baseline; this record does not recertify it or close
 the cross-language work package. No subsequent work package is authorized here.
+
+## Rust closure review 1 and R001 remediation (2026-10-08)
+
+Claude's independent closure review of code `9ccae76ccaee833541508e61e66f7b6c263af8dc`
+and docs `41697277b9b9c8538421c59df1c4f1f1653db558` is **CHANGES REQUIRED**:
+[durable review](https://github.com/EGAILab/minion-agent/pull/154#issuecomment-6044281181).
+That rejection remains history; the earlier implementation evidence is not an
+approval. This remediation does not certify or merge the implementation.
+
+**WP134-RUST-R001 — PI_PARITY_DEFECT, high.** The rule-5 diagnostic retry lost
+find's abort listener: its first run completed the shared window and the retry
+received no signal. Independently re-reading pinned Pi `find.ts` confirmed
+`onAbort -> stopChild -> settle` and the close handler's signal check. Pi's
+single diagnostic-producing run retains the listener until its own close.
+The approved rule-5 composition and completion rule therefore retain the
+window through the completion of the run whose outcome stands.
+
+Trigger check: this is R001's first Rust independent review (A has not fired)
+and has no Rust successor findings (B has not fired). The historical shared/
+Python rejected-review threshold was already handled by CE-L13-WP134-01; that
+episode remains settled. The reviewer and current handoff prescribe narrow
+Rust mechanism remediation against the unchanged agreed contract, not a new
+convergence semantic choice.
+
+Remediation code: `ce89793f352901c187a6fe29cc5f6519b0894645`.
+- `search_run::run_with_completion` decides synchronously at exit + both EOFs
+  whether that outcome stands. `find` computes the existing retry predicate
+  there. A retry keeps the **same** window active, without a close/reopen gap.
+- Both runs receive the original signal. Checks before verification and after
+  verification prevent another spawn when cancellation lands between runs.
+- Find's outer race observes a latched abort as well as an active-window signal,
+  so aborted completion settles without joining a held termination acknowledgement.
+- When no retry follows, including the final diagnostic, the window still closes
+  before stop-acknowledgement/stream cleanup. Grep uses the original always-final
+  completion policy. No certified lower-layer seam or shared semantic rule changed.
+- The synchronous line-collection mutex is not held across lower-layer awaits.
+
+### Permanent discriminators and known-bad evidence
+
+`search_tests.rs` uses scripted Windows engines on **both** hosts; both spawns
+reject a corrected full-path pattern. The tests invoke the real find factory.
+
+| Witness | Required observation |
+|---|---|
+| `diagnostic_rerun_abort_during_wait_settles_before_stop_ack` | Abort in the second wait returns `Operation aborted`; termination is observed while its acknowledgement is still held |
+| `diagnostic_rerun_abort_between_runs_prevents_spawn` | Abort in the second engine verification returns `Operation aborted`; there is no second spawn |
+| `diagnostic_rerun_without_abort_keeps_diagnostic` | No abort retains the exact Pi diagnostic and both spawns |
+| `diagnostic_rerun_completion_excludes_disposal_abort` | A real signal fired during the final run's stream close is ignored; exact diagnostic retained |
+
+Windows known-bad check: before production remediation, the permanent during-
+and between-run abort witnesses were run with the **unchanged** rejected
+`9ccae76c` production sources. Both failed their exact message assertion:
+actual `error parsing glob: Pi diagnostic`, expected `Operation aborted`.
+The no-abort control and pre-existing retry-verification test passed (2 failed,
+2 passed). A no-abort control is deliberately green on both versions, not
+claimed as a negative-control killer.
+
+The first local mechanism fix exposed a second part of the same R001 surface:
+the shared stream seam latched abort but completed the window while awaiting
+the held termination acknowledgement, and the outer race considered only
+`active`. The held-ack witness failed its deadlock safety timeout. Observing
+the latched abort fixed this before the candidate gates; that failed attempt
+gets no pass credit. Candidate focused retry evidence: all five tests passed.
+
+Four additional controls in `scripts/search-negative-controls.py` restore:
+first-run window closure; omission of the retry signal; omission of the
+between-run abort checks; and ignoring the latched abort while stop acknowledgement
+is held. Each runs only its named permanent witness. The last control's expected
+failure is the named witness's bounded deadlock guard, not a setup failure.
+
+### Neighborhood, environment and scope
+
+The unchanged pinned-Pi partition was freshly executed and asserted equal to
+`abort-partition-pi.json` on Windows and Linux: **14/14** each. The actual Rust
+factory partition, exit+both-EOF seam, held-limit-stop modes, diagnostic
+verification and no-abort/post-completion retry controls remain regression gates.
+The R002 rewrite and R003 comparison modes/canonical corpus are unchanged.
+
+The Linux invocation uses the previously recorded `rust:1.97.1-bookworm` image
+and verified ICU volume, copies the checkout into `/work`, and strips CR from
+the copied shell scripts. In particular, **both** compiler and rustdoc get the
+native ICU library path, and Node v22.15.1 is on PATH:
+
+```sh
+export CARGO_HOME=/build/cargo-home CARGO_TARGET_DIR=/build/target-wp134
+export RUST_ICU_MAJOR_VERSION_NUMBER=78
+export RUSTFLAGS='-L native=/build/icu/lib'
+export RUSTDOCFLAGS='-D warnings -L native=/build/icu/lib'
+export LD_LIBRARY_PATH=/build/icu/lib
+export MINION_AGENT_ICU_BIN=/build/icu/bin
+export MINION_AGENT_ICU_IDENTITY=/build/icu-identity.txt
+export MINION_SEARCH_ENGINE_ARTIFACTS=/artifacts
+export PATH=/build/icu/bin:/usr/local/bin:$PATH
+# /usr/local/bin/node is the pinned v22.15.1 Linux binary.
+```
+
+Fresh shared manifest/schema validation: **661 passed**. The permission-sensitive
+Linux recursive-remove witness was independently run as UID 65534 against the
+candidate-compiled binary: **1 passed**. Platform counts below are fresh at
+code `ce89793f352901c187a6fe29cc5f6519b0894645`; deliberately RED mutation
+runs are excluded from positive test totals.
+
+Linux's complete G3 gates passed at the remediation source: **596 passed,
+0 failed, 1 ignored**, plus the UID-65534 witness above. All **47 applicable
+controls** were killed by their intended witnesses; four Windows-only production
+branches are explicitly N/A. Afterward a disposable container copy's `find.rs`
+and `search_run.rs` were replaced with a `git archive` export of rejected
+`9ccae76c`, keeping the candidate's permanent tests. Exactly the two abort
+assertions failed with the diagnostic instead of `Operation aborted`; the
+no-abort, disposal and prior verification tests passed (**3 passed, 2 failed**).
+That deliberately RED check is not part of the positive suite count. The
+candidate worktree was never reverted or mutated by this replay. See
+`data/13-wp134-rust/r001-gates-linux.json` for every named control and diagnostic.
+
+Windows's complete G3 gates passed: **597 passed, 0 failed, 0 ignored**.
+All **50 applicable controls** were killed by their intended witnesses; the
+Linux-only production branch is explicitly N/A. Formatting, strict clippy,
+warning-strict rustdoc and canonical verification passed on both platforms.
+The unchanged search adapter covers 218 applicable documents per host and
+219 jointly. See `data/13-wp134-rust/r001-gates-win32.json` for the named
+controls and actual diagnostics. The existing MSVC LIBCMT linker warning
+remains a disclosed environment warning, not a test failure.
+
+**WP134-CON-R005 remains separate and pending.** Shared-owner docs PR #250 is not
+approved at this pass's eligibility check. Non-local-world error text has not
+been changed, and this candidate is offered for **R001 targeted closure only**.
+R005 alignment must follow its own approved contract; full certification remains
+blocked by the remaining findings. No Python, shared contract, canonical data,
+engine pin or Rust manifest semantics were changed in this remediation.
