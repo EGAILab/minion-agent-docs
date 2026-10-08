@@ -20,7 +20,7 @@ const rel = (p) => p.replace(/^<base>\//, "");
 
 function requirements(id) {
 	const reqs = new Set(["HAR-001", "HAR-013"]);
-	if (/^(f|y|v0[4-7])/.test(id)) reqs.add("HAR-010");
+	if (/^(f|y|n|v0[4-7])/.test(id)) reqs.add("HAR-010");
 	if (/^(i|g|d04|d06)/.test(id)) reqs.add("HAR-011");
 	if (/^(v|d03|d07|d09|y)/.test(id)) reqs.add("HAR-012");
 	if (/^r/.test(id)) reqs.add("HAR-011");
@@ -34,7 +34,7 @@ function divergences(id) {
 	if (JSON.stringify(norm(p)) === JSON.stringify(norm(m))) return [];
 	const out = new Set();
 	if (!p.rejects && p.diagnostics.some((d) => d.code === "parse_failed")) out.add("PP-14-1");
-	if (JSON.stringify(mask(p)) !== JSON.stringify(mask(m))) out.add(id.startsWith("r") ? "DIV-005" : id.startsWith("i1") ? "DIV-006" : "DIV-004");
+	if (JSON.stringify(mask(p)) !== JSON.stringify(mask(m))) out.add(id.startsWith("r") ? "DIV-005" : id.startsWith("i1") ? "DIV-006" : id.startsWith("n") ? "DIV-007" : "DIV-004");
 	return [...out].sort();
 }
 

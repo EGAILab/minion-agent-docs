@@ -4,6 +4,7 @@
 //            subset error, parse fails with the Minion-defined message.
 //   DIV-005: an entry whose root-relative ignore path is empty or starts with "/" emits one
 //            `invalid_path` diagnostic and is skipped, instead of rejecting the whole discovery.
+//   DIV-007: block collections nest at most 64 deep (via subset-reader.mjs MAX_DEPTH).
 //   DIV-006: an ignore pattern whose pinned-ignore RegExp is invalid is dropped with one
 //            `invalid_ignore_pattern` diagnostic (in line order); valid patterns keep their order.
 // The model is derivation evidence for canonical expectations, not an implementation.

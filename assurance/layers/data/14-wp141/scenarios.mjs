@@ -508,3 +508,49 @@ scenarios.push({
 	],
 	roots: ["skills"],
 });
+
+// ---- DIV-007 (Owner, WP141-R003): block collections nest at most 64 deep --------------------
+// nested(name, depth): the root mapping is depth 1; depth-1 chained `k:` entries reach a mapping
+// (or, with seq, a sequence) at exactly `depth`.
+const nested = (name, depth, seq = false) => {
+	const lines = [`name: ${name}`, "description: Nested."];
+	for (let i = 1; i < depth; i++) lines.push(`${"  ".repeat(i - 1)}k:`);
+	lines.push(`${"  ".repeat(depth - 1)}${seq ? "- item" : "leaf: value"}`);
+	return fm(lines);
+};
+scenarios.push(
+	{
+		id: "n01-depth-63-and-64-load",
+		fixture: [
+			{ path: "skills/deep63/SKILL.md", text: nested("deep63", 63) },
+			{ path: "skills/deep64/SKILL.md", text: nested("deep64", 64) },
+		],
+		roots: ["skills"],
+	},
+	{
+		id: "n02-depth-65-is-parse-failed-sibling-loads",
+		fixture: [
+			{ path: "skills/deep65/SKILL.md", text: nested("deep65", 65) },
+			{ path: "skills/ok/SKILL.md", text: skill("ok") },
+		],
+		roots: ["skills"],
+	},
+	{
+		id: "n03-sequence-counts-as-a-level",
+		fixture: [
+			{ path: "skills/seq64/SKILL.md", text: nested("seq64", 64, true) },
+			{ path: "skills/seq65/SKILL.md", text: nested("seq65", 65, true) },
+		],
+		roots: ["skills"],
+	},
+	{
+		// Pi (yaml@2.9.0) accepts these; DIV-007 rejects them. Pi's results are divergence evidence.
+		id: "n04-pi-accepts-depth-100-and-500",
+		fixture: [
+			{ path: "skills/deep100/SKILL.md", text: nested("deep100", 100) },
+			{ path: "skills/deep500/SKILL.md", text: nested("deep500", 500) },
+			{ path: "skills/ok/SKILL.md", text: skill("ok") },
+		],
+		roots: ["skills"],
+	},
+);

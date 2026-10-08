@@ -15,6 +15,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-004` | Skill frontmatter uses the Minion YAML subset rather than the full yaml@2.9.0 language | WP-14.1 (`HAR-010`) | APPROVED |
 | `DIV-005` | Invalid skill-discovery entry does not abort the entire discovery | WP-14.1 (`HAR-001`) | APPROVED |
 | `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
+| `DIV-007` | Frontmatter block collections nest at most 64 deep | WP-14.1 (`HAR-010`) | APPROVED |
 
 ---
 
@@ -204,4 +205,43 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - Pi's rejection is kept in `assurance/layers/data/14-wp141/out-linux.json`.
 - **Manifest:** row `HAR-011-DIV-006`, disposition `intentional divergence`.
 - **Governance:** Owner decision, WP141-I001 Option B (`minion-agent#158` issuecomment-6054403282, §1).
+- **Reconsideration trigger:** none expected.
+
+---
+
+## DIV-007 — Frontmatter block collections nest at most 64 deep
+
+- **Affected:** WP-14.1 skill discovery (`minion-agent#158`, `HAR-010`), the frontmatter subset only.
+- **Pi behaviour.**
+  - `yaml@2.9.0` accepts nested block mappings and sequences until its recursive parser exhausts the
+    host JavaScript stack.
+  - Pi's `parseFrontmatter` then contains the failure as a parse failure.
+  - The cut-off depth is a property of the Node build and stack size (about 950 levels observed at
+    the pin). It is not a language rule.
+- **Minion behaviour.**
+  - The root mapping is depth 1, and each nested mapping or sequence is one deeper.
+  - A file whose frontmatter has a collection at depth 65 or more is outside the subset. It is
+    therefore `parse_failed` for a declared `SKILL.md` and silently skipped otherwise. This holds
+    identically in every binding.
+  - Within the bound, values are unchanged.
+  - A reader stack exhaustion is still contained as the same outcome (defence in depth,
+    `WP141-R002`).
+- **Classification:** intentional practical-parity divergence.
+- **Practical-parity assessment (Owner):** Pi's cut-off is host-dependent, so exact parity is not
+  reproducible across bindings. Realistic skill frontmatter nests a few levels. A fixed bound makes
+  every binding agree.
+- **Divergence band:** Pi loads frontmatter nested 65 to about 950 deep; Minion reports it as
+  `parse_failed`. Beyond Pi's limit, both fail.
+- **Platforms:** all.
+- **Permanent witnesses:**
+  - canonical `skills-n01-depth-63-and-64-load` (identical to Pi);
+  - `skills-n02-depth-65-is-parse-failed-sibling-loads`, `skills-n03-sequence-counts-as-a-level`
+    and `skills-n04-pi-accepts-depth-100-and-500` (divergences DIV-007; Pi's acceptance is kept in
+    `assurance/layers/data/14-wp141/out-*.json`);
+  - Python boundary tests at 63, 64, 64 with a sequence, 65, 65 with a sequence, 100 and 500, plus
+    the lifted-bound containment test;
+  - controls: an off-by-one bound is killed by the 64 witnesses, and a removed bound by the 65+
+    witnesses.
+- **Manifest:** row `HAR-010-DIV-007`, disposition `intentional divergence`.
+- **Governance:** Owner decision, WP141-R003 Option 1 (`minion-agent#158` issuecomment-6058827431).
 - **Reconsideration trigger:** none expected.

@@ -5060,6 +5060,92 @@
           "path": "<base>\\skills\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop"
         }
       ]
+    },
+    {
+      "id": "n01-depth-63-and-64-load",
+      "skills": [
+        {
+          "name": "deep63",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\deep63\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "deep64",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\deep64\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "n02-depth-65-is-parse-failed-sibling-loads",
+      "skills": [
+        {
+          "name": "ok",
+          "description": "Use ok.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ok\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep65\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "n03-sequence-counts-as-a-level",
+      "skills": [
+        {
+          "name": "seq64",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\seq64\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\seq65\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "n04-pi-accepts-depth-100-and-500",
+      "skills": [
+        {
+          "name": "ok",
+          "description": "Use ok.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ok\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep100\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep500\\SKILL.md"
+        }
+      ]
     }
   ]
 }

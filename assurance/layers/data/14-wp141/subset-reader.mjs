@@ -224,7 +224,12 @@ function blockScalar(header, lines, i, n) {
 	return [`${body}\n`, consumed];
 }
 
-function sequence(lines, i, m) {
+// DIV-007 (Owner, WP141-R003): block collections nest at most 64 deep; the root mapping is depth 1,
+// each nested mapping or sequence one more. Deeper is outside the subset (parse_failed).
+export const MAX_DEPTH = 64;
+
+function sequence(lines, i, m, depth) {
+	if (depth > MAX_DEPTH) reject("nesting deeper than 64");
 	const items = [];
 	let j = i;
 	for (; j < lines.length; j++) {
@@ -243,7 +248,8 @@ function sequence(lines, i, m) {
 	return [{ seq: items }, j - 1 - i];
 }
 
-function mapping(lines, i, n) {
+function mapping(lines, i, n, depth) {
+	if (depth > MAX_DEPTH) reject("nesting deeper than 64");
 	const entries = [];
 	const seen = new Set();
 	let j = i;
@@ -274,10 +280,10 @@ function mapping(lines, i, n) {
 			let k = j + 1;
 			while (k < lines.length && isBlankOrComment(lines[k])) k++;
 			if (next > n && /^[^:\s]+:(?=[ \t]|$)/.test(lines[k].slice(next))) {
-				[value, consumed] = mapping(lines, k, next);
+				[value, consumed] = mapping(lines, k, next, depth + 1);
 				consumed += k - j;
 			} else if (next >= n && next !== -1 && lines[k].slice(next).startsWith("- ")) {
-				[value, consumed] = sequence(lines, k, next);
+				[value, consumed] = sequence(lines, k, next, depth + 1);
 				consumed += k - j;
 			} else if (next > n) {
 				reject("value on the following line is outside the subset");
@@ -307,7 +313,7 @@ export function readSubset(text) {
 		while (k < lines.length && isBlankOrComment(lines[k])) k++;
 		if (k === lines.length) return { ok: true, value: null };
 		if (indentOf(lines[k]) !== 0) reject("top-level mapping must start at column 0");
-		const [value, consumed] = mapping(lines, k, 0);
+		const [value, consumed] = mapping(lines, k, 0, 1);
 		for (let j = k + consumed + 1; j < lines.length; j++) if (!isBlankOrComment(lines[j])) reject("trailing content");
 		return { ok: true, value };
 	} catch (e) {

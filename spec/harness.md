@@ -33,6 +33,8 @@ Durable AgentHarness lanes/operations/suspend-resume/replay/navigation/pending w
 - **DIV-005:** an invalid entry does not abort discovery.
 - **DIV-006:** an invalid ignore pattern is dropped with a diagnostic and does not abort discovery
   (Owner decision `minion-agent#158` issuecomment-6054403282, §1).
+- **DIV-007:** frontmatter block collections nest at most 64 deep (Owner decision, `WP141-R003`,
+  recorded at `minion-agent#158` issuecomment-6058827431).
 - **PP-14-1:** the `parse_failed` message text is Minion-defined.
 - **PP-14-8:** the text of filesystem-origin messages is non-normative.
 
@@ -386,16 +388,21 @@ behaviour recorded as the DIV-004 witness:
 - a plain value that starts on the line after its key;
 - a scalar or sequence document;
 - tab indentation;
-- the characters forbidden by rule 1, including escapes that produce them.
+- the characters forbidden by rule 1, including escapes that produce them;
+- nesting deeper than 64 (DIV-007).
 
 Pi's other parse failures (duplicate keys, an unterminated quote) are `parse_failed` in both.
 
-**Resource exhaustion (`WP141-R002`).** Nesting deep enough to exhaust a reader's stack is a parse
-failure with the ordinary outcome below, and discovery continues. It never escapes and never aborts
-discovery. Pinned Pi contains its parser's failure in the same way. The depth at which it happens is
-a host limit, in Pi and in each binding, and is **not normative**. It is not a subset rule and not a
-depth limit of the grammar. Canonical evidence fixes only the outcome shape (a far-too-deep declared
-file gives one `parse_failed`, and a later root still loads) and shallow controls that must load.
+**Nesting depth (DIV-007).** Owner decision, `WP141-R003`.
+- **Rule:** block collections nest at most **64** deep. The root `Mapping(0)` is depth 1, and each
+  nested `Mapping` (rule 4) or `Sequence` (rule 6) is one deeper than the collection that holds it.
+- **Outcome:** a collection at depth 65 or more is outside the subset, so the file is
+  `parse_failed`, in every binding.
+- **Pi:** `yaml@2.9.0` accepts such nesting up to its host stack limit. Pi's successful results at
+  depths 65, 100 and 500 are recorded as divergence evidence (canonical `n02`–`n04`).
+- **Defence in depth (`WP141-R002`):** a reader that nevertheless exhausts its own stack contains
+  that as the same `parse_failed`. It never escapes and never aborts discovery. Within the bound,
+  no binding's stack depth is observable.
 
 **Using the frontmatter.** Loading a file, `load_file(path, parent_dir_name)` — direct parity,
 except the `parse_failed` message:

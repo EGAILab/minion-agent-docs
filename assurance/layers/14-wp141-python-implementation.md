@@ -1,6 +1,6 @@
 # Layer 14 WP-14.1 — Python implementation record
 
-**Status:** Python candidate, remediation 1 (`WP141-R001`, `WP141-R002`; §5) for independent
+**Status:** Python candidate, remediations 1 and 2 (`WP141-R001`..`R003`; §5, §6) for independent
 re-review.
 
 **Coordination:** `minion-agent#158` (`PYTHON_IMPLEMENTATION` → `IMPLEMENTATION_REVIEW`).
@@ -189,3 +189,66 @@ On the candidate, every witness passes.
 
 **Unchanged by this remediation:** the DIV-006 delta (approved), the 92 canonical scenarios, both
 differential corpora and their controls.
+
+## 6. Remediation 2 (Codex targeted re-review 1)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `8f2bd8c9` / docs `#258` @ `83168d2d`. It is
+posted verbatim at `minion-agent#158` issuecomment-6058277706.
+- `WP141-R001` and `WP141-R002` are PROVISIONALLY CLOSED.
+- New finding `WP141-R003` (medium, `CONTRACT_ASSURANCE_DEFECT`): §5's HAR-010 "Resource
+  exhaustion" clarification granted host-dependent *acceptance* latitude, which no one had
+  approved. Codex's discriminator: at 950 levels Python accepts the frontmatter and pinned
+  `yaml@2.9.0` rejects it.
+
+**Owner decision:** WP141-R003 Option 1, recorded verbatim at `minion-agent#158`
+issuecomment-6058827431. It sets a normative nesting bound **N = 64** (DIV-007).
+
+**Contract (`spec/harness.md` HAR-010).**
+- The "Resource exhaustion" paragraph is **replaced** by "Nesting depth (DIV-007)":
+  - the root `Mapping(0)` is depth 1, and each nested `Mapping` or `Sequence` is one deeper;
+  - depth 65 or more is outside the subset, so the file is `parse_failed`;
+  - stack-exhaustion containment stays as defence in depth.
+- "Nesting deeper than 64" joins the list of rejected constructs.
+- DIV-007 is added to the approved departures.
+- **Counting sequences as a level** is this record's reading of the Owner's "nesting depth". In
+  the subset a sequence holds only scalars, so it can only be the innermost level. It is called out
+  for the reviewer.
+
+**Registry and manifest.** `pi-divergences.md` DIV-007, and manifest row `HAR-010-DIV-007`
+(intentional divergence).
+
+**Evidence.**
+- **Reference reader:** `subset-reader.mjs` `MAX_DEPTH = 64`, the same rule. The Minion model takes
+  it through `subset-object.mjs`; the model source is otherwise unchanged.
+- **Canonical:** 96 scenarios, with four new ones:
+
+  | Scenario | Pi | Minion | Divergence |
+  |---|---|---|---|
+  | `n01-depth-63-and-64-load` | both load | both load | none (identical) |
+  | `n02-depth-65-is-parse-failed-sibling-loads` | loads | `parse_failed`; the sibling loads | DIV-007 |
+  | `n03-sequence-counts-as-a-level` | both load | `seq64` loads; `seq65` is `parse_failed` | DIV-007 |
+  | `n04-pi-accepts-depth-100-and-500` | both load | both `parse_failed` | DIV-007 |
+
+  Pi's acceptance is kept in `out-*.json` as divergence evidence. The 92 earlier scenario files are
+  unchanged.
+- **Model controls:** 4 of 4 are still killed.
+- **Frontmatter corpus:** the committed 8,000-case corpus regenerates **byte-identically** under the
+  bound, so no corpus case nests beyond 64. The earlier fuzz soundness claim (subset accepts ⇒
+  `yaml@2.9.0` accepts the same value) is unaffected, because the bound only adds rejections.
+- **Python** (`_frontmatter.py`): `MAX_DEPTH = 64`, checked on entry to every mapping and sequence.
+  The `RecursionError` containment is kept.
+- **Tests:**
+  - depths 63, 64 and 64-with-a-sequence load;
+  - 65, 65-with-a-sequence, 100 and 500 are `parse_failed`, and a sibling still loads;
+  - with the bound lifted (monkeypatch), a 1,200-deep file is still one contained `parse_failed`;
+  - the 1,200-deep declared and undeclared cases are kept.
+- **Controls:**
+  - an off-by-one bound (`>=`) is killed by the depth-64 tests, `n01` and `n03`;
+  - a removed bound is killed by the depth 65/100/500 tests, `n02`, `n03` and `n04`.
+
+**Fresh gates (code `#161` @ `8423af2e`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,220 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,085 statements); ruff clean; mypy clean (113 files) |
+| Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,167 passed, 0 failed, 97 skipped, 19 xfailed** |
