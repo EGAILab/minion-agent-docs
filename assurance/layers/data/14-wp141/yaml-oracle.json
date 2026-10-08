@@ -1,0 +1,812 @@
+[
+ {
+  "src": "name: a\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": "a",
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "~",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "null",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "just a scalar",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "42",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "- a\n- b",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: true",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: True",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: TRUE",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: yes",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "yes",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: no",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "no",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: on",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "on",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: off",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "off",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: y",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "y",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: n",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "n",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 0o17",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 017",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 0x1F",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 1_000",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "1_000",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 1e3",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: .inf",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: -.Inf",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: .nan",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 12:30:00",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "12:30:00",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 2001-12-14",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "2001-12-14",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 2001-12-14t21:59:43.10-05:00",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "2001-12-14t21:59:43.10-05:00",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: ~",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: null",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: Null",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: ''",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: \"\"",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: '  x  '",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "  x  ",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: !!str 123",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "123",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: !!int '7'",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: !!binary aGk=",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: !custom x",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "x",
+   "disable": false
+  }
+ },
+ {
+  "src": "a: &x foo\ndescription: *x",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "foo",
+   "disable": false
+  }
+ },
+ {
+  "src": "base: &b {description: d}\n<<: *b",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "<<: {description: d}",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: d\ndescription: e",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Map keys must be unique at line 2, column 1:"
+ },
+ {
+  "src": "Description: a\ndescription: b",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "b",
+   "disable": false
+  }
+ },
+ {
+  "src": "name: a\n\tdescription: d",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Tabs are not allowed as indentation at line 2, column 1:"
+ },
+ {
+  "src": "description: \"open",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Missing closing \"quote at line 1, column 19:"
+ },
+ {
+  "src": "description: 'open",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Missing closing 'quote at line 1, column 19:"
+ },
+ {
+  "src": "description: d\n...\nx: 1",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Source contains multiple documents; please use YAML.parseAllDocuments() at line 3, column 1:"
+ },
+ {
+  "src": "%YAML 1.1",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Missing directives-end indicator line at line 1, column 10:"
+ },
+ {
+  "src": "%YAML 1.2\n---\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: d\n  - x",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d - x",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: [a, b",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 19:"
+ },
+ {
+  "src": "{description: Flow.}",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "Flow.",
+   "disable": false
+  }
+ },
+ {
+  "src": "? [a, b]\n: c\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "__proto__: {x: 1}\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: >\n  one\n  two",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "one two\n",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: |\n  one\n  two",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "one\ntwo\n",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: |-\n  one",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "one",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: >+\n  one\n\n",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "one\n\n",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: \"a\\tb \\u00e9 \\x41 \\U0001F600\"",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "a\tb é A 😀",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: \"\\ud800\"",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "\ud800",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 'it''s'",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "it's",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: a # comment",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "a",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: a#b",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "a#b",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: 'a: b'",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "a: b",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: a: b",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Nested mappings are not allowed in compact mappings at line 1, column 14:"
+ },
+ {
+  "src": "description: -",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Unexpected block-seq-ind on same line with key at line 1, column 14:"
+ },
+ {
+  "src": "description: - x",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Unexpected block-seq-ind on same line with key at line 1, column 14:"
+ },
+ {
+  "src": "description: @x",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Plain value cannot start with reserved character @ at line 1, column 14:"
+ },
+ {
+  "src": "description: `x",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Plain value cannot start with reserved character ` at line 1, column 14:"
+ },
+ {
+  "src": "description: %x",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Plain value cannot start with directive indicator character % at line 1, column 14:"
+ },
+ {
+  "src": "description: *undefined",
+  "ok": false,
+  "error": "ReferenceError",
+  "message": "Unresolved alias (the anchor must be set before the alias): undefined"
+ },
+ {
+  "src": "description: &a",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: d\n'description': e",
+  "ok": false,
+  "error": "YAMLParseError",
+  "message": "Map keys must be unique at line 2, column 1:"
+ },
+ {
+  "src": "disable-model-invocation: true",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": true
+  }
+ },
+ {
+  "src": "disable-model-invocation: 'true'",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "disable-model-invocation: 1",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "name:\n  - list\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "name: {a: 1}\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description:",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "description: \t",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "﻿description: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: d\r\nname: n",
+  "ok": true,
+  "observed": {
+   "name": "n",
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: café",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "café",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: x",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "x",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: a b",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "a b",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: x\u0007",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "x\u0007",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: \"x\\0\"",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "x\u0000",
+   "disable": false
+  }
+ },
+ {
+  "src": "1: one\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "true: t\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "null: n\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "[a]: b\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "__proto__: {description: via-proto, name: proto-name}",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": null,
+   "disable": false
+  }
+ },
+ {
+  "src": "__proto__: {disable-model-invocation: true}\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "constructor: x\ndescription: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "description: d\nname: [a]",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ },
+ {
+  "src": "? description\n: d",
+  "ok": true,
+  "observed": {
+   "name": null,
+   "description": "d",
+   "disable": false
+  }
+ }
+]

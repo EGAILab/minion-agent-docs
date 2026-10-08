@@ -1,0 +1,562 @@
+{
+ "pyyaml-safe (1.1)": {
+  "agree": 72,
+  "total": 95,
+  "mismatches": [
+   {
+    "src": "description: yes",
+    "pi": {
+     "name": null,
+     "description": "yes",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: no",
+    "pi": {
+     "name": null,
+     "description": "no",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: on",
+    "pi": {
+     "name": null,
+     "description": "on",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: off",
+    "pi": {
+     "name": null,
+     "description": "off",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 0o17",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "0o17",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 1_000",
+    "pi": {
+     "name": null,
+     "description": "1_000",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 1e3",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "1e3",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 12:30:00",
+    "pi": {
+     "name": null,
+     "description": "12:30:00",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14t21:59:43.10-05:00",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14t21:59:43.10-05:00",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: !custom x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": "ConstructorError"
+   },
+   {
+    "src": "base: &b {description: d}\n<<: *b",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "<<: {description: d}",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: d\ndescription: e",
+    "pi": "Map keys must be unique at line 2, column 1:",
+    "engine": {
+     "name": null,
+     "description": "e",
+     "disable": false
+    }
+   },
+   {
+    "src": "? [a, b]\n: c\ndescription: d",
+    "pi": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    },
+    "engine": "ConstructorError"
+   },
+   {
+    "src": "description: >\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one two\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one two",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: |\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one\ntwo\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one\ntwo",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: d\n'description': e",
+    "pi": "Map keys must be unique at line 2, column 1:",
+    "engine": {
+     "name": null,
+     "description": "e",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: \t",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": "ScannerError"
+   },
+   {
+    "src": "description: x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": "ScannerError"
+   },
+   {
+    "src": "description: a b",
+    "pi": {
+     "name": null,
+     "description": "a b",
+     "disable": false
+    },
+    "engine": "ScannerError"
+   },
+   {
+    "src": "description: x\u0007",
+    "pi": {
+     "name": null,
+     "description": "x\u0007",
+     "disable": false
+    },
+    "engine": "ReaderError"
+   },
+   {
+    "src": "[a]: b\ndescription: d",
+    "pi": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    },
+    "engine": "ConstructorError"
+   }
+  ]
+ },
+ "ruamel-safe-pure-1.2": {
+  "agree": 84,
+  "total": 95,
+  "mismatches": [
+   {
+    "src": "description: 1_000",
+    "pi": {
+     "name": null,
+     "description": "1_000",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14t21:59:43.10-05:00",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14t21:59:43.10-05:00",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: !custom x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": "ConstructorError"
+   },
+   {
+    "src": "base: &b {description: d}\n<<: *b",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "<<: {description: d}",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: >\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one two\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one two",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: |\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one\ntwo\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one\ntwo",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: \t",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": "ScannerError"
+   },
+   {
+    "src": "description: x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: x\u0007",
+    "pi": {
+     "name": null,
+     "description": "x\u0007",
+     "disable": false
+    },
+    "engine": "ReaderError"
+   }
+  ]
+ },
+ "ruamel-rt": {
+  "agree": 83,
+  "total": 95,
+  "mismatches": [
+   {
+    "src": "description: 1_000",
+    "pi": {
+     "name": null,
+     "description": "1_000",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: 2001-12-14t21:59:43.10-05:00",
+    "pi": {
+     "name": null,
+     "description": "2001-12-14t21:59:43.10-05:00",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: !!str 123",
+    "pi": {
+     "name": null,
+     "description": "123",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "description: !custom x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": null,
+     "disable": false
+    }
+   },
+   {
+    "src": "base: &b {description: d}\n<<: *b",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "<<: {description: d}",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "d",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: >\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one two\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one two",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: |\n  one\n  two",
+    "pi": {
+     "name": null,
+     "description": "one\ntwo\n",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "one\ntwo",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: \t",
+    "pi": {
+     "name": null,
+     "description": null,
+     "disable": false
+    },
+    "engine": "ScannerError"
+   },
+   {
+    "src": "description: x",
+    "pi": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    },
+    "engine": {
+     "name": null,
+     "description": "x",
+     "disable": false
+    }
+   },
+   {
+    "src": "description: x\u0007",
+    "pi": {
+     "name": null,
+     "description": "x\u0007",
+     "disable": false
+    },
+    "engine": "ReaderError"
+   }
+  ]
+ }
+}

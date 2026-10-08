@@ -1,0 +1,30 @@
+{
+ "rows": [
+  {
+   "seed": 1,
+   "generated": 300000,
+   "distinct": 279291
+  },
+  {
+   "seed": 2,
+   "generated": 300000,
+   "distinct": 279534
+  },
+  {
+   "seed": 3,
+   "generated": 300000,
+   "distinct": 279429
+  },
+  {
+   "seed": 4,
+   "generated": 300000,
+   "distinct": 279266
+  },
+  {
+   "seed": 5,
+   "generated": 300000,
+   "distinct": 279377
+  }
+ ],
+ "distinctAcrossSeeds": 1374031
+}

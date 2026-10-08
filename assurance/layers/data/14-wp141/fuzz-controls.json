@@ -1,0 +1,13 @@
+{
+ "clip-drops-final-newline": 2021,
+ "keep-drops-one-newline": 1344,
+ "colon-space-accepted": 278,
+ "safe-lead-any-indicator": 2179,
+ "duplicate-key-accepted": 2292,
+ "yes-is-boolean": 622,
+ "comment-allows-continuation": 256,
+ "tab-indentation-accepted": 66,
+ "continuation-strips-unicode-whitespace": 67,
+ "unterminated-final-blank-counts": 4,
+ "folded-joins-with-newline": 1427
+}
