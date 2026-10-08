@@ -15,10 +15,13 @@ with it.
 
 ## 1. Candidate
 
-- **Code:** PR `#161`, branch `layer/14-wp141-python`, head `13eafa25`. It depends on L12-D004
-  (`#162`, issue `#163`), whose correction `c01` needs on Linux. `#162` is independently approved and
-  merged (`5477eaeb`); this branch is merged up to `main`, so its diff is WP-14.1 only. `13eafa25`
-  has the same tree as `e4a128f2`, the head the gates below ran on.
+- **Code:** PR `#161`, branch `layer/14-wp141-python`, head `5ba6973a`. It depends on L12-D004
+  (`#162`, issue `#163`, now CLOSED), whose correction `c01` needs on Linux. This branch is merged up
+  to `main`, so its diff is WP-14.1 only.
+- **Gated tree:** the gates below ran on `e4a128f2`.
+  - `5ba6973a` differs from that tree only in `pi-parity-manifest.yaml` `EXEC-002`'s `python` text,
+    which came from `main` (L12-D004 certification, `#164`).
+  - Manifest and schema validation on the review head: **762 passed**.
 - **Package:** `minion-agent-python/src/minion_agent/skills/`.
 
 | Module | What it is |
@@ -91,7 +94,7 @@ back for comparison. The scenarios are all **92** in `conformance/agent/skill-di
 
 ### Full gates on the candidate (`#161` with L12-D004)
 
-The gates were rerun on `#161` @ `e4a128f`, which includes L12-D004 remediation 1 (`L12D004-R001`, code `#162` @ `32287fa5`). The review head `13eafa25` has the identical tree (`98bdf829`).
+The gates were rerun on `#161` @ `e4a128f`, which includes L12-D004 remediation 1 (`L12D004-R001`, code `#162` @ `32287fa5`).
 
 | Platform | Result |
 |---|---|
