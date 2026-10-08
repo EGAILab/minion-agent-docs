@@ -90,7 +90,9 @@ def _scoping_closure(gh: GitHub, old: dict[str, Any], new: dict[str, Any]) -> st
         isinstance(review, dict)
         and all(isinstance(review.get(k), str) and review[k].strip() for k in ("verdict", "source"))
     ):
-        return "SCOPING -> CLOSED requires a recorded scoping_review with a non-empty verdict and source (§10.3)"
+        return (
+            "SCOPING -> CLOSED requires a recorded scoping_review with a non-empty verdict and source (§10.3)"
+        )
     present = {side: c for side, c in candidates(new).items() if c is not None}
     if not present:
         return "SCOPING -> CLOSED requires the merged scoping artifact recorded as a candidate (§10.3)"

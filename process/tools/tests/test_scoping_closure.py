@@ -24,7 +24,10 @@ def _scoping_wp(**changes: Any) -> dict[str, Any]:
         open_findings=[],
         code=None,
         docs={"pr": 253, "sha": SHA_B, "base": "master", "merged_sha": MERGED},
-        scoping_review={"verdict": "LAYER 14 SCOPE APPROVED", "source": "minion-agent-docs#253 issuecomment-1"},
+        scoping_review={
+            "verdict": "LAYER 14 SCOPE APPROVED",
+            "source": "minion-agent-docs#253 issuecomment-1",
+        },
         next_owner="Claude",
         next_action="close the scoping WP",
     )
@@ -53,7 +56,15 @@ def _close(fake: FakeGitHub, extra: dict[str, Any] | None = None) -> None:
         w["next_action"] = None
         w.update(extra or {})
 
-    allowed = {"status", "next_owner", "next_action", "requirements", "open_findings", "scoping_review", "docs"}
+    allowed = {
+        "status",
+        "next_owner",
+        "next_action",
+        "requirements",
+        "open_findings",
+        "scoping_review",
+        "docs",
+    }
     commit_state(GitHub(fake.run), CODE, 10, mutate, allowed)
 
 
@@ -81,7 +92,12 @@ def test_a_completed_scoping_only_wp_closes_and_the_remote_state_round_trips() -
         ({"docs": None}, None, {}, "merged scoping artifact"),
         ({"docs": {"pr": 253, "sha": SHA_B, "base": "master"}}, None, {}, "merged_sha"),
         ({}, None, {"merged": False}, "not merged"),
-        ({"docs": {"pr": 253, "sha": SHA_B, "base": "master", "merged_sha": "e" * 40}}, None, {}, "not merged"),
+        (
+            {"docs": {"pr": 253, "sha": SHA_B, "base": "master", "merged_sha": "e" * 40}},
+            None,
+            {},
+            "not merged",
+        ),
         ({}, None, {"on_default": False}, "default branch"),
     ],
     ids=[
