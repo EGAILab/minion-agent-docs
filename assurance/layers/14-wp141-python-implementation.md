@@ -1,6 +1,6 @@
 # Layer 14 WP-14.1 — Python implementation record
 
-**Status:** Python candidate, remediations 1–3 (`WP141-R001`..`R004`; §5–§7) for independent
+**Status:** Python candidate, remediations 1–4 (`WP141-R001`..`R004`; §5–§8) for independent
 re-review.
 
 **Coordination:** `minion-agent#158` (`PYTHON_IMPLEMENTATION` → `IMPLEMENTATION_REVIEW`).
@@ -301,3 +301,40 @@ DIV-006 and DIV-007 contract deltas were APPROVED at that docs SHA.
 |---|---|
 | Windows, pinned ICU 78.3 | **5,221 passed, 45 skipped, 21 xfailed**; coverage **100%** (9,102 statements); ruff clean; mypy clean (113 files) |
 | Linux | **5,171 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+## 8. Remediation 4 (Codex final review 2: `WP141-R004` refined)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `afdbdd41` / docs `#258` @ `ff3fa9bc`.
+`WP141-R004` stays open, on the matcher.
+- **Why:** `Ignore.add_valid` clears the matcher cache. The next `ignores()` then reached `_t`, which
+  recursed once per uncached parent path.
+- **Witness:** a 1,050-deep acyclic tree with a valid `.gitignore` (`unrelated.txt`) at the leaf
+  still exhausted the stack and lost the later root. Pi loads it.
+- **The walk itself:** Codex confirmed the frame-stack walk is correct.
+
+**Correction (code @ `9f4da713`).** `Ignore._t` walks the parent chain upward with a list until it
+reaches a cached ancestor or the top, then evaluates it top-down. That gives the same evaluation
+order, the same short-circuit on an ignored ancestor, and the same cache entries as ignore@7.0.5's
+recursive `_t`. Nothing is depth-bound, and the recursion limit is unchanged.
+
+**Witnesses:**
+- `test_a_deep_acyclic_tree_loads_and_later_roots_still_load[100|950|1050 × plain|leaf-ignore-file]`
+  (POSIX);
+- `test_the_walk_does_not_grow_the_interpreter_stack_with_directory_depth`: every platform, a
+  60-deep tree with a leaf `.gitignore`, under a recursion limit 40 frames above the caller;
+- `test_the_ignore_matcher_evaluates_a_deep_path_without_recursing`: a direct 3,000-segment path,
+  with the nearest-ignored-ancestor and leaf-rule results checked.
+
+**Known-bad** (the `afdbdd41` `_ignore.py`, Linux): `[1050-leaf-ignore-file]`, the stack witness and
+the deep-path witness fail; the shallow and plain controls pass. On Windows the two
+cross-platform witnesses fail.
+
+**Unchanged:** the 18,000-check `ignore` differential corpus, the 96 canonical scenarios, and every
+earlier witness pass.
+
+**Fresh gates (code @ `9f4da713`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,222 passed, 48 skipped, 21 xfailed**; coverage **100%** (9,110 statements); ruff and mypy clean (113 files) |
+| Linux | **5,175 passed, 0 failed, 97 skipped, 19 xfailed** |
