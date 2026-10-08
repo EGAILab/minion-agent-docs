@@ -1,0 +1,2 @@
+{"platform":"win32","withSkill":false,"skills":[],"diagnostics":[{"code":"file_info_failed","loopDepth":64,"messagePrefix":"ELOOP: too many symbolic links encountered"}]}
+{"platform":"win32","withSkill":true,"skills":["\\skills\\b.md"],"diagnostics":[{"code":"file_info_failed","loopDepth":64,"messagePrefix":"ELOOP: too many symbolic links encountered"}]}

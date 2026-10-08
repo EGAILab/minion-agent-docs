@@ -1,0 +1,1142 @@
+{
+  "platform": "linux",
+  "node": "v22.15.1",
+  "icu": "76.1",
+  "results": [
+    {
+      "id": "d01-single-skill-dir",
+      "skills": [
+        {
+          "name": "alpha",
+          "description": "Use alpha.",
+          "content": "Body.",
+          "filePath": "<base>/skills/alpha/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d02-root-skill-md-short-circuits",
+      "skills": [
+        {
+          "name": "skills",
+          "description": "Use skills.",
+          "content": "Body.",
+          "filePath": "<base>/skills/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d03-invalid-skill-md-still-short-circuits",
+      "skills": [],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/alpha/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "d04-ignored-skill-md-does-not-short-circuit",
+      "skills": [
+        {
+          "name": "inner",
+          "description": "Use inner.",
+          "content": "Body.",
+          "filePath": "<base>/skills/alpha/inner/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d05-sorted-traversal-order",
+      "skills": [
+        {
+          "name": "_x",
+          "description": "Skill in _x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/_x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "-y",
+          "description": "Skill in -y.",
+          "content": "Body.",
+          "filePath": "<base>/skills/-y/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a",
+          "description": "Skill in a.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a_b",
+          "description": "Skill in a_b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a_b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a-b",
+          "description": "Skill in a-b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a-b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a10",
+          "description": "Skill in a10.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a10/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a9",
+          "description": "Skill in a9.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a9/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "Skill in b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "e",
+          "description": "Skill in e.",
+          "content": "Body.",
+          "filePath": "<base>/skills/e/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "é",
+          "description": "Skill in é.",
+          "content": "Body.",
+          "filePath": "<base>/skills/é/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "Z",
+          "description": "Skill in Z.",
+          "content": "Body.",
+          "filePath": "<base>/skills/Z/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/_x/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not start or end with a hyphen",
+          "path": "<base>/skills/-y/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/a_b/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/é/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/Z/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "d06-dotfiles-and-node-modules-skipped",
+      "skills": [
+        {
+          "name": "visible",
+          "description": "Use visible.",
+          "content": "Body.",
+          "filePath": "<base>/skills/visible/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d05p-case-variant-order",
+      "skills": [
+        {
+          "name": "a",
+          "description": "Skill in a.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "A",
+          "description": "Skill in A.",
+          "content": "Body.",
+          "filePath": "<base>/skills/A/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "Skill in b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "B",
+          "description": "Skill in B.",
+          "content": "Body.",
+          "filePath": "<base>/skills/B/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "e",
+          "description": "Skill in e.",
+          "content": "Body.",
+          "filePath": "<base>/skills/e/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "E",
+          "description": "Skill in E.",
+          "content": "Body.",
+          "filePath": "<base>/skills/E/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "é",
+          "description": "Skill in é.",
+          "content": "Body.",
+          "filePath": "<base>/skills/é/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "É",
+          "description": "Skill in É.",
+          "content": "Body.",
+          "filePath": "<base>/skills/É/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/A/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/B/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/E/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/é/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/É/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "d06p-node-modules-exact-name",
+      "skills": [
+        {
+          "name": "dep2",
+          "description": "Use dep2.",
+          "content": "Body.",
+          "filePath": "<base>/skills/Node_Modules/dep2/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d07-root-markdown-only-at-root",
+      "skills": [
+        {
+          "name": "direct",
+          "description": "Use direct.",
+          "content": "Body.",
+          "filePath": "<base>/skills/direct.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "deeper",
+          "description": "Use deeper.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/deeper/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"direct\" does not match parent directory \"skills\"",
+          "path": "<base>/skills/direct.md"
+        }
+      ]
+    },
+    {
+      "id": "d08-root-markdown-filters",
+      "skills": [
+        {
+          "name": "skills",
+          "description": "Use skills.",
+          "content": "Body.",
+          "filePath": "<base>/skills/ok.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d09-root-markdown-name-mismatch-quirk",
+      "skills": [
+        {
+          "name": "skills",
+          "description": "No name.",
+          "content": "Body.",
+          "filePath": "<base>/skills/noname.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "other",
+          "description": "Use other.",
+          "content": "Body.",
+          "filePath": "<base>/skills/other.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"other\" does not match parent directory \"skills\"",
+          "path": "<base>/skills/other.md"
+        }
+      ]
+    },
+    {
+      "id": "d10-roots-missing-file-duplicate-order",
+      "skills": [
+        {
+          "name": "b",
+          "description": "Use b.",
+          "content": "Body.",
+          "filePath": "<base>/two/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a",
+          "description": "Use a.",
+          "content": "Body.",
+          "filePath": "<base>/one/a/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "Use b.",
+          "content": "Body.",
+          "filePath": "<base>/two/b/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d11-nested-depth",
+      "skills": [
+        {
+          "name": "c",
+          "description": "Use c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/b/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "x",
+          "description": "Use x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/x/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d12-symlinks",
+      "skills": [
+        {
+          "name": "linked",
+          "description": "Use linked.",
+          "content": "Body.",
+          "filePath": "<base>/skills/linked/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "plain",
+          "description": "Use plain.",
+          "content": "Body.",
+          "filePath": "<base>/skills/plain/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "viafile",
+          "description": "Use viafile.",
+          "content": "Body.",
+          "filePath": "<base>/skills/viafile/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d13-root-is-symlink",
+      "skills": [
+        {
+          "name": "s",
+          "description": "Use s.",
+          "content": "Body.",
+          "filePath": "<base>/rootlink/s/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "d14-duplicate-names-kept",
+      "skills": [
+        {
+          "name": "dup",
+          "description": "First.",
+          "content": "Body.",
+          "filePath": "<base>/skills/dup/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "dup",
+          "description": "Second.",
+          "content": "Body.",
+          "filePath": "<base>/skills/other/dup/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "v01-invalid-name-loads-with-warnings",
+      "skills": [
+        {
+          "name": "Bad_Name",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/Bad_Name/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/Bad_Name/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "v02-all-name-messages-in-order",
+      "skills": [
+        {
+          "name": "-A--xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/dir/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"-A--xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-\" does not match parent directory \"dir\"",
+          "path": "<base>/skills/dir/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name exceeds 64 characters (75)",
+          "path": "<base>/skills/dir/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/dir/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not start or end with a hyphen",
+          "path": "<base>/skills/dir/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not contain consecutive hyphens",
+          "path": "<base>/skills/dir/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "v03-description-length-utf16",
+      "skills": [
+        {
+          "name": "astral-ok",
+          "description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+          "content": "Body.",
+          "filePath": "<base>/skills/astral-ok/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "exact",
+          "description": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "content": "Body.",
+          "filePath": "<base>/skills/exact/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "over",
+          "description": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+          "content": "Body.",
+          "filePath": "<base>/skills/over/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description exceeds 1024 characters (1025)",
+          "path": "<base>/skills/over/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "v04-description-required-cases",
+      "skills": [],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/bomws/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/ideo/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/list/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/none/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/nul/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/num/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/ws/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "v05-name-fallbacks",
+      "skills": [
+        {
+          "name": "boolname",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/boolname/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "emptyname",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/emptyname/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "numname",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/numname/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "v06-disable-model-invocation-values",
+      "skills": [
+        {
+          "name": "t-cap",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-cap/SKILL.md",
+          "disableModelInvocation": true
+        },
+        {
+          "name": "t-false",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-false/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "t-on",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-on/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "t-one",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-one/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "t-str",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-str/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "t-true",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-true/SKILL.md",
+          "disableModelInvocation": true
+        },
+        {
+          "name": "t-upper",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-upper/SKILL.md",
+          "disableModelInvocation": true
+        },
+        {
+          "name": "t-yes",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/t-yes/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "v07-description-not-trimmed-in-record",
+      "skills": [
+        {
+          "name": "pad",
+          "description": "  padded  ",
+          "content": "Body.",
+          "filePath": "<base>/skills/pad/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "f01-line-endings",
+      "skills": [
+        {
+          "name": "cr",
+          "description": "d",
+          "content": "Body",
+          "filePath": "<base>/skills/cr/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "crlf",
+          "description": "d",
+          "content": "Line 1\nLine 2",
+          "filePath": "<base>/skills/crlf/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "f02-bom-means-no-frontmatter",
+      "skills": [],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/bom/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "f03-delimiter-edges",
+      "skills": [
+        {
+          "name": "body-trim",
+          "description": "d",
+          "content": "Body text",
+          "filePath": "<base>/skills/body-trim/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "close4",
+          "description": "d",
+          "content": "-\nBody",
+          "filePath": "<base>/skills/close4/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "closefoo",
+          "description": "d",
+          "content": "foo\nBody",
+          "filePath": "<base>/skills/closefoo/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "no-body",
+          "description": "d",
+          "content": "",
+          "filePath": "<base>/skills/no-body/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "opener-x",
+          "description": "d",
+          "content": "Body",
+          "filePath": "<base>/skills/opener-x/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/empty-fm/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/indented/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/unclosed/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "f04-yaml-rejections",
+      "skills": [
+        {
+          "name": "badindent",
+          "description": "d - x",
+          "content": "Body.",
+          "filePath": "<base>/skills/badindent/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing directives-end indicator line at line 1, column 10:\n\n%YAML 1.1\n         ^\n",
+          "path": "<base>/skills/directive/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Source contains multiple documents; please use YAML.parseAllDocuments() at line 4, column 1:\n\n...\nx: 1\n^^^^\n",
+          "path": "<base>/skills/docend/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\ndescription: a\ndescription: b\n^\n",
+          "path": "<base>/skills/dupkey/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Tabs are not allowed as indentation at line 2, column 1:\n\nname: tabs\n\tdescription: d\n^\n",
+          "path": "<base>/skills/tabs/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 2, column 19:\n\ndescription: \"open\n                  ^\n",
+          "path": "<base>/skills/unterminated/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "f05-yaml-value-semantics",
+      "skills": [
+        {
+          "name": "alias",
+          "description": "Aliased.",
+          "content": "Body.",
+          "filePath": "<base>/skills/alias/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "complexkey",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/complexkey/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "date",
+          "description": "2001-12-14",
+          "content": "Body.",
+          "filePath": "<base>/skills/date/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "flow",
+          "description": "Flow.",
+          "content": "Body.",
+          "filePath": "<base>/skills/flow/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "folded",
+          "description": "one two\n",
+          "content": "Body.",
+          "filePath": "<base>/skills/folded/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "literal",
+          "description": "one\ntwo\n",
+          "content": "Body.",
+          "filePath": "<base>/skills/literal/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "proto",
+          "description": "d",
+          "content": "Body.",
+          "filePath": "<base>/skills/proto/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "quoted",
+          "description": "a\tb é A",
+          "content": "Body.",
+          "filePath": "<base>/skills/quoted/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "tagged",
+          "description": "123",
+          "content": "Body.",
+          "filePath": "<base>/skills/tagged/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/merge/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/octal/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/scalar/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "f06-non-declared-parse-error-silent",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "i01-dir-pattern-and-negation",
+      "skills": [
+        {
+          "name": "keep-tmp",
+          "description": "Use keep-tmp.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep-tmp/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "ok",
+          "description": "Use ok.",
+          "content": "Body.",
+          "filePath": "<base>/skills/ok/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i02-nested-ignore-prefixing",
+      "skills": [
+        {
+          "name": "anchored",
+          "description": "Use anchored.",
+          "content": "Body.",
+          "filePath": "<base>/skills/group/deep/anchored/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "inner",
+          "description": "Use inner.",
+          "content": "Body.",
+          "filePath": "<base>/skills/inner/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i03-comments-escapes-blank",
+      "skills": [
+        {
+          "name": "!bang",
+          "description": "Bang dir.",
+          "content": "Body.",
+          "filePath": "<base>/skills/!bang/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "comment",
+          "description": "Use comment.",
+          "content": "Body.",
+          "filePath": "<base>/skills/comment/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/!bang/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "i04-case-insensitive",
+      "skills": [
+        {
+          "name": "public",
+          "description": "Use public.",
+          "content": "Body.",
+          "filePath": "<base>/skills/public/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i05-all-three-ignore-files",
+      "skills": [
+        {
+          "name": "c",
+          "description": "Use c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "e",
+          "description": "Use e.",
+          "content": "Body.",
+          "filePath": "<base>/skills/e/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i06-ignore-file-is-directory-or-symlink",
+      "skills": [
+        {
+          "name": "a",
+          "description": "Use a.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i07-globstar-and-root-file-patterns",
+      "skills": [
+        {
+          "name": "skills",
+          "description": "Use skills.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i08-crlf-ignore-file",
+      "skills": [
+        {
+          "name": "c",
+          "description": "Use c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i09-trailing-spaces",
+      "skills": [
+        {
+          "name": "esc",
+          "description": "Esc.",
+          "content": "Body.",
+          "filePath": "<base>/skills/esc/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "plain ",
+          "description": "Plain with space.",
+          "content": "Body.",
+          "filePath": "<base>/skills/plain /SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/plain /SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "r01-leading-backslash-rejects-after-collected-sibling",
+      "rejects": {
+        "name": "RangeError",
+        "message": "path should be a `path.relative()`d string, but got \"/x.md\""
+      }
+    },
+    {
+      "id": "r02-leading-backslash-dir-rejects",
+      "rejects": {
+        "name": "RangeError",
+        "message": "path should be a `path.relative()`d string, but got \"/d/\""
+      }
+    },
+    {
+      "id": "r03-earlier-root-lost",
+      "rejects": {
+        "name": "RangeError",
+        "message": "path should be a `path.relative()`d string, but got \"/bad.md\""
+      }
+    },
+    {
+      "id": "r04-inner-backslash-loads",
+      "skills": [
+        {
+          "name": "skills",
+          "description": "Use skills.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a\\b.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    }
+  ]
+}

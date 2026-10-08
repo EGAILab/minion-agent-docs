@@ -1,0 +1,2 @@
+{"platform":"linux","withSkill":false,"skills":[],"diagnostics":[{"code":"file_info_failed","loopDepth":41,"messagePrefix":"ELOOP: too many symbolic links encountered"}]}
+{"platform":"linux","withSkill":true,"skills":["/skills/b.md"],"diagnostics":[{"code":"file_info_failed","loopDepth":41,"messagePrefix":"ELOOP: too many symbolic links encountered"}]}
