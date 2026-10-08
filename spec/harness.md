@@ -232,9 +232,10 @@ corpus.
 `yaml@2.9.0`.
 
 Evidence:
-- a differential fuzz of 1.5M inputs: whenever the subset accepts, `yaml@2.9.0` accepts with an
+- a differential fuzz of 1,500,000 generated inputs (1,374,031 distinct): whenever the subset
+  accepts, `yaml@2.9.0` accepts with an
   identical value tree;
-- nine negative controls, all killed;
+- eleven negative controls, each killed on all three seeds;
 - 25/25 realistic skill frontmatters accepted with identical values.
 
 The grammar:
@@ -286,6 +287,9 @@ The grammar:
      - It must close on the same line, with the same trailing rule.
      - The value is always a string.
    - **Plain.**
+     - **Whitespace.** Only SP and TAB are YAML whitespace here. Every other whitespace character
+       (U+00A0, U+2003, U+3000, and the like) is scalar content: it is never indentation, never
+       stripped, and never a comment separator (`WP141-C001`).
      - **The text.** A comment starts at the first SP or TAB followed by `#`. The text is
        everything before the comment, with trailing SP and TAB removed. It must:
        - be non-empty;
@@ -297,7 +301,7 @@ The grammar:
        continuation lines are the following lines up to the first non-blank line indented `<= n`.
        Each one is either blank, or a text line under these rules:
        - a comment line is rejected;
-       - the line is taken without its indentation;
+       - the line is taken without its indentation, which is its leading SP characters only;
        - it may contain no comment;
        - its text follows the same rules, except that it may not start with any of those
          characters at all.
@@ -334,7 +338,10 @@ The grammar:
    - **Body:**
      - `|` joins the text and empty lines with LF.
      - `>` joins consecutive text lines with a SP, and with `k` LF across `k` empty lines.
-   - **Chomping,** where `E` is the number of empty lines after the last text line in the region:
+   - **Chomping,** where `E` is the number of empty lines after the last text line in the region
+     that are **followed by an LF in `T`**. The unterminated final line of `T` (`T` does not end in
+     LF) contributes no line break even when it is whitespace-only: for example, an indented blank
+     line just before the closing `---`.
      - clip (no indicator) → `body + LF`;
      - strip (`-`) → `body`;
      - keep (`+`) → `body + LF + LF×E`.
@@ -410,12 +417,14 @@ is unobservable here, because extraction normalizes CR to LF itself.
 
 ### Conformance evidence (WP-14.1)
 
-**Canonical scenarios:** `conformance/harness/skills/*.yaml`, schema
+**Canonical scenarios:** `conformance/agent/skill-discovery/*.json`, schema
 `conformance/schema/skill-discovery-scenario.schema.json`.
 - They are generated from the characterization corpus, using each scenario's expected values.
 - Rows that diverge from pinned Pi are labelled with their `DIV-` ID. Their Pi observation is kept
   in the evidence data.
-- POSIX-only rows: backslash names, case-variant names, trailing-space names.
+- POSIX-only rows: backslash names, case-variant names, trailing-space names. `r05` is the DIV-005
+  continuation witness, with a successful skill both before and after the invalid entry
+  (`WP141-C002`).
 
 **Frontmatter subset:** the subset cases are fixture rows (one `SKILL.md` each), through the real
 loader. No YAML API is exposed (Owner decision §6).

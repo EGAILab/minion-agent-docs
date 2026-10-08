@@ -134,7 +134,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Permanent witnesses:**
   - the WP-14.1 canonical rows labelled `DIV-004` (each excluded construct through the real loader; Pi's own result kept in the evidence data);
   - the differential soundness evidence (`assurance/layers/data/14-wp141/subset-diff.mjs`): whenever the subset accepts, `yaml@2.9.0` accepts with an identical value tree;
-  - the nine fuzz negative controls (`fuzz-controls.mjs`);
+  - the eleven fuzz negative controls (`fuzz-controls.mjs`), each killed on all three seeds;
   - the realistic-shape acceptance set (`subset-realistic.mjs`).
 - **Manifest:** row `HAR-010-DIV-004`, disposition `intentional divergence`.
 - **Governance:** Owner decision, Layer 14 WP-14.1 (`minion-agent#158` issuecomment-6051472129, §2–§6).
@@ -160,7 +160,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Realistic user impact:** a single oddly named entry no longer makes all skills disappear.
 - **Platforms:** POSIX. Windows cannot create such names. Names starting with `.` are skipped before the check on every platform.
 - **Permanent witnesses:**
-  - the WP-14.1 canonical rows labelled `DIV-005`: a leading-backslash file after a collected sibling, a leading-backslash directory, a later root after an earlier root, and the inner-backslash control that still loads normally;
+  - the WP-14.1 canonical rows labelled `DIV-005`: a leading-backslash file after a collected sibling, a leading-backslash directory, a later root after an earlier root, a successful skill both before **and after** the invalid entry (`r05`, `WP141-C002`), and the inner-backslash control that still loads normally;
+  - the model negative controls (`assurance/layers/data/14-wp141/model-controls.mjs`): "stops walking the directory after the invalid entry" is caught by `r05` alone, and "skips without a diagnostic" is caught by `r01`, `r02`, `r03` and `r05`;
   - Pi's rejection is kept in `assurance/layers/data/14-wp141/out-linux.json`.
 - **Manifest:** row `HAR-001-DIV-005`, disposition `intentional divergence`.
 - **Governance:** Owner decision, Layer 14 WP-14.1 (`minion-agent#158` issuecomment-6051472129, §9–§11).

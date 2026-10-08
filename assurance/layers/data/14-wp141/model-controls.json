@@ -1,0 +1,24 @@
+{
+ "platform": "linux",
+ "report": {
+  "invalid-entry-stops-the-directory": {
+   "applied": true,
+   "intended": "r05-skills-before-and-after-invalid-entry",
+   "killedBy": [
+    "r05-skills-before-and-after-invalid-entry"
+   ],
+   "killedByIntended": true
+  },
+  "invalid-entry-without-diagnostic": {
+   "applied": true,
+   "intended": "r01-leading-backslash-rejects-after-collected-sibling",
+   "killedBy": [
+    "r01-leading-backslash-rejects-after-collected-sibling",
+    "r02-leading-backslash-dir-rejects",
+    "r03-earlier-root-lost",
+    "r05-skills-before-and-after-invalid-entry"
+   ],
+   "killedByIntended": true
+  }
+ }
+}

@@ -19,6 +19,9 @@ const NUMBER_RES = [
 // space/EOL, but the subset rejects them as first characters unconditionally.
 const PLAIN_FIRST_FORBIDDEN = new Set([..."-?:,[]{}#&*!|>'\"%@`"]);
 
+// Whether T ends with LF (set per readSubset call): its last line is then terminated.
+let lastLineTerminated = false;
+
 class Reject extends Error {}
 const reject = (why) => {
 	throw new Reject(why);
@@ -143,8 +146,11 @@ function sameLineScalar(rest, allowContinuation, lines, i, n) {
 		if (indentOf(line) <= n) break;
 		if (/^ *\t/.test(line)) reject("tab in continuation indentation");
 		if (isComment(line)) reject("comment inside multi-line plain scalar");
-		const seg = plainLine(line.trimStart());
-		if (seg !== line.trimStart().replace(/[ \t]+$/, "")) reject("comment after continuation line");
+		// Indentation is SP only (TAB is rejected globally). Any other whitespace -- U+00A0, U+2003,
+		// U+3000 and the like -- is scalar content, as in yaml@2.9.0 (WP141-C001).
+		const stripped = line.replace(/^ +/, "");
+		const seg = plainLine(stripped);
+		if (seg !== stripped.replace(/[ \t]+$/, "")) reject("comment after continuation line");
 		checkPlainSegment(seg, false);
 		text += blanks === 0 ? ` ${seg}` : "\n".repeat(blanks);
 		if (blanks !== 0) text += seg;
@@ -188,12 +194,14 @@ function blockScalar(header, lines, i, n) {
 		if (style === ">" && /^[ \t]/.test(text)) reject("more-indented line in folded scalar");
 		content.push(text);
 	}
-	// trailing blank lines belong to the block scalar's chomping region
+	// trailing blank lines belong to the block scalar's chomping region; each counts only if a line
+	// break follows it in T -- the unterminated final line of T contributes none
 	let trailing = 0;
 	while (content.length && content[content.length - 1] === null) {
 		content.pop();
 		trailing++;
 	}
+	if (trailing > 0 && j === lines.length && !lastLineTerminated) trailing--;
 	const consumed = j - 1 - i;
 	if (content.length === 0) return [chomp === "+" ? "\n".repeat(trailing) : "", consumed];
 	let body = "";
@@ -292,7 +300,8 @@ export function readSubset(text) {
 		for (const ch of text) if (forbiddenChar(ch.codePointAt(0))) reject("forbidden character");
 		const lines = text.split("\n");
 		// a final line break terminates the last line; it does not start another one
-		if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+		lastLineTerminated = lines.length > 1 && lines[lines.length - 1] === "";
+		if (lastLineTerminated) lines.pop();
 		for (const line of lines) if (/^ *\t/.test(line)) reject("tab in leading whitespace");
 		let k = 0;
 		while (k < lines.length && isBlankOrComment(lines[k])) k++;

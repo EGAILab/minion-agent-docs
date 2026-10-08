@@ -731,6 +731,81 @@
       "diagnostics": []
     },
     {
+      "id": "f07-unicode-whitespace-in-continuation",
+      "skills": [
+        {
+          "name": "emsp",
+          "description": "a  b",
+          "content": "Body.",
+          "filePath": "<base>/skills/emsp/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "ideosp",
+          "description": "a 　b",
+          "content": "Body.",
+          "filePath": "<base>/skills/ideosp/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "leadnbsp",
+          "description": " x y ",
+          "content": "Body.",
+          "filePath": "<base>/skills/leadnbsp/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "nbsp",
+          "description": "a  b",
+          "content": "Body.",
+          "filePath": "<base>/skills/nbsp/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "f08-block-chomping-at-frontmatter-end",
+      "skills": [
+        {
+          "name": "clip-ws",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>/skills/clip-ws/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-blank",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>/skills/keep-blank/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-both",
+          "description": "x\n\n",
+          "content": "Body",
+          "filePath": "<base>/skills/keep-both/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-ws",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>/skills/keep-ws/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "strip-ws",
+          "description": "x",
+          "content": "Body",
+          "filePath": "<base>/skills/strip-ws/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
       "id": "f02-bom-means-no-frontmatter",
       "skills": [],
       "diagnostics": [
@@ -1124,6 +1199,13 @@
       "rejects": {
         "name": "RangeError",
         "message": "path should be a `path.relative()`d string, but got \"/bad.md\""
+      }
+    },
+    {
+      "id": "r05-skills-before-and-after-invalid-entry",
+      "rejects": {
+        "name": "RangeError",
+        "message": "path should be a `path.relative()`d string, but got \"/x.md\""
       }
     },
     {
@@ -2092,116 +2174,160 @@
       "id": "y03-fuzz-boundary-sample",
       "skills": [
         {
-          "name": "y040",
-          "description": "+",
+          "name": "y023",
+          "description": "　x\n-x\n\n*a\n\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y040/SKILL.md",
+          "filePath": "<base>/skills/y023/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y126",
-          "description": "\n\na,b\n",
+          "name": "y046",
+          "description": "a # c\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y126/SKILL.md",
+          "filePath": "<base>/skills/y046/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y132",
-          "description": "\n\n!t x",
+          "name": "y081",
+          "description": "!t x\nnull\n+1",
           "content": "Body.",
-          "filePath": "<base>/skills/y132/SKILL.md",
+          "filePath": "<base>/skills/y081/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y178",
-          "description": "  p!d  q\"",
+          "name": "y090",
+          "description": "&a x - x w\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y178/SKILL.md",
+          "filePath": "<base>/skills/y090/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y203",
-          "description": "a#b-",
+          "name": "y114",
+          "description": "0o17 :x\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y203/SKILL.md",
+          "filePath": "<base>/skills/y114/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y214",
-          "description": "\"",
+          "name": "y145",
+          "description": "x \nw\n　x\n yes\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y214/SKILL.md",
+          "filePath": "<base>/skills/y145/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y222",
-          "description": "/",
+          "name": "y160",
+          "description": "it's",
           "content": "Body.",
-          "filePath": "<base>/skills/y222/SKILL.md",
+          "filePath": "<base>/skills/y160/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y267",
-          "description": "\u001b",
+          "name": "y192",
+          "description": "a: b \" x # y # z  y z\n",
           "content": "Body.",
-          "filePath": "<base>/skills/y267/SKILL.md",
+          "filePath": "<base>/skills/y192/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "a\"b",
-          "description": "😀",
+          "name": " ",
+          "description": "a: b",
           "content": "Body.",
-          "filePath": "<base>/skills/y273/SKILL.md",
+          "filePath": "<base>/skills/y196/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y199",
+          "description": "\nx # y # z TRUE +1",
+          "content": "Body.",
+          "filePath": "<base>/skills/y199/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y200",
+          "description": " b\n  x\n~\na}b\n\n",
+          "content": "Body.",
+          "filePath": "<base>/skills/y200/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y211",
+          "description": "#",
+          "content": "Body.",
+          "filePath": "<base>/skills/y211/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y223",
+          "description": "a'b",
+          "content": "Body.",
+          "filePath": "<base>/skills/y223/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y255",
+          "description": "\n- x\n \nx # y # z\n",
+          "content": "Body.",
+          "filePath": "<base>/skills/y255/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y270",
+          "description": "  pad  ",
+          "content": "Body.",
+          "filePath": "<base>/skills/y270/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y291",
+          "description": "1  x :x",
+          "content": "Body.",
+          "filePath": "<base>/skills/y291/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y295",
+          "description": "\ud800",
+          "content": "Body.",
+          "filePath": "<base>/skills/y295/SKILL.md",
           "disableModelInvocation": false
         }
       ],
       "diagnostics": [
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nk-1: \"a#b\" # c\nk-1:\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y000/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ntags: a,b\ntags: Nul\n^\n",
+          "message": "Block scalar header includes extra characters: |: at line 2, column 11:\n\nlicense: |:\n          ^\n",
           "path": "<base>/skills/y001/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n   a,b\n  Null\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y002/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Comments must be separated from other tokens by white space characters at line 1, column 14:\n\nlicense: \"\\ \"# c\n             ^^^\n",
+          "message": "Map keys must be unique at line 3, column 1:\n\nname: >+\nname: >+\n^\n",
           "path": "<base>/skills/y003/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndisable-model-invocation: off # café\n a # c\n^\n",
           "path": "<base>/skills/y004/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y005/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"\"\" does not match parent directory \"y005\"",
-          "path": "<base>/skills/y005/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "Invalid escape sequence \\@ at line 1, column 7:\n\nk-1: \"\\@\"\"\n      ^\n",
           "path": "<base>/skills/y005/SKILL.md"
         },
         {
@@ -2213,7 +2339,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 23:\n\n  __proto__: %x # a: b\n                      ^\n",
+          "message": "Unexpected scalar at node end at line 3, column 12:\n\n - \"\\u00e9\" \n           ^\n",
           "path": "<base>/skills/y007/SKILL.md"
         },
         {
@@ -2224,50 +2350,62 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 4, column 11:\n\nName: \"\\/\"x\n          ^\n",
           "path": "<base>/skills/y009/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\nme\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y010/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 7, column 18:\n\n    description: a: b Use it # first-line comment\n                 ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y011/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \"a #b  b \"\n\" does not match parent directory \"y011\"",
+          "path": "<base>/skills/y011/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y011/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 10, column 4:\n\n `x\n   ^\n",
           "path": "<base>/skills/y012/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n  w\nmetadata: 1.5 # \"\n^\n",
+          "message": "Implicit keys need to be on a single line at line 6, column 1:\n\n__proto__: 'plain'\nallowed-tools:&\n^\n",
           "path": "<base>/skills/y013/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 3, column 11:\n\nname: \"\\N\"x\n          ^\n",
+          "message": "Invalid escape sequence \\x~1 at line 1, column 15:\n\ndescription: \"\\x~1\"\n              ^\n",
           "path": "<base>/skills/y014/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 13, column 1:\n\n __proto__: a\"b - x\ntags: \"a\\nbplain\"\n^\n",
           "path": "<base>/skills/y015/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 1, column 17:\n\nallowed-tools: \"\n                ^\n",
           "path": "<base>/skills/y016/SKILL.md"
         },
         {
@@ -2285,7 +2423,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 25:\n\nallowed-tools: '  pad  'x\n                        ^\n",
+          "message": "Plain value cannot start with flow indicator character , at line 2, column 7:\n\nname: , x # café\n      ^\n",
           "path": "<base>/skills/y019/SKILL.md"
         },
         {
@@ -2303,32 +2441,8 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"-.Inf\n\na,b\" does not match parent directory \"y021\"",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name must not start or end with a hyphen",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 10:\n\nlicense: 1e3 a: b\n         ^\n",
+          "message": "description is required",
           "path": "<base>/skills/y022/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 9, column 1:\n\nlicense: café !t x # first-line comment\nlicense: café !t x # first-line comment\n^\n",
-          "path": "<base>/skills/y023/SKILL.md"
         },
         {
           "type": "warning",
@@ -2350,20 +2464,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"-x\" does not match parent directory \"y026\"",
-          "path": "<base>/skills/y026/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name must not start or end with a hyphen",
-          "path": "<base>/skills/y026/SKILL.md"
-        },
-        {
-          "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 13, column 5:\n\n  *a\n    ^\n",
+          "message": "Plain value cannot start with reserved character ` at line 3, column 27:\n\ndisable-model-invocation: `x\n                          ^\n",
           "path": "<base>/skills/y027/SKILL.md"
         },
         {
@@ -2381,13 +2483,13 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\na.b: |2\n 1e3\n^\n",
+          "message": "Implicit map keys need to be followed by map values at line 4, column 1:\n\nname: 😀 ok\na]b\n^^^\n",
           "path": "<base>/skills/y030/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nallowed-tools: \"q\\\\/\"\nallowed-tools: [a]% tailing   # %x\n^\n",
+          "message": "All mapping items must start at the same column at line 8, column 1:\n\n      -.Inf\n    a: b\n^\n",
           "path": "<base>/skills/y031/SKILL.md"
         },
         {
@@ -2404,14 +2506,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 2, column 1:\n\ndisable-model-invocation:  x # .nan\ndisable-model-invocation:\n^\n",
           "path": "<base>/skills/y034/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 2:\n\n a.b: 'it''s' # c\n a.b: |-  # c\n ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y035/SKILL.md"
         },
         {
@@ -2422,38 +2524,44 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 3:\n\n  a.b: '  pad  '\n  name: \n  ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y037/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 2, column 12:\n\nlicense: \"\"x\n           ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y038/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalars with more-indented leading empty lines must use an explicit indentation indicator at line 8, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "Map keys must be unique at line 3, column 1:\n\nmetadata: null\nmetadata: '  pad  '\n^\n",
           "path": "<base>/skills/y039/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 8, column 2:\n\n k-1: +1\n x_y: >\n ^\n",
+          "path": "<base>/skills/y040/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\na.b: !t x\na.b: -x\n^\n",
           "path": "<base>/skills/y041/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit keys need to be on a single line at line 3, column 1:\n\nallowed-tools: -.Inf\nyes\n^\n",
           "path": "<base>/skills/y042/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 4:\n\n   allowed-tools: \"\\U0001F600\\0\"\n   allowed-tools: 'it''s'\n   ^\n",
+          "message": "All mapping items must start at the same column at line 8, column 1:\n\n  a.b: 1 # first-line comment\n     x \n^\n",
           "path": "<base>/skills/y043/SKILL.md"
         },
         {
@@ -2465,31 +2573,13 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"  pd  \" does not match parent directory \"y044\"",
-          "path": "<base>/skills/y044/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y044/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 17:\n\n~: \"\\U0001F600 \"x\n                ^\n",
+          "message": "description is required",
           "path": "<base>/skills/y045/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y046/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 3, column 8:\n\n- 'a\"b'x\n       ^\n",
           "path": "<base>/skills/y047/SKILL.md"
         },
         {
@@ -2500,38 +2590,62 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndisable-model-invocation: > # c\ndisable-model-invocation: &a x\n^\n",
-          "path": "<base>/skills/y049/SKILL.md"
+          "code": "invalid_metadata",
+          "message": "name \"a\"b\" does not match parent directory \"y048\"",
+          "path": "<base>/skills/y048/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\nName: 'a\\nb'\nx_y: +1 0x1F\n^\n",
-          "path": "<base>/skills/y050/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n# comment\ndisable-model-invocation:\n^\n",
-          "path": "<base>/skills/y051/SKILL.md"
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y048/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y052/SKILL.md"
+          "path": "<base>/skills/y049/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n__proto__: \"\\_\"\ntags: >+\n^\n",
+          "message": "Plain value cannot start with reserved character ` at line 1, column 27:\n\ndisable-model-invocation: `x\n                          ^\n",
+          "path": "<base>/skills/y050/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y051/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a#b\" does not match parent directory \"y051\"",
+          "path": "<base>/skills/y051/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y051/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\nlicense: 0o17\nlicense: 'a\\nb'\n^\n",
+          "path": "<base>/skills/y052/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y053/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 1, column 10:\n\nlicense: %x\n         ^\n",
+          "message": "Plain value cannot start with directive indicator character % at line 1, column 4:\n\n1: %x\n   ^\n",
           "path": "<base>/skills/y054/SKILL.md"
         },
         {
@@ -2542,62 +2656,74 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 12, column 1:\n\n    __proto__: |2\n     True\n^\n",
           "path": "<base>/skills/y056/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\n   \nname:\n^\n",
           "path": "<base>/skills/y057/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Flow map in block collection must be sufficiently indented and end with a } at line 1, column 32:\n\ndisable-model-invocation: {a: b\n                               ^\n",
+          "message": "Unexpected scalar at node end at line 1, column 20:\n\nlicense: \"\\ud800\\r\"x\n                   ^\n",
           "path": "<base>/skills/y058/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 6:\n\ntrue:\n     ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y059/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\nallowed-tools: *a # 017\nallowed-tools: *a # 017\n^\n",
           "path": "<base>/skills/y060/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 6, column 10:\n\nname: a#b\n         ^\n",
           "path": "<base>/skills/y061/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\na.b: 0x1F\nname:   x\n^\n",
           "path": "<base>/skills/y062/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 1, column 12:\n\n__proto__: `x\n           ^\n",
+          "message": "Missing closing 'quote at line 2, column 1:\n\nmetadata: '\n\n^\n",
           "path": "<base>/skills/y063/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\n<<: 😀 ok\ndesc\n^\n",
+          "path": "<base>/skills/y064/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y064/SKILL.md"
+          "path": "<base>/skills/y065/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\n# comment\nname 😀 ok\n^\n",
+          "code": "invalid_metadata",
+          "message": "name \"0o17 skill\" does not match parent directory \"y065\"",
+          "path": "<base>/skills/y065/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>/skills/y065/SKILL.md"
         },
         {
@@ -2609,49 +2735,37 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"café\na\" does not match parent directory \"y066\"",
-          "path": "<base>/skills/y066/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y066/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Not a YAML token: - a'b at line 4, column 9:\n\n  - >-  - a'b\n        ^^^^^\n",
+          "message": "description is required",
           "path": "<base>/skills/y067/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nk-1: !t x\nk-1: !t x\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y068/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\na.b: \"\\x07a\\tb\"\na.b: !t x # @x\n^\n",
+          "message": "Plain value cannot start with reserved character @ at line 1, column 12:\n\n__proto__: @x\n           ^\n",
           "path": "<base>/skills/y069/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n    ~\n   +1\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y070/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 1, column 7:\n\nk-1 : `x\n      ^\n",
+          "message": "Plain value cannot start with reserved character @ at line 4, column 5:\n\n  - @x\n    ^\n",
           "path": "<base>/skills/y071/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 2, column 6:\n\nx_y: `x\n     ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y072/SKILL.md"
         },
         {
@@ -2663,61 +2777,55 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\n- >\nName: x:y # .inf\n^\n",
+          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: \"a#b\"\ndescription: \"a#b\"\n^\n",
           "path": "<base>/skills/y074/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit map keys need to be followed by map values at line 8, column 1:\n\n \nx # y # z\n^\n",
           "path": "<base>/skills/y075/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\nname: \"\\/a#b\"\nname: \"\\/a#b\"\n^\n",
+          "message": "Plain value cannot start with reserved character @ at line 3, column 3:\n\n- @x\n  ^\n",
           "path": "<base>/skills/y076/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 1, column 12:\n\nx_y: \"\\x41\"x\n           ^\n",
+          "path": "<base>/skills/y077/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y077/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 15, column 1:\n\na b: \"\\\\\"\na b: \"\\\\\"\n^\n",
           "path": "<base>/skills/y078/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n# comment\ntags: > # c\n^\n",
+          "message": "Unexpected block-seq-ind on same line with key at line 9, column 11:\n\nmetadata: - x # -x\n          ^\n",
           "path": "<base>/skills/y079/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 4, column 1:\n\n     　x\n   no\n^\n",
           "path": "<base>/skills/y080/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\ndescription: a,b\ndescription: ''\n^\n",
-          "path": "<base>/skills/y081/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "Implicit keys need to be on a single line at line 8, column 1:\n\nName: .inf\n😀 ok\n^\n",
           "path": "<base>/skills/y082/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 2, column 4:\n\nx_y:|  b # :x\n   true\n   ^^^^\n",
           "path": "<base>/skills/y083/SKILL.md"
         },
         {
@@ -2735,85 +2843,73 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"TRUE\n'\n\" does not match parent directory \"y085\"",
-          "path": "<base>/skills/y085/SKILL.md"
+          "message": "description is required",
+          "path": "<base>/skills/y086/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y085/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nk-1: |2\n a # c\n^\n",
+          "message": "name \"yes\" does not match parent directory \"y086\"",
           "path": "<base>/skills/y086/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit map keys need to be followed by map values at line 14, column 2:\n\n disable-model-invocation: a]b\n a.b:x a\"b\n ^^^^^^^^^\n",
+          "message": "Plain value cannot start with reserved character ` at line 1, column 7:\n\na|.b: `x\n      ^\n",
           "path": "<base>/skills/y087/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 2, column 1:\n\nName:0x1F # x # y # z\n%x\n^^\n",
           "path": "<base>/skills/y088/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 8, column 1:\n\nname: 1_000\nlicense: >-\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y089/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y090/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\n__proto__: |2\n 1\n^\n",
           "path": "<base>/skills/y091/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\nallowed-tools: trailing   %x\nallowed-tools:\n^\n",
           "path": "<base>/skills/y092/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 7, column 1:\n\nk-1: {a: 1}\n   x:y\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y093/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndescription: a\"b `x # first-line cmment\n skill\n^\n",
           "path": "<base>/skills/y094/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Unresolved alias (the anchor must be set before the alias): a",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y095/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit map keys need to be followed by map values at line 4, column 1:\n\n  - a#b\nmetadata:&\n^^^^^^^^^^\n",
           "path": "<base>/skills/y096/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\nName: :x # first-line comment\n  a: b\n^\n",
           "path": "<base>/skills/y097/SKILL.md"
         },
         {
@@ -2824,38 +2920,50 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Block scalars with more-indented leading empty lines must use an explicit indentation indicator at line 4, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y099/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 2:\n\n _proto__: 'plain' # c\n license: >+\n ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y100/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"x:y\" does not match parent directory \"y100\"",
+          "path": "<base>/skills/y100/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>/skills/y100/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n\n +1\n^\n",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\nd!isable-model-invocation:  b # first-line comment\n  x\n^\n",
           "path": "<base>/skills/y101/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\na.b: |\na.b: |\n^\n",
+          "message": "Map keys must be unique at line 2, column 6:\n\nName:\n     ^\n",
           "path": "<base>/skills/y102/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 16, column 2:\n\n   allowed-tools: 'a\\nb' # c\n x_y:\n ^\n",
+          "message": "Plain value cannot start with reserved character @ at line 3, column 7:\n\nName: @x\n      ^\n",
           "path": "<base>/skills/y103/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Missing closing 'quote at line 7, column 21:\n\ndescription: \"plain\"\n                    ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y104/SKILL.md"
         },
         {
@@ -2866,8 +2974,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndescription: 017 # first-line comment\n  skill\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y106/SKILL.md"
         },
         {
@@ -2885,19 +2993,43 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
+          "message": "name \"\n\n- x\n\" does not match parent directory \"y108\"",
+          "path": "<base>/skills/y108/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y108/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
           "message": "description is required",
           "path": "<base>/skills/y109/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \"pla!in\" does not match parent directory \"y109\"",
+          "path": "<base>/skills/y109/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y109/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 2, column 15:\n\ndescription: \"\n              ^\n",
           "path": "<base>/skills/y110/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit map keys need to be followed by map values at line 4, column 1:\n\nNam: x:y\n0 .inf\n^^^^^^\n",
+          "message": "All mapping items must start at the same column at line 3, column 1:\n\n'q': 😀 ok -.Inf # first-line comment\n  a: b\n^\n",
           "path": "<base>/skills/y111/SKILL.md"
         },
         {
@@ -2915,19 +3047,13 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 5:\n\n  - \n    ^\n",
-          "path": "<base>/skills/y114/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 6:\n\ntags:\n     ^\n",
+          "message": "Implicit keys need to be on a single line at line 4, column 1:\n\n  name: yes # ?x\nallow\n^\n",
           "path": "<base>/skills/y115/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "A block sequence may not be used as an implicit map key at line 4, column 1:\n\n__proto__: x:y # on\n - x\n^\n",
           "path": "<base>/skills/y116/SKILL.md"
         },
         {
@@ -2939,43 +3065,55 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y118/SKILL.md"
+          "message": "name \"a\\nb\" does not match parent directory \"y117\"",
+          "path": "<base>/skills/y117/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y117/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y118/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\n   !t x\ntags:\n^\n",
           "path": "<base>/skills/y119/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 3, column 16:\n\ndescription: -x\n               ^\n",
+          "message": "Map keys must be unique at line 3, column 1:\n\ndisable-model-invocation: \"\\N\"\nmetadata: on\n^\n",
           "path": "<base>/skills/y120/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ntags: a#b # no\n  no\n^\n",
+          "message": "Missing closing \"quote at line 3, column 14:\n\nk-1: \" # a #b\n             ^\n",
           "path": "<base>/skills/y121/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 10:\n\nmetadata:\n         ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y122/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Missing closing \"quote at line 7, column 5:\n\n a}b\n    ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y123/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 5, column 7:\n\n  - ''x\n      ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y124/SKILL.md"
         },
         {
@@ -2986,20 +3124,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unresolved alias (the anchor must be set before the alias): a",
+          "path": "<base>/skills/y126/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Nested mappings are not allowed in compact mappings at line 1, column 14:\n\ndescription: a: b\n             ^\n",
           "path": "<base>/skills/y127/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\na.b: a#b\na.b:\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y128/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 6, column 1:\n\n   \"\n  a#b\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y129/SKILL.md"
         },
         {
@@ -3011,8 +3155,14 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 8, column 2:\n\n disable-model-invocation: \"\\N\"\n x_y: 'it''s'\n ^\n",
+          "message": "Map keys must be unique at line 2, column 1:\n\nlicense: \"\\N\"\nlicense: \"\\N\"\n^\n",
           "path": "<base>/skills/y131/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 4, column 7:\n\n- café\n      ^\n",
+          "path": "<base>/skills/y132/SKILL.md"
         },
         {
           "type": "warning",
@@ -3029,73 +3179,67 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \" [a]\n True\n 1\n\" does not match parent directory \"y134\"",
-          "path": "<base>/skills/y134/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y134/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
           "message": "description is required",
           "path": "<base>/skills/y135/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\n__proto__: 0x1F # first-line comment\n -.Inf\n^\n",
           "path": "<base>/skills/y136/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Plain value cannot start with reserved character ` at line 9, column 9:\n\n  tags: `x\n        ^\n",
           "path": "<base>/skills/y137/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\n~: 1.5 café\n~: 1.5 café\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y138/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y139/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"no 017\" does not match parent directory \"y139\"",
-          "path": "<base>/skills/y139/SKILL.md"
+          "message": "name \"-x  b\" does not match parent directory \"y138\"",
+          "path": "<base>/skills/y138/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y138/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not start or end with a hyphen",
+          "path": "<base>/skills/y138/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Block scalars with more-indented leading empty lines must use an explicit indentation indicator at line 5, column 2:\n\n  \n -.Inf\n ^\n",
           "path": "<base>/skills/y139/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 4, column 12:\n\n__proto__: @x a]b\n           ^\n",
+          "message": "Unexpected scalar at node end at line 1, column 16:\n\n__proto__: \"\\_\"x\n               ^\n",
           "path": "<base>/skills/y140/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalar lines must not be less indented than their first line at line 5, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "Map keys must be unique at line 3, column 1:\n\n\na.b: trailing  \n^\n",
           "path": "<base>/skills/y141/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 3:\n\n  description: ''\n  description: ''\n  ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y142/SKILL.md"
         },
         {
@@ -3106,20 +3250,26 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 9, column 1:\n\n  disable-model-invocation: null\na.b: \"\\ \"\n^\n",
+          "code": "invalid_metadata",
+          "message": "name \"\ud800plain\" does not match parent directory \"y143\"",
+          "path": "<base>/skills/y143/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y143/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y144/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 5, column 1:\n\n\n {a: 1}\n^\n",
-          "path": "<base>/skills/y145/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: café\ndescription:\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y146/SKILL.md"
         },
         {
@@ -3131,25 +3281,31 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"plain\" does not match parent directory \"y147\"",
+          "message": "name \"a\nb\" does not match parent directory \"y147\"",
           "path": "<base>/skills/y147/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Unresolved alias (the anchor must be set before the alias): a",
-          "path": "<base>/skills/y148/SKILL.md"
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y147/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y148/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 5, column 1:\n\n   a\"}b\nx_y: 'it''s'\n^\n",
           "path": "<base>/skills/y149/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 3:\n\n  metadata: trailing  \n  k-1: \"plain\"\n  ^\n",
+          "message": "Missing closing \"quote at line 5, column 13:\n\n  - ~ #  y z\n            ^\n",
           "path": "<base>/skills/y150/SKILL.md"
         },
         {
@@ -3160,38 +3316,38 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nallowed-tools: null a#b # x # y # z # first-line comment\n  off\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y152/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 2, column 11:\n\nlicense: '\n          ^\n",
+          "message": "Plain value cannot start with directive indicator character % at line 2, column 3:\n\n- %x\n  ^\n",
           "path": "<base>/skills/y153/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nmetadata: x\ty\ndescription:café\n^\n",
-          "path": "<base>/skills/y154/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\nname: -x\nallowed-tools: '  pad '\n^\n",
-          "path": "<base>/skills/y155/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y156/SKILL.md"
+          "path": "<base>/skills/y154/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y155/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 5, column 5:\n\n- \"?\n    ^\n",
+          "message": "All mapping items must start at the same column at line 4, column 1:\n\n  __proto__: |2\n   1e3\n^\n",
+          "path": "<base>/skills/y156/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y157/SKILL.md"
         },
         {
@@ -3202,26 +3358,20 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 2, column 21:\n\n  allowed-tools: *a a#b\n                    ^^^\n",
           "path": "<base>/skills/y159/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y160/SKILL.md"
-        },
-        {
-          "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 6:\n\na b: a: b\n     ^\n",
+          "message": "Nested mappings are not allowed in compact mappings at line 1, column 14:\n\ndescription: x:y {a: 1}\n             ^\n",
           "path": "<base>/skills/y161/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n k-1: !t x # first-line comment\n  0o17\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y162/SKILL.md"
         },
         {
@@ -3239,19 +3389,19 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n    !t x\n  café\n^\n",
+          "message": "Implicit map keys need to be followed by map values at line 2, column 1:\n\nk-1: a,b\ndisable-model-invocation x\ty #x\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
           "path": "<base>/skills/y165/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndescription: &a x # +1\n %x\n^\n",
+          "message": "Plain value cannot start with reserved character ` at line 6, column 7:\n\nName: `x\n      ^\n",
           "path": "<base>/skills/y166/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Block scalar lines must not be less indented than their first line at line 10, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y167/SKILL.md"
         },
         {
@@ -3268,20 +3418,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a,b\" does not match parent directory \"y169\"",
-          "path": "<base>/skills/y169/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y169/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 2, column 1:\n\n<<: :x\n<<:\n^\n",
           "path": "<base>/skills/y170/SKILL.md"
         },
         {
@@ -3292,14 +3430,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Missing closing 'quote at line 2, column 15:\n\nmetadata: ' #x\n              ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y172/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 3, column 1:\n\ndescription: Null # f&irst-line comment\n   1e#3\n^\n",
           "path": "<base>/skills/y173/SKILL.md"
         },
         {
@@ -3310,62 +3448,80 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nlicense: true # .inf\n   *a\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y175/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"x \" does not match parent directory \"y175\"",
+          "path": "<base>/skills/y175/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>/skills/y175/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\na.b: a]b\na.b: |-\n^\n",
+          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndisable-model-invocation: |2\n w\n^\n",
           "path": "<base>/skills/y176/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 3:\n\n  name: a\"b\n  name:\n  ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y177/SKILL.md"
         },
         {
           "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y178/SKILL.md"
+        },
+        {
+          "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 2, column 14:\n\ndescription: @x\n             ^\n",
+          "message": "Unexpected block-seq-ind on same line with key at line 5, column 14:\n\n  __proto__: - x\n             ^\n",
           "path": "<base>/skills/y179/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected tag at node end at line 1, column 12:\n\nx_y: \"a\\nb\"!\n           ^\n",
           "path": "<base>/skills/y180/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: ~\ndescription: \"a\\nb\"\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y181/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 4, column 1:\n\nName: x\ty # 1\n   true\n^\n",
           "path": "<base>/skills/y182/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Tags and anchors must be separated from the next token by white space at line 4, column 4:\n\n- !\"a#b\"\n   ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y183/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\nallowed-too\n^\n",
-          "path": "<base>/skills/y184/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y184/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\nk-1: \\x07\"\nk-1: >\n^\n",
           "path": "<base>/skills/y185/SKILL.md"
         },
         {
@@ -3394,128 +3550,98 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Plain value cannot start with reserved character @ at line 1, column 6:\n\nk-1: @x :x\n     ^\n",
           "path": "<base>/skills/y188/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n  disable-model-invocation: ?x # first-line comment\n    a: b\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y189/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Implicit keys need to be on a single line at line 3, column 1:\n\nallowed-tools: 1_000\na,b\n^\n",
+          "path": "<base>/skills/y190/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y190/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"017\n\" does not match parent directory \"y190\"",
-          "path": "<base>/skills/y190/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y190/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with block scalar indicator > at line 2, column 7:\n\n[k-1: >\n      ^\n",
           "path": "<base>/skills/y191/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 3, column 7:\n\nname: %x true\n      ^\n",
-          "path": "<base>/skills/y192/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 10:\n\nlicense: +1__proto__:\n         ^\n",
+          "message": "Unexpected scalar at node end at line 3, column 9:\n\nname: ''x\n        ^\n",
           "path": "<base>/skills/y193/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 7, column 1:\n\ndisable-model-invocation: \"\\x07\"\ndescription: 'it''s'\n^\n",
           "path": "<base>/skills/y194/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a'b\" does not match parent directory \"y194\"",
-          "path": "<base>/skills/y194/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y194/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\n\t# tabbed comment\nlicense:\n^\n",
           "path": "<base>/skills/y195/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \" \" does not match parent directory \"y196\"",
           "path": "<base>/skills/y196/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\n\nallowed-tools: |+\n^\n",
-          "path": "<base>/skills/y197/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\ndescription: |2\n [a]\n^\n",
-          "path": "<base>/skills/y198/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nname: on\na#b\n^\n",
-          "path": "<base>/skills/y199/SKILL.md"
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y196/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y200/SKILL.md"
+          "path": "<base>/skills/y197/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y198/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n    null\nlicense: |-\n^\n",
+          "message": "Plain value cannot start with reserved character ` at line 1, column 14:\n\ndescription: `x\n             ^\n",
           "path": "<base>/skills/y201/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\n  license: [a] # first-line comment\n     {a: 1}\n^\n",
+          "message": "Map keys must be unique at line 2, column 1:\n\nName: >+\nName: >+  a # c\n^\n",
           "path": "<base>/skills/y202/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\na.\n^\n",
+          "message": "All mapping items must start at the same column at line 3, column 1:\n\nk-1: a # c\n a: b\n^\n",
+          "path": "<base>/skills/y203/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 4, column 1:\n\n\ndisable-model-invocation: >\n^\n",
           "path": "<base>/skills/y204/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 9:\n\nx_y: '#'\n        ^\n",
+          "message": "Map keys must be unique at line 5, column 1:\n\n  - 'a\"b'\ntags: > # c\n^\n",
           "path": "<base>/skills/y205/SKILL.md"
         },
         {
@@ -3527,79 +3653,79 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y207/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y208/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y209/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y210/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a # 0c !t x\" does not match parent directory \"y210\"",
-          "path": "<base>/skills/y210/SKILL.md"
+          "message": "name \"#\" does not match parent directory \"y206\"",
+          "path": "<base>/skills/y206/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y210/SKILL.md"
+          "path": "<base>/skills/y206/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y211/SKILL.md"
+          "path": "<base>/skills/y207/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 5, column 1:\n\n   Name: 😀 ok\n  \t name: {a: 1}\n^\n",
+          "message": "All mapping items must start at the same column at line 4, column 1:\n\n   ?x\n  -x\n^\n",
+          "path": "<base>/skills/y208/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 7, column 1:\n\nmetadata: [a]\n  x \n^\n",
+          "path": "<base>/skills/y209/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 4, column 1:\n\n\nk-1: true TRUE\n^\n",
+          "path": "<base>/skills/y210/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 2, column 1:\n\nName: x # y # z\nName: >-\n^\n",
           "path": "<base>/skills/y212/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 6, column 16:\n\nallowed-tools: @x\n               ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y213/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y214/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 1, column 14:\n\nlicense: \"\\_\"x\n             ^\n",
           "path": "<base>/skills/y215/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\na.b: x # y # z # first-line commnt\n -.Inf\n^\n",
-          "path": "<base>/skills/y216/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Missing closing \"quote at line 5, column 5:\n\n  ?x\n    ^\n",
-          "path": "<base>/skills/y217/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y216/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y217/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 4, column 1:\n\nmetadata: 'a\\nb'\ndescription:\n^\n",
           "path": "<base>/skills/y218/SKILL.md"
         },
         {
@@ -3610,8 +3736,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 14:\n\n  license: -x\n             ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y220/SKILL.md"
         },
         {
@@ -3624,30 +3750,18 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y223/SKILL.md"
+          "path": "<base>/skills/y222/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"\\\" does not match parent directory \"y223\"",
-          "path": "<base>/skills/y223/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y223/SKILL.md"
+          "code": "parse_failed",
+          "message": "Missing closing 'quote at line 6, column 7:\n\n   - '\n      ^\n",
+          "path": "<base>/skills/y224/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y224/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 3, column 13:\n\n __proto__: @x\n            ^\n",
           "path": "<base>/skills/y225/SKILL.md"
         },
         {
@@ -3665,19 +3779,19 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\ndisable-model-invocation: .inf # 1.5\ndisable-model-invocation:\n^\n",
+          "message": "Implicit keys need to be on a single line at line 3, column 1:\n\ndisable-model-invocation: a#b\nNull\n^\n",
           "path": "<base>/skills/y228/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Invalid escape sequence \\U0{001F60 at line 1, column 17:\n\nallowed-tools: \"\\U0{001F600\"\n                ^\n",
+          "message": "Map keys must be unique at line 6, column 1:\n\n   x \nname: .inf\n^\n",
           "path": "<base>/skills/y229/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 5:\n\nx_y:\n    ^\n",
+          "message": "Map keys must be unique at line 2, column 11:\n\n__proto__:\n          ^\n",
           "path": "<base>/skills/y230/SKILL.md"
         },
         {
@@ -3688,56 +3802,56 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Missing closing 'quote at line 1, column 8:\n\nName: '\n       ^\n",
           "path": "<base>/skills/y232/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 9, column 7:\n\n  - ?x\n      ^\n",
+          "message": "Missing closing 'quote at line 4, column 8:\n\ntags: '\n       ^\n",
           "path": "<base>/skills/y233/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 12, column 1:\n\n\n    -x\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y234/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit map keys need to be followed by map values at line 4, column 1:\n\ntags: 017\n \n^\n",
           "path": "<base>/skills/y235/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 5, column 5:\n\n   '\n    ^\n",
           "path": "<base>/skills/y236/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 7, column 9:\n\n   a: 1}\n        ^\n",
+          "message": "Map keys must be unique at line 8, column 1:\n\nk-1: \"a#b\" # c\ndisable-model-invocation:\n^\n",
           "path": "<base>/skills/y237/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 16, column 1:\n\n    a: b\n   x:y\n^\n",
+          "path": "<base>/skills/y238/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y238/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 3, column 5:\n\n  - `x # first-line comment\n    ^\n",
           "path": "<base>/skills/y239/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalar header includes extra characters: |-\" at line 2, column 17:\n\nallowed-tols: |-\"  # c\n                ^\n",
+          "message": "Map keys must be unique at line 6, column 11:\n\n__proto__:\n          ^\n",
           "path": "<base>/skills/y240/SKILL.md"
         },
         {
@@ -3748,74 +3862,74 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "All mapping items must start at the same column at line 4, column 1:\n\nlicens'e: [a]\n   a}b\n^\n",
           "path": "<base>/skills/y242/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n\t# tabbed commentlicense: \"a#ba\\tb\"\nmetadata: 'a\\nb'\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y243/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar token in YAML stream: \"description\" at line 6, column 1:\n\n\ndescription: > # c\n^^^^^^^^^^^\n",
           "path": "<base>/skills/y244/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 3, column 1:\n\ndescription: >\ndescription: >\n^\n",
           "path": "<base>/skills/y245/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nName: {a: 1} # a'b\n !t x\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y246/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n   a # c\n\n^\n",
+          "message": "All mapping items must start at the same column at line 9, column 1:\n\n__proto__: trailing   # first-line comment\n  [a]\n^\n",
           "path": "<base>/skills/y247/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 6, column 6:\n\n   - %x\n     ^\n",
+          "message": "Missing closing 'quote at line 11, column 8:\n\n   null\n       ^\n",
           "path": "<base>/skills/y248/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 5, column 1:\n\n  tags: trailing  \nno\n^\n",
-          "path": "<base>/skills/y249/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>/skills/y249/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Plain value cannot start with reserved character ` at line 2, column 1:\n\nx_y:\n`  Name: 0x1F\n^\n",
           "path": "<base>/skills/y250/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n    - \"\\\"q\\\"\nlicense:\n^\n",
+          "message": "Block scalar header includes extra characters: |-\" at line 3, column 8:\n\nk-1: |-\"  # c\n       ^\n",
           "path": "<base>/skills/y251/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 6, column 2:\n\n - \"\\x41\"\n license: >+\n ^\n",
           "path": "<base>/skills/y252/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Plain value cannot start with reserved character ` at line 5, column 14:\n\n  __proto__: `x\n             ^\n",
           "path": "<base>/skills/y253/SKILL.md"
         },
         {
@@ -3828,48 +3942,48 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y255/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
           "path": "<base>/skills/y256/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 7, column 14:\n\n    a.b: \"\\\"\"x\n             ^\n",
           "path": "<base>/skills/y257/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 13:\n\nnme: \"\\x41\" %# c\n            ^^^^\n",
+          "message": "Missing closing 'quote at line 9, column 10:\n\na.b: \"\\r\"\n         ^\n",
           "path": "<base>/skills/y258/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nmetadata: > # c\n{\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y259/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n__proto__: '#'\nName: >-\n^\n",
+          "code": "invalid_metadata",
+          "message": "name \"1e3\" does not match parent directory \"y259\"",
+          "path": "<base>/skills/y259/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y260/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 5, column 18:\n\n  allowed-tools: %x {a: 1}\n                 ^\n",
+          "message": "Plain value cannot start with reserved character ` at line 1, column 13:\n\n__prot:o__: `x  y z\n            ^\n",
           "path": "<base>/skills/y261/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\n  - >-\ntags: 'pla&in'\n^\n",
+          "message": "Sequence item without - indicator at line 2, column 6:\n\n- |- |2\n     ^\n",
           "path": "<base>/skills/y262/SKILL.md"
         },
         {
@@ -3881,38 +3995,50 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected tag at node end at line 2, column 31:\n\ndi sable-model-invocation: '#'!\n                              ^\n",
+          "message": "Unexpected scalar at node end at line 4, column 23:\n\ndescription: '  pad  'x\n                      ^\n",
           "path": "<base>/skills/y264/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 7, column 1:\n\n  x # y # z\n Use it\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y265/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \"q\"\" does not match parent directory \"y265\"",
+          "path": "<base>/skills/y265/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y265/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 5, column 1:\n\n\nx_y: 1\n^\n",
           "path": "<base>/skills/y266/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 12, column 1:\n\n __proto__: null # a\"b # first-line comment\n    -.Inf\n^\n",
+          "message": "All mapping items must start at the same column at line 3, column 1:\n\nmetadata: on # first-linecomment\n  %x\n^\n",
+          "path": "<base>/skills/y267/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y268/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 2, column 6:\n\n- *a a #b\n     ^^^^\n",
           "path": "<base>/skills/y269/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y270/SKILL.md"
         },
         {
           "type": "warning",
@@ -3922,38 +4048,44 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 4, column 13:\n\n  metadata: `x\n            ^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y272/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a\"b\" does not match parent directory \"y273\"",
+          "code": "parse_failed",
+          "message": "Unexpected scalar at node end at line 1, column 10:\n\na.b: \"\\_\"x\n         ^\n",
           "path": "<base>/skills/y273/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 5, column 1:\n\n  - {a: 1}\nk-1: 'a\"b'\n^\n",
+          "path": "<base>/skills/y274/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>/skills/y275/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a\tb\" does not match parent directory \"y275\"",
+          "path": "<base>/skills/y275/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y273/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nname: a#b # first-line comment\n @x\n^\n",
-          "path": "<base>/skills/y274/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\ndisable-model-in]vocation: True\ntags:\n^\n",
           "path": "<base>/skills/y275/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 1:\n\n# comment\nx_y: \"  pad  \"\n^\n",
+          "message": "Map keys must be unique at line 9, column 1:\n\n  017\nmetadata:\n^\n",
           "path": "<base>/skills/y276/SKILL.md"
         },
         {
@@ -3964,99 +4096,93 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"skill TRUE\" does not match parent directory \"y277\"",
-          "path": "<base>/skills/y277/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y277/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\na.b 'a\\nb'\n^\n",
           "path": "<base>/skills/y278/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ntags: true # -x\n x # y # z\n^\n",
+          "message": "Missing closing 'quote at line 6, column 9:\n\n   a # c\n        ^\n",
           "path": "<base>/skills/y279/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 2, column 11:\n\nmetadata: on {a: 1} # .nan\n          ^\n",
+          "message": "Unexpected scalar at node end at line 6, column 15:\n\n Name: 'it''s'x\n              ^\n",
           "path": "<base>/skills/y280/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 1:\n\nlicense: '' # c\nlicense: null\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y281/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y282/SKILL.md"
+          "message": "name \"　x null\" does not match parent directory \"y281\"",
+          "path": "<base>/skills/y281/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y283/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y284/SKILL.md"
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/y281/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 2, column 13:\n\n  metadata: @x\n            ^\n",
+          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\n# c\ndescrip\n^\n",
+          "path": "<base>/skills/y282/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Missing closing 'quote at line 1, column 8:\n\nName: '\n       ^\n",
+          "path": "<base>/skills/y283/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 5, column 1:\n\nname: |2\nname: |2\n^\n",
+          "path": "<base>/skills/y284/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y285/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 2:\n\n    trailing  \n tags: yes\n ^\n",
+          "message": "Block scalar header includes extra characters: >: at line 3, column 28:\n\ndisable-model-invocation: >:\n                           ^\n",
           "path": "<base>/skills/y286/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 11, column 2:\n\n disable-model-invocat'ion: 0o17\n Name: a: b\n ^\n",
+          "message": "Implicit keys need to be on a single line at line 5, column 1:\n\n\nmetadata:% ~\n^\n",
           "path": "<base>/skills/y287/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Map keys must be unique at line 6, column 1:\n\n\ndescription:\n^\n",
           "path": "<base>/skills/y288/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Flow map in block collection must be sufficiently indented and end with a } at line 8, column 1:\n\nk-1: {a: b\ntags: null\n^\n",
           "path": "<base>/skills/y289/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n- 1e3\nmetadata: \"\\0\\`e\"\n^\n",
-          "path": "<base>/skills/y290/SKILL.md"
-        },
-        {
-          "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/y291/SKILL.md"
+          "path": "<base>/skills/y290/SKILL.md"
         },
         {
           "type": "warning",
@@ -4066,26 +4192,20 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Missing closing \"quote at line 2, column 8:\n\n   null\n       ^\n",
           "path": "<base>/skills/y293/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\n`# c\n^\n",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>/skills/y294/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\nname: 'a\\nb'\nmetadata: |\n^\n",
-          "path": "<base>/skills/y295/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nx_y: True # first-line com!ment\n  a\"b\n^\n",
+          "message": "Unexpected scalar at node end at line 6, column 21:\n\n__proto__: \"a#ba\\tb\"x\n                    ^\n",
           "path": "<base>/skills/y296/SKILL.md"
         },
         {
@@ -4096,33 +4216,38 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Plain value cannot start with reserved character @ at line 3, column 16:\n\nallowed-tools: @x\n               ^\n",
           "path": "<base>/skills/y298/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "Implicit keys need to be on a single line at line 3, column 1:\n\n  __proto__: true\n x\n^\n",
           "path": "<base>/skills/y299/SKILL.md"
         }
       ]
     },
     {
       "id": "g00-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g01-ignore-corpus",
       "skills": [
         {
-          "name": "b",
-          "description": "In a/b.",
+          "name": "c",
+          "description": "In c.",
           "content": "Body.",
-          "filePath": "<base>/skills/a/b/SKILL.md",
+          "filePath": "<base>/skills/c/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "c",
-          "description": "In a/c.",
+          "name": "keep",
+          "description": "In keep.",
           "content": "Body.",
-          "filePath": "<base>/skills/a/c/SKILL.md",
+          "filePath": "<base>/skills/keep/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4136,21 +4261,15 @@
       "diagnostics": []
     },
     {
-      "id": "g01-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
       "id": "g02-ignore-corpus",
       "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>/skills/#x/SKILL.md",
+          "disableModelInvocation": false
+        },
         {
           "name": "B",
           "description": "In B.",
@@ -4159,17 +4278,116 @@
           "disableModelInvocation": false
         },
         {
-          "name": "c",
-          "description": "In c.",
+          "name": "skills",
+          "description": "Keep.",
           "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/#x/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/B/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g03-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/b/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "d1",
-          "description": "In d1.",
+          "name": "ab",
+          "description": "In ab.",
           "content": "Body.",
-          "filePath": "<base>/skills/d1/SKILL.md",
+          "filePath": "<base>/skills/ab/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In x/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/x/b/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g04-ignore-corpus",
+      "skills": [
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a-x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g05-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g06-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/!keep/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4192,66 +4410,9 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/B/SKILL.md"
+          "path": "<base>/skills/!keep/SKILL.md"
         }
       ]
-    },
-    {
-      "id": "g03-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g04-ignore-corpus",
-      "skills": [
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>/skills/d1/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g05-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g06-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
     },
     {
       "id": "g07-ignore-corpus",
@@ -4260,51 +4421,8 @@
     },
     {
       "id": "g08-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "a-x",
-          "description": "In a-x.",
-          "content": "Body.",
-          "filePath": "<base>/skills/a-x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>/skills/d1/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        }
-      ]
+      "skills": [],
+      "diagnostics": []
     },
     {
       "id": "g09-ignore-corpus",
@@ -4317,17 +4435,17 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
           "filePath": "<base>/skills/d1/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
           "disableModelInvocation": false
         }
       ],
@@ -4344,109 +4462,12 @@
       "id": "g10-ignore-corpus",
       "skills": [
         {
-          "name": "skills",
-          "description": "Root.",
+          "name": "a",
+          "description": "In a.",
           "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g11-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g12-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g13-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
+          "filePath": "<base>/skills/a/SKILL.md",
           "disableModelInvocation": false
         },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In sub/b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/sub/b/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g14-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/b/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g15-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>/skills/d1/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g16-ignore-corpus",
-      "skills": [
         {
           "name": "a-x",
           "description": "In a-x.",
@@ -4455,71 +4476,10 @@
           "disableModelInvocation": false
         },
         {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g17-ignore-corpus",
-      "skills": [
-        {
-          "name": "!keep",
-          "description": "In !keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/!keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
           "filePath": "<base>/skills/d1/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/!keep/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g18-ignore-corpus",
-      "skills": [
-        {
-          "name": "!keep",
-          "description": "In !keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/!keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4528,151 +4488,52 @@
           "content": "Body.",
           "filePath": "<base>/skills/keep.md",
           "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In sub/c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/sub/c/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/!keep/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g19-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g20-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/b/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g21-ignore-corpus",
-      "skills": [
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
         }
       ],
       "diagnostics": []
     },
     {
-      "id": "g22-ignore-corpus",
+      "id": "g11-ignore-corpus",
       "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/b/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>/skills/root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g23-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g24-ignore-corpus",
-      "skills": [
-        {
-          "name": "b",
-          "description": "In a/b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/a/b/SKILL.md",
-          "disableModelInvocation": false
-        },
         {
           "name": "a-x",
           "description": "In a-x.",
           "content": "Body.",
           "filePath": "<base>/skills/a-x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "B",
+          "description": "In B.",
+          "content": "Body.",
+          "filePath": "<base>/skills/B/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/B/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g12-ignore-corpus",
+      "skills": [
+        {
+          "name": "c",
+          "description": "In a/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4687,129 +4548,6 @@
           "description": "In c.",
           "content": "Body.",
           "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In sub/b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/sub/b/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/B/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g25-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g26-ignore-corpus",
-      "skills": [
-        {
-          "name": "skills",
-          "description": "Keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/keep.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In sub/c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/sub/c/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g27-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g28-ignore-corpus",
-      "skills": [
-        {
-          "name": "a-x",
-          "description": "In a-x.",
-          "content": "Body.",
-          "filePath": "<base>/skills/a-x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>/skills/c/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>/skills/keep/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g29-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g30-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g31-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>/skills/b/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4825,13 +4563,493 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/B/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g13-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g14-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>/skills/#x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "ab",
+          "description": "In ab.",
+          "content": "Body.",
+          "filePath": "<base>/skills/ab/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>/skills/#x/SKILL.md"
         }
       ]
     },
     {
-      "id": "g32-ignore-corpus",
+      "id": "g15-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>/skills/#x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/#x/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g16-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>/skills/#x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/#x/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g17-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g18-ignore-corpus",
+      "skills": [
+        {
+          "name": "a",
+          "description": "In a.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a-x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In x/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/x/b/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g19-ignore-corpus",
+      "skills": [
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g20-ignore-corpus",
+      "skills": [
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a-x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g21-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/!keep/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/b/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/!keep/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g22-ignore-corpus",
       "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g23-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/!keep/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "d1",
+          "description": "In d1.",
+          "content": "Body.",
+          "filePath": "<base>/skills/d1/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/!keep/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g24-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g25-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g26-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g27-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g28-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "B",
+          "description": "In B.",
+          "content": "Body.",
+          "filePath": "<base>/skills/B/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In x/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/x/b/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/B/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g29-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g30-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>/skills/#x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a-x/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>/skills/#x/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g31-ignore-corpus",
+      "skills": [
+        {
+          "name": "c",
+          "description": "In a/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g32-ignore-corpus",
+      "skills": [
+        {
+          "name": "a",
+          "description": "In a.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        }
+      ],
       "diagnostics": []
     },
     {
@@ -4839,9 +5057,41 @@
       "skills": [
         {
           "name": "c",
+          "description": "In a/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/a/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
           "description": "In c.",
           "content": "Body.",
           "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g34-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g35-ignore-corpus",
+      "skills": [
+        {
+          "name": "d1",
+          "description": "In d1.",
+          "content": "Body.",
+          "filePath": "<base>/skills/d1/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep",
+          "description": "In keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4869,7 +5119,34 @@
       "diagnostics": []
     },
     {
-      "id": "g34-ignore-corpus",
+      "id": "g36-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/b/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g37-ignore-corpus",
       "skills": [
         {
           "name": "a-x",
@@ -4886,43 +5163,34 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "b",
           "description": "In sub/b.",
           "content": "Body.",
           "filePath": "<base>/skills/sub/b/SKILL.md",
           "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g35-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g36-ignore-corpus",
-      "skills": [
+        },
         {
-          "name": "a-x",
-          "description": "In a-x.",
+          "name": "c",
+          "description": "In sub/c.",
           "content": "Body.",
-          "filePath": "<base>/skills/a-x/SKILL.md",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "keep",
-          "description": "In keep.",
+          "name": "b",
+          "description": "In x/b.",
           "content": "Body.",
-          "filePath": "<base>/skills/keep/SKILL.md",
+          "filePath": "<base>/skills/x/b/SKILL.md",
           "disableModelInvocation": false
         }
       ],
-      "diagnostics": []
-    },
-    {
-      "id": "g37-ignore-corpus",
-      "skills": [],
       "diagnostics": []
     },
     {
@@ -4936,6 +5204,13 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
@@ -4944,9 +5219,16 @@
         },
         {
           "name": "skills",
-          "description": "Keep.",
+          "description": "Root.",
           "content": "Body.",
-          "filePath": "<base>/skills/keep.md",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/c/SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -4963,31 +5245,10 @@
       "id": "g39-ignore-corpus",
       "skills": [
         {
-          "name": "!keep",
-          "description": "In !keep.",
+          "name": "a-x",
+          "description": "In a-x.",
           "content": "Body.",
-          "filePath": "<base>/skills/!keep/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>/skills/#x/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "a",
-          "description": "In a.",
-          "content": "Body.",
-          "filePath": "<base>/skills/a/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>/skills/ab/SKILL.md",
+          "filePath": "<base>/skills/a-x/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4996,21 +5257,30 @@
           "content": "Body.",
           "filePath": "<base>/skills/B/SKILL.md",
           "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>/skills/root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sub/b/SKILL.md",
+          "disableModelInvocation": false
         }
       ],
       "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/!keep/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/#x/SKILL.md"
-        },
         {
           "type": "warning",
           "code": "invalid_metadata",

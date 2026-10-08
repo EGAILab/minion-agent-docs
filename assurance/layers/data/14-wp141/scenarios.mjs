@@ -208,6 +208,30 @@ export const scenarios = [
 		],
 		roots: ["skills"],
 	},
+	{
+		// WP141-C001: non-SP whitespace at the start of a plain continuation line is content
+		id: "f07-unicode-whitespace-in-continuation",
+		fixture: [
+			{ path: "skills/nbsp/SKILL.md", text: fm(["name: nbsp", "description: a", "   b"]) },
+			{ path: "skills/emsp/SKILL.md", text: fm(["name: emsp", "description: a", "   b"]) },
+			{ path: "skills/ideosp/SKILL.md", text: fm(["name: ideosp", "description: a", "  　b"]) },
+			{ path: "skills/leadnbsp/SKILL.md", text: fm(["name: leadnbsp", "description:  x", "  y "]) },
+		],
+		roots: ["skills"],
+	},
+	{
+		// block-scalar chomping at the end of T: a whitespace-only last line (unterminated in T) adds no
+		// line break; a blank line before the closer does (T then ends with LF)
+		id: "f08-block-chomping-at-frontmatter-end",
+		fixture: [
+			{ path: "skills/keep-ws/SKILL.md", text: "---\nname: keep-ws\ndescription: |+\n  x\n  \n---\nBody" },
+			{ path: "skills/keep-blank/SKILL.md", text: "---\nname: keep-blank\ndescription: |+\n  x\n\n---\nBody" },
+			{ path: "skills/keep-both/SKILL.md", text: "---\nname: keep-both\ndescription: >+\n  x\n\n  \n---\nBody" },
+			{ path: "skills/clip-ws/SKILL.md", text: "---\nname: clip-ws\ndescription: |\n  x\n  \n---\nBody" },
+			{ path: "skills/strip-ws/SKILL.md", text: "---\nname: strip-ws\ndescription: >-\n  x\n  \n---\nBody" },
+		],
+		roots: ["skills"],
+	},
 	{ id: "f02-bom-means-no-frontmatter", fixture: [{ path: "skills/bom/SKILL.md", text: `\uFEFF${skill("bom")}` }], roots: ["skills"] },
 	{
 		id: "f03-delimiter-edges",
@@ -379,6 +403,17 @@ export const scenarios = [
 		roots: ["first", "second"],
 	},
 	{
+		// WP141-C002: a successful sibling AFTER the offending entry -- discovery must continue past it
+		id: "r05-skills-before-and-after-invalid-entry",
+		posixOnly: true,
+		fixture: [
+			{ path: "skills/-a/SKILL.md", text: fm(["description: Before the invalid entry."]) },
+			{ path: "skills/\\x.md", text: skill("x") },
+			{ path: "skills/z/SKILL.md", text: skill("z", "After the invalid entry.") },
+		],
+		roots: ["skills"],
+	},
+	{
 		id: "r04-inner-backslash-loads",
 		posixOnly: true,
 		fixture: [{ path: "skills/a\\b.md", text: skill("skills") }],
@@ -390,11 +425,15 @@ export const scenarios = [
 import { corpus as yamlOracle } from "./yaml-oracle.mjs";
 import { realistic } from "./subset-realistic.mjs";
 
+// mulberry32 (exact 32-bit arithmetic); see subset-gen.mjs for why the earlier LCG was replaced
 function seeded(seed) {
-	let s = seed;
+	let s = seed >>> 0;
 	return () => {
-		s = (s * 1103515245 + 12345) & 0x7fffffff;
-		return s / 0x7fffffff;
+		s = (s + 0x6d2b79f5) >>> 0;
+		let t = s;
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 	};
 }
 const asSkill = (src) => `---\n${src}\n---\nBody.`;

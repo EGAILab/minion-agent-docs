@@ -633,6 +633,81 @@
       "diagnostics": []
     },
     {
+      "id": "f07-unicode-whitespace-in-continuation",
+      "skills": [
+        {
+          "name": "emsp",
+          "description": "a  b",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\emsp\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "ideosp",
+          "description": "a 　b",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ideosp\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "leadnbsp",
+          "description": " x y ",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\leadnbsp\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "nbsp",
+          "description": "a  b",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\nbsp\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "f08-block-chomping-at-frontmatter-end",
+      "skills": [
+        {
+          "name": "clip-ws",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>\\skills\\clip-ws\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-blank",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>\\skills\\keep-blank\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-both",
+          "description": "x\n\n",
+          "content": "Body",
+          "filePath": "<base>\\skills\\keep-both\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep-ws",
+          "description": "x\n",
+          "content": "Body",
+          "filePath": "<base>\\skills\\keep-ws\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "strip-ws",
+          "description": "x",
+          "content": "Body",
+          "filePath": "<base>\\skills\\strip-ws\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
       "id": "f02-bom-means-no-frontmatter",
       "skills": [],
       "diagnostics": [
@@ -987,6 +1062,10 @@
     },
     {
       "id": "r03-earlier-root-lost",
+      "skipped": "posixOnly"
+    },
+    {
+      "id": "r05-skills-before-and-after-invalid-entry",
       "skipped": "posixOnly"
     },
     {
@@ -1925,31 +2004,59 @@
       "id": "y03-fuzz-boundary-sample",
       "skills": [
         {
-          "name": "y040",
-          "description": "+",
+          "name": "y023",
+          "description": "　x\n-x\n\n*a\n\n",
           "content": "Body.",
-          "filePath": "<base>\\skills\\y040\\SKILL.md",
+          "filePath": "<base>\\skills\\y023\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y126",
-          "description": "\n\na,b\n",
+          "name": "y046",
+          "description": "a # c\n",
           "content": "Body.",
-          "filePath": "<base>\\skills\\y126\\SKILL.md",
+          "filePath": "<base>\\skills\\y046\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y203",
-          "description": "a#b-",
+          "name": "y081",
+          "description": "!t x\nnull\n+1",
           "content": "Body.",
-          "filePath": "<base>\\skills\\y203\\SKILL.md",
+          "filePath": "<base>\\skills\\y081\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "y214",
-          "description": "\"",
+          "name": "y090",
+          "description": "&a x - x w\n",
           "content": "Body.",
-          "filePath": "<base>\\skills\\y214\\SKILL.md",
+          "filePath": "<base>\\skills\\y090\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y145",
+          "description": "x \nw\n　x\n yes\n",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\y145\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y199",
+          "description": "\nx # y # z TRUE +1",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\y199\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y211",
+          "description": "#",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\y211\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "y223",
+          "description": "a'b",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\y223\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -1986,20 +2093,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>\\skills\\y005\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"\"\" does not match parent directory \"y005\"",
-          "path": "<base>\\skills\\y005\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y005\\SKILL.md"
         },
         {
@@ -2028,20 +2123,32 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y010\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y011\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
+          "path": "<base>\\skills\\y011\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a #b  b \"\n\" does not match parent directory \"y011\"",
+          "path": "<base>\\skills\\y011\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\y011\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y012\\SKILL.md"
         },
         {
@@ -2058,26 +2165,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y015\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y016\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y017\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y018\\SKILL.md"
         },
         {
@@ -2088,8 +2195,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y020\\SKILL.md"
         },
         {
@@ -2100,15 +2207,9 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y022\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y023\\SKILL.md"
         },
         {
           "type": "warning",
@@ -2118,26 +2219,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y025\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\y026\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"-x\" does not match parent directory \"y026\"",
-          "path": "<base>\\skills\\y026\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name must not start or end with a hyphen",
           "path": "<base>\\skills\\y026\\SKILL.md"
         },
         {
@@ -2154,8 +2243,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y029\\SKILL.md"
         },
         {
@@ -2172,8 +2261,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y032\\SKILL.md"
         },
         {
@@ -2184,14 +2273,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y034\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y035\\SKILL.md"
         },
         {
@@ -2202,8 +2291,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y037\\SKILL.md"
         },
         {
@@ -2217,6 +2306,12 @@
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y039\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y040\\SKILL.md"
         },
         {
           "type": "warning",
@@ -2245,26 +2340,8 @@
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "name \"  pd  \" does not match parent directory \"y044\"",
-          "path": "<base>\\skills\\y044\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\y044\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y045\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\y046\\SKILL.md"
+          "path": "<base>\\skills\\y045\\SKILL.md"
         },
         {
           "type": "warning",
@@ -2274,8 +2351,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y048\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a\"b\" does not match parent directory \"y048\"",
+          "path": "<base>\\skills\\y048\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y048\\SKILL.md"
         },
         {
@@ -2292,8 +2381,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y051\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a#b\" does not match parent directory \"y051\"",
+          "path": "<base>\\skills\\y051\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y051\\SKILL.md"
         },
         {
@@ -2304,8 +2405,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y053\\SKILL.md"
         },
         {
@@ -2316,20 +2417,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y055\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y056\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y057\\SKILL.md"
         },
         {
@@ -2340,8 +2441,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y059\\SKILL.md"
         },
         {
@@ -2352,8 +2453,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y061\\SKILL.md"
         },
         {
@@ -2370,14 +2471,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y064\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y065\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"0o17 skill\" does not match parent directory \"y065\"",
+          "path": "<base>\\skills\\y065\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y065\\SKILL.md"
         },
         {
@@ -2406,8 +2519,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y070\\SKILL.md"
         },
         {
@@ -2418,14 +2531,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y072\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y073\\SKILL.md"
         },
         {
@@ -2436,8 +2549,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y075\\SKILL.md"
         },
         {
@@ -2466,15 +2579,9 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>\\skills\\y080\\SKILL.md"
-        },
-        {
-          "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y081\\SKILL.md"
+          "path": "<base>\\skills\\y080\\SKILL.md"
         },
         {
           "type": "warning",
@@ -2490,8 +2597,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y084\\SKILL.md"
         },
         {
@@ -2502,8 +2609,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y086\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"yes\" does not match parent directory \"y086\"",
           "path": "<base>\\skills\\y086\\SKILL.md"
         },
         {
@@ -2520,15 +2633,9 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y089\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y090\\SKILL.md"
         },
         {
           "type": "warning",
@@ -2544,8 +2651,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y093\\SKILL.md"
         },
         {
@@ -2562,8 +2669,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y096\\SKILL.md"
         },
         {
@@ -2580,14 +2687,26 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y099\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y100\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"x:y\" does not match parent directory \"y100\"",
+          "path": "<base>\\skills\\y100\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y100\\SKILL.md"
         },
         {
@@ -2622,26 +2741,50 @@
         },
         {
           "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y106\\SKILL.md"
+        },
+        {
+          "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y106\\SKILL.md"
+          "path": "<base>\\skills\\y107\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\y107\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y108\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "name \"\n\n- x\n\" does not match parent directory \"y108\"",
+          "path": "<base>\\skills\\y108\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\y108\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y109\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"pla!in\" does not match parent directory \"y109\"",
+          "path": "<base>\\skills\\y109\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y109\\SKILL.md"
         },
         {
@@ -2658,8 +2801,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y112\\SKILL.md"
         },
         {
@@ -2682,20 +2825,32 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y116\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y117\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \"a\\nb\" does not match parent directory \"y117\"",
+          "path": "<base>\\skills\\y117\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\y117\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y118\\SKILL.md"
         },
         {
@@ -2718,8 +2873,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y122\\SKILL.md"
         },
         {
@@ -2742,8 +2897,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y126\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y127\\SKILL.md"
         },
         {
@@ -2784,8 +2945,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y134\\SKILL.md"
         },
         {
@@ -2796,20 +2957,38 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y136\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>\\skills\\y137\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y137\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y138\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"-x  b\" does not match parent directory \"y138\"",
+          "path": "<base>\\skills\\y138\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\y138\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not start or end with a hyphen",
           "path": "<base>\\skills\\y138\\SKILL.md"
         },
         {
@@ -2832,8 +3011,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y142\\SKILL.md"
         },
         {
@@ -2850,14 +3029,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y145\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y146\\SKILL.md"
         },
         {
@@ -2868,8 +3041,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y148\\SKILL.md"
         },
         {
@@ -2886,8 +3059,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y151\\SKILL.md"
         },
         {
@@ -2910,8 +3083,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y155\\SKILL.md"
         },
         {
@@ -2934,8 +3107,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y159\\SKILL.md"
         },
         {
@@ -2958,14 +3131,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y163\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y164\\SKILL.md"
         },
         {
@@ -3000,32 +3173,20 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a,b\" does not match parent directory \"y169\"",
-          "path": "<base>\\skills\\y169\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\y169\\SKILL.md"
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y170\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\y170\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y171\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y172\\SKILL.md"
         },
         {
@@ -3036,8 +3197,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y174\\SKILL.md"
         },
         {
@@ -3054,14 +3215,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y177\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y178\\SKILL.md"
         },
         {
@@ -3072,32 +3233,32 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y180\\SKILL.md"
         },
         {
           "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y181\\SKILL.md"
+        },
+        {
+          "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y181\\SKILL.md"
+          "path": "<base>\\skills\\y182\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\y182\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y183\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y184\\SKILL.md"
         },
         {
@@ -3126,20 +3287,20 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y187\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>\\skills\\y188\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y188\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y189\\SKILL.md"
         },
         {
@@ -3150,8 +3311,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y191\\SKILL.md"
         },
         {
@@ -3174,14 +3335,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y195\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y196\\SKILL.md"
         },
         {
@@ -3195,12 +3356,6 @@
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y198\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y199\\SKILL.md"
         },
         {
           "type": "warning",
@@ -3224,6 +3379,12 @@
           "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\y203\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y204\\SKILL.md"
         },
         {
@@ -3234,14 +3395,26 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y206\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
-          "message": "description is required",
+          "message": "name \"#\" does not match parent directory \"y206\"",
+          "path": "<base>\\skills\\y206\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\y206\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y207\\SKILL.md"
         },
         {
@@ -3258,27 +3431,9 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y210\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a # 0c !t x\" does not match parent directory \"y210\"",
-          "path": "<base>\\skills\\y210\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\y210\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>\\skills\\y211\\SKILL.md"
         },
         {
           "type": "warning",
@@ -3288,9 +3443,15 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y213\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y214\\SKILL.md"
         },
         {
           "type": "warning",
@@ -3312,8 +3473,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y218\\SKILL.md"
         },
         {
@@ -3324,8 +3485,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y220\\SKILL.md"
         },
         {
@@ -3344,12 +3505,6 @@
           "type": "warning",
           "code": "parse_failed",
           "message": "frontmatter is not valid in the supported YAML subset",
-          "path": "<base>\\skills\\y223\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y224\\SKILL.md"
         },
         {
@@ -3360,14 +3515,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y226\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y227\\SKILL.md"
         },
         {
@@ -3390,8 +3545,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y231\\SKILL.md"
         },
         {
@@ -3408,14 +3563,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y234\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y235\\SKILL.md"
         },
         {
@@ -3432,14 +3587,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y238\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y239\\SKILL.md"
         },
         {
@@ -3450,8 +3605,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y241\\SKILL.md"
         },
         {
@@ -3468,8 +3623,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y244\\SKILL.md"
         },
         {
@@ -3498,14 +3653,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y249\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y250\\SKILL.md"
         },
         {
@@ -3528,26 +3683,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y254\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y255\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y256\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y257\\SKILL.md"
         },
         {
@@ -3558,14 +3713,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y259\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "name \"1e3\" does not match parent directory \"y259\"",
+          "path": "<base>\\skills\\y259\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y260\\SKILL.md"
         },
         {
@@ -3582,8 +3743,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y263\\SKILL.md"
         },
         {
@@ -3600,8 +3761,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y266\\SKILL.md"
         },
         {
@@ -3612,14 +3773,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y268\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y269\\SKILL.md"
         },
         {
@@ -3654,8 +3815,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y275\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"a\tb\" does not match parent directory \"y275\"",
+          "path": "<base>\\skills\\y275\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y275\\SKILL.md"
         },
         {
@@ -3666,14 +3839,14 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y277\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y278\\SKILL.md"
         },
         {
@@ -3690,8 +3863,20 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
+          "path": "<base>\\skills\\y281\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name \"　x null\" does not match parent directory \"y281\"",
+          "path": "<base>\\skills\\y281\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
           "path": "<base>\\skills\\y281\\SKILL.md"
         },
         {
@@ -3702,8 +3887,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y283\\SKILL.md"
         },
         {
@@ -3714,8 +3899,8 @@
         },
         {
           "type": "warning",
-          "code": "parse_failed",
-          "message": "frontmatter is not valid in the supported YAML subset",
+          "code": "invalid_metadata",
+          "message": "description is required",
           "path": "<base>\\skills\\y285\\SKILL.md"
         },
         {
@@ -3738,8 +3923,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y289\\SKILL.md"
         },
         {
@@ -3750,8 +3935,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y291\\SKILL.md"
         },
         {
@@ -3792,33 +3977,38 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y298\\SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>\\skills\\y299\\SKILL.md"
         }
       ]
     },
     {
       "id": "g00-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g01-ignore-corpus",
       "skills": [
         {
-          "name": "b",
-          "description": "In a/b.",
+          "name": "c",
+          "description": "In c.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\a\\b\\SKILL.md",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "c",
-          "description": "In a/c.",
+          "name": "keep",
+          "description": "In keep.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\a\\c\\SKILL.md",
+          "filePath": "<base>\\skills\\keep\\SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -3832,21 +4022,15 @@
       "diagnostics": []
     },
     {
-      "id": "g01-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
       "id": "g02-ignore-corpus",
       "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\#x\\SKILL.md",
+          "disableModelInvocation": false
+        },
         {
           "name": "B",
           "description": "In B.",
@@ -3855,17 +4039,116 @@
           "disableModelInvocation": false
         },
         {
-          "name": "c",
-          "description": "In c.",
+          "name": "skills",
+          "description": "Keep.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\#x\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\B\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g03-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\b\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "d1",
-          "description": "In d1.",
+          "name": "ab",
+          "description": "In ab.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\d1\\SKILL.md",
+          "filePath": "<base>\\skills\\ab\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In x/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\x\\b\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g04-ignore-corpus",
+      "skills": [
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a-x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g05-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g06-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\!keep\\SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -3888,66 +4171,9 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\B\\SKILL.md"
+          "path": "<base>\\skills\\!keep\\SKILL.md"
         }
       ]
-    },
-    {
-      "id": "g03-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g04-ignore-corpus",
-      "skills": [
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\d1\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g05-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g06-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
     },
     {
       "id": "g07-ignore-corpus",
@@ -3956,51 +4182,8 @@
     },
     {
       "id": "g08-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\#x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "a-x",
-          "description": "In a-x.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\a-x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\d1\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\#x\\SKILL.md"
-        }
-      ]
+      "skills": [],
+      "diagnostics": []
     },
     {
       "id": "g09-ignore-corpus",
@@ -4013,17 +4196,17 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
           "filePath": "<base>\\skills\\d1\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
           "disableModelInvocation": false
         }
       ],
@@ -4038,102 +4221,14 @@
     },
     {
       "id": "g10-ignore-corpus",
-      "skipped": "posixOnly"
-    },
-    {
-      "id": "g11-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g12-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g13-ignore-corpus",
       "skills": [
         {
-          "name": "#x",
-          "description": "In",
+          "name": "a",
+          "description": "In a.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\#x\\SKILL.md",
+          "filePath": "<base>\\skills\\a\\SKILL.md",
           "disableModelInvocation": false
         },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In sub/b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\#x\\SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g14-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\b\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g15-ignore-corpus",
-      "skills": [
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "d1",
-          "description": "In d1.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\d1\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g16-ignore-corpus",
-      "skills": [
         {
           "name": "a-x",
           "description": "In a-x.",
@@ -4142,33 +4237,6 @@
           "disableModelInvocation": false
         },
         {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g17-ignore-corpus",
-      "skills": [
-        {
-          "name": "!keep",
-          "description": "In !keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\!keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
@@ -4177,184 +4245,17 @@
         },
         {
           "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\!keep\\SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g18-ignore-corpus",
-      "skills": [
-        {
-          "name": "!keep",
-          "description": "In !keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\!keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
           "description": "Keep.",
           "content": "Body.",
           "filePath": "<base>\\skills\\keep.md",
           "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In sub/c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\!keep\\SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g19-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g20-ignore-corpus",
-      "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\#x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\b\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\#x\\SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g21-ignore-corpus",
-      "skills": [
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
         }
       ],
       "diagnostics": []
     },
     {
-      "id": "g22-ignore-corpus",
+      "id": "g11-ignore-corpus",
       "skills": [
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\#x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\b\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skills",
-          "description": "Root.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\root.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\#x\\SKILL.md"
-        }
-      ]
-    },
-    {
-      "id": "g23-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g24-ignore-corpus",
-      "skills": [
-        {
-          "name": "b",
-          "description": "In a/b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\a\\b\\SKILL.md",
-          "disableModelInvocation": false
-        },
         {
           "name": "a-x",
           "description": "In a-x.",
@@ -4367,20 +4268,6 @@
           "description": "In B.",
           "content": "Body.",
           "filePath": "<base>\\skills\\B\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "b",
-          "description": "In sub/b.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -4394,13 +4281,307 @@
       ]
     },
     {
-      "id": "g25-ignore-corpus",
+      "id": "g12-ignore-corpus",
+      "skipped": "posixOnly"
+    },
+    {
+      "id": "g13-ignore-corpus",
       "skills": [],
       "diagnostics": []
     },
     {
-      "id": "g26-ignore-corpus",
+      "id": "g14-ignore-corpus",
       "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\#x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "ab",
+          "description": "In ab.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ab\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\#x\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g15-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\#x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\#x\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g16-ignore-corpus",
+      "skills": [
+        {
+          "name": "#x",
+          "description": "In",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\#x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\#x\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g17-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g18-ignore-corpus",
+      "skills": [
+        {
+          "name": "a",
+          "description": "In a.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a-x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In x/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\x\\b\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g19-ignore-corpus",
+      "skills": [
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g20-ignore-corpus",
+      "skills": [
+        {
+          "name": "a-x",
+          "description": "In a-x.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a-x\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g21-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\!keep\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\!keep\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g22-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g23-ignore-corpus",
+      "skills": [
+        {
+          "name": "!keep",
+          "description": "In !keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\!keep\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "d1",
+          "description": "In d1.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\d1\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "path": "<base>\\skills\\!keep\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "g24-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In a/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
         {
           "name": "skills",
           "description": "Keep.",
@@ -4419,42 +4600,23 @@
       "diagnostics": []
     },
     {
+      "id": "g25-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g26-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
       "id": "g27-ignore-corpus",
-      "skipped": "posixOnly"
+      "skills": [],
+      "diagnostics": []
     },
     {
       "id": "g28-ignore-corpus",
-      "skills": [
-        {
-          "name": "a-x",
-          "description": "In a-x.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\a-x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "c",
-          "description": "In c.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\c\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "keep",
-          "description": "In keep.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\keep\\SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
+      "skipped": "posixOnly"
     },
     {
       "id": "g29-ignore-corpus",
@@ -4463,11 +4625,6 @@
     },
     {
       "id": "g30-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g31-ignore-corpus",
       "skills": [
         {
           "name": "#x",
@@ -4477,17 +4634,24 @@
           "disableModelInvocation": false
         },
         {
-          "name": "b",
-          "description": "In b.",
+          "name": "a-x",
+          "description": "In a-x.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\b\\SKILL.md",
+          "filePath": "<base>\\skills\\a-x\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "b",
-          "description": "In x/b.",
+          "name": "skills",
+          "description": "Root.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\x\\b\\SKILL.md",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -4501,8 +4665,57 @@
       ]
     },
     {
+      "id": "g31-ignore-corpus",
+      "skills": [
+        {
+          "name": "c",
+          "description": "In a/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
       "id": "g32-ignore-corpus",
-      "skills": [],
+      "skills": [
+        {
+          "name": "a",
+          "description": "In a.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        }
+      ],
       "diagnostics": []
     },
     {
@@ -4510,9 +4723,41 @@
       "skills": [
         {
           "name": "c",
+          "description": "In a/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\a\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
           "description": "In c.",
           "content": "Body.",
           "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g34-ignore-corpus",
+      "skills": [],
+      "diagnostics": []
+    },
+    {
+      "id": "g35-ignore-corpus",
+      "skills": [
+        {
+          "name": "d1",
+          "description": "In d1.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\d1\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "keep",
+          "description": "In keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep\\SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4540,7 +4785,34 @@
       "diagnostics": []
     },
     {
-      "id": "g34-ignore-corpus",
+      "id": "g36-ignore-corpus",
+      "skills": [
+        {
+          "name": "b",
+          "description": "In b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\b\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "g37-ignore-corpus",
       "skills": [
         {
           "name": "a-x",
@@ -4557,43 +4829,34 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "b",
           "description": "In sub/b.",
           "content": "Body.",
           "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
           "disableModelInvocation": false
-        }
-      ],
-      "diagnostics": []
-    },
-    {
-      "id": "g35-ignore-corpus",
-      "skills": [],
-      "diagnostics": []
-    },
-    {
-      "id": "g36-ignore-corpus",
-      "skills": [
+        },
         {
-          "name": "a-x",
-          "description": "In a-x.",
+          "name": "c",
+          "description": "In sub/c.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\a-x\\SKILL.md",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
           "disableModelInvocation": false
         },
         {
-          "name": "keep",
-          "description": "In keep.",
+          "name": "b",
+          "description": "In x/b.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\keep\\SKILL.md",
+          "filePath": "<base>\\skills\\x\\b\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
-      "diagnostics": []
-    },
-    {
-      "id": "g37-ignore-corpus",
-      "skills": [],
       "diagnostics": []
     },
     {
@@ -4607,6 +4870,13 @@
           "disableModelInvocation": false
         },
         {
+          "name": "c",
+          "description": "In c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
           "name": "d1",
           "description": "In d1.",
           "content": "Body.",
@@ -4615,9 +4885,16 @@
         },
         {
           "name": "skills",
-          "description": "Keep.",
+          "description": "Root.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\keep.md",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "c",
+          "description": "In sub/c.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\c\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -4634,31 +4911,10 @@
       "id": "g39-ignore-corpus",
       "skills": [
         {
-          "name": "!keep",
-          "description": "In !keep.",
+          "name": "a-x",
+          "description": "In a-x.",
           "content": "Body.",
-          "filePath": "<base>\\skills\\!keep\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "#x",
-          "description": "In",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\#x\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "a",
-          "description": "In a.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\a\\SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "ab",
-          "description": "In ab.",
-          "content": "Body.",
-          "filePath": "<base>\\skills\\ab\\SKILL.md",
+          "filePath": "<base>\\skills\\a-x\\SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -4667,21 +4923,30 @@
           "content": "Body.",
           "filePath": "<base>\\skills\\B\\SKILL.md",
           "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "skills",
+          "description": "Root.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\root.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "b",
+          "description": "In sub/b.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sub\\b\\SKILL.md",
+          "disableModelInvocation": false
         }
       ],
       "diagnostics": [
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\!keep\\SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>\\skills\\#x\\SKILL.md"
-        },
         {
           "type": "warning",
           "code": "invalid_metadata",

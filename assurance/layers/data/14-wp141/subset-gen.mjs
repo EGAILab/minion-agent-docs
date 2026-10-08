@@ -1,16 +1,24 @@
 // Document generator for the WP-14.1 differential fuzzer (subset-diff.mjs) and the canonical
 // boundary sample (scenarios.mjs y03). Deterministic for a given seed.
 export function makeGenerator(initialSeed) {
-	let seed = initialSeed;
+	// mulberry32: exact 32-bit integer arithmetic (Math.imul). The earlier LCG multiplied in
+	// doubles past 2^53, lost precision and cycled after a few hundred documents (self-found
+	// evidence defect, recorded in the characterization's remediation record).
+	let seed = initialSeed >>> 0;
 	const rand = () => {
-		seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-		return seed / 0x7fffffff;
+		seed = (seed + 0x6d2b79f5) >>> 0;
+		let t = seed;
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 	};
 	const pick = (xs) => xs[Math.floor(rand() * xs.length)];
 	const chance = (p) => rand() < p;
 
 	const KEYS = ["name", "description", "disable-model-invocation", "license", "metadata", "allowed-tools", "tags", "x_y", "a.b", "__proto__", "Name", "k-1", "true", "1", "~", "a b", "'q'", "<<"];
-	const WORDS = ["skill", "Use it", "a#b", "a # c", "x:y", "a: b", "-x", "- x", "?x", ":x", "café", "\u{1F600} ok", "1", "017", "0o17", "0x1F", "1e3", "1_000", ".inf", "-.Inf", ".nan", "1.5", "+1", "true", "True", "TRUE", "yes", "on", "no", "off", "null", "Null", "~", "", "x\ty", "trailing  ", "@x", "`x", "%x", "&a x", "*a", "!t x", "[a]", "{a: 1}", "a,b", "a]b", "a}b", "x # y # z", "'", "\"", "a'b", "a\"b", "#x"];
+	const WORDS = ["skill", "Use it", "a#b", "a # c", "x:y", "a: b", "-x", "- x", "?x", ":x", "café", "\u{1F600} ok", "1", "017", "0o17", "0x1F", "1e3", "1_000", ".inf", "-.Inf", ".nan", "1.5", "+1", "true", "True", "TRUE", "yes", "on", "no", "off", "null", "Null", "~", "", "x\ty", "trailing  ", "@x", "`x", "%x", "&a x", "*a", "!t x", "[a]", "{a: 1}", "a,b", "a]b", "a}b", "x # y # z", "'", "\"", "a'b", "a\"b", "#x",
+		// WP141-C001: non-SP whitespace is scalar content, never indentation
+		"\u00a0b", "\u2003x", "\u3000x", "x\u00a0", "\u00a0", "\u2009y z", "a\u00a0#b", "a:\u00a0b", "\u00a0 x"];
 	const DQ = ["plain", "a\\tb", "a\\nb", "\\u00e9", "\\U0001F600", "\\x41", "\\x07", "\\ud800", "\\\\", "\\\"", "\\/", "\\r", "\\0", "\\e", "\\N", "\\_", "\\ ", "  pad  ", "a#b", "", "q\\"];
 	const SQ = ["plain", "it''s", "  pad  ", "a\\nb", "#", "", "a\"b"];
 

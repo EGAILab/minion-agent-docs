@@ -18,6 +18,8 @@ const mutations = {
 	"yes-is-boolean": reader.replace("|[Ff]alse|FALSE)$/;", "|[Ff]alse|FALSE|yes|no|on|off)$/;"),
 	"comment-allows-continuation": reader.replace("if (!allowContinuation || /[ \\t]#/.test(rest)) {", "if (!allowContinuation) {"),
 	"tab-indentation-accepted": reader.replace('for (const line of lines) if (/^ *\\t/.test(line)) reject("tab in leading whitespace");', ""),
+	"continuation-strips-unicode-whitespace": once('const stripped = line.replace(/^ +/, "");', "const stripped = line.trimStart();"),
+	"unterminated-final-blank-counts": once("if (trailing > 0 && j === lines.length && !lastLineTerminated) trailing--;", ""),
 	"folded-joins-with-newline": reader.replace('if (k > 0) body += pendingBlank === 0 ? " " : "\\n".repeat(pendingBlank);', 'if (k > 0) body += pendingBlank === 0 ? "\\n" : "\\n".repeat(pendingBlank);'),
 };
 const results = {};
