@@ -191,8 +191,8 @@ other paths are unchanged from candidate 1.
 - real host, with an existing prefix `file`: `file\0missing`, `missing\0file` and `file\0` give
   exactly the previous outcome on that host, and never `file`'s canonical path.
 
-**Known-bad control (Linux).** With the NUL guard removed (`.tmp` copy; script
-`l12-known-bad-nul.py`), all four new tests fail; the other 15 pass.
+**Known-bad control (Linux).** With the NUL guard removed in a disposable copy (`data/12-l12-d004/known_bad_nul.py`,
+run from the copy's `minion-agent-python/`), all four new tests fail; the other 15 pass.
 
 **NUL neighbourhood (Linux, new; `data/12-l12-d004/`).**
 - Probe: `probe_nul.py` over `cases-nul.json` (8 paths, including an absolute path, a NUL after a
