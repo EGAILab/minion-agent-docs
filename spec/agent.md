@@ -356,6 +356,101 @@ growth, not a leak from outside it. `prepareNextTurn` may still replace the whol
 run-locally (above); neither ordinary growth nor a `prepareNextTurn` replacement is ever written
 back to `AgentInstance`, and a second, independent run always starts from a fresh snapshot again.
 
+### Optional prompt assembler (`L08-D001`, `MINION_EXTENSION`; Owner decision `PP-14-9`)
+
+**Status:** contract delta, for independent contract review before implementation.
+
+**Owner decision:** `minion-agent#159` issuecomment-6057640884, Option A. The delta is additive and
+covers both bindings.
+
+**Purpose.** The model-visible system prompt and the request's tool schemas must come from **one**
+tool snapshot (`HAR-016`). The driver is the only component that holds that snapshot. It is
+therefore the only place where both can be derived from it by construction.
+
+**The seam.**
+- **Configuration:** a driver may be given **at most one** prompt assembler. With none, every rule
+  in this section is inert and Layer 08 behaves exactly as certified.
+- **Signature:** `assemble(base: string, tools: ordered tool definitions) -> string`.
+- **Synchronous:** the assembler is synchronous. No other code runs between the tool snapshot and
+  the assembled prompt.
+- **Generic:** the interface names no skill, section or formatting concept. What the assembler
+  renders is its own concern; Layer 14 supplies one (`HAR-015`).
+
+**Where it is called.** It is called exactly once for each provider request whose system text is
+not overridden, while that request is built:
+
+1. Take the request's tool snapshot. This is the run-local `RunContext.tools`, exactly the tuple
+   whose schemas this request carries.
+2. **If** the governing step decision carries a per-step system override, the system text is that
+   override, unchanged, and the assembler is **not** called. Override behaviour is unchanged: it
+   replaces the whole prompt.
+3. **Otherwise** the system text is `assemble(RunContext.system_prompt, that tool snapshot)`.
+4. Record the request header and send the request using that system text and that snapshot's
+   schemas. The header's `system_base` component holds the system text (`MINION-003`, unchanged).
+
+Every request is therefore a snapshot point:
+- the first request of a run (run start);
+- every later turn, including after a `prepareNextTurn` replacement of the context;
+- every request after the run-local tool set grew through `added_tool_names`.
+
+**What the assembler receives.**
+- **`base`:** `RunContext.system_prompt`, the run-local value taken at run start or supplied by a
+  `prepareNextTurn` replacement, unchanged.
+- **`tools`:** the same snapshot the request's schemas are built from.
+
+The assembler must derive tool-dependent text from `tools` only. It must not read the live tool
+registry. A registration or withdrawal reaching the registry after the snapshot was taken changes
+neither that request's schemas nor its prompt. That is the existing `L08-R001` rule, which this
+delta extends to the prompt.
+
+**Unchanged by this delta:**
+- the run-start snapshot (`RunContext` taken once);
+- in-place growth through `added_tool_names`;
+- `prepareNextTurn` whole-context replacement, its listener signature and what listeners receive;
+- the per-step override;
+- `AgentInstance.system_prompt`;
+- the header mechanism.
+
+With an assembler installed, `RunContext.system_prompt` is the assembler's **input** (the base). A
+`prepareNextTurn` listener that reads or replaces it reads or replaces the base. The assembled text
+exists only in the request and its header.
+
+**Failure.** The rules are deterministic:
+- **What counts as a failure:** if `assemble` raises, or returns a value that is not a string, the
+  request is **not** sent and no request header is recorded for it.
+- **How the run settles:** the failure is a run-executor failure. It settles through the certified
+  `handleRunFailure` path, exactly like a throwing listener: failure message, `turn_end` and
+  `agent_end` with reason `failed`, and the existing propagation rules. No partially assembled
+  prompt/tool pair is ever published or executed.
+
+**Pi relation.**
+- **Harness:** pinned Pi's harness has no composer; `AgentHarnessOptions.systemPrompt` is
+  application-supplied, and when a callback is resolved is `PI_BEHAVIOR_UNCERTAIN` at the pin.
+- **Coding agent:** it keeps its prompt consistent with its tools by eager rebuild (C-11) and a
+  per-turn refresh.
+- **Minion:** this seam reaches the same observable guarantee — the prompt the model sees describes
+  exactly the tools that request carries — by construction at request time. It is a Minion
+  extension (no Pi API equivalent), not a parity claim about Pi internals.
+
+**Witnesses (planned; both bindings):**
+- **No assembler:** behaviour unchanged. The existing Layer 08 suite passes unmodified, and the
+  header bytes are identical.
+- **Assembler, run start:** called once for the first request, with the instance's base and the
+  run-start tool tuple. A tool registered after the run started does not appear in its tools, the
+  prompt or the schemas.
+- **Assembler, between turns:** a `prepareNextTurn` replacement with new tools and base yields a
+  next request whose prompt and schemas both reflect exactly the replacement. A tool added through
+  `added_tool_names` appears in both on the next request.
+- **Override:** a step with a system override sends the override verbatim, and the assembler is not
+  called.
+- **Snapshot identity:** the `tools` argument is identical in membership and order to the tools
+  whose schemas the request carries. A concurrency-oriented case registers and withdraws tools from
+  another task across every await point of a multi-turn run, and asserts pairwise agreement for
+  each request.
+- **Failure:** an assembler that raises, and one that returns a non-string. Neither sends a
+  request or records a header, and both settle as a failed run.
+- **Header:** `system_base` equals the assembled text, and reconstruction is byte-identical.
+
 ### Initial-turn admission: prompt lifecycle before the steering claim
 
 Pinned Pi's exact first-turn order: `agent_start`, `turn_start`, the initial prompt messages' own
