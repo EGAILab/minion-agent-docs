@@ -142,7 +142,9 @@ Every file below was read in full unless marked partial.
 - **S-4.** Each root gets a fresh ignore matcher. The root itself is `rootInfo.path`, the addressed
   path, which is not canonicalized.
 - **S-5.** `loadSourcedSkills(env, [{path, source}], mapSkill?)`: same per input, with the source
-  attached to every skill and diagnostic. Source values are opaque.
+  attached to every skill and diagnostic. Source values are opaque. `mapSkill` is application
+  code: a throw from it propagates and is not a diagnostic. Contract drafting decides how to treat
+  it; it is not assumed here.
 
 ### Per directory: `loadSkillsFromDirInternal(dir, includeRootFiles, ig, root)`
 
@@ -195,15 +197,33 @@ Every file below was read in full unless marked partial.
   - a dir-only pattern `build/` matches `build/` and its descendants, but not the bare `build`;
   - negation works;
   - a nested-prefix `sub/*.md` does not match `sub/deep/a.md`;
-  - a trailing space in a pattern is significant;
+  - Pi passes the **untrimmed** line (S-18), but the matcher then **discards an unescaped trailing
+    space**: `foo ` ignores `foo`, not `foo `. An escaped trailing space is literal: `foo\ `
+    ignores `foo `, not `foo` (remediation probe, §6);
   - `\#x` matches `#x`;
   - `**/tmp` matches at any depth;
-  - empty, `../`, `/` and `./` paths **throw**; Pi never produces one (S-32).
+  - empty, `../`, `/` and `./` paths **throw**. This **is reachable** through the real loader:
+    see S-33.
 - **S-20.** The `ignore` package's path-side backslash handling is **platform-dependent**: path
   `a\b` against pattern `a\b` gives `true` on win32 and `false` on Linux (§6). Pi never passes a
   backslash on the path side, because `relativeEnvPath` converts `\` to `/` first. A POSIX
-  filename containing a literal backslash is therefore matched as if it had a separator
-  (risk R-8).
+  filename containing an *inner* literal backslash is therefore matched as if it had a separator
+  (risk R-8). A *leading* or bare backslash name is S-33.
+
+- **S-33.** **Uncaught discovery rejection** (`L14-SCOPE-R002`). On POSIX, an entry whose name
+  starts with `\` (for example `\x.md` or a directory `\d`), or is exactly `\`, yields a
+  relative path that `ignore` rejects:
+  - `/x.md` or `/d/` → `RangeError: path should be a \`path.relative()\`d string, but got "/x.md"`;
+  - a bare `\` file → `""` → `TypeError: path must not be empty`;
+  - a bare `\` directory → `/` → `RangeError`.
+
+  Pi does not catch it. The **whole** `loadSkills` call rejects, discarding skills and
+  diagnostics already collected from earlier roots and siblings. No diagnostic is produced.
+  Names starting with `.` (for example `.\x.md`) never reach the check (S-11), and an inner
+  backslash (`a\b.md`) loads normally. All of this was established through the byte-copied
+  pinned loader with a scripted environment, identical on win32 and Linux (§6 remediation probe).
+  Preserving the rejection is the Pi baseline. Converting it into a diagnostic or skip is
+  practical-parity candidate `PP-14-7`, which needs governance and is not an automatic hardening.
 
 ### File loading: `loadSkillFromFile(path, parentDirName)`
 
@@ -296,7 +316,8 @@ Every file below was read in full unless marked partial.
 - **P-3.** Input order is preserved; there is no sorting or deduplication.
 - **P-4.** `escapeXml` is applied to `name`, `description` and `location`, in this order: `&`,
   `<`, `>`, `"`, `'` → `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`. Nothing else is escaped:
-  control characters, newlines inside a description, lone surrogates and `]]>` pass through.
+  control characters, newlines inside a description and lone surrogates pass through. `]]>`
+  becomes `]]&gt;` through the general `>` rule (`N001`).
 - **P-5.** `location` is `skill.filePath` exactly: the addressed path, with native separators.
 - **P-6.** `formatSkillInvocation(skill, extra?)` produces
   `<skill name="${name}" location="${filePath}">\nReferences are relative to ${dirnameEnvPath(filePath)}.\n\n${content}\n</skill>`,
@@ -308,7 +329,8 @@ Every file below was read in full unless marked partial.
 
 - **C-1.** The prompt is either `customPrompt` or Pi's product default ("You are an expert coding
   assistant operating inside pi …", plus the Pi documentation block). The default is Pi-product
-  text and **is not adopted**.
+  text and **is not adopted**. The discriminator is **truthiness**: an empty `customPrompt`
+  selects the default branch. Any adopted analogue keeps that discriminator explicit.
 - **C-2.** Then the append section: `\n\n${append}` when non-empty.
 - **C-3.** Then, if there are context files:
 
@@ -343,8 +365,13 @@ Every file below was read in full unless marked partial.
 
 ### Timing and ownership (Pi core)
 
-- **T-1.** Tools and resources are held as copies: `setTools` and `setResources` copy the arrays,
-  and the getters return copies.
+- **T-1.** `setTools`/`setResources` and the getters copy the **arrays** only (`L14-SCOPE-R003`).
+  Collection *membership* is isolated: pushing onto a returned array does not change the
+  harness. The `Skill`, `PromptTemplate` and tool **records** are shared by identity: mutating
+  `getResources().skills[0].description` is visible to the next `getResources()` (Codex reviewer
+  probe on the pinned harness). `createContextSnapshot` likewise copies the tool and message
+  arrays, not their elements. T-1 therefore does **not** establish that model-visible skill state
+  changes only through replacement.
 - **T-2.** Active tool names default to all tool names, in order.
 - **T-3.** The harness sends no tool metadata other than `AgentTool`/`Tool` fields to the model.
 - **T-4.** `HarnessTool.replay` belongs to the durable harness (`HAR-009`, deferred).
@@ -354,6 +381,20 @@ Every file below was read in full unless marked partial.
   fields** of one `Context`. Tool schemas never enter the system-prompt string.
 
 ## 6. Premise probes (executed, not assumed)
+
+**Remediation probe** (`L14-SCOPE-R001`/`R002`), `remediation1_probe.mjs`:
+- sha256 `399c6ea4…b458`;
+- run with `node --experimental-strip-types`;
+- outputs `remediation1-{win32,linux}.txt`, identical on both platforms.
+
+It drives the **byte-copied pinned** `pinned/skills.ts` and `pinned/types.ts`. Both are
+byte-identical to `ref-repos/pi/packages/agent/src/harness/` at the pin (checked with `cmp`).
+The environment is a scripted POSIX-style `ExecutionEnv`, and nothing in the loader or matcher
+is replicated. A first run failed to import because the probe package defaulted to CommonJS. That
+setup failure was fixed with `pinned/package.json` (`"type": "module"`) and is not credited as
+evidence.
+
+**Original premise probe:**
 
 Evidence, per workflow lesson 1 (`minion-agent#75`): `assurance/layers/data/14-scope/`.
 
@@ -379,7 +420,8 @@ Findings that change the contract hypothesis:
 | merge key `<<` | **not** merged; kept as a literal key |
 | scalar or empty document | a non-object or `null` frontmatter → no fields |
 | `ignore` case | `Foo` ignores `foo` (**case-insensitive**) |
-| `ignore` with a non-relative path | throws (Pi never produces one, S-32) |
+| `ignore` with a non-relative path | throws; **reachable** through a leading-backslash or bare-backslash POSIX name, rejecting the whole discovery (S-33) |
+| unescaped vs escaped trailing pattern space | `foo ` matches `foo` only; `foo\ ` matches `foo ` only (remediation probe) |
 | `"😀".length` | 2 (UTF-16), so the 1024 description limit is counted in code units |
 
 ## 7. Tool prompt metadata classification
@@ -419,7 +461,8 @@ Each candidate approved later needs its own `DIV-` entry and a permanent witness
 | ID | Candidate | (a)/(b)/(c) | Recommendation |
 |---|---|---|---|
 | `PP-14-1` | **YAML engine.** `parse_failed` messages equal `yaml@2.9.0` error text. Exact text needs a byte-faithful port of the library's error reporter in both languages. | no / rare (only for malformed frontmatter) / yes | **Divergence:** match the *accept/reject decision and parsed value* of `yaml@2.9.0` exactly over a characterized corpus (the §6 rows plus a generated corpus), keep the code and path exact, and make the **message** Minion-defined. Needs a witness pairing every corpus case with Pi's accept/reject decision. |
-| `PP-14-2` | **Exotic YAML outside the corpus.** Anchors, aliases, tags (`!!str`), complex keys and flow collections in frontmatter. | no / rare / yes for full YAML 1.2 fidelity | Either adopt a YAML 1.2 core engine whose agreement is witnessed on the corpus, with documented residual risk, or reject constructs outside the corpus as `parse_failed`. **Decision deferred to the WP-14.1 feasibility matrix.** |
+| `PP-14-2` | **YAML constructs outside the characterized corpus.** Examples are tags (`!!str`), complex keys and flow collections. "Exotic" is a screening label, not proof that a construct is unreachable: ordinary aliases already work (§6). | no / rare / yes for full YAML 1.2 fidelity | A finite corpus is evidence, not a definition of library equivalence. The contract must define a **deterministic** treatment for every unsupported construct, for example `parse_failed`, and obtain governance for it. It must not treat unknown behaviour as certified residual agreement. **Decision deferred to the WP-14.1 feasibility matrix.** |
+| `PP-14-7` | **Whole-discovery rejection** (S-33): one leading or bare backslash POSIX name rejects all of `loadSkills` | no (an incidental `ignore` precondition) / rare / no | **Owner decision** before the WP-14.1 contract freezes. Either keep it (Pi-exact) or convert it to a defined diagnostic with the entry skipped (a divergence with a witness). The default without a decision is Pi-exact. |
 | `PP-14-3` | **Symlink cycles.** Pi recursion through a directory cycle has no guard. It descends `a/loop/loop/…` until a platform path or loop limit, with diagnostics that depend on that limit (`PI_BEHAVIOR_UNCERTAIN`; characterization is a WP-14.1 obligation). | no / rare / yes (host-limit-dependent output) | **Divergence:** stop at a directory whose canonical path is already on the current descent stack, with a defined diagnostic. To be characterized first. |
 | `PP-14-4` | **Section composition.** Pi has no harness composer. Proposed Minion mapping: `ctx.system_prompt` sections in a specified deterministic order: base, append, plugin sections, then the skills block. The skills block is gated as in C-4 only if the Owner adopts the gate. | mapping, not a divergence | Label it a **MINION mapping**. Adopt C-2/C-4's order and the C-4 `read` gate as the Pi-compatible reference. Do **not** adopt C-1 product text, C-3 context files or C-5's cwd line (see `PP-14-6`). |
 | `PP-14-5` | **Tool snippet/guideline rendering** (C-6..C-10). It is model-visible only in Pi's *product default* prompt. | no (product text) / yes for coding agents / no | **Owner decision.** Option A: defer entirely, and `promptSnippet`/`promptGuidelines` are not modeled. Option B (**recommended**): additive optional fields on the `ctx.tools` definition, with the C-8/C-9 normalization, and an opt-in "tools" section that renders the C-6/C-7 lines exactly. The Pi product preamble and the bash-only conditional bullet are excluded unless the Owner says otherwise. |
@@ -465,15 +508,15 @@ in the manifest and are left unused, so no new row sorts between existing ones.
 
 | ID | Requirement | WP |
 |---|---|---|
-| `HAR-001` (umbrella, refined) | Discovery traversal over `ctx.fs` (S-1..S-16, S-25, S-30..S-32) | 14.1 |
+| `HAR-001` (umbrella, refined) | Discovery traversal over `ctx.fs` (S-1..S-16, S-25, S-30..S-33) | 14.1 |
 | `HAR-010` | Frontmatter extraction and YAML semantics (S-23, S-24, S-26, S-29, §6; `PP-14-1`/`PP-14-2`) | 14.1 |
-| `HAR-011` | Ignore files and matching (S-17..S-20; `ignore@7.0.5` corpus) | 14.1 |
+| `HAR-011` | Ignore files and matching (S-17..S-20, S-33; `ignore@7.0.5` corpus, including trailing-space and invalid-path cases) | 14.1 |
 | `HAR-012` | Validation and diagnostics: codes, message text, order, UTF-16 lengths, the mismatch quirk (S-27, S-28) | 14.1 |
 | `HAR-013` | Sourced loading and skill record shape (S-5, S-29; `Skill{name, description, content, filePath, disableModelInvocation}`) | 14.1 |
 | `HAR-002` (refined) | Available-skills block (P-1..P-5) | 14.2 |
 | `HAR-014` | Explicit skill invocation text (P-6, including `dirnameEnvPath`) | 14.2 |
 | `HAR-015` | `ctx.system_prompt` section composition: order, gating, separator bytes, empty-section handling (`PP-14-4`; MINION mapping) | 14.2 |
-| `HAR-016` | Snapshot timing and consistency: the prompt is evaluated at the same points where the request snapshot is taken (run start; each `prepare_next_turn`; the override per T-5/C-12); the textual tool section and the request tool schemas derive from **one** `ctx.tools` visible-tool snapshot; the skill set changes only by an explicit replace (T-1) | 14.2 |
+| `HAR-016` | Snapshot timing and consistency: the prompt is evaluated at the same points where the request snapshot is taken (run start; each `prepare_next_turn`; the override per T-5/C-12); the textual tool section and the request tool schemas derive from **one** `ctx.tools` visible-tool snapshot; skill-set **membership** changes only by an explicit replace (T-1). Whether a mutation of a retained, shared skill or tool record is seen, and when, is a **Minion composition choice** under `AUTH-14-2`; it is not a consequence of T-1. Any value-isolation rule is proposed through the contract and governance path, without freezing, deep-copying or reopening Layers 07/08 here. | 14.2 |
 | `HAR-017` | Request reconstruction: the assembled prompt's model-visible bytes are reconstructable from content-addressed header components (`MINION-003`); the decomposition is a storage detail, the bytes are normative | 14.2 |
 | `HAR-018` | Tool prompt metadata (`PP-14-5`, only if the Owner adopts Option B) | 14.2 |
 
@@ -508,7 +551,10 @@ is frozen. Its *implementation* follows WP-14.1's certification.
   - the addressed-path spelling, which becomes the model-visible `<location>`;
   - JS-string path scoping (`fs-path-jsstring-scoping.md`) for lone surrogates.
 - **`TOOL-040`** — the pinned ICU collator. It needs an additive raw-compare accessor; `key()` is
-  unchanged.
+  unchanged. Reusing the build is **not** by itself a skill-collation disposition. Pi's sort uses
+  host Node's ICU 76.1 under the host default locale. The WP-14.1 contract must carry that
+  host-sensitive mapping, onto pinned `en-001`/ICU 78.3, with its own evidence. `TOOL-040`'s `ls`
+  disclosure does not silently extend to skills.
 - **Layer 05** — `ToolDefinition`. An additive optional-field extension, only under `PP-14-5`
   Option B.
 - **Layers 07/08/03** — as in the graph. No change is expected.
@@ -544,12 +590,14 @@ is frozen. Its *implementation* follows WP-14.1's certification.
 | R-4 | **Malformed frontmatter:** YAML 1.1 vs 1.2 (`yes`/`on`, timestamps), duplicate keys, tabs, multi-document; Python and Rust YAML libraries differ from `yaml@2.9.0` | **critical** | `PP-14-1`/`PP-14-2`. Corpus oracle from pinned `yaml@2.9.0`, and a feasibility matrix for the engine choice per language. |
 | R-5 | **Unicode:** UTF-16 `.length` limits, JS `trim()` whitespace set (includes U+FEFF and U+3000; Python's `str.strip` differs), lone surrogates in names | high | JS-string semantics reused from Layer 12 scoping. Canonical cases at 1024/1025 code units with astral characters, and trim edge characters. |
 | R-6 | **XML escaping and prompt injection:** only five characters are escaped; descriptions may contain newlines and fake `</available_skills>` text (escaped `<`, so not structural); P-6 invocation and C-3 paths are unescaped | high | Adopt as Pi does, with canonical injection cases showing exact bytes. Do not "harden" silently: any stricter escaping is a divergence needing the Owner. |
-| R-7 | **Dynamic registration:** a tool or skill change mid-run must reach the prompt and the schemas at the same snapshot point | high | `HAR-016`, with one-snapshot consistency witnesses: a tool registered between turns shows in both, or in neither. |
-| R-8 | **Exclusion flags:** the `disable-model-invocation` strict `=== true`, the dotfile and `node_modules` skips, ignore case-insensitivity, a literal backslash in POSIX names (S-20) | medium | Canonical cases for each, including the backslash name on Linux. |
+| R-7 | **Dynamic registration:** a tool or skill change mid-run must reach the prompt and the schemas at the same snapshot point | high | `HAR-016`, with one-snapshot consistency witnesses: a tool registered between turns shows in both, or in neither. Add **retained-record mutation** witnesses: a shared skill or tool record mutated after it was supplied (T-1, `L14-SCOPE-R003`), observed at each snapshot point under whatever rule the contract adopts. |
+| R-8 | **Exclusion flags:** the `disable-model-invocation` strict `=== true`, the dotfile and `node_modules` skips, ignore case-insensitivity, a literal backslash in POSIX names (S-20) | medium | Canonical cases for each, including the inner-backslash name on Linux. |
 | R-9 | **Path projection and cross-platform paths:** `<location>` is the addressed path with native separators; `dirnameEnvPath`'s drive-root rule; `relativeEnvPath`'s backslash conversion | high | Per-platform expected outputs. The addressed-path spelling comes from Layer 12, never re-normalized in Layer 14. |
 | R-10 | **Request reconstruction and persistence:** splitting the prompt into header components must not change model-visible bytes; the override replaces the whole prompt | medium | `HAR-017` round-trip witnesses over the real header and artifact store (`MINION-003`). |
 | R-11 | **Symlink cycles:** Pi's output is host-limit dependent | medium | `PP-14-3`, characterize first. |
 | R-12 | **Engine-library premise errors** (lesson 1) | medium | Every library premise gets an executed probe (§6), extended in WP-14.1. |
+| R-13 | **Whole-discovery rejection** (S-33): a leading or bare backslash POSIX name rejects the entire `loadSkills` call, losing every other skill | high | WP-14.1 witnesses for `\x.md`, `\d/`, a bare `\` file and directory, and a sibling-loss case; nearest-case characterization before contract freeze; `PP-14-7` if Minion wants a diagnostic instead. |
+| R-14 | **Trailing-space matcher semantics** (`L14-SCOPE-R001`): the raw line is kept, the matcher drops an unescaped trailing space | medium | `HAR-011` corpus with unescaped, escaped and mixed trailing-space patterns. Never trim raw lines as a "fix". |
 
 ## 13. Python / Rust feasibility notes
 
@@ -578,7 +626,10 @@ raw-compare accessor.
 - `trim()`'s whitespace set, `.length` in code units, and `/^[a-z0-9-]+$/` (ASCII) are
   implementable directly.
 - Python strings are code-point based, so lengths must count UTF-16 units.
-- Rust `str` cannot hold lone surrogates; Layer 12 already scopes that domain.
+- Rust `str` cannot hold lone surrogates. Layer 12 scopes this for **filesystem paths** only.
+  The skill name, description, content and invocation strings are separate carriers. Where they
+  can hold lone surrogates, they must reuse the certified JS-string representations, not ordinary
+  `str`. This belongs in the WP feasibility matrices.
 
 **Filesystem.** Everything runs over the certified `ctx.fs` in both languages. Symlink handling
 follows S-25 exactly; there is no `os.walk` or `read_dir` shortcut.
@@ -604,5 +655,26 @@ Expected verdict vocabulary, as in Layer 13 scoping:
 IMPLEMENTATION AUTHORIZED NO`.
 
 Owner decisions are needed before the WP-14.2 contract freezes: `PP-14-4` (mapping confirmation)
-and `PP-14-5` (Option A or B). Before the WP-14.1 contract freezes: `PP-14-1`, `PP-14-2` and
+and `PP-14-5` (Option A or B). Before the WP-14.1 contract freezes: `PP-14-1`, `PP-14-2`, `PP-14-7` and
 `PP-14-3`, informed by the feasibility matrix and characterization. None blocks the scoping review.
+
+## 15. Remediation record (scoping review 1)
+
+Review: Codex @ `06f146b9`, published verbatim at `minion-agent-docs#253` issuecomment-6049513540.
+
+- **Verdict:**
+  - LAYER 14 SCOPE CHANGES REQUESTED;
+  - WORK-PACKAGE SPLIT APPROVED;
+  - REQUIREMENT SET CHANGES REQUESTED;
+  - IMPLEMENTATION AUTHORIZED NO.
+
+| Finding | Change |
+|---|---|
+| `L14-SCOPE-R001` (medium): the trailing-space premise was wrong | S-19 now separates raw-line preservation (S-18, unchanged) from matcher semantics: an unescaped trailing space is discarded, an escaped one is literal. Evidence is the executed remediation probe (§6). Added R-14 and the `HAR-011` corpus obligation. |
+| `L14-SCOPE-R002` (medium): invalid ignore paths are reachable | Withdrew "Pi never produces one". Added S-33, the uncaught whole-discovery rejection, reproduced through the byte-copied pinned loader for leading-backslash files and directories and a bare `\` file and directory, with sibling loss and the dotfile and inner-backslash controls. Added R-13 and `PP-14-7` (Pi-exact by default). |
+| `L14-SCOPE-R003` (medium): `HAR-016` overstated what T-1 guarantees | T-1 now separates copied membership from shared records. `HAR-016` limits replace-only to membership and names retained-record visibility as a Minion composition choice under `AUTH-14-2`. R-7 adds retained-record mutation witnesses. Layers 07/08 are not reopened. |
+| `N001`: the `]]>` example | P-4 corrected: `]]>` becomes `]]&gt;`. |
+| Reviewer notes, non-blocking | Carried into S-5 (a `mapSkill` throw), C-1 (truthiness discriminator), §10 (the host-sensitive skill-collation mapping is not implied by `TOOL-040`), §13 (non-path JS-string carriers), and `PP-14-2` (deterministic treatment, corpus ≠ equivalence). |
+
+The WP split and the requirement numbering are unchanged. No production code, manifest or spec was
+modified.
