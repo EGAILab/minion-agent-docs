@@ -1,0 +1,282 @@
+[
+ {
+  "rel": "file",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "dir/sub/..",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/sub/../inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "missing",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "missing/x",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "file/",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "file/.",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "file/..",
+  "node": {
+   "ok": "/tmp/rp/base"
+  }
+ },
+ {
+  "rel": "file/x",
+  "node": {
+   "error": "not_directory",
+   "cause": "ENOTDIR"
+  }
+ },
+ {
+  "rel": "dir//inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "./file",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir/../file",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "link-file",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "link-dir",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-dir/inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "link-dir/",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-abs",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dangling",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "dangling/x",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "self",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "self/x",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "cyc-a",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "cyc-b/x",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "dir/up",
+  "node": {
+   "ok": "/tmp/rp/base"
+  }
+ },
+ {
+  "rel": "dir/up/file",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir/up/dir/up/dir/inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "dir/down/..",
+  "node": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-dir/down/../inner",
+  "node": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "link-file/",
+  "node": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "chain-39/0",
+  "node": {
+   "ok": "/tmp/rp/base/chain-39/end"
+  }
+ },
+ {
+  "rel": "chain-40/0",
+  "node": {
+   "ok": "/tmp/rp/base/chain-40/end"
+  }
+ },
+ {
+  "rel": "chain-41/0",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "node": {
+   "error": "unknown",
+   "cause": "ENAMETOOLONG"
+  }
+ },
+ {
+  "rel": "dir/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "node": {
+   "error": "unknown",
+   "cause": "ENAMETOOLONG"
+  }
+ },
+ {
+  "rel": "dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "noperm/inside/f",
+  "node": {
+   "error": "permission_denied",
+   "cause": "EACCES"
+  }
+ },
+ {
+  "rel": "noperm/inside",
+  "node": {
+   "error": "permission_denied",
+   "cause": "EACCES"
+  }
+ }
+]

@@ -1,0 +1,278 @@
+[
+ {
+  "rel": "file",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "dir",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "dir/",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "dir/inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "dir/sub/..",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "dir/sub/../inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "missing",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "missing/x",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "file/",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "file/.",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "file/..",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase"
+  }
+ },
+ {
+  "rel": "file/x",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "dir//inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "./file",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "dir/../file",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "link-file",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "link-dir",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "link-dir/inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "link-dir/",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "link-abs",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "dangling",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "dangling/x",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "self",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "self/x",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "cyc-a",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "cyc-b/x",
+  "node": {
+   "error": "unknown",
+   "cause": "ELOOP"
+  }
+ },
+ {
+  "rel": "dir/up",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase"
+  }
+ },
+ {
+  "rel": "dir/up/file",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "dir/up/dir/up/dir/inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "dir/down/..",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir"
+  }
+ },
+ {
+  "rel": "link-dir/down/../inner",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\dir\\inner"
+  }
+ },
+ {
+  "rel": "link-file/",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\file"
+  }
+ },
+ {
+  "rel": "chain-39/0",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\chain-39\\end"
+  }
+ },
+ {
+  "rel": "chain-40/0",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\chain-40\\end"
+  }
+ },
+ {
+  "rel": "chain-41/0",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\chain-41\\end"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\loop\\a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\loop\\a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\loop\\a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\loop\\a"
+  }
+ },
+ {
+  "rel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "dir/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir",
+  "node": {
+   "error": "not_found",
+   "cause": "ENOENT"
+  }
+ },
+ {
+  "rel": "noperm/inside/f",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\noperm\\inside\\f"
+  }
+ },
+ {
+  "rel": "noperm/inside",
+  "node": {
+   "ok": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12-realpath\\winbase\\noperm\\inside"
+  }
+ }
+]
