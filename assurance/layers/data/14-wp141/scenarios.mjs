@@ -169,7 +169,7 @@ export const scenarios = [
 			{ path: "skills/ws/SKILL.md", text: fm(["name: ws", "description: \"  \\t \""]) },
 			{ path: "skills/num/SKILL.md", text: fm(["name: num", "description: 42"]) },
 			{ path: "skills/none/SKILL.md", text: fm(["name: none"]) },
-			{ path: "skills/nul/SKILL.md", text: fm(["name: nul", "description: ~"]) },
+			{ path: "skills/tilde-null/SKILL.md", text: fm(["name: tilde-null", "description: ~"]) },
 			{ path: "skills/list/SKILL.md", text: fm(["name: list", "description: [a, b]"]) },
 			{ path: "skills/ideo/SKILL.md", text: fm(["name: ideo", "description: \"\\u3000\""]) },
 			{ path: "skills/bomws/SKILL.md", text: fm(["name: bomws", "description: \"\\uFEFF\""]) },
@@ -361,6 +361,35 @@ export const scenarios = [
 		fixture: [
 			{ path: "skills/.gitignore", text: "a\r\nb\r\n" },
 			...["a", "b", "c"].map((n) => ({ path: `skills/${n}/SKILL.md`, text: skill(n) })),
+		],
+		roots: ["skills"],
+	},
+	{
+		// DIV-006: invalid patterns (their pinned-ignore RegExp is a SyntaxError) are dropped with one
+		// diagnostic each, in line order; the valid ones still apply, in order. Pi rejects the call.
+		id: "i10-invalid-patterns-dropped-valid-kept",
+		fixture: [
+			{ path: "skills/.gitignore", text: "drop-me\n[~-a]\n!keep[~-!]\nother*\nx[ab/c\n" },
+			...["drop-me", "other1", "keep", "z"].map((n) => ({ path: `skills/${n}/SKILL.md`, text: skill(n) })),
+		],
+		roots: ["skills"],
+	},
+	{
+		// DIV-006: a directory name that makes every prefixed pattern of its own ignore file invalid
+		id: "i11-invalid-prefix-from-directory-name",
+		fixture: [
+			{ path: "skills/[~-a]/.gitignore", text: "hidden\n" },
+			{ path: "skills/[~-a]/hidden/SKILL.md", text: skill("hidden") },
+			{ path: "skills/sibling/SKILL.md", text: skill("sibling") },
+		],
+		roots: ["skills"],
+	},
+	{
+		// DIV-006 positive control: the same valid patterns alone -- identical to pinned Pi
+		id: "i12-valid-patterns-only",
+		fixture: [
+			{ path: "skills/.gitignore", text: "drop-me\nother*\n" },
+			...["drop-me", "other1", "keep", "z"].map((n) => ({ path: `skills/${n}/SKILL.md`, text: skill(n) })),
 		],
 		roots: ["skills"],
 	},

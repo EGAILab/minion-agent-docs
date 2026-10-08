@@ -221,7 +221,10 @@ async function addIgnoreRules(
 			.split(/\r?\n/)
 			.map((line) => prefixIgnorePattern(line, prefix))
 			.filter((line): line is string => Boolean(line));
-		if (patterns.length > 0) ig.add(patterns);
+		for (const pattern of patterns) {
+			if (validIgnorePattern(pattern)) ig.add([pattern]);
+			else diagnostics.push({ type: "warning", code: "invalid_ignore_pattern", message: "ignore pattern is not valid and was dropped", path: ignorePath });
+		}
 	}
 }
 
@@ -387,6 +390,18 @@ function relativeEnvPath(root: string, path: string): string {
 	return normalizedPath.startsWith(`${normalizedRoot}/`)
 		? normalizedPath.slice(normalizedRoot.length + 1)
 		: normalizedPath.replace(/^\/+/, "");
+}
+
+// DIV-006: pinned ignore builds a rule's RegExp lazily; test() (checkUnignored = true) evaluates every
+// rule, so a pattern whose RegExp is invalid throws here. Skipped patterns (blank, comment) add no rule.
+function validIgnorePattern(pattern: string): boolean {
+	try {
+		ignore().add([pattern]).test("a");
+		return true;
+	} catch (error) {
+		if (error instanceof SyntaxError) return false;
+		throw error;
+	}
 }
 
 // DIV-005: the root-relative paths ignore@7.0.5 refuses that the loader can actually produce.

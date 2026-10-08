@@ -12,7 +12,7 @@ import { scenarios } from "./scenarios.mjs";
 const outDir = process.argv[2];
 if (!outDir) throw new Error("usage: node gen-canonical.mjs <output dir>");
 const PI_REVISION = "b7bb00b936dbe21b8e160b3e89efdec361846699";
-const NORMATIVE_MESSAGE = new Set(["invalid_metadata", "parse_failed", "invalid_path"]);
+const NORMATIVE_MESSAGE = new Set(["invalid_metadata", "parse_failed", "invalid_path", "invalid_ignore_pattern"]);
 const load = (f) => JSON.parse(readFileSync(f, "utf8")).results;
 const model = new Map(load("model-linux.json").map((r) => [r.id, r]));
 const pi = new Map(load("out-linux.json").map((r) => [r.id, r]));
@@ -34,7 +34,7 @@ function divergences(id) {
 	if (JSON.stringify(norm(p)) === JSON.stringify(norm(m))) return [];
 	const out = new Set();
 	if (!p.rejects && p.diagnostics.some((d) => d.code === "parse_failed")) out.add("PP-14-1");
-	if (JSON.stringify(mask(p)) !== JSON.stringify(mask(m))) out.add(id.startsWith("r") ? "DIV-005" : "DIV-004");
+	if (JSON.stringify(mask(p)) !== JSON.stringify(mask(m))) out.add(id.startsWith("r") ? "DIV-005" : id.startsWith("i1") ? "DIV-006" : "DIV-004");
 	return [...out].sort();
 }
 

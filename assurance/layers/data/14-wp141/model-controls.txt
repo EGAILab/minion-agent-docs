@@ -1,4 +1,4 @@
-89 scenarios -> out-linux.json
-89 scenarios -> model-linux.json
 KILLED   invalid-entry-stops-the-directory: killed by [r05-skills-before-and-after-invalid-entry]
 KILLED   invalid-entry-without-diagnostic: killed by [r01-leading-backslash-rejects-after-collected-sibling, r02-leading-backslash-dir-rejects, r03-earlier-root-lost, r05-skills-before-and-after-invalid-entry]
+KILLED   invalid-pattern-without-diagnostic: killed by [i10-invalid-patterns-dropped-valid-kept, i11-invalid-prefix-from-directory-name]
+KILLED   invalid-pattern-stops-the-file: killed by [i10-invalid-patterns-dropped-valid-kept]

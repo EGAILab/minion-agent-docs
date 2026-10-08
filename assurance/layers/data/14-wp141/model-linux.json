@@ -592,13 +592,13 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/nul/SKILL.md"
+          "path": "<base>/skills/num/SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>/skills/num/SKILL.md"
+          "path": "<base>/skills/tilde-null/SKILL.md"
         },
         {
           "type": "warning",
@@ -1141,6 +1141,92 @@
           "description": "Use c.",
           "content": "Body.",
           "filePath": "<base>/skills/c/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i10-invalid-patterns-dropped-valid-kept",
+      "skills": [
+        {
+          "name": "keep",
+          "description": "Use keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "z",
+          "description": "Use z.",
+          "content": "Body.",
+          "filePath": "<base>/skills/z/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>/skills/.gitignore"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>/skills/.gitignore"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>/skills/.gitignore"
+        }
+      ]
+    },
+    {
+      "id": "i11-invalid-prefix-from-directory-name",
+      "skills": [
+        {
+          "name": "hidden",
+          "description": "Use hidden.",
+          "content": "Body.",
+          "filePath": "<base>/skills/[~-a]/hidden/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "sibling",
+          "description": "Use sibling.",
+          "content": "Body.",
+          "filePath": "<base>/skills/sibling/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>/skills/[~-a]/.gitignore"
+        }
+      ]
+    },
+    {
+      "id": "i12-valid-patterns-only",
+      "skills": [
+        {
+          "name": "keep",
+          "description": "Use keep.",
+          "content": "Body.",
+          "filePath": "<base>/skills/keep/SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "z",
+          "description": "Use z.",
+          "content": "Body.",
+          "filePath": "<base>/skills/z/SKILL.md",
           "disableModelInvocation": false
         }
       ],

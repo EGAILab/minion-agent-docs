@@ -1,3 +1,3 @@
 out: win32 vs linux structural diffs: c01-symlink-cycle
 model: win32 vs linux structural diffs: c01-symlink-cycle
-pi vs model (linux): 9 scenarios differ: v04-description-required-cases, f04-yaml-rejections, f05-yaml-value-semantics, r01-leading-backslash-rejects-after-collected-sibling, r02-leading-backslash-dir-rejects, r03-earlier-root-lost, r05-skills-before-and-after-invalid-entry, y01-yaml-oracle-sources, y03-fuzz-boundary-sample
+pi vs model (linux): 11 scenarios differ: v04-description-required-cases, f04-yaml-rejections, f05-yaml-value-semantics, i10-invalid-patterns-dropped-valid-kept, i11-invalid-prefix-from-directory-name, r01-leading-backslash-rejects-after-collected-sibling, r02-leading-backslash-dir-rejects, r03-earlier-root-lost, r05-skills-before-and-after-invalid-entry, y01-yaml-oracle-sources, y03-fuzz-boundary-sample

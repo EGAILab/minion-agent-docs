@@ -14,6 +14,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-003` | Search-engine acquisition is explicit rather than tool-triggered | WP-13.4 (`TOOL-038`) | APPROVED |
 | `DIV-004` | Skill frontmatter uses the Minion YAML subset rather than the full yaml@2.9.0 language | WP-14.1 (`HAR-010`) | APPROVED |
 | `DIV-005` | Invalid skill-discovery entry does not abort the entire discovery | WP-14.1 (`HAR-001`) | APPROVED |
+| `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
 
 ---
 
@@ -165,4 +166,42 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - Pi's rejection is kept in `assurance/layers/data/14-wp141/out-linux.json`.
 - **Manifest:** row `HAR-001-DIV-005`, disposition `intentional divergence`.
 - **Governance:** Owner decision, Layer 14 WP-14.1 (`minion-agent#158` issuecomment-6051472129, §9–§11).
+- **Reconsideration trigger:** none expected.
+
+---
+
+## DIV-006 — An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery
+
+- **Affected:** WP-14.1 skill discovery (`minion-agent#158`, `HAR-011`). This is ignore-file reading only; matching with valid patterns is unchanged.
+- **Pi behaviour.**
+  - Pinned `ignore@7.0.5` builds each rule's JavaScript RegExp lazily. A pattern whose RegExp is invalid throws `SyntaxError` when that rule is first evaluated. Examples are an out-of-order character range (`[~-a]`, `[é-a]`) or an unterminated class (`[ab/c`).
+  - Pi does not catch it, so the whole `loadSkills` call rejects and every skill is lost.
+  - Whether it throws depends on rule order and on the path being checked: a negated rule is not evaluated until something is ignored.
+- **Minion behaviour.**
+  - When an ignore file is read, each prefixed pattern whose RegExp pinned `ignore` would reject is dropped.
+  - Each dropped pattern gets exactly one diagnostic, emitted in line order right after that file is read:
+
+    ```text
+    {code: invalid_ignore_pattern, path: <the ignore file>,
+     message: "ignore pattern is not valid and was dropped"}
+    ```
+  - The valid patterns are added in their original order, and discovery continues.
+  - Patterns `ignore` itself skips (blank, `#`, an invalid trailing backslash) stay silent.
+  - With no invalid pattern, behaviour is identical to Pi (`spec/harness.md` WP-14.1, HAR-011 "Invalid patterns").
+- **Classification:** intentional practical-parity divergence.
+- **Practical-parity assessment (Owner):**
+  - Pi's intentional abstraction: no. It is an incidental consequence of lazy RegExp construction.
+  - Realistic in normal use: rare, but a single typo in a `.gitignore` under a skills root would lose all skills.
+  - Exact parity is reproducible, but it is fragile and order-dependent.
+- **Realistic user impact:** one malformed ignore line no longer makes all skills disappear. The line is reported instead.
+- **Platforms:** all.
+- **Permanent witnesses:**
+  - canonical `skills-i10-invalid-patterns-dropped-valid-kept` (mixed: an out-of-order range, a negated invalid pattern and an unterminated class, interleaved with valid patterns);
+  - canonical `skills-i11-invalid-prefix-from-directory-name` (a directory named `[~-a]` makes its own ignore file's patterns invalid);
+  - the positive control `skills-i12-valid-patterns-only`, identical to pinned Pi;
+  - the model controls: *drops without a diagnostic* is killed by `i10` and `i11`, and *stops reading the file at the first invalid pattern* is killed by `i10`;
+  - Python regressions in `minion-agent-python/tests/skills/test_discovery.py`;
+  - Pi's rejection is kept in `assurance/layers/data/14-wp141/out-linux.json`.
+- **Manifest:** row `HAR-011-DIV-006`, disposition `intentional divergence`.
+- **Governance:** Owner decision, WP141-I001 Option B (`minion-agent#158` issuecomment-6054403282, §1).
 - **Reconsideration trigger:** none expected.
