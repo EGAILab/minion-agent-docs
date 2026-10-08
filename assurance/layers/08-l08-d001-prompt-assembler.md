@@ -1,6 +1,6 @@
 # L08-D001 — Optional prompt assembler at the request snapshot (Layer 08 delta)
 
-**Status:** contract delta, for independent contract review. Python: NOT_IMPLEMENTED. Rust:
+**Status:** contract APPROVED and merged; Python implementation candidate (§7) for independent review. Rust:
 NOT_IMPLEMENTED.
 
 **Classification:** `MINION_EXTENSION`, additive. With no assembler installed, the certified
@@ -92,3 +92,62 @@ Specifically:
    on a later turn?
 3. Are the planned witnesses sufficient for both bindings?
 4. Is the generic signature implementable identically in Rust, including the synchronous rule?
+
+## 7. Python implementation (candidate)
+
+**Contract:** approved by Codex contract review 1 (`minion-agent#166` issuecomment-6058279097) and
+merged: code `#165` → `b1f8108b`, docs `#260` → `142d0491`.
+
+**Code** (`minion-agent-python/src/minion_agent/agent_loop/`):
+- **`driver.py`:**
+  - `type PromptAssembler = Callable[[str, tuple[ToolDefinition, ...]], str]`;
+  - an optional `AgentLoop(prompt_assembler=...)` collaborator, default `None`;
+  - `_system_text(decision, context)`, which applies the contract's three cases in order:
+    1. the per-step override, verbatim;
+    2. otherwise `prompt_assembler(context.system_prompt, context.tools)`, when one is installed;
+    3. otherwise `context.system_prompt`.
+  - A non-string result raises `TypeError`.
+  - `_run_step` computes the system text **before** `record_header`, so a failing assembler records
+    no header and sends no request. Its exception reaches `_execute_run`'s certified
+    `except Exception` → `_settle_run_failure` path unchanged.
+- **`__init__.py`:** `AgentLoopFactory.for_instance(instance, *, prompt_assembler=None)`, and
+  `PromptAssembler` is exported.
+
+**Unchanged:** when no assembler is installed, the request-build path computes the same
+`system_base` as before. The certified suites pass unmodified (gates below).
+
+**Witnesses** (`tests/agent_loop/test_prompt_assembler.py`, 13 tests):
+1. no assembler: the request and header are exactly the stored prompt;
+2. run start: one call, with the base and the run-start tuple;
+3. a tool registered after run start (from a tool's own execute) is in neither the prompt nor the
+   schemas;
+4. a `prepareNextTurn` replacement drives the next prompt and schemas;
+5. a listener reads and replaces the base, not the assembled text;
+6. `added_tool_names` growth reaches the prompt and the schemas;
+7. the override is sent verbatim, and the assembler is not called;
+8. concurrent registry churn at every await point of a 7-request run: for each request, the
+   assembler's tools equal the request's schemas;
+9. a raising assembler, which sends nothing and records no header; the run ends `failed`;
+10. a non-string result, likewise;
+11. a later-turn failure, which keeps the earlier request and header and settles as `failed`;
+12. the header records and reconstructs the assembled text;
+13. the factory installs the assembler, or leaves it absent.
+
+**Kill controls** (disposable copy; `data/08-l08-d001/controls.py`): all 5 killed.
+
+| Mutant | Killed by witnesses |
+|---|---|
+| Assembler fed from the live registry | 3, 4 |
+| Reversed snapshot order | 6 |
+| Override reassembled | 7 |
+| Stale assembled text (first request only) | 3, 4, 6, 8, 11 |
+| Header published before assembly | 7, 9, 10, 11, 12 |
+
+**Fresh gates (code @ `53287050`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,105 passed, 32 skipped, 21 xfailed**; coverage **100%** (8,256 statements); ruff clean; mypy clean (109 files) |
+| Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,042 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+**Rust:** NOT_IMPLEMENTED. Codex implements under the same contract after this review.
