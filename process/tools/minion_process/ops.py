@@ -64,6 +64,48 @@ def _process_closure(old: dict[str, Any], new: dict[str, Any]) -> str | None:
     return None
 
 
+def _scoping_closure(gh: GitHub, old: dict[str, Any], new: dict[str, Any]) -> str | None:
+    """`SCOPING -> CLOSED` is legal only for a completed scoping-only work package
+    (`coordination-state.md` §10.3). The tool verifies every mechanical fact it can:
+    - an explicit `requirements: []` before and after, so the closure claims no product
+      certification and may not reclassify a product WP;
+    - no open finding;
+    - a recorded `scoping_review` with a non-empty `verdict` and `source`;
+    - at least one candidate, and every candidate a PR that GitHub reports merged at its recorded
+      `merged_sha`, with that merge reachable from the default branch.
+
+    The review's semantics stay recorded evidence. The tool checks the record's presence, never that
+    the verdict approved; the agent still verifies it approved that exact candidate."""
+    if not (old["status"] == "SCOPING" and new["status"] == "CLOSED"):
+        return None
+    if old.get("requirements") != [] or new.get("requirements") != []:
+        return (
+            "SCOPING -> CLOSED is for a scoping-only WP: requirements must be an explicit [] before "
+            "and after the transition (§10.3)"
+        )
+    if new.get("open_findings"):
+        return "cannot close with open findings (§4.3)"
+    review = new.get("scoping_review")
+    if not (
+        isinstance(review, dict)
+        and all(isinstance(review.get(k), str) and review[k].strip() for k in ("verdict", "source"))
+    ):
+        return "SCOPING -> CLOSED requires a recorded scoping_review with a non-empty verdict and source (§10.3)"
+    present = {side: c for side, c in candidates(new).items() if c is not None}
+    if not present:
+        return "SCOPING -> CLOSED requires the merged scoping artifact recorded as a candidate (§10.3)"
+    for side, candidate in present.items():
+        if not (isinstance(candidate, dict) and candidate.get("pr") and candidate.get("merged_sha")):
+            return f"cannot close before the {side} candidate records its pr and merged_sha (§4.3, §10.3)"
+        repo, merged = REPOS[side], candidate["merged_sha"]
+        pr = gh.pr(repo, candidate["pr"])
+        if pr.get("state") != "MERGED" or (pr.get("mergeCommit") or {}).get("oid") != merged:
+            return f"{side} PR #{candidate['pr']} is not merged at {merged[:12]} (§10.3)"
+        if not gh.contains(repo, gh.default_branch(repo), merged):
+            return f"{side} merge {merged[:12]} is not on the default branch (§10.3)"
+    return None
+
+
 def commit_state(
     gh: GitHub,
     repo: str,
@@ -103,7 +145,11 @@ def commit_state(
     outside = [k for k in changed if k not in allowed]
     if outside:
         raise CheckFailed(f"patch changed keys outside ALLOWED: {outside}")
-    reason = check_transition(old["status"], new_workflow["status"]) or _process_closure(old, new_workflow)
+    reason = (
+        check_transition(old["status"], new_workflow["status"])
+        or _process_closure(old, new_workflow)
+        or _scoping_closure(gh, old, new_workflow)
+    )
     if reason:
         raise CheckFailed(reason)
     if old["status"] == "BLOCKED_FOR_OWNER" and new_workflow["status"] != "BLOCKED_FOR_OWNER":

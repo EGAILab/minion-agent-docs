@@ -8,7 +8,13 @@ from __future__ import annotations
 from .model import ACTIVE, STATUSES
 
 LEGAL: dict[str, frozenset[str]] = {
-    "SCOPING": frozenset({"CONTRACT_DRAFT", "WAITING_FOR_TRIGGER"}),
+    "SCOPING": frozenset(
+        {
+            "CONTRACT_DRAFT",
+            "WAITING_FOR_TRIGGER",
+            "CLOSED",  # a scoping-only WP, scoping approved and merged (§10.3; ops guard)
+        }
+    ),
     "CONTRACT_DRAFT": frozenset({"CONTRACT_REVIEW"}),
     "CONTRACT_REVIEW": frozenset(
         {
