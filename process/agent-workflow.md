@@ -714,7 +714,7 @@ BLOCKED_FOR_OWNER
 State intent:
 
 `SCOPING`
-: Read-only audit and boundary definition. No implementation authorization is implied.
+: Read-only audit and boundary definition. No implementation authorization is implied. A scoping-only WP (`requirements: []`) closes directly from here once its scoping artifact is independently approved and merged (`coordination-state.md` §10.3).
 
 `CONTRACT_DRAFT`
 : Shared contract/evidence is being authored before implementation.
