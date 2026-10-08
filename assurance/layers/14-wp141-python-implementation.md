@@ -90,10 +90,14 @@ back for comparison. The scenarios are all **92** in `conformance/agent/skill-di
 
 ### Full gates on the candidate (`#161` with L12-D004)
 
+The gates were rerun on `#161` @ `e4a128f`, which includes L12-D004 remediation 1 (`L12D004-R001`, code `#162` @ `32287fa5`).
+
 | Platform | Result |
 |---|---|
-| Windows, pinned ICU 78.3 | **5,196 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,072 statements, including `skills`); ruff clean; mypy clean (113 files) |
-| Linux (`python:3.13`, pinned ICU volume, search engines mounted) | **5,143 passed, 0 failed, 97 skipped, 19 xfailed** |
+| Windows, pinned ICU 78.3 | **5,200 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,075 statements, including `skills`); ruff clean; mypy clean (113 files) |
+| Linux (`python:3.13`, pinned ICU volume, search engines mounted) | **5,147 passed, 0 failed, 97 skipped, 19 xfailed**; skill-discovery conformance 93 passed |
+
+On the earlier head `4676a51b` (before remediation 1): Windows 5,196 passed; Linux 5,143 passed, 0 failed.
 
 The 21 Windows xfails are the 19 existing ones plus L12-D004's two strict Windows xfails (`#69`).
 
