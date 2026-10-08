@@ -435,8 +435,9 @@ loader. No YAML API is exposed (Owner decision §6).
 
 ## WP-14.2 — Prompt assembly and model-visible skill/tool metadata (`HAR-002`, `HAR-014`..`HAR-018`)
 
-**Status (`minion-agent#159`):** CONTRACT_DRAFT, **incomplete**. `HAR-016` waits on Owner decision
-`PP-14-9` (below). Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#159`):** CONTRACT_DRAFT. `HAR-016` depends on the Layer 08 delta `L08-D001`
+(`minion-agent#166`), which is under its own contract review. Python: NOT_IMPLEMENTED. Rust:
+NOT_IMPLEMENTED.
 
 **Authority:** pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - `packages/agent/src/harness/{system-prompt,skills}.ts` for the skills block and skill invocation
@@ -445,8 +446,8 @@ loader. No YAML API is exposed (Owner decision §6).
   section order, the `read` gate and tool-metadata rendering (`AUTH-14-2`). Its Pi-product text is
   not adopted.
 
-**Owner decision:** `minion-agent#159` issuecomment-6051472443, §15–§20 (`PP-14-4` mapping; `PP-14-5`
-Option B).
+**Owner decisions:** `minion-agent#159` issuecomment-6051472443, §15–§20 (`PP-14-4` mapping; `PP-14-5`
+Option B); issuecomment-6057640884 (`PP-14-9` Option A, `HAR-016`).
 
 **Input record:** WP-14.1's `Skill` (`HAR-013`), unchanged: `name`, `description`, `content`,
 `file_path`, `disable_model_invocation`. Records are values; a change to the skill set is a
@@ -552,8 +553,8 @@ empty string means the section is absent.
 
 1. **`base`:** the agent's base prompt text.
 2. **`tools`:** `HAR-018`'s section (opt-in).
-3. **`contributed`:** application- or plugin-supplied sections, in contribution order (`HAR-016`
-   fixes that order). Pi's `appendSystemPrompt` maps here.
+3. **`contributed`:** the prompt configuration's `sections`, in order (`HAR-016`). Pi's
+   `appendSystemPrompt` maps here.
 4. **`skills`:** `HAR-002`'s block, included **only if** the tool snapshot contains a tool named
    exactly `read` (the C-4 gate). Pi's custom-prompt `!selectedTools` clause has no analogue: a
    Minion assembly always has a tool snapshot.
@@ -576,49 +577,50 @@ prompt carries "Available tools"/"Guidelines", directly after the base.
   not adopted here. Content addressing already stores an unchanged prompt once.
 - **Witness:** reconstructing the header yields byte-identical model-visible text.
 
-### HAR-016 — Snapshot timing and consistency — **OPEN (`PP-14-9`, Owner)**
+### HAR-016 — Snapshot timing and consistency (`MINION_ARCHITECTURAL_MAPPING`; Owner `PP-14-9` Option A)
 
-**Settled by the scoping record:**
-- **Snapshot points:** the prompt is evaluated where the request snapshot is taken: run start, each
-  `prepare_next_turn`, and the certified per-step override.
-- **One snapshot:** the tools section, the `read` gate and the request's tool schemas derive from
-  **one** visible-tool snapshot of `ctx.tools`.
-- **Skill membership** changes only by replacement. WP-14.1 records are immutable values in both
-  languages, so the retained-record mutation question (`L14-SCOPE-R003`) reduces to "a change is a
-  replacement".
+**Mechanism.** The Layer 14 composer is installed as the driver's prompt assembler (`L08-D001`,
+`minion-agent#166`; `spec/agent.md`, Layer 08, "Optional prompt assembler"). Its contract is that
+seam's, unchanged.
+- **When it runs:** once for every provider request without a per-step system override, while that
+  request is built.
+- **What it receives:**
+  - `base`: the run-local `RunContext.system_prompt`, which is `AgentInstance.system_prompt` at run
+    start unless a `prepareNextTurn` replacement supplied another;
+  - `tools`: the request's own tool snapshot, whose schemas that request carries.
+- **The rule this gives:** the `tools` section (`HAR-018`), the `read` gate (`HAR-015`) and the
+  request's tool schemas therefore derive from **one** snapshot, by construction. The composer never
+  reads `ctx.tools`.
 
-**Open:** *how* the run-start snapshot gets a prompt that was assembled from the same tool snapshot
-— see `PP-14-9`.
+**Prompt configuration.** The composer holds one **prompt configuration** value:
+- `skills`: an ordered sequence of WP-14.1 `Skill` records;
+- `tools_section`: a boolean, default `false`;
+- `sections`: an ordered sequence of strings, the `contributed` sections in order.
 
-**`PP-14-9` — the problem.**
-- **Pi:** the coding agent rebuilds the base prompt eagerly on every change to the tool registry,
-  the active tools or the resources (C-11). Its per-turn refresh then sets the prompt and the tools
-  together (`_installAgentNextTurnRefresh`).
-- **Minion, run start:** the certified driver snapshots `instance.system_prompt` and
-  `ctx.tools.visible_from(scope)` at run start (Layer 08, `L08-R001`).
-- **Minion, the gap:** `ctx.tools` has no change notification. So a prompt assembled earlier can
-  disagree with the run-start tool snapshot, if a tool was registered or withdrawn in between.
+**How it changes.**
+- **By whole-value replacement only.** Supplying a configuration copies its membership: a caller
+  mutating its own sequence afterwards changes nothing (T-1 membership isolation).
+- **Records are immutable values** in both bindings, so there is no retained-record mutation to
+  observe (`L14-SCOPE-R003` reduces to "a change is a replacement").
+- **When a replacement takes effect:** at the next request build that starts after it. A request
+  being built uses exactly one configuration value. This is atomic: there is never a mix of an old
+  and a new value.
 
-**Option A — additive Layer 08 delta.** The driver consults an optional prompt assembler at each
-snapshot point, with the very tool tuple it snapshots.
-- **Guarantee:** `HAR-016` holds everywhere.
-- **Without an assembler,** behaviour is unchanged.
-- **Cost:** it reopens certified Layer 08 additively (Python and Rust), with its own delta review.
+**Override.** A per-step system override replaces the whole prompt, and the composer is not called
+(`L08-D001`). This matches the scoping record, under which the override replaces the whole prompt
+(C-12).
 
-**Option B — no lower-layer change.**
-- **Between turns:** an `AGENT_PREPARE_NEXT_TURN` listener replaces the run context with the prompt
-  and the tools assembled from one fresh snapshot. This mirrors `_installAgentNextTurnRefresh`.
-- **At run start:** the snapshot uses the last assembled `instance.system_prompt`. Consistency there
-  holds only if no tool changed since the last assembly. This is a disclosed limitation with a
-  witness; the application must reassemble after changing tools.
+**Errors.** The composer is total over valid inputs, so it does not raise for any configuration or
+tool snapshot. Any failure is the seam's failure rule: nothing is sent, and the run settles through
+`handleRunFailure`.
 
-**Option C — additive Layer 05 change notification.** Add one to `ctx.tools`, and reassemble
-eagerly as Pi does.
-- **Guarantee:** consistency everywhere, except a change made concurrently with run start.
-- **Cost:** a lower-layer addition that has no other consumer.
+**Not adopted:**
+- a registration API for plugin-contributed sections;
+- per-scope section visibility;
+- section names.
 
-**Recommendation:** Option A. It is the only option that makes the one-snapshot rule hold by
-construction at every snapshot point, it is small, and it is additive.
+The `contributed` list is an ordered value an application supplies. A later plugin mechanism would
+be a separate, governed extension (Owner decision §16: no prompt framework).
 
 ### Conformance evidence (planned; WP-14.2)
 
@@ -647,6 +649,12 @@ functions. The tools section is generated from pinned `buildSystemPrompt`'s norm
 rendering, with the non-adopted product lines removed by a documented, asserted patch (as for the
 WP-14.1 model).
 
-**Driver-level witnesses (`HAR-016`/`HAR-017`):** to be fixed after `PP-14-9`. They must include a
-tool registered between turns, which appears in both the tool schemas and the prompt or in neither,
-and header round-trips.
+**Driver-level witnesses (`HAR-016`/`HAR-017`)**, through the real driver with the composer
+installed (`L08-D001`):
+- a tool registered after run start appears in neither the prompt nor the schemas of that run;
+- a `prepareNextTurn` replacement of the tools is reflected in both, and so is `added_tool_names`
+  growth;
+- `read` gating follows the snapshot;
+- a configuration replaced mid-run takes effect at the next request, atomically;
+- the override bypasses the composer;
+- the header's `system_base` round-trips byte-identically.
