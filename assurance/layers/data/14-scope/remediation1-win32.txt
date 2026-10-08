@@ -1,0 +1,17 @@
+ignore ["foo "] "foo" -> true
+ignore ["foo "] "foo " -> false
+ignore ["foo\\ "] "foo" -> false
+ignore ["foo\\ "] "foo " -> true
+ignore ["foo\\  "] "foo" -> false
+ignore ["foo\\  "] "foo " -> true
+ignore ["foo\\  "] "foo  " -> false
+ignore ["foo \\ "] "foo" -> false
+ignore ["foo \\ "] "foo " -> false
+ignore ["foo \\ "] "foo  " -> true
+loader leading-backslash file: REJECTS RangeError: path should be a `path.relative()`d string, but got "/x.md"
+loader leading-backslash dir: REJECTS RangeError: path should be a `path.relative()`d string, but got "/d/"
+loader bare-backslash file: REJECTS TypeError: path must not be empty
+loader bare-backslash dir: REJECTS RangeError: path should be a `path.relative()`d string, but got "/"
+loader inner-backslash file (control): resolved skills=["/root/a\\b.md"] diagnostics=1
+loader dot-backslash file (dotfile skip): resolved skills=[] diagnostics=0
+loader sibling before bad name: REJECTS RangeError: path should be a `path.relative()`d string, but got "/x.md"

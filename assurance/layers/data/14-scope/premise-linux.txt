@@ -1,0 +1,41 @@
+yaml bool true: {"disable-model-invocation":true} (boolean)
+yaml bool yes (1.1 style): {"disable-model-invocation":"yes"} (string)
+yaml bool True: {"disable-model-invocation":true} (boolean)
+yaml bool on: {"disable-model-invocation":"on"} (string)
+yaml duplicate key: THROWS YAMLParseError: Map keys must be unique at line 2, column 1:
+yaml scalar doc: "just a string" (undefined)
+yaml empty: null (object)
+yaml numeric name: {"name":123,"description":"x"} (undefined)
+yaml tab indent: THROWS YAMLParseError: Tabs are not allowed as indentation at line 2, column 1:
+yaml anchor/alias: {"a":"foo","description":"foo"} (undefined)
+yaml merge key: {"base":{"description":"d"},"<<":{"description":"d"}} (undefined)
+yaml multi-doc: THROWS YAMLParseError: Source contains multiple documents; please use YAML.parseAllDocuments() at line 2, column 1:
+yaml timestamp: {"description":"2001-12-14"} (undefined)
+yaml null: {"description":null} (undefined)
+ignore dir-only: "build" -> false
+ignore dir-only: "build/" -> true
+ignore dir-only: "a/build/" -> true
+ignore dir-only: "build/x.md" -> true
+ignore negation: "x.md" -> true
+ignore negation: "keep.md" -> false
+ignore prefixed nested: "sub/a.md" -> true
+ignore prefixed nested: "sub/deep/a.md" -> false
+ignore prefixed nested: "a.md" -> false
+ignore trailing space kept: "foo" -> true
+ignore trailing space kept: "foo " -> false
+ignore escaped hash: "#x" -> true
+ignore double star: "tmp/" -> true
+ignore double star: "a/b/tmp/" -> true
+ignore case: "foo" -> true
+ignore case: "Foo" -> true
+ignore non-relative paths: "" -> THROWS TypeError: path must not be empty
+ignore non-relative paths: "../x" -> THROWS RangeError: path should be a `path.relative()`d string, but got "../x"
+ignore non-relative paths: "/x" -> THROWS RangeError: path should be a `path.relative()`d string, but got "/x"
+ignore non-relative paths: "./x" -> THROWS RangeError: path should be a `path.relative()`d string, but got "./x"
+ignore backslash on posix: "a\\b" -> false
+ignore backslash on posix: "a/b" -> true
+trim BOM: "desc" py-like differs if U+FEFF kept
+length UTF-16: 2 1025
+localeCompare: _x -y a b B e é Z
+Intl default locale: en-US
+node v22.15.1 icu 76.1
