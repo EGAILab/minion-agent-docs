@@ -8,6 +8,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { blocks, minionSection, naiveBlocks, renderOptions } from "./tools-model.mjs";
 
 const [piCore, out] = process.argv.slice(2);
 const work = join(import.meta.dirname, "gen");
@@ -73,32 +74,6 @@ const { normalizeSnippet, normalizeGuidelines } = await import(pathToFileURL(joi
 const pi = await import(pathToFileURL(join(work, "pi-system-prompt.ts")).href);
 const mo = await import(pathToFileURL(join(work, "model-system-prompt.ts")).href);
 
-// _rebuildSystemPrompt's collection, over tools in snapshot order (every tool is in the registry here)
-function collect(tools) {
-	const toolSnippets = {};
-	const promptGuidelines = [];
-	for (const t of tools) {
-		const s = normalizeSnippet(t.snippet);
-		if (s) toolSnippets[t.name] = s;
-		const g = normalizeGuidelines(t.guidelines);
-		if (g.length > 0) promptGuidelines.push(...g);
-	}
-	return { toolSnippets, promptGuidelines };
-}
-function blocks(prompt) {
-	const tools = prompt.split(NL + NL).find((b) => b.startsWith("Available tools:")) ?? null;
-	const guide = prompt.split(NL + NL).find((b) => b.startsWith("Guidelines:")) ?? null;
-	return { tools, guidelines: guide };
-}
-function minionSection(prompt) {
-	const { tools, guidelines } = blocks(prompt);
-	const parts = [];
-	// a block whose list rendered empty is its bare header line: absent in the Minion section
-	if (tools !== null && tools !== "Available tools:") parts.push(tools);
-	if (guidelines !== null && guidelines !== "Guidelines:") parts.push(guidelines);
-	return parts.join(NL + NL);
-}
-
 const ws = (cps) => cps.map((c) => String.fromCodePoint(c)).join("");
 const CR = String.fromCharCode(13);
 const cases = [
@@ -115,12 +90,28 @@ const cases = [
 	{ id: "t11-bash-without-search-tools", tools: [{ name: "bash", snippet: "Run" }] },
 	{ id: "t12-inner-whitespace-kept-in-guideline", tools: [{ name: "a", guidelines: [`a${NL}b  c`] }] },
 	{ id: "t13-mixed", tools: [{ name: "read", snippet: "Read" }, { name: "x" }, { name: "edit", guidelines: ["Edit carefully"] }] },
+	// WP142-R002: guidelines whose text holds blank lines (trim-only normalization preserves them)
+	{ id: "t14-guideline-with-blank-lines", tools: [{ name: "a", guidelines: [`first${NL}${NL}second`] }] },
+	{ id: "t15-multiline-dedupe-per-tool", tools: [{ name: "a", guidelines: [`p1${NL}${NL}p2`, `p1${NL}${NL}p2`, "other"] }] },
+	{
+		id: "t16-multiline-dedupe-cross-tool",
+		tools: [{ name: "a", snippet: "A", guidelines: [`x${NL}${NL}y`] }, { name: "b", guidelines: [`x${NL}${NL}y`, "z"] }],
+	},
 ];
 const rows = cases.map((c) => {
-	const { toolSnippets, promptGuidelines } = collect(c.tools);
-	const opts = { selectedTools: c.tools.map((t) => t.name), toolSnippets, promptGuidelines, cwd: "/" };
+	const opts = renderOptions(c.tools, normalizeSnippet, normalizeGuidelines);
 	const piPrompt = pi.buildSystemPrompt(opts);
 	return { ...c, pi: blocks(piPrompt), minion_tools_section: minionSection(mo.buildSystemPrompt(opts)) };
 });
+// Negative control (WP142-R002): the superseded blank-line extractor must disagree on every
+// multi-paragraph witness, and agree everywhere else.
+for (const c of cases) {
+	const opts = renderOptions(c.tools, normalizeSnippet, normalizeGuidelines);
+	const piPrompt = pi.buildSystemPrompt(opts);
+	const same = JSON.stringify(naiveBlocks(piPrompt).guidelines) === JSON.stringify(blocks(piPrompt).guidelines);
+	const multiline = /^t1[4-6]-/.test(c.id);
+	if (multiline === same) throw new Error(`negative control: naive extractor ${same ? "survived" : "broke"} on ${c.id}`);
+}
+console.log("negative control: naive blank-line extractor killed by t14, t15, t16 only");
 writeFileSync(out, JSON.stringify(rows, null, 1));
 console.log(`${rows.length} tool-metadata cases -> ${out}`);

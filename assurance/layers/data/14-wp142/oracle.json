@@ -130,13 +130,13 @@
    "skills": [
     {
      "name": "pt",
-     "description": "line1\nline2\r\n\ttab \u0001ctl \ud800 lone 😀",
+     "description": "line1\nline2\r\n\ttab \u0001ctl 😀 astral",
      "content": "# pt\nbody",
      "filePath": "/skills/pt/SKILL.md",
      "disableModelInvocation": false
     }
    ],
-   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>pt</name>\n    <description>line1\nline2\r\n\ttab \u0001ctl \ud800 lone 😀</description>\n    <location>/skills/pt/SKILL.md</location>\n  </skill>\n</available_skills>"
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>pt</name>\n    <description>line1\nline2\r\n\ttab \u0001ctl 😀 astral</description>\n    <location>/skills/pt/SKILL.md</location>\n  </skill>\n</available_skills>"
   },
   {
    "id": "b09-windows-location",
@@ -459,11 +459,11 @@
    "skill": {
     "name": "s",
     "description": "s description",
-    "content": "x\r\n\ud800\u0001",
+    "content": "x\r\n😀\u0001",
     "filePath": "/skills/s/SKILL.md",
     "disableModelInvocation": false
    },
-   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\nx\r\n\ud800\u0001\n</skill>"
+   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\nx\r\n😀\u0001\n</skill>"
   }
  ]
 }

@@ -4,19 +4,20 @@
 //   Pi's own blocks recorded as `pi_reference`.
 // - compose: expected = the HAR-015 mapping over the same pinned functions (the join rule below is the
 //   Minion mapping itself, PP-14-4; it is the only rule written here).
-// Strings: a plain JSON string, or {"utf16": [units]} when the text holds a lone surrogate.
+// Strings: plain JSON strings, always Unicode scalar-value strings (WP142-R001, Owner): the generator
+// refuses any text holding an unpaired surrogate, so no document can carry one.
 // Run (Node v22.15.1): node --experimental-strip-types --no-warnings gen-canonical.mjs <out dir>
 // (after tools-oracle.mjs, which writes gen/model-system-prompt.ts and gen/normalize.ts)
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { minionSection, renderOptions } from "./tools-model.mjs";
 import { formatSkillsForSystemPrompt } from "../14-wp141/pinned/system-prompt.ts";
 
 const outDir = process.argv[2];
 const here = import.meta.dirname;
 const PI_REVISION = "b7bb00b936dbe21b8e160b3e89efdec361846699";
 const NL = String.fromCharCode(10);
-const LONE = String.fromCharCode(0xd800);
 
 // true when s holds an unpaired surrogate, which a plain JSON string cannot carry portably
 function hasLoneSurrogate(s) {
@@ -30,12 +31,10 @@ function hasLoneSurrogate(s) {
 	}
 	return false;
 }
-function units(s) {
-	const out = [];
-	for (let i = 0; i < s.length; i++) out.push(s.charCodeAt(i));
-	return out;
-}
-const jsx = (s) => (hasLoneSurrogate(s) ? { utf16: units(s) } : s);
+const jsx = (s) => {
+	if (hasLoneSurrogate(s)) throw new Error(`outside the WP-14.2 string domain: ${JSON.stringify(s)}`);
+	return s;
+};
 const skill = (k) => ({
 	name: jsx(k.name),
 	description: jsx(k.description),
@@ -81,17 +80,7 @@ for (const r of tools)
 
 // HAR-015 compose: the mapping (PP-14-4) over pinned functions
 function toolsSection(ts) {
-	const toolSnippets = {};
-	const promptGuidelines = [];
-	for (const t of ts) {
-		const s = normalizeSnippet(t.snippet);
-		if (s) toolSnippets[t.name] = s;
-		const g = normalizeGuidelines(t.guidelines);
-		if (g.length > 0) promptGuidelines.push(...g);
-	}
-	const p = model.buildSystemPrompt({ selectedTools: ts.map((t) => t.name), toolSnippets, promptGuidelines, cwd: "/" });
-	const parts = p.split(NL + NL).filter((b) => (b.startsWith("Available tools:") && b !== "Available tools:") || (b.startsWith("Guidelines:") && b !== "Guidelines:"));
-	return parts.join(NL + NL);
+	return minionSection(model.buildSystemPrompt(renderOptions(ts, normalizeSnippet, normalizeGuidelines)));
 }
 function compose({ base, tools: ts, tools_section, sections, skills }) {
 	const list = [base, tools_section ? toolsSection(ts) : "", ...sections];
@@ -114,7 +103,7 @@ const composeCases = [
 	{ id: "c10-all-empty", base: "", tools: [], tools_section: true, sections: [""], skills: [] },
 	{ id: "c11-section-with-blank-lines", base: `B${NL}`, tools: [], tools_section: false, sections: [`${NL}S${NL}${NL}`], skills: [] },
 	{ id: "c12-read-named-exactly", base: "BASE", tools: [{ name: "Read" }, { name: "read_file" }], tools_section: false, sections: [], skills: [sk("alpha")] },
-	{ id: "c13-lone-surrogate-base", base: `x${LONE}y`, tools: [], tools_section: false, sections: [], skills: [] },
+	{ id: "c13-astral-base", base: `x${String.fromCodePoint(0x1f600)}y`, tools: [], tools_section: false, sections: [], skills: [] },
 ];
 const MAPPING = "MINION_ARCHITECTURAL_MAPPING (PP-14-4, HAR-015 order and join) over the pinned harness skills block and the HAR-018 Minion model";
 for (const c of composeCases)

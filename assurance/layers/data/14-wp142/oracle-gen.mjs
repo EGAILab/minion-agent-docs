@@ -1,9 +1,7 @@
 // WP-14.2 Pi oracle for HAR-002 (formatSkillsForSystemPrompt) and HAR-014 (formatSkillInvocation):
 // every expected string comes from the byte-copied pinned harness functions; nothing is re-implemented.
 // Backslashes, control characters and surrogates are built from code units, so no tool rewrites them.
-// Run (Node v22.15.1): node --experimental-strip-types --no-warnings oracle-gen.mjs <out.json>, from a
-// checkout whose ../14-wp141/pinned/ is byte-identical to Pi (LF endings, not autocrlf) and has the
-// pinned skills.ts dependencies (yaml@2.9.0, ignore@7.0.5) installed. Output: oracle.json.
+// Run: node --experimental-strip-types --no-warnings gen.mjs <out.json>
 import { writeFileSync } from "node:fs";
 import { formatSkillInvocation } from "../14-wp141/pinned/skills.ts";
 import { formatSkillsForSystemPrompt } from "../14-wp141/pinned/system-prompt.ts";
@@ -37,7 +35,7 @@ const block = [
 		id: "b07-five-escapes",
 		skills: [sk("esc&<>", { description: `a & b < c > d " e ' f &amp; ]]> </available_skills>`, filePath: `/s/"q'&<>/SKILL.md` })],
 	},
-	{ id: "b08-pass-through", skills: [sk("pt", { description: `line1${NL}line2${CR}${NL}${TAB}tab ${CTL}ctl ${LONE} lone ${EMOJI}` })] },
+	{ id: "b08-pass-through", skills: [sk("pt", { description: `line1${NL}line2${CR}${NL}${TAB}tab ${CTL}ctl ${EMOJI} astral` })] },
 	{ id: "b09-windows-location", skills: [sk("win", { filePath: win("C:", "Users", "me", "skills", "win", "SKILL.md") })] },
 	{ id: "b10-empty-strings", skills: [sk("", { description: "", filePath: "" })] },
 ];
@@ -71,8 +69,14 @@ const invocation = [
 	{ id: "v91-additional", skill: sk("s"), additional: "Do it now." },
 	{ id: "v92-additional-empty", skill: sk("s"), additional: "" },
 	{ id: "v93-disabled-still-invocable", skill: sk("s", { disableModelInvocation: true }) },
-	{ id: "v94-pass-through", skill: sk("s", { content: `x${CR}${NL}${LONE}${CTL}` }) },
+	{ id: "v94-pass-through", skill: sk("s", { content: `x${CR}${NL}${EMOJI}${CTL}` }) },
 ];
+// WP142-R001 (Owner): lone surrogates are outside the Minion string domain. Pinned Pi's results for them are
+// kept as characterization evidence only (out-of-domain.json), never as Minion expectations.
+const outOfDomain = {
+	skills_block: [{ id: "x-b08-lone-surrogate-description", skills: [sk("pt", { description: `a ${LONE} b` })] }],
+	invocation: [{ id: "x-v94-lone-surrogate-content", skill: sk("s", { content: `x${LONE}y` }) }],
+};
 const rows = {
 	skills_block: block.map((c) => ({ ...c, expected: formatSkillsForSystemPrompt(c.skills) })),
 	invocation: invocation.map((c) => ({
@@ -81,4 +85,10 @@ const rows = {
 	})),
 };
 writeFileSync(out, JSON.stringify(rows, null, 1));
+const ood = {
+	note: "OUTSIDE the WP-14.2 string domain (Owner decision WP142-R001): pinned Pi results kept as characterization only",
+	skills_block: outOfDomain.skills_block.map((c) => ({ ...c, pi: formatSkillsForSystemPrompt(c.skills) })),
+	invocation: outOfDomain.invocation.map((c) => ({ ...c, pi: formatSkillInvocation(c.skill) })),
+};
+writeFileSync(out.replace(/oracle\.json$/, "out-of-domain.json"), JSON.stringify(ood, null, 1));
 console.log(`${rows.skills_block.length} block + ${rows.invocation.length} invocation cases -> ${out}`);

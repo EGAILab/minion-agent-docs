@@ -229,5 +229,63 @@
    "guidelines": "Guidelines:\n- Edit carefully\n- Be concise in your responses\n- Show file paths clearly when working with files"
   },
   "minion_tools_section": "Available tools:\n- read: Read\n\nGuidelines:\n- Edit carefully"
+ },
+ {
+  "id": "t14-guideline-with-blank-lines",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "first\n\nsecond"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- first\n\nsecond\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- first\n\nsecond"
+ },
+ {
+  "id": "t15-multiline-dedupe-per-tool",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "p1\n\np2",
+     "p1\n\np2",
+     "other"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- p1\n\np2\n- other\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- p1\n\np2\n- other"
+ },
+ {
+  "id": "t16-multiline-dedupe-cross-tool",
+  "tools": [
+   {
+    "name": "a",
+    "snippet": "A",
+    "guidelines": [
+     "x\n\ny"
+    ]
+   },
+   {
+    "name": "b",
+    "guidelines": [
+     "x\n\ny",
+     "z"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- a: A",
+   "guidelines": "Guidelines:\n- x\n\ny\n- z\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- a: A\n\nGuidelines:\n- x\n\ny\n- z"
  }
 ]
