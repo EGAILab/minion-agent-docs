@@ -64,18 +64,24 @@ def _process_closure(old: dict[str, Any], new: dict[str, Any]) -> str | None:
     return None
 
 
+SCOPING_REVIEW_APPROVED = "APPROVED"
+"""The one machine-checkable approval outcome for `scoping_review.outcome` (§10.3)."""
+
+
 def _scoping_closure(gh: GitHub, old: dict[str, Any], new: dict[str, Any]) -> str | None:
     """`SCOPING -> CLOSED` is legal only for a completed scoping-only work package
     (`coordination-state.md` §10.3). The tool verifies every mechanical fact it can:
     - an explicit `requirements: []` before and after, so the closure claims no product
       certification and may not reclassify a product WP;
     - no open finding;
-    - a recorded `scoping_review` with a non-empty `verdict` and `source`;
+    - a recorded `scoping_review` whose `outcome` is exactly `APPROVED`, with a non-empty
+      `verdict` and `source` (`PROC-L256-R001`: a recorded rejection, block or pending review is
+      refused, and no substring of the verdict is ever read as approval);
     - at least one candidate, and every candidate a PR that GitHub reports merged at its recorded
       `merged_sha`, with that merge reachable from the default branch.
 
-    The review's semantics stay recorded evidence. The tool checks the record's presence, never that
-    the verdict approved; the agent still verifies it approved that exact candidate."""
+    The `APPROVED` marker is necessary, not sufficient. Review semantics stay recorded evidence: the
+    agent still verifies that `source` independently approved that exact candidate."""
     if not (old["status"] == "SCOPING" and new["status"] == "CLOSED"):
         return None
     if old.get("requirements") != [] or new.get("requirements") != []:
@@ -92,6 +98,11 @@ def _scoping_closure(gh: GitHub, old: dict[str, Any], new: dict[str, Any]) -> st
     ):
         return (
             "SCOPING -> CLOSED requires a recorded scoping_review with a non-empty verdict and source (§10.3)"
+        )
+    if review.get("outcome") != SCOPING_REVIEW_APPROVED:
+        return (
+            f"SCOPING -> CLOSED requires scoping_review.outcome == {SCOPING_REVIEW_APPROVED!r}, "
+            f"got {review.get('outcome')!r} (§10.3)"
         )
     present = {side: c for side, c in candidates(new).items() if c is not None}
     if not present:

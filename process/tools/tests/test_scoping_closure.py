@@ -25,6 +25,7 @@ def _scoping_wp(**changes: Any) -> dict[str, Any]:
         code=None,
         docs={"pr": 253, "sha": SHA_B, "base": "master", "merged_sha": MERGED},
         scoping_review={
+            "outcome": "APPROVED",
             "verdict": "LAYER 14 SCOPE APPROVED",
             "source": "minion-agent-docs#253 issuecomment-1",
         },
@@ -133,3 +134,57 @@ def test_blocked_for_owner_still_cannot_close_directly() -> None:
 def test_other_states_are_not_widened() -> None:
     for state in ("CONTRACT_DRAFT", "CONTRACT_REVIEW", "PYTHON_IMPLEMENTATION", "WAITING_FOR_TRIGGER"):
         assert check_transition(state, "CLOSED") is not None
+
+
+def _review(outcome: object, verdict: str = "LAYER 14 SCOPE APPROVED") -> dict[str, Any]:
+    review: dict[str, Any] = {"verdict": verdict, "source": "minion-agent-docs#253 issuecomment-1"}
+    if outcome is not _MISSING:
+        review["outcome"] = outcome
+    return review
+
+
+_MISSING = object()
+
+
+@pytest.mark.parametrize(
+    "review",
+    [
+        _review("CHANGES REQUESTED", "LAYER 14 SCOPE CHANGES REQUESTED"),
+        _review("CHANGES_REQUESTED"),
+        _review("BLOCKED"),
+        _review("PENDING"),
+        _review("approved"),
+        _review("NOT APPROVED"),
+        _review("APPROVED WITH CHANGES"),
+        _review(None),
+        _review(True),
+        _review(_MISSING),
+    ],
+    ids=[
+        "rejected",
+        "rejected-token",
+        "blocked",
+        "pending",
+        "lowercase",
+        "not-approved",
+        "approved-prefix",
+        "null",
+        "boolean",
+        "missing",
+    ],
+)
+def test_only_an_explicit_approved_outcome_closes(review: dict[str, Any]) -> None:
+    """PROC-L256-R001: a recorded rejection, block, pending or unrecognized outcome is refused with
+    zero writes; only the exact `APPROVED` token passes, and no verdict substring is ever read."""
+    fake = _fake(_scoping_wp(scoping_review=review))
+    with pytest.raises(CheckFailed, match="outcome"):
+        _close(fake)
+    assert fake.edits == 0
+
+
+def test_an_approved_outcome_with_a_rejecting_verdict_text_is_not_reinterpreted() -> None:
+    """The tool reads the outcome token, never the verdict prose: an APPROVED outcome closes even
+    though the prose would not, which is why the agent must still verify the source (§10.3)."""
+    fake = _fake(_scoping_wp(scoping_review=_review("APPROVED", "free text, not parsed")))
+    _close(fake)
+    assert fake.edits == 1

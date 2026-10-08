@@ -480,10 +480,13 @@ SCOPING
 `minion-process apply` refuses this transition, with zero writes, unless all of the following hold:
 - **No product scope.** `requirements` is an explicit `[]` in both the current and the intended state. Missing or `null` is not scoping-only. The closing patch may not add or reclassify scope, so the closure claims no implementation or product certification.
 - **No open findings.** `open_findings` is empty.
-- **Review recorded.** `scoping_review` records a non-empty `verdict` and `source`, for example the published review comment.
+- **Approval recorded.** `scoping_review` records:
+  - `outcome: APPROVED`, the exact token; anything else is refused, including a recorded rejection, `BLOCKED`, `PENDING`, `approved`, `NOT APPROVED`, `null` or a missing outcome (`PROC-L256-R001`);
+  - a non-empty `verdict`, for example the review's verbatim verdict line;
+  - a non-empty `source`, for example the published review comment.
 - **Artifact merged.** At least one candidate (`code`/`docs`, v1 or v2 form) is recorded, and every recorded candidate is a PR that GitHub reports `MERGED` at its recorded `merged_sha`, with that merge reachable from the repository's default branch.
 
-The tool checks only that the review record is present. Review semantics stay recorded evidence, never inferred from an empty findings list: the agent still verifies that the recorded review approved that exact candidate (§11.3).
+The tool reads the `outcome` token only. It never parses the verdict prose, so it never treats a substring such as `APPROVED` inside `NOT APPROVED` as approval. The `APPROVED` marker is necessary, not sufficient: review semantics stay recorded evidence, never inferred from an empty findings list, and the agent still verifies that `source` independently approved that exact candidate (§11.3).
 
 The generic state machine is otherwise unchanged:
 - There is no `BLOCKED_FOR_OWNER -> CLOSED` shortcut.
