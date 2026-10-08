@@ -1,0 +1,119 @@
+[
+ {
+  "rel": "file\u0000missing",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "missing\u0000file",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "file\u0000",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "\u0000file",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "dir/inner\u0000x",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "missingdir/x\u0000y",
+  "canonical_path": {
+   "error": "not_found"
+  },
+  "resolve": {
+   "ok": "FsTarget(target_key='/tmp/rp/base/missingdir/x\\x00y', _provider=<minion_agent.execution.filesystem.LocalFileSystem object>)"
+  },
+  "mutation_queue_key": {
+   "ok": "'/tmp/rp/base/missingdir/x\\x00y'"
+  }
+ },
+ {
+  "rel": "link-file\u0000x",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ },
+ {
+  "rel": "/tmp/rp/base/file\u0000missing",
+  "canonical_path": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "resolve": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  },
+  "mutation_queue_key": {
+   "raises": "ValueError",
+   "text": "lstat: embedded null character in path"
+  }
+ }
+]

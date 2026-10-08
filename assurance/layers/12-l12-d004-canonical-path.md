@@ -1,6 +1,6 @@
 # L12-D004 — Python `canonical_path` ELOOP parity (Layer 12 delta)
 
-**Status:** Python candidate, pending independent review. Rust: an existing-conformance confirmation
+**Status:** Python candidate, remediation 1 (L12D004-R001) pending independent re-review. Rust: an existing-conformance confirmation
 is requested (see §5).
 
 **Requirement:** `EXEC-002` (`spec/execution.md` §3, `canonical_path`; `DIRECT_PI_PARITY`).
@@ -34,7 +34,7 @@ and options."*
 
 ## 2. Characterization (executed; `data/12-l12-d004/`)
 
-**Fixture.** `fixture.py` builds one tree, and 45 probe paths are resolved through **Minion's own
+**Fixture.** `fixture.py` builds one tree, and 44 probe paths are resolved through **Minion's own
 `resolve_local_path`**, the certified mirror of Pi's lexical `resolvePath`. The tree covers:
 - files, directories and missing paths;
 - a trailing slash on a file;
@@ -55,7 +55,7 @@ and options."*
 | `probe_python.py` | Linux: the current certified `LocalFileSystem.canonical_path`, raw `os.path.realpath(strict=True)`, and the proposed libc `realpath(3)` with its errno mapped by the certified `to_fs_error` |
 | `probe_python_win.py` | Windows: the current `canonical_path` |
 
-**Linux** (`python:3.13`, run as `nobody` so permission denial is real; `run_linux.sh`): **45 cases.**
+**Linux** (`python:3.13`, run as `nobody` so permission denial is real; `run_linux.sh`): **44 cases.** (Corrected from "45" in remediation 1; the fixture has always had 44.)
 - **Proposed vs Pi:** **0 differences.** Success paths are identical, and every error has the same
   `FsErrorCode`.
 - **Current vs Pi:** **exactly 2 differences**, both ELOOP traversal-limit cases.
@@ -168,3 +168,55 @@ The fake-libc tests also fail, as expected, because that branch bypasses libc. T
 
 **Downstream:** the WP-14.1 `skills-c01-symlink-cycle` row on Linux, re-run on the WP-14.1 branch
 rebased onto this candidate. It is recorded in the WP-14.1 assurance record.
+
+## 7. Remediation 1 — `L12D004-R001` (Codex implementation review 1)
+
+**Review:** Codex, **CHANGES REQUESTED** on code `#162` @ `856fb414` / docs `#257` @ `f23e079d`,
+posted verbatim at `minion-agent#163` issuecomment-6055084766.
+
+**Finding `L12D004-R001` (high).** The POSIX branch passed the path to `realpath(3)` as a C string,
+which ends at the first NUL. A path containing NUL therefore resolved its prefix: with an existing
+`file`, `file\0missing` returned `Ok(file)` where the previous implementation raised `ValueError`
+(and pinned Pi returns `unknown`). That is an unrelated semantic difference — exactly the Owner's
+STOP condition — and the original claim that "only the two ELOOP-limit rows change" was false
+outside the 44-path corpus. NUL disposition is `minion-agent#133`'s and is **not** decided here.
+
+**Correction (code `#162` @ `32287fa5`).** A NUL-containing path never reaches the C call. It keeps
+the previous resolution, `os.path.realpath(strict=True)`, unchanged, so every NUL outcome is the
+pre-delta outcome: `ValueError` in general, `not_found` when an earlier component is missing. All
+other paths are unchanged from candidate 1.
+
+**New witnesses** (`test_filesystem_canonical_path_eloop.py`, now 19 tests):
+- fake libc: a NUL path delegates to the previous resolution and libc is never called or freed;
+- real host, with an existing prefix `file`: `file\0missing`, `missing\0file` and `file\0` give
+  exactly the previous outcome on that host, and never `file`'s canonical path.
+
+**Known-bad control (Linux).** With the NUL guard removed (`.tmp` copy; script
+`l12-known-bad-nul.py`), all four new tests fail; the other 15 pass.
+
+**NUL neighbourhood (Linux, new; `data/12-l12-d004/`).**
+- Probe: `probe_nul.py` over `cases-nul.json` (8 paths, including an absolute path, a NUL after a
+  symlink, and a NUL after a missing directory), run by `run_nul_linux.sh`.
+- It records `canonical_path`, `resolve` (EXEC-003) and `mutation_queue_key` (TOOL-032) for
+  `origin/main` and for the candidate, plus pinned Pi `canonicalPath`.
+- Result: `nul-main.json` and `nul-candidate.json` are **byte-identical** (8/8 rows, all three
+  consumers). Pi (`nul-node.json`) returns `unknown` (`ERR_INVALID_ARG_VALUE`) on all 8. That
+  pre-existing Python/Pi difference belongs to `#133` and is unchanged by this delta.
+- Codex's own `neighbors.py` replay also gives identical output on `main` and the candidate.
+
+**Evidence correction.** The Linux corpus count is 44, not 45 (§2 corrected in place, with a note).
+
+**Fresh gates (code `#162` @ `32287fa5`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU | 5,092 passed, 32 skipped, 21 xfailed; coverage 100%; ruff and mypy clean |
+| Linux (`python:3.13`, pinned ICU) | 5,029 passed, 0 failed, 97 skipped, 19 xfailed |
+
+A first Windows run had one error, `WinError 10055` (socket buffer exhaustion while creating an
+asyncio event loop) in `test_prepared_string_conformance.py`, a module this delta does not touch. That
+file passed alone (38/38), and the full rerun above is clean. It is a host resource failure, not a
+result.
+
+**Unchanged:** Codex's judgment that the 41-link chain is in scope; the Rust status (no correction
+required); the Windows classification gap (§4, Owner options pending).
