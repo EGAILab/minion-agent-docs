@@ -1,0 +1,356 @@
+[
+ {
+  "scenario": "single-request",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/chunk",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 1,
+  "request_systems": [
+   "be helpful"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "tool-call-two-requests",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/message",
+   "tool/call",
+   "tool/result",
+   "turn/end",
+   "turn/start",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/chunk",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 2,
+  "request_systems": [
+   "be helpful",
+   "be helpful"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ],
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   },
+   {
+    "seq": 10,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "provider-error-stop",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 1,
+  "request_systems": [
+   "be helpful"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "transform-context-raises",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 0,
+  "request_systems": [],
+  "request_tools": [],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "transform-context-raises-on-second",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/message",
+   "tool/call",
+   "tool/result",
+   "turn/end",
+   "turn/start",
+   "request/header",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 1,
+  "request_systems": [
+   "be helpful"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   },
+   {
+    "seq": 10,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "assembler-raises",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 0,
+  "request_systems": [],
+  "request_tools": [],
+  "headers": [],
+  "escaped": null
+ },
+ {
+  "scenario": "pre-step-reject",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "agent/end"
+  ],
+  "requests_sent": 0,
+  "request_systems": [],
+  "request_tools": [],
+  "headers": [],
+  "escaped": null
+ },
+ {
+  "scenario": "per-step-override",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/chunk",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 1,
+  "request_systems": [
+   "one-off"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "one-off"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ },
+ {
+  "scenario": "unknown-model",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header"
+  ],
+  "requests_sent": 0,
+  "request_systems": [],
+  "request_tools": [],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "nothing",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": "UnknownModelError: no adapter supplies nobody/nothing"
+ },
+ {
+  "scenario": "aborted-during-tool",
+  "events": [
+   "agent/start",
+   "turn/start",
+   "user/message",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/message",
+   "tool/call",
+   "tool/result",
+   "turn/end",
+   "turn/start",
+   "request/header",
+   "assistant/stream-start",
+   "assistant/chunk",
+   "assistant/message",
+   "turn/end",
+   "agent/end"
+  ],
+  "requests_sent": 2,
+  "request_systems": [
+   "be helpful",
+   "be helpful"
+  ],
+  "request_tools": [
+   [
+    "echo"
+   ],
+   [
+    "echo"
+   ]
+  ],
+  "headers": [
+   {
+    "seq": 3,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   },
+   {
+    "seq": 10,
+    "model": "mock-1",
+    "components": {
+     "system_base": "be helpful"
+    },
+    "tools": [
+     "echo"
+    ]
+   }
+  ],
+  "escaped": null
+ }
+]
