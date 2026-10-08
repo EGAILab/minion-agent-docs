@@ -390,6 +390,13 @@ behaviour recorded as the DIV-004 witness:
 
 Pi's other parse failures (duplicate keys, an unterminated quote) are `parse_failed` in both.
 
+**Resource exhaustion (`WP141-R002`).** Nesting deep enough to exhaust a reader's stack is a parse
+failure with the ordinary outcome below, and discovery continues. It never escapes and never aborts
+discovery. Pinned Pi contains its parser's failure in the same way. The depth at which it happens is
+a host limit, in Pi and in each binding, and is **not normative**. It is not a subset rule and not a
+depth limit of the grammar. Canonical evidence fixes only the outcome shape (a far-too-deep declared
+file gives one `parse_failed`, and a later root still loads) and shallow controls that must load.
+
 **Using the frontmatter.** Loading a file, `load_file(path, parent_dir_name)` — direct parity,
 except the `parse_failed` message:
 - **Declared:** the file is *declared* when its path's last segment, splitting on `/` or `\` after
