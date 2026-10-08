@@ -188,3 +188,36 @@ eager-path witness passes.
 |---|---|
 | Windows | **5,108 passed, 32 skipped, 21 xfailed**; coverage **100%** (8,260 statements); ruff and mypy clean |
 | Linux | **5,045 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+## 9. Remediation 2 (Codex final review 2: `L08D001-R002`)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#168` @ `3ca9308e` / docs `#262` @ `ac16a4f7`.
+- `L08D001-R001` is **CLOSED**.
+- New finding `L08D001-R002` (medium, `CONTRACT_ASSURANCE_DEFECT`): the committed control
+  `data/08-l08-d001/controls.py` no longer built an executable "stale assembled text" mutant.
+  - **Cause:** remediation 1 moved the assembler call into a `try` at 12 spaces. The control's
+    8-space anchor then matched a suffix of that line, and the mutant's second line fell outside the
+    `try`, giving a `SyntaxError`.
+  - **Effect:** the script reported `SURVIVED -> []`, so no intended witness ever ran.
+- No production or contract change was requested. The production code is unchanged at `3ca9308e`.
+
+**Correction (docs only; `controls.py`).**
+- **Anchors** start at a line start (a leading newline), so they can never match a suffix of a
+  more-indented line. The stale mutant keeps its meaning: it reuses the first non-empty assembled
+  text on later requests, with the error-origin handling unchanged.
+- **Validity guards.** Every mutant must change the source and must compile (`py_compile`). The
+  pytest exit status must be 0 (survived) or 1 (killed). Anything else is reported **INVALID** and
+  fails the run. A syntax, collection or usage error is never counted as a kill (workflow §9.7).
+- **The guard is exercised:** run in a container without `pytest-cov`, all five mutants reported
+  INVALID (pytest exit status 4, an unknown `--no-cov`) rather than a false kill or survival.
+
+**Results at code `3ca9308e`.** Each mutant compiles and is killed by its intended witnesses, on
+Windows and on Linux (exit 0 on both):
+
+| Mutant | Killed by |
+|---|---|
+| Live-registry assembly | late registration; `prepareNextTurn` replacement |
+| Reversed snapshot order | `added_tool_names` growth |
+| Override reassembled | the verbatim-override witness |
+| Stale assembled text | late registration, replacement, growth, concurrent churn, later-turn failure, `UnknownModelError[2]` |
+| Header published before assembly | override, raising, non-string, later-turn failure, header reconstruction, `UnknownModelError[1]` and `[2]` |
