@@ -430,3 +430,276 @@ is unobservable here, because extraction normalizes CR to LF itself.
 loader. No YAML API is exposed (Owner decision §6).
 
 **Ignore matcher:** the pattern×path corpus, through the real loader.
+
+---
+
+## WP-14.2 — Prompt assembly and model-visible skill/tool metadata (`HAR-002`, `HAR-014`..`HAR-018`)
+
+**Status (`minion-agent#159`):** CONTRACT_DRAFT. `HAR-016` depends on the Layer 08 delta `L08-D001`
+(`minion-agent#166`), which is under its own contract review. Python: NOT_IMPLEMENTED. Rust:
+NOT_IMPLEMENTED.
+
+**Authority:** pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`.
+- `packages/agent/src/harness/{system-prompt,skills}.ts` for the skills block and skill invocation
+  (`AUTH-14-1`).
+- `packages/coding-agent/src/core/{system-prompt,agent-session}.ts` **only** as the reference for
+  section order, the `read` gate and tool-metadata rendering (`AUTH-14-2`). Its Pi-product text is
+  not adopted.
+
+**Owner decisions:** `minion-agent#159` issuecomment-6051472443, §15–§20 (`PP-14-4` mapping; `PP-14-5`
+Option B); issuecomment-6057640884 (`PP-14-9` Option A, `HAR-016`).
+
+**Input record:** WP-14.1's `Skill` (`HAR-013`), unchanged: `name`, `description`, `content`,
+`file_path`, `disable_model_invocation`. The records are writable and shared by identity, as in Pi
+(T-1; `WP141-R001`). Set membership changes only by replacement (see `HAR-016`).
+
+**String domain (Owner decision `WP142-R001`, recorded at `minion-agent#159`).**
+- **Domain:** every WP-14.2 string is a **Unicode scalar-value string** (U+0000..U+D7FF,
+  U+E000..U+10FFFF). That covers base prompts, contributed sections, tool snippets and guidelines,
+  additional invocation instructions, the WP-14.1 skill records consumed, composed prompts and
+  persisted invocation messages.
+- **Outside the domain:** unpaired UTF-16 surrogates. WP-14.2 makes no behavioural guarantee for
+  them, and no rejection API is added. Nothing is replaced, sanitized or surrogate-escaped, and no
+  carrier is widened. The certified Layer 03/07/08 carriers hold exactly this domain (feasibility
+  matrix `assurance/layers/14-wp142-feasibility-matrix.md`).
+- **Inside the domain, Pi's semantics hold unchanged.** The rules below that depend on code units
+  (the HAR-014 `dirname` indices, JS `trim` and `\s`) operate on the string's **UTF-16 code
+  units**, as JS does. A valid astral character is one scalar value (two code units) and passes
+  through unchanged.
+- The "JS whitespace set" is ECMA-262 `WhiteSpace` ∪ `LineTerminator`: the set
+  `String.prototype.trim` and the RegExp class `\s` use.
+
+### HAR-002 — Available-skills block (`DIRECT_PI_PARITY`)
+
+`format_skills_block(skills)`:
+1. **Filter:** keep the skills whose `disable_model_invocation` is not `true`, in input order. There
+   is no sorting and no deduplication.
+2. **None left** → the empty string `""`.
+3. **Otherwise** these lines, joined by `\n`, with no leading or trailing newline:
+
+   ```text
+   The following skills provide specialized instructions for specific tasks.
+   Read the full skill file when the task matches its description.
+   When a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.
+
+   <available_skills>
+     <skill>
+       <name>{esc(name)}</name>
+       <description>{esc(description)}</description>
+       <location>{esc(file_path)}</location>
+     </skill>
+   </available_skills>
+   ```
+
+   There is one `<skill>` element per kept skill, indented exactly as shown (2 and 4 spaces).
+4. **`esc`** replaces, in this order, `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`,
+   `'` → `&apos;`. Nothing else is escaped: newlines, control characters and astral characters pass
+   through.
+5. **`location`** is `file_path` exactly: the addressed path, native separators, never
+   re-normalized.
+
+### HAR-014 — Explicit skill invocation (`DIRECT_PI_PARITY`)
+
+`format_skill_invocation(skill, additional_instructions?)` returns:
+
+```text
+<skill name="{name}" location="{file_path}">\nReferences are relative to {dirname(file_path)}.\n\n{content}\n</skill>
+```
+
+- **No escaping** of any field.
+- **Additional instructions:** when present and non-empty, append `\n\n{additional_instructions}`.
+  An absent or empty value appends nothing.
+- **`dirname(path)`**, on code units:
+  1. strip every trailing `/` and `\`;
+  2. `i` = the last index of either `/` or `\`;
+  3. if `i == 2` and the unit at index 1 is `:` → the first 3 units (for example `C:\`);
+  4. otherwise, if `i <= 0` (including no separator at all) → `/`;
+  5. otherwise → the first `i` units.
+
+This is the persisted user-message text of an explicit invocation. *Sending* it as a message is an
+application action. No run operation is added here.
+
+### HAR-018 — Tool prompt metadata (`MINION_EXTENSION`, `PP-14-5` Option B)
+
+**Fields.** Two optional, additive fields on the Layer 05 tool definition (`ctx.tools`):
+- `prompt_snippet`: a string, or absent;
+- `prompt_guidelines`: a sequence of strings, or absent.
+
+They are model-visible metadata only. They never change the tool schema, identity, execution,
+argument validation, registry lookup or permission semantics, and they never enter the request's
+tool schemas.
+
+**Normalization** (Pi `_normalizePromptSnippet` / `_normalizePromptGuidelines`):
+- **Snippet:**
+  1. absent or `""` → none;
+  2. replace each run of `\r`/`\n` with one space;
+  3. replace each run of JS-whitespace characters with one space;
+  4. JS-trim;
+  5. an empty result → none.
+- **Guidelines:**
+  1. JS-trim each entry;
+  2. drop empty entries;
+  3. keep the first occurrence of each exact string, in order.
+
+**Tools section.** It is **opt-in**: it is rendered only when enabled for the assembly. Over the
+assembly's tool snapshot (`HAR-016`), in snapshot order:
+- **Available tools:** `Available tools:` then, for each tool with a snippet, `- {name}: {snippet}`.
+  The block is omitted when no tool has a snippet. Pi's `(none)` line is **not** rendered.
+- **Guidelines:** `Guidelines:` then `- {g}` for each guideline, concatenated in tool order. Across
+  tools, only the first occurrence of an exact string is kept. The block is omitted when there are
+  none.
+- **Joining:** each block's lines are joined by `\n`, and the two blocks by `\n\n`.
+- **Empty:** with both blocks omitted, or with the section disabled, the section is `""` and is
+  absent from the prompt (never synthetic).
+- **Not adopted** (Pi product text):
+  - the Pi preamble;
+  - "In addition to the tools above, …";
+  - the bash-only bullet;
+  - the two fixed bullets "Be concise in your responses" and "Show file paths clearly when working
+    with files".
+
+### HAR-015 — Section composition (`MINION_ARCHITECTURAL_MAPPING`, `PP-14-4`)
+
+The assembled system prompt is a fixed, ordered list of sections. Each section is a string, and an
+empty string means the section is absent.
+
+1. **`base`:** the agent's base prompt text.
+2. **`tools`:** `HAR-018`'s section (opt-in).
+3. **`contributed`:** the prompt configuration's `sections`, in order (`HAR-016`). Pi's
+   `appendSystemPrompt` maps here.
+4. **`skills`:** `HAR-002`'s block, included **only if** the tool snapshot contains a tool named
+   exactly `read` (the C-4 gate). Pi's custom-prompt `!selectedTools` clause has no analogue: a
+   Minion assembly always has a tool snapshot.
+
+**Bytes:** the non-empty sections in this order, joined by `\n\n`, with no leading or trailing
+separator. No cwd line, context files, `SYSTEM.md` or Pi documentation text is added (`PP-14-6`
+exclusions).
+
+**Pi reference** (custom-prompt path): `customPrompt` + `\n\n` + append + `\n\n` + skills block.
+Minion keeps that order and those separators. It places the opt-in tools section where Pi's default
+prompt carries "Available tools"/"Guidelines", directly after the base.
+
+### HAR-017 — Request reconstruction
+
+- **Recorded bytes:** the assembled prompt's exact bytes are what the request header records and
+  what the model receives, through the certified `MINION-003` header and `assemble_system`
+  (Layer 03, unchanged).
+- **Storage:** the assembled prompt is carried as the request's `system_base` component, or as the
+  certified per-step override. Splitting it into several header components is a storage detail,
+  not adopted here. Content addressing already stores an unchanged prompt once.
+- **Witness:** reconstructing the header yields byte-identical model-visible text.
+
+### HAR-016 — Snapshot timing and consistency (`MINION_ARCHITECTURAL_MAPPING`; Owner `PP-14-9` Option A)
+
+**Mechanism.** The Layer 14 composer is installed as the driver's prompt assembler (`L08-D001`,
+`minion-agent#166`; `spec/agent.md`, Layer 08, "Optional prompt assembler"). Its contract is that
+seam's, unchanged.
+- **When it runs:** once for every provider request without a per-step system override, while that
+  request is built.
+- **What it receives:**
+  - `base`: the run-local `RunContext.system_prompt`, which is `AgentInstance.system_prompt` at run
+    start unless a `prepareNextTurn` replacement supplied another;
+  - `tools`: the request's own tool snapshot, whose schemas that request carries.
+- **The rule this gives:** the `tools` section (`HAR-018`), the `read` gate (`HAR-015`) and the
+  request's tool schemas therefore derive from **one** snapshot, by construction. The composer never
+  reads `ctx.tools`.
+
+**Prompt configuration.** The composer holds one **prompt configuration** value:
+- `skills`: an ordered sequence of WP-14.1 `Skill` records;
+- `tools_section`: a boolean, default `false`;
+- `sections`: an ordered sequence of strings, the `contributed` sections in order.
+
+**How it changes.**
+- **By whole-value replacement only.** Supplying a configuration copies its membership: a caller
+  mutating its own sequence afterwards changes nothing (T-1 membership isolation).
+- **Retained records** (`L14-SCOPE-R003`) are shared by identity, not copied, as in Pi (T-1). The
+  `Skill` records are writable (`WP141-R001`). The composer reads each record's fields while
+  assembling, so a mutation of a retained record is visible from the next request build that starts
+  after it. This is the Minion composition choice that the scoping record left open. Pi's coding
+  agent likewise reflects a mutated record at its next rebuild.
+- **Concurrency model** (feasibility matrix §4): a retained record or the configuration is mutated
+  or replaced only from the execution context that drives the agent, between request builds:
+  - Python: the event-loop thread;
+  - Rust: the configuration's owner, by `&mut` or `Arc` replacement.
+
+  The assembly never awaits, so no other task on that context runs during it. A mutation from
+  another OS thread concurrent with an assembly is **outside the contract**: no atomicity or
+  data-race guarantee is made for it.
+- **When a replacement takes effect:** at the next request build that starts after it. A request
+  being built uses exactly one configuration value. This is atomic: there is never a mix of an old
+  and a new value.
+
+**Override.** A per-step system override replaces the whole prompt, and the composer is not called
+(`L08-D001`). This matches the scoping record, under which the override replaces the whole prompt
+(C-12).
+
+**Errors.** The composer is total over valid inputs, so it does not raise for any configuration or
+tool snapshot. Any failure is the seam's failure rule: nothing is sent, and the run settles through
+`handleRunFailure`.
+
+**Not adopted:**
+- a registration API for plugin-contributed sections;
+- per-scope section visibility;
+- section names.
+
+The `contributed` list is an ordered value an application supplies. A later plugin mechanism would
+be a separate, governed extension (Owner decision §16: no prompt framework).
+
+### Conformance evidence (WP-14.2)
+
+**Canonical byte cases:** 66 documents in `conformance/agent/prompt-assembly/`
+(`prompt-assembly-scenario.schema.json`). They are generated by `assurance/layers/data/14-wp142/`:
+`oracle-gen.mjs`, `tools-oracle.mjs` with `tools-model.mjs`, and `gen-canonical.mjs`.
+
+- **Strings:** every string is a plain JSON scalar-value string.
+- **Preflight:** the schema's language-neutral preflight rejects a document holding any code point
+  in U+D800..U+DFFF (`WP142-R003`). Negative controls cover lone high and lone low surrogates in
+  input and expected positions; positive controls cover astral characters and paired escapes.
+- **Out of domain:** pinned Pi's lone-surrogate results are kept only as characterization, in
+  `data/14-wp142/out-of-domain.json`.
+
+The cases cover:
+- **`HAR-002`:**
+  - zero, one and many skills;
+  - every skill disabled, giving `""`;
+  - `disable_model_invocation` exactly `true` vs other values;
+  - order preserved and duplicates kept;
+  - the five escapes and the `]]>` case;
+  - newlines, control characters and astral characters passing through;
+  - Windows and POSIX `location` spelling.
+- **`HAR-014`:**
+  - every `dirname` branch: trailing separators, mixed separators, drive root, root, no separator;
+  - no escaping;
+  - additional instructions present, empty and absent.
+- **`HAR-018`:**
+  - normalization edge cases (CRLF, NBSP, U+FEFF, U+3000, empty-after-trim);
+  - per-tool and cross-tool deduplication;
+  - snapshot order with shadowing;
+  - section disabled; no metadata, giving `""`; snippet-only; guidelines-only;
+  - guidelines whose text holds blank lines, kept whole, with per-tool and cross-tool
+    deduplication (`t14`..`t16`, `WP142-R002`). The oracle delimits Pi's rendered regions by their
+    fixed surrounding text, and a blank-line extractor is a negative control killed by exactly these
+    three cases.
+- **`HAR-015`:** every subset of empty and non-empty sections, the `read` gate, and the separators.
+
+**Pi oracle.** Every `DIRECT_PI_PARITY` case is generated from the byte-copied pinned harness
+functions. The tools section is generated from pinned `buildSystemPrompt`'s normalization and
+rendering, with the non-adopted product lines removed by a documented, asserted patch (as for the
+WP-14.1 model).
+
+**Driver-level witnesses (`HAR-016`/`HAR-017`)**, through the real driver with the composer
+installed (`L08-D001`):
+- a tool registered after run start appears in neither the prompt nor the schemas of that run;
+- a `prepareNextTurn` replacement of the tools is reflected in both, and so is `added_tool_names`
+  growth;
+- `read` gating follows the snapshot;
+- a configuration replaced mid-run takes effect at the next request, atomically;
+- the override bypasses the composer;
+- the header's `system_base` round-trips byte-identically.
+
+**Integration witnesses** (Owner decision `WP142-R001`, item 8), through the real driver,
+`ArtifactStore` and session log:
+- the request header persists and reconstructs the composed prompt byte-identically, including an
+  astral character;
+- explicit invocation text sent as a user message survives persistence and reload byte-identically;
+- the provider request's system text equals the composer output exactly.

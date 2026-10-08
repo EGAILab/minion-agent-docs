@@ -1,0 +1,469 @@
+{
+ "skills_block": [
+  {
+   "id": "b01-empty",
+   "skills": [],
+   "expected": ""
+  },
+  {
+   "id": "b02-one",
+   "skills": [
+    {
+     "name": "alpha",
+     "description": "alpha description",
+     "content": "# alpha\nbody",
+     "filePath": "/skills/alpha/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>alpha</name>\n    <description>alpha description</description>\n    <location>/skills/alpha/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b03-many-order-kept",
+   "skills": [
+    {
+     "name": "zeta",
+     "description": "zeta description",
+     "content": "# zeta\nbody",
+     "filePath": "/skills/zeta/SKILL.md",
+     "disableModelInvocation": false
+    },
+    {
+     "name": "alpha",
+     "description": "alpha description",
+     "content": "# alpha\nbody",
+     "filePath": "/skills/alpha/SKILL.md",
+     "disableModelInvocation": false
+    },
+    {
+     "name": "mid",
+     "description": "mid description",
+     "content": "# mid\nbody",
+     "filePath": "/skills/mid/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>zeta</name>\n    <description>zeta description</description>\n    <location>/skills/zeta/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>alpha</name>\n    <description>alpha description</description>\n    <location>/skills/alpha/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>mid</name>\n    <description>mid description</description>\n    <location>/skills/mid/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b04-duplicates-kept",
+   "skills": [
+    {
+     "name": "dup",
+     "description": "dup description",
+     "content": "# dup\nbody",
+     "filePath": "/skills/dup/SKILL.md",
+     "disableModelInvocation": false
+    },
+    {
+     "name": "dup",
+     "description": "second",
+     "content": "# dup\nbody",
+     "filePath": "/skills/dup/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>dup</name>\n    <description>dup description</description>\n    <location>/skills/dup/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>dup</name>\n    <description>second</description>\n    <location>/skills/dup/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b05-all-disabled",
+   "skills": [
+    {
+     "name": "a",
+     "description": "a description",
+     "content": "# a\nbody",
+     "filePath": "/skills/a/SKILL.md",
+     "disableModelInvocation": true
+    },
+    {
+     "name": "b",
+     "description": "b description",
+     "content": "# b\nbody",
+     "filePath": "/skills/b/SKILL.md",
+     "disableModelInvocation": true
+    }
+   ],
+   "expected": ""
+  },
+  {
+   "id": "b06-some-disabled",
+   "skills": [
+    {
+     "name": "a",
+     "description": "a description",
+     "content": "# a\nbody",
+     "filePath": "/skills/a/SKILL.md",
+     "disableModelInvocation": false
+    },
+    {
+     "name": "b",
+     "description": "b description",
+     "content": "# b\nbody",
+     "filePath": "/skills/b/SKILL.md",
+     "disableModelInvocation": true
+    },
+    {
+     "name": "c",
+     "description": "c description",
+     "content": "# c\nbody",
+     "filePath": "/skills/c/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>a</name>\n    <description>a description</description>\n    <location>/skills/a/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>c</name>\n    <description>c description</description>\n    <location>/skills/c/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b07-five-escapes",
+   "skills": [
+    {
+     "name": "esc&<>",
+     "description": "a & b < c > d \" e ' f &amp; ]]> </available_skills>",
+     "content": "# esc&<>\nbody",
+     "filePath": "/s/\"q'&<>/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>esc&amp;&lt;&gt;</name>\n    <description>a &amp; b &lt; c &gt; d &quot; e &apos; f &amp;amp; ]]&gt; &lt;/available_skills&gt;</description>\n    <location>/s/&quot;q&apos;&amp;&lt;&gt;/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b08-pass-through",
+   "skills": [
+    {
+     "name": "pt",
+     "description": "line1\nline2\r\n\ttab \u0001ctl 😀 astral",
+     "content": "# pt\nbody",
+     "filePath": "/skills/pt/SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>pt</name>\n    <description>line1\nline2\r\n\ttab \u0001ctl 😀 astral</description>\n    <location>/skills/pt/SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b09-windows-location",
+   "skills": [
+    {
+     "name": "win",
+     "description": "win description",
+     "content": "# win\nbody",
+     "filePath": "C:\\Users\\me\\skills\\win\\SKILL.md",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>win</name>\n    <description>win description</description>\n    <location>C:\\Users\\me\\skills\\win\\SKILL.md</location>\n  </skill>\n</available_skills>"
+  },
+  {
+   "id": "b10-empty-strings",
+   "skills": [
+    {
+     "name": "",
+     "description": "",
+     "content": "# \nbody",
+     "filePath": "",
+     "disableModelInvocation": false
+    }
+   ],
+   "expected": "The following skills provide specialized instructions for specific tasks.\nRead the full skill file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name></name>\n    <description></description>\n    <location></location>\n  </skill>\n</available_skills>"
+  }
+ ],
+ "invocation": [
+  {
+   "id": "v01-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/a/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/a/SKILL.md\">\nReferences are relative to /skills/a.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v02-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/a/SKILL.md/",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/a/SKILL.md/\">\nReferences are relative to /skills/a.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v03-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/a/SKILL.md///",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/a/SKILL.md///\">\nReferences are relative to /skills/a.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v04-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/SKILL.md\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v05-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"SKILL.md\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v06-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v07-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v08-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:\\skills\\a\\SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:\\skills\\a\\SKILL.md\">\nReferences are relative to C:\\skills\\a.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v09-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:\\SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:\\SKILL.md\">\nReferences are relative to C:\\.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v10-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:/SKILL.md\">\nReferences are relative to C:/.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v11-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:\\",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:\\\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v12-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v13-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "\\SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"\\SKILL.md\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v14-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "a\\b/c.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"a\\b/c.md\">\nReferences are relative to a\\b.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v15-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "a/b\\c.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"a/b\\c.md\">\nReferences are relative to a/b.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v16-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "//server/share/x.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"//server/share/x.md\">\nReferences are relative to //server/share.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v17-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "\\\\server\\share\\x.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"\\\\server\\share\\x.md\">\nReferences are relative to \\\\server\\share.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v18-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "x:\\",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"x:\\\">\nReferences are relative to /.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v19-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "ab:\\c.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"ab:\\c.md\">\nReferences are relative to ab:.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v20-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/a:b/c.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/a:b/c.md\">\nReferences are relative to /a:b.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v21-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/a\\\\",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/a\\\\\">\nReferences are relative to /skills.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v22-dirname",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "C:\\dir\\",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"C:\\dir\\\">\nReferences are relative to C:\\.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v90-no-escaping",
+   "skill": {
+    "name": "n\"&<>'",
+    "description": "n\"&<>' description",
+    "content": "</skill> & <x>",
+    "filePath": "/p\"&<>'/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"n\"&<>'\" location=\"/p\"&<>'/SKILL.md\">\nReferences are relative to /p\"&<>'.\n\n</skill> & <x>\n</skill>"
+  },
+  {
+   "id": "v91-additional",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/s/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "additional": "Do it now.",
+   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\n# s\nbody\n</skill>\n\nDo it now."
+  },
+  {
+   "id": "v92-additional-empty",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/s/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "additional": "",
+   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v93-disabled-still-invocable",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "# s\nbody",
+    "filePath": "/skills/s/SKILL.md",
+    "disableModelInvocation": true
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\n# s\nbody\n</skill>"
+  },
+  {
+   "id": "v94-pass-through",
+   "skill": {
+    "name": "s",
+    "description": "s description",
+    "content": "x\r\n😀\u0001",
+    "filePath": "/skills/s/SKILL.md",
+    "disableModelInvocation": false
+   },
+   "expected": "<skill name=\"s\" location=\"/skills/s/SKILL.md\">\nReferences are relative to /skills/s.\n\nx\r\n😀\u0001\n</skill>"
+  }
+ ]
+}

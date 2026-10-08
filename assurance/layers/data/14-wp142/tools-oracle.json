@@ -1,0 +1,291 @@
+[
+ {
+  "id": "t01-none",
+  "tools": [
+   {
+    "name": "read"
+   },
+   {
+    "name": "bash"
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- Use bash for file operations like ls, rg, find\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": ""
+ },
+ {
+  "id": "t02-snippet-only",
+  "tools": [
+   {
+    "name": "read",
+    "snippet": "Read a file"
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- read: Read a file",
+   "guidelines": "Guidelines:\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- read: Read a file"
+ },
+ {
+  "id": "t03-guidelines-only",
+  "tools": [
+   {
+    "name": "read",
+    "guidelines": [
+     "Prefer read over cat"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- Prefer read over cat\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- Prefer read over cat"
+ },
+ {
+  "id": "t04-both-order",
+  "tools": [
+   {
+    "name": "zeta",
+    "snippet": "Z",
+    "guidelines": [
+     "gz"
+    ]
+   },
+   {
+    "name": "alpha",
+    "snippet": "A",
+    "guidelines": [
+     "ga"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- zeta: Z\n- alpha: A",
+   "guidelines": "Guidelines:\n- gz\n- ga\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- zeta: Z\n- alpha: A\n\nGuidelines:\n- gz\n- ga"
+ },
+ {
+  "id": "t05-snippet-newlines",
+  "tools": [
+   {
+    "name": "t",
+    "snippet": "line1\r\nline2\n\nline3"
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- t: line1 line2 line3",
+   "guidelines": "Guidelines:\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- t: line1 line2 line3"
+ },
+ {
+  "id": "t06-snippet-js-whitespace",
+  "tools": [
+   {
+    "name": "t",
+    "snippet": "﻿a 　 b\t\u000b\f  "
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- t: a b",
+   "guidelines": "Guidelines:\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- t: a b"
+ },
+ {
+  "id": "t07-snippet-empty-after-trim",
+  "tools": [
+   {
+    "name": "t",
+    "snippet": "  ﻿"
+   },
+   {
+    "name": "u",
+    "snippet": ""
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": ""
+ },
+ {
+  "id": "t08-guidelines-trim-drop-dedupe",
+  "tools": [
+   {
+    "name": "t",
+    "guidelines": [
+     " g1 ",
+     "",
+     "  ",
+     "g1",
+     "g2",
+     "﻿g2　"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- g1\n- g2\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- g1\n- g2"
+ },
+ {
+  "id": "t09-cross-tool-dedupe",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "shared",
+     "only-a"
+    ]
+   },
+   {
+    "name": "b",
+    "guidelines": [
+     "only-b",
+     "shared"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- shared\n- only-a\n- only-b\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- shared\n- only-a\n- only-b"
+ },
+ {
+  "id": "t10-guideline-equals-fixed-bullet",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "Be concise in your responses",
+     "x"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- Be concise in your responses\n- x\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- Be concise in your responses\n- x"
+ },
+ {
+  "id": "t11-bash-without-search-tools",
+  "tools": [
+   {
+    "name": "bash",
+    "snippet": "Run"
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- bash: Run",
+   "guidelines": "Guidelines:\n- Use bash for file operations like ls, rg, find\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- bash: Run"
+ },
+ {
+  "id": "t12-inner-whitespace-kept-in-guideline",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "a\nb  c"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- a\nb  c\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- a\nb  c"
+ },
+ {
+  "id": "t13-mixed",
+  "tools": [
+   {
+    "name": "read",
+    "snippet": "Read"
+   },
+   {
+    "name": "x"
+   },
+   {
+    "name": "edit",
+    "guidelines": [
+     "Edit carefully"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- read: Read",
+   "guidelines": "Guidelines:\n- Edit carefully\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- read: Read\n\nGuidelines:\n- Edit carefully"
+ },
+ {
+  "id": "t14-guideline-with-blank-lines",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "first\n\nsecond"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- first\n\nsecond\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- first\n\nsecond"
+ },
+ {
+  "id": "t15-multiline-dedupe-per-tool",
+  "tools": [
+   {
+    "name": "a",
+    "guidelines": [
+     "p1\n\np2",
+     "p1\n\np2",
+     "other"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n(none)",
+   "guidelines": "Guidelines:\n- p1\n\np2\n- other\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Guidelines:\n- p1\n\np2\n- other"
+ },
+ {
+  "id": "t16-multiline-dedupe-cross-tool",
+  "tools": [
+   {
+    "name": "a",
+    "snippet": "A",
+    "guidelines": [
+     "x\n\ny"
+    ]
+   },
+   {
+    "name": "b",
+    "guidelines": [
+     "x\n\ny",
+     "z"
+    ]
+   }
+  ],
+  "pi": {
+   "tools": "Available tools:\n- a: A",
+   "guidelines": "Guidelines:\n- x\n\ny\n- z\n- Be concise in your responses\n- Show file paths clearly when working with files"
+  },
+  "minion_tools_section": "Available tools:\n- a: A\n\nGuidelines:\n- x\n\ny\n- z"
+ }
+]
