@@ -151,3 +151,40 @@ merged: code `#165` → `b1f8108b`, docs `#260` → `142d0491`.
 | Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,042 passed, 0 failed, 97 skipped, 19 xfailed** |
 
 **Rust:** NOT_IMPLEMENTED. Codex implements under the same contract after this review.
+
+## 8. Remediation 1 (Codex implementation review 1)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#168` @ `53287050` / docs `#262` @ `27cad9ed`.
+
+**Finding `L08D001-R001` (medium, `CONTRACT_ASSURANCE_DEFECT`).**
+- **Defect:** an assembler raising `UnknownModelError` escaped through the driver's certified eager
+  model-error exemption (`_execute_run`'s `except UnknownModelError: raise`). For both the first
+  and a later request, no failure message and no failed `agent_end` were produced.
+- **Why it matters:** the contract requires every assembler failure to settle through
+  `handleRunFailure`, whatever its class.
+
+**Correction (code @ `3ca9308e`).**
+- **The seam:** `_system_text` catches any ordinary `Exception` from the assembler and re-raises it
+  as `PromptAssemblyError`, which keeps the same text (so the failure message is unchanged) and
+  keeps the original as `__cause__`. No exemption meant for another origin can capture it.
+- **Unchanged:**
+  - `BaseException`s (cancellation, `KeyboardInterrupt`) pass through untouched;
+  - the certified `UnknownModelError` exemption is not modified, and genuine model resolution
+    still propagates eagerly.
+
+**Witnesses** (`tests/agent_loop/test_prompt_assembler.py`, now 16):
+- `test_an_assembler_raising_unknown_model_error_still_settles_as_failed[1|2]`, for the first and
+  a later request: no request or header for the failing request, the earlier header kept, one
+  failure message with the assembler's text, `agent_end` `failed`, status idle;
+- `test_a_genuinely_unknown_model_still_propagates_eagerly_with_an_assembler`: the certified eager
+  path stays green.
+
+**Known-bad:** with the code @ `53287050` driver, both `UnknownModelError` witnesses fail; the
+eager-path witness passes.
+
+**Fresh gates (code @ `3ca9308e`):**
+
+| Platform | Result |
+|---|---|
+| Windows | **5,108 passed, 32 skipped, 21 xfailed**; coverage **100%** (8,260 statements); ruff and mypy clean |
+| Linux | **5,045 passed, 0 failed, 97 skipped, 19 xfailed** |
