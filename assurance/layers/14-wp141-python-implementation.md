@@ -1,6 +1,6 @@
 # Layer 14 WP-14.1 — Python implementation record
 
-**Status:** Python candidate, remediations 1 and 2 (`WP141-R001`..`R003`; §5, §6) for independent
+**Status:** Python candidate, remediations 1–3 (`WP141-R001`..`R004`; §5–§7) for independent
 re-review.
 
 **Coordination:** `minion-agent#158` (`PYTHON_IMPLEMENTATION` → `IMPLEMENTATION_REVIEW`).
@@ -252,3 +252,52 @@ issuecomment-6058827431. It sets a normative nesting bound **N = 64** (DIV-007).
 |---|---|
 | Windows, pinned ICU 78.3 | **5,220 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,085 statements); ruff clean; mypy clean (113 files) |
 | Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,167 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+## 7. Remediation 3 (Codex complete final review)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `8423af2e` / docs `#258` @ `363aa699`. The
+DIV-006 and DIV-007 contract deltas were APPROVED at that docs SHA.
+
+**Finding `WP141-R004` (medium, `PI_PARITY_DEFECT`).**
+- **Defect:** `_walk` recursed once per directory level. A finite, acyclic tree 1,050 directories
+  deep exhausted Python's stack (`RecursionError`), rejected the whole call and lost the later root.
+- **Pi:** pinned Pi loads such a tree and the later root with no diagnostics.
+- **Why no earlier witness caught it:** none exercised a deep acyclic tree. `c01` is a cycle, and
+  `n01`–`n04` are frontmatter depth.
+
+**Correction (code @ `afdbdd41`).**
+- **Mechanism:** an explicit frame stack.
+  - `_enter(directory)` is the per-directory start of `loadSkillsFromDirInternal`: its own info and
+    kind, its ignore files, its listing and the `SKILL.md` short-circuit.
+  - It returns a frame holding the sorted child iterator.
+  - `_walk` pushes a child directory's frame and drains it fully before its parent's iterator
+    advances. That is exactly Pi's depth-first emission order.
+- **Unchanged:** sorting, the dotfile and `node_modules` skips, kind resolution, ignore checks and
+  matcher accumulation, addressed paths, diagnostics and later-root processing.
+- **No limits:** no directory-depth limit is added, and the recursion limit is not changed.
+
+**Witnesses** (`tests/skills/test_discovery.py`):
+- `test_a_deep_acyclic_tree_loads_and_later_roots_still_load[100|950|1050]` (POSIX; Windows path
+  limits rule these depths out):
+  - result `[a, good]` with no diagnostics, matching Pi;
+  - depth 100 is the shallow control that loaded before the fix too.
+- `test_the_walk_does_not_grow_the_interpreter_stack_with_directory_depth` (every platform): a
+  60-deep tree under a recursion limit only 40 frames above the caller.
+- The fixture builds the tree one level at a time, because `Path.mkdir(parents=True)` itself
+  recurses per missing parent.
+
+**Known-bad:** with the `8423af2e` `discovery.py`:
+- **Linux:** depths 950 and 1,050 and the stack witness fail; depth 100 passes.
+- **Windows:** the stack witness fails with `RecursionError`.
+
+**Unchanged evidence:**
+- the 96 canonical scenarios still pass, including `c01` and the ordering, ignore and DIV-005
+  rows;
+- no contract change.
+
+**Fresh gates (code @ `afdbdd41`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,221 passed, 45 skipped, 21 xfailed**; coverage **100%** (9,102 statements); ruff clean; mypy clean (113 files) |
+| Linux | **5,171 passed, 0 failed, 97 skipped, 19 xfailed** |
