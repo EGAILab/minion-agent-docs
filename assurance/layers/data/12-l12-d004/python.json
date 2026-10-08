@@ -1,0 +1,574 @@
+[
+ {
+  "rel": "file",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "dir/sub/..",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "dir/sub/../inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "missing",
+  "current": {
+   "error": "not_found",
+   "message": "[Errno 2] No such file or directory: '/tmp/rp/base/missing'"
+  },
+  "os_path_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  },
+  "libc_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  }
+ },
+ {
+  "rel": "missing/x",
+  "current": {
+   "error": "not_found",
+   "message": "[Errno 2] No such file or directory: '/tmp/rp/base/missing'"
+  },
+  "os_path_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  },
+  "libc_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  }
+ },
+ {
+  "rel": "file/",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "file/.",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "file/..",
+  "current": {
+   "ok": "/tmp/rp/base"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base"
+  }
+ },
+ {
+  "rel": "file/x",
+  "current": {
+   "error": "not_directory",
+   "message": "[Errno 20] Not a directory: '/tmp/rp/base/file'"
+  },
+  "os_path_realpath": {
+   "error": "ENOTDIR",
+   "mapped": "not_directory"
+  },
+  "libc_realpath": {
+   "error": "ENOTDIR",
+   "mapped": "not_directory"
+  }
+ },
+ {
+  "rel": "dir//inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "./file",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir/../file",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "link-file",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "link-dir",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-dir/inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "link-dir/",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-abs",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dangling",
+  "current": {
+   "error": "not_found",
+   "message": "[Errno 2] No such file or directory: '/tmp/rp/base/missing'"
+  },
+  "os_path_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  },
+  "libc_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  }
+ },
+ {
+  "rel": "dangling/x",
+  "current": {
+   "error": "not_found",
+   "message": "[Errno 2] No such file or directory: '/tmp/rp/base/missing'"
+  },
+  "os_path_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  },
+  "libc_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  }
+ },
+ {
+  "rel": "self",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 40] Too many levels of symbolic links: '/tmp/rp/base/self'"
+  },
+  "os_path_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "self/x",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 40] Too many levels of symbolic links: '/tmp/rp/base/self'"
+  },
+  "os_path_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "cyc-a",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 40] Too many levels of symbolic links: '/tmp/rp/base/cyc-a'"
+  },
+  "os_path_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "cyc-b/x",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 40] Too many levels of symbolic links: '/tmp/rp/base/cyc-b'"
+  },
+  "os_path_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "dir/up",
+  "current": {
+   "ok": "/tmp/rp/base"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base"
+  }
+ },
+ {
+  "rel": "dir/up/file",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "dir/up/dir/up/dir/inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "dir/down/..",
+  "current": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir"
+  }
+ },
+ {
+  "rel": "link-dir/down/../inner",
+  "current": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/dir/inner"
+  }
+ },
+ {
+  "rel": "link-file/",
+  "current": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/file"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/file"
+  }
+ },
+ {
+  "rel": "chain-39/0",
+  "current": {
+   "ok": "/tmp/rp/base/chain-39/end"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/chain-39/end"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/chain-39/end"
+  }
+ },
+ {
+  "rel": "chain-40/0",
+  "current": {
+   "ok": "/tmp/rp/base/chain-40/end"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/chain-40/end"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/chain-40/end"
+  }
+ },
+ {
+  "rel": "chain-41/0",
+  "current": {
+   "ok": "/tmp/rp/base/chain-41/end"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/chain-41/end"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "current": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "current": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "current": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "libc_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  }
+ },
+ {
+  "rel": "loop/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a/back/a",
+  "current": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "os_path_realpath": {
+   "ok": "/tmp/rp/base/loop/a"
+  },
+  "libc_realpath": {
+   "error": "ELOOP",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 36] File name too long: '/tmp/rp/base/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "os_path_realpath": {
+   "error": "ENAMETOOLONG",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ENAMETOOLONG",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "dir/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "current": {
+   "error": "unknown",
+   "message": "[Errno 36] File name too long: '/tmp/rp/base/dir/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+  },
+  "os_path_realpath": {
+   "error": "ENAMETOOLONG",
+   "mapped": "unknown"
+  },
+  "libc_realpath": {
+   "error": "ENAMETOOLONG",
+   "mapped": "unknown"
+  }
+ },
+ {
+  "rel": "dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir",
+  "current": {
+   "error": "not_found",
+   "message": "[Errno 2] No such file or directory: '/tmp/rp/base/dir/dir'"
+  },
+  "os_path_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  },
+  "libc_realpath": {
+   "error": "ENOENT",
+   "mapped": "not_found"
+  }
+ },
+ {
+  "rel": "noperm/inside/f",
+  "current": {
+   "error": "permission_denied",
+   "message": "[Errno 13] Permission denied: '/tmp/rp/base/noperm/inside'"
+  },
+  "os_path_realpath": {
+   "error": "EACCES",
+   "mapped": "permission_denied"
+  },
+  "libc_realpath": {
+   "error": "EACCES",
+   "mapped": "permission_denied"
+  }
+ },
+ {
+  "rel": "noperm/inside",
+  "current": {
+   "error": "permission_denied",
+   "message": "[Errno 13] Permission denied: '/tmp/rp/base/noperm/inside'"
+  },
+  "os_path_realpath": {
+   "error": "EACCES",
+   "mapped": "permission_denied"
+  },
+  "libc_realpath": {
+   "error": "EACCES",
+   "mapped": "permission_denied"
+  }
+ }
+]

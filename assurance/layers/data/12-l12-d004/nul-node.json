@@ -1,0 +1,58 @@
+[
+ {
+  "rel": "file\u0000missing",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "missing\u0000file",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "file\u0000",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "\u0000file",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "dir/inner\u0000x",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "missingdir/x\u0000y",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "link-file\u0000x",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ },
+ {
+  "rel": "/tmp/rp/base/file\u0000missing",
+  "node": {
+   "error": "unknown",
+   "cause": "ERR_INVALID_ARG_VALUE"
+  }
+ }
+]

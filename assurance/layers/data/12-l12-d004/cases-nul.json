@@ -1,0 +1,26 @@
+[
+ {
+  "rel": "file\u0000missing"
+ },
+ {
+  "rel": "missing\u0000file"
+ },
+ {
+  "rel": "file\u0000"
+ },
+ {
+  "rel": "\u0000file"
+ },
+ {
+  "rel": "dir/inner\u0000x"
+ },
+ {
+  "rel": "missingdir/x\u0000y"
+ },
+ {
+  "rel": "link-file\u0000x"
+ },
+ {
+  "rel": "/tmp/rp/base/file\u0000missing"
+ }
+]
