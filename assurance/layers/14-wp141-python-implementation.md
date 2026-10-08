@@ -1,0 +1,340 @@
+# Layer 14 WP-14.1 — Python implementation record
+
+**Status:** Python candidate, remediations 1–4 (`WP141-R001`..`R004`; §5–§8) for independent
+re-review.
+
+**Coordination:** `minion-agent#158` (`PYTHON_IMPLEMENTATION` → `IMPLEMENTATION_REVIEW`).
+
+**Contract:** `spec/harness.md` WP-14.1, approved at the contract checkpoint and merged at docs
+`0edad98a`, code `2a21bc0d`. The contract delta for **DIV-006** is in this docs PR and needs review
+with it.
+
+**Owner decisions:**
+- `minion-agent#158` issuecomment-6051472129 (PP-14-*);
+- `minion-agent#158` issuecomment-6054403282 (WP141-I001 → DIV-006; WP141-I002 → the Layer 12
+  correction L12-D004).
+
+## 1. Candidate
+
+- **Code:** PR `#161`, branch `layer/14-wp141-python`, head `5ba6973a`. It depends on L12-D004
+  (`#162`, issue `#163`, now CLOSED), whose correction `c01` needs on Linux. This branch is merged up
+  to `main`, so its diff is WP-14.1 only.
+- **Gated tree:** the gates below ran on `e4a128f2`.
+  - `5ba6973a` differs from that tree only in `pi-parity-manifest.yaml` `EXEC-002`'s `python` text,
+    which came from `main` (L12-D004 certification, `#164`).
+  - Manifest and schema validation on the review head: **762 passed**.
+- **Package:** `minion-agent-python/src/minion_agent/skills/`.
+
+| Module | What it is |
+|---|---|
+| `discovery.py` | Pi's harness loader over the certified `ctx.fs`, and the records |
+| `_frontmatter.py` | Pi's extraction on UTF-16 code units, and the Minion subset reader, HAR-010 rules 1–7 |
+| `_ignore.py` | A port of `ignore@7.0.5` `ignores()`, plus DIV-006's `add_valid` |
+
+- **Reuse:**
+  - `TOOL-040`'s pinned collator, compared raw. There is no new public API.
+  - The shared `js_trim`.
+  - `_utf16` helpers.
+- **Coverage and layering:** the coverage source gains `skills`, and the layering test gains the
+  `skills` rule: no `session`, `telemetry`, `agent` or `agent_loop`.
+
+## 2. How the JavaScript semantics are reproduced
+
+- **Ignore matching.**
+  - The `REPLACERS` chain is reproduced on code-unit strings, with JavaScript `\s`, `.` and `$`.
+  - The generated JavaScript RegExp source is translated to Python:
+    - Annex B escapes: legacy octal, `\c`, identity escapes;
+    - classes expanded to code-unit sets;
+    - `$` → `\Z`.
+  - The `i` flag is **ECMAScript `Canonicalize`** (non-Unicode mode), using `toUpperCase` at Unicode
+    16.0 via the pinned ICU (`upper_unicode16`). Unlike `re.IGNORECASE`, U+212A KELVIN SIGN never
+    matches `k`.
+  - Matching runs on canonicalized code units. Rule order, the skip conditions and parent-first
+    `_t` caching follow the package.
+  - An invalid RegExp raises `InvalidIgnorePattern` lazily in `ignores()`, exactly where Pi throws.
+    Discovery instead uses `add_valid`, which compiles eagerly (DIV-006).
+- **Frontmatter.** Extraction slices code units. For example, `---😀` splits the pair as Pi does,
+  and the subset then refuses the lone surrogate.
+- **Validation.** Lengths are counted in UTF-16 units, and `trim` uses the JS whitespace set.
+
+## 3. Evidence
+
+### Differential correctness (permanent tests in `tests/skills/test_differential_corpora.py`)
+
+| Check | Result |
+|---|---|
+| `ignore` port vs pinned `ignore@7.0.5`. Corpus generator `data/14-wp141/ignore-corpus.mjs` (Node v22.15.1); win32 and Linux outputs identical | **0 mismatches** in **18,000** committed checks (6,000 pattern sets; 1,044 of them throwing). One-off: **0** in **90,000** (seed 7, 30,000 sets; 5,093 throwing) |
+| Python frontmatter reader vs the reviewed reference reader (`frontmatter-corpus.mjs`) | **0 mismatches** in **8,000** committed cases (1,936 accepted). One-off: **0** in **50,000** (10,637 accepted) |
+
+**Port defects found by the corpus and fixed, before any review:**
+- `\c` not followed by a control letter is a literal backslash (Annex B).
+- An unterminated class (`[ab/x`) is a JavaScript `SyntaxError`.
+
+### Canonical scenarios
+
+The runner is `tests/conformance/skill_discovery_runner.py`. It is thin: it materializes the
+fixture, calls the real `load_skills` over the real `LocalFileSystem`, and maps addressed paths
+back for comparison. The scenarios are all **92** in `conformance/agent/skill-discovery/`.
+
+| Platform | Result |
+|---|---|
+| Windows | 82 passed, 10 POSIX-only skipped |
+| Linux | 92/92 passed, including `c01-symlink-cycle` (with L12-D004) and the POSIX-only DIV-005 rows |
+
+### Negative controls
+
+| Control | Killed by |
+|---|---|
+| DIV-006, Python: *drops without a diagnostic* | `i10`, `i11`, and `test_invalid_patterns_are_reported_per_pattern_in_file_order` |
+| DIV-006, Python: *stops at the first invalid pattern* | `i10`, and the three `add_valid` unit tests |
+| Model: early return after an invalid entry | `r05` alone |
+| Model: invalid entry without a diagnostic | `r01`, `r02`, `r03`, `r05` |
+| Model: invalid pattern without a diagnostic | `i10`, `i11` |
+| Model: invalid pattern stops the file | `i10` |
+| The 11 subset-reader fuzz controls | every seed (characterization §8) |
+
+### Full gates on the candidate (`#161` with L12-D004)
+
+The gates were rerun on `#161` @ `e4a128f`, which includes L12-D004 remediation 1 (`L12D004-R001`, code `#162` @ `32287fa5`).
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,200 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,075 statements, including `skills`); ruff clean; mypy clean (113 files) |
+| Linux (`python:3.13`, pinned ICU volume, search engines mounted) | **5,147 passed, 0 failed, 97 skipped, 19 xfailed**; skill-discovery conformance 93 passed |
+
+On the earlier head `4676a51b` (before remediation 1): Windows 5,196 passed; Linux 5,143 passed, 0 failed.
+
+The 21 Windows xfails are the 19 existing ones plus L12-D004's two strict Windows xfails (`#69`).
+
+## 4. Disclosed changes and limitations
+
+1. **Fixture rename.** Canonical `v04` used the directory `skills/nul`, a reserved device name on
+   Windows. Node could create it only through libuv's `\\?\` paths. It is renamed
+   `skills/tilde-null`, and the Pi and model results were re-derived. Only `v04` changed: the
+   rename, plus the order of the two entries.
+2. **DIV-006** (`HAR-011-DIV-006`): an invalid ignore pattern is dropped with one
+   `invalid_ignore_pattern` diagnostic, and the valid ones are kept in order. There are three new
+   canonical rows: `i10` and `i11` (DIV-006), and `i12` (positive control, identical to Pi). Every
+   previously Pi-identical scenario, including the 40-row ignore corpus, is still identical to Pi.
+3. **The Layer 12 correction (L12-D004):** a separate delta under review (`#162` / `#163`). Without
+   it, `c01` emits 4 diagnostics on Linux.
+4. **The pre-existing Windows classification gap** (`#69`): Windows `canonical_path` reports
+   `invalid` where Pi reports `unknown` (ELOOP) for a self-loop or cycle, and `not_found` for
+   over-long names. This is out of scope. WP-14.1 is unaffected, because any non-`not_found` code
+   gives the one diagnostic. It was returned to the Owner in L12-D004 §4.
+5. **Pre-existing formatting.** Eight files outside this WP fail `ruff format --check` on `main`,
+   with the review environment's ruff. They are untouched.
+6. **Rust:** WP-14.1 is not implemented in Rust. The contract and the canonical scenarios are the
+   handoff.
+
+## 5. Remediation 1 (Codex implementation review 1)
+
+**Review:** Codex, **CHANGES REQUESTED** on code `#161` @ `5ba6973a` / docs `#258` @ `3a33a691`. It is
+posted verbatim at `minion-agent#158` issuecomment-6058014898. The DIV-006 shared-contract delta was
+**APPROVED** at that docs SHA. The two findings follow.
+
+### `WP141-R001` (medium, `PI_PARITY_DEFECT`): the public records were frozen
+
+- **Defect:** the six public records (`Skill`, `SkillDiagnostic`, `LoadedSkills`, `SourcedSkill`,
+  `SourcedSkillDiagnostic`, `LoadedSourcedSkills`) were frozen dataclasses. Pinned Pi's records are
+  ordinary writable objects, and `loadSourcedSkills` hands the loaded `Skill` itself to `mapSkill`.
+  So a mapper that edits the skill and returns it worked in Pi but raised `FrozenInstanceError`
+  here. That rejected the whole call.
+- **Correction:** all six public records are writable (`@dataclass(slots=True)`), and the result
+  containers stay lists. Private parser value objects are unchanged. The contract had never stated
+  immutability, so there is no contract change.
+- **Witnesses** (`tests/skills/test_discovery.py`):
+  - `test_map_skill_may_edit_the_loaded_skill_and_return_it`: the same object comes back, with
+    edited fields and the opaque source identity unchanged;
+  - `test_loaded_records_and_their_lists_are_writable`.
+
+### `WP141-R002` (medium, `PI_PARITY_DEFECT`): deep nesting escaped as `RecursionError`
+
+- **Defect:** frontmatter nested about 1,200 levels deep exhausted the recursive subset reader. The
+  `RecursionError` escaped the loader and lost every later root. Pinned Pi contains its parser's
+  failure as `parse_failed` and continues.
+- **Correction:** `read_subset` converts the reader's stack exhaustion into `FrontmatterError`. The
+  file therefore takes the ordinary HAR-010 parse outcome: one `parse_failed`, with the Minion
+  message, for a declared `SKILL.md`; a silent skip for an undeclared `.md`. Discovery continues.
+  - The process recursion limit is not changed.
+  - No depth limit is added to the grammar.
+- **Contract clarification** (`spec/harness.md` HAR-010, "Resource exhaustion"): the depth at which
+  exhaustion happens is a host limit, in Pi and in each binding, and is **not normative**. Only the
+  outcome shape is. This follows the PP-14-3 precedent for host-limit-dependent symlink cycles. It
+  is submitted for the reviewer's judgment: if it needs governance, it goes to the Owner.
+- **Pi cross-check** (`data/14-wp141/r002-probe.mjs`, pinned loader, Node v22.15.1):
+  - **Depth 1200:** skills `[ok]`, diagnostics `[parse_failed @ bad/bad/SKILL.md]`; the undeclared
+    `root/deep.md` is skipped silently.
+  - **Depth 500:** everything loads normally.
+- **Witnesses:**
+  - `test_deep_nesting_is_one_parse_failed_and_later_roots_still_load` (depth 1200);
+  - `test_deep_nesting_in_an_undeclared_root_file_is_skipped_silently`;
+  - `test_shallower_nesting_still_loads[100|500]` (controls).
+
+### Known-bad check
+
+The two remediated modules from `5ba6973a` were restored in a disposable copy:
+- **Fail there:** the four new R001/R002 witnesses, with `FrozenInstanceError` and an escaping
+  `RecursionError`.
+- **Pass there:** the two shallow controls.
+
+On the candidate, every witness passes.
+
+### Fresh gates (code `#161` @ `8f2bd8c9`)
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,206 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,078 statements); ruff clean; mypy clean (113 files) |
+| Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,153 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+**Unchanged by this remediation:** the DIV-006 delta (approved), the 92 canonical scenarios, both
+differential corpora and their controls.
+
+## 6. Remediation 2 (Codex targeted re-review 1)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `8f2bd8c9` / docs `#258` @ `83168d2d`. It is
+posted verbatim at `minion-agent#158` issuecomment-6058277706.
+- `WP141-R001` and `WP141-R002` are PROVISIONALLY CLOSED.
+- New finding `WP141-R003` (medium, `CONTRACT_ASSURANCE_DEFECT`): §5's HAR-010 "Resource
+  exhaustion" clarification granted host-dependent *acceptance* latitude, which no one had
+  approved. Codex's discriminator: at 950 levels Python accepts the frontmatter and pinned
+  `yaml@2.9.0` rejects it.
+
+**Owner decision:** WP141-R003 Option 1, recorded verbatim at `minion-agent#158`
+issuecomment-6058827431. It sets a normative nesting bound **N = 64** (DIV-007).
+
+**Contract (`spec/harness.md` HAR-010).**
+- The "Resource exhaustion" paragraph is **replaced** by "Nesting depth (DIV-007)":
+  - the root `Mapping(0)` is depth 1, and each nested `Mapping` or `Sequence` is one deeper;
+  - depth 65 or more is outside the subset, so the file is `parse_failed`;
+  - stack-exhaustion containment stays as defence in depth.
+- "Nesting deeper than 64" joins the list of rejected constructs.
+- DIV-007 is added to the approved departures.
+- **Counting sequences as a level** is this record's reading of the Owner's "nesting depth". In
+  the subset a sequence holds only scalars, so it can only be the innermost level. It is called out
+  for the reviewer.
+
+**Registry and manifest.** `pi-divergences.md` DIV-007, and manifest row `HAR-010-DIV-007`
+(intentional divergence).
+
+**Evidence.**
+- **Reference reader:** `subset-reader.mjs` `MAX_DEPTH = 64`, the same rule. The Minion model takes
+  it through `subset-object.mjs`; the model source is otherwise unchanged.
+- **Canonical:** 96 scenarios, with four new ones:
+
+  | Scenario | Pi | Minion | Divergence |
+  |---|---|---|---|
+  | `n01-depth-63-and-64-load` | both load | both load | none (identical) |
+  | `n02-depth-65-is-parse-failed-sibling-loads` | loads | `parse_failed`; the sibling loads | DIV-007 |
+  | `n03-sequence-counts-as-a-level` | both load | `seq64` loads; `seq65` is `parse_failed` | DIV-007 |
+  | `n04-pi-accepts-depth-100-and-500` | both load | both `parse_failed` | DIV-007 |
+
+  Pi's acceptance is kept in `out-*.json` as divergence evidence. The 92 earlier scenario files are
+  unchanged.
+- **Model controls:** 4 of 4 are still killed.
+- **Frontmatter corpus:** the committed 8,000-case corpus regenerates **byte-identically** under the
+  bound, so no corpus case nests beyond 64. The earlier fuzz soundness claim (subset accepts ⇒
+  `yaml@2.9.0` accepts the same value) is unaffected, because the bound only adds rejections.
+- **Python** (`_frontmatter.py`): `MAX_DEPTH = 64`, checked on entry to every mapping and sequence.
+  The `RecursionError` containment is kept.
+- **Tests:**
+  - depths 63, 64 and 64-with-a-sequence load;
+  - 65, 65-with-a-sequence, 100 and 500 are `parse_failed`, and a sibling still loads;
+  - with the bound lifted (monkeypatch), a 1,200-deep file is still one contained `parse_failed`;
+  - the 1,200-deep declared and undeclared cases are kept.
+- **Controls:**
+  - an off-by-one bound (`>=`) is killed by the depth-64 tests, `n01` and `n03`;
+  - a removed bound is killed by the depth 65/100/500 tests, `n02`, `n03` and `n04`.
+
+**Fresh gates (code `#161` @ `8423af2e`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,220 passed, 42 skipped, 21 xfailed**; coverage **100%** (9,085 statements); ruff clean; mypy clean (113 files) |
+| Linux (`python:3.13`, pinned ICU, search engines mounted) | **5,167 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+## 7. Remediation 3 (Codex complete final review)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `8423af2e` / docs `#258` @ `363aa699`. The
+DIV-006 and DIV-007 contract deltas were APPROVED at that docs SHA.
+
+**Finding `WP141-R004` (medium, `PI_PARITY_DEFECT`).**
+- **Defect:** `_walk` recursed once per directory level. A finite, acyclic tree 1,050 directories
+  deep exhausted Python's stack (`RecursionError`), rejected the whole call and lost the later root.
+- **Pi:** pinned Pi loads such a tree and the later root with no diagnostics.
+- **Why no earlier witness caught it:** none exercised a deep acyclic tree. `c01` is a cycle, and
+  `n01`–`n04` are frontmatter depth.
+
+**Correction (code @ `afdbdd41`).**
+- **Mechanism:** an explicit frame stack.
+  - `_enter(directory)` is the per-directory start of `loadSkillsFromDirInternal`: its own info and
+    kind, its ignore files, its listing and the `SKILL.md` short-circuit.
+  - It returns a frame holding the sorted child iterator.
+  - `_walk` pushes a child directory's frame and drains it fully before its parent's iterator
+    advances. That is exactly Pi's depth-first emission order.
+- **Unchanged:** sorting, the dotfile and `node_modules` skips, kind resolution, ignore checks and
+  matcher accumulation, addressed paths, diagnostics and later-root processing.
+- **No limits:** no directory-depth limit is added, and the recursion limit is not changed.
+
+**Witnesses** (`tests/skills/test_discovery.py`):
+- `test_a_deep_acyclic_tree_loads_and_later_roots_still_load[100|950|1050]` (POSIX; Windows path
+  limits rule these depths out):
+  - result `[a, good]` with no diagnostics, matching Pi;
+  - depth 100 is the shallow control that loaded before the fix too.
+- `test_the_walk_does_not_grow_the_interpreter_stack_with_directory_depth` (every platform): a
+  60-deep tree under a recursion limit only 40 frames above the caller.
+- The fixture builds the tree one level at a time, because `Path.mkdir(parents=True)` itself
+  recurses per missing parent.
+
+**Known-bad:** with the `8423af2e` `discovery.py`:
+- **Linux:** depths 950 and 1,050 and the stack witness fail; depth 100 passes.
+- **Windows:** the stack witness fails with `RecursionError`.
+
+**Unchanged evidence:**
+- the 96 canonical scenarios still pass, including `c01` and the ordering, ignore and DIV-005
+  rows;
+- no contract change.
+
+**Fresh gates (code @ `afdbdd41`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,221 passed, 45 skipped, 21 xfailed**; coverage **100%** (9,102 statements); ruff clean; mypy clean (113 files) |
+| Linux | **5,171 passed, 0 failed, 97 skipped, 19 xfailed** |
+
+## 8. Remediation 4 (Codex final review 2: `WP141-R004` refined)
+
+**Review:** Codex, **CHANGES REQUESTED** at code `#161` @ `afdbdd41` / docs `#258` @ `ff3fa9bc`.
+`WP141-R004` stays open, on the matcher.
+- **Why:** `Ignore.add_valid` clears the matcher cache. The next `ignores()` then reached `_t`, which
+  recursed once per uncached parent path.
+- **Witness:** a 1,050-deep acyclic tree with a valid `.gitignore` (`unrelated.txt`) at the leaf
+  still exhausted the stack and lost the later root. Pi loads it.
+- **The walk itself:** Codex confirmed the frame-stack walk is correct.
+
+**Correction (code @ `9f4da713`).** `Ignore._t` walks the parent chain upward with a list until it
+reaches a cached ancestor or the top, then evaluates it top-down. That gives the same evaluation
+order, the same short-circuit on an ignored ancestor, and the same cache entries as ignore@7.0.5's
+recursive `_t`. Nothing is depth-bound, and the recursion limit is unchanged.
+
+**Witnesses:**
+- `test_a_deep_acyclic_tree_loads_and_later_roots_still_load[100|950|1050 × plain|leaf-ignore-file]`
+  (POSIX);
+- `test_the_walk_does_not_grow_the_interpreter_stack_with_directory_depth`: every platform, a
+  60-deep tree with a leaf `.gitignore`, under a recursion limit 40 frames above the caller;
+- `test_the_ignore_matcher_evaluates_a_deep_path_without_recursing`: a direct 3,000-segment path,
+  with the nearest-ignored-ancestor and leaf-rule results checked.
+
+**Known-bad** (the `afdbdd41` `_ignore.py`, Linux): `[1050-leaf-ignore-file]`, the stack witness and
+the deep-path witness fail; the shallow and plain controls pass. On Windows the two
+cross-platform witnesses fail.
+
+**Unchanged:** the 18,000-check `ignore` differential corpus, the 96 canonical scenarios, and every
+earlier witness pass.
+
+**Fresh gates (code @ `9f4da713`):**
+
+| Platform | Result |
+|---|---|
+| Windows, pinned ICU 78.3 | **5,222 passed, 48 skipped, 21 xfailed**; coverage **100%** (9,110 statements); ruff and mypy clean (113 files) |
+| Linux | **5,175 passed, 0 failed, 97 skipped, 19 xfailed** |

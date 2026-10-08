@@ -31,6 +31,10 @@ Durable AgentHarness lanes/operations/suspend-resume/replay/navigation/pending w
 **Approved departures from pinned Pi:**
 - **DIV-004:** the frontmatter YAML subset.
 - **DIV-005:** an invalid entry does not abort discovery.
+- **DIV-006:** an invalid ignore pattern is dropped with a diagnostic and does not abort discovery
+  (Owner decision `minion-agent#158` issuecomment-6054403282, §1).
+- **DIV-007:** frontmatter block collections nest at most 64 deep (Owner decision, `WP141-R003`,
+  recorded at `minion-agent#158` issuecomment-6058827431).
 - **PP-14-1:** the `parse_failed` message text is Minion-defined.
 - **PP-14-8:** the text of filesystem-origin messages is non-normative.
 
@@ -56,7 +60,8 @@ Skill{
 
 SkillDiagnostic{
   type: "warning",
-  code: file_info_failed | list_failed | read_failed | parse_failed | invalid_metadata | invalid_path,
+  code: file_info_failed | list_failed | read_failed | parse_failed | invalid_metadata | invalid_path
+        | invalid_ignore_pattern,
   message: string,
   path: string,
 }
@@ -213,6 +218,26 @@ Canonical cases assert only the shape.
 Implementations port the matcher. A host gitignore library is not an authority unless it passes the
 corpus.
 
+**Invalid patterns (DIV-006).** Pinned `ignore@7.0.5` builds each rule's JavaScript RegExp lazily
+(`makeRegexPrefix`, then the trailing-wildcard rule, flag `i`). When that RegExp is invalid, for
+example an out-of-order character range such as `[~-a]` or an unterminated class such as `[ab/c`,
+the first evaluation of the rule throws `SyntaxError`, and Pi's whole `loadSkills` rejects. Whether
+it throws depends on rule order and on the path being checked. Minion instead:
+- **Classifies the pattern when its ignore file is read.** A prefixed pattern (step 5) is *invalid*
+  exactly when pinned `ignore@7.0.5` would reject the RegExp it builds for that pattern. The
+  canonical pattern×path corpus fixes which patterns those are. A pattern that `ignore` itself
+  skips (a blank line, a `#` line, or an invalid trailing backslash) is neither added nor invalid,
+  as in Pi.
+- **Drops each invalid pattern** with exactly one diagnostic `{code: invalid_ignore_pattern, path:
+  <the ignore file's path>, message: "ignore pattern is not valid and was dropped"}`. The
+  diagnostics are emitted in line order, right after that ignore file is read: after any earlier
+  ignore-file diagnostic of the same directory, and before the next ignore file and the listing.
+- **Keeps the valid patterns,** adding them in their original order. Discovery continues. With no
+  invalid pattern, behaviour is identical to Pi.
+
+A directory name can make every prefixed pattern of its own ignore file invalid (for example a
+directory named `[~-a]`). Each of those patterns is dropped with its diagnostic.
+
 ### HAR-010 — Frontmatter extraction and the Minion YAML subset
 
 **Extraction (direct Pi parity).**
@@ -363,9 +388,21 @@ behaviour recorded as the DIV-004 witness:
 - a plain value that starts on the line after its key;
 - a scalar or sequence document;
 - tab indentation;
-- the characters forbidden by rule 1, including escapes that produce them.
+- the characters forbidden by rule 1, including escapes that produce them;
+- nesting deeper than 64 (DIV-007).
 
 Pi's other parse failures (duplicate keys, an unterminated quote) are `parse_failed` in both.
+
+**Nesting depth (DIV-007).** Owner decision, `WP141-R003`.
+- **Rule:** block collections nest at most **64** deep. The root `Mapping(0)` is depth 1, and each
+  nested `Mapping` (rule 4) or `Sequence` (rule 6) is one deeper than the collection that holds it.
+- **Outcome:** a collection at depth 65 or more is outside the subset, so the file is
+  `parse_failed`, in every binding.
+- **Pi:** `yaml@2.9.0` accepts such nesting up to its host stack limit. Pi's successful results at
+  depths 65, 100 and 500 are recorded as divergence evidence (canonical `n02`–`n04`).
+- **Defence in depth (`WP141-R002`):** a reader that nevertheless exhausts its own stack contains
+  that as the same `parse_failed`. It never escapes and never aborts discovery. Within the bound,
+  no binding's stack depth is observable.
 
 **Using the frontmatter.** Loading a file, `load_file(path, parent_dir_name)` — direct parity,
 except the `parse_failed` message:
@@ -406,7 +443,7 @@ skill. The skill's `description` keeps its exact, **untrimmed** value.
 **What is normative**, for every diagnostic:
 - code, path and order;
 - the `invalid_metadata` texts (Pi's own);
-- the `parse_failed` and `invalid_path` texts (Minion's own, quoted above).
+- the `parse_failed`, `invalid_path` and `invalid_ignore_pattern` texts (Minion's own, quoted above).
 
 For `file_info_failed`, `list_failed` and `read_failed`, the message is the `ctx.fs`
 `FsError.message`, and is **non-normative** (PP-14-8). Layer 12 is not reopened to reproduce Node's

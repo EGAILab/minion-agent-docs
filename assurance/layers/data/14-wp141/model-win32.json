@@ -494,13 +494,13 @@
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\nul\\SKILL.md"
+          "path": "<base>\\skills\\num\\SKILL.md"
         },
         {
           "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
-          "path": "<base>\\skills\\num\\SKILL.md"
+          "path": "<base>\\skills\\tilde-null\\SKILL.md"
         },
         {
           "type": "warning",
@@ -1043,6 +1043,92 @@
           "description": "Use c.",
           "content": "Body.",
           "filePath": "<base>\\skills\\c\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "i10-invalid-patterns-dropped-valid-kept",
+      "skills": [
+        {
+          "name": "keep",
+          "description": "Use keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "z",
+          "description": "Use z.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\z\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>\\skills\\.gitignore"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>\\skills\\.gitignore"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>\\skills\\.gitignore"
+        }
+      ]
+    },
+    {
+      "id": "i11-invalid-prefix-from-directory-name",
+      "skills": [
+        {
+          "name": "hidden",
+          "description": "Use hidden.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\[~-a]\\hidden\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "sibling",
+          "description": "Use sibling.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\sibling\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_ignore_pattern",
+          "message": "ignore pattern is not valid and was dropped",
+          "path": "<base>\\skills\\[~-a]\\.gitignore"
+        }
+      ]
+    },
+    {
+      "id": "i12-valid-patterns-only",
+      "skills": [
+        {
+          "name": "keep",
+          "description": "Use keep.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\keep\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "z",
+          "description": "Use z.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\z\\SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -4972,6 +5058,92 @@
           "code": "file_info_failed",
           "message": "ELOOP: too many symbolic links encountered, realpath '<base>\\skills\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop'",
           "path": "<base>\\skills\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop\\a\\loop"
+        }
+      ]
+    },
+    {
+      "id": "n01-depth-63-and-64-load",
+      "skills": [
+        {
+          "name": "deep63",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\deep63\\SKILL.md",
+          "disableModelInvocation": false
+        },
+        {
+          "name": "deep64",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\deep64\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "n02-depth-65-is-parse-failed-sibling-loads",
+      "skills": [
+        {
+          "name": "ok",
+          "description": "Use ok.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ok\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep65\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "n03-sequence-counts-as-a-level",
+      "skills": [
+        {
+          "name": "seq64",
+          "description": "Nested.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\seq64\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\seq65\\SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "n04-pi-accepts-depth-100-and-500",
+      "skills": [
+        {
+          "name": "ok",
+          "description": "Use ok.",
+          "content": "Body.",
+          "filePath": "<base>\\skills\\ok\\SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep100\\SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>\\skills\\deep500\\SKILL.md"
         }
       ]
     }

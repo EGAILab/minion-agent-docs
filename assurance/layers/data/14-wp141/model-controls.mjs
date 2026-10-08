@@ -20,11 +20,29 @@ const controls = {
 		source: model.split(guard).join("continue; }"),
 		intended: "r01-leading-backslash-rejects-after-collected-sibling",
 	},
+	// DIV-006: drops an invalid pattern but never reports it
+	"invalid-pattern-without-diagnostic": {
+		source: model.replace(
+			'else diagnostics.push({ type: "warning", code: "invalid_ignore_pattern", message: "ignore pattern is not valid and was dropped", path: ignorePath });',
+			"",
+		),
+		intended: "i10-invalid-patterns-dropped-valid-kept",
+	},
+	// DIV-006: stops reading the file at the first invalid pattern (later valid patterns lost)
+	"invalid-pattern-stops-the-file": {
+		source: model.replace(
+			'else diagnostics.push({ type: "warning", code: "invalid_ignore_pattern", message: "ignore pattern is not valid and was dropped", path: ignorePath });',
+			'else { diagnostics.push({ type: "warning", code: "invalid_ignore_pattern", message: "ignore pattern is not valid and was dropped", path: ignorePath }); break; }',
+		),
+		intended: "i10-invalid-patterns-dropped-valid-kept",
+	},
 };
 const expected = new Map(JSON.parse(readFileSync("model-linux.json", "utf8")).results.map((r) => [r.id, r]));
 const report = {};
 for (const [name, { source, intended }] of Object.entries(controls)) {
-	if (source === model || source.split(guard).length > 1) {
+	// applied = the source changed; a DIV-005 control must also have removed every original guard
+	const div005 = intended.startsWith("r0");
+	if (source === model || (div005 && source.split(guard).length > 1)) {
 		report[name] = { applied: false };
 		continue;
 	}

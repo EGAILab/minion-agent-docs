@@ -169,7 +169,7 @@ export const scenarios = [
 			{ path: "skills/ws/SKILL.md", text: fm(["name: ws", "description: \"  \\t \""]) },
 			{ path: "skills/num/SKILL.md", text: fm(["name: num", "description: 42"]) },
 			{ path: "skills/none/SKILL.md", text: fm(["name: none"]) },
-			{ path: "skills/nul/SKILL.md", text: fm(["name: nul", "description: ~"]) },
+			{ path: "skills/tilde-null/SKILL.md", text: fm(["name: tilde-null", "description: ~"]) },
 			{ path: "skills/list/SKILL.md", text: fm(["name: list", "description: [a, b]"]) },
 			{ path: "skills/ideo/SKILL.md", text: fm(["name: ideo", "description: \"\\u3000\""]) },
 			{ path: "skills/bomws/SKILL.md", text: fm(["name: bomws", "description: \"\\uFEFF\""]) },
@@ -365,6 +365,35 @@ export const scenarios = [
 		roots: ["skills"],
 	},
 	{
+		// DIV-006: invalid patterns (their pinned-ignore RegExp is a SyntaxError) are dropped with one
+		// diagnostic each, in line order; the valid ones still apply, in order. Pi rejects the call.
+		id: "i10-invalid-patterns-dropped-valid-kept",
+		fixture: [
+			{ path: "skills/.gitignore", text: "drop-me\n[~-a]\n!keep[~-!]\nother*\nx[ab/c\n" },
+			...["drop-me", "other1", "keep", "z"].map((n) => ({ path: `skills/${n}/SKILL.md`, text: skill(n) })),
+		],
+		roots: ["skills"],
+	},
+	{
+		// DIV-006: a directory name that makes every prefixed pattern of its own ignore file invalid
+		id: "i11-invalid-prefix-from-directory-name",
+		fixture: [
+			{ path: "skills/[~-a]/.gitignore", text: "hidden\n" },
+			{ path: "skills/[~-a]/hidden/SKILL.md", text: skill("hidden") },
+			{ path: "skills/sibling/SKILL.md", text: skill("sibling") },
+		],
+		roots: ["skills"],
+	},
+	{
+		// DIV-006 positive control: the same valid patterns alone -- identical to pinned Pi
+		id: "i12-valid-patterns-only",
+		fixture: [
+			{ path: "skills/.gitignore", text: "drop-me\nother*\n" },
+			...["drop-me", "other1", "keep", "z"].map((n) => ({ path: `skills/${n}/SKILL.md`, text: skill(n) })),
+		],
+		roots: ["skills"],
+	},
+	{
 		id: "i09-trailing-spaces",
 		posixOnly: true,
 		fixture: [
@@ -479,3 +508,49 @@ scenarios.push({
 	],
 	roots: ["skills"],
 });
+
+// ---- DIV-007 (Owner, WP141-R003): block collections nest at most 64 deep --------------------
+// nested(name, depth): the root mapping is depth 1; depth-1 chained `k:` entries reach a mapping
+// (or, with seq, a sequence) at exactly `depth`.
+const nested = (name, depth, seq = false) => {
+	const lines = [`name: ${name}`, "description: Nested."];
+	for (let i = 1; i < depth; i++) lines.push(`${"  ".repeat(i - 1)}k:`);
+	lines.push(`${"  ".repeat(depth - 1)}${seq ? "- item" : "leaf: value"}`);
+	return fm(lines);
+};
+scenarios.push(
+	{
+		id: "n01-depth-63-and-64-load",
+		fixture: [
+			{ path: "skills/deep63/SKILL.md", text: nested("deep63", 63) },
+			{ path: "skills/deep64/SKILL.md", text: nested("deep64", 64) },
+		],
+		roots: ["skills"],
+	},
+	{
+		id: "n02-depth-65-is-parse-failed-sibling-loads",
+		fixture: [
+			{ path: "skills/deep65/SKILL.md", text: nested("deep65", 65) },
+			{ path: "skills/ok/SKILL.md", text: skill("ok") },
+		],
+		roots: ["skills"],
+	},
+	{
+		id: "n03-sequence-counts-as-a-level",
+		fixture: [
+			{ path: "skills/seq64/SKILL.md", text: nested("seq64", 64, true) },
+			{ path: "skills/seq65/SKILL.md", text: nested("seq65", 65, true) },
+		],
+		roots: ["skills"],
+	},
+	{
+		// Pi (yaml@2.9.0) accepts these; DIV-007 rejects them. Pi's results are divergence evidence.
+		id: "n04-pi-accepts-depth-100-and-500",
+		fixture: [
+			{ path: "skills/deep100/SKILL.md", text: nested("deep100", 100) },
+			{ path: "skills/deep500/SKILL.md", text: nested("deep500", 500) },
+			{ path: "skills/ok/SKILL.md", text: skill("ok") },
+		],
+		roots: ["skills"],
+	},
+);
