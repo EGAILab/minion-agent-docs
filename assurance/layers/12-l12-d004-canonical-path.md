@@ -1,7 +1,7 @@
 # L12-D004 — Python `canonical_path` ELOOP parity (Layer 12 delta)
 
-**Status:** Python candidate, remediation 1 (L12D004-R001) pending independent re-review. Rust: an existing-conformance confirmation
-is requested (see §5).
+**Status:** Python CERTIFIED (merged, `#162` -> `5477eaeb`). Rust: no change required (existing
+conformance confirmed, §5 and §8). Cross-language closure is pending (§8).
 
 **Requirement:** `EXEC-002` (`spec/execution.md` §3, `canonical_path`; `DIRECT_PI_PARITY`).
 
@@ -220,3 +220,36 @@ result.
 
 **Unchanged:** Codex's judgment that the 41-link chain is in scope; the Rust status (no correction
 required); the Windows classification gap (§4, Owner options pending).
+
+## 8. Final review, merge and certification
+
+**Final review:** Codex's complete independent final review (workflow §11.4) **APPROVED** the exact
+pair, code `#162` @ `32287fa5` and docs `#257` @ `d70e27ba`. `L12D004-R001` is CLOSED and there are
+no new findings. It is posted verbatim at `minion-agent#163` issuecomment-6057581461.
+
+**Merge.** The Owner authorized merging on that approval (2026-10-08, recorded in `#163`'s state).
+Both PRs were squash-merged at the approved heads by guarded merge:
+
+| PR | Merge commit |
+|---|---|
+| Code `#162` | `5477eaeb37bbe89bc1d261acadf680e265739acf` |
+| Docs `#257` | `1c148c49e48c33f6f85c410a2ae6d02d8c137b26` |
+
+Both merge commits are reachable from the default branches.
+
+**Traceability.** Manifest `EXEC-002`'s `python` field now records the merged correction. The
+"candidate, issue pending" wording that Codex noted as stale is replaced (code PR
+`layer/12-d004-certification`).
+
+**Status:**
+- `EXEC-002` Python, `L12-D004`: **CERTIFIED** — the targeted Layer 12 correction is independently
+  approved and merged.
+- `EXEC-002` Rust: **no change required**. The existing `tokio::fs::canonicalize` →
+  `std::fs::canonicalize` → `realpath(3)` already has the kernel traversal limit. Codex confirmed
+  this by a Linux boundary probe and a source audit; it is not a new Rust certification.
+- `L12-D004` cross-language: **closure pending** the closure review of this certification record.
+
+**Still excluded, unchanged:**
+- `#69`: the six Windows classification differences (§4). The Owner has not chosen between the §4
+  options, so the default (leave it to `#69`) holds.
+- `#133`: NUL disposition, including the pre-existing Python/Pi NUL difference.
