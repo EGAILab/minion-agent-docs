@@ -12,6 +12,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-001` | Bash lookup interruption termination semantics | WP-13.3 (`TOOL-034`) | APPROVED |
 | `DIV-002` | Windows `find` full-path glob zero-directory semantics | WP-13.4 (`TOOL-036`) | APPROVED |
 | `DIV-003` | Search-engine acquisition is explicit rather than tool-triggered | WP-13.4 (`TOOL-038`) | APPROVED |
+| `DIV-004` | Skill frontmatter uses the Minion YAML subset rather than the full yaml@2.9.0 language | WP-14.1 (`HAR-010`) | APPROVED |
+| `DIV-005` | Invalid skill-discovery entry does not abort the entire discovery | WP-14.1 (`HAR-001`) | APPROVED |
 
 ---
 
@@ -112,3 +114,54 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Manifest:** row `TOOL-038-DIV-003`, disposition `intentional divergence`.
 - **Governance:** Owner decision WP-13.4 Q3 = Option B (`minion-agent#51` comment `5988502021`).
 - **Reconsideration trigger:** a product requirement for zero-step first use that outweighs the added acquisition surface.
+
+---
+
+## DIV-004 — Skill frontmatter uses the Minion YAML subset rather than the full yaml@2.9.0 language
+
+- **Affected:** WP-14.1 skill discovery (`minion-agent#158`, `HAR-010`). This is frontmatter parsing only; extraction (`---` delimiters, CR normalization, the body) is unchanged.
+- **Pi behaviour.** The harness `parseFrontmatter` passes the frontmatter text to `yaml@2.9.0` `parse`, the full YAML 1.2 language: flow collections, anchors and aliases, tags, merge keys, complex keys, directives, multi-line quoted scalars, explicit block indentation, and so on. Its failures are reported with the library's own message text.
+- **Minion behaviour.** The text is read by the Minion frontmatter subset (`spec/harness.md` WP-14.1, HAR-010, rules 1–7):
+  - **Inside the subset,** the value is identical to `yaml@2.9.0`. That includes the YAML 1.2 core distinctions (`yes`/`on` stay strings), folded and literal block scalars with Pi's trailing-newline chomping, comments, nested block mappings and block sequences.
+  - **Outside it,** the result is a deterministic `parse_failed`, never a partial interpretation. The message is the Minion-defined `frontmatter is not valid in the supported YAML subset` (PP-14-1).
+- **Classification:** intentional practical-parity divergence.
+- **Practical-parity assessment (Owner):**
+  - Pi's intentional abstraction: no. Pi delegates to a general YAML implementation whose full surface is irrelevant to skill metadata.
+  - Realistic in normal use: no for the excluded constructs. All 25 realistic skill frontmatter shapes characterized are inside the subset.
+  - Exact parity would need a byte-faithful port of a general YAML implementation in both languages.
+- **Realistic user impact:** none for ordinary skill metadata. A `SKILL.md` that uses an excluded construct gets a `parse_failed` warning and is not loaded, where Pi would load it. A non-declared root `.md` is skipped silently, as Pi skips its own parse failures.
+- **Platforms:** all.
+- **Permanent witnesses:**
+  - the WP-14.1 canonical rows labelled `DIV-004` (each excluded construct through the real loader; Pi's own result kept in the evidence data);
+  - the differential soundness evidence (`assurance/layers/data/14-wp141/subset-diff.mjs`): whenever the subset accepts, `yaml@2.9.0` accepts with an identical value tree;
+  - the nine fuzz negative controls (`fuzz-controls.mjs`);
+  - the realistic-shape acceptance set (`subset-realistic.mjs`).
+- **Manifest:** row `HAR-010-DIV-004`, disposition `intentional divergence`.
+- **Governance:** Owner decision, Layer 14 WP-14.1 (`minion-agent#158` issuecomment-6051472129, §2–§6).
+- **Reconsideration trigger:** a realistic skill corpus that needs an excluded construct.
+
+---
+
+## DIV-005 — Invalid skill-discovery entry does not abort the entire discovery
+
+- **Affected:** WP-14.1 skill discovery (`minion-agent#158`, `HAR-001`). This affects only the ignore-check step of a directory walk.
+- **Pi behaviour.** `relativeEnvPath` converts `\` to `/`. For a POSIX entry whose name starts with `\`, or consists only of `\`, the root-relative path becomes `/name`, `/` or the empty string. `ignore@7.0.5` `ignores()` throws `RangeError` or `TypeError` on such a path. Pi does not catch it, so the **whole** `loadSkills` call rejects, discarding every skill and diagnostic already collected, including those from earlier roots.
+- **Minion behaviour.** An entry whose ignore-check path is empty or starts with `/` produces exactly one diagnostic. Discovery skips that entry and continues, keeping the skills found before and after it and in other roots. The diagnostic is:
+
+  ```text
+  {code: invalid_path, path: <entry addressed path>,
+   message: "entry path cannot be matched against ignore rules"}
+  ```
+- **Classification:** intentional practical-parity divergence.
+- **Practical-parity assessment (Owner):**
+  - Pi's intentional abstraction: no. It is an incidental consequence of Pi's path and ignore implementation.
+  - Realistic in normal use: no (such names are legal but rare).
+  - Exact parity is cheap, but it would make the harness lose unrelated skills.
+- **Realistic user impact:** a single oddly named entry no longer makes all skills disappear.
+- **Platforms:** POSIX. Windows cannot create such names. Names starting with `.` are skipped before the check on every platform.
+- **Permanent witnesses:**
+  - the WP-14.1 canonical rows labelled `DIV-005`: a leading-backslash file after a collected sibling, a leading-backslash directory, a later root after an earlier root, and the inner-backslash control that still loads normally;
+  - Pi's rejection is kept in `assurance/layers/data/14-wp141/out-linux.json`.
+- **Manifest:** row `HAR-001-DIV-005`, disposition `intentional divergence`.
+- **Governance:** Owner decision, Layer 14 WP-14.1 (`minion-agent#158` issuecomment-6051472129, §9–§11).
+- **Reconsideration trigger:** none expected.

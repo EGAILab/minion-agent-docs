@@ -385,3 +385,58 @@ export const scenarios = [
 		roots: ["skills"],
 	},
 ];
+
+// ---- generated corpora (deterministic) ----------------------------------------------------------
+import { corpus as yamlOracle } from "./yaml-oracle.mjs";
+import { realistic } from "./subset-realistic.mjs";
+
+function seeded(seed) {
+	let s = seed;
+	return () => {
+		s = (s * 1103515245 + 12345) & 0x7fffffff;
+		return s / 0x7fffffff;
+	};
+}
+const asSkill = (src) => `---\n${src}\n---\nBody.`;
+const usable = (src) => !src.includes("\n---") && !src.includes("\r");
+
+function frontmatterScenario(id, sources) {
+	return {
+		id,
+		fixture: sources.filter(usable).map((src, i) => ({ path: `skills/y${String(i).padStart(3, "0")}/SKILL.md`, text: asSkill(src) })),
+		roots: ["skills"],
+	};
+}
+scenarios.push(frontmatterScenario("y01-yaml-oracle-sources", yamlOracle));
+scenarios.push(frontmatterScenario("y02-realistic-frontmatter", realistic));
+
+// boundary sample: the fuzzer's own generator, first 300 inputs of seed 7
+import { generateSample } from "./subset-sample.mjs";
+scenarios.push(frontmatterScenario("y03-fuzz-boundary-sample", generateSample(7, 300)));
+
+// ignore pattern x path corpus
+const PATTERNS = ["a", "a/", "/a", "*.md", "!a", "a/**", "**/b", "a*", "?b", "[ab]", "[!a]*", "\#x", "# c", "", "   ", "sub/b", "**", "*", "!*.md", "B", "a/b/", "x[", "\*", "!keep", "keep", "*/b", "a/*", "**/c/", "/sub/", "!/a", "d?", "*-x", "a b", "b/"];
+const ENTRIES = ["a", "b", "c", "B", "ab", "keep", "a-x", "sub/b", "sub/c", "a/b", "a/c", "x/b", "d1", "#x", "!keep"];
+const rnd = seeded(14);
+for (let n = 0; n < 40; n++) {
+	const patterns = Array.from({ length: 1 + Math.floor(rnd() * 4) }, () => PATTERNS[Math.floor(rnd() * PATTERNS.length)]);
+	const entries = [...new Set(Array.from({ length: 2 + Math.floor(rnd() * 5) }, () => ENTRIES[Math.floor(rnd() * ENTRIES.length)]))];
+	const nested = rnd() < 0.3;
+	const fixture = [{ path: "skills/.gitignore", text: `${patterns.join("\n")}\n` }];
+	if (nested) fixture.push({ path: "skills/sub/.gitignore", text: `${PATTERNS[Math.floor(rnd() * PATTERNS.length)]}\n` });
+	for (const e of entries) fixture.push({ path: `skills/${e}/SKILL.md`, text: fm([`description: In ${e}.`]) });
+	if (rnd() < 0.5) fixture.push({ path: "skills/root.md", text: fm(["name: skills", "description: Root."]) });
+	if (rnd() < 0.3) fixture.push({ path: "skills/keep.md", text: fm(["name: skills", "description: Keep."]) });
+	scenarios.push({ id: `g${String(n).padStart(2, "0")}-ignore-corpus`, posixOnly: entries.some((e) => /[A-Z]/.test(e)) && entries.some((e) => /[a-z]/.test(e) && e.toLowerCase() === e && entries.includes(e.toUpperCase())), fixture, roots: ["skills"] });
+}
+
+// symlink cycle (PP-14-3): shape only
+scenarios.push({
+	id: "c01-symlink-cycle",
+	fixture: [
+		{ path: "skills/a/note.md", text: "plain" },
+		{ path: "skills/a/loop", symlink: "..", dir: true },
+		{ path: "skills/b.md", text: fm(["name: skills", "description: Kept."]) },
+	],
+	roots: ["skills"],
+});

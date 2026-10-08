@@ -1,5 +1,5 @@
 {
-  "loader": "pinned",
+  "loader": "model",
   "platform": "linux",
   "node": "v22.15.1",
   "icu": "76.1",
@@ -566,8 +566,8 @@
       "diagnostics": [
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/bomws/SKILL.md"
         },
         {
@@ -578,8 +578,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/list/SKILL.md"
         },
         {
@@ -804,44 +804,42 @@
     },
     {
       "id": "f04-yaml-rejections",
-      "skills": [
-        {
-          "name": "badindent",
-          "description": "d - x",
-          "content": "Body.",
-          "filePath": "<base>/skills/badindent/SKILL.md",
-          "disableModelInvocation": false
-        }
-      ],
+      "skills": [],
       "diagnostics": [
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing directives-end indicator line at line 1, column 10:\n\n%YAML 1.1\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/badindent/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/directive/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Source contains multiple documents; please use YAML.parseAllDocuments() at line 4, column 1:\n\n...\nx: 1\n^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/docend/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\ndescription: a\ndescription: b\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/dupkey/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Tabs are not allowed as indentation at line 2, column 1:\n\nname: tabs\n\tdescription: d\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/tabs/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 2, column 19:\n\ndescription: \"open\n                  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/unterminated/SKILL.md"
         }
       ]
@@ -850,31 +848,10 @@
       "id": "f05-yaml-value-semantics",
       "skills": [
         {
-          "name": "alias",
-          "description": "Aliased.",
-          "content": "Body.",
-          "filePath": "<base>/skills/alias/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "complexkey",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/complexkey/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "date",
           "description": "2001-12-14",
           "content": "Body.",
           "filePath": "<base>/skills/date/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "flow",
-          "description": "Flow.",
-          "content": "Body.",
-          "filePath": "<base>/skills/flow/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -892,32 +869,36 @@
           "disableModelInvocation": false
         },
         {
-          "name": "proto",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/proto/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "quoted",
           "description": "a\tb é A",
           "content": "Body.",
           "filePath": "<base>/skills/quoted/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "tagged",
-          "description": "123",
-          "content": "Body.",
-          "filePath": "<base>/skills/tagged/SKILL.md",
           "disableModelInvocation": false
         }
       ],
       "diagnostics": [
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/alias/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/complexkey/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/flow/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/merge/SKILL.md"
         },
         {
@@ -928,9 +909,21 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/proto/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/scalar/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/tagged/SKILL.md"
         }
       ]
     },
@@ -1107,24 +1100,61 @@
     },
     {
       "id": "r01-leading-backslash-rejects-after-collected-sibling",
-      "rejects": {
-        "name": "RangeError",
-        "message": "path should be a `path.relative()`d string, but got \"/x.md\""
-      }
+      "skills": [
+        {
+          "name": "-a",
+          "description": "Collected first.",
+          "content": "Body.",
+          "filePath": "<base>/skills/-a/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_metadata",
+          "message": "name must not start or end with a hyphen",
+          "path": "<base>/skills/-a/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "invalid_path",
+          "message": "entry path cannot be matched against ignore rules",
+          "path": "<base>/skills/\\x.md"
+        }
+      ]
     },
     {
       "id": "r02-leading-backslash-dir-rejects",
-      "rejects": {
-        "name": "RangeError",
-        "message": "path should be a `path.relative()`d string, but got \"/d/\""
-      }
+      "skills": [],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_path",
+          "message": "entry path cannot be matched against ignore rules",
+          "path": "<base>/skills/\\d"
+        }
+      ]
     },
     {
       "id": "r03-earlier-root-lost",
-      "rejects": {
-        "name": "RangeError",
-        "message": "path should be a `path.relative()`d string, but got \"/bad.md\""
-      }
+      "skills": [
+        {
+          "name": "a",
+          "description": "Use a.",
+          "content": "Body.",
+          "filePath": "<base>/first/a/SKILL.md",
+          "disableModelInvocation": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "type": "warning",
+          "code": "invalid_path",
+          "message": "entry path cannot be matched against ignore rules",
+          "path": "<base>/second/\\bad.md"
+        }
+      ]
     },
     {
       "id": "r04-inner-backslash-loads",
@@ -1227,59 +1257,10 @@
           "disableModelInvocation": false
         },
         {
-          "name": "y033",
-          "description": "123",
-          "content": "Body.",
-          "filePath": "<base>/skills/y033/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y036",
-          "description": "x",
-          "content": "Body.",
-          "filePath": "<base>/skills/y036/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y037",
-          "description": "foo",
-          "content": "Body.",
-          "filePath": "<base>/skills/y037/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "y041",
           "description": "b",
           "content": "Body.",
           "filePath": "<base>/skills/y041/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y047",
-          "description": "d - x",
-          "content": "Body.",
-          "filePath": "<base>/skills/y047/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y049",
-          "description": "Flow.",
-          "content": "Body.",
-          "filePath": "<base>/skills/y049/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y050",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y050/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y051",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y051/SKILL.md",
           "disableModelInvocation": false
         },
         {
@@ -1318,13 +1299,6 @@
           "disableModelInvocation": false
         },
         {
-          "name": "y057",
-          "description": "\ud800",
-          "content": "Body.",
-          "filePath": "<base>/skills/y057/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "y058",
           "description": "it's",
           "content": "Body.",
@@ -1360,20 +1334,6 @@
           "disableModelInvocation": false
         },
         {
-          "name": "y075",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y075/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y078",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y078/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "y079",
           "description": "café",
           "content": "Body.",
@@ -1381,87 +1341,10 @@
           "disableModelInvocation": false
         },
         {
-          "name": "y080",
-          "description": "x",
-          "content": "Body.",
-          "filePath": "<base>/skills/y080/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y081",
-          "description": "a b",
-          "content": "Body.",
-          "filePath": "<base>/skills/y081/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y082",
-          "description": "x\u0007",
-          "content": "Body.",
-          "filePath": "<base>/skills/y082/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y083",
-          "description": "x\u0000",
-          "content": "Body.",
-          "filePath": "<base>/skills/y083/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y084",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y084/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y085",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y085/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y086",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y086/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y087",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y087/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y089",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y089/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "y090",
           "description": "d",
           "content": "Body.",
           "filePath": "<base>/skills/y090/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y091",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y091/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y092",
-          "description": "d",
-          "content": "Body.",
-          "filePath": "<base>/skills/y092/SKILL.md",
           "disableModelInvocation": false
         }
       ],
@@ -1480,32 +1363,32 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y002/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y003/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y004/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y005/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y006/SKILL.md"
         },
         {
@@ -1600,122 +1483,170 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y033/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y034/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y035/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y036/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y037/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y038/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y039/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: d\ndescription: e\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y040/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Tabs are not allowed as indentation at line 2, column 1:\n\nname: a\n\tdescription: d\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y042/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 1, column 19:\n\ndescription: \"open\n                  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y043/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 1, column 19:\n\ndescription: 'open\n                  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y044/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Source contains multiple documents; please use YAML.parseAllDocuments() at line 3, column 1:\n\n...\nx: 1\n^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y045/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing directives-end indicator line at line 1, column 10:\n\n%YAML 1.1\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y046/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 19:\n\ndescription: [a, b\n                  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y047/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y048/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 14:\n\ndescription: a: b\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y049/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y050/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y051/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y057/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y062/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected block-seq-ind on same line with key at line 1, column 14:\n\ndescription: -\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y063/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected block-seq-ind on same line with key at line 1, column 14:\n\ndescription: - x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y064/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 1, column 14:\n\ndescription: @x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y065/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 1, column 14:\n\ndescription: `x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y066/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 1, column 14:\n\ndescription: %x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y067/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unresolved alias (the anchor must be set before the alias): undefined",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y068/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y069/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: d\n'description': e\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y070/SKILL.md"
         },
         {
@@ -1738,6 +1669,12 @@
         },
         {
           "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y075/SKILL.md"
+        },
+        {
+          "type": "warning",
           "code": "invalid_metadata",
           "message": "description is required",
           "path": "<base>/skills/y076/SKILL.md"
@@ -1750,9 +1687,81 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y078/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y080/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y081/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y082/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y083/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y084/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y085/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y086/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y087/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y088/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y089/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y091/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y092/SKILL.md"
         }
       ]
     },
@@ -2106,20 +2115,6 @@
           "disableModelInvocation": false
         },
         {
-          "name": "y132",
-          "description": "\n\n!t x",
-          "content": "Body.",
-          "filePath": "<base>/skills/y132/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y178",
-          "description": "  p!d  q\"",
-          "content": "Body.",
-          "filePath": "<base>/skills/y178/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
           "name": "y203",
           "description": "a#b-",
           "content": "Body.",
@@ -2132,58 +2127,37 @@
           "content": "Body.",
           "filePath": "<base>/skills/y214/SKILL.md",
           "disableModelInvocation": false
-        },
-        {
-          "name": "y222",
-          "description": "/",
-          "content": "Body.",
-          "filePath": "<base>/skills/y222/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "y267",
-          "description": "\u001b",
-          "content": "Body.",
-          "filePath": "<base>/skills/y267/SKILL.md",
-          "disableModelInvocation": false
-        },
-        {
-          "name": "a\"b",
-          "description": "😀",
-          "content": "Body.",
-          "filePath": "<base>/skills/y273/SKILL.md",
-          "disableModelInvocation": false
         }
       ],
       "diagnostics": [
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nk-1: \"a#b\" # c\nk-1:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y000/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ntags: a,b\ntags: Nul\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y001/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n   a,b\n  Null\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y002/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Comments must be separated from other tokens by white space characters at line 1, column 14:\n\nlicense: \"\\ \"# c\n             ^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y003/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y004/SKILL.md"
         },
         {
@@ -2206,14 +2180,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y006/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 23:\n\n  __proto__: %x # a: b\n                      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y007/SKILL.md"
         },
         {
@@ -2224,20 +2198,20 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y009/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\nme\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y010/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 7, column 18:\n\n    description: a: b Use it # first-line comment\n                 ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y011/SKILL.md"
         },
         {
@@ -2249,13 +2223,13 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n  w\nmetadata: 1.5 # \"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y013/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 3, column 11:\n\nname: \"\\N\"x\n          ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y014/SKILL.md"
         },
         {
@@ -2285,61 +2259,43 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 25:\n\nallowed-tools: '  pad  'x\n                        ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y019/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y020/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"-.Inf\n\na,b\" does not match parent directory \"y021\"",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y021/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name must not start or end with a hyphen",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y021/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 10:\n\nlicense: 1e3 a: b\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y022/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 9, column 1:\n\nlicense: café !t x # first-line comment\nlicense: café !t x # first-line comment\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y023/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y024/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y025/SKILL.md"
         },
         {
@@ -2363,7 +2319,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 13, column 5:\n\n  *a\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y027/SKILL.md"
         },
         {
@@ -2381,25 +2337,25 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\na.b: |2\n 1e3\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y030/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nallowed-tools: \"q\\\\/\"\nallowed-tools: [a]% tailing   # %x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y031/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y032/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y033/SKILL.md"
         },
         {
@@ -2411,49 +2367,49 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 2:\n\n a.b: 'it''s' # c\n a.b: |-  # c\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y035/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y036/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 3:\n\n  a.b: '  pad  '\n  name: \n  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y037/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 2, column 12:\n\nlicense: \"\"x\n           ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y038/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalars with more-indented leading empty lines must use an explicit indentation indicator at line 8, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y039/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y041/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y042/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 4:\n\n   allowed-tools: \"\\U0001F600\\0\"\n   allowed-tools: 'it''s'\n   ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y043/SKILL.md"
         },
         {
@@ -2477,7 +2433,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 17:\n\n~: \"\\U0001F600 \"x\n                ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y045/SKILL.md"
         },
         {
@@ -2489,55 +2445,55 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 3, column 8:\n\n- 'a\"b'x\n       ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y047/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y048/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndisable-model-invocation: > # c\ndisable-model-invocation: &a x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y049/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\nName: 'a\\nb'\nx_y: +1 0x1F\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y050/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n# comment\ndisable-model-invocation:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y051/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y052/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n__proto__: \"\\_\"\ntags: >+\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y053/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 1, column 10:\n\nlicense: %x\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y054/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y055/SKILL.md"
         },
         {
@@ -2555,19 +2511,19 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Flow map in block collection must be sufficiently indented and end with a } at line 1, column 32:\n\ndisable-model-invocation: {a: b\n                               ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y058/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 6:\n\ntrue:\n     ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y059/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y060/SKILL.md"
         },
         {
@@ -2578,14 +2534,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y062/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 1, column 12:\n\n__proto__: `x\n           ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y063/SKILL.md"
         },
         {
@@ -2597,61 +2553,49 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\n# comment\nname 😀 ok\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y065/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y066/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"café\na\" does not match parent directory \"y066\"",
-          "path": "<base>/skills/y066/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y066/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Not a YAML token: - a'b at line 4, column 9:\n\n  - >-  - a'b\n        ^^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y067/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\nk-1: !t x\nk-1: !t x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y068/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\na.b: \"\\x07a\\tb\"\na.b: !t x # @x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y069/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n    ~\n   +1\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y070/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 1, column 7:\n\nk-1 : `x\n      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y071/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 2, column 6:\n\nx_y: `x\n     ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y072/SKILL.md"
         },
         {
@@ -2663,7 +2607,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\n- >\nName: x:y # .inf\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y074/SKILL.md"
         },
         {
@@ -2675,25 +2619,25 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\nname: \"\\/a#b\"\nname: \"\\/a#b\"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y076/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y077/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 15, column 1:\n\na b: \"\\\\\"\na b: \"\\\\\"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y078/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n# comment\ntags: > # c\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y079/SKILL.md"
         },
         {
@@ -2705,103 +2649,91 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\ndescription: a,b\ndescription: ''\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y081/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y082/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y083/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y084/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y085/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"TRUE\n'\n\" does not match parent directory \"y085\"",
-          "path": "<base>/skills/y085/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y085/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nk-1: |2\n a # c\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y086/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit map keys need to be followed by map values at line 14, column 2:\n\n disable-model-invocation: a]b\n a.b:x a\"b\n ^^^^^^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y087/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y088/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 8, column 1:\n\nname: 1_000\nlicense: >-\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y089/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y090/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y091/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y092/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 7, column 1:\n\nk-1: {a: 1}\n   x:y\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y093/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y094/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unresolved alias (the anchor must be set before the alias): a",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y095/SKILL.md"
         },
         {
@@ -2812,8 +2744,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y097/SKILL.md"
         },
         {
@@ -2825,49 +2757,49 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalars with more-indented leading empty lines must use an explicit indentation indicator at line 4, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y099/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 2:\n\n _proto__: 'plain' # c\n license: >+\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y100/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n\n +1\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y101/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\na.b: |\na.b: |\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y102/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 16, column 2:\n\n   allowed-tools: 'a\\nb' # c\n x_y:\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y103/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 7, column 21:\n\ndescription: \"plain\"\n                    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y104/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y105/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndescription: 017 # first-line comment\n  skill\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y106/SKILL.md"
         },
         {
@@ -2878,50 +2810,50 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y108/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y109/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y110/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit map keys need to be followed by map values at line 4, column 1:\n\nNam: x:y\n0 .inf\n^^^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y111/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y112/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y113/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 5:\n\n  - \n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y114/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 6:\n\ntags:\n     ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y115/SKILL.md"
         },
         {
@@ -2932,8 +2864,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y117/SKILL.md"
         },
         {
@@ -2944,44 +2876,44 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y119/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 3, column 16:\n\ndescription: -x\n               ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y120/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ntags: a#b # no\n  no\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y121/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 10:\n\nmetadata:\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y122/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 7, column 5:\n\n a}b\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y123/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 5, column 7:\n\n  - ''x\n      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y124/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y125/SKILL.md"
         },
         {
@@ -2993,26 +2925,32 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\na.b: a#b\na.b:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y128/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 6, column 1:\n\n   \"\n  a#b\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y129/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y130/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 8, column 2:\n\n disable-model-invocation: \"\\N\"\n x_y: 'it''s'\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y131/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y132/SKILL.md"
         },
         {
           "type": "warning",
@@ -3022,20 +2960,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y134/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \" [a]\n True\n 1\n\" does not match parent directory \"y134\"",
-          "path": "<base>/skills/y134/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y134/SKILL.md"
         },
         {
@@ -3059,97 +2985,79 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\n~: 1.5 café\n~: 1.5 café\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y138/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y139/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"no 017\" does not match parent directory \"y139\"",
-          "path": "<base>/skills/y139/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y139/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 4, column 12:\n\n__proto__: @x a]b\n           ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y140/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalar lines must not be less indented than their first line at line 5, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y141/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 3:\n\n  description: ''\n  description: ''\n  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y142/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y143/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 9, column 1:\n\n  disable-model-invocation: null\na.b: \"\\ \"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y144/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 5, column 1:\n\n\n {a: 1}\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y145/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: café\ndescription:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y146/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y147/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"plain\" does not match parent directory \"y147\"",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y147/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unresolved alias (the anchor must be set before the alias): a",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y148/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y149/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 3:\n\n  metadata: trailing  \n  k-1: \"plain\"\n  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y150/SKILL.md"
         },
         {
@@ -3161,43 +3069,43 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nallowed-tools: null a#b # x # y # z # first-line comment\n  off\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y152/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 2, column 11:\n\nlicense: '\n          ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y153/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nmetadata: x\ty\ndescription:café\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y154/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\nname: -x\nallowed-tools: '  pad '\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y155/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y156/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 5, column 5:\n\n- \"?\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y157/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y158/SKILL.md"
         },
         {
@@ -3208,26 +3116,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y160/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 6:\n\na b: a: b\n     ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y161/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n k-1: !t x # first-line comment\n  0o17\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y162/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y163/SKILL.md"
         },
         {
@@ -3239,25 +3147,25 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n    !t x\n  café\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y165/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ndescription: &a x # +1\n %x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y166/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalar lines must not be less indented than their first line at line 10, column 1:\n\n\n\t# tabbed comment\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y167/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y168/SKILL.md"
         },
         {
@@ -3286,50 +3194,56 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y171/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 2, column 15:\n\nmetadata: ' #x\n              ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y172/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y173/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y174/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nlicense: true # .inf\n   *a\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y175/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\na.b: a]b\na.b: |-\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y176/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 3:\n\n  name: a\"b\n  name:\n  ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y177/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 2, column 14:\n\ndescription: @x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y178/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y179/SKILL.md"
         },
         {
@@ -3341,7 +3255,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 2, column 1:\n\ndescription: ~\ndescription: \"a\\nb\"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y181/SKILL.md"
         },
         {
@@ -3353,19 +3267,19 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Tags and anchors must be separated from the next token by white space at line 4, column 4:\n\n- !\"a#b\"\n   ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y183/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\nallowed-too\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y184/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y185/SKILL.md"
         },
         {
@@ -3401,61 +3315,37 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n  disable-model-invocation: ?x # first-line comment\n    a: b\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y189/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y190/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"017\n\" does not match parent directory \"y190\"",
-          "path": "<base>/skills/y190/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y190/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with block scalar indicator > at line 2, column 7:\n\n[k-1: >\n      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y191/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 3, column 7:\n\nname: %x true\n      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y192/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 1, column 10:\n\nlicense: +1__proto__:\n         ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y193/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y194/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a'b\" does not match parent directory \"y194\"",
-          "path": "<base>/skills/y194/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y194/SKILL.md"
         },
         {
@@ -3473,55 +3363,55 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\n\nallowed-tools: |+\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y197/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\ndescription: |2\n [a]\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y198/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nname: on\na#b\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y199/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y200/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n    null\nlicense: |-\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y201/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 3, column 1:\n\n  license: [a] # first-line comment\n     {a: 1}\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y202/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\na.\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y204/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 9:\n\nx_y: '#'\n        ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y205/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y206/SKILL.md"
         },
         {
@@ -3532,14 +3422,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y208/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y209/SKILL.md"
         },
         {
@@ -3569,31 +3459,31 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 5, column 1:\n\n   Name: 😀 ok\n  \t name: {a: 1}\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y212/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 6, column 16:\n\nallowed-tools: @x\n               ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y213/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y215/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\na.b: x # y # z # first-line commnt\n -.Inf\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y216/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 5, column 5:\n\n  ?x\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y217/SKILL.md"
         },
         {
@@ -3604,14 +3494,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y219/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing \"quote at line 4, column 14:\n\n  license: -x\n             ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y220/SKILL.md"
         },
         {
@@ -3622,32 +3512,26 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y222/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y223/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"\\\" does not match parent directory \"y223\"",
-          "path": "<base>/skills/y223/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
-          "path": "<base>/skills/y223/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y224/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 3, column 13:\n\n __proto__: @x\n            ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y225/SKILL.md"
         },
         {
@@ -3658,50 +3542,50 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y227/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\ndisable-model-invocation: .inf # 1.5\ndisable-model-invocation:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y228/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Invalid escape sequence \\U0{001F60 at line 1, column 17:\n\nallowed-tools: \"\\U0{001F600\"\n                ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y229/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 1, column 5:\n\nx_y:\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y230/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y231/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y232/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 9, column 7:\n\n  - ?x\n      ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y233/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 12, column 1:\n\n\n    -x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y234/SKILL.md"
         },
         {
@@ -3712,14 +3596,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y236/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Missing closing 'quote at line 7, column 9:\n\n   a: 1}\n        ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y237/SKILL.md"
         },
         {
@@ -3731,13 +3615,13 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 3, column 5:\n\n  - `x # first-line comment\n    ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y239/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Block scalar header includes extra characters: |-\" at line 2, column 17:\n\nallowed-tols: |-\"  # c\n                ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y240/SKILL.md"
         },
         {
@@ -3748,14 +3632,14 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y242/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n\t# tabbed commentlicense: \"a#ba\\tb\"\nmetadata: 'a\\nb'\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y243/SKILL.md"
         },
         {
@@ -3766,32 +3650,32 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y245/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nName: {a: 1} # a'b\n !t x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y246/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 4, column 1:\n\n   a # c\n\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y247/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with directive indicator character % at line 6, column 6:\n\n   - %x\n     ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y248/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 5, column 1:\n\n  tags: trailing  \nno\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y249/SKILL.md"
         },
         {
@@ -3803,19 +3687,19 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 10, column 1:\n\n    - \"\\\"q\\\"\nlicense:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y251/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y252/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y253/SKILL.md"
         },
         {
@@ -3845,49 +3729,49 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected scalar at node end at line 1, column 13:\n\nnme: \"\\x41\" %# c\n            ^^^^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y258/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 2, column 1:\n\nmetadata: > # c\n{\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y259/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 7, column 1:\n\n__proto__: '#'\nName: >-\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y260/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 5, column 18:\n\n  allowed-tools: %x {a: 1}\n                 ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y261/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 5, column 1:\n\n  - >-\ntags: 'pla&in'\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y262/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y263/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Unexpected tag at node end at line 2, column 31:\n\ndi sable-model-invocation: '#'!\n                              ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y264/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 7, column 1:\n\n  x # y # z\n Use it\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y265/SKILL.md"
         },
         {
@@ -3899,7 +3783,13 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 12, column 1:\n\n __proto__: null # a\"b # first-line comment\n    -.Inf\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
+          "path": "<base>/skills/y267/SKILL.md"
+        },
+        {
+          "type": "warning",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y268/SKILL.md"
         },
         {
@@ -3910,8 +3800,8 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y270/SKILL.md"
         },
         {
@@ -3923,55 +3813,37 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character ` at line 4, column 13:\n\n  metadata: `x\n            ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y272/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"a\"b\" does not match parent directory \"y273\"",
-          "path": "<base>/skills/y273/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y273/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nname: a#b # first-line comment\n @x\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y274/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\ndisable-model-in]vocation: True\ntags:\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y275/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 1:\n\n# comment\nx_y: \"  pad  \"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y276/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
-          "path": "<base>/skills/y277/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name \"skill TRUE\" does not match parent directory \"y277\"",
-          "path": "<base>/skills/y277/SKILL.md"
-        },
-        {
-          "type": "warning",
-          "code": "invalid_metadata",
-          "message": "name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y277/SKILL.md"
         },
         {
@@ -3983,25 +3855,25 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\ntags: true # -x\n x # y # z\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y279/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Nested mappings are not allowed in compact mappings at line 2, column 11:\n\nmetadata: on {a: 1} # .nan\n          ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y280/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 1:\n\nlicense: '' # c\nlicense: null\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y281/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y282/SKILL.md"
         },
         {
@@ -4012,32 +3884,32 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y284/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Plain value cannot start with reserved character @ at line 2, column 13:\n\n  metadata: @x\n            ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y285/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 6, column 2:\n\n    trailing  \n tags: yes\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y286/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 11, column 2:\n\n disable-model-invocat'ion: 0o17\n Name: a: b\n ^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y287/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y288/SKILL.md"
         },
         {
@@ -4049,7 +3921,7 @@
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 4, column 1:\n\n- 1e3\nmetadata: \"\\0\\`e\"\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y290/SKILL.md"
         },
         {
@@ -4060,38 +3932,38 @@
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y292/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y293/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Implicit keys need to be on a single line at line 1, column 1:\n\n`# c\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y294/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "Map keys must be unique at line 3, column 1:\n\nname: 'a\\nb'\nmetadata: |\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y295/SKILL.md"
         },
         {
           "type": "warning",
           "code": "parse_failed",
-          "message": "All mapping items must start at the same column at line 2, column 1:\n\nx_y: True # first-line com!ment\n  a\"b\n^\n",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y296/SKILL.md"
         },
         {
           "type": "warning",
-          "code": "invalid_metadata",
-          "message": "description is required",
+          "code": "parse_failed",
+          "message": "frontmatter is not valid in the supported YAML subset",
           "path": "<base>/skills/y297/SKILL.md"
         },
         {

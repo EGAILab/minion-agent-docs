@@ -3,8 +3,9 @@
 // Run: node --experimental-strip-types --no-warnings run.mjs <out.json>
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { NodeExecutionEnv } from "./pinned/env/nodejs.ts";
-import { loadSkills } from "./pinned/skills.ts";
+const loaderDir = process.env.WP141_LOADER ?? "pinned";
+const { NodeExecutionEnv } = await import(`./${loaderDir}/env/nodejs.ts`);
+const { loadSkills } = await import(`./${loaderDir}/skills.ts`);
 import { scenarios } from "./scenarios.mjs";
 
 const out = process.argv[2] ?? "out.json";
@@ -54,5 +55,5 @@ for (const scenario of scenarios) {
 		rmSync(base, { recursive: true, force: true });
 	}
 }
-writeFileSync(out, `${JSON.stringify({ platform: process.platform, node: process.version, icu: process.versions.icu, results }, null, 2)}\n`);
+writeFileSync(out, `${JSON.stringify({ loader: loaderDir, platform: process.platform, node: process.version, icu: process.versions.icu, results }, null, 2)}\n`);
 console.log(`${results.length} scenarios -> ${out}`);

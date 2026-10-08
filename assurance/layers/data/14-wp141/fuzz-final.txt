@@ -1,0 +1,5 @@
+iterations=300000 accepted=70652 bothReject=153263 VIOLATIONS=0
+iterations=300000 accepted=70651 bothReject=153259 VIOLATIONS=0
+iterations=300000 accepted=70651 bothReject=153267 VIOLATIONS=0
+iterations=300000 accepted=70649 bothReject=153269 VIOLATIONS=0
+iterations=300000 accepted=70650 bothReject=153260 VIOLATIONS=0

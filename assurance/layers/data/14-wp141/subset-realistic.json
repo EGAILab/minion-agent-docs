@@ -1,0 +1,127 @@
+[
+ {
+  "src": "name: pdf\ndescription: Extract text and tables from PDF files. Use when working with PDFs.",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: pdf\ndescription: Extract text, fill forms, and merge PDFs. Use when the user mentions PDFs, forms, or document extraction.\nlicense: Proprietary. LICENSE.txt has complete terms",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: brand-guidelines\ndescription: >\n  Applies the company's official brand colors and typography.\n  Use when producing branded documents.",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: brand-guidelines\ndescription: >-\n  Applies the company's official brand colors and typography.\n  Use when producing branded documents.",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: changelog\ndescription: |\n  Generates changelog entries.\n\n  Use after merging a release branch.",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: review\ndescription: \"Reviews code: style, correctness, and tests.\"",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: review\ndescription: 'Reviews code: style, correctness, and tests.'",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: deploy\ndescription: Deploys the service\ndisable-model-invocation: true",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: deploy\ndescription: Deploys the service\ndisable-model-invocation: false",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: data-viz\ndescription: Builds charts from CSV data\nmetadata:\n  author: Data Team\n  version: \"1.2\"",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: data-viz\ndescription: Builds charts\nmetadata:\n  author: Data Team\n  version: 1.2",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: git-helper\ndescription: Git workflows\nallowed-tools: Bash(git:*) Read Grep",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: helper\ndescription: Helps with tasks\ncompatibility: Requires Python 3.11+ and network access",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "# Skill frontmatter\nname: commented\ndescription: Has comments # trailing comment\n# end",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: tags\ndescription: Uses a tag list\ntags:\n  - writing\n  - editing",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: tags\ndescription: Uses a tag list\ntags:\n- writing\n- editing",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: long\ndescription: A long description that wraps\n  onto a second line without quotes\n  and a third.",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: unicode\ndescription: Handles café menus and 😀 emoji",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: url\ndescription: Fetches https://example.com/docs#section pages",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: colon\ndescription: \"Note: quoted because it has a colon-space\"",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: escape\ndescription: \"Tab\\tseparated and \\u00e9 escaped\"",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: empty-meta\ndescription: Something\nmetadata:",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: version\ndescription: Something\nversion: 1.0.0",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "name: trailing-space   \ndescription: Something   ",
+  "accepted": true,
+  "equal": true
+ },
+ {
+  "src": "\nname: leading-blank\ndescription: Something\n",
+  "accepted": true,
+  "equal": true
+ }
+]

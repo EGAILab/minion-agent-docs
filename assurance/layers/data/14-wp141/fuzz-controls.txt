@@ -1,0 +1,9 @@
+KILLED  clip-drops-final-newline: 1992
+KILLED  keep-drops-one-newline: 362
+KILLED  colon-space-accepted: 361
+KILLED  safe-lead-any-indicator: 2351
+KILLED  duplicate-key-accepted: 2716
+KILLED  yes-is-boolean: 725
+KILLED  comment-allows-continuation: 181
+KILLED  tab-indentation-accepted: 181
+KILLED  folded-joins-with-newline: 2348

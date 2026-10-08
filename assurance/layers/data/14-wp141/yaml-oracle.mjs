@@ -33,6 +33,8 @@ export const corpus = [
 	"constructor: x\ndescription: d", "description: d\nname: [a]", "? description\n: d",
 ];
 
+import { pathToFileURL } from "node:url";
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 // Pi's observable projection (harness skills.ts loadSkillFromFile): `frontmatter = parse(y) ?? {}`,
 // then `typeof fm.name === "string"`, `typeof fm.description === "string"`, `fm["disable-model-invocation"] === true`.
 function project(fm) {
@@ -53,3 +55,4 @@ const results = corpus.map((src) => {
 });
 writeFileSync(process.argv[2] ?? "yaml-oracle.json", `${JSON.stringify(results, null, 1)}\n`);
 console.log(`${results.length} sources, ${results.filter((r) => !r.ok).length} rejected`);
+}

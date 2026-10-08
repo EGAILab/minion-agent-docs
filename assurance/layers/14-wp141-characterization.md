@@ -2,8 +2,9 @@
 
 Mode: contract-draft evidence (`CONTRACT_DRAFT`, `minion-agent#158`). **IMPLEMENTATION AUTHORIZED:
 NO.** This record is derivation evidence (`process/agent-workflow.md` §9.3). It is not the
-normative contract. The normative WP-14.1 text will be drafted into `spec/harness.md` after the
-Owner decisions in §5.
+normative contract, which is `spec/harness.md` WP-14.1. §1–§6 record the pre-decision
+characterization as reviewed. §7 records the evidence for the contract drafted after the Owner
+decision.
 
 ## 1. Baselines and authority
 
@@ -278,3 +279,117 @@ no Rust probe was run here.
 3. Independent contract checkpoint (`CONTRACT_REVIEW`).
 
 No production code.
+
+## 7. Contract-draft evidence after the Owner decision (`minion-agent#158` issuecomment-6051472129)
+
+**Decisions taken:**
+- **PP-14-1:** approved; the `parse_failed` message is Minion-defined.
+- **PP-14-2:** Option A, with **DIV-004**.
+- **PP-14-3:** approved; no divergence.
+- **PP-14-7:** the resilient alternative, **DIV-005**.
+- **PP-14-8:** approved.
+- **Skill collation:** approved as a `TOOL-040` mapping.
+
+This section records the evidence for the normative WP-14.1 text in `spec/harness.md`. That text
+supersedes the recommendations in §5.
+
+### 7.1 The Minion YAML subset (DIV-004)
+
+**Reference reader (non-normative evidence):** `subset-reader.mjs`, which implements `spec/harness.md`
+HAR-010 rules 1–7.
+
+| Check | Command | Result |
+|---|---|---|
+| **Soundness:** whenever the subset accepts, `yaml@2.9.0` accepts with an identical value tree (strings, booleans, null, the number class, nested mappings and sequences) | `subset-diff.mjs 300000 <seed>`, seeds 1–5 (generator `subset-gen.mjs`) | **0 violations in 1,500,000 inputs** (`fuzz-final.txt`); about 70.6k accepted per 300k |
+| **Negative controls:** each one a single-rule mutation of the reader that the fuzzer must detect, killed only if *every* seed (21, 22, 23 × 50k) finds a violation | `fuzz-controls.mjs` | **9/9 killed**, minimum 181 violations (`fuzz-controls.txt`) |
+| **Realistic acceptance:** 25 skill-frontmatter shapes, covering folded and literal descriptions, `>-`, nested `metadata:`, both sequence indents, wrapped plain descriptions, comments, quoted colons, escapes and trailing spaces | `subset-realistic.mjs` | **25/25 accepted, values identical to Pi** (`subset-realistic.json`) |
+
+The nine controls are:
+- clip drops the final newline;
+- keep drops one newline;
+- `: ` accepted inside a plain scalar;
+- `-`/`?`/`:` accepted as a lead before anything;
+- a duplicate key accepted;
+- `yes` read as a boolean;
+- a comment allowing a continuation;
+- tab indentation accepted;
+- folded text joined with LF.
+
+**Defects the fuzzer found while the grammar was drafted.** Each one is fixed in the grammar, and
+each fix has a control. None of them reached the contract text:
+- a tab-led line after a block scalar;
+- keep chomping over-counting when `T` ends in LF;
+- whitespace-only block lines beyond the content indent;
+- a comment followed by a continuation.
+
+**Narrowing found by the model diff (§7.3).** A plain scalar may start with `-`, `?` or `:` when a
+non-space follows. Without that rule, the subset rejected Pi's `name: -A--…` row (v02).
+
+**Setup failures, disclosed and not credited:**
+- **Line-number mutations.** The first control harness patched the reader by line number. After the
+  reader changed, the patched mutants failed to compile, and that run was discarded. The controls
+  now patch exact content, and a mutation that does not apply is reported.
+- **Generator refactor.** The refactor that moved the document generator into `subset-gen.mjs`
+  first changed the order of RNG calls, and that let one control survive. The original order was
+  restored, and the controls run on three seeds so that one stream cannot hide a gap.
+
+### 7.2 Skill collation (mapping)
+
+- `collation-names.json` is a 71-name neighbourhood covering case, accents, combining marks,
+  punctuation, digits, `ß`/`ss`, dotless and dotted i, CJK, kana, Greek, Cyrillic, an emoji and
+  canonical equivalents.
+- Sorted by Node v22.15.1 / ICU 76.1 `localeCompare` (Pi), and by the `TOOL-040` pinned collator
+  compared raw under ICU 78.3 (`minion_agent.tools.builtin.collation`), the two orders are
+  **identical** (`collation-evidence.json`).
+
+### 7.3 The Minion model and the canonical expectations
+
+**Model.** `make-minion-model.mjs` derives `model/skills.ts` from the byte-copied pinned
+`skills.ts`. It applies exactly the approved departures as asserted single-occurrence patches:
+- the frontmatter goes through the subset, with the Minion `parse_failed` text;
+- the `invalid_path` guard is placed before both ignore checks.
+
+**Runs.** The corpus (`scenarios.mjs`, now **86 scenarios**) ran through the pinned loader
+(`out-*.json`) and through the model (`model-*.json`), each on win32 and Linux. The corpus now also
+includes:
+- every `yaml-oracle` source and every realistic shape as a `SKILL.md`;
+- a 300-input boundary sample from the fuzzer's generator;
+- a 40-scenario seeded ignore pattern × path corpus;
+- the symlink cycle.
+
+**`compare.mjs`.** Separators are normalized in path fields only.
+
+| Comparison | Result |
+|---|---|
+| Pi win32 vs Pi Linux | structurally identical except `c01-symlink-cycle` (host cycle depth, PP-14-3) |
+| Model win32 vs model Linux | structurally identical except `c01-symlink-cycle` |
+| Pi vs model (Linux) | **8 scenarios differ, every one by an approved departure:** `v04`, `f04`, `f05`, `y01` and `y03` (DIV-004, plus PP-14-1 where Pi had `parse_failed`) and `r01`–`r03` (DIV-005). `y02` (realistic) and every other scenario are **identical** |
+
+**Generation.** `gen-canonical.mjs` writes the 86 canonical scenarios from the model's Linux
+results, so the POSIX-only rows are included.
+- It labels `divergences` by comparing with Pi's own result: masked `parse_failed` text → `PP-14-1`;
+  any other difference → `DIV-004`, or `DIV-005` for the `r` rows.
+- The cycle row asserts only the PP-14-3 shape.
+
+**Hand check of the divergent rows.**
+- **DIV-005:** `r01` keeps `-a` and adds one `invalid_path` for `\x.md`; `r02` gives one
+  `invalid_path` for `\d`; `r03` keeps `first/a`. Pi rejects all three.
+- **DIV-004:** each newly `parse_failed` file uses an excluded construct:
+  - flow collections: `list`, `flow`, `proto`;
+  - alias and anchor: `alias`;
+  - tag: `tagged`;
+  - merge key: `merge`;
+  - complex key: `complexkey`;
+  - scalar document: `scalar`;
+  - an escape producing U+FEFF: `bomws`;
+  - a `-`-led continuation line: `badindent`.
+
+### 7.4 PP-14-3 implementation note (for the checkpoint)
+
+Node's `realpath` reports ELOOP, so Pi fails at canonicalization. A host whose `canonical_path`
+resolves component by component (for example Python's `os.path.realpath`) may instead canonicalize
+every level successfully, and fail later at the OS path-length limit, in `file_info` or `list_dir`.
+
+The normative shape therefore allows either fs-origin code, and leaves the depth host-defined. The
+shape is: termination, exactly one fs-origin diagnostic within the cycle, other skills retained.
+Each implementation must show this shape on both platforms.
