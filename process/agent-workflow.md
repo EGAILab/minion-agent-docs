@@ -405,6 +405,17 @@ Rules:
 - prefer deterministic, minimal examples;
 - when a probe reveals a semantic rule, express that rule in the normal manifest/spec/conformance/evidence chain.
 
+**Verify engine and platform premises by execution.** A design premise about how a delegated engine, a pinned library or a platform behaves is not adopted until it has been executed.
+- **Scope.** Examples include fd/ripgrep glob semantics, YAML or ignore-file matching, collation, and OS error codes.
+- **What counts as evidence.** The premise cites an executed probe against the pinned artifact. The probe and its output are recorded with the design, and the run is repeated on each platform the premise covers.
+- **Documentation is not enough.** A premise taken from documentation, from memory or from another version is a hypothesis until probed.
+- WP-13.4 shows the cost. Its remediation-1 rewrite rested on "fd's glob has no nested alternation". That was false for the pinned fd 10.4.2, and it cost a full convergence episode (`CE-L13-WP134-01`).
+
+**Expected results come from the authority, not from the construction under review.**
+- **Derive expectations from the authority.** Expected outputs come from the authority itself, for example Pi's own transformation run on the real engine. They do not come from the proposal's own construction, which would only restate it.
+- **Validate the oracle's selection predicates too.** When an oracle uses a predicate to select or classify cases (a component finder, a "this case is affected" filter), check that predicate against independently written expectations, such as hand counts or hand-written variants, before trusting its output.
+- In `CE-L13-WP134-01`, checkpoint review 1 rejected expectations derived from the proposal's own construction (`C001`). Review 2 then rejected an oracle whose component finder was itself wrong (`C002`).
+
 ### 9.4 Semantic-neighborhood expansion
 
 When a finding hits one member of a known semantic family, do not close only that point. Before remediation is proposed, the remediation owner characterizes the **smallest coherent partition** containing it:
@@ -420,6 +431,8 @@ Examples:
 The expansion is characterization, not speculative production code. Members that need no change are recorded as `AUDITED — no change`, and they become regression witnesses where they are cheaply executable. The reviewer checks the expansion record at targeted closure. A missing partition member is a `CONTRACT_ASSURANCE_DEFECT` against the remediation, not a new independent finding.
 
 This targets sequences like WP-13.2's *huge integer → `-0` → Infinity* and L0506-D001's *union → callback → sibling → numeric-looking string*, where each adjacent member cost a separate review cycle.
+
+**Characterize compositions of scoped rules, not only each class alone.** A rule of the form "rule X applies to this class, and everything else keeps Pi's meaning" needs mixed cases, where X's class and a Pi-meaning construct occur in **one** input. Showing each class on its own does not cover their interaction (`CE-L13-WP134-01` `C001`: `src/**/a*.ts` combines a rewritten full-path component with ordinary glob components).
 
 **Re-check the neighbourhood after every fix.** The expansion above happens *before* remediation. A fix also has to be checked *after* it changes behaviour. Verifying only the exact point that failed is not enough. After changing behaviour, the remediation owner re-checks the nearest rules that share the changed mechanism, representation, lifecycle boundary or error path, and records that re-check with the remediation.
 - **Keep it proportional.** Use the smallest coherent semantic neighbourhood that the change could plausibly have affected. This is not a requirement to rerun a whole work-package review after every patch. Examples:
@@ -484,6 +497,11 @@ When Linux evidence (or any second-platform evidence) materially supports a revi
 Prefer a committed script or a documented command sequence to prose where practical. The recipe must describe the environment actually used for the claimed evidence, not an approximate equivalent.
 
 A missing prerequisite is disclosed as such and is never reported as a passing gate. In L12-D002, a Rust EXEC-010 test failed only because its image lacked Node.js, and the WP-13.3 property tests did not collect without `hypothesis`.
+
+**Gate runs do not share host load.** Complete gate batches (full suites, canonical suites, negative-control replays) run **sequentially** on a host. No other gate batch or container build runs concurrently on that host.
+- **Under load, re-run.** A result produced under concurrent load is re-run in isolation, not credited. This applies to a failure and to a pass alike.
+- **Disclose it.** The evidence record says when a load-affected result was replaced.
+- In the WP-13.4 Rust closure, a concurrent Docker build made a Windows full-suite target fail spuriously; it passed on its own.
 
 ### 9.5 Reusable hazard families
 
@@ -729,7 +747,7 @@ State intent:
 : Deferred parity is valid and no implementation is authorized until a named event occurs (§11.13).
 
 `CLOSED`
-: The work package is durably complete for its disposition.
+: The work package is durably complete for its disposition. For a work package whose disposition certifies requirements, `CLOSED` requires its **status sync** to be merged first. That is the manifest rows and spec status lines that record the certification (for example `CERTIFIED_CLOSED`). A closure without it leaves the durable record contradicting the issue: L0506-D004 (`minion-agent#131`) closed cross-language while `TOOL-042` still read `CONTRACT_DRAFT`, until `#156` / docs `#252`. A mechanical check that the work package's rows read `CERTIFIED_CLOSED` is a candidate `minion_process` guard (§12.7).
 
 `INCIDENT`
 : Coordination object is retained for process/forensic history and is not actionable implementation state.
@@ -1418,6 +1436,11 @@ HANDOFF_BLOCKED
 
 and no next-agent review or implementation may begin from that handoff. This check applies to every agent-to-agent handoff described in §11.4, and to any future automated PR/issue-triggered handoff between Claude and Codex.
 
+**Reviewer environment loss is `HANDOFF_BLOCKED`, not a verdict.** A reviewer who loses the environment needed for the review mid-pass stops and reports `HANDOFF_BLOCKED`, naming the missing capability. Examples are network, Docker, or a pinned toolchain.
+- It issues no partial approval and no rejection.
+- The author records the block and routes it to the Owner, because restoring access is an Owner action.
+- Once access is confirmed, the author re-dispatches the **unchanged** candidate: the same exact SHAs and the same scope.
+
 ### 11.12 Quarantine semantics
 
 An artifact (branch, PR, issue, commit) produced outside its author's actual authorization, or otherwise found to rest on a false governance claim, is `QUARANTINED_ARTIFACT`:
@@ -1747,6 +1770,7 @@ Ask:
 - After each fix, was the semantic neighbourhood re-checked (§9.4), or did an adjacent finding surface in the next review?
 - Did the current-state block remain synchronized with comments/PR state?
 - Should any deferred work have been represented as `WAITING_FOR_TRIGGER` instead of active/open workflow?
+- Did a design rest on an engine, library or platform premise that was never executed (§9.3)? Did an oracle restate the construction, or use an unvalidated selection predicate (§9.3)? Were mixed compositions of scoped rules characterized (§9.4)? Did any gate run share host load (§9.8)? Was a closure made without its status sync (§11.1.3)?
 
 ### 14.3 Improvement rule
 
