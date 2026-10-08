@@ -56,7 +56,7 @@ Valid astral characters are preserved; canonical `b08`, `v94` and `c13` carry U+
 
 | Required semantic operation | Owning lower layer | Existing certified seam | Exact Pi semantics? | Python sufficient? | Rust sufficient? | Additive extension? | Non-additive reopen? |
 |---|---|---|---|---|---|---|---|
-| prompt and schemas from one tool snapshot | Layer 08 | `L08-D001` optional prompt assembler (approved and merged) | MINION mapping | yes | yes (Codex contract review: a synchronous fallible collaborator over an ordered `Arc<ToolDefinition>` slice) | `L08-D001` (in implementation, `#166`) | no |
+| prompt and schemas from one tool snapshot | Layer 08 | `L08-D001` optional prompt assembler (contract and Python implementation approved and merged; Rust pending) | MINION mapping | yes | yes (Codex contract review: a synchronous fallible collaborator over an ordered `Arc<ToolDefinition>` slice) | `L08-D001` (in implementation, `#166`) | no |
 | record and reconstruct the assembled prompt | Layer 03 | `record_header` / `reconstruct_header`, `system_base` component | MINION | yes (scalar values) | yes | no | no |
 | persist invocation text as a user message | Layers 03/07 | existing `TextBlock` user message, session log | Pi persisted-message shape | yes | yes | no | no |
 | optional tool prompt metadata | Layer 05 | `ToolDefinition` | MINION extension (PP-14-5) | yes | yes | **yes**: two optional fields, additive and governed by PP-14-5 Option B | no |
