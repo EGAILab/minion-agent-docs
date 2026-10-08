@@ -450,8 +450,8 @@ NOT_IMPLEMENTED.
 Option B); issuecomment-6057640884 (`PP-14-9` Option A, `HAR-016`).
 
 **Input record:** WP-14.1's `Skill` (`HAR-013`), unchanged: `name`, `description`, `content`,
-`file_path`, `disable_model_invocation`. Records are values; a change to the skill set is a
-replacement (see `HAR-016`).
+`file_path`, `disable_model_invocation`. The records are writable and shared by identity, as in Pi
+(T-1; `WP141-R001`). Set membership changes only by replacement (see `HAR-016`).
 
 **Strings.** Every rule below operates on JavaScript strings (UTF-16 code units), as in WP-14.1. The
 "JS whitespace set" is ECMA-262 `WhiteSpace` ∪ `LineTerminator`: the set `String.prototype.trim` and
@@ -600,8 +600,12 @@ seam's, unchanged.
 **How it changes.**
 - **By whole-value replacement only.** Supplying a configuration copies its membership: a caller
   mutating its own sequence afterwards changes nothing (T-1 membership isolation).
-- **Records are immutable values** in both bindings, so there is no retained-record mutation to
-  observe (`L14-SCOPE-R003` reduces to "a change is a replacement").
+- **Retained records** (`L14-SCOPE-R003`) are shared by identity, not copied, as in Pi (T-1). The
+  `Skill` records are writable (`WP141-R001`). The composer reads each record's fields while
+  assembling, so a mutation of a retained record is visible from the next request build that starts
+  after it. Assembly is synchronous, so a request never sees a record half-changed. This is the
+  Minion composition choice that the scoping record left open. Pi's coding agent likewise reflects
+  a mutated record at its next rebuild.
 - **When a replacement takes effect:** at the next request build that starts after it. A request
   being built uses exactly one configuration value. This is atomic: there is never a mix of an old
   and a new value.
