@@ -1,8 +1,9 @@
 # L08-D002 — Request header per provider request (Layer 08 delta)
 
 **Status:** contract APPROVED and merged (section 7, then #172 → `d461f812`, #266 → `0834a937`).
-Python: implementation candidate (section 8). Header presence and timing were pre-existing; the R003
-schema value snapshot was not. Rust: NOT_IMPLEMENTED.
+Python: CERTIFIED (#181 -> `3de4b75d`, #271 -> `52945167`; review #171 issuecomment-6073237153).
+Header presence and timing were pre-existing; the R003 schema value snapshot was not.
+Rust: IMPLEMENTATION CANDIDATE, independent closure review pending (section 9).
 
 > Sections 2 to 6 are the first contract candidate as reviewed. Where they say Python "conforms",
 > read it as header presence, count and timing only. Contract review 1 found the schema-snapshot gap
@@ -266,3 +267,18 @@ then **9/9 KILLED**:
 
 Fresh gate counts are in the implementation PR and the coordination issue. Rust L08-D002 remains NOT_IMPLEMENTED,
 and cross-language L08-D002 is NOT CLOSED.
+
+## 9. Rust implementation candidate
+
+Section 8's Rust disposition is the historical Python handoff. The Rust delta
+now captures one owned ordered schema vector, publishes through the existing
+Session header operation before transformation, and sends the same schema
+snapshot to the provider. Its real agent-loop adapter drives all eight shared
+request-header documents and observes complete headers and request schemas.
+Additional binding witnesses and intended-witness negative controls are recorded
+in `08-l08-d002-rust-implementation.md`, with the fresh G3 gates and recipe.
+
+The exact paired remote heads are recorded on #171. Rust remains NOT CERTIFIED;
+cross-language L08-D002 is NOT CLOSED. Next owner is Claude for independent
+exact-SHA Rust closure review. The L08-D001 #169 driver work is not changed by
+this candidate and remains sequenced after this delta's certification.
