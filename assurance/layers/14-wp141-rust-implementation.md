@@ -1,7 +1,8 @@
-# WP-14.1 — Rust implementation candidate
+# WP-14.1 — Rust implementation and certification
 
-Status: implementation candidate; independent Rust closure review pending.
-Coordination: minion-agent#158. This record does not certify the candidate.
+Status: Rust CERTIFIED by independent approval and verified merge; certification
+status-sync pair pending Claude's closure review and merge. Cross-language NOT CLOSED.
+Coordination: minion-agent#158. This follow-up changes evidence/status wording only.
 Code candidate: `ba6c2a022e017b4d2520f5c537fedb2221c10ef9`.
 
 ## Authority and provenance
@@ -84,9 +85,9 @@ pointers only. DIV-004..DIV-007 and PP-14-1/3/8 are consumed, not redefined.
 Existing Layer-12 contracts, #69/#133 exclusions and WP-14.2 prompt assembly
 are not reopened. L08-D001's separate owner decision is not a dependency.
 
-Code PR #173 and assurance PR #267 are the paired candidates. Rust remains an
-implementation candidate until Claude's
-independent exact-SHA closure review. Cross-language WP-14.1 is not closed.
+Code PR #173 and assurance PR #267 were the paired implementation candidates.
+Claude's subsequent exact-SHA approval and verified merges are recorded below.
+Cross-language WP-14.1 is not closed until the certification status sync merges.
 
 ## Fresh validation and reproducibility
 
@@ -161,7 +162,7 @@ The corpus integrity hashes (SHA-256) are:
 - frontmatter: `4c4a58e269ea116be62920d4672fdfc5821c7f8a78232f0b8b05165f5cac9968`
 - ignore: `baf69577830930d2026b9dfdc0a8b60a071c0e1709aceda95479135a3aed5802`
 
-## Independent closure handoff
+## Independent closure handoff (historical candidate, before approval)
 
 The Rust code is frozen at `ba6c2a022e017b4d2520f5c537fedb2221c10ef9` (#173).
 The exact paired assurance head is recorded in issue #158 and the handoff,
@@ -183,3 +184,46 @@ rerunnable; local logs do not substitute for the reviewer's fresh execution.
 
 Rust WP-14.1: IMPLEMENTATION CANDIDATE, NOT CERTIFIED.
 WP-14.1 cross-language: NOT CLOSED. No merge is performed by this handoff.
+
+## Certification follow-up
+
+Independent reviewer: Claude, Python/shared-contract owner, separate from the
+Rust implementer (Codex). Verdict APPROVED with no findings at the exact pair:
+
+- Code #173: `ba6c2a022e017b4d2520f5c537fedb2221c10ef9`.
+- Docs #267: `a71f98d5943efde7419f4771923d3372d2d734bc`.
+- Durable review: [minion-agent#158 comment 6072026200](https://github.com/EGAILab/minion-agent/issues/158#issuecomment-6072026200).
+
+Guarded squash merges are verified on the default branches:
+
+- Code #173 -> `d37171d716fe8fc44b5c16fec9c69705f8c74760`.
+- Docs #267 -> `2420ff378cbfbdc105ea52ff02e5ec9a78cfb46d`.
+
+The merged Rust tree and conformance inputs equal the approved head. The merged
+assurance file equals its approved head. Intervening code default-branch changes
+were Python/manifest changes, not Rust or conformance changes; they remain intact.
+These milestones are remote-reachable and are the bases of this status-only pair.
+
+The independent review records fresh Windows all-feature tests 610/0 (563/0
+default features), Linux 563/0, canonical 86 plus 10 explicit POSIX-only exclusions
+on Windows / 96 on Linux, both shared corpora passing, and clean fmt/Clippy/docs.
+It also records author controls 17/17 and independent reviewer controls 8/8 Linux
+and 7/7 Windows plus one platform exclusion. These are the reviewer's attributed
+results, not new product gates claimed by this documentary follow-up. The earlier
+author gate results and retry history above remain unchanged historical evidence.
+
+This pair changes only the nine WP-14.1 manifest Rust evidence fields and this
+assurance record. No product code, Python field, disposition, normative rule,
+canonical expectation or dependency is changed. In particular WP-14.2 and
+L08-D001/L08-D002 are not certified by this record.
+
+Current disposition: Python WP-14.1 CERTIFIED; Rust WP-14.1 CERTIFIED.
+Cross-language WP-14.1 closure/status-sync: pending independent Claude review
+and merge of this certification pair. Issue #158 stays CLOSURE_REVIEW with
+NEXT_OWNER Claude. No merge or issue closure is performed by this follow-up.
+
+After the implementation gates and this review, regenerable Cargo targets and
+disposable copies may be removed to recover E: space. Linux gate/control logs
+are retained in `.tmp/codex-scratch/wp141-linux-archive/`; the original target
+log paths above describe their historical execution location. Committed test
+and control sources remain independently rerunnable.
