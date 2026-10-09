@@ -1,0 +1,7 @@
+. 'E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.agents/project-environment.ps1'
+$minionRoot='E:/AI/Projects/OpenMinds/Minions/Minion-Agent'
+$minionLinuxScript="$minionRoot/.tmp/wp142-rust/gates-linux.sh"
+$minionLinuxContent=[IO.File]::ReadAllText($minionLinuxScript).Replace("`r`n", "`n")
+[IO.File]::WriteAllText($minionLinuxScript, $minionLinuxContent, (New-Object Text.UTF8Encoding $false))
+docker run --rm --read-only --tmpfs /tmp:rw,exec,size=16g --mount "type=bind,source=$minionRoot/review-worktrees/wp142-rust,target=/source,readonly" --mount "type=bind,source=$minionRoot/.tmp/cache/cargo-home-linux,target=/cargo-home" --mount "type=bind,source=$minionRoot/.tmp/cache/cargo-target/linux,target=/target" --mount "type=bind,source=$minionRoot/.tmp/wp142-rust/logs-linux,target=/logs" --mount "type=bind,source=$minionRoot/.toolchain/icu-78.3-linux,target=/icu,readonly" --mount "type=bind,source=$minionRoot/.tmp/wp141-node-linux,target=/node,readonly" --mount "type=bind,source=$minionRoot/.toolchain/search-engines/dl,target=/search-artifacts,readonly" --mount "type=bind,source=$minionRoot/.tmp/wp142-rust/gates-linux.sh,target=/run/gates.sh,readonly" rust:1.97.1-trixie sh /run/gates.sh
+exit $LASTEXITCODE
