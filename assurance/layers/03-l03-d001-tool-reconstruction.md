@@ -96,6 +96,10 @@ implementation candidate.
 
 ## 5. Discrimination at the contract stage
 
+> **Superseded recipe** (`L03D001-R001`). As first committed, this section omitted how the strict xfail
+> markers were bypassed: in the scratch copy they had been removed by hand. Section 9 gives the corrected,
+> self-checking recipe and its fresh results. The table below is kept as first recorded.
+
 `data/03-l03-d001/controls.py`, run with `--contract-stage` against a scratch copy that has the planned
 correction applied. It used Python 3.13 on Windows; logs stayed under `.tmp`.
 
@@ -165,3 +169,49 @@ No Rust file in the candidate is modified; the edit existed only in the scratch 
   exactly the schemas the provider request carried.
 - **Regressions:** the full Python suite, including Session, artifact, header, fork, compaction and Layer 08 driver
   tests. Remove the strict xfail and run all ten controls.
+
+## 9. Contract review 1 and remediation 1
+
+**Review.** Codex, independent contract review 1, at code #175 @ `a2dd9996` / docs #268 @ `17982fee`. Recorded
+verbatim at minion-agent#174 issuecomment-6072300545. Verdict CHANGES REQUESTED, with one finding. Accepted as
+written:
+- the contract semantics;
+- the binding-defined malformed-value and extra-member clause;
+- the canonical form and observational runner;
+- the Rust feasibility claim: no production change, and the runner counts go from 20 to 22.
+
+**`L03D001-R001`** (medium, blocking, `CONTRACT_ASSURANCE_DEFECT`). The committed `controls.py` passed no
+`--runxfail`, and the candidate marks the intended witnesses `xfail(strict=True)`.
+- Run as documented, every mutant's failure was reported as XFAIL, with exit 0: 0/7 kills.
+- A correctly fixed baseline is a strict XPASS, so the baseline was not green either.
+- The script also never established a positive baseline, or checked which assertion failed.
+- Section 5's 7/7 had come from a scratch copy whose markers I removed by hand without recording it.
+
+**Remediation 1** (`data/03-l03-d001/controls.py`):
+- every pytest run passes `--runxfail`, and `PYTEST_ADDOPTS` is cleared;
+- before any mutant, the selected controls' witnesses must pass unmutated, with exit 0, no error and no XPASS.
+  Otherwise the run stops as INVALID;
+- a kill needs pytest exit 1, failures and no errors, no XPASS, **and** the control's intended-failure
+  signature in the output. For the canonical controls that signature is the scenario's
+  `assert outcome["reconstructed_header"] == document["expect_reconstructed_header"]`. For the deferred
+  controls it is the expected exception (`KeyError: 'constrained_sampling'`), `DID NOT RAISE`, or the
+  integration witness's `assert reconstruct_tools(`;
+- exit 0 is SURVIVED, and anything else is INVALID;
+- the candidate itself keeps its strict xfail markers, unchanged.
+
+**Recipe** (contract stage):
+1. Copy the contract candidate's `minion-agent-python/` (without `.venv` or caches), `conformance/` and
+   `pi-parity-manifest.yaml` into one scratch directory on E:.
+2. In the copy, replace `src/minion_agent/session/request_header.py` with the planned correction from section
+   8. Change nothing else; the strict markers stay.
+3. Run `python controls.py <python> <copy>/minion-agent-python <scratch-logs> --contract-stage`.
+
+**Fresh results** (Windows, Python 3.13, scratch on E:):
+- **Planned correction applied:** `BASELINE 2 passed`; field-dropped, false-read-as-absent, absent-read-as-false,
+  strict-prefer-replaced, grammar-formats-swapped, grammar-format-dropped and tool-order-reversed all
+  **KILLED**, each by `1 failed` carrying the canonical assertion signature. The three implementation-stage
+  controls are DEFERRED, and the run exits 0.
+- **Negative check, the unchanged candidate:** `INVALID baseline: witnesses not green unmutated (2 failed)`,
+  exit 1. The recipe cannot report kills against a defective baseline.
+
+The three deferred controls, and their witnesses, remain mandatory for implementation approval.
