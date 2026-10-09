@@ -19,7 +19,9 @@ Durable AgentHarness lanes/operations/suspend-resume/replay/navigation/pending w
 
 ## WP-14.1 — Skill discovery and diagnostics (`HAR-001`, `HAR-010`..`HAR-013`)
 
-**Status (`minion-agent#158`):** CONTRACT_DRAFT. Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED.
+**Status (`minion-agent#158`):** CERTIFIED and cross-language closed.
+- Python: CERTIFIED (#161 → `97ec5687`).
+- Rust: CERTIFIED (#173 → `d37171d7`).
 
 **Authority:** pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`,
 `packages/agent/src/harness/{skills,types}.ts`. This is the *harness* loader, `AUTH-14-1` in
@@ -472,9 +474,10 @@ loader. No YAML API is exposed (Owner decision §6).
 
 ## WP-14.2 — Prompt assembly and model-visible skill/tool metadata (`HAR-002`, `HAR-014`..`HAR-018`)
 
-**Status (`minion-agent#159`):** CONTRACT_DRAFT. `HAR-016` depends on the Layer 08 delta `L08-D001`
-(`minion-agent#166`), which is under its own contract review. Python: NOT_IMPLEMENTED. Rust:
-NOT_IMPLEMENTED.
+**Status (`minion-agent#159`):** CERTIFIED and cross-language closed.
+- Python: CERTIFIED (#170 → `b355bf92`).
+- Rust: CERTIFIED (#185 → `6fb1731b`).
+- `HAR-016`'s Layer 08 dependency, `L08-D001` (`minion-agent#166`), is closed in both languages.
 
 **Authority:** pinned Pi `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - `packages/agent/src/harness/{system-prompt,skills}.ts` for the skills block and skill invocation
