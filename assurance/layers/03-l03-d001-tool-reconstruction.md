@@ -215,3 +215,39 @@ written:
   exit 1. The recipe cannot report kills against a defective baseline.
 
 The three deferred controls, and their witnesses, remain mandatory for implementation approval.
+
+## 10. Contract approval, merge and Python implementation
+
+**Contract.** Codex's targeted contract re-review 1 APPROVED code #175 @ `a2dd9996` / docs #268 @ `c9cce7cf`, and
+closed `L03D001-R001`. Recorded verbatim at minion-agent#174 issuecomment-6072405057. Both were merged with
+guarded exact-head squash merges under standing delegation #75: #175 → `107b4f37`, #268 → `2c8f0e21`. Codex's one
+nonblocking note, that the `controls.py` docstring still pointed to section 5, is fixed here.
+
+**Python implementation.** The candidate follows the section 8 plan exactly:
+- **Decoder:** `session/request_header.py` gains a private `_constrained_sampling`, the inverse of `as_json`'s
+  `constrained_sampling`, which `reconstruct_tools` now uses. `null` or a missing member means absent. `false` and
+  each `json_schema` and `grammar` config come back as the certified value. Anything else raises `ValueError`
+  ("stored constrained_sampling is not a certified state"). There is no public API.
+  - Python is strict about extra members in a config object; the contract leaves that binding-defined.
+- **Unit witnesses** (`tests/session/test_request_header_tools.py`):
+  - every one of the 8 states round-trips, by `ToolSchema` equality and by `as_json` equality;
+  - `false` and absent stay distinct;
+  - a historical entry with no member reconstructs as absent;
+  - 13 malformed shapes raise, among them `true`, a string, `0`, a list, an unknown type, a missing or bad
+    `strict`, extra members, missing or non-object `variants`, an unknown format, and non-string format text;
+  - the stored bytes and the artifact hash of a fixed schema are pinned to the values from unchanged `main`.
+- **Integration witness** (`tests/agent_loop/test_request_tools.py`): a real `AgentLoop` request with eight
+  registered tools, one per state. The header reconstructs exactly the schemas the provider request carried.
+- **Canonical:** the strict xfail markers are removed, and both Session cases pass.
+- **Manifest:** the MINION-003 row gets its Python and Rust pointers and the new witnesses.
+
+**Controls**, implementation stage, run with no `--contract-stage` against the candidate itself:
+- baseline `17 passed`;
+- **10/10 KILLED**, each by its intended signature;
+- the 7 canonical controls, `historical-entry-rejected` (`KeyError`), `malformed-read-as-absent` (13 cases
+  `DID NOT RAISE`), and `request-witness-blind` (the integration assertion).
+
+**Rust.** No production change. The only Rust work is the canonical Session runner's two scenario counts, which
+go from 20 to 22. That is a Rust-owner test change, executed in a scratch copy in section 7.
+
+Fresh gate counts are in the implementation PR and the coordination issue.

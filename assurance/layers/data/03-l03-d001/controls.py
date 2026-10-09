@@ -6,7 +6,7 @@ Usage (Windows needs the scratch directory on E:):
 MINION_AGENT_PYTHON_DIR must contain the L03-D001 correction:
 - contract stage: a scratch copy of the contract candidate with the planned correction applied to
   `src/minion_agent/session/request_header.py` (the candidate keeps its strict xfail markers; nothing else
-  changes). The record (section 5) gives the exact recipe.
+  changes). The record (section 9) gives the exact recipe.
 - implementation stage: the implementation candidate itself.
 
 Every pytest run passes `--runxfail`, so a pending `xfail(strict=True)` marker can neither hide a witness
