@@ -103,6 +103,82 @@ worktrees, copies and logs) is inside the E: project root. Linux uses E: bind mo
 for source, Cargo home/target and logs, and tmpfs for temporary POSIX fixtures; no
 writable Docker named volume is used.
 
+Windows positive G3 passed: **638 passed / 0 failed / 0 ignored**, including
+4 doctests, across 89 result blocks. Formatting, strict workspace/all-target/
+all-feature Clippy, warning-strict rustdoc and `xtask conformance verify` passed.
+The pre-existing ICU LIBCMT linker warning remains; no new warning was introduced.
+The initial wrapper's relative control-script path was invalid after the positive
+recipe changed working directory. Controls did not start in that wrapper; they
+were launched separately with an absolute path. This is not credited as a complete
+combined exit-zero batch. The individual positive gate commands were all green.
+
+Windows controls passed **18/18 WP-14.2 + 9/9 assembler + 11/11 header** valid
+intended-witness kills, zero invalid controls or survivors. The control-only
+resource settings were `CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`
+and `CARGO_INCREMENTAL=0`; optimization and debug assertions retain their default
+test settings. Candidate production and canonical files were never mutated.
+Shared manifest/schema validation passed **856** tests; docs process tests passed
+**363** tests.
+
+Fresh Node v22.15.1 replay ran the unchanged `oracle-gen.mjs`, `tools-oracle.mjs`
+against pinned Pi's core source, then `gen-canonical.mjs`. All **66 scenario files**
+and `oracle.json`, `tools-oracle.json`, `out-of-domain.json` were byte-identical to
+the committed Git blobs (`git hash-object --no-filters` versus the corresponding
+HEAD blob). The tools oracle's asserted naive blank-line extractor control was
+killed by t14/t15/t16 only. The harness `skills.ts` / `system-prompt.ts` copies
+were also checked directly against the pin: no source difference. This replay
+reused the prior local yaml@2.9.0 / ignore@7.0.5 dependency copy; no new dependency
+acquisition or integrity claim is made. Python was not an expected-value oracle.
+
+### Reproduction setup
+
+Committed recipes are in `assurance/layers/data/14-wp142-rust/`. They describe
+the environment actually used, with the fixed Owner project root
+`E:/AI/Projects/OpenMinds/Minions/Minion-Agent`. Place the code task worktree at
+`review-worktrees/wp142-rust`. Copy the four gate/control/launcher recipes into
+`.tmp/wp142-rust/`, and create `.tmp/wp142-rust/logs-linux` before the Docker run.
+The committed `project-environment.ps1` is an exact copy of the local sourced
+configuration: if the project's `.agents/project-environment.ps1` is absent,
+place that copy there (it resolves its parent as the project root). It changes
+only process-local environment variables, not user/system settings.
+
+Run from the project root, **sequentially**:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .tmp/wp142-rust/gates-windows.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .tmp/wp142-rust/controls-windows.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .tmp/wp142-rust/run-linux.ps1
+```
+
+Windows: amd64, Windows build `10.0.26200.0`, Rust/Cargo 1.97.1, Node v22.15.1.
+Linux: amd64 `rust:1.97.1-trixie`, inspected RepoDigest
+`rust@sha256:b1b3c9c0d921d7fa0a6d1f9ec7e4eab87f8c8ec97644c3d791450f131dec813f`.
+Node v22.15.1 is the existing Linux binary at `.tmp/wp141-node-linux`, mounted
+read-only, copied/chmodded in tmpfs and placed on PATH. Both platforms consume
+the existing certified ICU4C 78.3 build for their platform, with identity checks;
+source SHA-512 is
+`04a49455e1489030c520a4bfd2664fa2171e7938d08f2acdbbcb1fda976639fd8b1f0704f2eec89ba59a7b6d118ceaab6ec5a096e40d9085a0895d91ce225245`.
+The recipes give exact native link, identity and runtime-library paths and the
+official pinned search-artifact directory required by lower-layer regressions.
+
+The Docker root is read-only; source/Node/ICU/artifact mounts are read-only.
+Cargo home, positive/control targets and logs are E: binds. `/tmp` is a 16 GiB
+executable tmpfs. The source is copied there and `*.sh` line endings are normalized
+only in that copy; the launcher also normalizes its mounted gate script first.
+No source/canonical content is otherwise rewritten. Default container seccomp and
+capabilities were used. No other gate batch ran concurrently; the positive and
+control phases, and Windows then Linux, were sequential.
+
+Shared validation commands (the existing project Python venv, with candidate
+`minion-agent-python/src` or docs `process/tools` on PYTHONPATH):
+
+```text
+python -m pytest -q -o addopts='' tests/conformance/test_manifest_validation.py tests/conformance/test_schema_validation.py
+python -m pytest -q -o addopts='' process/tools/tests
+```
+
+These are schema/manifest and process gates, not a new Python certification claim.
+
 ## Scope and handoff
 
 No Python, shared contract, canonical expected value or dependency version change.
