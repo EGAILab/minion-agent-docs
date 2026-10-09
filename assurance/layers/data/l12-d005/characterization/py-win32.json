@@ -1,0 +1,320 @@
+{
+ "platform": "win32",
+ "python": "3.13.5",
+ "results": [
+  {
+   "id": "child-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/sub/f"
+   },
+   "left": [
+    "t/",
+    "t/sub/",
+    "t/sub/f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "target-readonly-file-recursive",
+   "call": {
+    "target": "f",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "f"
+   },
+   "left": [
+    "f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "target-readonly-file-nonrecursive",
+   "call": {
+    "target": "f",
+    "recursive": false
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "f"
+   },
+   "left": [
+    "f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "nested-readonly-files",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/s/u/c"
+   },
+   "left": [
+    "t/",
+    "t/a",
+    "t/s/",
+    "t/s/b",
+    "t/s/u/",
+    "t/s/u/c",
+    "t/z"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "readonly-directory-attribute",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/d"
+   },
+   "left": [
+    "t/",
+    "t/d/"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "chmod-denied-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "retry-fails-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "acl-denied-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "acl-denied-directory",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/d"
+   },
+   "left": [
+    "t/",
+    "t/d/"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "acl-denied-top-level-file",
+   "call": {
+    "target": "f",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "f"
+   },
+   "left": [
+    "f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "symlink-to-external-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true
+   }
+  },
+  {
+   "id": "symlink-to-external-readonly-dir",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "inner.txt present"
+   }
+  },
+  {
+   "id": "readonly-empty-dir-target-recursive",
+   "call": {
+    "target": "d",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "d"
+   },
+   "left": [
+    "d/"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "readonly-nonempty-dir-target-recursive",
+   "call": {
+    "target": "d",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "d/f"
+   },
+   "left": [
+    "d/",
+    "d/f"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "readonly-dir-target-nonrecursive",
+   "call": {
+    "target": "d",
+    "recursive": false
+   },
+   "observed": {
+    "code": "is_directory",
+    "path": "d"
+   },
+   "left": [
+    "d/"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "mixed-readonly-tree",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/x/y"
+   },
+   "left": [
+    "t/",
+    "t/a",
+    "t/x/",
+    "t/x/b",
+    "t/x/y/"
+   ],
+   "hook_fired": false
+  },
+  {
+   "id": "readonly-symlink-itself",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/link"
+   },
+   "left": [
+    "t/",
+    "t/link@"
+   ],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": false
+   }
+  },
+  {
+   "id": "readonly-symlink-target-nonrecursive",
+   "call": {
+    "target": "link",
+    "recursive": false
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true
+   }
+  },
+  {
+   "id": "entry-vanishes-during-recursive",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/a"
+   },
+   "left": [
+    "t/",
+    "t/a",
+    "t/c"
+   ],
+   "hook_fired": true
+  }
+ ]
+}

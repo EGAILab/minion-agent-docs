@@ -2763,6 +2763,7 @@ Characterization:
   - Opening a directory as a file on Windows gives `permission_denied`: the recorded `minion-agent#67`. Its cases are Linux-only in the corpus (above). For read and append the path differs too, because Node's error names none.
   - `remove` of a directory: pinned Pi answers `unknown` (`ERR_FS_EISDIR` is outside `toFileError`'s switch), while the Python binding answers `is_directory` on both platforms. Recorded as `L12-RM-DIRECTORY-CODE` (`minion-agent#125`); remediation is not authorized.
   - An **outcome** difference, not a code: on Windows, Node's `rimraf` retries an `EPERM` `unlink` after `chmod 0o666` (`fixWinEPERM`), so a recursive `remove` of a tree holding a read-only file succeeds; the Python binding fails `permission_denied`, naming that file. Recorded as `L12-RM-READONLY-WINDOWS` (`minion-agent#126`); remediation is not authorized.
+    - **Correction (`L12-D005`, §17).** The `fixWinEPERM` attribution above is wrong. Pinned Pi never calls `chmod` for a read-only file: libuv 1.49.2's Windows `unlink`/`rmdir` delete with `FILE_DISPOSITION_IGNORE_READONLY_ATTRIBUTE`, so the read-only attribute is ignored in every remove, recursive or not. `fixWinEPERM` runs only after a genuine ACL denial, and its `chmod` then fails. Remediation is now authorized and specified in §17.
 - **Scalar paths.** §2–§3 specified `FsError` codes, never `FsError.path`. This section adds the path carrier for every path, scalar included. No certified scalar claim changes.
   - Disclosed side effect: reproducing Node's walk aligns the Python binding's Windows code for a recursive creation through a file (`not_found` becomes Pi's `not_directory`). No certified test or scenario asserted the previous value.
 
@@ -3046,3 +3047,43 @@ Each must fail a witness:
 - `ctx.shell`.
 - `WritableStream`.
 - Environment and platform (§15).
+
+## 17. Layer-12 post-certification delta `L12-D005` — Windows `remove` ignores the read-only attribute (`EXEC-002`)
+
+**Status:** contract delta, for independent contract review (`minion-agent#188`). Provenance: `L12-RM-READONLY-WINDOWS` (`minion-agent#126`).
+
+**Owner decisions:** `#126` issuecomment-6086596348, amended by issuecomment-6087116283 after characterization. They authorize a targeted correction of certified Layer 12 in both bindings.
+
+**Authority:** pinned Pi `b7bb00b9`, `NodeExecutionEnv.remove` → `fs.promises.rm(resolved, {recursive, force})` under Node v22.15.1.
+- On Windows, Node's bundled libuv 1.49.2 (`src/win/fs.c` git blob `f2215bb3082178193d37f8429536bfe7b707dd0d`, `fs__unlink_rmdir`) opens the entry with `FILE_FLAG_OPEN_REPARSE_POINT`. It deletes with `FILE_DISPOSITION_DELETE | FILE_DISPOSITION_POSIX_SEMANTICS | FILE_DISPOSITION_IGNORE_READONLY_ATTRIBUTE`.
+- Where POSIX deletion is unsupported, the fallback clears `FILE_ATTRIBUTE_READONLY` first, then sets the delete flag.
+- Both `unlink` and `rmdir` take this path.
+- `rimraf`'s `fixWinEPERM` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`) is reached only when a deletion still fails with `EPERM`, which means a genuine ACL denial. Its `chmod(0o666)` then fails, or the retry fails, and the original or retry error is returned.
+- `chmod(0o666)` is therefore **not** the normative requirement.
+
+**The rule (Windows):**
+1. **Files.** A read-only file is removed, whether `remove` targets it directly (recursive or not) or meets it inside a recursive removal.
+2. **Directories.** A directory carrying the read-only attribute is removed when recursive removal is allowed, as the target or nested.
+   - A non-recursive `remove` of any directory stays governed by `#125`. This delta does not change it.
+3. **The link itself.** A symlink or reparse point that itself carries the read-only attribute is removed.
+   - Its target is never deleted, and never has its attributes changed.
+   - That holds also when the target is itself read-only, or outside the removed tree.
+4. **Everything else is unchanged.** Genuine ACL denial, sharing violations, inaccessible entries and every other failure keep their current semantics: the code (`permission_denied` for the characterized ACL denials), and the failure-origin path of §14.8 (the entry whose deletion failed).
+   - A case where clearing the attribute is itself denied (an ACL denying `WRITE_ATTRIBUTES` on a read-only file) is such a failure: `permission_denied`, naming that entry.
+5. **Concurrency.** An entry that disappears concurrently, during a recursive removal or while its attribute is being cleared, counts as removed (Node: `ENOENT` → success).
+6. **POSIX is unchanged.** Unlinking never depends on a file's own mode. A directory without write permission still fails with `permission_denied`, naming the entry inside it.
+
+**How a binding meets it.** The rule is about outcomes; the mechanism belongs to each binding. A simple, safe mechanism is fine, for example clearing the entry's own read-only attribute without following reparse points, then retrying the failed deletion once. The mechanism must not:
+- broaden permission handling;
+- change a deletion that already succeeds or that fails for another reason;
+- modify a link's target.
+
+**Canonical evidence:** `conformance/agent/fs-remove-readonly/*.json`, 20 documents (`fs-remove-readonly-scenario.schema.json`).
+- The expectations were generated by running the same case definitions through pinned Pi on Windows and on Linux (`assurance/layers/data/l12-d005/gen`).
+- Each document gives a fixture, one `remove`, its `Result`, the entries left and any external target's state.
+
+**Bindings:**
+- **Python** fails every read-only case today.
+- **Rust** removes read-only files, but fails a read-only directory.
+
+Record: `assurance/layers/12-l12-d005-readonly-remove.md`.

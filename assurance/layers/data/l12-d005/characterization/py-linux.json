@@ -1,0 +1,132 @@
+{
+ "platform": "linux",
+ "python": "3.13.15",
+ "results": [
+  {
+   "id": "child-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false
+  },
+  {
+   "id": "target-readonly-file-recursive",
+   "call": {
+    "target": "f",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false
+  },
+  {
+   "id": "target-readonly-file-nonrecursive",
+   "call": {
+    "target": "f",
+    "recursive": false
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false
+  },
+  {
+   "id": "nested-readonly-files",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false
+  },
+  {
+   "id": "symlink-to-external-readonly-file",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true
+   }
+  },
+  {
+   "id": "symlink-to-external-readonly-dir",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "inner.txt present"
+   }
+  },
+  {
+   "id": "readonly-symlink-target-nonrecursive",
+   "call": {
+    "target": "link",
+    "recursive": false
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": false,
+   "external": {
+    "exists": true,
+    "readonly": true
+   }
+  },
+  {
+   "id": "entry-vanishes-during-recursive",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "hook_fired": true
+  },
+  {
+   "id": "posix-readonly-subdir",
+   "call": {
+    "target": "t",
+    "recursive": true
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/sub/f"
+   },
+   "left": [
+    "t/",
+    "t/sub/",
+    "t/sub/f"
+   ],
+   "hook_fired": false
+  }
+ ]
+}

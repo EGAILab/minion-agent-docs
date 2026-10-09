@@ -1,0 +1,444 @@
+{
+ "comment": "L12-D005 canonical case definitions (minion-agent#188, #126). Fixtures are built relative to the case cwd; `remove` is the operation under test; `external` paths live in cwd but outside the removed subtree. Fixture ops: file, dir, readonly (Windows FILE_ATTRIBUTE_READONLY; POSIX clears every write bit), readonly_link (Windows attribute on the symlink itself, not its target), symlink (to, kind file|dir), deny_delete (Windows: ACL deny DELETE on the path and DELETE_CHILD on its parent), deny_write_attributes (Windows: ACL deny WRITE_ATTRIBUTES on the path).",
+ "cases": [
+  {
+   "id": "rec-readonly-child-file",
+   "fixture": [
+    {
+     "file": "t/sub/f"
+    },
+    {
+     "readonly": "t/sub/f"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-readonly-target-file",
+   "fixture": [
+    {
+     "file": "f"
+    },
+    {
+     "readonly": "f"
+    }
+   ],
+   "remove": {
+    "path": "f",
+    "recursive": true
+   }
+  },
+  {
+   "id": "nonrec-readonly-target-file",
+   "fixture": [
+    {
+     "file": "f"
+    },
+    {
+     "readonly": "f"
+    }
+   ],
+   "remove": {
+    "path": "f",
+    "recursive": false
+   }
+  },
+  {
+   "id": "rec-nested-readonly-files",
+   "fixture": [
+    {
+     "file": "t/a"
+    },
+    {
+     "file": "t/s/b"
+    },
+    {
+     "file": "t/s/u/c"
+    },
+    {
+     "file": "t/z"
+    },
+    {
+     "readonly": "t/a"
+    },
+    {
+     "readonly": "t/s/b"
+    },
+    {
+     "readonly": "t/s/u/c"
+    },
+    {
+     "readonly": "t/z"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-symlink-to-external-readonly-file",
+   "fixture": [
+    {
+     "file": "ext/protected.txt",
+     "text": "keep"
+    },
+    {
+     "readonly": "ext/protected.txt"
+    },
+    {
+     "dir": "t"
+    },
+    {
+     "symlink": "t/link",
+     "to": "ext/protected.txt",
+     "kind": "file"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   },
+   "external": [
+    "ext/protected.txt"
+   ]
+  },
+  {
+   "id": "rec-symlink-to-external-readonly-dir",
+   "fixture": [
+    {
+     "file": "ext/pdir/inner.txt",
+     "text": "keep"
+    },
+    {
+     "readonly": "ext/pdir"
+    },
+    {
+     "dir": "t"
+    },
+    {
+     "symlink": "t/dlink",
+     "to": "ext/pdir",
+     "kind": "dir"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   },
+   "external": [
+    "ext/pdir",
+    "ext/pdir/inner.txt"
+   ]
+  },
+  {
+   "id": "nonrec-symlink-to-external-readonly-file",
+   "fixture": [
+    {
+     "file": "ext/protected.txt",
+     "text": "keep"
+    },
+    {
+     "readonly": "ext/protected.txt"
+    },
+    {
+     "symlink": "link",
+     "to": "ext/protected.txt",
+     "kind": "file"
+    }
+   ],
+   "remove": {
+    "path": "link",
+    "recursive": false
+   },
+   "external": [
+    "ext/protected.txt"
+   ]
+  },
+  {
+   "id": "rec-readonly-dir-attribute-in-tree",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "t/d/f"
+    },
+    {
+     "readonly": "t/d"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-readonly-empty-dir-target",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "dir": "d"
+    },
+    {
+     "readonly": "d"
+    }
+   ],
+   "remove": {
+    "path": "d",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-readonly-nonempty-dir-target",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "d/f"
+    },
+    {
+     "readonly": "d/f"
+    },
+    {
+     "readonly": "d"
+    }
+   ],
+   "remove": {
+    "path": "d",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-mixed-readonly-tree",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "t/a"
+    },
+    {
+     "file": "t/x/b"
+    },
+    {
+     "file": "t/x/y/c"
+    },
+    {
+     "readonly": "t/x/b"
+    },
+    {
+     "readonly": "t/x/y"
+    },
+    {
+     "readonly": "t/x"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-readonly-symlink-itself",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "ext/plain.txt",
+     "text": "keep"
+    },
+    {
+     "dir": "t"
+    },
+    {
+     "symlink": "t/link",
+     "to": "ext/plain.txt",
+     "kind": "file"
+    },
+    {
+     "readonly_link": "t/link"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   },
+   "external": [
+    "ext/plain.txt"
+   ]
+  },
+  {
+   "id": "rec-readonly-symlink-to-readonly-external-file",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "ext/protected.txt",
+     "text": "keep"
+    },
+    {
+     "readonly": "ext/protected.txt"
+    },
+    {
+     "dir": "t"
+    },
+    {
+     "symlink": "t/link",
+     "to": "ext/protected.txt",
+     "kind": "file"
+    },
+    {
+     "readonly_link": "t/link"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   },
+   "external": [
+    "ext/protected.txt"
+   ]
+  },
+  {
+   "id": "rec-acl-denied-file",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "t/f"
+    },
+    {
+     "deny_delete": "t/f"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-acl-denied-dir",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "dir": "t/d"
+    },
+    {
+     "deny_delete": "t/d"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-acl-denied-target-file",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "f"
+    },
+    {
+     "deny_delete": "f"
+    }
+   ],
+   "remove": {
+    "path": "f",
+    "recursive": true
+   }
+  },
+  {
+   "id": "nonrec-acl-denied-target-file",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "f"
+    },
+    {
+     "deny_delete": "f"
+    }
+   ],
+   "remove": {
+    "path": "f",
+    "recursive": false
+   }
+  },
+  {
+   "id": "rec-readonly-attribute-correction-denied",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "t/f"
+    },
+    {
+     "readonly": "t/f"
+    },
+    {
+     "deny_write_attributes": "t/f"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-readonly-and-delete-denied",
+   "platforms": [
+    "win32"
+   ],
+   "fixture": [
+    {
+     "file": "t/f"
+    },
+    {
+     "readonly": "t/f"
+    },
+    {
+     "deny_delete": "t/f"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  },
+  {
+   "id": "rec-posix-readonly-subdir",
+   "platforms": [
+    "linux"
+   ],
+   "fixture": [
+    {
+     "file": "t/sub/f"
+    },
+    {
+     "readonly": "t/sub"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
+  }
+ ]
+}
