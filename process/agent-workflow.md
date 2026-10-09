@@ -509,6 +509,17 @@ A missing prerequisite is disclosed as such and is never reported as a passing g
 - **Disclose it.** The evidence record says when a load-affected result was replaced.
 - In the WP-13.4 Rust closure, a concurrent Docker build made a Windows full-suite target fail spuriously; it passed on its own.
 
+**Local storage stays inside the project root** (Owner rule, 2026-10-09). On the Windows host, every file a gate, probe or control creates goes under the project root on E: (`E:/AI/Projects/OpenMinds/Minions/Minion-Agent/`), never on C:. That covers:
+- worktrees, under `review-worktrees/`;
+- scratch and disposable copies, under `.tmp/`;
+- temp directories (`TMP`, `TEMP`, `TMPDIR`), which also hold test `tempdir()`s and pytest base temps;
+- `CARGO_HOME` and `CARGO_TARGET_DIR`;
+- the pip, uv and npm caches.
+
+Agent-home scratch locations (`AppData/Local/Temp`, `~/.codex/tmp`, `~/.claude/jobs`) are not used for builds. Setting only `CARGO_TARGET_DIR` is not enough: test temp directories still land in the user temp folder. Each agent keeps one sourced environment file that sets all of these.
+- **Docker.** Bind-mount project-root directories for source, target, `CARGO_HOME` and logs, and do not write into named volumes, which live in Docker's disk image on C:. Use `--tmpfs /tmp` for the container's temp directory. A Windows bind mount (drvfs) lacks the POSIX semantics some fixtures need: backslash file names and real symlinks. In L08-D002's Rust closure, a `TMPDIR` on drvfs failed `canonical_skill_discovery` and stalled the deep-walk witness. That batch was discarded and re-run on tmpfs.
+- **Free space.** Check free space before a long batch. A gate failure caused by a full disk (`WinError 112`, or a copy or link error) is environmental: free space, re-run, and disclose it, exactly as for a load-affected result. Delete only scratch you created; anything else needs the Owner.
+
 ### 9.5 Reusable hazard families
 
 - **Families are consulted up front.** `process/hazard-families.md` holds the reusable runtime hazard families: JS Number, JS String/UTF-16, Unicode/ICU, Async/order, Error/coercion projection, ECMAScript object order and the schema runtime domain. The feasibility matrix (§4.1.1) and neighborhood expansion (§9.4) consult them instead of rediscovering them.
@@ -1563,6 +1574,17 @@ Deterministic workflow mechanics use `minion-process` (`process/minion-process-c
 - byte-verified history comments.
 
 The tool decides only mechanical legality. It never decides semantics, never records a verdict on its own, and never approves.
+
+### 11.17 Completion notification between agent sessions
+
+Claude and Codex run as separate interactive sessions, panes in one herdr workspace. A work item handed from one to the other ends with a **completion notification**, so the loop continues without the Owner relaying it.
+
+- **When.** The agent holding a work item notifies the other agent's session when it hands back, completes, becomes blocked (`HANDOFF_BLOCKED`, `BLOCKED_FOR_OWNER`) or needs a decision. It notifies **only after** the durable state is pushed and verified: PR heads, the `minion-process` coordination update, any verdict comment (§12.1). A notification never stands in for that state.
+- **How.** Send a short prompt to the receiving pane, through the agent's herdr skill or directly: `herdr agent prompt <pane> "<sender>: <work item> <done|blocked|decision needed> - <one-line status>, <code PR@sha>/<docs PR@sha>, see <issue or comment>"`, then `herdr agent send-keys <pane> enter`. Keep it ASCII.
+  - Pane identities belong to the environment, not to the contract: each agent reads its own (`HERDR_PANE_ID`) and includes it in its dispatch. As of 2026-10-09, Claude (Python and shared contract) is `w1:p1` and Codex (Rust) is `w1:p2`.
+- **Every dispatch asks for it.** A dispatch prompt to the other agent includes the notification instruction and the sender's pane, and says that the work item ends with it.
+- **It is a wake-up, not evidence.** The receiver treats the notification text as a pointer. Before acting, it re-reads remote reality (§12.2): the coordination issue, the exact PR heads, and the verdict file or comment. A notification never carries an approval, a verdict or Owner authority (§11.10). The receiver verifies them where they are durably recorded.
+- **Fallback.** Polling the other session's status, or the expected verdict artifact, remains a fallback for a lost notification. It is not the primary signal.
 
 ## 12. Repository and remote-state discipline
 
