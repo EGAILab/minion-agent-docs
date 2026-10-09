@@ -356,6 +356,120 @@ growth, not a leak from outside it. `prepareNextTurn` may still replace the whol
 run-locally (above); neither ordinary growth nor a `prepareNextTurn` replacement is ever written
 back to `AgentInstance`, and a second, independent run always starts from a fresh snapshot again.
 
+### Request header per provider request (`L08-D002`; `MINION-003` integration)
+
+**Status:** contract delta, for independent contract review before implementation.
+
+**Owner decision:** `minion-agent#166` issuecomment-6068630928 (`L08D001-RUST-C001`, Option 1). It
+explicitly authorizes this targeted correction to certified Layer 08, including its observable
+change to the session event log.
+
+**Authority for the format:** the Layer 03 request-header contract (`MINION-003`) and the existing
+Session operation `record_header(components, model, tools)`, with `reconstruct_header` and
+`reconstruct_tools`. Both are unchanged. No new header format, artifact store or public Session API
+is introduced.
+
+**The rule.** While the driver builds each provider request, it records **exactly one**
+`request/header` event for that request:
+
+| Field | Value |
+|---|---|
+| `components` | exactly `{"system_base": <the request's system text>}`, where the system text is the per-step override verbatim if present, otherwise the `L08-D001` assembler's result when one is installed, otherwise `RunContext.system_prompt` |
+| `model` | the request model's model identifier (`ModelId.model`), as configured for that request |
+| `tools` | the request's schema value snapshot (below), in `RunContext.tools` order. The provider request carries the same snapshot |
+
+**Publication timing:**
+- **When:** at one fixed point of each request build:
+  - **after** the turn's entering messages (the prompt, steering, follow-up or tool results that
+    precede this request) are in the log;
+  - **after** the system text, model and tool schemas are final, so after assembler and override
+    resolution and after the schemas are computed;
+  - **before** `transformContext` runs and **before** the provider is called.
+- **Before the point:** if the build fails earlier, there is **no** header for that request. That
+  covers an assembler failure (`L08-D001`), schema computation failing, and a pre-step `Reject`,
+  which builds no request at all.
+- **After the point:** if a later stage fails, the header **stays** in the log, describing the
+  request that was being built. That covers `transformContext` raising (settled through
+  `handleRunFailure`), eager unknown-model resolution failing at the provider boundary, and the
+  provider returning an error or aborting. Exactly one header was recorded for that build either
+  way.
+- **No duplicates:** there are no retries inside one request build, and no second header for it.
+- **Multi-request runs:** each provider request has its own header, in request order. A run's log
+  therefore contains, per request, `… entering messages, request/header, assistant message …`.
+
+**Schema value snapshot** (`L08D002-R003`; Owner decision `minion-agent#171`
+issuecomment-6071887505, Option 1). For one provider request, the authoritative tool-schema state is a
+value snapshot captured at that request's header-publication point.
+- **Capture.** At each request build, after the final system text and model are resolved, the
+  driver derives the ordered schemas from `RunContext.tools`. It captures an independent value copy
+  of every model-facing schema field: `name`, `description`, the complete nested `parameters`,
+  `constrained_sampling` in every state, and any other certified model-facing field.
+- **Independent means no shared mutable state.** A shallow copy of a schema is not enough. Nested
+  objects and arrays in the snapshot must not alias objects the application owns. So no
+  application-held reference can change a snapshot once it is captured.
+- **One snapshot, two uses.** The header records that snapshot, and the provider request is built
+  from the **same** snapshot. The two carry semantically identical schema values.
+- **Later mutation.** A change to an application-owned tool definition after publication does not
+  change that request's header or its provider-visible schemas. A later request may observe the
+  change when its own snapshot is taken, subject to the existing `RunContext` and `prepareNextTurn`
+  rules.
+- **Timing is unchanged:** schema capture → header → `transformContext` → provider request. A
+  `transformContext` failure keeps the published header.
+- **Not changed by this rule:**
+  - the run-start tool snapshot, which stays a shallow snapshot of definitions, with no deep copy
+    or freeze at run start or registration;
+  - Layer 05 `ToolDefinition` semantics, registry membership and tool identity;
+  - Layer 07 state, the Layer 03 artifact format, prompt assembler semantics, and the failure and
+    lifecycle rules.
+
+  It is a value capture at the Layer 08 publication boundary only.
+- **Rust** builds owned schema values and already satisfies the rule. **Python** derives schemas
+  that share the application's `parameters` mapping, so it needs the capture as a narrow Layer 08
+  driver correction inside this delta.
+
+**Unchanged:**
+- `request/header` is **log-only** (Layer 03 classification): it never appears in the surface
+  message projection and never reaches the model;
+- the request-snapshot identity rules (`L08-R001`) and every other Layer 08 lifecycle, failure and
+  event rule;
+- historical session logs, which are not rewritten.
+
+The only observable change is in a binding that did not record headers: the session log gains one
+`request/header` event per provider request, which consumes a sequence number.
+
+**Bindings:**
+- **Python:** already conforms on header presence, count and timing. Characterization:
+  `assurance/layers/08-l08-d002-request-header.md`. It needs the schema value snapshot above
+  (`L08D002-R003`), and its full-schema reconstruction depends on `L03-D001`.
+- **Rust:** gains this integration in the driver, through its existing `Session::record_header`.
+  Its owned schema values already satisfy the snapshot rule.
+
+**Dependency (`L08D002-R002`).** Reconstructing `constrained_sampling` from a header is the Layer 03
+rule `L03-D001` (`minion-agent#174`). This delta claims complete request-schema reconstruction only
+once `L03-D001` is merged and certified.
+
+**Relationship to `L08-D001`.** `L08-D001`'s "with no assembler, behaviour is unchanged" is relative
+to the **corrected** Layer 08 baseline that this rule defines. Without an assembler, prompt, tools
+and execution are unchanged, and this rule provides the ordinary header. With an assembler:
+- the header records the assembled text and the matching tool snapshot;
+- an override is recorded literally;
+- an assembler failure records no header for the failing build;
+- earlier requests' headers remain.
+
+**Canonical evidence** (`conformance/agent/request-header-*.yaml`, through each binding's agent
+runner):
+- `expect_request_log`: the log's surface messages (`user`, `assistant`, `toolResult`) interleaved
+  with `header`, in log order;
+- `expect_headers`: each header reconstructed through the real Session (system text, component
+  names, model, and the **complete** tool schemas: name, description, parameters and any
+  `constrained_sampling`, in order; absent sampling omits the key);
+- `expect_request_schemas`: the complete tool schemas each provider request actually carried, in
+  request order and in the same form.
+
+Both are compared to the same literal schemas. So a header that differs from what was sent fails
+(`L08D002-R001`), whether through a corrupted header, a wrong description or parameters, lost
+sampling, or reordered tools.
+
 ### Optional prompt assembler (`L08-D001`, `MINION_EXTENSION`; Owner decision `PP-14-9`)
 
 **Status:** contract delta, for independent contract review before implementation.
@@ -385,7 +499,8 @@ not overridden, while that request is built:
    override, unchanged, and the assembler is **not** called. Override behaviour is unchanged: it
    replaces the whole prompt.
 3. **Otherwise** the system text is `assemble(RunContext.system_prompt, that tool snapshot)`.
-4. Record the request header and send the request using that system text and that snapshot's
+4. Record the request header (`L08-D002`, "Request header per provider request") and send the
+   request using that system text and that snapshot's
    schemas. The header's `system_base` component holds the system text (`MINION-003`, unchanged).
 
 Every request is therefore a snapshot point:
