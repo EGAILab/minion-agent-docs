@@ -27,6 +27,7 @@ RECORD = (
 )
 TRANSFORM = "\n        transformed_history = await self._transform_context(tuple(history))\n"
 COMPONENTS = '\n        components = {"system_base": self._system_text(decision, context)}\n'
+SENT = "\n            tools=schemas,\n            signal=self.instance.signal,\n"
 
 MUTANTS = {
     "header after transformContext": [
@@ -41,6 +42,19 @@ MUTANTS = {
     "provider-qualified model": [
         (RECORD, RECORD.replace("model=config.model.model", 'model=f"{config.model.provider}/{config.model.model}"'))
     ],
+    # Remediation 1 (L08D002-R001): the header must carry the complete schemas the request sent.
+    "header-only schema corruption (Codex R001 control)": [
+        (RECORD, RECORD.replace(
+            "tools=schemas,",
+            'tools=tuple(type(s)(name=s.name, description="CORRUPTED HEADER", parameters={"type": "null"}) '
+            "for s in schemas),"))
+    ],
+    "header drops constrained_sampling": [
+        (RECORD, RECORD.replace(
+            "tools=schemas,",
+            "tools=tuple(type(s)(name=s.name, description=s.description, parameters=s.parameters) for s in schemas),"))
+    ],
+    "request tools reordered": [(SENT, SENT.replace("tools=schemas,", "tools=schemas[::-1],"))],
 }
 
 results: dict[str, list[str] | str] = {}

@@ -141,3 +141,75 @@ An independent contract-delta review covering:
 3. Rust feasibility with the existing `Session::record_header`, including the fallible schema
    computation coming before publication;
 4. the `L08-D001` dependency clarification.
+
+## 7. Contract review 1, Owner decisions and remediation 1
+
+**Review.** Codex, independent contract review 1, at code #172 @ `9190f305` / docs #266 @ `267128e3`. Recorded
+verbatim at minion-agent#171 issuecomment-6070941439. Verdict CHANGES REQUESTED, with three findings, all
+`CONTRACT_ASSURANCE_DEFECT`, all high. Accepted as written: the timing split, component and model spelling, the
+log-only classification, historical logs, and the `L08-D001` note. Rust is feasible through its existing Session.
+
+- **`L08D002-R001`.** Headers were observed by tool **names** only. A header-only corruption control passed all 7
+  cases: a wrong description, with `parameters: {type: null}`.
+- **`L08D002-R002`.** Certified Python `reconstruct_tools` drops `constrained_sampling`: the field is stored but
+  not reconstructed.
+- **`L08D002-R003`.** Python's derived schema shares the application's `parameters` mapping. A `transformContext`
+  listener mutating it makes the provider request differ from the stored header.
+
+**Owner decisions**, recorded verbatim at #171 issuecomment-6071887505:
+- **R002, Option 1.** A separate Layer 03 delta, `L03-D001` (#174). It must be merged and certified before this
+  delta claims complete request-schema reconstruction. After that, these witnesses compare full schemas,
+  `constrained_sampling` included.
+- **R003, Option 1: snapshot at publication.**
+  - Per request, an independent value snapshot of every model-facing schema field is recorded in the header and
+    passed to the provider.
+  - A shallow copy is not enough.
+  - Later mutation changes neither that request's header nor its provider-visible schemas, though a later request
+    may see it.
+  - The run-start shallow snapshot and the Layer 05/07/03, assembler and failure semantics stay unchanged.
+  - The narrow Python driver correction lands inside this delta, after the revised contract is reviewed.
+
+**Remediation 1, contract:**
+- **Spec** (`spec/agent.md`):
+  - the `tools` row now names the schema value snapshot;
+  - a new **Schema value snapshot** rule, the Owner's items 1–9;
+  - the bindings paragraph covers Python's needed correction and Rust's owned values;
+  - a dependency paragraph for `L03-D001`;
+  - canonical evidence: complete schemas in both `expect_headers` and the new `expect_request_schemas`.
+- **Canonical:**
+  - `expect_headers.tools` is now the complete reconstructed schemas: name, description, parameters and any
+    `constrained_sampling`, with absent sampling omitted (the `L05-R006` input form);
+  - new `expect_request_schemas` gives the complete schemas each provider request carried, observed at the
+    provider boundary;
+  - the agent `toolStub` gains `description` and `constrained_sampling`;
+  - the 7 cases are regenerated with complete schemas;
+  - new `request-header-full-schema-identity`: two ordered tools with distinct descriptions, nested parameters,
+    a `json_schema` require config and a `grammar` config with both formats.
+- **Python runner:** it builds the real tool with its description and sampling, and reports each schema's own
+  `as_json()`, from the reconstructed header and from the adapter's received request. It derives nothing.
+- **R003 witness** (Python binding; Rust holds no application-shared mutable alias, so it cannot express one):
+  - `tests/agent_loop/test_request_schema_snapshot.py`;
+  - (a) **two tools:** the stored header equals what each request sent, with complete schemas in order;
+  - (b) **transform-time mutation:** a real `transformContext` listener changes a nested value and appends to a
+    nested list of the application's own mapping after the first publication. The first header and the first
+    request both keep the pre-mutation values and the sampling metadata. The second request sees the change, and
+    its header matches it;
+  - (b) is `xfail(strict=True)` until the driver correction lands.
+  - Checked against the unchanged driver: (b) fails, because the first request carries the mutated schema. With a
+    value-copying capture, tried in place and reverted, both pass.
+  - The header is read from the stored artifact bytes, so these witnesses do not depend on `L03-D001`.
+- **Controls** (`data/08-l08-d002/controls.py`). Three mutants are added:
+  - header-only schema corruption, Codex's R001 control;
+  - header drops `constrained_sampling`;
+  - request tools reordered.
+
+  All 8 controls were run on a scratch copy of this candidate with the planned `L03-D001` decoder overlaid, as the
+  baseline after `L03-D001` merges. The 8 request-header cases pass, and all 8 controls are **KILLED**:
+  - the corruption control is killed by `full-schema-identity`, `one-per-request-in-order` and
+    `transform-failure-later-request`;
+  - the sampling and reorder controls are killed by `full-schema-identity`.
+
+  An R003 "no value snapshot" control, killed by witness (b), is added with the driver correction.
+- **Not yet runnable on this branch:** `full-schema-identity` fails against unchanged Python until `L03-D001`
+  lands, because the header loses `constrained_sampling`. That is the declared dependency. This contract is
+  re-submitted for review only after `L03-D001` is merged.
