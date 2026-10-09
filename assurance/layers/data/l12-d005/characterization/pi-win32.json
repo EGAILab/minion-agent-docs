@@ -1,0 +1,363 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "user": "erick",
+ "results": [
+  {
+   "id": "child-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "target-readonly-file-recursive",
+   "call": {
+    "target": "f",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "target-readonly-file-nonrecursive",
+   "call": {
+    "target": "f",
+    "options": {}
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "nested-readonly-files",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "readonly-directory-attribute",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "chmod-denied-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "chmods": [
+    {
+     "path": "t/f",
+     "mode": "666"
+    }
+   ],
+   "hookFired": false,
+   "left": [
+    "t/",
+    "t/f"
+   ]
+  },
+  {
+   "id": "retry-fails-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "chmods": [
+    {
+     "path": "t/f",
+     "mode": "666"
+    }
+   ],
+   "hookFired": false,
+   "left": [
+    "t/",
+    "t/f"
+   ]
+  },
+  {
+   "id": "acl-denied-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/f"
+   },
+   "chmods": [
+    {
+     "path": "t/f",
+     "mode": "666"
+    }
+   ],
+   "hookFired": false,
+   "left": [
+    "t/",
+    "t/f"
+   ]
+  },
+  {
+   "id": "acl-denied-directory",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/d"
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [
+    "t/",
+    "t/d/"
+   ]
+  },
+  {
+   "id": "acl-denied-top-level-file",
+   "call": {
+    "target": "f",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "f"
+   },
+   "chmods": [
+    {
+     "path": "f",
+     "mode": "666"
+    }
+   ],
+   "hookFired": false,
+   "left": [
+    "f"
+   ]
+  },
+  {
+   "id": "vanish-during-recovery",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "symlink-to-external-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "no inner.txt"
+   }
+  },
+  {
+   "id": "symlink-to-external-readonly-dir",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "inner.txt present"
+   }
+  },
+  {
+   "id": "readonly-empty-dir-target-recursive",
+   "call": {
+    "target": "d",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "readonly-nonempty-dir-target-recursive",
+   "call": {
+    "target": "d",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "readonly-dir-target-nonrecursive",
+   "call": {
+    "target": "d",
+    "options": {}
+   },
+   "observed": {
+    "code": "unknown",
+    "path": "d"
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [
+    "d/"
+   ]
+  },
+  {
+   "id": "mixed-readonly-tree",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "readonly-symlink-itself",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": false,
+    "inner": "no inner.txt"
+   }
+  },
+  {
+   "id": "readonly-symlink-target-nonrecursive",
+   "call": {
+    "target": "link",
+    "options": {}
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "no inner.txt"
+   }
+  },
+  {
+   "id": "entry-vanishes-during-recursive",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": true,
+   "left": []
+  }
+ ]
+}

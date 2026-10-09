@@ -1,0 +1,253 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "pi": "b7bb00b936dbe21b8e160b3e89efdec361846699",
+ "results": [
+  {
+   "id": "rec-readonly-child-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-target-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "nonrec-readonly-target-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-nested-readonly-files",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-symlink-to-external-readonly-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [
+    "ext/",
+    "ext/protected.txt"
+   ],
+   "external": [
+    {
+     "path": "ext/protected.txt",
+     "exists": true,
+     "readonly": true,
+     "text": "keep"
+    }
+   ]
+  },
+  {
+   "id": "rec-symlink-to-external-readonly-dir",
+   "observed": {
+    "ok": true
+   },
+   "left": [
+    "ext/",
+    "ext/pdir/",
+    "ext/pdir/inner.txt"
+   ],
+   "external": [
+    {
+     "path": "ext/pdir",
+     "exists": true,
+     "readonly": true
+    },
+    {
+     "path": "ext/pdir/inner.txt",
+     "exists": true,
+     "readonly": false,
+     "text": "keep"
+    }
+   ]
+  },
+  {
+   "id": "nonrec-symlink-to-external-readonly-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [
+    "ext/",
+    "ext/protected.txt"
+   ],
+   "external": [
+    {
+     "path": "ext/protected.txt",
+     "exists": true,
+     "readonly": true,
+     "text": "keep"
+    }
+   ]
+  },
+  {
+   "id": "rec-readonly-dir-attribute-in-tree",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-empty-dir-target",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-nonempty-dir-target",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-mixed-readonly-tree",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-symlink-itself",
+   "observed": {
+    "ok": true
+   },
+   "left": [
+    "ext/",
+    "ext/plain.txt"
+   ],
+   "external": [
+    {
+     "path": "ext/plain.txt",
+     "exists": true,
+     "readonly": false,
+     "text": "keep"
+    }
+   ]
+  },
+  {
+   "id": "rec-readonly-symlink-to-readonly-external-file",
+   "observed": {
+    "ok": true
+   },
+   "left": [
+    "ext/",
+    "ext/protected.txt"
+   ],
+   "external": [
+    {
+     "path": "ext/protected.txt",
+     "exists": true,
+     "readonly": true,
+     "text": "keep"
+    }
+   ]
+  },
+  {
+   "id": "rec-acl-denied-file",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "t",
+     "f"
+    ]
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "external": []
+  },
+  {
+   "id": "rec-acl-denied-dir",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "t",
+     "d"
+    ]
+   },
+   "left": [
+    "t/",
+    "t/d/"
+   ],
+   "external": []
+  },
+  {
+   "id": "rec-acl-denied-target-file",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "f"
+    ]
+   },
+   "left": [
+    "f"
+   ],
+   "external": []
+  },
+  {
+   "id": "nonrec-acl-denied-target-file",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "f"
+    ]
+   },
+   "left": [
+    "f"
+   ],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-attribute-correction-denied",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "t",
+     "f"
+    ]
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "external": []
+  },
+  {
+   "id": "rec-readonly-and-delete-denied",
+   "observed": {
+    "error": "permission_denied",
+    "path": [
+     "t",
+     "f"
+    ]
+   },
+   "left": [
+    "t/",
+    "t/f"
+   ],
+   "external": []
+  }
+ ]
+}

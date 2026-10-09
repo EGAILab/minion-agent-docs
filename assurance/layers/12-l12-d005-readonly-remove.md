@@ -1,0 +1,244 @@
+# L12-D005: Windows `remove` ignores the read-only attribute
+
+Layer 12 post-certification delta. Coordination: minion-agent#188. Provenance: `L12-RM-READONLY-WINDOWS`
+(minion-agent#126). Requirement: `EXEC-002`. Normative text: `spec/execution.md` §17.
+
+**Governance.**
+- The Owner first authorized adopting pinned Pi's Windows behaviour, then took it to be `rimraf`'s `fixWinEPERM` (#126 issuecomment-6086596348).
+- Characterization showed the actual mechanism is libuv's own deletion, which also covers non-recursive remove. Claude returned to the Owner, as that decision required.
+- The amended decision (issuecomment-6087116283) adopts pinned Pi's actual rule:
+  - read-only files are removable, recursively and non-recursively;
+  - read-only-attributed directories are removable when recursive;
+  - Python fixes files and directories, and Rust fixes directories only;
+  - ACL, sharing and other errors are unchanged;
+  - symlink targets are never modified;
+  - POSIX is unchanged;
+  - non-recursive directory remove stays with #125.
+
+## 1. Authority
+
+| Source | Identity | What it shows |
+|---|---|---|
+| Pi `NodeExecutionEnv.remove` | `b7bb00b9` `packages/agent/src/harness/env/nodejs.ts:661-668` | `rm(resolved, {recursive, force})`; errors through `toFileError` |
+| Node `lib/internal/fs/rimraf.js` | v22.15.1, git blob `24bf3f46b878e711beadcdc8e1b08700d10aa3c5` (extracted from the pinned binary; hash identical to §14.8's citation) | `_rimraf` → `lstat`, `unlink`; `EPERM` → `fixWinEPERM`: `chmod(0o666)`, `stat`, then `unlink` or `_rmdir`; a failed `chmod` or `stat` returns the original error (`ENOENT` → success) |
+| libuv `src/win/fs.c` | v1.49.2 (Node's `process.versions.uv`), git blob `f2215bb3082178193d37f8429536bfe7b707dd0d` | `fs__unlink_rmdir`: `CreateFileW(FILE_READ_ATTRIBUTES \| FILE_WRITE_ATTRIBUTES \| DELETE, FILE_FLAG_OPEN_REPARSE_POINT …)`, then `FILE_DISPOSITION_DELETE \| POSIX_SEMANTICS \| IGNORE_READONLY_ATTRIBUTE`; the fallback clears `FILE_ATTRIBUTE_READONLY`, then sets the delete flag. Both `unlink` and `rmdir`. |
+
+**Consequence:**
+- On Windows, the read-only attribute never blocks a Node deletion.
+- `fixWinEPERM` is reached only for a deletion that still fails, which means a genuine ACL denial. There `chmod` fails, or the retry fails, so `permission_denied` is returned for that entry.
+- Every Windows probe call below was instrumented to record each `fs.chmod` call. No read-only case calls `chmod`. Only the ACL-denied cases do.
+
+## 2. Characterization (Windows 11; Node v22.15.1; Python 3.13.5 at `main` `bf39b46d`; Rust 1.97.1 at `bf39b46d`)
+
+The probes are in `data/l12-d005/characterization/`:
+- `pi-probe.mjs`: pinned Pi's real `NodeExecutionEnv`;
+- `py-probe.py`: the certified `LocalFileSystem`;
+- `rust-probe.rs`: a disposable test, run only in a scratch copy and never committed.
+
+Raw outputs sit beside them. In the table, `p_d` is `permission_denied`.
+
+| Case | Pi | Python | Rust |
+|---|---|---|---|
+| read-only file in a tree (recursive) | ok | `p_d` `t/sub/f` | ok |
+| read-only file as target, recursive | ok | `p_d` `f` | ok |
+| read-only file as target, **non-recursive** | ok | `p_d` `f` | ok |
+| several nested read-only files | ok | `p_d` (first met) | ok |
+| read-only *directory* in a tree | ok | `p_d` `t/d` | `p_d` `t/d` |
+| read-only directory as target, empty / non-empty (recursive) | ok / ok | `p_d` `d` / `p_d` `d/f` | (not run) |
+| read-only directory as target, non-recursive | `unknown` `d` (`ERR_FS_EISDIR`; #125) | `is_directory` | (#125) |
+| mixed read-only files and directories | ok | `p_d` `t/x/y` | (not run) |
+| read-only symlink itself (link attribute) | ok; target untouched | `p_d` `t/link` | (not run) |
+| removing *through* a symlink to a read-only file, non-recursive | ok (link only); target still read-only | ok | (not run) |
+| symlink to an external read-only file or directory, in a tree | ok; target untouched | ok; target untouched | (not run) |
+| ACL: file deny `DELETE` (+ parent deny `DELETE_CHILD`) | `p_d` `t/f` | same | same |
+| ACL: directory deny `DELETE` | `p_d` `t/d` | same | same |
+| ACL: target file denied | `p_d` `f` | same | same |
+| read-only file + deny `WRITE_ATTRIBUTES` (attribute correction denied) | `p_d` `t/f` (`chmod` attempted) | same | same |
+| read-only file + deny `DELETE` (retry denied) | `p_d` `t/f` (`chmod` attempted) | same | same |
+| entry vanishes during the recursive walk (controlled `readdir` hook) | ok (hook fired) | Linux: ok (hook fired). Windows: confounded by read-only siblings | (not run) |
+
+**Linux controls** (Docker `python:3.13`, uid 1000, trees on tmpfs; Node v22.15.1 Linux):
+- Pi and Python agree on every case.
+- Read-only files (mode 0444) are removed.
+- Symlink targets are untouched.
+- The vanishing entry is treated as removed.
+- A mode-0555 subdirectory gives `p_d`, naming `t/sub/f`.
+
+Nothing changes on POSIX.
+
+## 3. Contract
+
+`spec/execution.md` §17 is normative. It covers:
+- the rule for files, directories and the symlink itself;
+- the unchanged ACL and other semantics, with codes and §14.8 origin paths;
+- concurrent disappearance counting as removed;
+- POSIX unchanged;
+- binding-defined mechanism within limits: no broadening, no change to deletions that already succeed or fail for another reason, and no modification of a link's target.
+
+§14.8's bullet on #126 gains a correction note for its `fixWinEPERM` attribution. The original sentence is kept.
+
+## 4. Canonical evidence
+
+`conformance/agent/fs-remove-readonly/` holds 20 documents, shaped by `fs-remove-readonly-scenario.schema.json`.
+- **Fixture ops** (native setup only): `file`, `dir`, `readonly` (Windows attribute; POSIX clears the write bits), `readonly_link`, `symlink`, `deny_delete`, `deny_write_attributes`.
+- **Assertions:** the `Result` (code and path components), `expect_left`, and the external targets' existence, read-only state and text.
+- **Platforms:** cases shared by both platforms give identical Pi results on Linux and Windows. The generator enforces this.
+- **Case split:** 12 cases are Windows-only (attributes and ACLs), and 1 is Linux-only (the mode-0555 control).
+
+**Generation:**
+1. `gen/cases.json` holds the case definitions.
+2. `gen/pi-oracle.mjs` runs them through pinned Pi, writing `pi-win32.json` and `pi-linux.json`.
+3. `gen/gen-canonical.py` turns those outputs into the documents.
+
+**Runner:** the Python runner `tests/conformance/fs_remove_runner.py` prepares the fixture natively, calls the real `LocalFileSystem.remove` once, and observes the result. It restores attributes and ACLs afterwards.
+
+**Contract-stage status in Python on Windows:**
+- 10 cases are `xfail(strict=True)`: every read-only file, directory and link case.
+- The 8 others already pass: the ACL denials, the attribute-correction and retry denials, the symlink-through cases and the Linux-shared file cases with no read-only attribute involved.
+- 1 Linux case is an explicit skip.
+
+**Running as root on POSIX.** Root bypasses permission checks, so the mode-0555 control cannot be observed as root. The test skips it under root with an explicit reason. Its Linux evidence comes from a non-root (uid 1000) run.
+
+**Schema validation tests** cover well-formedness, every document validating, and seven malformed shapes being rejected. That includes `../` path escape, which first slipped through a dot-permitting segment pattern and was fixed.
+
+## 5. Discrimination at the contract stage (`data/l12-d005/controls.py`)
+
+**Recipe:**
+1. Copy the contract candidate's `minion-agent-python/`, `conformance/` and manifest to an E: scratch directory.
+2. Apply `gen/planned_fix.py` to that copy, and change nothing else.
+3. Run `python controls.py <python> <copy>/minion-agent-python <logs>`.
+
+The script passes `--runxfail`, clears `PYTEST_ADDOPTS`, and requires every intended witness to be selected and PASS unmutated (`-rA`). A kill needs exit 1, exactly the intended witnesses failing, and a canonical assertion signature.
+
+**Fresh results** (Windows, Python 3.13.5):
+- **Planned correction applied:** baseline `10 intended witnesses selected and PASS`. Every control is **KILLED**:
+
+  | Control | Witnesses |
+  |---|---|
+  | `top-level-delete-not-retried` | non-recursive and recursive read-only target |
+  | `tree-entries-not-retried` | child and nested read-only files |
+  | `directories-not-retried` | empty read-only directory target and directory in a tree |
+  | `attribute-cleared-on-the-link-target` | the read-only link itself, and the read-only external target staying read-only |
+  | `acl-denial-swallowed` | recursive and non-recursive ACL-denied target |
+
+- **Unchanged candidate:** `INVALID baseline` (7 witnesses not green). The recipe cannot report kills against the defective binding.
+
+**A survivor, recorded.** A first control, `attribute-cleared-through-the-link` (`os.chmod` without `follow_symlinks=False`), **survived**. On Windows, `os.chmod` sets the attribute on the link itself either way, so the mutant is observably equivalent. It was replaced by a mutant that clears the attribute on the link's *resolved target*. That is the hazard the Owner named. A new case was also added, `rec-readonly-symlink-to-readonly-external-file`, where both link and target are read-only and the target must stay read-only. The replacement is killed by both witnesses.
+
+## 6. Python implementation plan (after contract approval)
+
+- **Mechanism:**
+  - on a `PermissionError` from deleting a file, symlink or directory, check whether the entry's **own** attribute carries `FILE_ATTRIBUTE_READONLY`;
+  - if so, clear it without following reparse points, and retry the deletion once;
+  - otherwise, or if clearing fails, raise the original error;
+  - a retry failure raises the retry's error;
+  - `FileNotFoundError` during the correction or retry counts as removed.
+- **Where it applies:**
+  - the top-level `os.remove` and symlink paths;
+  - `shutil.rmtree`'s `onexc` handler, for `unlink`, `remove` and `rmdir`, keeping §14.8's failure-origin naming.
+- **Python 3.12 support** (`requires-python >= 3.12`):
+  - `os.chmod(…, follow_symlinks=False)` is unavailable on Windows before 3.13;
+  - on 3.12 the attribute must be cleared through a handle opened with `FILE_FLAG_OPEN_REPARSE_POINT` (`SetFileInformationByHandle(FileBasicInfo)`), or the equivalent;
+  - the witnesses include the link case.
+- **Witnesses:**
+  - the canonical corpus, with the strict xfails removed;
+  - binding witnesses for the concurrent-disappearance race: the vanishing entry during the walk, and vanishing between the failed delete and the attribute correction;
+  - regression of §14.8's origin cases and the L12-D001 corpus.
+
+## 7. Rust (implementation by the Rust owner after contract approval)
+
+- **Already conformant:** read-only files, including non-recursive.
+- **To fix:** a read-only-attributed directory, in a tree or as the target.
+- **Required:**
+  - the same canonical corpus driven through Rust's real `remove`;
+  - the concurrency witnesses;
+  - Rust-side controls, including one restoring the current directory failure.
+- **Unchanged:** Linux behaviour, and the non-recursive directory rule (#125).
+
+## 8. Contract review 1 and remediation 1
+
+**Review 1** (Codex; minion-agent#188 issuecomment-6089433966; verdict file sha256 `6ead36f11fd2024a229e64792b8c06cb98e1c834895c0bdfdae403a5fdf6d947`).
+It reviewed code #189 @ `be91b1f7` and docs #277 @ `e2eed4a1`. Verdict: **CHANGES REQUESTED**.
+
+- **`L12D005-C001`** (medium, `CONTRACT_ASSURANCE_DEFECT`). §17 rule 6 claimed that every directory without write permission fails on POSIX. In fact an *empty* mode-0555 directory in a writable parent is removable, and pinned Pi removes it. The corpus held only the non-empty case, so it could not reject the false reading.
+- **`N001`** (nonblocking). §4 says the "8 others" pass on Windows at the contract stage. 9 do: 19 cases apply on Windows, 10 are strict xfail and 9 pass. The completeness test makes pytest's total 10.
+
+**Remediation 1:**
+- **Rule 6 restated.** POSIX permission semantics are unchanged and decided by the host's checks. A directory's own missing write permission matters only when an entry inside it must be unlinked. The characterized non-root outcomes (empty → removed, non-empty → `permission_denied` naming the child) are stated, and no claim is made for privileged callers. The manifest's EXEC-002 text says "POSIX permission semantics unchanged".
+- **New case** `rec-posix-readonly-empty-dir` (Linux), sitting beside the existing `rec-posix-readonly-subdir`. It was added to `gen/cases.json`, and the unchanged `gen/pi-oracle.mjs` was re-run on Linux.
+  - **Run:** `node:22.15.1-bookworm-slim`, uid 1000, `--tmpfs /tmp`, pinned Pi mounted read-only.
+  - **Result:** Pi gives `ok`, with nothing left. Every earlier Linux observation is byte-identical.
+  - **Corpus:** regenerated with the unchanged generator, giving **21** documents. The only new file is the added case.
+  - **Root:** it expects success, so it also runs under root, where root gives the same result. The non-empty control stays non-root only.
+- **`N001`** is corrected here, not in §4, which keeps its text as history: 9 Windows cases pass at the contract stage.
+- **Windows unchanged:** no rule, case or control changed.
+
+## 9. Contract review 2 and Python implementation
+
+**Review 2** (Codex; #188 issuecomment-6089613161; verdict file sha256 `afea9f2aa45a7e53be655d2338837ee9cd7e86224bd8a2d8b1b4c9bf52f5614a`).
+It reviewed code `559878bc` and docs `31657d88`. Verdict: **CONTRACT APPROVED / CHECKPOINT APPROVED**.
+- `L12D005-C001` is CLOSED.
+- **Nonblocking `N002`:** §17's canonical-evidence pointer said 20 documents. It now says 21, in the implementation docs commit.
+
+**Implementation** (code commit `L12-D005 Python`, on the same PR #189):
+
+- **Mechanism.**
+  - When deleting an entry raises `PermissionError`, the entry's **own** `FILE_ATTRIBUTE_READONLY` is cleared and the deletion retried once.
+  - It is cleared through a handle opened with `FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS`, and read and written with `Get/SetFileInformationByHandle(FileBasicInfo)`. So a link is changed itself, never its target. This works the same on Python 3.12 and 3.13, so no `os.chmod(follow_symlinks=False)` is needed.
+  - **No retry when:** the attribute was not set, the handle cannot be opened (for example, `WRITE_ATTRIBUTES` or `DELETE` denied by ACL), or the update fails. The original error then stands.
+  - **Retry fails:** that retry's error is reported, with §14.8 origin.
+- **Entries that vanish count as removed** (§17's concurrency clause). This covers vanishing:
+  - before the attribute correction (the handle open gives `ERROR_FILE_NOT_FOUND` or `ERROR_PATH_NOT_FOUND`);
+  - before the retry;
+  - during the walk.
+- **Python 3.12 gap, found here.** On 3.12, `shutil.rmtree` hands a concurrently vanished tree entry's `FileNotFoundError` to the error handler, while 3.13 and later skip it before the handler. So the handler now treats `FileNotFoundError` as removed, as `rimraf` does with `ENOENT`. The walk witness exposed this on 3.12. A direct handler witness also covers it on 3.13.
+- **Where it applies:** the top-level delete, the symlink delete, and `rmtree`'s handler for `unlink`, `remove` and `rmdir`. POSIX is unchanged. On POSIX, `_clear_readonly` returns False.
+- **Witnesses:**
+  - the 21-document canonical corpus, with no strict xfails left;
+  - `tests/execution/test_filesystem_readonly_remove.py`: vanishing before the correction, a failed correction keeping the original error, vanishing during the walk (both platforms; POSIX walks by directory fd), a tree retry error, vanishing before a tree retry, and the handler's vanished entry.
+
+**Implementation-stage controls** (`data/l12-d005/controls_impl.py`; same validity rules; anchors on the implementation; contract-stage `controls.py` kept as history).
+- Baseline: **14 intended witnesses selected and PASS**.
+- **10/10 KILLED**:
+
+  | Control | Witnesses |
+  |---|---|
+  | `top-level-delete-not-retried` | 2 canonical |
+  | `tree-entries-not-retried` | 2 canonical |
+  | `directories-not-retried` | 2 canonical |
+  | `attribute-cleared-through-the-reparse-point` (handle opened without `FILE_FLAG_OPEN_REPARSE_POINT`) | the link-itself case, and the read-only external target staying read-only |
+  | `acl-denial-swallowed` | 2 canonical |
+  | `vanished-before-correction-is-an-error` | binding |
+  | `vanished-before-top-level-retry-is-an-error` | binding |
+  | `vanished-before-tree-retry-is-an-error` | binding |
+  | `tree-retry-error-replaced-by-success` | binding |
+  | `handler-reports-a-vanished-tree-entry` | binding |
+
+**Fresh gates at the implementation head:**
+- **Windows** (Python 3.13.5): **5505 passed / 50 skipped / 21 xfailed**, coverage **100%** (9317 statements), ruff and mypy clean.
+- **Python 3.12.8 on Windows:** the remove and filesystem surfaces (corpus, binding witnesses, `test_fs_error_origin`, `test_filesystem`) give **216 passed / 8 skipped**.
+- **Linux** (Docker `python:3.13`, tmpfs):
+  - full suite as root: **5443 passed / 0 failed**;
+  - the same remove and filesystem surfaces as uid 1000: **178 passed / 0 failed**.
+
+## 10. Implementation review 1 and remediation 1
+
+**Review 1** (Codex; #188 issuecomment-6089940273; verdict file sha256 `43460fc0a927fc9c8c7b5154212ffbfcdfedda20949751e89f5f55dd6e00edff`).
+It reviewed code `4812b255` and docs `a1f2c8b8`. Verdict: **CHANGES REQUESTED**. No production defect was found.
+
+- **`L12D005-I001`** (medium, `CONTRACT_ASSURANCE_DEFECT`, evidence only). `test_a_tree_entry_whose_retry_still_fails_reports_the_retry_error` made the first and the retried deletion fail identically. A mutant keeping the *first* error (`except OSError: pass` in place of `exc = retry`) therefore passed every new test.
+
+**Remediation 1** (test only; `exc = retry` is unchanged):
+- **New witness** `test_a_tree_entry_retry_failure_reports_the_retry_error_not_the_first`, through the real `LocalFileSystem.remove`:
+  1. The first `unlink` of a read-only tree entry fails with `PermissionError`.
+  2. The attribute is really cleared.
+  3. The retried `unlink` of that entry raises `NotADirectoryError`.
+  4. Asserted: two attempts, result `not_directory` naming the entry, the entry still present, its attribute cleared.
+- **Existing witness kept.** The earlier same-error witness remains, as complementary success-vs-failure coverage.
+- **New control** `tree-retry-keeps-the-first-error` in `controls_impl.py`. Under it the new witness fails at its code assertion (`'permission_denied' == 'not_directory'`), so it is killed for the error-selection reason.
+
+**Fresh gates:**
+- **Controls:** baseline **15 intended witnesses selected and PASS**; **11/11 KILLED**.
+- **Windows** (3.13.5): **5506 passed / 50 skipped / 21 xfailed**, coverage **100%** (9317), ruff and mypy clean.
+- **Python 3.12.8** surfaces: **217 passed / 8 skipped**.
+- **Linux:** the new witness is Windows-only, and the Linux-applicable code and tests are unchanged since §9.

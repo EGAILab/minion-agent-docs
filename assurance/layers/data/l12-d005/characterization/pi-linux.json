@@ -1,0 +1,158 @@
+{
+ "platform": "linux",
+ "node": "22.15.1",
+ "user": "1000",
+ "results": [
+  {
+   "id": "child-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "target-readonly-file-recursive",
+   "call": {
+    "target": "f",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "target-readonly-file-nonrecursive",
+   "call": {
+    "target": "f",
+    "options": {}
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "nested-readonly-files",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": []
+  },
+  {
+   "id": "symlink-to-external-readonly-file",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "no inner.txt"
+   }
+  },
+  {
+   "id": "symlink-to-external-readonly-dir",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "inner.txt present"
+   }
+  },
+  {
+   "id": "readonly-symlink-target-nonrecursive",
+   "call": {
+    "target": "link",
+    "options": {}
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [],
+   "external": {
+    "exists": true,
+    "readonly": true,
+    "inner": "no inner.txt"
+   }
+  },
+  {
+   "id": "entry-vanishes-during-recursive",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "ok": true
+   },
+   "chmods": [],
+   "hookFired": true,
+   "left": []
+  },
+  {
+   "id": "posix-readonly-subdir",
+   "call": {
+    "target": "t",
+    "options": {
+     "recursive": true
+    }
+   },
+   "observed": {
+    "code": "permission_denied",
+    "path": "t/sub/f"
+   },
+   "chmods": [],
+   "hookFired": false,
+   "left": [
+    "t/",
+    "t/sub/",
+    "t/sub/f"
+   ]
+  }
+ ]
+}
