@@ -3071,7 +3071,11 @@ Each must fail a witness:
 4. **Everything else is unchanged.** Genuine ACL denial, sharing violations, inaccessible entries and every other failure keep their current semantics: the code (`permission_denied` for the characterized ACL denials), and the failure-origin path of §14.8 (the entry whose deletion failed).
    - A case where clearing the attribute is itself denied (an ACL denying `WRITE_ATTRIBUTES` on a read-only file) is such a failure: `permission_denied`, naming that entry.
 5. **Concurrency.** An entry that disappears concurrently, during a recursive removal or while its attribute is being cleared, counts as removed (Node: `ENOENT` → success).
-6. **POSIX is unchanged.** Unlinking never depends on a file's own mode. A directory without write permission still fails with `permission_denied`, naming the entry inside it.
+6. **POSIX is unchanged.** This delta changes no POSIX permission semantics: removal succeeds or fails exactly as the host's `unlink`/`rmdir` permission checks decide. Unlinking never depends on a file's own mode. A directory's own missing write permission matters only when an entry *inside* it must be unlinked. Characterized, non-root, with a writable parent (`L12D005-C001`):
+   - an **empty** mode-0555 directory is removed;
+   - a mode-0555 directory **containing** a file fails with `permission_denied`, naming that file (§14.8 origin).
+
+   No outcome is claimed for privileged callers, which bypass these checks.
 
 **How a binding meets it.** The rule is about outcomes; the mechanism belongs to each binding. A simple, safe mechanism is fine, for example clearing the entry's own read-only attribute without following reparse points, then retrying the failed deletion once. The mechanism must not:
 - broaden permission handling;

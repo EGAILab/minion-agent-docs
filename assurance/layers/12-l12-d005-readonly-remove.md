@@ -154,3 +154,21 @@ The script passes `--runxfail`, clears `PYTEST_ADDOPTS`, and requires every inte
   - the concurrency witnesses;
   - Rust-side controls, including one restoring the current directory failure.
 - **Unchanged:** Linux behaviour, and the non-recursive directory rule (#125).
+
+## 8. Contract review 1 and remediation 1
+
+**Review 1** (Codex; minion-agent#188 issuecomment-6089433966; verdict file sha256 `6ead36f11fd2024a229e64792b8c06cb98e1c834895c0bdfdae403a5fdf6d947`).
+It reviewed code #189 @ `be91b1f7` and docs #277 @ `e2eed4a1`. Verdict: **CHANGES REQUESTED**.
+
+- **`L12D005-C001`** (medium, `CONTRACT_ASSURANCE_DEFECT`). §17 rule 6 claimed that every directory without write permission fails on POSIX. In fact an *empty* mode-0555 directory in a writable parent is removable, and pinned Pi removes it. The corpus held only the non-empty case, so it could not reject the false reading.
+- **`N001`** (nonblocking). §4 says the "8 others" pass on Windows at the contract stage. 9 do: 19 cases apply on Windows, 10 are strict xfail and 9 pass. The completeness test makes pytest's total 10.
+
+**Remediation 1:**
+- **Rule 6 restated.** POSIX permission semantics are unchanged and decided by the host's checks. A directory's own missing write permission matters only when an entry inside it must be unlinked. The characterized non-root outcomes (empty → removed, non-empty → `permission_denied` naming the child) are stated, and no claim is made for privileged callers. The manifest's EXEC-002 text says "POSIX permission semantics unchanged".
+- **New case** `rec-posix-readonly-empty-dir` (Linux), sitting beside the existing `rec-posix-readonly-subdir`. It was added to `gen/cases.json`, and the unchanged `gen/pi-oracle.mjs` was re-run on Linux.
+  - **Run:** `node:22.15.1-bookworm-slim`, uid 1000, `--tmpfs /tmp`, pinned Pi mounted read-only.
+  - **Result:** Pi gives `ok`, with nothing left. Every earlier Linux observation is byte-identical.
+  - **Corpus:** regenerated with the unchanged generator, giving **21** documents. The only new file is the added case.
+  - **Root:** it expects success, so it also runs under root, where root gives the same result. The non-empty control stays non-root only.
+- **`N001`** is corrected here, not in §4, which keeps its text as history: 9 Windows cases pass at the contract stage.
+- **Windows unchanged:** no rule, case or control changed.

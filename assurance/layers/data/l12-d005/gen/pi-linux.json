@@ -111,6 +111,14 @@
     "t/sub/f"
    ],
    "external": []
+  },
+  {
+   "id": "rec-posix-readonly-empty-dir",
+   "observed": {
+    "ok": true
+   },
+   "left": [],
+   "external": []
   }
  ]
 }

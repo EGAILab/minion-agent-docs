@@ -439,6 +439,24 @@
     "path": "t",
     "recursive": true
    }
+  },
+  {
+   "id": "rec-posix-readonly-empty-dir",
+   "platforms": [
+    "linux"
+   ],
+   "fixture": [
+    {
+     "dir": "t/sub"
+    },
+    {
+     "readonly": "t/sub"
+    }
+   ],
+   "remove": {
+    "path": "t",
+    "recursive": true
+   }
   }
  ]
 }
