@@ -434,8 +434,11 @@ value snapshot captured at that request's header-publication point.
   event rule;
 - historical session logs, which are not rewritten.
 
-The only observable change is in a binding that did not record headers: the session log gains one
-`request/header` event per provider request, which consumes a sequence number.
+Observable changes:
+- in a binding that did not record headers, the session log gains one `request/header` event per
+  provider request, which consumes a sequence number;
+- in a binding whose request schemas aliased application-owned objects, a mutation after
+  publication no longer reaches that request (the schema value snapshot above).
 
 **Bindings:**
 - **Python:** already conforms on header presence, count and timing. Characterization:
