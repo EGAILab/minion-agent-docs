@@ -220,3 +220,25 @@ It reviewed code `559878bc` and docs `31657d88`. Verdict: **CONTRACT APPROVED / 
 - **Linux** (Docker `python:3.13`, tmpfs):
   - full suite as root: **5443 passed / 0 failed**;
   - the same remove and filesystem surfaces as uid 1000: **178 passed / 0 failed**.
+
+## 10. Implementation review 1 and remediation 1
+
+**Review 1** (Codex; #188 issuecomment-6089940273; verdict file sha256 `43460fc0a927fc9c8c7b5154212ffbfcdfedda20949751e89f5f55dd6e00edff`).
+It reviewed code `4812b255` and docs `a1f2c8b8`. Verdict: **CHANGES REQUESTED**. No production defect was found.
+
+- **`L12D005-I001`** (medium, `CONTRACT_ASSURANCE_DEFECT`, evidence only). `test_a_tree_entry_whose_retry_still_fails_reports_the_retry_error` made the first and the retried deletion fail identically. A mutant keeping the *first* error (`except OSError: pass` in place of `exc = retry`) therefore passed every new test.
+
+**Remediation 1** (test only; `exc = retry` is unchanged):
+- **New witness** `test_a_tree_entry_retry_failure_reports_the_retry_error_not_the_first`, through the real `LocalFileSystem.remove`:
+  1. The first `unlink` of a read-only tree entry fails with `PermissionError`.
+  2. The attribute is really cleared.
+  3. The retried `unlink` of that entry raises `NotADirectoryError`.
+  4. Asserted: two attempts, result `not_directory` naming the entry, the entry still present, its attribute cleared.
+- **Existing witness kept.** The earlier same-error witness remains, as complementary success-vs-failure coverage.
+- **New control** `tree-retry-keeps-the-first-error` in `controls_impl.py`. Under it the new witness fails at its code assertion (`'permission_denied' == 'not_directory'`), so it is killed for the error-selection reason.
+
+**Fresh gates:**
+- **Controls:** baseline **15 intended witnesses selected and PASS**; **11/11 KILLED**.
+- **Windows** (3.13.5): **5506 passed / 50 skipped / 21 xfailed**, coverage **100%** (9317), ruff and mypy clean.
+- **Python 3.12.8** surfaces: **217 passed / 8 skipped**.
+- **Linux:** the new witness is Windows-only, and the Linux-applicable code and tests are unchanged since §9.

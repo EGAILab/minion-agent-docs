@@ -73,6 +73,10 @@ CONTROLS = [
      "        except OSError as retry:\n            exc = retry\n",
      "        except OSError:\n            return\n",
      [RACE + "test_a_tree_entry_whose_retry_still_fails_reports_the_retry_error"]),
+    ("tree-retry-keeps-the-first-error",  # L12D005-I001: which failure survives
+     "        except OSError as retry:\n            exc = retry\n",
+     "        except OSError:\n            pass\n",
+     [RACE + "test_a_tree_entry_retry_failure_reports_the_retry_error_not_the_first"]),
     ("handler-reports-a-vanished-tree-entry",
      "    if isinstance(exc, FileNotFoundError):\n        return\n    if (\n",
      "    if (\n",
