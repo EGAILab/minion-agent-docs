@@ -198,18 +198,18 @@ log-only classification, historical logs, and the `L08-D001` note. Rust is feasi
   - Checked against the unchanged driver: (b) fails, because the first request carries the mutated schema. With a
     value-copying capture, tried in place and reverted, both pass.
   - The header is read from the stored artifact bytes, so these witnesses do not depend on `L03-D001`.
-- **Controls** (`data/08-l08-d002/controls.py`). Three mutants are added:
-  - header-only schema corruption, Codex's R001 control;
-  - header drops `constrained_sampling`;
-  - request tools reordered.
-
-  All 8 controls were run on a scratch copy of this candidate with the planned `L03-D001` decoder overlaid, as the
-  baseline after `L03-D001` merges. The 8 request-header cases pass, and all 8 controls are **KILLED**:
-  - the corruption control is killed by `full-schema-identity`, `one-per-request-in-order` and
-    `transform-failure-later-request`;
-  - the sampling and reorder controls are killed by `full-schema-identity`.
-
-  An R003 "no value snapshot" control, killed by witness (b), is added with the driver correction.
-- **Not yet runnable on this branch:** `full-schema-identity` fails against unchanged Python until `L03-D001`
-  lands, because the header loses `constrained_sampling`. That is the declared dependency. This contract is
-  re-submitted for review only after `L03-D001` is merged.
+- **Controls** (`data/08-l08-d002/controls.py`):
+  - **Three mutants added:** header-only schema corruption (Codex's R001 control), header drops
+    `constrained_sampling`, and request tools reordered.
+  - **Validity gates**, carrying over the `L03D001-R001` lesson: the request-header cases must all pass
+    unmutated (positive baseline), and each mutant has a declared set of intended cases. KILLED needs pytest exit
+    1, no ERROR or XPASS, and every intended case among the failures. Otherwise the result is INVALID.
+  - **Fresh run on this rebased candidate** (`L03-D001` is now merged, so no overlay is needed): baseline green,
+    and **8/8 KILLED**.
+    - The corruption control is killed by `full-schema-identity`, `one-per-request-in-order` and
+      `transform-failure-later-request`.
+    - The sampling and reorder controls are killed by `full-schema-identity`.
+  - An R003 "no value snapshot" control, killed by witness (b), is added with the driver correction.
+- **Dependency met.** `L03-D001` Python is merged and certified: code #178 → `9b91dad8`, docs #270 → `09c8c499`,
+  minion-agent#174. So `full-schema-identity` passes on this candidate. `L03-D001`'s Rust closure, a test-only
+  count change, is tracked in #174.

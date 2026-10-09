@@ -2,8 +2,13 @@
 agent_loop/driver.py; the request-header canonical scenarios must fail. Run from a copy's
 minion-agent-python/ with: python controls.py <python> <basetemp>.
 
-Anchors start at a line start; every mutant must change the source and compile; only pytest exit
-status 0 (survived) or 1 (killed) counts -- anything else is INVALID and fails the run."""
+Anchors start at a line start; every mutant must change the source and compile.
+
+Validity (remediation 1, carrying over the L03D001-R001 lesson):
+- before any mutant, the request-header cases must all pass unmutated (positive baseline), else the run stops;
+- KILLED needs pytest exit 1, no ERROR line and no XPASS, and every one of the mutant's INTENDED cases among
+  the failures; exit 0 is SURVIVED; anything else (another exit status, an error, or failures that miss an
+  intended case) is INVALID. The run exits non-zero unless every mutant is KILLED."""
 
 import os
 import pathlib
@@ -57,6 +62,37 @@ MUTANTS = {
     "request tools reordered": [(SENT, SENT.replace("tools=schemas,", "tools=schemas[::-1],"))],
 }
 
+# The case(s) each mutant must fail, at minimum.
+INTENDED = {
+    "header after transformContext": {"request-header-transform-failure-first-request",
+                                      "request-header-transform-failure-later-request"},
+    "no header": {"request-header-single-request"},
+    "duplicate header": {"request-header-single-request"},
+    "stored prompt instead of the override": {"request-header-records-the-literal-override"},
+    "provider-qualified model": {"request-header-single-request"},
+    "header-only schema corruption (Codex R001 control)": {"request-header-full-schema-identity",
+                                                           "request-header-one-per-request-in-order"},
+    "header drops constrained_sampling": {"request-header-full-schema-identity"},
+    "request tools reordered": {"request-header-full-schema-identity"},
+}
+assert set(INTENDED) == set(MUTANTS)
+
+
+def _run(tag: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [PY, "-m", "pytest", "-p", "no:cacheprovider", "--no-cov", "-q", "-rfEX",
+         f"--basetemp={BASETEMP}/{tag}", *TESTS],
+        capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"},
+    )
+
+
+baseline = _run("baseline")
+if baseline.returncode != 0 or "ERROR" in baseline.stdout or "XPASS" in baseline.stdout:
+    print("INVALID  baseline: request-header cases not green unmutated")
+    print(baseline.stdout[-2000:])
+    sys.exit(1)
+print("BASELINE", baseline.stdout.strip().splitlines()[-1])
+
 results: dict[str, list[str] | str] = {}
 for label, edits in MUTANTS.items():
     text = ORIGINAL
@@ -71,17 +107,15 @@ for label, edits in MUTANTS.items():
         except py_compile.PyCompileError as error:
             results[label] = f"INVALID (does not compile: {error.msg.strip().splitlines()[-1]})"
             continue
-        run = subprocess.run(
-            [PY, "-m", "pytest", "-p", "no:cacheprovider", "--no-cov", "-q",
-             f"--basetemp={BASETEMP}/{abs(hash(label))}", *TESTS],
-            capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"},
-        )
-        if run.returncode not in (0, 1):
-            results[label] = f"INVALID (pytest exit status {run.returncode})"
+        run = _run(str(abs(hash(label))))
+        if run.returncode not in (0, 1) or "ERROR" in run.stdout or "XPASS" in run.stdout:
+            results[label] = f"INVALID (pytest exit status {run.returncode}, or an error/XPASS)"
             continue
-        results[label] = [
+        failed = [
             line.split("[", 1)[1].split("]", 1)[0] for line in run.stdout.splitlines() if line.startswith("FAILED")
         ]
+        missing = INTENDED[label] - set(failed)
+        results[label] = f"INVALID (intended case(s) not failed: {sorted(missing)})" if failed and missing else failed
     finally:
         DRIVER.write_text(ORIGINAL, encoding="utf-8")
 
