@@ -1,7 +1,12 @@
 # L08-D002 — Request header per provider request (Layer 08 delta)
 
-**Status:** contract delta, for independent contract review. Python: conforms (pre-existing).
-Rust: NOT_IMPLEMENTED.
+**Status:** contract APPROVED and merged (section 7, then #172 → `d461f812`, #266 → `0834a937`).
+Python: implementation candidate (section 8). Header presence and timing were pre-existing; the R003
+schema value snapshot was not. Rust: NOT_IMPLEMENTED.
+
+> Sections 2 to 6 are the first contract candidate as reviewed. Where they say Python "conforms",
+> read it as header presence, count and timing only. Contract review 1 found the schema-snapshot gap
+> (`L08D002-R003`), which section 8 corrects.
 
 **Coordination:** `minion-agent#171`.
 
@@ -213,3 +218,51 @@ log-only classification, historical logs, and the `L08-D001` note. Rust is feasi
 - **Dependency met.** `L03-D001` Python is merged and certified: code #178 → `9b91dad8`, docs #270 → `09c8c499`,
   minion-agent#174. So `full-schema-identity` passes on this candidate. `L03-D001`'s Rust closure, a test-only
   count change, is tracked in #174.
+
+## 8. Contract approval, merge and Python implementation
+
+**Contract.** Codex's contract re-review 1 APPROVED code #172 @ `1ef1f093` / docs #266 @ `8bbe052e`. Recorded
+verbatim at #171 issuecomment-6073014973. R001 and R003 are closed at the contract stage, and R002 through
+`L03-D001`, which is closed (#174). Both PRs were merged by guarded exact-head squash merges, in the Owner's order
+of contract, review, then merge: #172 → `d461f812`, #266 → `0834a937`.
+
+**Editorial note from that review.** Older summaries said Python "already conforms". This record now qualifies
+them: the status header, the note above section 2, AG-025's rule and Python field, and the spec's
+observable-changes list. Python's header presence and timing were pre-existing. Its schema value snapshot was
+not.
+
+**Python correction**, the narrow Layer 08 driver change the Owner authorized:
+- `agent_loop/driver.py` gains `_schema_snapshot(schema)`, which is `replace(schema, parameters=copy.deepcopy(...))`.
+- `name`, `description` and `constrained_sampling` are immutable values already; the nested `parameters` mapping
+  is the only possible alias of application state.
+- Each request build computes one snapshot tuple. The header records it, and the provider request carries that
+  same tuple.
+- Unchanged: the run-start shallow `RunContext.tools` snapshot, `ToolDefinition`, registry membership and
+  identity, Layer 07 state, the artifact format, assembler semantics, and the failure and lifecycle rules.
+
+**Witnesses** (`tests/agent_loop/test_request_schema_snapshot.py`; the strict xfail is removed):
+- the full-schema identity of header and request, two ordered tools with sampling metadata (G, F);
+- the transform-time mutation witness (A–E).
+  - The first header and request keep the pre-mutation nested value and list.
+  - The second request takes its own snapshot and sees the change.
+  - Its header matches it.
+
+**Controls** (`data/08-l08-d002/controls.py`):
+- one implementation-stage mutant is added, **"no value snapshot"**, restoring the aliasing derivation;
+- its intended witness is the mutation witness;
+- the witness module is now selected alongside the request-header cases (`-k "request-header or
+  request_schema_snapshot"`).
+
+**A survivor caught by the baseline.** The first run of the new control *survived*. The `-k request-header` filter
+had deselected the snapshot witness entirely, so the mutant never met its witness. That was a selection mistake,
+not a weak witness. The baseline gate now also requires every mutant's intended case to appear among the PASSED
+nodes, using `-rA`. A copy of the script with the old filter reproduces the mistake, and the baseline refuses it:
+`INVALID baseline: ... intended witnesses not selected: [test_a_transform_time_mutation_...]`.
+
+**Fresh run on the implementation candidate:** baseline `10 passed; every intended witness selected and green`,
+then **9/9 KILLED**:
+- the 8 contract-stage mutants;
+- `no value snapshot`, killed by `test_a_transform_time_mutation_reaches_neither_the_published_header_nor_its_request`.
+
+Fresh gate counts are in the implementation PR and the coordination issue. Rust L08-D002 remains NOT_IMPLEMENTED,
+and cross-language L08-D002 is NOT CLOSED.
