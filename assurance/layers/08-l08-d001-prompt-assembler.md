@@ -221,3 +221,15 @@ Windows and on Linux (exit 0 on both):
 | Override reassembled | the verbatim-override witness |
 | Stale assembled text | late registration, replacement, growth, concurrent churn, later-turn failure, `UnknownModelError[2]` |
 | Header published before assembly | override, raising, non-string, later-turn failure, header reconstruction, `UnknownModelError[1]` and `[2]` |
+
+## 10. Dependency on L08-D002 (Owner decision on `L08D001-RUST-C001`)
+
+- **The defect:** the Rust checkpoint found that the certified Rust driver records no request
+  header (`L08D001-RUST-C001`, `CONTRACT_ASSURANCE_DEFECT`).
+- **The decision:** the Owner opened `L08-D002` (`minion-agent#171`), which makes "one
+  request/header per provider request" normative in both bindings (spec/agent.md, "Request header
+  per provider request").
+- **What changes here:** this delta's step 4 ("record the request header") and its "no assembler:
+  unchanged" guarantee are read relative to that corrected baseline. AG-024 is unchanged. Python
+  already conforms.
+- **Rust order:** Rust L08-D001 is integrated and certified only after L08-D002 is.

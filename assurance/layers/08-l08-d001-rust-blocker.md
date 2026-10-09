@@ -41,3 +41,14 @@ No new dependency, Python change, or shared semantic change was made.
 Full regression gates, later-turn/replacement/growth/concurrency witnesses,
 header reconstruction and discriminating source controls remain outstanding.
 This checkpoint is explicitly not an implementation approval or certification.
+
+## Resume after the separately certified header correction
+
+The preceding status and observations describe the original checkpoint, not the
+current candidate. The Owner selected separate delta L08-D002 (#166
+issuecomment-6068630928); its Rust implementation was independently approved
+at #171 issuecomment-6076366261 and merged as code `c99be8e2` / docs `db3c8934`.
+That resolves this checkpoint's dependency and defines the corrected
+no-assembler baseline. The resumed candidate and fresh evidence are recorded in
+`08-l08-d001-rust-implementation.md`. Neither this historical record nor the
+resume itself certifies Rust L08-D001.

@@ -71,3 +71,28 @@ The requirement applies whenever concurrent mutation is admitted by that impleme
 
 Dispatch and reconstruction use the same canonical composition. Content-addressed artifacts are a
 Minion storage divergence permitted only when model-visible bytes are equivalent.
+
+### Request-header tool reconstruction (`L03-D001`)
+
+A request header records the request's tool schemas in a content-addressed artifact, separate from its prompt
+components. Reconstructing them returns every model-facing field each schema had when recorded: `name`,
+`description`, the complete nested `parameters`, and `constrained_sampling` (`spec/tools.md`).
+
+- **Every state comes back.** `constrained_sampling` has four states: absent, `false`, a `json_schema` config with
+  `strict` of `prefer` or `require`, and a `grammar` config carrying any subset of `openai_lark` and `openai_regex`,
+  the empty subset included. Reconstruction returns the recorded state. `false` is never read back as absent, and
+  absent is never read back as `false`. A grammar keeps exactly the formats it had, with their text.
+- **Order and equality.** Reconstruction returns the recorded tools in recorded order, each equal to the schema
+  recorded. Comparing names, or any subset of fields, is not evidence of this rule.
+- **Historical headers.** A stored tool entry that has no `constrained_sampling` member reconstructs it as absent.
+  Headers recorded before the field existed stay readable.
+- **No lossy reading.** A stored `constrained_sampling` value outside the four states fails reconstruction. It is
+  never normalized, and never read as absent. The error kind is binding-defined. So is any tolerance for extra
+  members inside an otherwise valid config object: the artifact bytes are binding-private, and only that binding's
+  own `record_header` writes them.
+- **Storage is unchanged.** This rule is about reading. Each binding keeps its existing stored byte form, field
+  names and artifact hashes. No header format, store or public Session API is added.
+
+This corrects certified behaviour; it is not a new feature and not a Pi divergence. Pi has no request-header
+artifact. `MINION-003` permits content addressing only when the log reconstructs what was dispatched, and
+`constrained_sampling` is part of each tool schema the provider request carries.

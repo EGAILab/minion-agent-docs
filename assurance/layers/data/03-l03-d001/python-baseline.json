@@ -1,0 +1,476 @@
+[
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": true,
+    "recorded": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "absent",
+    "stored": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": false,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "false",
+    "stored": {
+      "constrained_sampling": false,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "strict": "prefer",
+        "type": "json_schema"
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "json_schema_prefer",
+    "stored": {
+      "constrained_sampling": {
+        "strict": "prefer",
+        "type": "json_schema"
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "strict": "require",
+        "type": "json_schema"
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "json_schema_require",
+    "stored": {
+      "constrained_sampling": {
+        "strict": "require",
+        "type": "json_schema"
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_lark": "start: WORD"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "grammar_lark",
+    "stored": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_lark": "start: WORD"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_regex": "[a-z]+"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "grammar_regex",
+    "stored": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_regex": "[a-z]+"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_lark": "start: WORD",
+          "openai_regex": "[a-z]+"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "grammar_both",
+    "stored": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {
+          "openai_lark": "start: WORD",
+          "openai_regex": "[a-z]+"
+        }
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  },
+  {
+    "reconstructed": {
+      "constrained_sampling": null,
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "reconstructed_equals_recorded": false,
+    "recorded": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {}
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "state": "grammar_neither",
+    "stored": {
+      "constrained_sampling": {
+        "type": "grammar",
+        "variants": {}
+      },
+      "description": "Echo.",
+      "name": "echo",
+      "parameters": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    "stored_equals_recorded": true
+  }
+]
