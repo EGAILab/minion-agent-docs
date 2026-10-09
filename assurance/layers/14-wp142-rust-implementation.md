@@ -96,8 +96,8 @@ canonical partition or direct driver/unit witness for each control.
 
 ## Validation and reproducibility
 
-Fresh platform results and the exact sequential recipes are recorded below after
-the gate batches finish. No incomplete run or environment-invalid control is
+Fresh platform results and the exact sequential recipes are recorded below.
+No incomplete run or environment-invalid control is
 counted as a pass. All Windows storage (TMP/TEMP/TMPDIR, caches, Cargo home/target,
 worktrees, copies and logs) is inside the E: project root. Linux uses E: bind mounts
 for source, Cargo home/target and logs, and tmpfs for temporary POSIX fixtures; no
@@ -178,6 +178,36 @@ python -m pytest -q -o addopts='' process/tools/tests
 ```
 
 These are schema/manifest and process gates, not a new Python certification claim.
+
+Linux positive G3 passed **638 / 0 failed / 1 configured ignore**, including
+4 doctests, across 89 result blocks. Formatting, strict Clippy, warning-strict
+rustdoc and `xtask conformance verify` passed. The configured ignore is
+`recursive_remove_single_failure_reports_the_inner_native_call`, the real POSIX
+permission witness that must run as a non-root user. An explicit sequential
+non-root check is recorded below after the control batch. No other gate batch ran
+concurrently and no load-affected result is credited.
+
+Linux controls passed **18/18 WP-14.2 + 9/9 assembler + 11/11 header** valid
+intended-witness kills, with zero invalid controls or survivors. Every intended
+baseline witness was selected and passed. The complete Linux container batch
+exited zero after all gates and controls, using the same control-only resource
+settings as Windows.
+
+After that batch, the supplemental non-root permission witness passed separately:
+**1 passed / 0 failed / 0 ignored**. `permission-linux.sh` selects the exact
+positive-G3 binary from the test log and runs the witness as `nobody`, with the
+same ICU libraries and tmpfs fixtures. Copy it and `permission-run-linux.ps1`
+to `.tmp/wp142-rust/` and run the latter sequentially after `run-linux.ps1`.
+This covers the root-run ignore; it is not added to the full-suite count.
+
+Local evidence is under `.tmp/wp142-rust/logs-windows`,
+`controls-{assembler-windows-complete,header-windows,assembly-windows}` and
+`logs-linux` (including `permission-nonroot.log`). The original code worktree
+remained unmutated. Later code commits change only control-runner capture and
+intended-failure signatures, not production, tests or canonical expectations.
+The final code candidate is PR #185 at
+`ad3481ecfc08af4139b292bc352763f7d9750afd`; PR #275 carries this assurance.
+Its final exact SHA is recorded in issue #159 rather than self-referenced here.
 
 ## Scope and handoff
 
