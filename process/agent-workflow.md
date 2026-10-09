@@ -482,6 +482,12 @@ For each control, the evidence record identifies:
 
 A mutation that produces only unrelated failures does not show that the claimed permanent witness protects the rule. Fix the witness, or add one, before claiming the control. Control runners should reject collection, setup and compile failures as kills mechanically, and report the identity of each killing test so a reviewer can check it.
 
+**A control runner proves its own baseline first.** Before any mutant, the runner executes the unmutated candidate and stops as INVALID unless:
+- every witness it will rely on runs and passes. A witness that was never *selected* — dropped by a `-k` filter, a path, a marker or a parametrize id — can neither kill its mutant nor reveal that it could not. So the check is that each mutant's intended test appears among the baseline's PASSED nodes, not merely that the run exited 0;
+- no pending marker hides the result. A witness carried as `xfail(strict=True)` on a contract-stage candidate turns a real failure into XFAIL (exit 0, a false SURVIVED) and a correct fix into a strict XPASS. A runner used on an overlay of the planned fix must neutralize such markers explicitly (pytest `--runxfail`) and clear inherited options (`PYTEST_ADDOPTS`).
+
+The recipe that produced a recorded kill is part of the evidence. That includes any overlay of a planned fix, and any marker bypass. A kill that cannot be reproduced from the committed script and the documented recipe is not evidence. (L03-D001 `L03D001-R001`; L08-D002 remediation 1, section 8.)
+
 ### 9.8 Reproducible platform evidence
 
 When Linux evidence (or any second-platform evidence) materially supports a review, closure or certification, record enough of the environment that another reviewer can reproduce it without reconstructing the setup from chat history. As applicable, record:
