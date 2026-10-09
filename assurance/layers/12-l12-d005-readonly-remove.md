@@ -172,3 +172,51 @@ It reviewed code #189 @ `be91b1f7` and docs #277 @ `e2eed4a1`. Verdict: **CHANGE
   - **Root:** it expects success, so it also runs under root, where root gives the same result. The non-empty control stays non-root only.
 - **`N001`** is corrected here, not in §4, which keeps its text as history: 9 Windows cases pass at the contract stage.
 - **Windows unchanged:** no rule, case or control changed.
+
+## 9. Contract review 2 and Python implementation
+
+**Review 2** (Codex; #188 issuecomment-6089613161; verdict file sha256 `afea9f2aa45a7e53be655d2338837ee9cd7e86224bd8a2d8b1b4c9bf52f5614a`).
+It reviewed code `559878bc` and docs `31657d88`. Verdict: **CONTRACT APPROVED / CHECKPOINT APPROVED**.
+- `L12D005-C001` is CLOSED.
+- **Nonblocking `N002`:** §17's canonical-evidence pointer said 20 documents. It now says 21, in the implementation docs commit.
+
+**Implementation** (code commit `L12-D005 Python`, on the same PR #189):
+
+- **Mechanism.**
+  - When deleting an entry raises `PermissionError`, the entry's **own** `FILE_ATTRIBUTE_READONLY` is cleared and the deletion retried once.
+  - It is cleared through a handle opened with `FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS`, and read and written with `Get/SetFileInformationByHandle(FileBasicInfo)`. So a link is changed itself, never its target. This works the same on Python 3.12 and 3.13, so no `os.chmod(follow_symlinks=False)` is needed.
+  - **No retry when:** the attribute was not set, the handle cannot be opened (for example, `WRITE_ATTRIBUTES` or `DELETE` denied by ACL), or the update fails. The original error then stands.
+  - **Retry fails:** that retry's error is reported, with §14.8 origin.
+- **Entries that vanish count as removed** (§17's concurrency clause). This covers vanishing:
+  - before the attribute correction (the handle open gives `ERROR_FILE_NOT_FOUND` or `ERROR_PATH_NOT_FOUND`);
+  - before the retry;
+  - during the walk.
+- **Python 3.12 gap, found here.** On 3.12, `shutil.rmtree` hands a concurrently vanished tree entry's `FileNotFoundError` to the error handler, while 3.13 and later skip it before the handler. So the handler now treats `FileNotFoundError` as removed, as `rimraf` does with `ENOENT`. The walk witness exposed this on 3.12. A direct handler witness also covers it on 3.13.
+- **Where it applies:** the top-level delete, the symlink delete, and `rmtree`'s handler for `unlink`, `remove` and `rmdir`. POSIX is unchanged. On POSIX, `_clear_readonly` returns False.
+- **Witnesses:**
+  - the 21-document canonical corpus, with no strict xfails left;
+  - `tests/execution/test_filesystem_readonly_remove.py`: vanishing before the correction, a failed correction keeping the original error, vanishing during the walk (both platforms; POSIX walks by directory fd), a tree retry error, vanishing before a tree retry, and the handler's vanished entry.
+
+**Implementation-stage controls** (`data/l12-d005/controls_impl.py`; same validity rules; anchors on the implementation; contract-stage `controls.py` kept as history).
+- Baseline: **14 intended witnesses selected and PASS**.
+- **10/10 KILLED**:
+
+  | Control | Witnesses |
+  |---|---|
+  | `top-level-delete-not-retried` | 2 canonical |
+  | `tree-entries-not-retried` | 2 canonical |
+  | `directories-not-retried` | 2 canonical |
+  | `attribute-cleared-through-the-reparse-point` (handle opened without `FILE_FLAG_OPEN_REPARSE_POINT`) | the link-itself case, and the read-only external target staying read-only |
+  | `acl-denial-swallowed` | 2 canonical |
+  | `vanished-before-correction-is-an-error` | binding |
+  | `vanished-before-top-level-retry-is-an-error` | binding |
+  | `vanished-before-tree-retry-is-an-error` | binding |
+  | `tree-retry-error-replaced-by-success` | binding |
+  | `handler-reports-a-vanished-tree-entry` | binding |
+
+**Fresh gates at the implementation head:**
+- **Windows** (Python 3.13.5): **5505 passed / 50 skipped / 21 xfailed**, coverage **100%** (9317 statements), ruff and mypy clean.
+- **Python 3.12.8 on Windows:** the remove and filesystem surfaces (corpus, binding witnesses, `test_fs_error_origin`, `test_filesystem`) give **216 passed / 8 skipped**.
+- **Linux** (Docker `python:3.13`, tmpfs):
+  - full suite as root: **5443 passed / 0 failed**;
+  - the same remove and filesystem surfaces as uid 1000: **178 passed / 0 failed**.
