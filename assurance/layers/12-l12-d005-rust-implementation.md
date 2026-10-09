@@ -65,7 +65,10 @@ Other excluded Layer-12 findings are not remediated or certified by this candida
 tree, restores every source in `finally`, and first proves each intended baseline is selected
 and passing. A kill requires the exact witness FAILED, a semantic panic with its expected
 signature, one failed test, and Cargo test exit 101. Compilation/infrastructure failures and
-unselected witnesses are INVALID.
+unselected witnesses are INVALID. After restoring the sources the runner invalidates only
+the small native-helper package's regenerable Cargo artifacts, rebuilds, and requires every
+intended witness to pass again. This leaves the single shared platform target in a verified
+unmutated state.
 
 | Control | Intended witness | Discriminator |
 |---|---|---|
@@ -83,6 +86,13 @@ survives, correctly, because the outer Windows recursive seam also accepts NotFo
 not a killed control and is not counted. The revised control preserves the original permission
 error on that disappeared retry, which changes the actual recursive result and is discriminated
 by the permanent disappearance witness. No production correction was needed.
+
+Self-found cache hazard: a control's native-helper artifact was reused across the scratch and
+candidate worktrees after source restoration, making the first full Windows run fail the
+no-follow witness. Cleaning only `minion-agent-native-fs` and rerunning the unchanged exact
+witness passed. The product source was correct; this was compiled-mutant contamination in
+the shared Cargo target. That failed batch is not a passing gate. The restoration proof above
+was added to the runner; fresh isolated complete gates replace the affected batch.
 
 ## 5. Fresh gates and reproducibility
 
