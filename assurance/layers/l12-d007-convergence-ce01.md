@@ -5,7 +5,7 @@ Coordination: minion-agent#199.
 - **Scope:** the evidence and fixture containment surface only. No Pi filesystem semantics, error-code expectation, native call sequence or certified product behavior changes here.
 - `L12D007-C002` and `L12D007-C003` stay provisionally closed at code `80fd74c0` / docs `105bc1f9`.
 
-**Checkpoint: revision 1 REJECTED** (independent checkpoint review 1). **Revision 2 PROPOSED**, at the end of this record. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
+**Checkpoint: revision 1 REJECTED** (independent checkpoint review 1); revision 2 REJECTED narrowly, on R5 only (checkpoint review 2). **Revision 3 PROPOSED**, at the end of this record. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
 
 ## OPEN FINDINGS
 
@@ -270,3 +270,28 @@ Negative controls, each killed by its intended witness. Revision 1's seven stand
 10. **entry-proof-authorizes-write:** the intercept admits a write after an ENTRY proof of the same path. Killed by (a) under the intercept.
 11. **logical-not-native:** prove the logical spelling instead of the native projection. Killed by (e).
 12. **restore-on-absence:** a restore attempted on a proven-missing target. Killed by (f).
+
+## Checkpoint revision 3 (after independent checkpoint review 2: REJECTED narrowly)
+
+Checkpoint review 2 (#199 comment 6101270123; `.tmp/codex-scratch/l12d007-ce01-checkpoint-review-2.md`) provisionally closed the entry-versus-referent finding (`CE-L12D007-01-C001`). It rejected only R5's projection clause.
+
+Revision 2 said "on POSIX a lone surrogate becomes U+FFFD; on Windows the UTF-16 spelling is kept". **That is wrong.** Certified §14.1 states the native projection "is the same on Linux and Windows: it happens before the platform-specific call". It also says a provider must not leave it to the host ("Python on Windows passes the raw surrogate to NTFS").
+
+The earlier Windows observation of a kept lone surrogate (`error/lone/self-dir/append`) is the **logical** fallback path of a path-less error (§14.1's logical value). It is not the native spelling.
+
+Revision 3 **supersedes only R5** below. Everything else in revision 2 stands.
+
+**Checkpoint: PROPOSED (revision 3).**
+
+### R5 (revision 3): provider-operation targets, as the native spelling actually touched
+
+The runner and the oracle pass the step's **original argument unchanged** to the provider. Separately, they compute the **effective native path** the provider will touch:
+1. Pi's logical resolution: a `file://` URL is decoded through the certified §14 rules, and a relative path is joined to the case directory;
+2. then the certified §14.1 native projection, **identical on Linux and Windows**:
+   - an unpaired high or low surrogate becomes U+FFFD;
+   - a valid surrogate pair, including one held as two separate surrogate characters, becomes its astral character;
+   - everything else is unchanged.
+
+That native spelling is REFERENT-proven under R2 on both platforms. So `a<U+D800>`, `a<U+DC00>` and `a<U+FFFD>` (§14.1's aliasing) are proven as the one native entry `a<U+FFFD>`, and a link at that spelling cannot evade the proof on either host. This applies the certified §14.1 rule; it does not modify it. The raw-form ban (R1) still does not apply to provider inputs.
+
+**Witness (e), revised:** the projection alias pair runs on **both** platforms. A synthetic lone-surrogate argument (high, and low) whose projected U+FFFD spelling is an outward link is **refused**. Its unprojected spelling, which is missing, must not be what the guard proves. Negative control 11 (**logical-not-native**) is killed by (e) on both platforms. A further mutant, **windows-keeps-surrogate** (project only on POSIX), is killed by (e)'s Windows run.
