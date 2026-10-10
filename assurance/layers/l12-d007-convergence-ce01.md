@@ -295,3 +295,48 @@ The runner and the oracle pass the step's **original argument unchanged** to the
 That native spelling is REFERENT-proven under R2 on both platforms. So `a<U+D800>`, `a<U+DC00>` and `a<U+FFFD>` (§14.1's aliasing) are proven as the one native entry `a<U+FFFD>`, and a link at that spelling cannot evade the proof on either host. This applies the certified §14.1 rule; it does not modify it. The raw-form ban (R1) still does not apply to provider inputs.
 
 **Witness (e), revised:** the projection alias pair runs on **both** platforms. A synthetic lone-surrogate argument (high, and low) whose projected U+FFFD spelling is an outward link is **refused**. Its unprojected spelling, which is missing, must not be what the guard proves. Negative control 11 (**logical-not-native**) is killed by (e) on both platforms. A further mutant, **windows-keeps-surrogate** (project only on POSIX), is killed by (e)'s Windows run.
+
+## Checkpoint amendment (revision 4): R3a, a proven over-long single component (POSIX)
+
+**Context.**
+- Under the agreed revision 3, the native Linux replay (uid 1000) **refused**, failing closed, at `errors/name-too-long`: the guard's `lstat` of the 300-character fixture component fails with `ENAMETOOLONG`, which is outside R3's POSIX missing set.
+- The first amendment request (add every `ENAMETOOLONG` to the missing set) was **REJECTED** (#199 comment 6101513676; `.tmp/codex-scratch/l12d007-ce01-amendment-review-1.md`). POSIX uses `ENAMETOOLONG` for an over-long **component**, an over-long **complete pathname**, and an over-long intermediate pathname after **link substitution** (POSIX `lstat` errors; pathname resolution, Base Definitions 4.16). Only the first proves that the inspected component cannot exist.
+- Accepted. The blanket rule is withdrawn. Revision 4 adds only R3a below. Revision 3 is otherwise unchanged, and R3a changes no Pi error-code expectation or product behavior.
+
+**Checkpoint: amendment PROPOSED (revision 4).**
+
+### R3a: proven over-long single native component (POSIX only)
+
+During the R2 walk, an `lstat` of component *C* that fails with `ENAMETOOLONG` proves *C* missing (terminal ii) **only if all of the following are established**, each independently:
+1. **The containing directory is fully proven.** Every earlier component of the current pending path was inspected, exists and is not a link (the R2 walk substitutes links as it meets them, so the prefix holds no link). There is therefore no link substitution between the proven directory and *C*.
+2. **The limit is established for that directory**, never assumed:
+   - `NAME_MAX` is queried for the **containing directory itself** (Python `os.pathconf(dir, "PC_NAME_MAX")`; Node `getconf NAME_MAX <dir>`, a read-only query);
+   - the answer must be a positive integer;
+   - an error, an unavailable or indeterminate limit (`-1`, `undefined`, non-numeric output) **refuses**. There is no default, and no assumption of 255.
+3. **The comparison is in native bytes.** *C*'s length is measured in the bytes of its §14.1 native spelling, encoded as the filesystem receives it (UTF-8 on POSIX). It must **exceed** `NAME_MAX`. A component at or under the limit that reports `ENAMETOOLONG` **refuses**: that error came from elsewhere, for example the whole pathname. A character count is never used.
+4. **The whole path is excluded as the cause.** `PATH_MAX` is queried the same way for the containing directory (a positive integer, or refuse). The byte length of the full absolute path inspected (directory + separator + *C*) must not exceed it. If it does, the source is ambiguous and the call **refuses**.
+
+If any condition fails, or the error is anything other than `ENAMETOOLONG`, R3 applies unchanged (refuse). Windows is unchanged: the same over-long component already fails with 123, in R3's agreed set.
+
+### Witnesses (synthetic; `lstat`, `pathconf`/`getconf` answers substituted; every mutation recorded, none reaches the OS)
+
+| # | Situation | Expected |
+|---|---|---|
+| W1 | proven directory, `NAME_MAX` 255, a 300-byte ASCII component reports `ENAMETOOLONG` (the corpus case) | **admit** (proven missing); no mutation outside the sandbox |
+| W2 | proven directory, a 100-byte component reports `ENAMETOOLONG` because the full path exceeds `PATH_MAX` | **refuse** |
+| W3 | an `ENAMETOOLONG` attributed to link expansion: a component at or under the limit whose `lstat` reports it | **refuse** |
+| W4 | byte versus character: 128 × `é` (128 characters, **256** UTF-8 bytes) against `NAME_MAX` 255 | **admit** |
+| W5 | byte versus character: 200 ASCII characters (200 bytes) against `NAME_MAX` 255, reporting `ENAMETOOLONG` | **refuse** (not over the byte limit) |
+| W6 | the limit query errors, or returns `-1` / undefined / non-numeric | **refuse** |
+| W7 | the `PATH_MAX` query is unavailable | **refuse** |
+| W8 | the containing directory is not proven (an earlier component's inspection is refused) | **refuse**, before any limit query |
+
+### Negative controls
+
+- **blanket-ENAMETOOLONG-is-missing:** admit every `ENAMETOOLONG`. Killed by W2, W3 and W5.
+- **refuse-every-overlong:** never admit. Killed by W1 and W4 (the positive fixtures).
+- **assume-255:** use 255 when the limit is unavailable. Killed by W6.
+- **character-count:** compare character length, not bytes. Killed by W4 and W5.
+- **skip-path-max:** omit condition 4. Killed by W2.
+
+The native Linux replay resumes only after this amendment is independently approved and its controls pass.
