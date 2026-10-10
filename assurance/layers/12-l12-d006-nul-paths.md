@@ -212,3 +212,23 @@ It reviewed code `1b014860` and docs `160dd5bb`. Verdict: **CHANGES REQUESTED**.
 - **Controls** (`controls.py` against the implementation itself):
   - Windows: baseline **11 PASS**, **7/7 KILLED** (`canonical-path-walks-first` is Linux-only);
   - Linux (uid 1000): baseline **12 PASS**, **8/8 KILLED**.
+
+## 11. Implementation review 1 and remediation 1
+
+**Review 1** (Codex; #194 issuecomment-6095732196; verdict sha256 `2a37d2ce44dc677def6def75b16287265414e0727a82ae69e92bee3c5319f7b0`). Verdict: **CHANGES REQUESTED**.
+- **`L12D006-I001`:** `_contain_nul` declared `self, path, /`, so `path` was positional-only. Every keyword call (`read_text_file(path=…)`, `rename_file(source=…, destination=…)`) now raised `TypeError` where the baseline returned `Ok`, across all 15 decorated operations.
+
+**Remediation 1:**
+- **Fix:** the wrapper forwards `*args, **kwargs` unchanged. On a contained `ValueError` it binds them against the operation's own signature (`inspect.signature`, computed once at decoration) and reads the path arguments by name: `path`, or `rename_file`'s `source` and `destination`. Containment, the error path and the precedence rules are unchanged.
+- **Witnesses** (`test_filesystem_nul.py`):
+  - for every decorated operation, a keyword call gives exactly the positional call's Result;
+  - a keyword call with a literal or `file://` `%00` NUL is contained as `unknown` with the logical path;
+  - a keyword `rename_file` to a `%00` destination names the source and leaves it intact.
+- **Control:** `positional-only-wrapper` restores the regression and is killed by the `read_text_file` and `rename_file` keyword witnesses (`TypeError`). `premature-nul-validation` is re-anchored to the binding.
+
+**Fresh gates:**
+- **Windows:** **5872 passed / 50 skipped / 21 xfailed**, coverage **100%** (9388); ruff and mypy clean. A first run hit only #197's bash race (with its one coverage line); it passed on rerun.
+- **Linux:**
+  - full suite as root: **5809 / 0**;
+  - the NUL surfaces as uid 1000: **454 passed**.
+- **Controls:** Windows baseline **13 PASS**, **8/8 KILLED**; Linux (uid 1000) baseline **14 PASS**, **9/9 KILLED**.

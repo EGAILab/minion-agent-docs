@@ -35,7 +35,8 @@ FS = "src/minion_agent/execution/filesystem.py"
 CANON = "tests/conformance/test_fs_path_conformance.py::test_fs_path_domain_case"
 BINDING = "tests/execution/test_filesystem_nul.py::"
 SIGNATURES = ("assert got == want", "assert isinstance(result, Err)", "assert result.error",
-              "assert await _tool", "DID NOT RAISE", "ValueError")
+              "assert await _tool", "DID NOT RAISE", "ValueError",
+              "TypeError: LocalFileSystem.")  # L12D006-I001: a call form the wrapper rejects
 PLATFORM = "win32" if sys.platform == "win32" else "linux"
 BOTH = ("win32", "linux")
 
@@ -55,10 +56,11 @@ CONTROLS_ALL = [
      "    return FsError(FsErrorCode.INVALID, str(exc), logical, exc)\n",
      [node("nul/middle/read_text_file"), node("nul/middle/file_info")], BOTH),
     ("premature-nul-validation", FS,
-     "        try:\n            return await method(self, path, *args, **kwargs)\n",
-     "        if _NUL in path:\n"
-     "            return Err(_nul_failure(ValueError(\"embedded null\"), resolve_local_path(self.cwd, path)))\n"
-     "        try:\n            return await method(self, path, *args, **kwargs)\n",
+     "        try:\n            return await method(*args, **kwargs)\n",
+     "        early = signature.bind(*args, **kwargs).arguments\n"
+     "        if _NUL in str(early.get(\"path\", \"\")):\n"
+     "            return Err(_nul_failure(ValueError(\"embedded null\"), resolve_local_path(early[\"self\"].cwd, early[\"path\"])))\n"
+     "        try:\n            return await method(*args, **kwargs)\n",
      [node("nul/under-new-parent/write_file"), node("nul/middle/read_text_lines-max0"),
       node("nul/aborted/read_text_file")], BOTH),
     ("projected-fallback-path", FS,
@@ -80,6 +82,15 @@ CONTROLS_ALL = [
      "            if not _nul_rejected(exc, path, *args, *kwargs.values()):\n",
      [node("nul/url-final/read_text_file"), node("nul/url-final/exists"),
       node("nul/url-control/rename_file-to-url-nul")], BOTH),
+    # L12D006-I001: a wrapper that takes the path positionally only breaks every keyword call.
+    ("positional-only-wrapper", FS,
+     "    async def contained(*args: P.args, **kwargs: P.kwargs) -> Result[T, FsError]:\n"
+     "        try:\n            return await method(*args, **kwargs)\n",
+     "    async def contained(self: Any, path: str, /, *args: Any, **kwargs: Any) -> Any:\n"
+     "        args = (self, path, *args)\n"
+     "        try:\n            return await method(*args, **kwargs)\n",
+     [BINDING + "test_a_keyword_call_behaves_exactly_like_the_positional_call[read_text_file]",
+      BINDING + "test_a_keyword_call_behaves_exactly_like_the_positional_call[rename_file]"], BOTH),
     ("canonical-path-walks-first", FS,
      "        if _NUL in resolved:\n            return Err(_nul_failure(ValueError(\"embedded null character in path\"), resolved))\n",
      "",
