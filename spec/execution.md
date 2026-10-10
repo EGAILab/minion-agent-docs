@@ -3093,3 +3093,89 @@ Each must fail a witness:
 - **Rust** removes read-only files, but fails a read-only directory.
 
 Record: `assurance/layers/12-l12-d005-readonly-remove.md`.
+
+---
+
+## 18. Layer-12 post-certification delta `L12-D006` — a NUL-containing path fails as `unknown` (`EXEC-002`, `EXEC-003`)
+
+**Status:** contract delta, for independent contract review (`minion-agent#194`). Provenance: `L12-NUL` (`minion-agent#65`) and `#133`-F1.
+
+**Owner decision:** "#65 + #133-F1, APPROVE OPTION 1: PINNED PI UNKNOWN", recorded verbatim on #65 and #133 (sha256 `ebb3579c…887f1c`). It authorizes a targeted correction of certified Layer 12 in both bindings, as `DIRECT_PI_PARITY`. It is not a divergence.
+
+**Authority:** pinned Pi `b7bb00b9`, `packages/agent/src/harness/env/nodejs.ts`, under Node v22.15.1.
+- `NodeExecutionEnv`'s operations each pass the resolved logical path to a `fs`/`fs.promises` call.
+- Node validates every path argument and rejects one containing U+0000 with `TypeError` `ERR_INVALID_ARG_VALUE`. That error carries **no** `err.path`.
+- `toFileError` (`nodejs.ts:97-121`) does not list that code, so it answers **`unknown`**, with the operation's logical fallback path.
+- The write tools' mutation-queue key (`coding-agent` `file-mutation-queue.ts` `getMutationQueueKey`) is `realpath(resolved)`, which rejects the same way. That is not a missing-path error, so it propagates.
+
+### 18.1 Rule
+
+For every filesystem-touching operation, **the native call whose path argument contains U+0000 fails**. The argument meant is the one the native call receives, **after** the existing L12-D001 resolution. A NUL can therefore also arrive through certified `file://` decoding (`%00` decodes to U+0000), with no literal U+0000 in the caller's string (`L12D006-C001`). The fallback path is then the decoded logical path.
+- **Where it fails:** at that call, in the operation's own call order.
+- **Result:** `Err(FsError(code = unknown))`.
+- **Path:** the operation's **logical** fallback path. That is the resolved JavaScript string, lone surrogates included. It is **never projected**, never replaced and never a native spelling.
+- **Never** a host exception escaping the `Result` boundary, and **never** `invalid`.
+
+| Operation | Fails at | Error path | Earlier effects kept |
+|---|---|---|---|
+| `read_text_file`, `read_binary_file`, `read_text_lines` | the read | the resolved path | — |
+| `write_file`, `append_file` | the write of the file. A NUL in the **parent** fails at the parent's creation | the resolved path | the parent directory **is created** when the NUL is only in the final component |
+| `rename_file` | the rename, whether the NUL is in the source, the destination or both | the **source**'s resolved path (Pi's fallback) | — |
+| `file_info`, `exists` | the `lstat`. `exists` answers `Err(unknown)`, **not** `false` | the resolved path | — |
+| `list_dir` | the enumeration | the resolved path | — |
+| `canonical_path` | the whole-argument validation of `realpath`, **before** any component walk. A missing earlier component never answers `not_found` first | the resolved path | — |
+| `create_dir` (recursive or not) | the creation | the resolved path | — |
+| `remove` (every `recursive` × `force` combination) | the removal. `force` does not swallow it | the resolved path | — |
+| `create_temp_dir` (NUL in `prefix`) | the creation | **none** (absent): Pi passes no fallback | — |
+| `create_temp_file` (NUL in `prefix` or `suffix`) | the file write | the would-be file path | the temporary directory **is created** |
+
+**Minion operations** follow the pinned Node primitive they map, which rejects the same way:
+- `list_dir_raw` (`readdir`) and `probe_dir_entry` (`lstat`), from EXEC-007;
+- `check_readable` (`access(R_OK)`), from EXEC-008, and `check_read_write` (`access(R_OK|W_OK)`), from EXEC-009. These already conform;
+- `resolve` / `target_key` (EXEC-003): `canonical_path`'s `unknown` propagates. It is not `not_found`, so there is no lexical fallback.
+
+### 18.2 Unchanged
+
+- **Lexical operations** (`absolute_path`, `join_path`) return their Pi-compatible string, NUL included. They are positive controls.
+- **Early returns keep precedence:**
+  - an already-aborted signal answers `aborted` (with that operation's abort path; for `rename_file`, the destination) before any NUL handling;
+  - `read_text_lines` with `max_lines <= 0` answers `ok([])` without touching the filesystem.
+- **No universal early validation.** An operation never rejects a NUL before reaching the native call that receives it. Such a check would change Pi's side effects (`write_file`'s parent creation) and its failure precedence. The one exception is `canonical_path`: its native call (`realpath`) itself validates its whole argument first.
+- **Binding mechanics:**
+  - Python must contain only the host's NUL rejection of a NUL-containing argument; an unrelated `ValueError` still raises.
+  - Rust must map only its NUL validation failure to `unknown`; any other `InvalidInput` keeps its existing classification.
+  - The L12-D001 JavaScript-string projection is unchanged.
+- **Out of scope here:**
+  - `#133`-F2 (native-name decoding) and the other recorded Layer-12 findings;
+  - NUL in a **subprocess** argument (`find` hands the search path to `fd`). That is the spawn surface, recorded separately as #195.
+
+### 18.3 Tool boundary (Layer 06 / Layer 13)
+
+The built-in tools reach these operations through `ctx.fs` and render a failure with the certified cause-phrase table (`R010-B`; `unknown` → "unknown filesystem error"). With a NUL path:
+
+| Tool | Result |
+|---|---|
+| `read` | `Cannot access <absolute>: unknown filesystem error` (`check_readable`) |
+| `write`, `edit` | `Cannot resolve <path>: unknown filesystem error`. The mutation-queue key fails **before** any parent creation, as Pi's `getMutationQueueKey` does |
+| `ls`, `grep` | `Path not found: <path>`. The directory probe fails, as Pi's `pathExists` / `stat` catch does |
+| `find` | the `ctx.fs` part (the `.git` ancestor probe) answers `Err`, and the walk continues. Its subprocess launch is the separately recorded spawn surface (#195) |
+
+Each result is an error tool result; no host exception text reaches the model.
+
+### 18.4 Evidence
+
+- **Canonical:** `conformance/agent/fs-path-domain/fs-path-nul.json`, 237 cases, generated from pinned Pi (`assurance/layers/data/l12-d006/gen`).
+  - Observations are identical on Windows and Linux.
+  - NUL positions covered: beginning, middle, end, the final component under a new parent, a parent component, and with a lone surrogate.
+  - The same final, parent-component and new-parent positions are also reached through a `file://` URL decoding `%00`.
+  - URL controls: an ordinary URL succeeds; `%2500` decodes to the three characters `%00`, not a NUL, so it gives an ordinary `not_found`/success; a rename to a `%00` URL destination names the source.
+  - The cases also cover rename source, destination and both; abort; `max_lines: 0`; and lexical controls.
+  - Follow-up steps observe the side effects.
+  - The `fs-path-domain` schema gains, additively, the EXEC-007/008/009 operations and the `max_lines`, `force` and `aborted` step fields.
+- **Binding witnesses:** temporary-file creation, the tool boundary, and an unrelated `ValueError` still raising.
+
+**Bindings today:**
+- **Python** raises `ValueError` from almost every operation. On Linux, `canonical_path` reports `not_found` for a missing earlier component, and on Windows it projects a lone surrogate in the error path.
+- **Rust** answers `invalid`.
+
+Record: `assurance/layers/12-l12-d006-nul-paths.md`.
