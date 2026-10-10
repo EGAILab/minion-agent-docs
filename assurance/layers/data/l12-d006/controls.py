@@ -35,8 +35,11 @@ FS = "src/minion_agent/execution/filesystem.py"
 CANON = "tests/conformance/test_fs_path_conformance.py::test_fs_path_domain_case"
 BINDING = "tests/execution/test_filesystem_nul.py::"
 SIGNATURES = ("assert got == want", "assert isinstance(result, Err)", "assert result.error",
-              "assert await _tool", "DID NOT RAISE", "ValueError",
+              "assert await _tool", "DID NOT RAISE", "ValueError: embedded null",
               "TypeError: LocalFileSystem.")  # L12D006-I001: a call form the wrapper rejects
+# A mutant that breaks the code itself (an undefined name, a syntax error) is not a behavioural
+# kill: its output makes the control INVALID (Codex #194 implementation review, I001 re-review).
+BROKEN_MUTANT = ("NameError", "UnboundLocalError", "SyntaxError", "ImportError")
 PLATFORM = "win32" if sys.platform == "win32" else "linux"
 BOTH = ("win32", "linux")
 
@@ -79,7 +82,7 @@ CONTROLS_ALL = [
     # `%00` decodes to the NUL the native call rejects.
     ("argument-only-containment", FS,
      "            if not _nul_rejected(exc, *resolved):\n",
-     "            if not _nul_rejected(exc, path, *args, *kwargs.values()):\n",
+     "            if not _nul_rejected(exc, *args, *kwargs.values()):\n",
      [node("nul/url-final/read_text_file"), node("nul/url-final/exists"),
       node("nul/url-control/rename_file-to-url-nul")], BOTH),
     # L12D006-I001: a wrapper that takes the path positionally only breaks every keyword call.
@@ -157,6 +160,7 @@ def main() -> int:
                 print(f"SURVIVED {name}")
                 failures += 1
             elif (run.returncode == 1 and " error" not in summary and "XPASS" not in out
+                  and not any(b in out for b in BROKEN_MUTANT)
                   and any(s in out for s in SIGNATURES) and set(failed) == set(nodes)):
                 print(f"KILLED   {name} ({len(failed)} intended witnesses failed)")
             else:

@@ -232,3 +232,15 @@ It reviewed code `1b014860` and docs `160dd5bb`. Verdict: **CHANGES REQUESTED**.
   - full suite as root: **5809 / 0**;
   - the NUL surfaces as uid 1000: **454 passed**.
 - **Controls:** Windows baseline **13 PASS**, **8/8 KILLED**; Linux (uid 1000) baseline **14 PASS**, **9/9 KILLED**.
+
+**Control-validity correction** (found by Codex during the I001 re-review; a separate assurance finding):
+- After the I001 fix, the `argument-only-containment` mutant still referenced the removed wrapper name `path`. It therefore raised `NameError`, not the intended escaped `ValueError`.
+- The kills reported in remediation 1 (Windows 8/8, Linux 9/9) passed the driver only because its signature list contained the bare `ValueError`, which a traceback line satisfied. **For that one control, those kills are not valid evidence.** The other controls' kills were genuine.
+- **Mutant fixed:** `_nul_rejected(exc, *args, *kwargs.values())`, testing the caller's raw arguments with valid names.
+- **Driver tightened:**
+  - the bare `ValueError` signature is narrowed to `ValueError: embedded null` (the escaped host rejection);
+  - a mutant whose output contains `NameError`, `UnboundLocalError`, `SyntaxError` or `ImportError` is INVALID, never a kill.
+- **Fresh re-run** (code `202d4ed5`, unchanged):
+  - **Windows:** baseline 13 PASS, **8/8 KILLED**. `argument-only-containment` is now killed by `ValueError: embedded null character` / `lstat: embedded null character in path` / `replace: embedded null character in dst`.
+  - **Linux** (uid 1000): baseline 14 PASS, **9/9 KILLED**, with no `NameError` in any control log.
+- **Codex's independent check of I001 at `202d4ed5`:** the 57-test binding module passes; all 46 keyword witnesses fail with `TypeError` at the rejected `0f4f1b11`.
