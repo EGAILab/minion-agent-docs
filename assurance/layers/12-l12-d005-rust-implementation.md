@@ -96,7 +96,41 @@ was added to the runner; fresh isolated complete gates replace the affected batc
 
 ## 5. Fresh gates and reproducibility
 
-Gate results are recorded below after the frozen candidate's batches complete.
+Frozen code candidate: `5f6b0e712266c00e6768d85f5f233f7946a94bea`.
+
+Windows G3: **648 passed, 0 failed, 0 ignored** (including 4 doctests). Formatting,
+strict all-target/all-feature clippy, warning-strict rustdoc and xtask conformance verification
+passed. The existing MSVC linker LNK4098 warning remains; clippy and rustdoc gates are green.
+The real readonly corpus executes 19 applicable documents. All 8 intended-witness controls
+were killed, with selected green baselines and the final restored 8-test baseline green.
+The fresh pinned-Pi/Node Windows replay has 19 rows identical to the committed oracle after
+JSON parsing (checkout CRLF vs generated LF is not claimed as raw-byte identity).
+
+Linux G3: **644 passed, 0 failed, 1 ignored** (including 4 doctests). The ignored
+pre-existing `recursive_remove_single_failure_reports_the_inner_native_call` permission
+witness was then run explicitly as uid/gid 1000 and **passed (1/0)**. Formatting,
+strict all-target/all-feature clippy, warning-strict rustdoc and xtask verification passed.
+The readonly corpus passed all **9 applicable documents as uid/gid 1000**, including empty
+mode-0555 directory success and the nonempty-directory child permission-error origin.
+All **6 portable controls** were killed at their intended witnesses; every selected baseline
+passed and the final restored **4-test** baseline passed. The 2 Windows-native controls are
+Windows-only, not represented as Linux executions.
+
+The Linux image is `rust:1.97.1-trixie`, pinned by RepoDigest
+`rust@sha256:b1b3c9c0d921d7fa0a6d1f9ec7e4eab87f8c8ec97644c3d791450f131dec813f`.
+Both platforms used Rust 1.97.1 and Node 22.15.1 with the certified ICU4C 78.3 environment.
+Fresh logs are retained under `.tmp/l12d005-rust/logs-windows`,
+`controls-windows-restored`, and `logs-linux-final` (including the Linux controls and
+unprivileged corpus). The extra non-root origin witness log is `posix-origin-unprivileged.log`.
+
+Shared schema and manifest validation: **885 passed** in a final sequential Windows batch
+using the candidate's unchanged Python source, pinned ICU environment, and
+`pytest tests/conformance/test_schema_validation.py tests/conformance/test_manifest_validation.py
+-q -o addopts=''`. This is schema/traceability validation, not a new Python implementation pass.
+
+The first Linux attempt was stopped before completion when another full Python gate batch
+was discovered on the host. Only the Codex container was stopped. That load-overlapped attempt
+is discarded under section 9.8; it is not credited as a gate result.
 
 Storage: all host temp/cache/targets/logs/worktrees are under the project root on E:.
 Dot-source `.agents/project-environment.ps1` in each shell. Windows uses Rust/Cargo 1.97.1,
@@ -119,7 +153,12 @@ logs at `/logs`, pinned `.toolchain/icu-78.3-linux` at `/icu`, Node Linux binary
 and official search artifact directory at `/search-artifacts`. The script copies the tree to
 tmpfs, strips CR from shell scripts, runs G3, executes the readonly corpus as uid/gid 1000,
 then runs controls in another disposable tmpfs copy. No Docker named volumes or C: caches.
-Windows and Linux batches run sequentially.
+Windows and Linux batches run sequentially. After the stopped Linux attempt, Claude explicitly
+confirmed HOST CLEAR and reserved the host until completion notification. The credited Linux
+batch ran in that isolated window. To run the existing ignored origin witness, use the
+`fs_path_domain` executable selected by the fresh test log with Docker `--user 1000:1000`,
+the same image and ICU environment, tmpfs `/tmp`, and a read-only E:-backed target mount;
+pass `--ignored --exact recursive_remove_single_failure_reports_the_inner_native_call --nocapture`.
 
 An exploratory Windows batch was discarded before freezing the final implementation. It is
 not credited as G3. Only the fresh frozen-tree results below support this handoff.
