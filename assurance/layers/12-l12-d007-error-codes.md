@@ -160,3 +160,7 @@ The merge refuses to write unless every oracle cell agrees with the independent 
 **Schema** (additive): three fixture-only steps, `make_symlink`, `hold_exclusive` and `lock_range` (the last two Windows-only). The Python runner builds them natively (ctypes `CreateFileW` share 0 / `LockFile`), containment-checked, and releases them at case end.
 
 **Python today, Windows:** **85 failing cases**: directory-empty 7, directory-nonempty 7, invalid-name 15, name-too-long 15, ntfs-stream-syntax 15, sharing-violation 10, lock-violation 8, symlink-loop 8. This is exactly the section 4 Windows delta minus its 19 preserved-primitive cells (104 - 19 = 85). The remaining 91 Windows cases pass.
+
+**Implementation-stage item:** `fs-path-domain` already has **10 Linux-only L12-D001 error-origin cases**, each limited with a `#67` platform note (a directory read on Windows answered differently). L12-D007 closes #67, so the implementation stage regenerates them for both platforms from pinned Pi (their own L12-D001 generator) and removes the limitation, or records why any must stay.
+
+**Containment follow-up (outside this delta):** the merged L12-D006 oracle (`data/l12-d006/gen/pi_oracle.mjs`) sandboxes under `os.tmpdir()` and ends with a recursive remove. Its run was safe (TMP pointed inside the project), but under the 2026-10-10 rule it must not be rerun as-is. Any regeneration first moves it onto `fs-guard` (`makeSandbox` / `assertInside`).
