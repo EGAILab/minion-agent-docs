@@ -27,11 +27,12 @@ from pathlib import Path
 
 EXECUTE = "src/minion_agent/tools/execute.py"
 JS_OBJECT = "src/minion_agent/llm/js_object.py"
+RUNNER = "tests/conformance/arg_isolation_runner.py"
 TEST = "tests/conformance/test_arg_isolation_conformance.py::test_arg_isolation_case"
 SIGNATURES = tuple(
     f'assert observed["{key}"] == expect["{key}"]'
     for key in ("outcome", "hook_entries", "facts", "execute", "updates", "raw_after")
-)
+) + ("OverflowError: cannot convert float infinity to integer",)
 
 
 def node(name: str) -> str:
@@ -60,6 +61,13 @@ CONTROLS = [
      "        order_in_place(current[2])\n        return (*current[:3], signal)\n",
      "        return (current[0], current[1], structured_clone(current[2]), signal)\n",
      [node("two-hooks-share-the-validated-graph")]),
+    # CE-L0506-D005-01 (C003): the RUNNER's fixture decoder, restored to the faulty finite-to-int
+    # assumption -- an integer-shaped overflow then raises instead of becoming +/-Infinity.
+    ("runner-assumes-finite-integer", RUNNER,
+     "    value = float(token)\n    if math.isinf(value):\n        return value\n    return number(token)\n",
+     "    return number(token)\n",
+     [node("raw-integer-401-digits-is-infinity"),
+      "tests/conformance/test_arg_isolation_runner_numbers.py::test_a_401_digit_integer_is_signed_infinity"]),
 ]
 
 

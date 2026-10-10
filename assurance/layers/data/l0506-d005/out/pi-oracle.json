@@ -1495,6 +1495,421 @@
    }
   },
   {
+   "id": "raw-integer-largest-finite-binary64",
+   "outcome": "executed",
+   "hook_entries": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "1.7976931348623157e+308"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "facts": [],
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "1.7976931348623157e+308"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "updates": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "1.7976931348623157e+308"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "1.7976931348623157e+308"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "id": "raw-integer-at-overflow-threshold-is-infinity",
+   "outcome": "executed",
+   "hook_entries": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "facts": [],
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "updates": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "id": "raw-integer-401-digits-is-infinity",
+   "outcome": "executed",
+   "hook_entries": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "facts": [],
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "updates": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "id": "raw-negative-integer-401-digits-is-negative-infinity",
+   "outcome": "executed",
+   "hook_entries": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "-Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "facts": [],
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "-Infinity"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "updates": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "-Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "-Infinity"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "id": "raw-exponent-overflow-is-infinity",
+   "outcome": "executed",
+   "hook_entries": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "facts": [],
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "updates": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "n",
+          {
+           "n": "+Infinity"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "n",
+         {
+          "n": "+Infinity"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  {
    "id": "validation-failure",
    "outcome": "immediate_error",
    "hook_entries": [],

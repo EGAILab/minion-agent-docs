@@ -1006,8 +1006,8 @@ VALIDATED arguments  ONE independent structured clone of the PREPARED arguments 
 
 **Adjacent boundary, characterized and not changed.** Pinned Pi hands `prepareArguments` the raw arguments object itself, so a shim's in-place writes change the raw arguments. Minion passes the shim a fresh top-level `dict`: the certified design-spec §6 nonmutation mapping. So a shim's *top-level* writes do not reach the raw arguments, while its nested writes do, as in Pi. This delta does not change that boundary (Owner: "do not silently widen").
 
-**Canonical evidence:** `conformance/agent/arg-isolation/*.json`, 16 documents (`arg-isolation-scenario.schema.json`), generated from pinned Pi.
-- Numbers are constructed through `JSON.parse`'s binary64 decoding and observed as the certified prepared-runtime token (ECMAScript `Number::toString`, with `-0`/`NaN`/`+Infinity`/`-Infinity` named).
+**Canonical evidence:** `conformance/agent/arg-isolation/*.json`, 21 documents (`arg-isolation-scenario.schema.json`), generated from pinned Pi.
+- Numbers are constructed through `JSON.parse`'s binary64 decoding, including overflow to ±Infinity for integer-shaped and exponent literals alike (`CE-L0506-D005-01`), and observed as the certified prepared-runtime token (ECMAScript `Number::toString`, with `-0`/`NaN`/`+Infinity`/`-Infinity` named).
 - The cross-language feasibility matrix is `assurance/layers/l0506-d005-feasibility-matrix.md`.
 - Named shims are part of the fixture vocabulary. `cycle` is used only by the characterization-only case:
 
