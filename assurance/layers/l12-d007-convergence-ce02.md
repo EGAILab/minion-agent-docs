@@ -363,3 +363,30 @@ Candidate `b8062daa` (both platforms):
   - The `fs-remove-readonly` corpus unchanged and passing.
 - **NORMATIVE DELTAS:** spec §19.5 (revision 3: rule 0, post-validation rule 1) and the §17 correction note. Manifest pointers at implementation.
 - **NEXT_OWNER:** Codex, for checkpoint review 3 of exactly this proposal.
+
+## Checkpoint review 3 (Codex): APPROVED
+
+#199 issuecomment-6103236644: **APPROVED** at exactly docs `795cc30b` / code `b8062daa`.
+
+- C003 is resolved by rule 0 / the post-validation rule 1.
+- The reviewer independently replayed the Windows validation matrix and the Linux 13 + 18 + 10 rows.
+- It ran seven in-memory comparator challenges (`.tmp/codex-scratch/l12d007-ce02-comparator-controls.py`), including:
+  - binding-unfired refused, even with `--expected-diff`;
+  - shared not-applicable accepted;
+  - a binding-only injection rejected;
+  - a read-only target difference rejected.
+- The current candidate is correctly rejected by the agreed gate.
+- This is checkpoint agreement only. `L12D007-I003` and `CE-L12D007-02-C003` stay open until implementation and the §11.8.7 targeted closure.
+
+## CONVERGENCE CONTRACT
+
+**AGREED FOR IMPLEMENTATION**: revision 3 (docs `795cc30b`), after Codex's independent checkpoint review 3 APPROVED (issuecomment-6103236644).
+
+The implementation must satisfy all of the following:
+- §19.5 rules 0 to 6;
+- all three matrices MATCH on Windows and Linux, with no expected differences and **zero binding-side UNFIRED**;
+- the permanent witnesses, including the V pairs;
+- N1 to N14 each killed by its intended witness;
+- the `fs-remove-readonly` corpus unchanged and passing.
+
+The Owner's ADOPT PI decision (issuecomment-6103080422) governs the Windows recovery scope.

@@ -1,8 +1,9 @@
 """CE-L12D007-02 revision 2: the Python candidate's real `LocalFileSystem.remove` over
 ce02-recovery-matrix.json (Windows EPERM recovery). As ce02_py_probe.py, but each row may inject several
 failures, fixtures may hold read-only attributes and file symlinks, and the output lists every entry left
-read-only. Python makes no `chmod` call of its own (its read-only correction is internal), so a `chmod`
-injection simply never fires here; the outcome is what is compared.
+read-only. The matrix's `chmod` is the binding's own-attribute correction seam (`_correct_own_attribute`,
+never a link-following chmod); a candidate without that seam leaves those injections unfired, which the
+comparator refuses to credit. The matrix file is the optional third argument (default: the recovery matrix).
 
 Usage: python ce02_recovery_py_probe.py <code worktree> <scratch dir inside the project>"""
 
@@ -57,6 +58,10 @@ os.lstat = _wrap("lstat", os.lstat)
 os.stat = _wrap("stat", os.stat)
 os.scandir = _wrap("readdir", os.scandir)
 fs_module._node_rmdir = _wrap("rmdir", fs_module._node_rmdir)
+if hasattr(fs_module, "_correct_own_attribute"):
+    # The binding's own-attribute correction (fixWinEPERM's `chmod`, done without following links): the
+    # matrix's `chmod` injections fire here (CE-L12D007-02 checkpoint review 2 evidence reminder).
+    fs_module._correct_own_attribute = _wrap("chmod", fs_module._correct_own_attribute)
 if sys.platform == "win32":
     fs_module._libuv_unlink = _wrap("unlink", fs_module._libuv_unlink)
 else:

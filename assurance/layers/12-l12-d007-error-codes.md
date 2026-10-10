@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); **remediation 1 pending targeted closure review** (§12). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). **The CE-02 implementation is pending targeted closure** (§13). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -480,3 +480,87 @@ On the final remediation tree (code `b8062daa`), run sequentially:
   - full pytest **5831 passed / 0 failed / 413 skipped / 19 xfailed**;
   - non-gating mypy: 17 findings, unchanged (14 base platform findings plus 3 missing-stub findings).
 - **Harness, disclosed:** two Linux attempts stopped at `pip`, before any test ran, on the intermittent PyPI lookup for `PyICU==2.16.2`. The launcher now keeps the PyICU **source** archive in the project-local cache (`.tmp/pip-cache/sdist`) and compiles it in the container against that run's ICU (`--no-index --no-build-isolation`, `setuptools` installed). The updated script is in `data/l12-d007/impl/`.
+
+## 13. Implementation review 2, convergence episode CE-L12D007-02, and its implementation
+
+**Targeted re-review of remediation 1** (#199 issuecomment-6102913331, at code `b8062daa` / docs `a6e40c39`): CHANGES REQUESTED.
+- `L12D007-I001` and the original `L12D007-I002` were provisionally closed; N001 was closed.
+- New **`L12D007-I003`** (high): `_rimraf_child` caught a directory-removal failure as if `lstat` had failed, then unlinked or re-walked it. A failing removal could become a successful destructive one.
+- Trigger B fired on the recursive-removal surface (PY-I001, I002, I003), so the episode `CE-L12D007-02` opened.
+
+**The episode** is in `l12-d007-convergence-ce02.md`; evidence is in `data/l12-d007/ce02/`.
+- **Revision 1** (13-row matrix): checkpoint review 1 REJECTED it. Two findings:
+  - `C001`: the Windows `fixWinEPERM` recovery stage was missing;
+  - `C002`: O001 needed an Owner disposition.
+- **Owner decision on O001: ADOPT PI** (verbatim at #199 issuecomment-6103080422; cross-referenced on #126). It is a targeted correction of L12-D005's certified Windows recovery outcomes in both bindings; link targets are never changed.
+- **Revision 2** (the 18-row recovery matrix; spec §19.5 rules 1 to 6; the §17 correction note): checkpoint review 2 REJECTED it. `C003`: Node's `rm` target validation (`validateRmOptions`) is a separate stage from `rimraf` classification.
+- **Revision 3** (the 10-row validation matrix; §19.5 rule 0; the probes report unfired injections and the comparator refuses to credit a binding-unfired row): checkpoint review 3 **APPROVED** it (issuecomment-6103236644). The record now reads **AGREED FOR IMPLEMENTATION**.
+
+### 13.1 Implementation (`execution/filesystem.py`, `execution/_libuv_win32.py`)
+
+- **`_remove_sync`**, rule 0:
+  - the target's validation `lstat` fails as is, except force + ENOENT, which proceeds;
+  - a directory without recursive gives #125 (`_is_tree`, libuv's view: a junction is a link);
+  - then `_rimraf_entry(target)`.
+- **`_rimraf_entry`**, rule 1:
+  - the entry's own fresh `lstat`, and only that call, is guarded;
+  - ENOENT means removed; Windows EPERM goes to `_fix_win_eperm`; any other failure goes to unlink;
+  - a directory goes to `_rimraf` outside the handler (`I003`).
+- **`_unlink_routed`**, rule 2:
+  - ENOENT means removed; Windows EPERM goes to `_fix_win_eperm`;
+  - POSIX EISDIR/EPERM go to `_rimraf` with the original error;
+  - anything else is that failure.
+- **`_rimraf`**, rules 3 and 4: unchanged in behavior. Its children now go through `_rimraf_entry`.
+- **`_fix_win_eperm`**, rule 5:
+  - `_correct_own_attribute`, the new `_libuv_win32.clear_own_readonly`: no-follow; a success whether or not the attribute was set; a failure raises its Win32 code;
+  - `os.stat`, following links;
+  - a directory goes to `_rimraf(original)`; otherwise one `_node_unlink` retry, whose failure is the result;
+  - a correction or inspection failure gives ENOENT → removed, else the **original** error.
+- **Removed:** L12-D005's conditional mechanism (`_clear_own_readonly_windows`, `_clear_readonly`, `_delete_ignoring_readonly`, `_unlink_entry`). Its certified outcomes are kept, except where the Owner's ADOPT PI decision changes them.
+- **Evidence seams, as agreed:** the correction (`_correct_own_attribute`), the inspection (`os.stat`), the retry (the second `_node_unlink`), and the target's classification `lstat` (the second `os.lstat`) are separate calls.
+
+### 13.2 Acceptance against the agreed gate
+
+- **`ce02_compare.py`, all three matrices, both platforms** (the Python probe now maps the matrix's `chmod` to `_correct_own_attribute`):
+
+  | Platform | core | recovery | validation |
+  |---|---|---|---|
+  | Windows | 13/13 MATCH | 18/18 MATCH | 10/10 MATCH |
+  | Linux (uid 1000) | 13/13 MATCH | 18/18 MATCH (the Windows-only recovery stage not applicable on both sides) | 10/10 MATCH |
+
+  - The implementation outputs at code `0887a50d` are `ce02-*-py-impl-0887a50d-{win32,linux}.jsonl`.
+  - The same Linux run replayed pinned Pi **byte-identical** to the committed outputs for all three matrices.
+
+  There are no expected differences, and **zero binding-side UNFIRED**.
+  - The binding's full per-path call map equals pinned Pi's, including both target `lstat` calls.
+  - The only differences were `chmod` counts in the core probe, which does not wrap the correction seam.
+- **Permanent witnesses**, `tests/execution/test_filesystem_remove_routing.py`:
+  - all 41 rows through the real `LocalFileSystem.remove`, against pinned Pi's per-platform observation (`tests/execution/data/remove_routing_pi.json`, generated from the docs outputs);
+  - the compared observation is: result, path, **every** call per path (chmod and stat included), remains, read-only entries, and unfired injections.
+- **Controls N1 to N14:** each mutant fails every intended row on its platform. N6 to N10 are Windows-only, because pinned Pi has no recovery stage on POSIX.
+  - Two first drafts were harness defects and were corrected before being credited:
+    - N2's retry sat below the injection seam;
+    - N10's `os.chmod` did not change a link's target on this host, so it now corrects `realpath`.
+- **Retargeted to the new seams:**
+  - the L12-D005 binding witnesses (`test_filesystem_readonly_remove.py`: correction-seam vanish, correction failure, retry failure, vanish before retry), with the same certified meanings;
+  - the I002 cached-type control (`_rimraf_entry`).
+  - The branch tests superseded by matrix rows were removed.
+- **`fs-remove-readonly`** (21 canonical cases), the full `fs-path-domain` corpus, and `tests/execution` / `tests/conformance` all pass unchanged.
+
+### 13.3 Fresh gates
+
+On the final tree (code `0887a50d`), run sequentially:
+
+- **Windows** (3.13.5, pinned ICU 78.3):
+  - ruff and format clean; mypy clean (117 files);
+  - full pytest **6278 passed / 41 skipped / 19 xfailed**;
+  - coverage **100%** (9581 statements).
+- **Linux** (`python:3.13`, pinned ICU and PyICU built in the container, uid 1000):
+  - full pytest **5893 passed / 0 failed / 413 skipped / 19 xfailed**;
+  - non-gating mypy: 15 findings. That is 12 platform-attribute findings, fewer than the base's 14 because the removed ctypes helper is gone, plus 3 for missing stubs.
+- **Disclosed:** the first full Windows run reached 99.97% coverage. Three lines were not exercised: `clear_own_readonly`'s two failure branches, and rule 2's unlink ENOENT. Focused tests were added: `test_libuv_win32.py`, and `test_an_unlink_finding_the_entry_gone_counts_as_removed`. The run above is the rerun.
+
+**Status:**
+- Python L12-D007, with CE-L12D007-02 implemented: **pending independent targeted closure** of `L12D007-I003` and `CE-L12D007-02-C003` (§11.8.7).
+- Rust: NOT_IMPLEMENTED.
+- Cross-language: NOT CLOSED.
