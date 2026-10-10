@@ -1,0 +1,367 @@
+{
+ "node": "v22.15.1",
+ "uv": "1.49.2",
+ "platform": "win32",
+ "results": [
+  {
+   "condition": "sharing-violation",
+   "op": "readTextFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, open 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "readTextLines",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, open 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, open 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "writeFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, open 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "appendFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, open 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, rename 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f' -> 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\renamed'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied",
+    "message": "EPERM: operation not permitted, rename 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\src' -> 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "listDir",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, scandir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EEXIST: file already exists, mkdir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EEXIST: file already exists, mkdir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove-force",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\sharing-violation-z2ezjh\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "node_error": "EBUSY"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "holder-alive-at-end",
+   "observed": {
+    "alive": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readTextFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, read"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readTextLines",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, read"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, read"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "writeFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, write"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "appendFile",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, write"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "lock-violation",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, rename 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f' -> 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\renamed'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied",
+    "message": "EPERM: operation not permitted, rename 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\src' -> 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   },
+   "ms": 1
+  },
+  {
+   "condition": "lock-violation",
+   "op": "listDir",
+   "observed": {
+    "error": "not_directory",
+    "message": "ENOTDIR: not a directory, scandir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EEXIST: file already exists, mkdir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EEXIST: file already exists, mkdir 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 1
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove-force",
+   "observed": {
+    "error": "unknown",
+    "message": "EBUSY: resource busy or locked, unlink 'E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l12d007\\busy\\lock-violation-ZRZZRW\\f'"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "node_error": "ENOTDIR"
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   },
+   "ms": 0
+  },
+  {
+   "condition": "lock-violation",
+   "op": "holder-alive-at-end",
+   "observed": {
+    "alive": true
+   }
+  }
+ ]
+}

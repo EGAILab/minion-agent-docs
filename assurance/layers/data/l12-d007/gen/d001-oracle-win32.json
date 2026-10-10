@@ -1,0 +1,193 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "uv": "1.49.2",
+ "pi": "b7bb00b936dbe21b8e160b3e89efdec361846699",
+ "results": [
+  {
+   "id": "error/scalar/self-dir/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/scalar/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        65533
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/append",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read-lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error/lone/self-dir/read-binary",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        97,
+        55296
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

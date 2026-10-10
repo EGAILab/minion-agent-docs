@@ -137,9 +137,16 @@ not_supported | unknown
 Confirmed concrete mapping in the harness-tier reference implementation (`nodejs.ts:97-121`,
 `toFileError`): `ABORT_ERR -> aborted`, `ENOENT -> not_found`, `EACCES`/`EPERM -> permission_denied`,
 `ENOTDIR -> not_directory`, `EISDIR -> is_directory`, `EINVAL -> invalid`, anything else ->
-`unknown`. This exact errno list is Node-specific mechanics; the CONDITIONS these codes represent
-(the argument is a directory when a file was expected, the reverse, the operation was cancelled,
-etc.) are the language-neutral contract each provider must reproduce from its own OS primitives.
+`unknown`.
+
+**Corrected at L12-D007 (§19; Owner decision #69 / #125 / #67).** The earlier sentence here said the
+CONDITIONS these codes represent were the contract, to be reproduced from each provider's own OS
+primitives. That is withdrawn. For the Pi-derived Layer 12 filesystem operations, the normative
+`FsErrorCode` is the code pinned Pi's `toFileError` **actually returns** for that operation, input
+and host platform. That includes Node/libuv's errno translation of the original OS error and Node's
+and libuv's operation-specific errors (§19). A binding reproduces those observable codes. The errno
+list is still Node mechanics: bindings key on their own native error, not on errno names. The
+EXEC-007/008/009 Minion operations and `not_supported` keep their own specified dispositions.
 
 ### 2.2 `ShellError`/`ExecutionError` codes
 
@@ -3181,3 +3188,124 @@ Each result is an error tool result; no host exception text reaches the model.
 - **Rust** answers `invalid`.
 
 Record: `assurance/layers/12-l12-d006-nul-paths.md`.
+
+## 19. Layer-12 post-certification delta `L12-D007` — filesystem error codes are pinned Pi's literal `toFileError` results (`EXEC-002`)
+
+**Status:** contract delta, for independent contract review (`minion-agent#199`). Provenance, each keeping its own identity and closure evidence:
+- `L12-WINDOWS-ERROR-MAP` (#69);
+- `L12-RM-DIRECTORY-CODE` (#125);
+- `L12-WINDOWS-DIRECTORY-READ` (#67).
+
+**Owner decision:** "#69 / #125 / #67, APPROVE OPTION 1: PINNED PI LITERAL ERROR CODES", recorded verbatim on all three (sha256 `4ca7a5ca…b601`). It authorizes a targeted correction of certified Layer 12 in both bindings, as `DIRECT_PI_PARITY`. It is not a divergence. It also corrects §2.1 (done above).
+
+**Authority:** pinned Pi `b7bb00b9`, `packages/agent/src/harness/env/nodejs.ts` (`NodeExecutionEnv`, `toFileError` `nodejs.ts:97-121`), under Node v22.15.1 / libuv 1.49.2.
+- **Generic path:** libuv `src/win/error.c` `uv_translate_sys_error` (blob `7abf906b…`).
+- **Per-operation special cases:** libuv `src/win/fs.c` (blob `f2215bb3…`).
+- **Node's own operation errors:** for example `rm`'s `ERR_FS_EISDIR`.
+- **Characterization:** `assurance/layers/12-l12-d007-error-codes.md`, guarded probes through Pi's real provider on Windows 11 and Linux.
+
+### 19.1 Rule
+
+For each **Pi-derived** filesystem operation, the result is the `FsErrorCode` pinned Pi returns for that operation, input and host platform:
+- `read_text_file`, `read_text_lines`, `read_binary_file`;
+- `write_file`, `append_file`;
+- `rename_file` (source, and destination);
+- `file_info`, `exists`, `list_dir`, `canonical_path`;
+- `create_dir` (recursive or not);
+- `remove` (every `recursive` × `force`).
+
+The error path is Pi's (the operation's existing path rules are unchanged). `exists` keeps answering `ok(false)` where Pi's `not_found` is swallowed. `remove` with `force` keeps answering `ok` where Pi swallows `not_found`.
+
+**Windows**, by the **original Win32 error** of the failing call (libuv `uv_translate_sys_error`, then `toFileError`):
+
+| Win32 error | Pi code |
+|---|---|
+| 2, 3, **123** `INVALID_NAME`, **161** `BAD_PATHNAME`, **267** `DIRECTORY` | `not_found` |
+| 5 `ACCESS_DENIED` | `permission_denied` |
+| **32** `SHARING_VIOLATION`, **33** `LOCK_VIOLATION` | `unknown` (EBUSY) |
+| **1921** `CANT_RESOLVE_FILENAME` (link loop) | `unknown` (ELOOP) |
+| 206 `FILENAME_EXCED_RANGE`, 145 `DIR_NOT_EMPTY`, 17 `NOT_SAME_DEVICE`, any unlisted code | `unknown` |
+| 1 `INVALID_FUNCTION` | `is_directory` |
+| 87 `INVALID_PARAMETER` | `invalid` |
+
+The complete table is libuv's; the rows shown are the ones Layer 12 reaches. A binding uses its pinned copy of the whole table.
+
+**Operation-specific rules**, which come before the table:
+
+| Operation and input | Code | Platforms | Pinned source |
+|---|---|---|---|
+| `write_file` / `append_file` on a directory, when libuv's open reaches that case | `is_directory` | both | libuv `fs__open`: `ERROR_FILE_EXISTS` under create-without-exclusive becomes `EISDIR` (Windows); POSIX `EISDIR`. An append's open of a directory can instead **succeed** (`OPEN_ALWAYS`); its write then fails with 1 `INVALID_FUNCTION`, i.e. `EISDIR` with **no** path, so Pi names the logical path |
+| `read_text_file` / `read_text_lines` / `read_binary_file` of a directory, **when libuv's open of it succeeds** | `is_directory` | both | Windows: libuv opens with `FILE_FLAG_BACKUP_SEMANTICS`, which **permits** a directory open but does not guarantee it; when the open succeeds, the read fails with 1 `INVALID_FUNCTION`, which becomes `EISDIR`. POSIX: `EISDIR` from the read |
+| any of the above when **libuv's own open fails first** | that open's code | both | `fs__open` propagates its Win32 error; Pi's catch calls `toFileError` on it and never substitutes a code from the target's type. Examples in the corpus: a read-denied directory gives 5 → `permission_denied` (POSIX: `EACCES` for a non-root user); a directory held open without sharing gives 32 → `unknown` |
+| `remove` (any form) of an entry, Windows | the code of libuv's own unlink/rmdir open, then its delete | Windows | libuv `fs__unlink_rmdir` (lines 1086-1206) opens the entry itself with `FILE_READ_ATTRIBUTES \| FILE_WRITE_ATTRIBUTES \| DELETE` and deletes **through that handle**: a read-denied entry fails the open (5 → `permission_denied`), at the top level and inside a recursive tree. A read-only entry is deleted (`IGNORE_READONLY`, or the attribute cleared on the fallback), which is the L12-D005 outcome |
+| `create_dir` (non-recursive) failing with 123 or 267 | `invalid` | Windows | libuv `fs__mkdir` forces `UV_EINVAL` |
+| `remove` without `recursive` (with or without `force`) of a directory | `unknown` | both | Node `rm` raises `ERR_FS_EISDIR` before any syscall (#125) |
+
+These rules produce, among others:
+- **#69:** invalid names, over-long single components (Win32 123, not 206), NTFS stream syntax and bad pathnames answer `not_found`, except non-recursive `create_dir`, which answers `invalid`. Sharing and lock violations answer `unknown`, including `list_dir` of an exclusively held file; renaming **onto** a held file answers `permission_denied` (Win32 5). A link loop answers `unknown`.
+- **#67:** a directory read or written as a file answers `is_directory` on Windows **when libuv's open of it succeeds**; a denied or held directory keeps that open's own failure (C002).
+- **#125:** a non-recursive `remove` of a directory answers `unknown` everywhere.
+
+**Linux** already follows the generic POSIX path (`ENOTDIR` / `ELOOP` / `ENAMETOOLONG` → `not_directory` / `unknown` / `unknown`). Its only delta is #125. The normative per-cell outcomes for both platforms are the canonical corpus (§19.4); the tables above explain them.
+
+### 19.2 Binding mechanics (normative constraints, not prescribed code)
+
+- **Key on the Win32 error of the call libuv makes.** The table applies to the error of the native call pinned libuv makes for that operation. Examples (libuv `fs.c`):
+  - opens go through `CreateFileW` with full sharing (`FILE_SHARE_READ | WRITE | DELETE`) and `FILE_FLAG_BACKUP_SEMANTICS`, so a directory opens;
+  - listing opens the directory with `FILE_LIST_DIRECTORY | SYNCHRONIZE`, the same sharing and backup semantics, then queries it; a non-directory there is libuv's explicit `ENOTDIR`;
+  - `mkdir` is `CreateDirectoryW`.
+
+  A binding must obtain that error. It may not key on a runtime's already-collapsed classification:
+  - **CPython's `open()`** goes through the C runtime's `_wopen`, whose errno mapping collapses 123 and 1921 into `EINVAL` and 32/33 into `EACCES`, and keeps no `winerror`;
+  - CPython's `errno` for other calls, and **Rust's `ErrorKind`** (123/161/206 → `InvalidFilename`, 267 → `NotADirectory`), collapse the same way.
+
+  Where the binding's own call differs from libuv's, or loses the Win32 code, it performs libuv's equivalent Win32 call itself, with the same access, sharing and flags, or otherwise obtains that call's error. For example, CPython's `os.scandir` uses `FindFirstFileW`, which answers 267 for a file where libuv's directory open answers 32 under a sharing violation. The mechanism is the binding's; the observable codes (§19.4) are normative.
+- **libuv's table has no `ENOTDIR` entry.** On Windows, `not_directory` arises only at libuv's or Node's explicit sites: listing a non-directory, and Node's recursive `mkdir` through a file.
+- **No global remap:** `EINVAL` / `InvalidInput` / `ErrorKind` are never remapped wholesale. Only the Win32 codes above, within the Pi-derived Layer 12 filesystem operations, change classification.
+- **Failure precedence is the call sequence's, never the target's type** (C002). A binding reproduces libuv's call sequence, and the code comes from whichever call fails first. If its own runtime's call fails where libuv's would succeed (CPython's `open()` refuses every directory with 5), it must make libuv's call instead. It must **not** keep its own call and substitute `is_directory` from the target's type: that would turn a genuinely denied or held directory into `is_directory`, and a check-then-use type test would also race. The corpus's denied-directory, held-directory, denied-file and denied-tree-entry cases fail any target-type mapper.
+- **The EXEC-007/008/009 operations keep their semantics; their failure classification follows the corrected mapper.**
+  - `list_dir_raw`, `probe_dir_entry`, `check_readable` and `check_read_write` keep everything §11-§13 define: which call is made, what is checked, ACL-aware readability and writability on Windows, symlink handling, and success answers. That is the preserved Windows extension (`MINION_ARCHITECTURAL_MAPPING`).
+  - Their **failure classification** was never their own. §11.3 says `list_dir_raw`'s error mapping is "identical to `list_dir`'s own whole-directory-read failure (§2.1)". §12.4 and §13.4 say a failure is "classified by §2.1 like every other operation's, through the binding's own shared host-error mapper". §13.4 names the Windows sharing-violation difference as an instance of #69, "whose remediation is not authorized"; it now is.
+  - So, from L12-D007, they classify with the same corrected Win32 mapping as the Pi-derived operations, and `list_dir_raw` makes `list_dir`'s directory open. Examples: a link loop gives `unknown` where the operation fails at all; a sharing violation gives `unknown` in both bindings, closing §13.4's recorded difference.
+  - Their outcomes are not Pi-literal (pinned Pi's Windows `access` is attribute-only), so the canonical corpus does not list them. Their witnesses are consistency witnesses: the same Windows condition gets the same code from the primitive as from the Pi-derived operations.
+- **Unchanged:** `not_supported` capability answers.
+  - The L12-D006 NUL rule (§18) and the L12-D001 path domain (§14) are unchanged.
+
+### 19.3 Unchanged / out of scope
+
+- Abort precedence, path resolution, error paths, `max_lines <= 0`.
+- Success observations and side effects.
+- POSIX permission semantics.
+- `#133`-F2 (native-name decoding) and DIV-008 (#127).
+- Subprocess and shell error codes (§2.2, §2.3).
+
+### 19.4 Evidence
+
+- **Canonical:** `conformance/agent/fs-path-domain/fs-error-codes.json`, **240 cases**: 160 on both platforms and 80 Windows-only.
+  - 15 conditions × the 16 Pi-derived operation forms.
+    - Both platforms: missing, file, empty and non-empty directory, non-directory component, link loop, over-long name. Plus the C002 precedence conditions: **read-denied directory**, **read-denied file**, and a **tree with a read-denied entry**.
+    - Windows only: invalid name, NTFS stream syntax, sharing violation, byte-range lock, and the C002 **directory held without sharing**.
+  - Generated from pinned Pi's real provider on Windows 11 and on Linux, there as non-root uid 1000 so mode-000 denial is real (`assurance/layers/data/l12-d007/gen`). Containment guards are on every path; `expect_by_platform` where pinned Node differs by platform.
+  - Every cell of a characterized condition agrees with the independent characterization runs (0 mismatches). The C002 conditions are new and have no characterization row.
+  - The `fs-path-domain` schema gains, additively, four fixture-only steps:
+    - `make_symlink`;
+    - `deny_access` (an Everyone read-deny ACE on Windows; mode 000 on POSIX), undone at case end;
+    - on Windows, `hold_exclusive` (a no-sharing handle; directories with backup semantics);
+    - on Windows, `lock_range` (bytes 0-63 locked, sharing read+write only).
+
+    The runner builds each condition natively, containment-checked, and observes `ok`; the behavior under test is always the provider's.
+- **Containment controls** (C001; record §8):
+  - guard self-tests (`fs-guard/fs-guard-check.mjs`, `fs_guard_check.py`);
+  - intercepted rejecting controls (`fs-guard/containment-controls.mjs`: an outside oracle output is refused with no outside mutation attempted; a mutant without the output guard is caught; `makeSandbox` through an outward junction refuses before `mkdir`);
+  - the runner's `tests/conformance/test_fs_path_runner_containment.py`.
+- **Binding witnesses (implementation stage):**
+  - the precedence cases above (a target-type mapper fails them);
+  - an unrelated `OSError` keeps its existing classification;
+  - the EXEC-007/008/009 consistency witnesses (§19.2);
+  - both directions of every family.
+
+**Bindings:**
+- **Python** at the contract base fails the characterized delta on Windows: directory read/write and `remove` (#67, #125), the name class, the link loop, sharing/lock (#69), and libuv's handle-based unlink. On Linux, `remove` of a directory (#125).
+- **Rust:** see the feasibility matrix, `assurance/layers/l12-d007-feasibility-matrix.md` (C003).
+
+Record: `assurance/layers/12-l12-d007-error-codes.md`.
