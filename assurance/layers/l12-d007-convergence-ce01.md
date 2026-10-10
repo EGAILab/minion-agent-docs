@@ -5,7 +5,7 @@ Coordination: minion-agent#199.
 - **Scope:** the evidence and fixture containment surface only. No Pi filesystem semantics, error-code expectation, native call sequence or certified product behavior changes here.
 - `L12D007-C002` and `L12D007-C003` stay provisionally closed at code `80fd74c0` / docs `105bc1f9`.
 
-**Checkpoint: PROPOSED** (shared owner, Claude). Awaiting independent checkpoint review. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
+**Checkpoint: revision 1 REJECTED** (independent checkpoint review 1). **Revision 2 PROPOSED**, at the end of this record. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
 
 ## OPEN FINDINGS
 
@@ -142,3 +142,131 @@ At code `80fd74c0` / docs `105bc1f9`:
 - Product provider behavior (Python/Rust): the evidence itself.
 - Pytest and Rust test-suite temp bases: already required inside the root.
 - The guard does not defend against an adversarial process racing the filesystem between proof and operation; the sandboxes are private to the run. This is stated, not solved: the risk is concurrent modification, which no single-process proof can exclude.
+
+## Checkpoint revision 2 (after independent checkpoint review 1: REJECTED)
+
+Checkpoint review 1 (#199 comment 6101235663; `.tmp/codex-scratch/l12d007-ce01-checkpoint-review-1.md`) found **`CE-L12D007-01-C001`**: the rules give **one dereferencing proof for every operation**, while the matrix promises operations on an outward link **as an entry**. Examples: cleanup removing `j-out -> C:\` as itself, and controls creating outward-link fixtures.
+
+Under revision 1's R2 the entry `j-out` fails its own proof. So either the promise is impossible, or it is met by silently bypassing the proof, which recreates the missing-guard defect.
+
+Accepted. Revision 2 **supersedes R2, R4, R5, R6, R7 and R8** below; R1, R3 and R9 stand. The S1-S12 inventory stands.
+
+**Checkpoint: PROPOSED (revision 2).**
+
+### Operation classes (new)
+
+Every mutation in the inventory belongs to exactly one class. Its proof is determined by the class, never chosen per call site.
+
+| Class | Operations | What is proven | Final component |
+|---|---|---|---|
+| **REFERENT** | anything that follows the final link: open, read, write, append, truncate, chmod/ACL change on a target, mkdir *through* a path, every provider operation under test | the **entire effective native path**, through the final component (R2) | an outward final link is **refused** |
+| **ENTRY** (only with a verified no-follow primitive) | creating a link (its *path*), unlinking a symlink or junction, an own-entry metadata reset that is verifiably no-follow (`icacls <entry> /reset /L`; POSIX `lchown`-class or none) | the **containing directory** by the full R2 proof, plus the entry name as a single component (no separator, R1-clean). **The final component is not dereferenced** | an outward link may be inspected (`lstat`/`readlink`) and removed **as itself**; it never authorizes traversal or a referent mutation |
+| **TRAVERSAL** | recursive cleanup, the POSIX permission restore walk | each child is first classified as an ENTRY. A link or junction child is handled **only** by an ENTRY operation (removed as itself) and **never descended into**. An ordinary directory child is re-proven by R2 before it is visited | an outward junction's target is never enumerated, reset or deleted |
+
+- **No-follow is a verified property, not a declaration.** An ENTRY operation may be used only where the platform primitive's no-follow behavior is part of the cited contract:
+  - Node `fs.unlinkSync` / `rmSync` (no recursion) on a link; Python `os.unlink` on a link; Windows `RemoveDirectoryW` on a junction;
+  - `icacls ... /L` ("performs the operation on a symbolic link itself versus its target");
+  - link creation (`symlink(2)`, `CreateSymbolicLinkW`, `CreateJunction`), which writes only the new entry.
+
+  If no such primitive exists for an operation (for example a recursive chmod tool), the operation is **refused or skipped and the sandbox is left in place**. It never falls back to a following call.
+- **Link text is data.** Creating a link writes only its entry. The text may point anywhere *only* for a link whose creation is an ENTRY operation in a **negative fixture** (below). For every ordinary fixture, the text must resolve inside under R2 from the link's own directory (revision-1 R4).
+
+### R2 (revised): positive resolution proof, with explicit terminals
+
+The REFERENT proof walks the effective native path component by component. Every link met has its text resolved, and that hop is checked at once, including on the last iteration. The proof **succeeds only** at one of three terminals:
+- **(i) completed traversal:** every component was inspected, the last exists and is not a link (or is a link whose chain ends at (i) or (ii)), and every hop stayed inside;
+- **(ii) proven missing:** a component is missing under R3, so nothing below it exists to redirect;
+- **(iii) proven contained cycle:** the full pending path repeats a state already checked.
+
+**Budget exhaustion (64) without a repeat, an outward hop, an unknown inspection outcome (R3) or a readlink failure all refuse.** No mutation may depend on exhaustion or on an unknown inspection state.
+
+### R4 (revised): every entry point, by class
+
+Each inventory mutation calls the guard for **its class** immediately before the native call:
+
+| Entry point | Class |
+|---|---|
+| fixture writes and mkdirs, per-case directories, outputs, `deny_access` (an ACL change on a file or directory, never on a link) | REFERENT |
+| `make_symlink` | ENTRY for the link path. For ordinary fixtures, the text is also REFERENT-proven from the link's directory |
+| the controls driver's scratch, mutant-file and log writes | REFERENT |
+| the controls driver's junction creation | ENTRY, as a negative fixture |
+| removals of anything | TRAVERSAL / ENTRY |
+
+### Negative-fixture rule (new; narrow)
+
+A **negative fixture** is an outward-pointing link created *only* to prove the guard refuses it.
+- It may be created **only** by an ENTRY operation inside a sandbox that was itself created under R2 for that control.
+- Its text must be a fixed constant listed in the control: `C:\`, `/`, or `C:\l12d007-…-never-created`.
+- It must never be the target of a REFERENT operation by the control.
+- It is never removed by anything other than an ENTRY unlink.
+- The control's own assertions are that the guard **refuses** REFERENT use of it and that no operation on its referent is attempted. They are observed under the intercept (R8).
+
+This is the only route that admits an outward link text. It is not an exemption for controls in general: every other control operation is REFERENT or TRAVERSAL as above.
+
+### R5 (revised): provider-operation targets, as the native spelling actually touched
+
+The runner and the oracle pass the step's **original argument unchanged** to the provider. Separately, they compute the **effective native path** the provider will touch:
+1. Pi's logical resolution: a `file://` URL is decoded through the certified §14 rules, and a relative path is joined to the case directory;
+2. then the certified L12-D001 OS **projection** (§14): on POSIX a lone surrogate becomes U+FFFD in the native spelling; on Windows the UTF-16 spelling is kept.
+
+That native spelling is REFERENT-proven under R2. A lone-surrogate argument and its U+FFFD projection can address the same entry, so a link at the projected spelling cannot evade the proof. This applies the certified §14 rule; it does not modify it. The raw-form ban (R1) still does not apply to provider inputs.
+
+### R6 (revised): restore requires an existing, non-link entry
+
+A case-end restore (undoing `deny_access`) re-proves its target at restore time and **additionally requires an existing, non-link entry of the kind it changed** (file or directory).
+- A **proven-missing** target (renamed away) means the restore is **skipped**: absence never authorizes a restore attempt.
+- A target that is now a **link** is also skipped; a restore never follows a link.
+- On any skip or failure: log it, leave the sandbox in place, and never force.
+
+### R7 (revised): cleanup is a TRAVERSAL
+
+The cleanup walks the sandbox itself, by the TRAVERSAL class:
+- links and junctions are removed as entries (ENTRY unlink), never descended into, never reset;
+- ordinary children are re-proven before they are visited;
+- each ordinary entry is reset singly (`icacls <entry> /reset /L`; POSIX `chmod` on ordinary entries only);
+- the ordinary entries are removed bottom-up.
+
+No tool traversal (`/T`, `-R`). Any refusal or failure leaves the sandbox in place.
+
+### R8 (revised): the intercept admits the proven operation only
+
+The intercept preload classifies each intercepted call by its **operation**, then applies that class's proof:
+- write, append, truncate, open-for-write, chmod and mkdir: REFERENT;
+- unlink, rmdir, symlink creation: ENTRY.
+
+A proof for unlink therefore **never** authorizes a write or chmod through the same outward link. The intercept's **log destination** is itself REFERENT-proven before every append. A refused call is logged and thrown; it never reaches the OS.
+
+### Behavior matrix (revision 2 additions; revision 1's rows stand unless superseded)
+
+| Input | Operation | Outcome |
+|---|---|---|
+| entry `j-out -> C:\` inside the sandbox | REFERENT write, chmod, open, mkdir `j-out/x` | **refuse** |
+| the same entry | ENTRY unlink / `rmdir` of the junction itself | allow; only the entry is removed; **no operation on `C:\`** |
+| the same entry | TRAVERSAL cleanup | the junction is unlinked as an entry; `C:\` is never enumerated, reset or deleted |
+| the same entry | ENTRY `icacls /reset /L` | allow (acts on the link itself); without `/L`, refused as a REFERENT ACL change |
+| an entry whose **parent** resolves outside (`j-out/x`) | ENTRY unlink, link creation | **refuse**: the parent's REFERENT proof fails |
+| a contained, existing, non-link target | REFERENT | allow, terminal (i) |
+| a lone-surrogate argument whose U+FFFD projection is an outward link (POSIX) | provider operation | **refuse**; the projected spelling is proven |
+| a restore target renamed away | restore | skip (proven missing does not authorize), log, leave the sandbox |
+| a restore target replaced by a link | restore | skip, log |
+
+### Witnesses and negative controls (revision 2)
+
+All synthetic-metadata controls substitute `lstat` / `readlink` and error answers and intercept every mutation. The native self-tests create links only inside their own sandboxes, under the negative-fixture rule.
+
+New **paired** controls, all on the **same** outward final link:
+- **(a)** REFERENT write and chmod are refused;
+- **(b)** ENTRY unlink is allowed, and its native effect is confined to the entry: under the intercept, the only attempted mutation is the unlink of the entry path;
+- **(c)** no operation on the referent is attempted, in either (a) or (b);
+- **(d)** an outward **ancestor**: ENTRY unlink and link creation of `j-out/x` are both refused;
+- **(e)** the projection alias pair: a synthetic lone-surrogate argument whose projected U+FFFD spelling is an outward link is refused;
+- **(f)** restore after a rename, and after a replacement by a link: both are skipped and no restore call is attempted.
+
+Kept from revision 1: long acyclic chains (hop 42, budget+1), the last hop, inspection errors at an ancestor and at the leaf (`EACCES`/`EPERM`/`EBUSY`/readlink failure), Win32 123/161 as missing, contained cycles (2 and 10), and the intercept facing a lexically-inside link to outside.
+
+Negative controls, each killed by its intended witness. Revision 1's seven stand, plus:
+8. **parent-only-everywhere:** prove only the parent for every mutation. Killed by (a): a REFERENT write through the outward final link is admitted.
+9. **follow-final-in-cleanup:** the cleanup descends into, or resets through, a link or junction. Killed by the TRAVERSAL control: an attempted operation on the referent is intercepted.
+10. **entry-proof-authorizes-write:** the intercept admits a write after an ENTRY proof of the same path. Killed by (a) under the intercept.
+11. **logical-not-native:** prove the logical spelling instead of the native projection. Killed by (e).
+12. **restore-on-absence:** a restore attempted on a proven-missing target. Killed by (f).
