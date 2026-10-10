@@ -252,3 +252,39 @@ The local implementation, rebased on remediation 1, passes on Windows:
 - `tests/execution`.
 
 It has not been pushed and is not under review.
+
+## 9. Remediation 2: convergence episode CE-L12D007-01 implemented (`L12D007-C001`)
+
+Trigger A fired on `L12D007-C001` after re-review 2. Convergence episode `CE-L12D007-01` (`l12-d007-convergence-ce01.md`) reached **AGREED FOR IMPLEMENTATION** at revision 3 (checkpoint review 3), with the R3a amendment agreed at revision 5 (checkpoint review 5).
+
+**Implemented** (guards `fs-guard/fs-guard.mjs`, `fs_guard.py`; the oracle and probes; the code repo's runner):
+- **Operation classes:** REFERENT, ENTRY (verified no-follow only), TRAVERSAL.
+- **R2:** a positive proof with three terminals (completed traversal, proven missing, repeated state). Budget 64; exhaustion refuses.
+- **R3:** fail-closed inspection, plus **R3a**: a proven over-long single component, using a queried `NAME_MAX` in native bytes and `L + 1 <=` a queried `PATH_MAX`, with no defaults.
+- **R5:** the §14.1 native projection (Python), and the runner's proof of mutating provider steps.
+- **R6:** the re-proving restore.
+- **R7:** the guard-owned no-follow cleanup (per-entry `icacls /remove:d` then `/reset`, both with `/L`).
+- **R8:** an operation-classified intercept with a proven log, synced to ESM named imports.
+
+**Permanent controls** (synthetic link metadata and limit answers; every mutation recorded, none reaching the OS):
+
+| Suite | Result |
+|---|---|
+| `fs-guard/ce01-controls.mjs` (Node) | real guard **38/38**; mutants 1-6, 8-10, 12, 14-20 **all KILLED** (17) |
+| `fs-guard/ce01_controls.py` (Python) | real guard **33/33**; mutants 1-3, 5, 6, 8, 9, 11-20 **all KILLED** (17; 13 runs on Windows) |
+| code `tests/conformance/test_fs_path_runner_containment.py` | **39 tests** |
+| `fs-guard/runner_mutant7.py` | mutant 7 **KILLED** |
+
+The native self-tests (`fs-guard-check.mjs`, `fs_guard_check.py`) still pass. Codex's review-2 Node memory script, run against the new guard: 5-hop, 42-hop and `lstat` `EACCES` all **REFUSED**, with 0 mutations. Its Python script mocks `os.path.lexists` / `islink`, which the new guard no longer calls, so its "ACCEPTED" is not a guard result. `ce01_suite.py` covers the same cases through `os.lstat`, and they are refused.
+
+**Native replay (R9)**, after all the controls passed, under the final guards:
+- Windows: 240 cases; Linux (container, uid 1000): 160 cases.
+- The regenerated `fs-error-codes.json` is **byte-identical** to the pre-remediation corpus. The containment work changed no evidence.
+
+**Defects found and fixed during this remediation:**
+1. **The `deny_access` fixture's rights.** A generic `(R)` deny also denies `READ_CONTROL`. Under Python 3.13's protected `0o700` temp-directory ACL, which carries an OWNER RIGHTS ACE, the owner then cannot read or change the ACL at all. The runner's R6 restores therefore failed silently (`icacls` exit 5, unchecked), leaving permanently denied entries. Those failed closed, in place under `.tmp` (`pytest-l12d007`, `pytest-l12d007-deny`; only an administrator can now undo them).
+   - Fixed: the fixture denies `(RD,REA,RA,S)`, every read right **except** read-control.
+   - The corpus regenerated with it is byte-identical; denial cases now leave 0 locked entries; the schema comment is updated.
+2. **R5 with a NUL path** (applied, and flagged for review). A native path containing U+0000 cannot be inspected. By certified §18 the provider's native call rejects it before touching the filesystem, except for `write` / `append`'s parent creation when the NUL is only in the final component. The runner therefore proves the **NUL-free directory prefix** and never inspects or touches the remainder.
+
+**Implementation-stage note (outside this contract review):** on the local Python implementation branch, the Windows removal now goes through libuv's handle-based unlink. Seven L12-D005 / L12-D001 removal witnesses simulate failures by monkeypatching `os.remove` / `shutil`, so they no longer reach the code path. They must target the new seam at the implementation stage. The product behavior they check is unchanged in intent.

@@ -122,6 +122,20 @@ os.chmod = _mut("chmod")
 Path.mkdir = lambda self, *a, **k: CALLS.append(("mkdir", str(self)))
 subprocess.run = lambda args, *a, **k: CALLS.append(("exec", " ".join(map(str, args))))
 
+LIMITS: dict = {}
+
+
+def _pathconf(p, name):
+    """R3a: answers from LIMITS ("error" raises; any other value returned as is, e.g. -1, None, "abc")."""
+    CALLS.append(("pathconf", f"{name} {os.path.abspath(str(p))}"))
+    v = LIMITS.get(name, "error")
+    if v == "error":
+        raise OSError(errno.EINVAL, "synthetic pathconf", str(p))
+    return v
+
+
+os.pathconf = _pathconf
+
 import fs_guard as g  # noqa: E402
 
 g.os = os
@@ -173,4 +187,30 @@ done = []
 setv({}); r["f_restore_missing_skipped"] = not g.restore_access(VR, "gone", "file", done.append, quiet) and not done  # noqa: E702
 setv({"l": {"type": "link", "text": "x"}}); r["f_restore_link_skipped"] = not g.restore_access(VR, "l", "file", done.append, quiet) and not done  # noqa: E702
 setv({"f": {"type": "file"}}); r["f_restore_existing_done"] = g.restore_access(VR, "f", "file", done.append, quiet) and len(done) == 1  # noqa: E702
+# R3a (revision 5) witnesses: the component's lstat reports ENAMETOOLONG; limits explicit per row;
+# PATH_MAX is set relative to L, the native byte length of the full inspected path.
+def r3a(name, name_max, path_max, under=""):
+    comp = f"{under}/{name}" if under else name
+    spec = {comp: {"type": "file", "err": errno.ENAMETOOLONG}}
+    if under:
+        spec[under] = {"type": "dir", "err": errno.EACCES}
+    setv(spec)
+    LIMITS.clear()
+    LIMITS.update({"PC_NAME_MAX": name_max, "PC_PATH_MAX": path_max})
+    return not refused(lambda: g.assert_inside(VR, comp))
+
+
+Lb = lambda name: len(os.path.join(VR, name).encode("utf-8"))  # noqa: E731
+n300, e128, a200, a255 = "n" * 300, "é" * 128, "a" * 200, "a" * 255
+r["W1_overlong_component_admitted"] = r3a(n300, 255, Lb(n300) + 1000)
+r["W2_path_max_overflow_refused"] = not r3a(n300, 255, Lb(n300) // 2)
+r["W2b_short_component_path_overflow_refused"] = not r3a("x" * 100, 255, 50)
+r["W3_at_limit_component_refused"] = not r3a(a255, 255, Lb(a255) + 1000)
+r["W4_bytes_not_characters_admitted"] = r3a(e128, 255, Lb(e128) + 1000)
+r["W5_under_limit_component_refused"] = not r3a(a200, 255, Lb(a200) + 1000)
+r["W6_name_max_unavailable_refused"] = all(not r3a(n300, v, Lb(n300) + 1000) for v in ("error", -1, None, "abc"))
+r["W7_path_max_unavailable_refused"] = all(not r3a(n300, 255, v) for v in ("error", -1, None, "abc"))
+r["W8_unproven_directory_refused_before_query"] = not r3a(n300, 255, 1 << 20, "d-denied") and not any(c[0] == "pathconf" for c in CALLS)
+r["W9a_path_max_boundary_inside_admitted"] = r3a(n300, 255, Lb(n300) + 1)
+r["W9b_path_max_terminator_refused"] = not r3a(n300, 255, Lb(n300))
 print(json.dumps(r))

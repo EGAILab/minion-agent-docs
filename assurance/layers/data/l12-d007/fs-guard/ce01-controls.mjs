@@ -26,6 +26,13 @@ const MUTANTS = [
   ["8 parent-only-everywhere", "fs-guard.mjs", "  const lexical = lexicalInside(sandbox, target, cwd);\n  prove(lexical, sandbox, target);\n  return lexical;", "  return assertEntry(sandbox, target, cwd);", ["a_referent_through_outward_link_refused"]],
   ["9 follow-final-in-cleanup", "fs-guard.mjs", "    if (st.isSymbolicLink()) { removeLinkEntry(child); continue; } // as itself; never descended", "    if (st.isSymbolicLink()) { walkClean(root, child); removeLinkEntry(child); continue; }", ["c_cleanup_removes_link_as_entry_only"]],
   ["10 entry-proof-authorizes-write", "intercept.mjs", "  writeFileSync: [[0, R]],", "  writeFileSync: [[0, E]],", ["intercept_write_to_outward_final_link_refused"]],
+  ["14 blanket-ENAMETOOLONG-is-missing", "fs-guard.mjs", "    if (e?.code === \"ENAMETOOLONG\" && overlongComponent(path.dirname(p), path.basename(p), p)) return null;", "    if (e?.code === \"ENAMETOOLONG\") return null;", ["W2_path_max_overflow_refused", "W3_at_limit_component_refused", "W5_under_limit_component_refused"]],
+  ["15 refuse-every-overlong", "fs-guard.mjs", "  const nameMax = queryLimit(\"NAME_MAX\", dir);", "  return false;\n  const nameMax = queryLimit(\"NAME_MAX\", dir);", ["W1_overlong_component_admitted", "W4_bytes_not_characters_admitted"]],
+  ["16 assume-255", "fs-guard.mjs", "  const nameMax = queryLimit(\"NAME_MAX\", dir);", "  const nameMax = queryLimit(\"NAME_MAX\", dir) ?? 255;", ["W6_name_max_unavailable_refused"]],
+  ["17 assume-default-PATH_MAX", "fs-guard.mjs", "  const pathMax = queryLimit(\"PATH_MAX\", dir);", "  const pathMax = queryLimit(\"PATH_MAX\", dir) ?? 1048576;", ["W7_path_max_unavailable_refused"]],
+  ["18 character-count", "fs-guard.mjs", "  if (nameMax === null || nativeBytes(name) <= nameMax) return false;", "  if (nameMax === null || name.length <= nameMax) return false;", ["W4_bytes_not_characters_admitted"]],
+  ["19 skip-path-max", "fs-guard.mjs", "  return pathMax !== null && nativeBytes(full) + 1 <= pathMax;", "  return true;", ["W2_path_max_overflow_refused"]],
+  ["20 omit-NUL", "fs-guard.mjs", "  return pathMax !== null && nativeBytes(full) + 1 <= pathMax;", "  return pathMax !== null && nativeBytes(full) <= pathMax;", ["W9b_path_max_terminator_refused"]],
   ["12 restore-on-absence", "fs-guard.mjs", "    if (st === null) return log(`fs-guard: restore skipped, ${rel} is missing`), false;", "    if (st === null) { restore(target); return true; }", ["f_restore_missing_skipped"]],
 ];
 

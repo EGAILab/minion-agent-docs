@@ -36,8 +36,32 @@ function inspect(p) {
     return fs.lstatSync(p);
   } catch (e) {
     if (MISSING.has(e?.code)) return null;
+    if (e?.code === "ENAMETOOLONG" && overlongComponent(path.dirname(p), path.basename(p), p)) return null;
     throw new Error(`fs-guard: cannot inspect ${p} (${e?.code ?? e?.message}); refused`);
   }
+}
+
+// R3a (CE-L12D007-01 revision 5): an ENAMETOOLONG proves the component missing ONLY when (1) its
+// containing directory is fully proven -- inspect() is reached for a component only after every earlier
+// component of the pending path was inspected, exists and is not a link; (2) NAME_MAX is QUERIED for
+// that directory and is a positive integer; (3) the component's native UTF-8 byte length EXCEEDS it;
+// (4) PATH_MAX, queried the same way, admits the whole path including its terminator: L + 1 <= PATH_MAX.
+// Anything unavailable or indeterminate refuses; there is no default.
+function queryLimit(name, dir) {
+  try {
+    const out = String(execFileSync("getconf", [name, dir], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })).trim();
+    const n = Number(out);
+    return out !== "" && Number.isInteger(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+const nativeBytes = (s) => Buffer.byteLength(String(s).toWellFormed(), "utf8");
+function overlongComponent(dir, name, full) {
+  const nameMax = queryLimit("NAME_MAX", dir);
+  if (nameMax === null || nativeBytes(name) <= nameMax) return false;
+  const pathMax = queryLimit("PATH_MAX", dir);
+  return pathMax !== null && nativeBytes(full) + 1 <= pathMax;
 }
 
 function realRoot(p) {
@@ -192,6 +216,8 @@ export function cleanupSandbox(root, log = console.error) {
 // entry itself (/L) and the read-only attribute cleared; POSIX: owner access restored.
 function resetEntry(p, isDirectory) {
   if (process.platform === "win32") {
+    // A deny_access ACE blocks reading the ACL that /reset needs; the owner can still remove the deny.
+    try { execFileSync("icacls", [p, "/remove:d", "*S-1-1-0", "/L", "/Q"], { stdio: "ignore" }); } catch { /* no deny present */ }
     execFileSync("icacls", [p, "/reset", "/L", "/Q"], { stdio: "ignore" });
     fs.chmodSync(p, 0o666);
   } else fs.chmodSync(p, isDirectory ? 0o700 : 0o600);

@@ -16,7 +16,7 @@ let tree = new Map(); // rel (projected, "/"-joined) -> { type: "dir"|"file"|"li
 const calls = [];
 globalThis.__syn = {
   root: ROOT,
-  set(spec) { tree = new Map(Object.entries(spec).map(([k, v]) => [project(k), v])); calls.length = 0; },
+  set(spec, limits = {}) { tree = new Map(Object.entries(spec).map(([k, v]) => [project(k), v])); calls.length = 0; globalThis.__syn.limits = limits; },
   calls,
 };
 const rel = (p) => {
@@ -83,5 +83,15 @@ Object.assign(fs, {
   renameSync: mutation("renameSync", [0, 1]), symlinkSync: mutation("symlinkSync", [1]), truncateSync: mutation("truncateSync", [0]),
   openSync: mutation("openSync", [0]), copyFileSync: mutation("copyFileSync", [1]),
 });
-cp.execFileSync = (file, args = []) => { calls.push({ op: `exec:${file}`, args: args.map(String) }); return ""; };
+// `getconf NAME|PATH_MAX <dir>` answers come from globalThis.__syn.limits ("error" throws; any other
+// value is printed as is, e.g. -1, "undefined", "abc"); every other program is recorded and returns "".
+cp.execFileSync = (file, args = []) => {
+  calls.push({ op: `exec:${file}`, args: args.map(String) });
+  if (file === "getconf") {
+    const v = globalThis.__syn.limits?.[args[0]];
+    if (v === undefined || v === "error") throw err("EGETCONF", args.join(" "));
+    return `${v}\n`;
+  }
+  return "";
+};
 syncBuiltinESMExports();

@@ -67,7 +67,35 @@ def _inspect(p: str) -> os.stat_result | None:
     except OSError as exc:
         if getattr(exc, "winerror", None) in _MISSING_WIN32 or exc.errno in (errno.ENOENT, errno.ENOTDIR):
             return None
+        if exc.errno == errno.ENAMETOOLONG and _overlong_component(os.path.dirname(p), os.path.basename(p), p):
+            return None
         raise RuntimeError(f"fs_guard: cannot inspect {p} ({exc}); refused") from exc
+
+
+def _query_limit(name: str, directory: str) -> int | None:
+    """A positive limit queried for `directory`, or None (unavailable / indeterminate): no default."""
+    try:
+        value = os.pathconf(directory, name)
+    except (OSError, ValueError, AttributeError):  # AttributeError: no pathconf (Windows)
+        return None
+    return value if isinstance(value, int) and value > 0 else None
+
+
+def _native_bytes(text: str) -> int:
+    return len(project(text).encode("utf-8"))
+
+
+def _overlong_component(directory: str, name: str, full: str) -> bool:
+    """R3a (CE-L12D007-01 revision 5): ENAMETOOLONG proves the component missing ONLY when (1) its
+    containing directory is fully proven -- _inspect is reached for a component only after every
+    earlier component was inspected, exists and is not a link; (2) NAME_MAX is queried for that
+    directory; (3) the component's native UTF-8 bytes EXCEED it; (4) a queried PATH_MAX admits the
+    whole path with its terminator: L + 1 <= PATH_MAX. Anything unavailable refuses."""
+    name_max = _query_limit("PC_NAME_MAX", directory)
+    if name_max is None or _native_bytes(name) <= name_max:
+        return False
+    path_max = _query_limit("PC_PATH_MAX", directory)
+    return path_max is not None and _native_bytes(full) + 1 <= path_max
 
 
 def _is_link(st: os.stat_result) -> bool:
@@ -207,6 +235,8 @@ def restore_access(sandbox: str, rel: str, kind: str, restore: Callable[[str], o
 def _reset_entry(p: str, is_dir: bool) -> None:
     """Only on an ordinary (non-link) entry just proven."""
     if sys.platform == "win32":
+        # A deny_access ACE blocks reading the ACL that /reset needs; the owner can remove the deny.
+        subprocess.run(["icacls", p, "/remove:d", "*S-1-1-0", "/L", "/Q"], check=False, capture_output=True)
         subprocess.run(["icacls", p, "/reset", "/L", "/Q"], check=True, capture_output=True)
         os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
     else:

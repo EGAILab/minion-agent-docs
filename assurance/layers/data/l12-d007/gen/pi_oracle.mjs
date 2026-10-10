@@ -38,12 +38,13 @@ const HOLD = {
     : `$s=[IO.File]::Open('${p}','Open','ReadWrite','None'); Write-Output ready; Start-Sleep 300`),
   lock_range: (p) => `$s=[IO.File]::Open('${p}','Open','ReadWrite','ReadWrite'); $s.Lock(0,64); Write-Output ready; Start-Sleep 300`,
 };
-// deny_access: Windows denies Everyone read (`icacls /deny *S-1-1-0:(R)`); POSIX removes every mode
+// deny_access: Windows denies Everyone every read right except read-control
+// (`icacls /deny *S-1-1-0:(RD,REA,RA,S)`, so the owner can always undo it); POSIX removes every mode
 // bit (chmod 000; meaningful only for a non-root user). Each is undone at case end so cleanup works.
 function denyAccess(cwd, rel, target, releases) {
   const kind = fs.statSync(target).isDirectory() ? "directory" : "file";
   if (process.platform === "win32") {
-    execFileSync("icacls", [target, "/deny", "*S-1-1-0:(R)"], { stdio: "ignore" });
+    execFileSync("icacls", [target, "/deny", "*S-1-1-0:(RD,REA,RA,S)"], { stdio: "ignore" });
     releases.push(() => restoreAccess(cwd, rel, kind, (t) => execFileSync("icacls", [t, "/remove:d", "*S-1-1-0"], { stdio: "ignore" })));
   } else {
     const mode = fs.statSync(target).mode & 0o777;
