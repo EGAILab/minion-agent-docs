@@ -3050,7 +3050,9 @@ Each must fail a witness:
 
 ## 17. Layer-12 post-certification delta `L12-D005` — Windows `remove` ignores the read-only attribute (`EXEC-002`)
 
-**Status:** contract delta, for independent contract review (`minion-agent#188`). Provenance: `L12-RM-READONLY-WINDOWS` (`minion-agent#126`).
+**Status (`minion-agent#188`):** CERTIFIED_CLOSED (cross-language). Provenance: `L12-RM-READONLY-WINDOWS` (`minion-agent#126`).
+- **Python:** code #189 → `4efa52ff`, docs #277 → `4ce6aa65`. Final complete review: #188 issuecomment-6090261622.
+- **Rust:** code #192 → `fd6c025f`, docs #279 → `e556ff09`. Closure re-review: #188 issuecomment-6093795761, after `L12D005-R001`.
 
 **Owner decisions:** `#126` issuecomment-6086596348, amended by issuecomment-6087116283 after characterization. They authorize a targeted correction of certified Layer 12 in both bindings.
 
