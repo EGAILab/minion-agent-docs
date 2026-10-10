@@ -957,7 +957,9 @@ ToolExecutionContext              -- immutable snapshot; no setter; no agent ref
 
 ### Validated-argument isolation (`TOOL-003`, post-certification delta `L0506-D005`)
 
-**Status (`minion-agent#190`; provenance #129):** CONTRACT_DRAFT.
+**Status (`minion-agent#190`; provenance #129):** CERTIFIED_CLOSED (cross-language), for acyclic prepared graphs (Owner `L0506D005-Q001`; cyclic validation is #193, out of scope).
+- **Python:** code #191 → `aa14b055`, docs #278 → `fbdbc679`. Final contract review: #190 issuecomment-6093423771. Implementation review: issuecomment-6094021310; integration: issuecomment-6094108563.
+- **Rust (acyclic audit, no production change):** code #200 → `fb197b30`, docs #282 → `f21b0b8d`. Closure review: #190 issuecomment-6096557637.
 
 - **Authorization:** Owner decision on #129, Option 1, "deep-copy like pinned Pi" (recorded verbatim on #129). It authorizes this targeted, non-additive Layer 06 correction. It is a Pi-parity correction, **not** a divergence. The routine lifecycle is delegated under #75.
 - **Finding:** `L06-VALIDATION-SHALLOW-COPY`. A raw-schema tool's validation copied the arguments **shallowly**, so a hook's nested mutation reached the raw `ToolCall.arguments` and every later raw observation.
