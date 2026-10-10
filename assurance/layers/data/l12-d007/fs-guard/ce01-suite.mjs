@@ -50,6 +50,17 @@ let restored = 0; const count = () => { restored++; };
 S.set({}); r.f_restore_missing_skipped = !g.restoreAccess(VR, "gone", "file", count, quiet) && restored === 0;
 S.set({ l: { type: "link", text: "x" } }); r.f_restore_link_skipped = !g.restoreAccess(VR, "l", "file", count, quiet) && restored === 0;
 S.set({ f: { type: "file" } }); r.f_restore_existing_done = g.restoreAccess(VR, "f", "file", count, quiet) && restored === 1;
+S.set({ f: { type: "file" } }); r.f_restore_failure_propagates = refused(() => g.restoreAccess(VR, "f", "file", () => { throw new Error("synthetic restore failure"); }, quiet));
+
+// Closure review 1: ".." in link text must not erase an unchecked link (POSIX 4.13). `a` -> "b/../leaf",
+// `b` -> an outside directory: natively a resolves to <outside parent>/leaf.
+const OUT_DIR = process.platform === "win32" ? "C:\\outside\\nested" : "/outside/nested";
+S.set({ a: { type: "link", text: "b/../leaf" }, b: { type: "link", text: OUT_DIR } });
+r.dotdot_referent_refused = refused(() => g.assertInside(VR, "a"));
+r.dotdot_entry_below_refused = refused(() => g.assertEntry(VR, "a/x"));
+r.dotdot_entry_on_link_itself_allowed = allowed(() => g.assertEntry(VR, "a"));
+r.dotdot_output_refused = refused(() => g.assertOutput(path.join(VR, "a", "o.json")));
+r.dotdot_sandbox_refused = refused(() => g.makeSandbox(path.join(VR, "a", "s"))) && !S.calls.some((c) => c.op === "mkdirSync");
 
 // R3a (revision 5) witnesses. The component's lstat reports ENAMETOOLONG; limits are explicit per row.
 // L is the native byte length of the full inspected path; PATH_MAX is set relative to it.
@@ -84,5 +95,7 @@ if (withIntercept) {
   threw = refused(() => fs.chmodSync(path.join(VR, "j"), 0o600));
   r.intercept_chmod_outward_final_link_refused = threw && !reached("chmodSync", path.join(VR, "j"));
   r.intercept_entry_unlink_allowed_and_confined = allowed(() => fs.unlinkSync(path.join(VR, "j"))) && reached("unlinkSync", path.join(VR, "j")) && !touchesOutside();
+  S.set({ a: { type: "link", text: "b/../leaf" }, b: { type: "link", text: OUT_DIR } });
+  r.intercept_dotdot_write_refused = refused(() => fs.writeFileSync(path.join(VR, "a", "x"), "x")) && !reached("writeFileSync", path.join(VR, "a", "x"));
 }
 console.log(JSON.stringify(r));

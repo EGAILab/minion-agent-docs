@@ -89,6 +89,9 @@ function prove(target, boundary, what) {
       if (st.isSymbolicLink()) {
         let text;
         try { text = fs.readlinkSync(cur); } catch (e) { throw new Error(`fs-guard: cannot read link ${cur} (${e?.code}); refused`); }
+        // A ".." in link text is resolved natively against the RESOLVED predecessor (POSIX 4.13), so
+        // collapsing it lexically could erase an unchecked link ("b/../leaf" with b a link): refused.
+        if (String(text).split(/[\\/]/).includes("..")) throw new Error(`fs-guard: link ${cur} text ${text} has a ".." segment; refused`);
         const base = path.isAbsolute(text) ? text : `${path.dirname(cur)}${path.sep}${text}`;
         redirected = path.resolve([base, ...parts.slice(i + 1)].join(path.sep));
         break;
@@ -174,19 +177,22 @@ export function assertOutput(file) {
 }
 
 // R6: undo a deny_access only on an EXISTING, NON-LINK entry of the recorded kind, re-proven now.
+// Only a failed PROOF skips (logged, false). A restore that RUNS and fails is never swallowed: its
+// error propagates (closure review 1), so the caller fails closed instead of reporting a clean run.
 export function restoreAccess(sandbox, rel, kind, restore, log = console.error) {
+  let target;
   try {
-    const target = assertInside(sandbox, rel);
+    target = assertInside(sandbox, rel);
     const st = inspect(target);
     if (st === null) return log(`fs-guard: restore skipped, ${rel} is missing`), false;
     if (st.isSymbolicLink()) return log(`fs-guard: restore skipped, ${rel} is now a link`), false;
     if ((kind === "directory") !== st.isDirectory()) return log(`fs-guard: restore skipped, ${rel} changed kind`), false;
-    restore(target);
-    return true;
   } catch (e) {
     log(`fs-guard: restore skipped (${e.message})`);
     return false;
   }
+  restore(target); // a restore that runs and fails propagates
+  return true;
 }
 
 // ENTRY removal of a link or junction AS ITSELF. Node's unlink / rmdir act on the entry, never on its

@@ -11,7 +11,9 @@ import { PROJECT_ROOT, makeSandbox, assertInside } from "./fs-guard.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FILES = ["fs-guard.mjs", "intercept.mjs", "synthetic.mjs", "ce01-suite.mjs"];
-const src = Object.fromEntries(FILES.map((f) => [f, fs.readFileSync(path.join(here, f), "utf8")]));
+// Normalized to LF so the mutant anchors match on a CRLF (core.autocrlf) checkout too; a failed anchor
+// is an error, never a kill.
+const src = Object.fromEntries(FILES.map((f) => [f, fs.readFileSync(path.join(here, f), "utf8").replace(/\r\n/g, "\n")]));
 const work = makeSandbox(path.join(PROJECT_ROOT, ".tmp", "ce01-controls", `run-${Date.now()}`));
 
 // [name, file, old, new, the control(s) that must fail]
@@ -21,7 +23,8 @@ const MUTANTS = [
   ["3 unchecked-last-hop", "fs-guard.mjs", "    if (!inside(redirected)) throw new Error(`fs-guard: ${what} reaches ${redirected} through a link, outside ${boundary}`);\n    pending = redirected;\n  }\n  throw new Error(`fs-guard: ${what}: ${BUDGET}-hop budget exhausted without a repeated state; refused`);",
     "    pending = redirected;\n  }\n  return pending;", ["last_hop_outward_refused"]],
   ["4 lexical-intercept", "intercept.mjs", "        if (cls === \"REFERENT\") proveReferentAbs(target);\n        else proveEntryAbs(target);", "        void cls;", ["intercept_write_through_outward_ancestor_refused"]],
-  ["5 restore-without-proof", "fs-guard.mjs", "  try {\n    const target = assertInside(sandbox, rel);", "  try {\n    restore(path.resolve(sandbox, rel)); return true;\n    const target = assertInside(sandbox, rel);", ["f_restore_missing_skipped"]],
+  ["5 restore-without-proof", "fs-guard.mjs", "  let target;\n  try {\n    target = assertInside(sandbox, rel);", "  restore(path.resolve(sandbox, rel)); return true;\n  let target;\n  try {\n    target = assertInside(sandbox, rel);", ["f_restore_missing_skipped"]],
+  ["22 swallow-restore-failure", "fs-guard.mjs", "  restore(target); // a restore that runs and fails propagates", "  try { restore(target); } catch { return false; }", ["f_restore_failure_propagates"]],
   ["6 tool-traversal-cleanup", "fs-guard.mjs", "    walkClean(path.resolve(root), path.resolve(root));", "    execFileSync(\"icacls\", [path.resolve(root), \"/reset\", \"/T\", \"/C\", \"/Q\"]);", ["c_cleanup_removes_link_as_entry_only"]],
   ["8 parent-only-everywhere", "fs-guard.mjs", "  const lexical = lexicalInside(sandbox, target, cwd);\n  prove(lexical, sandbox, target);\n  return lexical;", "  return assertEntry(sandbox, target, cwd);", ["a_referent_through_outward_link_refused"]],
   ["9 follow-final-in-cleanup", "fs-guard.mjs", "    if (st.isSymbolicLink()) { removeLinkEntry(child); continue; } // as itself; never descended", "    if (st.isSymbolicLink()) { walkClean(root, child); removeLinkEntry(child); continue; }", ["c_cleanup_removes_link_as_entry_only"]],
@@ -33,6 +36,7 @@ const MUTANTS = [
   ["18 character-count", "fs-guard.mjs", "  if (nameMax === null || nativeBytes(name) <= nameMax) return false;", "  if (nameMax === null || name.length <= nameMax) return false;", ["W4_bytes_not_characters_admitted"]],
   ["19 skip-path-max", "fs-guard.mjs", "  return pathMax !== null && nativeBytes(full) + 1 <= pathMax;", "  return true;", ["W2_path_max_overflow_refused"]],
   ["20 omit-NUL", "fs-guard.mjs", "  return pathMax !== null && nativeBytes(full) + 1 <= pathMax;", "  return pathMax !== null && nativeBytes(full) <= pathMax;", ["W9b_path_max_terminator_refused"]],
+  ["21 lexical-dotdot-link-text", "fs-guard.mjs", "        if (String(text).split(/[\\\\/]/).includes(\"..\")) throw new Error(`fs-guard: link ${cur} text ${text} has a \"..\" segment; refused`);\n", "", ["dotdot_referent_refused", "dotdot_entry_below_refused"]],
   ["12 restore-on-absence", "fs-guard.mjs", "    if (st === null) return log(`fs-guard: restore skipped, ${rel} is missing`), false;", "    if (st === null) { restore(target); return true; }", ["f_restore_missing_skipped"]],
 ];
 

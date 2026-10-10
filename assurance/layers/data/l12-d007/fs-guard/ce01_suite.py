@@ -187,6 +187,20 @@ done = []
 setv({}); r["f_restore_missing_skipped"] = not g.restore_access(VR, "gone", "file", done.append, quiet) and not done  # noqa: E702
 setv({"l": {"type": "link", "text": "x"}}); r["f_restore_link_skipped"] = not g.restore_access(VR, "l", "file", done.append, quiet) and not done  # noqa: E702
 setv({"f": {"type": "file"}}); r["f_restore_existing_done"] = g.restore_access(VR, "f", "file", done.append, quiet) and len(done) == 1  # noqa: E702
+def _boom(t):
+    raise OSError(errno.EACCES, "synthetic restore failure", t)
+
+
+setv({"f": {"type": "file"}}); r["f_restore_failure_propagates"] = refused(lambda: g.restore_access(VR, "f", "file", _boom, quiet))  # noqa: E702
+# Closure review 1: ".." in link text must not erase an unchecked link (POSIX 4.13).
+OUT_DIR = "C:\\outside\\nested" if WIN else "/outside/nested"
+setv({"a": {"type": "link", "text": "b/../leaf"}, "b": {"type": "link", "text": OUT_DIR}})
+r["dotdot_referent_refused"] = refused(lambda: g.assert_inside(VR, "a"))
+r["dotdot_entry_below_refused"] = refused(lambda: g.assert_entry(VR, "a/x"))
+r["dotdot_entry_on_link_itself_allowed"] = not refused(lambda: g.assert_entry(VR, "a"))
+r["dotdot_output_refused"] = refused(lambda: g.assert_output(os.path.join(VR, "a", "o.json")))
+r["dotdot_sandbox_refused"] = refused(lambda: g.make_sandbox(os.path.join(VR, "a", "s"))) and not any(c[0] == "mkdir" for c in CALLS)
+
 # R3a (revision 5) witnesses: the component's lstat reports ENAMETOOLONG; limits explicit per row;
 # PATH_MAX is set relative to L, the native byte length of the full inspected path.
 def r3a(name, name_max, path_max, under=""):

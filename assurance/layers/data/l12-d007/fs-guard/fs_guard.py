@@ -133,6 +133,10 @@ def _prove(target: str, boundary: str, what: str) -> str:
                     raise RuntimeError(f"fs_guard: cannot read link {cur} ({exc}); refused") from exc
                 if text.startswith("\\\\?\\"):
                     text = text[4:]
+                # A ".." in link text resolves natively against the RESOLVED predecessor (POSIX 4.13);
+                # collapsing it lexically could erase an unchecked link ("b/../leaf"): refused.
+                if ".." in text.replace("\\", "/").split("/"):
+                    raise RuntimeError(f"fs_guard: link {cur} text {text!r} has a '..' segment; refused")
                 base = text if os.path.isabs(text) else _concat(os.path.dirname(cur), text)
                 redirected = os.path.abspath(_concat(base, *parts[i + 1 :]))
                 break
@@ -212,7 +216,8 @@ def assert_output(file: str) -> str:
 
 def restore_access(sandbox: str, rel: str, kind: str, restore: Callable[[str], object],
                    log: Callable[[str], object] = print) -> bool:
-    """R6: undo a deny only on an EXISTING, NON-LINK entry of the recorded kind, re-proven now."""
+    """R6: undo a deny only on an EXISTING, NON-LINK entry of the recorded kind, re-proven now.
+    Only a failed PROOF skips (logged, False); a restore that RUNS and fails propagates."""
     try:
         target = assert_inside(sandbox, rel)
         st = _inspect(target)
@@ -225,11 +230,11 @@ def restore_access(sandbox: str, rel: str, kind: str, restore: Callable[[str], o
         if (kind == "directory") != stat.S_ISDIR(st.st_mode):
             log(f"fs_guard: restore skipped, {rel!r} changed kind")
             return False
-        restore(target)
-        return True
     except (RuntimeError, OSError) as exc:
         log(f"fs_guard: restore skipped ({exc})")
         return False
+    restore(target)  # a restore that runs and fails propagates (never swallowed)
+    return True
 
 
 def _reset_entry(p: str, is_dir: bool) -> None:

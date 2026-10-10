@@ -288,3 +288,43 @@ The native self-tests (`fs-guard-check.mjs`, `fs_guard_check.py`) still pass. Co
 2. **R5 with a NUL path** (applied, and flagged for review). A native path containing U+0000 cannot be inspected. By certified §18 the provider's native call rejects it before touching the filesystem, except for `write` / `append`'s parent creation when the NUL is only in the final component. The runner therefore proves the **NUL-free directory prefix** and never inspects or touches the remainder.
 
 **Implementation-stage note (outside this contract review):** on the local Python implementation branch, the Windows removal now goes through libuv's handle-based unlink. Seven L12-D005 / L12-D001 removal witnesses simulate failures by monkeypatching `os.remove` / `shutil`, so they no longer reach the code path. They must target the new seam at the implementation stage. The product behavior they check is unchanged in intent.
+
+## 10. Targeted closure review 1 (C001) and remediation 3
+
+Closure review 1 (#199 comment 6101778434; `.tmp/codex-scratch/l12d007-ce01-closure-review-1.md`) was **CHANGES REQUESTED**. `CE-L12D007-01-C003` (R3a) is provisionally closed; `L12D007-C001` stays open.
+
+**Refined witness** (correct, POSIX 4.13):
+- the setup: `a` → `b/../leaf`, with `b` → an outside directory;
+- every guard and the runner collapsed `b/..` lexically (`path.resolve` / `os.path.abspath`) and accepted, **never inspecting `b`**. Native resolution substitutes `b` first, so the referent is `<outside>/leaf`.
+
+**Remediation 3:**
+- **Link text containing a `..` segment is refused**, the conservative option the review accepted. This applies in both guards and the runner, and therefore in the intercept, which uses the guard's proof. With no `..`, the remaining lexical steps (`.` and separators) cannot erase a component.
+- **Permanent witnesses:**
+  - REFERENT `a`, refused;
+  - ENTRY `a/x`, refused (its parent `a` must be proven);
+  - ENTRY `a` itself, allowed (unlinking the link does not follow its text);
+  - `makeSandbox` / `assertOutput` through `a`, refused, with no `mkdir` reached;
+  - the intercept refusing a write to `a/x`;
+  - the runner's REFERENT and ENTRY provider targets.
+- **Mutant 21** (restore the lexical collapse): killed in Node, in Python, and in the runner (`fs-guard/runner_mutants.py`, which supersedes `runner_mutant7.py` and also keeps mutant 7).
+- **R5 NUL witnesses** (the review accepted the NUL-free-prefix reading as a containment composition of §18). Each run-level case records **zero** provider calls:
+  - a final-component NUL under an outward parent: refused;
+  - a parent-component NUL: only the NUL-free directory is proven;
+  - a decoded `file://` `%00` under an outward parent: refused;
+  - a rename destination with NUL under an outward parent: refused.
+- **Loud restore failures.** Only a failed *proof* skips a restore. A restore that runs and fails propagates: in the guards, the runner (`icacls` with `check=True`) and the oracle. Witness `f_restore_failure_propagates`; **mutant 22** (swallow-restore-failure) is killed in Node and Python.
+- **CRLF portability.** `ce01-controls.mjs` normalizes sources to LF before applying mutant anchors. Codex's CRLF-checkout anchor failure (mutant 3) was correctly not counted as a kill; a failed anchor is always an error.
+
+**Fresh results** (Windows):
+
+| Suite | Result |
+|---|---|
+| `ce01-controls.mjs` | **45/45**; **19** mutants killed |
+| `ce01_controls.py` | **39/39**; **19** killed |
+| runner containment | **45 tests** |
+| `runner_mutants.py` | 7 and 21 killed |
+
+**Native replay** after the controls (R9), with loud restores:
+- Windows 240, Linux 160 (uid 1000);
+- no restore failed;
+- the corpus is **byte-identical** again.
