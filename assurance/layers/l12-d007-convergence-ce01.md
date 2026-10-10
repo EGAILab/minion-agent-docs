@@ -5,7 +5,7 @@ Coordination: minion-agent#199.
 - **Scope:** the evidence and fixture containment surface only. No Pi filesystem semantics, error-code expectation, native call sequence or certified product behavior changes here.
 - `L12D007-C002` and `L12D007-C003` stay provisionally closed at code `80fd74c0` / docs `105bc1f9`.
 
-**Checkpoint: revision 1 REJECTED** (independent checkpoint review 1); revision 2 REJECTED narrowly, on R5 only (checkpoint review 2). **Revision 3 PROPOSED**, at the end of this record. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
+**Checkpoint: AGREED FOR IMPLEMENTATION** at revision 3 (independent checkpoint review 3 APPROVED: #199 comment 6101296900, `.tmp/codex-scratch/l12d007-ce01-checkpoint-review-3.md`, at code `80fd74c0` / docs `2e3056f4`). History: revision 1 REJECTED (checkpoint review 1); revision 2 REJECTED narrowly on R5 (checkpoint review 2). `L12D007-C001` still needs targeted closure after implementation. No guard implementation or native evidence run happens before **AGREED FOR IMPLEMENTATION** (§11.8.5).
 
 ## OPEN FINDINGS
 

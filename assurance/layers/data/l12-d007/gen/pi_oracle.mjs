@@ -9,7 +9,7 @@ import fs from "node:fs";
 import { execFileSync, spawn } from "node:child_process";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { PROJECT_ROOT, makeSandbox, assertInside, assertOutput } from "../fs-guard/fs-guard.mjs";
+import { PROJECT_ROOT, makeSandbox, assertInside, assertEntry, assertOutput, restoreAccess, cleanupSandbox } from "../fs-guard/fs-guard.mjs";
 
 const [piDir, casesPath, outPath] = process.argv.slice(2);
 const { NodeExecutionEnv } = await import(pathToFileURL(`${piDir}/packages/agent/src/harness/env/nodejs.ts`).href);
@@ -40,14 +40,15 @@ const HOLD = {
 };
 // deny_access: Windows denies Everyone read (`icacls /deny *S-1-1-0:(R)`); POSIX removes every mode
 // bit (chmod 000; meaningful only for a non-root user). Each is undone at case end so cleanup works.
-function denyAccess(target, releases) {
+function denyAccess(cwd, rel, target, releases) {
+  const kind = fs.statSync(target).isDirectory() ? "directory" : "file";
   if (process.platform === "win32") {
     execFileSync("icacls", [target, "/deny", "*S-1-1-0:(R)"], { stdio: "ignore" });
-    releases.push(() => { try { execFileSync("icacls", [target, "/remove:d", "*S-1-1-0"], { stdio: "ignore" }); } catch {} });
+    releases.push(() => restoreAccess(cwd, rel, kind, (t) => execFileSync("icacls", [t, "/remove:d", "*S-1-1-0"], { stdio: "ignore" })));
   } else {
     const mode = fs.statSync(target).mode & 0o777;
     fs.chmodSync(target, 0);
-    releases.push(() => { try { fs.chmodSync(target, mode); } catch {} });
+    releases.push(() => restoreAccess(cwd, rel, kind, (t) => fs.chmodSync(t, mode)));
   }
   return { ok: null };
 }
@@ -69,16 +70,16 @@ async function hold(kind, target, holders) {
 
 async function run(env, cwd, step, holders) {
   const p = text(step.path.utf16);
-  const target = assertInside(cwd, p);
-  if (step.to) {
-    // A rename destination resolves from the case directory; a symlink's text from the link's own
-    // directory. Both must stay inside the case directory, through every link.
-    assertInside(cwd, text(step.to.utf16), step.op === "make_symlink" ? path.dirname(target) : cwd);
-  }
+  // CE-L12D007-01 operation classes. ENTRY (no-follow on the entry itself): link creation, and Pi's
+  // rename / remove (neither follows the final link). REFERENT: everything else.
+  const ENTRY_OPS = new Set(["make_symlink", "rename_file", "remove"]);
+  const target = ENTRY_OPS.has(step.op) ? assertEntry(cwd, p) : assertInside(cwd, p);
+  if (step.op === "make_symlink") assertInside(cwd, text(step.to.utf16), path.dirname(target)); // ordinary fixture: text proven inside
+  else if (step.to) assertEntry(cwd, text(step.to.utf16));
   switch (step.op) {
     case "make_symlink": fs.symlinkSync(text(step.to.utf16), target); return { ok: null };
     case "hold_exclusive": case "lock_range": return hold(step.op, target, holders);
-    case "deny_access": return denyAccess(target, holders);
+    case "deny_access": return denyAccess(cwd, p, target, holders);
     case "write_file": return okOr(cwd, await env.writeFile(p, text(step.content)), () => ({ ok: null }));
     case "append_file": return okOr(cwd, await env.appendFile(p, text(step.content)), () => ({ ok: null }));
     case "read_text_file": return okOr(cwd, await env.readTextFile(p), (v) => ({ ok: units(v) }));
@@ -113,20 +114,7 @@ for (const [n, c] of cases.entries()) {
   results.push({ id: c.id, observed });
 }
 await new Promise((r) => setTimeout(r, 500)); // let killed holders release their handles
-assertInside(path.dirname(root), path.basename(root)); // the guard refuses absolute raw targets
-// A deny_access fixture whose entry the operation under test MOVED (rename) is not undone by its
-// case-end release; restore access across this run's own sandbox only, then remove it. Failures
-// leave the sandbox in place (it is under the project's .tmp) rather than losing the results.
-try {
-  if (process.platform === "win32") execFileSync("icacls", [root, "/reset", "/T", "/C", "/Q"], { stdio: "ignore" });
-  else {
-    const open = (p) => { fs.chmodSync(p, 0o700); if (fs.lstatSync(p).isDirectory()) for (const e of fs.readdirSync(p)) { const q = assertInside(root, path.relative(root, path.join(p, e))); if (!fs.lstatSync(q).isSymbolicLink()) open(q); } };
-    open(root);
-  }
-  fs.rmSync(root, { recursive: true, force: true });
-} catch (e) {
-  console.error(`sandbox left in place (${e.code ?? e.message}): ${root}`);
-}
+cleanupSandbox(root); // R7: TRAVERSAL; links removed as entries, never descended; failure leaves it
 fs.writeFileSync(assertOutput(outPath), JSON.stringify({ platform, node: process.versions.node, uv: process.versions.uv,
   pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", results }, null, 1) + "\n");
 console.log(`l12-d007 oracle (${platform}): ${results.length} cases`);

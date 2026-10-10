@@ -9,7 +9,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
-import { PROJECT_ROOT, makeSandbox, assertInside, assertOutput } from "./fs-guard/fs-guard.mjs";
+import { PROJECT_ROOT, makeSandbox, assertInside, assertEntry, assertOutput, cleanupSandbox } from "./fs-guard/fs-guard.mjs";
 
 const [piDir, outPath] = process.argv.slice(2);
 const { NodeExecutionEnv } = await import(pathToFileURL(`${piDir}/packages/agent/src/harness/env/nodejs.ts`).href);
@@ -26,7 +26,7 @@ const CONDITIONS = {
   "directory-nonempty": (cwd) => { fs.mkdirSync(at(cwd, "d")); fs.writeFileSync(at(cwd, "d/c"), "x"); return { target: "d" }; },
   "non-directory-component": (cwd) => { fs.writeFileSync(at(cwd, "f"), "x"); return { target: "f/x" }; },
   // Relative link texts, each checked from the link's own directory; the loop never leaves cwd.
-  "symlink-loop": (cwd) => { at(cwd, "b"); fs.symlinkSync("b", at(cwd, "a")); at(cwd, "a"); fs.symlinkSync("a", at(cwd, "b")); return { target: "a" }; },
+  "symlink-loop": (cwd) => { at(cwd, "b"); fs.symlinkSync("b", assertEntry(cwd, "a")); at(cwd, "a"); fs.symlinkSync("a", assertEntry(cwd, "b")); return { target: "a" }; },
   "name-too-long": () => ({ target: "n".repeat(300) }),
   ...(win ? {
     "invalid-name": () => ({ target: "x<y" }),
@@ -122,8 +122,7 @@ for (const [condition, setup] of Object.entries(CONDITIONS)) {
     console.log(`${condition} ${op} ${JSON.stringify(observed).slice(0, 60)} (${Math.round((Date.now() - started) / 1000)}s)`);
   }
 }
-assertInside(path.dirname(root), path.basename(root)); // the guard refuses absolute raw targets
-try { fs.rmSync(root, { recursive: true, force: true }); } catch {}
+cleanupSandbox(root); // R7: TRAVERSAL cleanup; a failure leaves the sandbox in place
 fs.writeFileSync(assertOutput(outPath), JSON.stringify({ platform: process.platform, node: process.versions.node, uv: process.versions.uv,
   pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", results }, null, 1) + "\n");
 console.log(`l12-d007 pi probe (${process.platform}): ${results.length} rows`);

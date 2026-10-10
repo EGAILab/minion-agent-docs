@@ -9,13 +9,12 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import shutil
 import subprocess
 import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "fs-guard"))
-from fs_guard import PROJECT_ROOT, assert_inside, assert_output, make_sandbox  # noqa: E402
+from fs_guard import PROJECT_ROOT, assert_entry, assert_inside, assert_output, cleanup_sandbox, make_sandbox  # noqa: E402
 
 from minion_agent.execution.filesystem import LocalFileSystem  # noqa: E402
 from minion_agent.execution.result import Ok  # noqa: E402
@@ -54,9 +53,9 @@ def setup(condition: str, cwd: str) -> tuple[str, subprocess.Popen[bytes] | None
     if condition == "symlink-loop":
         # Relative link texts, each checked from the link's own directory.
         assert_inside(cwd, "b")
-        os.symlink("b", j("a"))
+        os.symlink("b", assert_entry(cwd, "a"))
         assert_inside(cwd, "a")
-        os.symlink("a", j("b"))
+        os.symlink("a", assert_entry(cwd, "b"))
         return "a", None
     if condition == "name-too-long":
         return "n" * 300, None
@@ -137,8 +136,7 @@ async def main(out: str) -> None:
                     hold.kill()
                     hold.wait()
             results.append({"condition": condition, "op": op, "observed": observed})
-    assert_inside(os.path.dirname(root), os.path.basename(root))  # absolute raw targets are refused
-    shutil.rmtree(root, ignore_errors=True)
+    cleanup_sandbox(root)  # R7: TRAVERSAL cleanup; a failure leaves the sandbox in place
     with open(assert_output(out), "w", encoding="utf-8") as f:
         json.dump({"platform": sys.platform, "python": sys.version.split()[0], "results": results}, f, indent=1)
     print(f"l12-d007 python probe: {len(results)} rows")
