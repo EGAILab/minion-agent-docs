@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented, pending independent implementation review** (§11). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); **remediation 1 pending targeted closure review** (§12). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -335,7 +335,7 @@ The contract and integration were approved at code `8cc91cde` / docs `bc5f0a21` 
 
 ### 11.1 What changed
 
-- **Mapper (`execution/errors.py`, `to_pi_fs_error`).** On Windows, the `FsErrorCode` is keyed on the ORIGINAL Win32 code of the failing call (`winerror`), through the pinned libuv 1.49.2 `uv_translate_sys_error` table (`src/win/error.c`, blob `7abf906b`). It is reduced by Pi's `toFileError`, and any code not listed is `unknown`. Elsewhere it is the existing `to_fs_error`. EXEC-007/008/009 keep `to_fs_error`.
+- **Mapper (`execution/errors.py`, `to_pi_fs_error`).** On Windows, the `FsErrorCode` is keyed on the ORIGINAL Win32 code of the failing call (`winerror`), through the pinned libuv 1.49.2 `uv_translate_sys_error` table (`src/win/error.c`, blob `7abf906b`). It is reduced by Pi's `toFileError`, and any code not listed is `unknown`. Elsewhere it is the existing `to_fs_error`. The EXEC-007/008/009 operations classify through it too, as §19.2 approves. (This sentence was corrected in remediation 1, N001; it first said they keep `to_fs_error`.)
 - **libuv-equivalent Win32 seam (`execution/_libuv_win32.py`, new, Windows only).** It reproduces the calls pinned libuv makes (`src/win/fs.c`, blob `f2215bb3`):
   - `fs__open`: `CreateFileW` with full sharing and backup semantics, Node's `r` / `w` / `a` access and disposition, and `ERROR_FILE_EXISTS` under create giving `EISDIR`. A directory opens, and its read fails `EISDIR` with no path (#67).
   - `fs__read` / `fs__write`: `ReadFile` / `WriteFile` keep the Win32 code (for example 33 under a byte-range lock).
@@ -400,3 +400,83 @@ On the final candidate tree (code `f851ea03`), run sequentially with the scripts
   - The first Linux runs failed because of the harness. `set -e` aborted on pytest's exit before the log was copied. Then a cached PyICU wheel carried another ICU prefix: 221 failures, 146 of them `libicui18n.so.78` not loadable.
   - The run after the PyICU fix found `L12D007-PY-I001` (§11.2).
   - One rerun failed at `pip` (PyPI lookup) and was repeated unchanged.
+
+## 12. Implementation review 1 (Codex) and remediation 1
+
+Implementation review 1 (#199 issuecomment-6102670593; `.tmp/codex-scratch/l12d007-impl-*`) was **CHANGES REQUESTED** at code `f851ea03` / docs `bedfe37e`. It raised two PI_PARITY_DEFECT findings, each with a real-Pi witness, and one documentary note.
+
+**Convergence trigger check** (`agent-workflow.md` §11.8, before this pass):
+- **A** (finding-specific): not fired. `L12D007-I001` and `L12D007-I002` have each survived one independent review.
+- **B** (root-cause surface): not fired.
+  - Recursive removal: one reviewer successor finding (`I002`) after the author-found `L12D007-PY-I001` remediation. That is 1 of the 2 successor findings B requires.
+  - Path-less error path: `I001` is the first finding on that surface.
+- **C** (work-package-wide): not fired. It counts rejected complete *contract* reviews: L12-D007 has 2, and its contract phase ended APPROVED. This rejection is an implementation review.
+- **D** (opt-in): not needed. Both fixes are bounded point fixes with the reviewer's own discriminating witnesses.
+
+Ordinary remediation therefore applies. The settled CE-L12D007-01 containment provenance is untouched.
+
+### `L12D007-I001` (medium): a path-less read failure must report the logical fallback
+
+- **Defect.** The three reads' generic `OSError` branch always passed the NATIVE path. Pinned Pi's `toFileError(error, resolved)` uses the resolved LOGICAL path whenever Node's error names no path. A libuv `fs__read` failure names none (for example Win32 33 under a byte-range lock).
+- **Fix.** One helper, `_failing_path(exc, native, resolved)`:
+  - the failing call's native path when the error names one (§14.2);
+  - otherwise the logical fallback.
+  - It is used by `read_text_file`, `read_binary_file` and `read_text_lines`, and by `write_file` / `append_file`, which already did this inline.
+  - The metadata and listing operations (`file_info`, `list_dir_raw`, `probe_dir_entry`, `check_readable`, `check_read_write`, `canonical_path`) fail only on calls that name their path, so they are unchanged.
+  - The error-code table and path-domain semantics are unchanged.
+- **Permanent witnesses** (`tests/execution/test_filesystem_pathless_read.py`, logical spelling `lone-<U+D800>` with native projection `lone-<U+FFFD>`, so the two answers differ on both platforms):
+  - an injected path-less failure: all three reads report the logical path;
+  - the open-error control: a failure naming its path keeps the native origin;
+  - the real host on Windows: a byte-range lock via the canonical `lock_range` fixture, all three reads giving `unknown` with the logical path. This is the reviewer's pinned-Pi witness.
+  - **Control:** the mutant that projects the fallback natively fails the witness.
+
+### `L12D007-I002` (high): each child's type must be decided afresh, by name
+
+- **Defect.** `_rimraf` dispatched a child on the type the listing saw (`DirEntry.is_dir`). Pinned Node's `_rmchildren` passes each child NAME back to `rimraf` / `_rimraf`, whose own `lstat` decides `rmdir` versus `unlink`. A child directory replaced by a file after the listing stayed in place, and the parent's final `rmdir` failed (`unknown`). Pinned Pi gives `ok`.
+- **Fix:** `_rimraf_child(path)` mirrors rimraf `_rimraf` for one child.
+  - Its own `lstat`, now, decides. A directory that is not a junction (libuv's `lstat` reports a junction as a link) goes through `_rimraf`; anything else goes through `unlink` (`_unlink_entry`, the `fixWinEPERM` retry unchanged).
+  - An `lstat` failure other than ENOENT still goes on to `unlink`, as rimraf's does.
+  - An `unlink` that meets a directory goes to `_rimraf` carrying the unlink error as `_rmdir`'s `originalErr`. On POSIX that is EISDIR / EPERM. On Windows it is EPERM (5 / 1314) when `fixWinEPERM`'s following `stat` finds a directory; a `stat` that finds the entry gone also routes there, where `rmdir`'s ENOENT counts as removed.
+  - A POSIX `rmdir` ENOTDIR answers that `originalErr`: none for a directory `lstat` saw, so success.
+  - Kept: rmdir-first, no-follow, original/retry error provenance, vanished-entry acceptance, and the sequential order (removal is not parallelized; #127 is not touched).
+- **Pinned-Pi evidence** (`data/l12-d007/rm-replace-probe.mjs`): Pi's real `NodeExecutionEnv.remove`, with the real `fs.readdir` whose completion performs the replacement before delivering the names (the review's interception). Pinned Pi `b7bb00b` is clean, Node v22.15.1, CE-01 guard. Windows (`rm-replace-win32.jsonl`) and Linux (container, `rm-replace-linux.jsonl`, launcher `impl/run-linux-replace.sh`):
+
+  | Scenario | Pi, both platforms |
+  |---|---|
+  | directory → file | `ok`, tree removed |
+  | file → directory (the inverse) | `ok`, tree removed |
+  | directory → directory link to a directory outside the tree | `ok`, tree removed, the outside content intact |
+
+- **Permanent witnesses** (`tests/execution/test_filesystem_rimraf.py`, the real `LocalFileSystem.remove`; the replacement runs when the real listing closes, with no sleep):
+  - the three scenarios above;
+  - a junction inside the tree is removed as itself, its target intact (Windows);
+  - the branches: `lstat` gone, `lstat` refused going on to `unlink`, an `unlink` meeting a directory, `fixWinEPERM`'s `stat` finding a file / failing / finding the entry gone, and a POSIX ENOTDIR answering the unlink's error.
+  - **Control:** the cached-listing-type mutant fails the directory → file witness.
+- **Pre-fix discrimination.** The new witnesses were run against the rejected `f851ea03` source.
+  - All four behavior witnesses fail on their assertions: the path-less injected and byte-range witnesses give the native `lone-<U+FFFD>`; directory → file gives `unknown` (145); file → directory gives `permission_denied` (5).
+  - So the **inverse replacement was also wrong** before this remediation.
+  - The other failures there were missing-helper errors and are not counted as discrimination.
+
+### N001 (documentary)
+
+The claim that EXEC-007/008/009 "keep `to_fs_error`" was stale. They classify through `to_pi_fs_error`, as §19.2 approves. Corrected in:
+- `to_pi_fs_error`'s docstring;
+- five `filesystem.py` docstrings of the EXEC-008/009 primitives;
+- §11.1 above.
+
+### Also in this pass
+
+- `_is_tree` uses the literal `0xA0000003` (`IO_REPARSE_TAG_MOUNT_POINT`), because the stub declares the `stat` constant Windows-only. `mypy --platform linux` stays at the base's 14 findings.
+
+### Fresh gates
+
+On the final remediation tree (code `b8062daa`), run sequentially:
+
+- **Windows** (3.13.5, pinned ICU 78.3):
+  - ruff 0 and format clean; mypy clean (117 files);
+  - full pytest **6203 passed / 41 skipped / 19 xfailed**;
+  - coverage **100%** (9597 statements).
+- **Linux** (`python:3.13`, pinned ICU built in the container, PyICU compiled against it, uid 1000):
+  - full pytest **5831 passed / 0 failed / 413 skipped / 19 xfailed**;
+  - non-gating mypy: 17 findings, unchanged (14 base platform findings plus 3 missing-stub findings).
+- **Harness, disclosed:** two Linux attempts stopped at `pip`, before any test ran, on the intermittent PyPI lookup for `PyICU==2.16.2`. The launcher now keeps the PyICU **source** archive in the project-local cache (`.tmp/pip-cache/sdist`) and compiles it in the container against that run's ICU (`--no-index --no-build-isolation`, `setuptools` installed). The updated script is in `data/l12-d007/impl/`.

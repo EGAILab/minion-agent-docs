@@ -14,9 +14,13 @@ mkdir -p /tmp/icu && cp /icu-src/icu4c-78.3-sources.tgz /tmp/icu/
 eval "$(bash scripts/pinned-icu/build.sh /tmp/icu --env)"
 PIP_CACHE_DIR=/pipcache pip install -q --root-user-action=ignore "pydantic>=2.7" "pyyaml>=6.0" "jsonschema>=4.22" \
   "httpx>=0.27" "url-py>=2026.5.1" "ada-url==1.15.3" "wasmtime==49.0.0" pytest pytest-asyncio \
-  pytest-cov hypothesis ruff mypy > /out/pip.log 2>&1
+  pytest-cov hypothesis ruff mypy setuptools wheel > /out/pip.log 2>&1
 # PyICU is compiled against THIS run's ICU (its rpath names /tmp/icu); a cached wheel would carry another prefix.
-pip install -q --root-user-action=ignore --no-cache-dir --no-binary PyICU "PyICU==2.16.2" >> /out/pip.log 2>&1
+# The SOURCE archive is kept in the project-local cache (an intermittent PyPI lookup failure otherwise aborts
+# the run); it is still compiled here, against this run's ICU.
+mkdir -p /pipcache/sdist
+ls /pipcache/sdist/pyicu-2.16.2.tar.gz > /dev/null 2>&1 || pip download -q --retries 10 --no-deps --no-binary :all: "PyICU==2.16.2" -d /pipcache/sdist >> /out/pip.log 2>&1
+pip install -q --root-user-action=ignore --no-cache-dir --no-index --no-build-isolation /pipcache/sdist/pyicu-2.16.2.tar.gz >> /out/pip.log 2>&1
 python -c "import icu; print('icu', icu.ICU_VERSION)"
 chown -R 1000:1000 /tmp/work /tmp/home
 run() { setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/tmp/home TMPDIR=/tmp "$@"; }
