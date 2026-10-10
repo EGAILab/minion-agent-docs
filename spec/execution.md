@@ -3259,9 +3259,12 @@ These rules produce, among others:
 - **libuv's table has no `ENOTDIR` entry.** On Windows, `not_directory` arises only at libuv's or Node's explicit sites: listing a non-directory, and Node's recursive `mkdir` through a file.
 - **No global remap:** `EINVAL` / `InvalidInput` / `ErrorKind` are never remapped wholesale. Only the Win32 codes above, within the Pi-derived Layer 12 filesystem operations, change classification.
 - **The directory-as-file rules are operation-scoped.** A binding whose native directory open fails earlier (CPython's `open()` gets 5 `ACCESS_DENIED`) must still answer `is_directory`, and only when the target **is** a directory. An access-denied file stays `permission_denied`.
-- **Preserved:**
-  - EXEC-007/008/009 (`list_dir_raw`, `probe_dir_entry`, `check_readable`, `check_read_write`) keep §11-§13. Their Windows dispositions (for example §13.4's sharing violation) are not changed by this delta.
-  - `not_supported` capability answers are unchanged.
+- **The EXEC-007/008/009 operations keep their semantics; their failure classification follows the corrected mapper.**
+  - `list_dir_raw`, `probe_dir_entry`, `check_readable` and `check_read_write` keep everything §11-§13 define: which call is made, what is checked, ACL-aware readability and writability on Windows, symlink handling, and success answers. That is the preserved Windows extension (`MINION_ARCHITECTURAL_MAPPING`).
+  - Their **failure classification** was never their own. §11.3 says `list_dir_raw`'s error mapping is "identical to `list_dir`'s own whole-directory-read failure (§2.1)". §12.4 and §13.4 say a failure is "classified by §2.1 like every other operation's, through the binding's own shared host-error mapper". §13.4 names the Windows sharing-violation difference as an instance of #69, "whose remediation is not authorized"; it now is.
+  - So, from L12-D007, they classify with the same corrected Win32 mapping as the Pi-derived operations, and `list_dir_raw` makes `list_dir`'s directory open. Examples: a link loop gives `unknown` where the operation fails at all; a sharing violation gives `unknown` in both bindings, closing §13.4's recorded difference.
+  - Their outcomes are not Pi-literal (pinned Pi's Windows `access` is attribute-only), so the canonical corpus does not list them. Their witnesses are consistency witnesses: the same Windows condition gets the same code from the primitive as from the Pi-derived operations.
+- **Unchanged:** `not_supported` capability answers.
   - The L12-D006 NUL rule (§18) and the L12-D001 path domain (§14) are unchanged.
 
 ### 19.3 Unchanged / out of scope

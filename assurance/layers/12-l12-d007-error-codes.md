@@ -164,3 +164,22 @@ The merge refuses to write unless every oracle cell agrees with the independent 
 **Implementation-stage item:** `fs-path-domain` already has **10 Linux-only L12-D001 error-origin cases**, each limited with a `#67` platform note (a directory read on Windows answered differently). L12-D007 closes #67, so the implementation stage regenerates them for both platforms from pinned Pi (their own L12-D001 generator) and removes the limitation, or records why any must stay.
 
 **Containment follow-up (outside this delta):** the merged L12-D006 oracle (`data/l12-d006/gen/pi_oracle.mjs`) sandboxes under `os.tmpdir()` and ends with a recursive remove. Its run was safe (TMP pointed inside the project), but under the 2026-10-10 rule it must not be rerun as-is. Any regeneration first moves it onto `fs-guard` (`makeSandbox` / `assertInside`).
+
+## 7. Pre-review contract corrections (found while implementing, before independent review began)
+
+All three are recorded here as part of the contract history. No canonical expectation changed.
+
+1. **§19.2 keying** (docs `1d55a799`). The binding keys on the Win32 error of **libuv's own call**. Where a runtime loses it, the binding reproduces that call:
+   - CPython's `open()` goes through the C runtime's `_wopen`, which collapses errno and keeps no `winerror`;
+   - `os.scandir` uses `FindFirstFileW`, while libuv opens a `FILE_LIST_DIRECTORY` handle;
+   - the C runtime's `_read` / `_write` collapse 33 into `EACCES`.
+
+   Also: libuv's table has no `ENOTDIR` entry.
+2. **EXEC-007/008/009 classification** (`CONTRACT_ASSURANCE_DEFECT` in the first draft). The draft said these operations' Windows dispositions were unchanged. But §11.3, §12.4 and §13.4 already make their failure classification the shared §2.1 mapper's, and §13.4 names its sharing-violation difference as an instance of #69. Corrected:
+   - their **semantics** are preserved (the `MINION_ARCHITECTURAL_MAPPING`);
+   - their **classification** follows the corrected mapper;
+   - `list_dir_raw` makes `list_dir`'s directory open;
+   - witnesses are consistency witnesses (the same condition gets the same code across operations), since their outcomes are not Pi-literal.
+
+   The Python binding's existing witnesses already assert that consistency.
+3. **`lock_range` fixture sharing** (code `213ed0ce`). The first runner shared delete access; the canonical fixture (pinned Pi's PowerShell holder, `FileShare.ReadWrite`) does not. The runner now shares read+write only, and the schema comment states each fixture's sharing exactly.
