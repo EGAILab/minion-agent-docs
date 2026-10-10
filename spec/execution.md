@@ -3098,7 +3098,9 @@ Record: `assurance/layers/12-l12-d005-readonly-remove.md`.
 
 ## 18. Layer-12 post-certification delta `L12-D006` — a NUL-containing path fails as `unknown` (`EXEC-002`, `EXEC-003`)
 
-**Status:** contract delta, for independent contract review (`minion-agent#194`). Provenance: `L12-NUL` (`minion-agent#65`) and `#133`-F1.
+**Status:** CERTIFIED_CLOSED (cross-language), `minion-agent#194`. Provenance: `L12-NUL` (`minion-agent#65`) and `#133`-F1.
+- **Python:** code #196 → `0ab81a0c`, docs #280 → `e499c91d`. Final Python review: #194 issuecomment-6096665420.
+- **Rust:** code #203 → `29089a88`, docs #285 → `9a185213`. Closure review: #194 issuecomment-6101644540.
 
 **Owner decision:** "#65 + #133-F1, APPROVE OPTION 1: PINNED PI UNKNOWN", recorded verbatim on #65 and #133 (sha256 `ebb3579c…887f1c`). It authorizes a targeted correction of certified Layer 12 in both bindings, as `DIRECT_PI_PARITY`. It is not a divergence.
 
