@@ -340,3 +340,53 @@ If any condition fails, or the error is anything other than `ENAMETOOLONG`, R3 a
 - **skip-path-max:** omit condition 4. Killed by W2.
 
 The native Linux replay resumes only after this amendment is independently approved and its controls pass.
+
+## Checkpoint amendment (revision 5): R3a condition 4 and its discriminating witnesses
+
+Checkpoint review 4 (#199 comment 6101552086; `.tmp/codex-scratch/l12d007-ce01-checkpoint-review-4.md`) found **`CE-L12D007-01-C003`**: rejected narrowly, both points accepted.
+- **Boundary.** `PATH_MAX` counts the terminating NUL; `NAME_MAX` does not (POSIX limit definitions). Revision 4's "must not exceed" admitted a path string of exactly `PATH_MAX` bytes.
+- **Witness.** W2's 100-byte component already fails condition 3 against `NAME_MAX` 255, so the correct rule and `skip-path-max` both refuse it. W2 could not kill that mutant.
+
+Revision 5 **supersedes R3a condition 4 and the R3a witness/control table only**; conditions 1-3 stand.
+
+**Checkpoint: amendment PROPOSED (revision 5).**
+
+### R3a condition 4 (revision 5)
+
+**The whole path is excluded as the cause.**
+- `PATH_MAX` is queried for the containing directory (`os.pathconf(dir, "PC_PATH_MAX")`, or `getconf PATH_MAX <dir>`). It must be a positive integer; otherwise refuse.
+- Let *L* be the byte length of the complete absolute path string inspected (directory + separator + *C*), in its §14.1 native spelling, UTF-8, **without** the terminator.
+- Admission requires **`L + 1 <= PATH_MAX`**, that is, `L < PATH_MAX`. At `L >= PATH_MAX` the whole path may be the cause, so the call **refuses**.
+- The full absolute path is used deliberately (conservative); no relative-path optimization.
+
+### Witnesses (revision 5; synthetic; every limit answer explicit; nothing reaches the OS)
+
+Every row has a fully proven, existing, non-link containing directory unless stated, and `lstat` of *C* reports `ENAMETOOLONG`.
+
+| # | NAME_MAX | C (native bytes) | L (bytes) | PATH_MAX | Expected | Discriminates |
+|---|---|---|---|---|---|---|
+| W1 | 255 | 300 (ASCII; the corpus case) | well under 4096 | 4096 | **admit** | refuse-every-overlong |
+| W2 | 255 | **300** | **5000** | 4096 | **refuse** | **skip-path-max** (conditions 1-3 all pass) |
+| W2b | 255 | 100 | 5000 | 4096 | refuse | complementary: a short component with a whole-path overflow |
+| W3 | 255 | 200 (at or under the limit) | under 4096 | 4096 | refuse | blanket (not a component overflow) |
+| W4 | 255 | 256 (128 × `é`; 128 characters) | under 4096 | 4096 | **admit** | character-count, refuse-every-overlong |
+| W5 | 255 | 200 ASCII (200 characters) | under 4096 | 4096 | refuse | character-count, blanket |
+| W6 | query error / `-1` / undefined / non-numeric | 300 | under 4096 | 4096 | refuse | assume-255 |
+| W7 | 255 | 300 | under 4096 | query error / `-1` / undefined / non-numeric | refuse | assume a default `PATH_MAX` |
+| W8 | (not queried) | 300 | under 4096 | 4096 | refuse: an earlier component's inspection is refused, before any limit query | unproven directory |
+| **W9a** | 255 | 300 | **4095** | 4096 | **admit** | the `L + 1 <= PATH_MAX` boundary, inside |
+| **W9b** | 255 | 300 | **4096** | 4096 | **refuse** | **omit-NUL** (`L <= PATH_MAX`) |
+
+### Negative controls (revision 5)
+
+| Mutant | Killed by |
+|---|---|
+| blanket-ENAMETOOLONG-is-missing | W2, W2b, W3, W5 |
+| refuse-every-overlong | W1, W4, W9a |
+| assume-255 (a default when `NAME_MAX` is unavailable) | W6 |
+| assume-default-PATH_MAX | W7 |
+| character-count | W4, W5 |
+| **skip-path-max** | **W2** |
+| **omit-NUL** (compare `L <= PATH_MAX`) | **W9b** |
+
+The native Linux replay stays held until this amendment is independently approved and its controls pass.
