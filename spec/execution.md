@@ -3246,7 +3246,17 @@ These rules produce, among others:
 
 ### 19.2 Binding mechanics (normative constraints, not prescribed code)
 
-- **Key on the original native error.** Python uses the `OSError`'s `winerror` on Windows; Rust uses the `io::Error`'s `raw_os_error`. Neither may key on CPython's `errno` or Rust's `ErrorKind`: both already collapse distinct Win32 causes (CPython: 123 and 1921 → `EINVAL`, 32/33 → `EACCES`; Rust: 123/161/206 → `InvalidFilename`, 267 → `NotADirectory`).
+- **Key on the Win32 error of the call libuv makes.** The table applies to the error of the native call pinned libuv makes for that operation. Examples (libuv `fs.c`):
+  - opens go through `CreateFileW` with full sharing (`FILE_SHARE_READ | WRITE | DELETE`) and `FILE_FLAG_BACKUP_SEMANTICS`, so a directory opens;
+  - listing opens the directory with `FILE_LIST_DIRECTORY | SYNCHRONIZE`, the same sharing and backup semantics, then queries it; a non-directory there is libuv's explicit `ENOTDIR`;
+  - `mkdir` is `CreateDirectoryW`.
+
+  A binding must obtain that error. It may not key on a runtime's already-collapsed classification:
+  - **CPython's `open()`** goes through the C runtime's `_wopen`, whose errno mapping collapses 123 and 1921 into `EINVAL` and 32/33 into `EACCES`, and keeps no `winerror`;
+  - CPython's `errno` for other calls, and **Rust's `ErrorKind`** (123/161/206 → `InvalidFilename`, 267 → `NotADirectory`), collapse the same way.
+
+  Where the binding's own call differs from libuv's, or loses the Win32 code, it performs libuv's equivalent Win32 call itself, with the same access, sharing and flags, or otherwise obtains that call's error. For example, CPython's `os.scandir` uses `FindFirstFileW`, which answers 267 for a file where libuv's directory open answers 32 under a sharing violation. The mechanism is the binding's; the observable codes (§19.4) are normative.
+- **libuv's table has no `ENOTDIR` entry.** On Windows, `not_directory` arises only at libuv's or Node's explicit sites: listing a non-directory, and Node's recursive `mkdir` through a file.
 - **No global remap:** `EINVAL` / `InvalidInput` / `ErrorKind` are never remapped wholesale. Only the Win32 codes above, within the Pi-derived Layer 12 filesystem operations, change classification.
 - **The directory-as-file rules are operation-scoped.** A binding whose native directory open fails earlier (CPython's `open()` gets 5 `ACCESS_DENIED`) must still answer `is_directory`, and only when the target **is** a directory. An access-denied file stays `permission_denied`.
 - **Preserved:**
