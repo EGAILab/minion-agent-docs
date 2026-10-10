@@ -186,3 +186,29 @@ It reviewed code `1b014860` and docs `160dd5bb`. Verdict: **CHANGES REQUESTED**.
 - **Controls** (planned-fix overlay):
   - Windows: baseline **11 PASS**, **7/7 KILLED**, including `argument-only-containment` (3 URL witnesses); `canonical-path-walks-first` NOT RUN (Linux only);
   - Linux (uid 1000): baseline **12 PASS**, **8/8 KILLED**.
+
+## 10. Contract re-review 2 and Python implementation
+
+**Re-review 2** (Codex; #194 issuecomment-6094152341): **APPROVED**; `L12D006-C001` CLOSED at code `3fe658fc` / docs `674bf29c`.
+
+**Integration.** `main` had moved (L12-D005 Rust and L0506-D005 Python merged), so `main` was merged into the branch first.
+- The only conflict was adjacent manifest edits: L12-D005's Rust note beside the L12-D006 entry.
+- **Disclosed:** the same merge commit refreshes the L12-D006 manifest entry. It was still describing the 158-case contract-stage corpus; it now gives 237 cases, the resolved-argument rule and Python's implementation. The C001 remediation had missed this explanatory text.
+
+**Implementation** (code #196):
+- **Production:** `gen/planned_fix.py` applied as written. That means `_contain_nul` on the resolved path arguments, `canonical_path`'s whole-argument check, and the temp-creation handling.
+- **Contract-stage scaffolding removed:** the strict xfails, the L12-D001 negative-control skip and the binding `PENDING` markers.
+- **Certified-test consequence** (disclosed now; it surfaced only in the full suite):
+  - `tests/execution/test_filesystem_canonical_path_eloop.py::test_a_nul_path_keeps_the_previous_outcome…` was an L12-D004 (`L12D004-R001`) witness. It asserted the NUL outcome equals the *previous* resolution, while stating "NUL's disposition is minion-agent#133's and is not decided here".
+  - L12-D006 is that disposition. The witness now asserts `Err(unknown)` with the logical path and keeps its R001 guarantee: never the prefix's canonical path.
+  - The contract-stage overlay runs covered only the fs-path modules, not the full suite, so this consequence was not listed at the contract stage. It changes no L12-D004 rule.
+- **New binding witnesses:** an unrelated `ValueError` in `create_temp_dir` / `create_temp_file` still raises. These cover the two remaining branches.
+
+**Fresh gates:**
+- **Windows:** **5826 passed / 50 skipped / 21 xfailed**, coverage **100%** (9385); ruff and mypy clean.
+- **Linux:**
+  - full suite as root: **5763 passed / 0 failed**;
+  - the NUL surfaces as uid 1000 (including the L12-D004 witness): **408 passed**.
+- **Controls** (`controls.py` against the implementation itself):
+  - Windows: baseline **11 PASS**, **7/7 KILLED** (`canonical-path-walks-first` is Linux-only);
+  - Linux (uid 1000): baseline **12 PASS**, **8/8 KILLED**.
