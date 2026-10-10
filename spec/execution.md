@@ -3232,14 +3232,16 @@ The complete table is libuv's; the rows shown are the ones Layer 12 reaches. A b
 
 | Operation and input | Code | Platforms | Pinned source |
 |---|---|---|---|
-| `write_file` / `append_file` on a directory | `is_directory` | both | libuv `fs__open`: `ERROR_FILE_EXISTS` under create-without-exclusive becomes `EISDIR` (Windows); POSIX `EISDIR` |
-| `read_text_file` / `read_text_lines` / `read_binary_file` of a directory | `is_directory` | both | Windows: libuv opens with `FILE_FLAG_BACKUP_SEMANTICS`, so the directory open **succeeds**; the read fails with 1 `INVALID_FUNCTION`, which becomes `EISDIR`. POSIX: `EISDIR` |
+| `write_file` / `append_file` on a directory, when libuv's open reaches that case | `is_directory` | both | libuv `fs__open`: `ERROR_FILE_EXISTS` under create-without-exclusive becomes `EISDIR` (Windows); POSIX `EISDIR`. An append's open of a directory can instead **succeed** (`OPEN_ALWAYS`); its write then fails with 1 `INVALID_FUNCTION`, i.e. `EISDIR` with **no** path, so Pi names the logical path |
+| `read_text_file` / `read_text_lines` / `read_binary_file` of a directory, **when libuv's open of it succeeds** | `is_directory` | both | Windows: libuv opens with `FILE_FLAG_BACKUP_SEMANTICS`, which **permits** a directory open but does not guarantee it; when the open succeeds, the read fails with 1 `INVALID_FUNCTION`, which becomes `EISDIR`. POSIX: `EISDIR` from the read |
+| any of the above when **libuv's own open fails first** | that open's code | both | `fs__open` propagates its Win32 error; Pi's catch calls `toFileError` on it and never substitutes a code from the target's type. Examples in the corpus: a read-denied directory gives 5 → `permission_denied` (POSIX: `EACCES` for a non-root user); a directory held open without sharing gives 32 → `unknown` |
+| `remove` (any form) of an entry, Windows | the code of libuv's own unlink/rmdir open, then its delete | Windows | libuv `fs__unlink_rmdir` (lines 1086-1206) opens the entry itself with `FILE_READ_ATTRIBUTES \| FILE_WRITE_ATTRIBUTES \| DELETE` and deletes **through that handle**: a read-denied entry fails the open (5 → `permission_denied`), at the top level and inside a recursive tree. A read-only entry is deleted (`IGNORE_READONLY`, or the attribute cleared on the fallback), which is the L12-D005 outcome |
 | `create_dir` (non-recursive) failing with 123 or 267 | `invalid` | Windows | libuv `fs__mkdir` forces `UV_EINVAL` |
 | `remove` without `recursive` (with or without `force`) of a directory | `unknown` | both | Node `rm` raises `ERR_FS_EISDIR` before any syscall (#125) |
 
 These rules produce, among others:
 - **#69:** invalid names, over-long single components (Win32 123, not 206), NTFS stream syntax and bad pathnames answer `not_found`, except non-recursive `create_dir`, which answers `invalid`. Sharing and lock violations answer `unknown`, including `list_dir` of an exclusively held file; renaming **onto** a held file answers `permission_denied` (Win32 5). A link loop answers `unknown`.
-- **#67:** a directory read or written as a file answers `is_directory` on Windows.
+- **#67:** a directory read or written as a file answers `is_directory` on Windows **when libuv's open of it succeeds**; a denied or held directory keeps that open's own failure (C002).
 - **#125:** a non-recursive `remove` of a directory answers `unknown` everywhere.
 
 **Linux** already follows the generic POSIX path (`ENOTDIR` / `ELOOP` / `ENAMETOOLONG` → `not_directory` / `unknown` / `unknown`). Its only delta is #125. The normative per-cell outcomes for both platforms are the canonical corpus (§19.4); the tables above explain them.
@@ -3258,7 +3260,7 @@ These rules produce, among others:
   Where the binding's own call differs from libuv's, or loses the Win32 code, it performs libuv's equivalent Win32 call itself, with the same access, sharing and flags, or otherwise obtains that call's error. For example, CPython's `os.scandir` uses `FindFirstFileW`, which answers 267 for a file where libuv's directory open answers 32 under a sharing violation. The mechanism is the binding's; the observable codes (§19.4) are normative.
 - **libuv's table has no `ENOTDIR` entry.** On Windows, `not_directory` arises only at libuv's or Node's explicit sites: listing a non-directory, and Node's recursive `mkdir` through a file.
 - **No global remap:** `EINVAL` / `InvalidInput` / `ErrorKind` are never remapped wholesale. Only the Win32 codes above, within the Pi-derived Layer 12 filesystem operations, change classification.
-- **The directory-as-file rules are operation-scoped.** A binding whose native directory open fails earlier (CPython's `open()` gets 5 `ACCESS_DENIED`) must still answer `is_directory`, and only when the target **is** a directory. An access-denied file stays `permission_denied`.
+- **Failure precedence is the call sequence's, never the target's type** (C002). A binding reproduces libuv's call sequence, and the code comes from whichever call fails first. If its own runtime's call fails where libuv's would succeed (CPython's `open()` refuses every directory with 5), it must make libuv's call instead. It must **not** keep its own call and substitute `is_directory` from the target's type: that would turn a genuinely denied or held directory into `is_directory`, and a check-then-use type test would also race. The corpus's denied-directory, held-directory, denied-file and denied-tree-entry cases fail any target-type mapper.
 - **The EXEC-007/008/009 operations keep their semantics; their failure classification follows the corrected mapper.**
   - `list_dir_raw`, `probe_dir_entry`, `check_readable` and `check_read_write` keep everything §11-§13 define: which call is made, what is checked, ACL-aware readability and writability on Windows, symlink handling, and success answers. That is the preserved Windows extension (`MINION_ARCHITECTURAL_MAPPING`).
   - Their **failure classification** was never their own. §11.3 says `list_dir_raw`'s error mapping is "identical to `list_dir`'s own whole-directory-read failure (§2.1)". §12.4 and §13.4 say a failure is "classified by §2.1 like every other operation's, through the binding's own shared host-error mapper". §13.4 names the Windows sharing-violation difference as an instance of #69, "whose remediation is not authorized"; it now is.
@@ -3277,18 +3279,31 @@ These rules produce, among others:
 
 ### 19.4 Evidence
 
-- **Canonical:** `conformance/agent/fs-path-domain/fs-error-codes.json`, **176 cases**: 112 on both platforms and 64 Windows-only.
-  - 11 conditions × the 16 Pi-derived operation forms. Conditions: missing, file, empty and non-empty directory, non-directory component, link loop, over-long name; on Windows only: invalid name, NTFS stream syntax, sharing violation, byte-range lock.
-  - Generated from pinned Pi's real provider on Windows 11 and Linux (`assurance/layers/data/l12-d007/gen`), with containment guards; `expect_by_platform` where pinned Node differs by platform.
-  - Every cell agrees with the independent characterization runs (0 mismatches).
-  - The `fs-path-domain` schema gains, additively, three fixture-only steps: `make_symlink`; and on Windows, `hold_exclusive` (a no-sharing handle) and `lock_range` (bytes 0-63 locked). The runner builds the condition natively and observes `ok`; the behavior under test is always the provider's.
-- **Binding witnesses (implementation stage):**
-  - an access-denied **file** stays `permission_denied` (the directory rule is target-scoped);
-  - an unrelated `OSError` keeps its existing classification;
-  - both directions of every family, so the outcome holds.
+- **Canonical:** `conformance/agent/fs-path-domain/fs-error-codes.json`, **240 cases**: 160 on both platforms and 80 Windows-only.
+  - 15 conditions × the 16 Pi-derived operation forms.
+    - Both platforms: missing, file, empty and non-empty directory, non-directory component, link loop, over-long name. Plus the C002 precedence conditions: **read-denied directory**, **read-denied file**, and a **tree with a read-denied entry**.
+    - Windows only: invalid name, NTFS stream syntax, sharing violation, byte-range lock, and the C002 **directory held without sharing**.
+  - Generated from pinned Pi's real provider on Windows 11 and on Linux, there as non-root uid 1000 so mode-000 denial is real (`assurance/layers/data/l12-d007/gen`). Containment guards are on every path; `expect_by_platform` where pinned Node differs by platform.
+  - Every cell of a characterized condition agrees with the independent characterization runs (0 mismatches). The C002 conditions are new and have no characterization row.
+  - The `fs-path-domain` schema gains, additively, four fixture-only steps:
+    - `make_symlink`;
+    - `deny_access` (an Everyone read-deny ACE on Windows; mode 000 on POSIX), undone at case end;
+    - on Windows, `hold_exclusive` (a no-sharing handle; directories with backup semantics);
+    - on Windows, `lock_range` (bytes 0-63 locked, sharing read+write only).
 
-**Bindings today:**
-- **Python fails 85 Windows cases**, the characterized delta: directory read/write and `remove` (#67, #125), the name class, the link loop, and sharing/lock (#69). On Linux, `remove` of a directory (#125).
-- **Rust:** to be characterized by the Rust owner against the same corpus.
+    The runner builds each condition natively, containment-checked, and observes `ok`; the behavior under test is always the provider's.
+- **Containment controls** (C001; record §8):
+  - guard self-tests (`fs-guard/fs-guard-check.mjs`, `fs_guard_check.py`);
+  - intercepted rejecting controls (`fs-guard/containment-controls.mjs`: an outside oracle output is refused with no outside mutation attempted; a mutant without the output guard is caught; `makeSandbox` through an outward junction refuses before `mkdir`);
+  - the runner's `tests/conformance/test_fs_path_runner_containment.py`.
+- **Binding witnesses (implementation stage):**
+  - the precedence cases above (a target-type mapper fails them);
+  - an unrelated `OSError` keeps its existing classification;
+  - the EXEC-007/008/009 consistency witnesses (§19.2);
+  - both directions of every family.
+
+**Bindings:**
+- **Python** at the contract base fails the characterized delta on Windows: directory read/write and `remove` (#67, #125), the name class, the link loop, sharing/lock (#69), and libuv's handle-based unlink. On Linux, `remove` of a directory (#125).
+- **Rust:** see the feasibility matrix, `assurance/layers/l12-d007-feasibility-matrix.md` (C003).
 
 Record: `assurance/layers/12-l12-d007-error-codes.md`.

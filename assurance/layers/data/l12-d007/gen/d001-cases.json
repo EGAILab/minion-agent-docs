@@ -1,0 +1,431 @@
+{
+ "cases": [
+  {
+   "id": "error/scalar/self-dir/write",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "write_file",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "content": [
+      99
+     ],
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         98
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/scalar/self-dir/append",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "append_file",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "content": [
+      99
+     ],
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         98
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/scalar/self-dir/read",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_text_file",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         98
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/scalar/self-dir/read-lines",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_text_lines",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         98
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/scalar/self-dir/read-binary",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_binary_file",
+     "path": {
+      "utf16": [
+       98
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         98
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/lone/self-dir/write",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "write_file",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "content": [
+      99
+     ],
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         97,
+         65533
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/lone/self-dir/append",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "append_file",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "content": [
+      99
+     ],
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         97,
+         65533
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/lone/self-dir/read",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_text_file",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         97,
+         55296
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/lone/self-dir/read-lines",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_text_lines",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         97,
+         55296
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  },
+  {
+   "id": "error/lone/self-dir/read-binary",
+   "platforms": [
+    "linux",
+    "win32"
+   ],
+   "steps": [
+    {
+     "op": "create_dir",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "recursive": true,
+     "expect": {
+      "ok": null
+     }
+    },
+    {
+     "op": "read_binary_file",
+     "path": {
+      "utf16": [
+       97,
+       55296
+      ]
+     },
+     "expect": {
+      "error": "is_directory",
+      "path": {
+       "components": [
+        [
+         97,
+         55296
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "_file": "fs-path-error-origin.json"
+  }
+ ]
+}

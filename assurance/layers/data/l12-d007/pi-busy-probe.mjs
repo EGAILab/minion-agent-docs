@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { spawn } from "node:child_process";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
+import { makeSandbox, assertInside, assertOutput } from "./fs-guard/fs-guard.mjs";
 
 const [piDir, outPath, scratch] = process.argv.slice(2);
 const { NodeExecutionEnv } = await import(pathToFileURL(`${piDir}/packages/agent/src/harness/env/nodejs.ts`).href);
@@ -19,7 +20,7 @@ const OPS = {
   writeFile: (env, t) => env.writeFile(t, "w"),
   appendFile: (env, t) => env.appendFile(t, "w"),
   "renameFile-source": (env, t) => env.renameFile(t, "renamed"),
-  "renameFile-destination-onto": (env, t, cwd) => { fs.writeFileSync(path.join(cwd, "src"), "s"); return env.renameFile("src", t); },
+  "renameFile-destination-onto": (env, t, cwd) => { fs.writeFileSync(assertInside(cwd, "src"), "s"); return env.renameFile("src", t); },
   fileInfo: (env, t) => env.fileInfo(t),
   exists: (env, t) => env.exists(t),
   listDir: (env, t) => env.listDir(t),
@@ -39,8 +40,8 @@ const PRIMITIVES = {
 
 const results = [];
 for (const [condition, script] of Object.entries(HOLDERS)) {
-  const cwd = fs.mkdtempSync(path.join(scratch, `${condition}-`));
-  const target = path.join(cwd, "f");
+  const cwd = makeSandbox(path.join(scratch, `${condition}-${Date.now()}`));
+  const target = assertInside(cwd, "f");
   fs.writeFileSync(target, "0123456789".repeat(10));
   const holder = spawn("powershell", ["-NoProfile", "-Command", script(target)], { stdio: ["ignore", "pipe", "ignore"] });
   await new Promise((r) => holder.stdout.once("data", r));
@@ -63,5 +64,5 @@ for (const [condition, script] of Object.entries(HOLDERS)) {
   results.push({ condition, op: "holder-alive-at-end", observed: { alive: holder.exitCode === null } });
   holder.kill();
 }
-fs.writeFileSync(outPath, JSON.stringify({ node: process.version, uv: process.versions.uv, platform: process.platform, results }, null, 1));
+fs.writeFileSync(assertOutput(outPath), JSON.stringify({ node: process.version, uv: process.versions.uv, platform: process.platform, results }, null, 1));
 for (const r of results) console.log(r.condition.padEnd(18), r.op.padEnd(28), JSON.stringify(r.observed).slice(0, 70), r.ms ?? "", "ms");

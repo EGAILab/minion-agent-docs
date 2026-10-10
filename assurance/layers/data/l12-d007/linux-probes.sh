@@ -3,7 +3,7 @@
 # Sources are read-only mounts; every sandbox lives in the container's private tmpfs /tmp
 # (FS_GUARD_ROOT=/tmp/guard-root). The only writable host mount is /out.
 set -eu
-export FS_GUARD_ROOT=/tmp/guard-root TMPDIR=/tmp HOME=/tmp/home
+export FS_GUARD_ROOT=/tmp/guard-root FS_GUARD_OUTPUT=/out TMPDIR=/tmp HOME=/tmp/home
 mkdir -p "$FS_GUARD_ROOT" /tmp/home /tmp/probe
 cp /probe/*.mjs /probe/*.py /tmp/probe/
 mkdir -p /tmp/probe/fs-guard && cp /probe/fs-guard/*.py /probe/fs-guard/*.mjs /tmp/probe/fs-guard/

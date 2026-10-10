@@ -183,3 +183,72 @@ All three are recorded here as part of the contract history. No canonical expect
 
    The Python binding's existing witnesses already assert that consistency.
 3. **`lock_range` fixture sharing** (code `213ed0ce`). The first runner shared delete access; the canonical fixture (pinned Pi's PowerShell holder, `FileShare.ReadWrite`) does not. The runner now shares read+write only, and the schema comment states each fixture's sharing exactly.
+
+## 8. Contract review 1 (Codex) and remediation 1
+
+Review 1 (#199 comment 6100860925; `.tmp/codex-scratch/l12d007-contract-review-1.md`) was **CHANGES REQUESTED** at code `213ed0ce` / docs `afb5464d`.
+
+### L12D007-C001 (HIGH): containment not enforced over the complete evidence path
+
+Codex's intercepted, non-writing controls showed three gaps:
+- `make_sandbox` / `makeSandbox` and the runner's `_fixture_target` were lexical-only;
+- `pi_oracle.mjs` reached a write to an outside output path;
+- `pi-busy-probe.mjs` had no guard.
+
+That was correct. **The record's earlier claim (§1, "every target ... passes assertInside before every operation") was not true at that pair and is superseded by this section.**
+
+Remediation:
+- **Both guards** (`fs-guard/fs-guard.mjs`, `fs_guard.py`):
+  - refuse the Owner's prohibited raw forms **before normalization** (a `..` segment, drive forms, absolute / UNC / device paths, an empty name);
+  - walk **every link hop**, whether existing, dangling or looping, checking each hop against the boundary as written and as its real path, **before** the operation. A loop that stays inside is accepted; any outward hop is refused;
+  - `makeSandbox` walks its own ancestry before `mkdir`, and checks the real path after it;
+  - a new `assertOutput` / `assert_output` covers every output file. A container declares its one writable output directory with `FS_GUARD_OUTPUT`.
+- **Every entry point is guarded**, including fixture setup (moved to guarded helpers), the per-case directories, the final cleanup, and every output write:
+  - `pi_oracle.mjs`, `pi-error-probe.mjs`, `pi-busy-probe.mjs` (now guarded throughout);
+  - `py-error-probe.py`, `gen_canonical.py`, `make_cases.py`, `widen_d001.py`.
+
+  Symlink texts are checked from the link's own directory.
+- **The canonical runner** (`fs_path_runner._fixture_target`): the same raw-form refusal and link walk, before every fixture's native operation.
+- **Permanent rejecting controls:**
+  - `fs-guard/fs-guard-check.mjs` (25 cases) and `fs_guard_check.py` (29 cases, plus `make_sandbox` through an outward junction with `Path.mkdir` intercepted: 0 calls);
+  - `fs-guard/containment-controls.mjs`, which runs the real oracle under `intercept.mjs`, a preload that refuses and logs every outside mutation:
+    - the real oracle given an outside output is refused, with **no** outside mutation attempted;
+    - a mutant without its output guard is **caught**: the attempted outside write is logged and refused, never reaching the OS;
+    - `makeSandbox` through an outward junction refuses with 0 `mkdir` calls;
+  - code `tests/conformance/test_fs_path_runner_containment.py` (20 cases).
+
+  All pass.
+- **Two fixture defects were found and fixed while doing this, both fail-open before the fix:**
+  1. The directory hold's PowerShell literal `0xC0000000` is a negative Int32 in PowerShell 5.1. Its conversion failed silently, and the holder still printed `ready` without holding anything. It now uses explicit `[uint32]` values, `$ErrorActionPreference='Stop'`, and an exit on an invalid handle, and readiness is the exact `ready` line.
+  2. A `deny_access` whose entry the operation **renamed** was not undone, which blocked cleanup. Cleanup now resets ACLs over the run's own sandbox only. A failed cleanup leaves the sandbox in `.tmp` instead of losing results; two such sandboxes from the interrupted runs remain there.
+
+### L12D007-C002 (HIGH): the directory-as-file rule erased earlier native failure precedence
+
+Codex was correct: `FILE_FLAG_BACKUP_SEMANTICS` *permits* a directory open, it does not guarantee one. A failed open propagates its own error.
+
+Remediation:
+- **Spec §19.1:** the directory-as-file rows are qualified by "when libuv's open of it succeeds". A row states that an earlier open failure keeps its code.
+- **Spec §19.2:** precedence is the call sequence's, never the target's type, and a binding must not substitute `is_directory` from a type test.
+- **New corpus conditions**, with Pi's answers:
+  - **read-denied directory**: reads give `permission_denied` on Windows (5) and on Linux, as non-root uid 1000 (`EACCES`);
+  - **directory held without sharing** (Windows): reads give `unknown` (32);
+  - **read-denied file** (the control);
+  - **tree with a read-denied entry.**
+
+  This adds two fixture steps: `deny_access`, and `hold_exclusive` on a directory (backup semantics).
+- **Found while implementing, now in §19.1:** libuv's `fs__unlink_rmdir` opens each entry with `FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES | DELETE` and deletes through that handle. So a read-denied file's `remove` is `permission_denied` under Pi (top level, `force` and recursive), where `DeleteFileW` would succeed. The tree condition was added because of this.
+- **Corpus:** 240 cases (160 on both platforms, 80 Windows-only), regenerated on Windows and on Linux (container, uid 1000). 0 mismatches against the characterization on every characterized cell.
+- **Recorded corpus history** (§6 kept as it was): 176 → 240 cases; Windows-only 64 → 80.
+
+### L12D007-C003 (MEDIUM): cross-language feasibility matrix missing
+
+Remediation: `assurance/layers/l12-d007-feasibility-matrix.md`. It has 16 dimensions, each with Pi's native call, the Python call and disposition, a read-only audit of the Rust seam and its feasibility, and the required witness. It also lists six realistic wrong implementations and which witnesses reject each, and the deferred / not-applicable items.
+
+### Python implementation status (local only, not part of this contract review)
+
+The local implementation, rebased on remediation 1, passes on Windows:
+- the full `fs-path-domain` corpus (240 L12-D007 cases plus L12-D001 / L12-D006);
+- the runner containment controls;
+- `tests/execution`.
+
+It has not been pushed and is not under review.

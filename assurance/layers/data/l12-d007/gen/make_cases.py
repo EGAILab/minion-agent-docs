@@ -6,7 +6,11 @@ parity). Writes gen/cases.json in the fs_path_domain step grammar; pi_oracle.mjs
 """
 
 import json
+import sys
 import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fs-guard"))
+from fs_guard import assert_output  # noqa: E402
+
 
 u = lambda s: {"utf16": [ord(c) for c in s]}  # noqa: E731  (BMP-only literals here)
 w = lambda p, content="x": {"op": "write_file", "path": u(p), "content": [ord(c) for c in content]}  # noqa: E731
@@ -27,6 +31,14 @@ CONDITIONS = {
     "ntfs-stream-syntax": ([w("f")], "./f:stream:bad", WIN),
     "sharing-violation": ([w("f", "0123456789" * 10), {"op": "hold_exclusive", "path": u("f")}], "f", WIN),
     "lock-violation": ([w("f", "0123456789" * 10), {"op": "lock_range", "path": u("f")}], "f", WIN),
+    # L12D007-C002: failure precedence. libuv's own open of a directory can FAIL before any read; Pi
+    # then reports that failure, not `is_directory`. A target-type-only mapper fails these.
+    "directory-denied": ([d("d"), {"op": "deny_access", "path": u("d")}], "d", BOTH),
+    "file-denied": ([w("f"), {"op": "deny_access", "path": u("f")}], "f", BOTH),
+    "directory-held": ([d("d"), {"op": "hold_exclusive", "path": u("d")}], "d", WIN),
+    # libuv deletes every entry of a recursive removal through its own handle (fs__unlink_rmdir),
+    # so a read-denied entry inside the tree is refused on Windows.
+    "tree-with-denied-entry": ([d("d"), w("d/c"), {"op": "deny_access", "path": u("d/c")}], "d", BOTH),
 }
 
 
@@ -57,7 +69,7 @@ for condition, (fixture, target, platforms) in CONDITIONS.items():
         cases.append({"id": f"errors/{condition}/{op}", "platforms": platforms, "steps": [*fixture, *steps]})
 
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cases.json")
-with open(out, "w", encoding="utf-8", newline="\n") as f:
+with open(assert_output(out), "w", encoding="utf-8", newline="\n") as f:
     json.dump({"cases": cases}, f, indent=1)
     f.write("\n")
 print(f"{len(cases)} cases -> {out}")

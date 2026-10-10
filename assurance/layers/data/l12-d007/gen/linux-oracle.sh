@@ -5,6 +5,7 @@
 # Every sandbox lives in the container's private tmpfs /tmp (FS_GUARD_ROOT).
 set -eu
 export FS_GUARD_ROOT=/tmp/guard-root
+export FS_GUARD_OUTPUT=/out
 export HOME=/tmp/home
 mkdir -p "$FS_GUARD_ROOT" "$HOME"
 cp -r /data /tmp/data

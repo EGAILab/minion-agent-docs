@@ -15,7 +15,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "fs-guard"))
-from fs_guard import PROJECT_ROOT, assert_inside, make_sandbox  # noqa: E402
+from fs_guard import PROJECT_ROOT, assert_inside, assert_output, make_sandbox  # noqa: E402
 
 from minion_agent.execution.filesystem import LocalFileSystem  # noqa: E402
 from minion_agent.execution.result import Ok  # noqa: E402
@@ -34,7 +34,8 @@ def holder(script: str) -> subprocess.Popen[bytes]:
 
 
 def setup(condition: str, cwd: str) -> tuple[str, subprocess.Popen[bytes] | None]:
-    j = lambda *p: os.path.join(cwd, *p)  # noqa: E731
+    # Every fixture path passes the guard BEFORE its native write (L12D007-C001).
+    j = lambda *p: assert_inside(cwd, "/".join(p))  # noqa: E731
     if condition == "missing":
         return "missing", None
     if condition == "file":
@@ -51,8 +52,11 @@ def setup(condition: str, cwd: str) -> tuple[str, subprocess.Popen[bytes] | None
         write(j("f"))
         return "f/x", None
     if condition == "symlink-loop":
-        os.symlink(j("b"), j("a"))
-        os.symlink(j("a"), j("b"))
+        # Relative link texts, each checked from the link's own directory.
+        assert_inside(cwd, "b")
+        os.symlink("b", j("a"))
+        assert_inside(cwd, "a")
+        os.symlink("a", j("b"))
         return "a", None
     if condition == "name-too-long":
         return "n" * 300, None
@@ -80,7 +84,7 @@ if sys.platform != "win32":  # the same POSIX subset as pi-error-probe.mjs
 
 def ops(fs: LocalFileSystem, t: str, cwd: str) -> dict[str, object]:
     def onto() -> object:
-        write(os.path.join(cwd, "src"), "s")
+        write(assert_inside(cwd, "src"), "s")
         return fs.rename_file("src", t)
 
     return {
@@ -113,7 +117,7 @@ async def main(out: str) -> None:
     n = 0
     for condition in CONDITIONS:
         for op in ops(LocalFileSystem(root), "x", root):
-            cwd = os.path.join(root, str(n))
+            cwd = assert_inside(root, str(n))
             n += 1
             os.mkdir(cwd)
             target, hold = setup(condition, cwd)
@@ -133,9 +137,9 @@ async def main(out: str) -> None:
                     hold.kill()
                     hold.wait()
             results.append({"condition": condition, "op": op, "observed": observed})
-    assert_inside(os.path.dirname(root), root)
+    assert_inside(os.path.dirname(root), os.path.basename(root))  # absolute raw targets are refused
     shutil.rmtree(root, ignore_errors=True)
-    with open(out, "w", encoding="utf-8") as f:
+    with open(assert_output(out), "w", encoding="utf-8") as f:
         json.dump({"platform": sys.platform, "python": sys.version.split()[0], "results": results}, f, indent=1)
     print(f"l12-d007 python probe: {len(results)} rows")
 

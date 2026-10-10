@@ -9,7 +9,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
-import { PROJECT_ROOT, makeSandbox, assertInside } from "./fs-guard/fs-guard.mjs";
+import { PROJECT_ROOT, makeSandbox, assertInside, assertOutput } from "./fs-guard/fs-guard.mjs";
 
 const [piDir, outPath] = process.argv.slice(2);
 const { NodeExecutionEnv } = await import(pathToFileURL(`${piDir}/packages/agent/src/harness/env/nodejs.ts`).href);
@@ -17,28 +17,31 @@ const win = process.platform === "win32";
 const units = (s) => Array.from({ length: s.length }, (_, i) => s.charCodeAt(i));
 
 // Conditions: setup(cwd) prepares the fixture and returns { target, cleanup? }.
+// Every fixture path passes the guard BEFORE its native write (L12D007-C001).
+const at = (cwd, rel, from = cwd) => assertInside(cwd, rel, from);
 const CONDITIONS = {
   "missing": () => ({ target: "missing" }),
-  "file": (cwd) => { fs.writeFileSync(path.join(cwd, "f"), "x"); return { target: "f" }; },
-  "directory-empty": (cwd) => { fs.mkdirSync(path.join(cwd, "d")); return { target: "d" }; },
-  "directory-nonempty": (cwd) => { fs.mkdirSync(path.join(cwd, "d")); fs.writeFileSync(path.join(cwd, "d", "c"), "x"); return { target: "d" }; },
-  "non-directory-component": (cwd) => { fs.writeFileSync(path.join(cwd, "f"), "x"); return { target: "f/x" }; },
-  "symlink-loop": (cwd) => { fs.symlinkSync(path.join(cwd, "b"), path.join(cwd, "a")); fs.symlinkSync(path.join(cwd, "a"), path.join(cwd, "b")); return { target: "a" }; },
+  "file": (cwd) => { fs.writeFileSync(at(cwd, "f"), "x"); return { target: "f" }; },
+  "directory-empty": (cwd) => { fs.mkdirSync(at(cwd, "d")); return { target: "d" }; },
+  "directory-nonempty": (cwd) => { fs.mkdirSync(at(cwd, "d")); fs.writeFileSync(at(cwd, "d/c"), "x"); return { target: "d" }; },
+  "non-directory-component": (cwd) => { fs.writeFileSync(at(cwd, "f"), "x"); return { target: "f/x" }; },
+  // Relative link texts, each checked from the link's own directory; the loop never leaves cwd.
+  "symlink-loop": (cwd) => { at(cwd, "b"); fs.symlinkSync("b", at(cwd, "a")); at(cwd, "a"); fs.symlinkSync("a", at(cwd, "b")); return { target: "a" }; },
   "name-too-long": () => ({ target: "n".repeat(300) }),
   ...(win ? {
     "invalid-name": () => ({ target: "x<y" }),
     // "./" keeps "f:" from parsing as drive F:. (A former "bad-pathname" case used a ".."-chain that escaped to
     // the drive root and was removed after it ran destructive operations on E:\ -- see fs-guard.mjs.)
-    "ntfs-stream-syntax": (cwd) => { fs.writeFileSync(path.join(cwd, "f"), "x"); return { target: "./f:stream:bad" }; },
+    "ntfs-stream-syntax": (cwd) => { fs.writeFileSync(at(cwd, "f"), "x"); return { target: "./f:stream:bad" }; },
     "sharing-violation": (cwd) => {
-      const p = path.join(cwd, "f"); fs.writeFileSync(p, "x");
+      const p = at(cwd, "f"); fs.writeFileSync(p, "x");
       // Hold the file open with FileShare.None in another process for the duration of the case.
       const holder = spawn("powershell", ["-NoProfile", "-Command",
         `$s=[IO.File]::Open('${p}','Open','ReadWrite','None'); Write-Output ready; Start-Sleep 120`], { stdio: ["ignore", "pipe", "ignore"] });
       return { target: "f", ready: new Promise((r) => holder.stdout.once("data", r)), cleanup: () => holder.kill() };
     },
     "lock-violation": (cwd) => {
-      const p = path.join(cwd, "f"); fs.writeFileSync(p, "xxxxxxxx");
+      const p = at(cwd, "f"); fs.writeFileSync(p, "xxxxxxxx");
       const holder = spawn("powershell", ["-NoProfile", "-Command",
         `$s=[IO.File]::Open('${p}','Open','ReadWrite','ReadWrite'); $s.Lock(0,8); Write-Output ready; Start-Sleep 120`], { stdio: ["ignore", "pipe", "ignore"] });
       return { target: "f", ready: new Promise((r) => holder.stdout.once("data", r)), cleanup: () => holder.kill() };
@@ -53,7 +56,7 @@ const OPS = {
   writeFile: (env, t) => env.writeFile(t, "w"),
   appendFile: (env, t) => env.appendFile(t, "w"),
   "renameFile-source": (env, t) => env.renameFile(t, "renamed"),
-  "renameFile-destination-onto": (env, t, cwd) => { fs.writeFileSync(path.join(cwd, "src"), "s"); return env.renameFile("src", t); },
+  "renameFile-destination-onto": (env, t, cwd) => { fs.writeFileSync(assertInside(cwd, "src"), "s"); return env.renameFile("src", t); },
   fileInfo: (env, t) => env.fileInfo(t),
   exists: (env, t) => env.exists(t),
   listDir: (env, t) => env.listDir(t),
@@ -82,10 +85,10 @@ const root = fs.realpathSync(makeSandbox(path.join(PROJECT_ROOT, ".tmp", "claude
 const results = [];
 let n = 0;
 const started = Date.now();
-try { fs.unlinkSync(outPath + ".jsonl"); } catch {}
+try { fs.unlinkSync(assertOutput(outPath + ".jsonl")); } catch {}
 for (const [condition, setup] of Object.entries(CONDITIONS)) {
   for (const [op, run] of [...Object.entries(OPS), ...Object.entries(PRIMITIVES).map(([k, f]) => [k, null, f])]) {
-    const cwd = path.join(root, String(n++));
+    const cwd = assertInside(root, String(n++));
     fs.mkdirSync(cwd);
     let prepared;
     try { prepared = setup(cwd); } catch (e) { results.push({ condition, op, setup_failed: String(e) }); continue; }
@@ -115,12 +118,12 @@ for (const [condition, setup] of Object.entries(CONDITIONS)) {
     }
     prepared.cleanup?.();
     results.push({ condition, op, observed, lstat_code: node_code });
-    fs.appendFileSync(outPath + ".jsonl", JSON.stringify(results.at(-1)) + "\n");
+    fs.appendFileSync(assertOutput(outPath + ".jsonl"), JSON.stringify(results.at(-1)) + "\n");
     console.log(`${condition} ${op} ${JSON.stringify(observed).slice(0, 60)} (${Math.round((Date.now() - started) / 1000)}s)`);
   }
 }
-assertInside(path.dirname(root), root);
+assertInside(path.dirname(root), path.basename(root)); // the guard refuses absolute raw targets
 try { fs.rmSync(root, { recursive: true, force: true }); } catch {}
-fs.writeFileSync(outPath, JSON.stringify({ platform: process.platform, node: process.versions.node, uv: process.versions.uv,
+fs.writeFileSync(assertOutput(outPath), JSON.stringify({ platform: process.platform, node: process.versions.node, uv: process.versions.uv,
   pi: "b7bb00b936dbe21b8e160b3e89efdec361846699", results }, null, 1) + "\n");
 console.log(`l12-d007 pi probe (${process.platform}): ${results.length} rows`);

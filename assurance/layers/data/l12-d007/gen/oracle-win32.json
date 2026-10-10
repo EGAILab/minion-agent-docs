@@ -7066,6 +7066,1331 @@
      }
     }
    ]
+  },
+  {
+   "id": "errors/directory-denied/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/rename_file-onto",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "kind": "directory",
+     "name": [
+      100
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/create_dir-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-denied/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/rename_file-onto",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "kind": "file",
+     "name": [
+      102
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/create_dir-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/file-denied/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/rename_file-onto",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "kind": "directory",
+     "name": [
+      100
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "components": [
+      [
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/create_dir-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/directory-held/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "is_directory",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/rename_file-onto",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        115,
+        114,
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "kind": "directory",
+     "name": [
+      100
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "names": [
+      [
+       99
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "components": [
+      [
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/create_dir-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "permission_denied",
+     "path": {
+      "components": [
+       [
+        100
+       ],
+       [
+        99
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "errors/tree-with-denied-entry/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        100
+       ]
+      ]
+     }
+    }
+   ]
   }
  ]
 }
