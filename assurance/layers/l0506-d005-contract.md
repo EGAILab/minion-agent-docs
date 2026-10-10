@@ -166,3 +166,31 @@ It reviewed code `2bc2dd7c` and docs `9ed90e56`. Verdict: **CHANGES REQUESTED**.
 - **Corpus:** 16 certifying documents. At the contract stage there are 12 strict xfails and 4 passes.
 - **Controls on the planned-fix overlay:** baseline 5 intended witnesses PASS, **5/5 KILLED** (`shallow-copy-restored`, `clone-forgets-aliases`, `clone-keeps-pipeline-containers`, `json-round-trip-clone`, `clone-per-listener`).
 - **§7 Rust plan, corrected:** confirm the acyclic corpus through the real preflight and Rust controls. No Rust validation change is authorized. The cyclic validation surface is #193's, not this delta's.
+
+## 9. Final contract review and Python implementation
+
+**Contract.** Codex closed C003 provisionally and approved the final complete contract, **APPROVED FOR IMPLEMENTATION / MERGE-ELIGIBLE**, at code `fb8c3fc9` / docs `ac52fdb4`. References: #190 issuecomment-6093423771, verdict sha256 `2feba9a3cb04fadc8133f972565d592c98102bf43342aa8211fd1e8dc1a8e0b7`. This came after the CE-L0506-D005-01 checkpoint approval (issuecomment-6093327191). **Nonblocking `N001`:** the manifest's stale pending count (12 → 17) is fixed in the implementation commit.
+
+**Implementation** (code #191, on top of the approved contract):
+
+- **`llm/js_object.py` `structured_clone`:**
+  - iterative and identity-memoized;
+  - every object and array reachable from the prepared arguments is copied exactly once, as an ordered `JsObject` / `JsArray`; other values are carried unchanged;
+  - the copy shares no container with its source;
+  - clone capability keeps cycles too (the unit witness). Cyclic *validation* stays outside the certified domain (`L0506D005-Q001`, #193).
+- **`tools/execute.py` `_validate`, raw-schema path:** delivers and validates `structured_clone(arguments)` instead of the shallow `JsObject(arguments)`. The pydantic path is unchanged (AUDITED — NO CHANGE).
+- **Contract-stage strict xfails:** all 17 removed; the 21-document corpus passes.
+- **K1 test consequences** (§3, disclosed at the contract stage):
+  - `test_a_reference_crossing_the_frontier_stays_one_object` now asserts `kept: False`, while `equal` and `through_old` are unchanged;
+  - the R007 control is re-pointed from the `adopt` mutant, which is now equivalent at every observer, to a clone without graph seams.
+- **Binding witnesses** (`tests/tools/test_validated_argument_isolation.py`):
+  - one graph across every listener and `execute` (identity);
+  - pydantic-path isolation;
+  - clone structure: aliases, cycle, order, values, and a depth of 100,000 without recursion.
+
+**Fresh gates at the implementation head:**
+- **Windows** (3.13.5): **5517 passed / 48 skipped / 21 xfailed**, coverage **100%** (9285), ruff and mypy clean.
+  - A first run failed only `builtin-bash-abort-during` (#197, the recorded load race), with its skipped branch the single missed coverage line. It passed on rerun; it is not counted.
+- **Linux** (Docker `python:3.13`): **5470 passed / 0 failed**.
+- **Python 3.12.8** (`.tmp/py312-venv`): the arg-isolation corpus, binding witnesses and K1 provenance tests give **40 passed**.
+- **Controls** (`controls.py`, run against the implementation itself): baseline **7 intended witnesses PASS**; **6/6 KILLED**.
