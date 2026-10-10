@@ -1,0 +1,1984 @@
+{
+ "platform": "win32",
+ "python": "3.13.5",
+ "results": [
+  {
+   "id": "absolutePath/begin",
+   "observed": {
+    "ok": {
+     "string": [
+      0,
+      102
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/begin",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      0,
+      102
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/begin",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/begin",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/begin",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/begin",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/begin",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "appendFile/begin",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-source/begin",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/begin",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/begin",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/begin",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/begin",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     0,
+     102
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/begin",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/begin",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/begin",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/begin",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/begin",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     0,
+     102
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/begin",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     0,
+     102
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/begin",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     0,
+     102
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "absolutePath/middle",
+   "observed": {
+    "ok": {
+     "string": [
+      102,
+      0,
+      120
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/middle",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      102,
+      0,
+      120
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/middle",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "appendFile/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-source/middle",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/middle",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/middle",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/middle",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/middle",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/middle",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/middle",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/middle",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/middle",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/middle",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/middle",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/middle",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "absolutePath/end",
+   "observed": {
+    "ok": {
+     "string": [
+      102,
+      0
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/end",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      102,
+      0
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/end",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/end",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/end",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/end",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/end",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "appendFile/end",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-source/end",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/end",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/end",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/end",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/end",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/end",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/end",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/end",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/end",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/end",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/end",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/end",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     102,
+     0
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "absolutePath/last_component_under_new_parent",
+   "observed": {
+    "ok": {
+     "string": [
+      110,
+      101,
+      119,
+      92,
+      97,
+      0,
+      98
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/last_component_under_new_parent",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      110,
+      101,
+      119,
+      92,
+      97,
+      0,
+      98
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/last_component_under_new_parent",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f",
+    "new/"
+   ]
+  },
+  {
+   "id": "appendFile/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f",
+    "new/"
+   ]
+  },
+  {
+   "id": "renameFile-source/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/last_component_under_new_parent",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     110,
+     101,
+     119,
+     92,
+     97,
+     0,
+     98
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/last_component_under_new_parent",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/last_component_under_new_parent",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     110,
+     101,
+     119,
+     92,
+     97,
+     0,
+     98
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/last_component_under_new_parent",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     110,
+     101,
+     119,
+     92,
+     97,
+     0,
+     98
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/last_component_under_new_parent",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     110,
+     101,
+     119,
+     92,
+     97,
+     0,
+     98
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "absolutePath/parent_component",
+   "observed": {
+    "ok": {
+     "string": [
+      112,
+      0,
+      113,
+      92,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/parent_component",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      112,
+      0,
+      113,
+      92,
+      99,
+      104,
+      105,
+      108,
+      100
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/parent_component",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/parent_component",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/parent_component",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/parent_component",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/parent_component",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "appendFile/parent_component",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-source/parent_component",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/parent_component",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/parent_component",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/parent_component",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/parent_component",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     112,
+     0,
+     113,
+     92,
+     99,
+     104,
+     105,
+     108,
+     100
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/parent_component",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/parent_component",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/parent_component",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/parent_component",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/parent_component",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     112,
+     0,
+     113,
+     92,
+     99,
+     104,
+     105,
+     108,
+     100
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/parent_component",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     112,
+     0,
+     113,
+     92,
+     99,
+     104,
+     105,
+     108,
+     100
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/parent_component",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     112,
+     0,
+     113,
+     92,
+     99,
+     104,
+     105,
+     108,
+     100
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "absolutePath/lone_surrogate_and_nul",
+   "observed": {
+    "ok": {
+     "string": [
+      55296,
+      0,
+      122
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "joinPath/lone_surrogate_and_nul",
+   "observed": {
+    "ok": {
+     "string": [
+      100,
+      92,
+      55296,
+      0,
+      122
+     ]
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-max0/lone_surrogate_and_nul",
+   "observed": {
+    "ok": {
+     "array": 0
+    }
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "appendFile/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-source/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-destination/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in dst"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-both/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: replace: embedded null character in src"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "fileInfo/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: scandir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "canonicalPath/lone_surrogate_and_nul",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     65533,
+     0,
+     122
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "exists/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createDir-nonrecursive/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-force/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "remove-recursive-force/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDirRaw/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: listdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "probeDirEntry/lone_surrogate_and_nul",
+   "observed": {
+    "threw": "ValueError: lstat: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadable/lone_surrogate_and_nul",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     55296,
+     0,
+     122
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "checkReadWrite/lone_surrogate_and_nul",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     55296,
+     0,
+     122
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "resolve/lone_surrogate_and_nul",
+   "observed": {
+    "error": "unknown",
+    "path": [
+     65533,
+     0,
+     122
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextFile-aborted/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-aborted/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readTextLines-aborted-max0/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "readBinaryFile-aborted/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "writeFile-aborted/last_component_under_new_parent",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     110,
+     101,
+     119,
+     92,
+     97,
+     0,
+     98
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-aborted-source/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     103
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "renameFile-aborted-destination/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "listDir-aborted/middle",
+   "observed": {
+    "error": "aborted",
+    "path": [
+     102,
+     0,
+     120
+    ]
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createTempDir-prefix/middle",
+   "observed": {
+    "threw": "ValueError: mkdir: embedded null character in path"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createTempFile-prefix/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  },
+  {
+   "id": "createTempFile-suffix/middle",
+   "observed": {
+    "threw": "ValueError: embedded null character"
+   },
+   "left": [
+    "d/",
+    "f"
+   ]
+  }
+ ]
+}
