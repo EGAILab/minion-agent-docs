@@ -3068,6 +3068,7 @@ Each must fail a witness:
 - Where POSIX deletion is unsupported, the fallback clears `FILE_ATTRIBUTE_READONLY` first, then sets the delete flag.
 - Both `unlink` and `rmdir` take this path.
 - `rimraf`'s `fixWinEPERM` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`) is reached only when a deletion still fails with `EPERM`, which means a genuine ACL denial. Its `chmod(0o666)` then fails, or the retry fails, and the original or retry error is returned.
+  - **Correction note (L12-D007, `CE-L12D007-02`):** the "genuine ACL denial" premise does not hold for every `EPERM`. A transient `EPERM` is recovered by `fixWinEPERM`'s unconditional retry; an `lstat` `EPERM` also enters it. The Owner adopted pinned Pi's recovery outcomes (#199 issuecomment-6103080422); they are stated in §19.5 rule 5. The original sentence above is kept as history.
 - `chmod(0o666)` is therefore **not** the normative requirement.
 
 **The rule (Windows):**
@@ -3305,5 +3306,46 @@ These rules produce, among others:
 **Bindings:**
 - **Python** at the contract base fails the characterized delta on Windows: directory read/write and `remove` (#67, #125), the name class, the link loop, sharing/lock (#69), and libuv's handle-based unlink. On Linux, `remove` of a directory (#125).
 - **Rust:** see the feasibility matrix, `assurance/layers/l12-d007-feasibility-matrix.md` (C003).
+
+### 19.5 `remove`: entry classification, failure routing and Windows `EPERM` recovery (`CE-L12D007-02`)
+
+**Status:** proposed in convergence episode `CE-L12D007-02` (revision 2), for checkpoint review. It is not yet agreed.
+
+**Authority:** pinned Pi `remove` → `fs.promises.rm` → Node v22.15.1 `rimraf` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`): `_rimraf`, `fixWinEPERM`, `_rmdir`, `_rmchildren`. Every `remove` that reaches the filesystem, recursive or not, goes through it. This section states pinned Pi's observable outcomes. It prescribes no call sequence.
+
+**Owner decision (Windows recovery):** "ADOPT PI", #199 issuecomment-6103080422. It authorizes a targeted correction of §17's (L12-D005) certified recovery outcomes in both bindings, as `DIRECT_PI_PARITY`. §17's other rules stand, in particular rule 3: a link's target is never changed.
+
+Rules (an "entry" is the `remove` target itself, or any entry met inside a recursive removal):
+
+1. **Classification.** The entry's own `lstat`, made when that entry is handled (never a listing's earlier answer), decides. A directory that is not a link or junction is removed as a directory (rule 3); anything else is unlinked as itself (rule 2).
+   - `lstat` ENOENT: removed.
+   - On Windows, `lstat` EPERM: the recovery of rule 5, with that error as the original error.
+   - Any other `lstat` failure: the entry is unlinked as itself (rule 2).
+   - A directory's outcome is the entry's outcome. It is never re-routed through the `lstat`-failure or unlink paths.
+2. **Unlink failure.**
+   - ENOENT: removed.
+   - EISDIR, or EPERM on POSIX: removed as a directory (rule 3), carrying the unlink error as the original error.
+   - EPERM on Windows: the recovery of rule 5.
+   - Anything else: that failure.
+3. **Directory.** `rmdir` first.
+   - ENOTEMPTY, EEXIST or EPERM: list the directory, remove each child by these rules, then `rmdir` again.
+   - ENOTDIR: the original error, if one routed here; otherwise removed.
+   - ENOENT: removed.
+   - Anything else: that failure, with no listing and no retry.
+4. **Propagation.** A listing failure, or the first child failure from any depth, is the directory's failure, unchanged. The final `rmdir` runs only after every child is removed. Siblings are handled sequentially; multi-failure selection stays with DIV-008 / #127.
+5. **Windows `EPERM` recovery** (`fixWinEPERM`):
+   - **a.** Clear the entry's own read-only attribute, without following links. It is a success whether or not the attribute was set. If the correction fails: ENOENT means removed; anything else gives the **original** error.
+   - **b.** Inspect the entry, following links. ENOENT means removed; any other failure gives the **original** error.
+   - **c.** If (b) finds a directory, it is removed by rule 3, carrying the original error. Otherwise the entry is unlinked **once** more. That retry's own failure is the result (ENOENT: removed).
+   - A link's target never has its attributes changed. This is §17 rule 3; pinned Pi was measured to leave a read-only link target unchanged.
+6. **Error identity.** A failure reports the failing call's own code and its §14.8 origin path, except where rules 3 and 5 name the original error.
+
+**Unchanged:** non-recursive `remove` of a directory (#125, §19.1); `force` (ENOENT of the target only); POSIX permission semantics; L12-D005's read-only outcomes, whose cases are all persistent conditions that give the same result under rule 5.
+
+**Evidence:**
+- `assurance/layers/data/l12-d007/ce02/`, with single- and multi-call fault injection through each binding's real provider and pinned Pi's real `NodeExecutionEnv.remove`, on Windows and Linux:
+  - `ce02-matrix.json`: 13 rows;
+  - `ce02-recovery-matrix.json`: 18 rows.
+- Fault injection has no language-neutral fixture, so this is binding-level evidence with a pinned-Pi oracle in both languages, compared by `ce02_compare.py`.
 
 Record: `assurance/layers/12-l12-d007-error-codes.md`.

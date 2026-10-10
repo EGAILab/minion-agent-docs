@@ -2,7 +2,8 @@
 platform). A row MATCHes when the result code, the error path, what remains, and the per-path counts of the
 child-walk calls (rmdir, unlink, readdir, and lstat of anything below `tree`) are equal. The top-level `lstat tree`
 count (Node's rm validates first) and `stat` / `chmod` (fixWinEPERM mechanics) are not compared.
-Exit 0 iff every row matches except those named in --expected-diff.
+Exit 0 iff every row matches except those named in --expected-diff. Also used for the revision-2 recovery
+matrix (ce02-recovery-*.jsonl).
 
 Usage: python ce02_compare.py <pi.jsonl> <py.jsonl> [--expected-diff ID ...]"""
 
@@ -29,7 +30,12 @@ def walk_calls(row: dict) -> dict[str, int]:
 
 
 def view(row: dict) -> dict:
-    return {"result": row["result"], "path": row["path"], "remains": row["remains"], "calls": walk_calls(row)}
+    """The compared observables. `readonly` (the recovery matrix: every entry left read-only, which makes a
+    changed link TARGET visible) is compared when the row records it."""
+    observed = {"result": row["result"], "path": row["path"], "remains": row["remains"], "calls": walk_calls(row)}
+    if "readonly" in row:
+        observed["readonly"] = row["readonly"]
+    return observed
 
 
 def main(argv: list[str]) -> int:

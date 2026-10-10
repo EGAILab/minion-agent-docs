@@ -131,3 +131,136 @@ None. R1 to R5 are already pinned Node's behavior under §19 (literal `toFileErr
   - negative controls N1 to N5, each killed by its named rows.
 - **NORMATIVE DELTAS:** none (record §13 only).
 - **NEXT_OWNER:** Codex, for the checkpoint review of exactly this proposal.
+
+## Checkpoint review 1 (Codex): REJECTED
+
+#199 issuecomment-6103008491, at docs `559acb9c` / code `b8062daa`.
+
+- **`CE-L12D007-02-C001`** (high, CONTRACT_ASSURANCE_DEFECT). The Windows EPERM recovery stage (`fixWinEPERM`) was missing:
+  - its two entry sites (a child `lstat` EPERM and an `unlink` EPERM);
+  - chmod/stat success, ENOENT and other failure;
+  - original-versus-retry error provenance;
+  - file, directory and link outcomes.
+  - Reviewer neighbour: `lstat` EPERM followed by a failing recovery gives `permission_denied` under Pi, but **ok** in the candidate, with the child deleted.
+- **`CE-L12D007-02-C002`** (medium). O001 cannot be excluded on the strength of the certified L12-D005 mechanism. It needs an explicit Owner disposition.
+
+The reviewer confirmed the I003 core characterization, all 13 rows on both platforms, and the comparator's listed differences.
+
+## Revision 2 (Claude): response to C001 / C002
+
+### Owner disposition of O001 (C002)
+
+**ADOPT PI** (#199 issuecomment-6103080422, verbatim; cross-referenced on #126). It authorizes a targeted correction of L12-D005's certified Windows recovery outcomes in both bindings, as `DIRECT_PI_PARITY`.
+
+O001 is therefore no longer out of scope: E11 is an acceptance row on both platforms. §17's other rules stand, in particular that a link target is never changed. Pinned Pi was measured to keep that rule (rows L9, U7 below).
+
+### Recovery-stage characterization (C001)
+
+`ce02-recovery-matrix.json`, 18 rows. Pinned Pi's real `NodeExecutionEnv.remove` runs with one or more injected failures (`ce02-recovery-pi-probe.mjs`), and every entry left read-only is recorded.
+
+| Row | Entry and stage | Pi on Windows (`ce02-recovery-pi-win32.jsonl`) |
+|---|---|---|
+| L1 / L2 | child `lstat` EPERM; recovery succeeds (file / directory) | ok; chmod, stat, then unlink / rmdir ×1 |
+| L3 | `lstat` EPERM, chmod EIO | `permission_denied` at the child (the **original** error); no unlink; child remains |
+| L4 | `lstat` EPERM, chmod ENOENT | the child counts as removed, so the tree's final rmdir ENOTEMPTY gives `unknown` at `tree` |
+| L5 | `lstat` EPERM, stat EIO | `permission_denied` (original); no unlink |
+| L6 | `lstat` EPERM, stat ENOENT | as L4 |
+| L7 | `lstat` EPERM, the retry unlink EIO | `unknown` at the child (the **retry's** error) |
+| L8 | `lstat` EPERM on a directory, rmdir EIO | `unknown` at the child |
+| L9 | `lstat` EPERM on a file link to a read-only outside target | ok; the link is removed; **the target stays read-only** |
+| U1 (= E11) | `unlink` EPERM once | ok; chmod, stat, unlink ×2 |
+| U2 | `unlink` EPERM, chmod EIO | `permission_denied` (original) |
+| U3 | `unlink` EPERM, stat ENOENT | as L4 |
+| U4 | `unlink` EPERM, then the retry EIO | `unknown` (retry's error) |
+| U5 | `unlink` EPERM twice (persistent) | `permission_denied` (retry's error) |
+| U6 | a real read-only file, no injection | ok, with no recovery at all (libuv ignores the attribute) |
+| U7 | `unlink` EPERM on a link to a read-only outside target | ok; **the target stays read-only** |
+| T1 | single-file `remove` (not recursive), `unlink` EPERM once | ok (the same recovery at top level) |
+| T2 | T1 with chmod EIO | `permission_denied` (original) |
+
+On **Linux** (`ce02-recovery-pi-linux.jsonl`, uid 1000) there is no recovery stage:
+- an `lstat` EPERM goes on to `unlink`;
+- an `unlink` EPERM goes to `_rmdir`, where ENOTDIR gives the original error. T1 and T2 make that `rmdir` too.
+
+The revision 1 Linux Pi matrix replayed byte-identical.
+
+**Candidate `b8062daa`:**
+- Windows: 12 DIFF rows. The outcome differences are L3 to L6 (the `lstat` EPERM entry skips recovery) and U1, U4, U7, T1 (L12-D005's conditional retry). L2, L8, U3 and U5 differ in calls only.
+- Linux: matches every outcome. T1 and T2 differ only by Pi's extra top-level `rmdir`: the top-level non-directory does not share the child routing.
+
+### Revised OBSERVABLE RULES
+
+These are normative §19.5 in docs (proposed), and they supersede R1 to R5 above.
+
+- **R1 (revised).** Classification applies to **every entry, the `remove` target included** (Node's `rm` is `rimraf` for any target).
+  - The entry's own `lstat`, now, decides.
+  - ENOENT: removed. Windows EPERM: R6 recovery (original = the `lstat` error). Other failures: unlink (R2).
+  - A directory's outcome is the entry's outcome (`I003`).
+- **R2 (revised).** An unlink failure:
+  - ENOENT: removed;
+  - EISDIR, or EPERM on POSIX: `_rmdir` with the original error;
+  - Windows EPERM: R6;
+  - else: that failure.
+- **R3, R4:** unchanged (rmdir-first; ENOTDIR gives the original error; first-failure propagation, sequential; #127 untouched).
+- **R5 (revised).** Each failure reports its failing call's code and §14.8 origin, except where R3 / R6 return the **original** error.
+- **R6 (new), Windows recovery:**
+  - **a.** Clear the entry's own read-only attribute without following links. This is a success whether or not the attribute was set. Its failure gives ENOENT → removed, else the original error.
+  - **b.** Inspect the entry, following links. ENOENT → removed; any other failure → the original error.
+  - **c.** A directory goes to `_rmdir` with the original error. Otherwise **one** more unlink, whose own failure is the result (ENOENT → removed).
+  - A link target's attributes are never changed (§17 rule 3).
+
+### MINIMAL EXECUTABLE WITNESSES (revised)
+
+- **Acceptance:** `ce02_compare.py` reports **all MATCH** for both matrices on both platforms, with **no expected differences**. That covers E11/U1 and T1/T2's top-level routing.
+  - The comparator now also compares `readonly` where a row records it, so a changed link target is a DIFF.
+- **Permanent binding witnesses** (`tests/execution/test_filesystem_rimraf.py`, real `LocalFileSystem.remove`, the same injection seams):
+  - the rows C0, E1 to E12, L1 to L9, U1 to U7, T1 and T2;
+  - the platform-specific ones are skipped on the other platform.
+- **The L12-D005 canonical corpus** (`conformance/agent/fs-remove-readonly`, 21 documents) must still pass unchanged. Its cases are persistent conditions, so R6 yields the same outcomes.
+
+### NEGATIVE CONTROLS (revised: revision 1's N1 to N5 stand)
+
+| Control | Mutation | Killed by |
+|---|---|---|
+| N6 | Windows `lstat` EPERM routed straight to unlink (no recovery) | L3, L5 |
+| N7 | a recovery chmod/stat failure returns its own error, not the original | L3, L5, U2, T2 |
+| N8 | retry only when a read-only attribute was set (L12-D005's conditional retry) | U1, U4, T1 |
+| N9 | the retry failure replaced by the original error | L7, U4 |
+| N10 | the attribute correction follows links (changes the target) | L9, U7 (`readonly`) |
+| N11 | the top-level non-directory bypasses the shared routing | T1, T2 on Linux (the `rmdir` call) |
+
+### SPEC / MANIFEST / CONFORMANCE DELTAS (revised)
+
+- `spec/execution.md` **§19.5** (new; proposed): rules 1 to 6 as above, with the Owner decision.
+- **§17:** a correction note under the disproven "genuine ACL denial" premise. The original sentence is kept.
+- **Manifest:** `fs_error_codes_pinned_pi_literal` will cite §19.5 at implementation. The L12-D005 entry gains a pointer.
+- **Canonical:** none added. Fault injection has no language-neutral fixture, so the evidence is binding-level with a pinned-Pi oracle per language. The `fs-remove-readonly` corpus is unchanged and re-run.
+
+### IMPLEMENTATION CONSTRAINTS (revised)
+
+- One routing serves the `remove` target and every child: catch `lstat` failures around `lstat` only, then dispatch outside that handler.
+- R6 replaces L12-D005's conditional retry on Windows, keeping its link-safety:
+  - the own-attribute correction never follows links and is a no-op success when the attribute is not set;
+  - the inspection follows links;
+  - there is one retry.
+- No additional retries, no parallel removal, #127 untouched. POSIX gains no recovery stage.
+- **Rust** implements R1 to R6 natively (`remove_dir_all` violates R3/R4). No language-specific extension point is involved. The rules are outcome rules; the evidence is the shared matrices.
+
+### OUT-OF-SCOPE / DEFERRED (revised)
+
+- O001 is now adopted (above).
+- Concurrent child removal and first-settled-failure selection: #127 / DIV-008.
+- The top-level validation `lstat` count is not compared.
+
+## CONVERGENCE CHECKPOINT (revision 2)
+
+**PROPOSED FOR IMPLEMENTATION** (revision 2, Claude)
+
+- **OPEN FINDINGS:** `L12D007-I003`, `CE-L12D007-02-C001`, `CE-L12D007-02-C002`. C002 has the Owner's disposition recorded.
+- **ACCEPTANCE WITNESSES:**
+  - both matrices all MATCH on Windows and Linux, with no exceptions;
+  - the permanent per-row witnesses;
+  - controls N1 to N11 each killed by their named rows;
+  - the `fs-remove-readonly` corpus unchanged and passing.
+- **NORMATIVE DELTAS:** spec §19.5 (new), the §17 correction note, manifest pointers at implementation.
+- **NEXT_OWNER:** Codex, for checkpoint review 2 of exactly this proposal.
