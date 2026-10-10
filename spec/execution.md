@@ -3309,15 +3309,21 @@ These rules produce, among others:
 
 ### 19.5 `remove`: entry classification, failure routing and Windows `EPERM` recovery (`CE-L12D007-02`)
 
-**Status:** proposed in convergence episode `CE-L12D007-02` (revision 2), for checkpoint review. It is not yet agreed.
+**Status:** proposed in convergence episode `CE-L12D007-02` (revision 3), for checkpoint review. It is not yet agreed.
 
 **Authority:** pinned Pi `remove` → `fs.promises.rm` → Node v22.15.1 `rimraf` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`): `_rimraf`, `fixWinEPERM`, `_rmdir`, `_rmchildren`. Every `remove` that reaches the filesystem, recursive or not, goes through it. This section states pinned Pi's observable outcomes. It prescribes no call sequence.
 
 **Owner decision (Windows recovery):** "ADOPT PI", #199 issuecomment-6103080422. It authorizes a targeted correction of §17's (L12-D005) certified recovery outcomes in both bindings, as `DIRECT_PI_PARITY`. §17's other rules stand, in particular rule 3: a link's target is never changed.
 
-Rules (an "entry" is the `remove` target itself, or any entry met inside a recursive removal):
+Rules. The `remove` target passes **two separate stages**. An "entry" in rules 1 to 6 is the target *after* rule 0 has let it through, or any entry met inside a recursive removal.
 
-1. **Classification.** The entry's own `lstat`, made when that entry is handled (never a listing's earlier answer), decides. A directory that is not a link or junction is removed as a directory (rule 3); anything else is unlinked as itself (rule 2).
+0. **Target validation** (Node `validateRmOptions`, before any `rimraf` routing; `CE-L12D007-02-C003`). The target's own `lstat`:
+   - **fails:** with `force` and ENOENT, the removal continues to rule 1. Any other failure, including ENOENT without `force` and a Windows EPERM, **is the result as is**. No recovery, inspection, unlink or rmdir follows.
+   - **is a directory and `recursive` is false:** #125 (`unknown`, §19.1).
+   - **otherwise:** the target continues to rule 1.
+
+   This `lstat` and rule 1's are distinct calls. Rule 1 classifies afresh: an answer from rule 0 is never reused.
+1. **Classification.** The entry's own `lstat`, made when that entry is handled (never a listing's or rule 0's earlier answer), decides. A directory that is not a link or junction is removed as a directory (rule 3); anything else is unlinked as itself (rule 2).
    - `lstat` ENOENT: removed.
    - On Windows, `lstat` EPERM: the recovery of rule 5, with that error as the original error.
    - Any other `lstat` failure: the entry is unlinked as itself (rule 2).
@@ -3340,12 +3346,14 @@ Rules (an "entry" is the `remove` target itself, or any entry met inside a recur
    - A link's target never has its attributes changed. This is §17 rule 3; pinned Pi was measured to leave a read-only link target unchanged.
 6. **Error identity.** A failure reports the failing call's own code and its §14.8 origin path, except where rules 3 and 5 name the original error.
 
-**Unchanged:** non-recursive `remove` of a directory (#125, §19.1); `force` (ENOENT of the target only); POSIX permission semantics; L12-D005's read-only outcomes, whose cases are all persistent conditions that give the same result under rule 5.
+**Unchanged:** non-recursive `remove` of a directory (#125, §19.1); `force` (rule 0: it lets a target `lstat` ENOENT through to rule 1, where an entry that does exist is still removed); POSIX permission semantics; L12-D005's read-only outcomes, whose cases are all persistent conditions that give the same result under rule 5.
 
 **Evidence:**
 - `assurance/layers/data/l12-d007/ce02/`, with single- and multi-call fault injection through each binding's real provider and pinned Pi's real `NodeExecutionEnv.remove`, on Windows and Linux:
   - `ce02-matrix.json`: 13 rows;
-  - `ce02-recovery-matrix.json`: 18 rows.
+  - `ce02-recovery-matrix.json`: 18 rows;
+  - `ce02-validation-matrix.json`: 10 rows (rule 0 against rule 1).
+- Every planned injection must fire on each side that makes the call. A call pinned Pi never makes on a platform is not applicable there, and the outcomes are still compared.
 - Fault injection has no language-neutral fixture, so this is binding-level evidence with a pinned-Pi oracle in both languages, compared by `ce02_compare.py`.
 
 Record: `assurance/layers/12-l12-d007-error-codes.md`.

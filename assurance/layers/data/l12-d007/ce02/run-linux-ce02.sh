@@ -30,4 +30,6 @@ MSYS_NO_PATHCONV=1 docker run --rm --tmpfs /tmp:exec,size=2g \
     echo "== py"; run python ce02_py_probe.py /tmp/w/code /tmp/guard-root/scratch
     echo "== pi-recovery"; run /tmp/node --experimental-strip-types --no-warnings ce02-recovery-pi-probe.mjs /pi /tmp/guard-root/scratch
     echo "== py-recovery"; run python ce02_recovery_py_probe.py /tmp/w/code /tmp/guard-root/scratch
+    echo "== pi-validation"; run /tmp/node --experimental-strip-types --no-warnings ce02-recovery-pi-probe.mjs /pi /tmp/guard-root/scratch ce02-validation-matrix.json
+    echo "== py-validation"; run python ce02_recovery_py_probe.py /tmp/w/code /tmp/guard-root/scratch ce02-validation-matrix.json
   '

@@ -44,9 +44,24 @@ def main(argv: list[str]) -> int:
     assert pi.keys() == py.keys(), (sorted(pi), sorted(py))
     failed = 0
     for row_id in pi:
-        same = view(pi[row_id]) == view(py[row_id])
+        # Injection applicability: a planned call pinned Pi never makes on this platform (unfired on BOTH sides,
+        # e.g. fixWinEPERM's chmod/stat on POSIX) does not apply there, and the outcomes are still compared. A
+        # call Pi makes but the binding does not (unfired on the binding side only) leaves the row unexercised: it
+        # is never credited. A call only the binding makes (fired there, not in Pi) is a behavior difference.
+        pi_unfired = set(pi[row_id].get("unfired", []))
+        py_unfired = set(py[row_id].get("unfired", []))
+        if py_unfired - pi_unfired:
+            print(f"{'UNFIRED':13} {row_id}: binding never made {sorted(py_unfired - pi_unfired)}")
+            failed += 1
+            continue
+        extra = sorted(pi_unfired - py_unfired)
+        not_applicable = sorted(pi_unfired & py_unfired)
+        same = view(pi[row_id]) == view(py[row_id]) and not extra
         verdict = "MATCH" if same else ("EXPECTED-DIFF" if row_id in expected else "DIFF")
-        print(f"{verdict:13} {row_id}")
+        if extra:
+            print(f"    binding made calls pinned Pi does not: {extra}")
+        label = f"{row_id} (not applicable here: {not_applicable})" if not_applicable else row_id
+        print(f"{verdict:13} {label}")
         if not same:
             print(f"    pi: {view(pi[row_id])}\n    py: {view(py[row_id])}")
         failed += verdict == "DIFF" or (same and row_id in expected)

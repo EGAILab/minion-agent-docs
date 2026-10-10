@@ -20,6 +20,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "fs-guard"))
 code_root, scratch = sys.argv[1], sys.argv[2]
+MATRIX = sys.argv[3] if len(sys.argv) > 3 else "ce02-recovery-matrix.json"
 sys.path.insert(0, str(Path(code_root) / "minion-agent-python" / "src"))
 
 import fs_guard  # noqa: E402
@@ -45,6 +46,7 @@ def _wrap(op: str, real: Any) -> Any:
                 row["calls"][key] = row["calls"].get(key, 0) + 1
                 for plan in row["plans"]:
                     if (plan["op"], plan["rel"], plan["nth"]) == (op, rel, row["calls"][key]):
+                        plan["fired"] = True
                         raise _error(plan["code"], os.fspath(p))
         return real(p, *args, **kwargs)
 
@@ -83,7 +85,7 @@ def _state(root: str) -> dict[str, list[str]]:
 
 async def main() -> None:
     global row
-    matrix = json.loads((HERE / "ce02-recovery-matrix.json").read_text(encoding="utf-8"))
+    matrix = json.loads((HERE / MATRIX).read_text(encoding="utf-8"))
     for spec in matrix["rows"]:
         root = fs_guard.make_sandbox(os.path.join(scratch, f"ce02r-py-{spec['id']}-{os.getpid()}"))
         late: list[str] = []
@@ -100,8 +102,11 @@ async def main() -> None:
         for rel in late:
             os.chmod(fs_guard.assert_inside(root, rel), stat.S_IREAD)
         remove = spec.get("remove", {"path": "tree", "recursive": True})
-        row = {"root": root, "plans": spec["inject"], "calls": {}}
-        result = await LocalFileSystem(root).remove(remove["path"], recursive=remove["recursive"])
+        plans = [dict(q) for q in spec["inject"]]
+        row = {"root": root, "plans": plans, "calls": {}}
+        result = await LocalFileSystem(root).remove(
+            remove["path"], recursive=remove["recursive"], force=remove.get("force", False)
+        )
         calls = row["calls"]
         row = None
         path = None
@@ -111,6 +116,7 @@ async def main() -> None:
             "platform": sys.platform, "id": spec["id"],
             "result": "ok" if isinstance(result, Ok) else str(result.error.code), "path": path,
             "calls": dict(sorted(calls.items())), **_state(root),
+            "unfired": [f"{q['op']} {q['rel']} #{q['nth']}" for q in plans if not q.get("fired")],
         }), flush=True)
         for rel in late:
             if os.path.lexists(os.path.join(root, rel)):

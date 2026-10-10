@@ -264,3 +264,102 @@ These are normative §19.5 in docs (proposed), and they supersede R1 to R5 above
   - the `fs-remove-readonly` corpus unchanged and passing.
 - **NORMATIVE DELTAS:** spec §19.5 (new), the §17 correction note, manifest pointers at implementation.
 - **NEXT_OWNER:** Codex, for checkpoint review 2 of exactly this proposal.
+
+## Checkpoint review 2 (Codex): REJECTED
+
+#199 issuecomment-6103179882, at docs `9b9aef6f` / code `b8062daa`.
+
+- **Accepted:** C002's governance (the Owner's ADOPT PI), and C001's recovery-stage characterization (R6, the 18 rows, L9/U7 link-target safety). N1 to N11 are appropriate *planned* controls.
+- **`CE-L12D007-02-C003`** (high, CONTRACT_ASSURANCE_DEFECT). Initial target validation was conflated with `rimraf` classification.
+  - Node's `rm` first runs `validateRmOptions`. Its target `lstat` failure is returned as is, except force + ENOENT.
+  - Only after that does `rimraf`'s own classification `lstat` (with recovery) run.
+  - The reviewer's witness: a non-recursive file whose first `lstat` gives EPERM is `permission_denied` with no recovery under Pi. A blanket target R1 would recover and succeed.
+- **Implementation-evidence reminder:** the Python recovery probe had no adapter for the own-attribute correction stage, so its chmod injections never fired. Re-running it after implementation could not have shown L3/L4/U2/T2 as all-MATCH.
+
+## Revision 3 (Claude): response to C003 and the evidence reminder
+
+### Source
+
+Node v22.15.1, re-fetched and hashed:
+- `lib/internal/fs/promises.js` (blob `ebf9f379`): `rm` awaits `validateRmOptionsPromise`, then `lazyRimRaf()(path, options)`.
+- `lib/internal/fs/utils.js` (blob `95cb4fc8`): `validateRmOptions`:
+  - `lstat(path)` failing: `force` && ENOENT → proceed; else `cb(err)`;
+  - a directory && !recursive → `ERR_FS_EISDIR`;
+  - else proceed.
+
+### Validation-stage characterization (`ce02-validation-matrix.json`, 10 rows)
+
+`lstat #1` is the target validation; `lstat #2` is `rimraf`'s classification.
+
+| Row | Case | Pi, Windows and Linux (identical results) |
+|---|---|---|
+| V1 | file, not recursive, validation `lstat` EPERM | `permission_denied`; `lstat` ×1 only; the file remains |
+| V2 | file, not recursive, **classification** `lstat` EPERM | ok. Windows: chmod, stat, unlink (recovery). Linux: unlink |
+| V3 | directory, recursive, validation `lstat` EPERM | `permission_denied`; nothing else |
+| V4 | directory, recursive, classification `lstat` EPERM | ok (Windows through recovery) |
+| V5 | validation `lstat` EIO | `unknown`; nothing else |
+| V6 | missing, no force | `not_found` |
+| V7 | missing, force | ok; `rimraf`'s `lstat` ENOENT |
+| V8 | existing file, validation `lstat` ENOENT, no force | `not_found`; the file remains |
+| V9 | existing file, validation `lstat` ENOENT, **force** | **ok, and the file is removed** (`rimraf`'s own `lstat` finds it) |
+| V10 | file, classification `lstat` EIO | ok (unlink) |
+
+Candidate `b8062daa` (both platforms):
+- MATCH: V1, V3, V5, V6, V7, V8.
+- **DIFF:** V9. The candidate returns ok but leaves the file, because it stops at force + not_found.
+- **UNFIRED** (the binding never makes the call): V2, V4, V10. The candidate has no classification `lstat` for the target; it reuses validation's answer.
+
+### Evidence hygiene: injections must fire
+
+- Both recovery probes now take a matrix argument and `force`, and report `unfired` (planned injections that never matched a call).
+- `ce02_compare.py` classifies per row:
+  - fired only in Pi → **UNFIRED** (unexercised; never credited);
+  - unfired on both sides → not applicable on that platform, and the outcomes are still compared (for example `fixWinEPERM`'s chmod/stat on Linux);
+  - fired only in the binding → DIFF.
+- The Windows recovery outputs were regenerated with the new probe. Pinned Pi is identical on all 18 rows apart from the added `unfired` field, which is empty for every Pi row. The candidate shows UNFIRED on L3-L6, U2, U4, U5 and T2: it has no correction / inspection / second-unlink stage to inject.
+- On Linux, all 13 + 18 + 10 rows ran. The revision 1 Pi output is byte-identical.
+  - The recovery rows match except T1/T2 (top-level routing). Rows whose injections Pi never makes on Linux are not applicable.
+  - The validation rows are as on Windows.
+
+### Revised OBSERVABLE RULES (= §19.5, revision 3)
+
+- **R0 (new), target validation:**
+  - A target `lstat` failure is the result as is, with no recovery, except force + ENOENT, which continues to R1.
+  - A directory without recursive gives #125.
+  - Otherwise continue to R1.
+- **R1:** now explicitly post-validation, with its own fresh `lstat`; R0's answer is never reused.
+- **R2 to R6:** unchanged from revision 2.
+
+### Witnesses and controls (additions)
+
+- **Paired permanent witnesses:**
+  - V1 against V2: file, validation against classification EPERM; on Windows, recovery runs only in V2;
+  - V3 against V4: the same for a directory;
+  - V6 against V7: a missing target without and with force;
+  - V8 against V9: validation ENOENT without and with force.
+- **New controls:**
+
+  | Control | Mutation | Killed by |
+  |---|---|---|
+  | N12 | the validation error routed into recovery | V1, V3 on Windows (ok instead of `permission_denied`) |
+  | N13 | the validation answer reused, no classification `lstat` | V2, V4, V10 (UNFIRED) |
+  | N14 | force + validation ENOENT returns at once | V9 (the file remains) |
+
+- **Binding evidence seam** (implementation constraint):
+  - The binding's own-attribute correction is one injectable call, which the probe maps to the matrix's `chmod`.
+  - Its following inspection maps to `stat`, the retry to the second `unlink`, and the target's classification `lstat` is a call of its own.
+  - Acceptance needs **zero binding-side UNFIRED** in every matrix on both platforms.
+  - The correction stays no-follow (never a link-following chmod).
+
+## CONVERGENCE CHECKPOINT (revision 3)
+
+**PROPOSED FOR IMPLEMENTATION** (revision 3, Claude)
+
+- **OPEN FINDINGS:** `L12D007-I003`, `CE-L12D007-02-C001`, `CE-L12D007-02-C002` (Owner disposition recorded), `CE-L12D007-02-C003`.
+- **ACCEPTANCE WITNESSES:**
+  - `ce02_compare.py` over all three matrices (13 + 18 + 10 rows) on Windows and Linux: every row MATCH. "Not applicable" is allowed only where pinned Pi itself makes no such call on that platform. There are no expected differences and no binding-side UNFIRED.
+  - The permanent per-row witnesses, including the V pairs.
+  - Controls N1 to N14, each killed by its named rows.
+  - The `fs-remove-readonly` corpus unchanged and passing.
+- **NORMATIVE DELTAS:** spec §19.5 (revision 3: rule 0, post-validation rule 1) and the §17 correction note. Manifest pointers at implementation.
+- **NEXT_OWNER:** Codex, for checkpoint review 3 of exactly this proposal.

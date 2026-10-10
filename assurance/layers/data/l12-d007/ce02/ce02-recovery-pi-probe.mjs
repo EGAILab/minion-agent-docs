@@ -9,8 +9,8 @@ import { pathToFileURL } from "node:url";
 import { syncBuiltinESMExports } from "node:module";
 import { makeSandbox, assertInside, assertEntry, cleanupSandbox } from "../fs-guard/fs-guard.mjs";
 
-const [piDir, scratch] = process.argv.slice(2);
-const matrix = JSON.parse(fs.readFileSync(new URL("./ce02-recovery-matrix.json", import.meta.url), "utf8"));
+const [piDir, scratch, matrixName = "ce02-recovery-matrix.json"] = process.argv.slice(2);
+const matrix = JSON.parse(fs.readFileSync(new URL(`./${matrixName}`, import.meta.url), "utf8"));
 const OPS = ["lstat", "stat", "unlink", "rmdir", "readdir", "chmod"];
 let row = null; // { root, plans, calls }
 
@@ -25,6 +25,7 @@ for (const op of OPS) {
         row.calls[key] = (row.calls[key] ?? 0) + 1;
         const plan = row.plans.find((q) => q.op === op && q.rel === rel && q.nth === row.calls[key]);
         if (plan) {
+          plan.fired = true;
           const callback = args.at(-1);
           const error = Object.assign(new Error(`injected ${plan.code}`), { code: plan.code, syscall: op, path: String(p) });
           queueMicrotask(() => callback(error));
@@ -67,8 +68,9 @@ for (const spec of matrix.rows) {
   }
   for (const rel of late) fs.chmodSync(assertInside(root, rel), 0o444);
   const remove = spec.remove ?? { path: "tree", recursive: true };
-  row = { root, plans: spec.inject, calls: {} };
-  const result = await new NodeExecutionEnv({ cwd: root }).remove(remove.path, { recursive: remove.recursive });
+  row = { root, plans: spec.inject.map((q) => ({ ...q })), calls: {} };
+  const plans = row.plans;
+  const result = await new NodeExecutionEnv({ cwd: root }).remove(remove.path, { recursive: remove.recursive, force: remove.force ?? false });
   const calls = row.calls;
   row = null;
   const errorPath = result.ok || !result.error.path ? null
@@ -76,6 +78,7 @@ for (const spec of matrix.rows) {
   console.log(JSON.stringify({
     platform: process.platform, id: spec.id, result: result.ok ? "ok" : result.error.code, path: errorPath,
     calls: Object.fromEntries(Object.entries(calls).sort()), ...state(root),
+    unfired: plans.filter((q) => !q.fired).map((q) => `${q.op} ${q.rel} #${q.nth}`),
   }));
   for (const rel of late) {
     const p = path.join(root, rel);
