@@ -22,7 +22,9 @@ const loop = new Function("validateToolArguments", stripTypeScriptTypes(
   "\nreturn { prepareToolCall, executePreparedToolCall };")(validateToolArguments);
 
 const obs = (v, stack = []) => {
-  if (typeof v === "number") return { n: Object.is(v, -0) ? "-0" : String(v) };
+  // Number tokens as the certified prepared-runtime authority spells them (prepared_runtime_runner.render):
+  // ECMAScript Number::toString, with -0, NaN, +Infinity and -Infinity named.
+  if (typeof v === "number") return { n: Object.is(v, -0) ? "-0" : v === Infinity ? "+Infinity" : String(v) };
   if (typeof v === "string") return { u: Array.from({ length: v.length }, (_, i) => v.charCodeAt(i)) };
   if (v === null || typeof v !== "object") return v;
   if (stack.includes(v)) return { cycle: stack.length - stack.indexOf(v) };  // levels up to the referenced ancestor
@@ -31,7 +33,7 @@ const obs = (v, stack = []) => {
 };
 const build = (g) => {
   if (g === null || typeof g !== "object") return g;
-  if ("n" in g) return Number(g.n === "-0" ? "-0" : g.n);
+  if ("n" in g) return g.n === "+Infinity" ? Infinity : Number(g.n);
   if ("u" in g) return String.fromCharCode(...g.u);
   if ("a" in g) return g.a.map(build);
   return g.o.reduce((acc, [k, x]) => { acc[k] = build(x); return acc; }, {});

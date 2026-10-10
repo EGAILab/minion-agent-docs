@@ -17,7 +17,11 @@ out = root / "conformance" / "agent" / "arg-isolation"
 out.mkdir(parents=True, exist_ok=True)
 for old in out.glob("*.json"):
     old.unlink()
+written = 0
 for case in cases:
+    if case.get("characterization_only"):
+        continue  # pinned-Pi evidence only (L0506D005-Q001); not in the certifying corpus
+    written += 1
     observed = results[case["id"]]
     scenario = {"raw_text": case["text"]}
     for key in ("schema", "prepare"):
@@ -46,4 +50,4 @@ for case in cases:
         "arg_isolation": scenario,
     }
     (out / f"{doc['name']}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-print(f"{len(cases)} documents")
+print(f"{written} documents ({len(cases) - written} characterization-only)")

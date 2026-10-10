@@ -129,3 +129,40 @@ The Rust owner is required to:
 - confirm conformance through the canonical corpus and permanent witnesses (Owner scope 3);
 - run Rust-side controls, including restored shallow copying;
 - change production code only if the corpus shows non-conformance.
+
+## 8. Contract review 1, Owner decision L0506D005-Q001 and remediation 1
+
+**Review 1** (Codex; #190 issuecomment-6090443463; verdict sha256 `66bca062cabc73b506b9e22e785ab544ec3cee8af2fff5150d08f81be8d3c41a`).
+It reviewed code `2bc2dd7c` and docs `9ed90e56`. Verdict: **CHANGES REQUESTED**.
+- **`L0506D005-C001`** (medium, `CONTRACT_ASSURANCE_DEFECT`): the §4.1.1 Cross-Language Feasibility Matrix was missing.
+- **`L0506D005-C002`** (high, `PI_PARITY_DEFECT`): the Rust cycle reaches a validation projection that is not graph-aware.
+  - Rust's clone keeps the self-cycle, but preflight's `validate_runtime_schema` calls `value.try_to_json()` (`tools/prepared_validation.rs:370`), which has no cycle guard.
+  - Pi's reachable open-schema cycle case therefore overflows the stack (Codex's probe through the real `execute_tool_calls`).
+  - The §7 suggestion that Rust conforms was premature.
+- **`L0506D005-C003`** (medium, `CONTRACT_ASSURANCE_DEFECT`): the runner's numbers were not `JSON.parse` binary64 / `Number::toString`. There were three pinned-Pi neighbours:
+  - raw `9007199254740993`;
+  - inserted `1000000000000000100`;
+  - inserted `1e+300`.
+
+**Owner decision `L0506D005-Q001`** (#190 issuecomment-6091246259, sha256 `3fa425f2d9d645e9f5305b4220c51ac22d5ca705403493a009e439d78ef056b3`): **defer cyclic validation**.
+- This delta's certified domain is **acyclic** prepared graphs, and aliases stay in scope.
+- No Rust validation change is authorized.
+- The Pi cycle evidence is kept as characterization-only.
+- The uncovered surface is recorded as a separate out-of-scope finding: **#193**, with reproduction, versions, scope, consequence, alternatives and triggers.
+
+**Remediation 1:**
+- **C001.** New `l0506-d005-feasibility-matrix.md`, from the process template. Every row is `AUDITED`, `NOT_APPLICABLE` or `DEFERRED_WITH_REASON`, and the verdict is READY for the acyclic domain. It distinguishes the clone **capability** (cycles kept in both bindings) from the validation **capability** (Rust is not cycle-safe; DEFERRED_WITH_REASON under `L0506D005-Q001` / #193).
+- **C002, under the Owner decision:**
+  - `prepared-cycle-survives-clone` is marked `characterization_only` in `gen/cases.json`. The oracle still runs it and `out/pi-oracle.json` keeps its pinned-Pi observation, but the generator no longer emits it into the certifying corpus.
+  - The spec's rule 4 now states the acyclic certified domain and #193.
+  - Codex's Rust probe is preserved in `data/l0506-d005/rust-cycle-probe/` as #193's reproduction. It builds against the candidate's Rust crate with the repository's pinned ICU flags.
+  - No claim is made that the Rust pipeline supports cyclic prepared arguments.
+- **C003:**
+  - The runner now constructs numbers with the certified binary64 decoder (`raw_arguments_runner.number`, also used by `parse_raw`'s `parse_int`/`parse_float`) and observes them with the certified prepared-runtime token (`prepared_runtime_runner.render`). An integer that is not binary64 observes as the strict `{non_binary64_int}` marker and can never match a token.
+  - Infinity is now spelled `+Infinity`, as that authority does. The oracle, schema pattern and corpus were regenerated to match.
+  - Three new pinned-Pi cases: `raw-integer-beyond-2p53-is-binary64`, `hook-inserts-integer-spelled-by-number-tostring`, `hook-inserts-exponent-spelled-number`.
+  - New runner number tests (`test_arg_isolation_runner_numbers.py`).
+  - New control `json-round-trip-clone`, the design the Owner forbids.
+- **Corpus:** 16 certifying documents. At the contract stage there are 12 strict xfails and 4 passes.
+- **Controls on the planned-fix overlay:** baseline 5 intended witnesses PASS, **5/5 KILLED** (`shallow-copy-restored`, `clone-forgets-aliases`, `clone-keeps-pipeline-containers`, `json-round-trip-clone`, `clone-per-listener`).
+- **§7 Rust plan, corrected:** confirm the acyclic corpus through the real preflight and Rust controls. No Rust validation change is authorized. The cyclic validation surface is #193's, not this delta's.

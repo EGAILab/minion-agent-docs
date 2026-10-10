@@ -982,7 +982,8 @@ VALIDATED arguments  ONE independent structured clone of the PREPARED arguments 
    - A listener's *replacement* arguments are a Minion mapping (Per-call pipeline), unchanged by this delta.
    - Pinned Pi has one `beforeToolCall`. Minion's listener chain maps onto it; this is a mapping, not a direct Pi parity claim.
 4. **Graph structure survives.**
-   - Every object and array reachable from the prepared arguments is cloned **exactly once**. A container reached twice (an alias) is one container in the clone, and a cycle stays a cycle.
+   - Every object and array reachable from the prepared arguments is cloned **exactly once**. A container reached twice (an alias) is one container in the clone.
+   - **Certified domain: acyclic prepared graphs** (Owner decision `L0506D005-Q001`, #190 issuecomment-6091246259). A cyclic prepared graph passing through validation is **outside** this delta's certification. Both bindings' clone keeps a cycle, but certified Rust validation is not cycle-safe. That is recorded as finding #193; it is neither accepted behaviour nor a Pi divergence. The pinned-Pi cycle case stays as characterization-only evidence.
    - Every other value is carried unchanged: numbers including `-0`, NaN and ±Infinity (`L0506-D001`); strings including lone surrogates (`L0506-D002`); booleans; null.
    - Objects enumerate as their source does: K1 ECMAScript order, `L0206-D001`. Clone containers are the graph's own containers: Python `JsObject`/`JsArray`, carrying K1's seams.
 5. **Unchanged by this delta:**
@@ -1005,29 +1006,33 @@ VALIDATED arguments  ONE independent structured clone of the PREPARED arguments 
 
 **Adjacent boundary, characterized and not changed.** Pinned Pi hands `prepareArguments` the raw arguments object itself, so a shim's in-place writes change the raw arguments. Minion passes the shim a fresh top-level `dict`: the certified design-spec §6 nonmutation mapping. So a shim's *top-level* writes do not reach the raw arguments, while its nested writes do, as in Pi. This delta does not change that boundary (Owner: "do not silently widen").
 
-**Canonical evidence:** `conformance/agent/arg-isolation/*.json`, 14 documents (`arg-isolation-scenario.schema.json`), generated from pinned Pi. Named shims are part of the fixture vocabulary:
+**Canonical evidence:** `conformance/agent/arg-isolation/*.json`, 16 documents (`arg-isolation-scenario.schema.json`), generated from pinned Pi.
+- Numbers are constructed through `JSON.parse`'s binary64 decoding and observed as the certified prepared-runtime token (ECMAScript `Number::toString`, with `-0`/`NaN`/`+Infinity`/`-Infinity` named).
+- The cross-language feasibility matrix is `assurance/layers/l0506-d005-feasibility-matrix.md`.
+- Named shims are part of the fixture vocabulary. `cycle` is used only by the characterization-only case:
 
 | Shim | Returns |
 |---|---|
 | `alias` | `x = {k: 1}`, then `{p: x, q: x}` |
 | `cycle` | `o = {k: 1}`, `o.self = o`, then `o` |
-| `non-finite` | `{...raw, nan: NaN, inf: Infinity, ninf: -Infinity, nz: -0}` |
+| `non-finite` | `{...raw, nan: NaN, inf: +Infinity, ninf: -Infinity, nz: -0}` |
 | `reuse-raw-child` | `{o: raw.o, extra: 1}`, without mutating `raw` |
 
 **Witnesses** (Owner A–J):
 - **A, B, E** (nested set, push of an object, `execute` sees the hook's change): canonical.
 - **C, D** (raw unchanged; `tools/update` carries original values): canonical, in every executed case.
 - **F** (several listeners, one graph): canonical, plus a binding identity witness.
-- **G** (aliases shared within the clone, not with raw): canonical alias, cycle and reused-raw-child cases.
+- **G** (aliases shared within the clone, not with raw): canonical alias and reused-raw-child cases. The cycle case is characterization-only (`L0506D005-Q001`).
 - **H** (K1 order): canonical index-key case, plus the K1 suites as regression.
-- **I** (`-0`, ±Infinity, NaN, lone surrogates, `1e300`): canonical.
+- **I** (`-0`, ±Infinity, NaN, lone surrogates, `1e300`, a raw integer past 2^53, integers spelled by `Number::toString`): canonical.
 - **J** (validation failure, blocked call): canonical.
 
 **Negative controls** (each must fail an intended witness):
 - shallow copying restored;
 - a clone that forgets aliases;
 - a clone that shares containers reached through the shim with raw;
-- a clone taken again per listener.
+- a clone taken again per listener;
+- a JSON round trip in place of the clone (the Owner forbids it).
 
 ### Explicitly not certified by Layer 06
 

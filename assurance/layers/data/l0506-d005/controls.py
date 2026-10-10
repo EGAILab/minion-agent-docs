@@ -52,6 +52,10 @@ CONTROLS = [
      "            if isinstance(child, (dict, list)):\n",
      "            if isinstance(child, (dict, list)) and not isinstance(child, (JsObject, JsArray)):\n",
      [node("prepared-reused-raw-child-is-isolated"), node("hook-sets-into-nested-object")]),
+    ("json-round-trip-clone", EXECUTE,  # the Owner-forbidden design: loses graph identity
+     "        validated: dict[str, Any] = structured_clone(arguments)\n",
+     "        validated: dict[str, Any] = adopt(__import__('json').loads(__import__('json').dumps(arguments)))\n",
+     [node("prepared-alias-stays-shared-in-clone")]),
     ("clone-per-listener", EXECUTE,
      "        order_in_place(current[2])\n        return (*current[:3], signal)\n",
      "        return (current[0], current[1], structured_clone(current[2]), signal)\n",
