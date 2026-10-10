@@ -53,9 +53,18 @@ def _contain_nul[**P, T](
         try:
             return await method(self, path, *args, **kwargs)
         except ValueError as exc:
-            if not _nul_rejected(exc, path, *args, *kwargs.values()):
+            # The RESOLVED path arguments (L12D006-C001): a `file://` URL's `%00` decodes to the NUL
+            # the native call rejects, with no literal NUL in the caller's string. `rename_file` has
+            # a second path, its destination; every other operation's other arguments are not paths.
+            logical = resolve_local_path(self.cwd, path)
+            resolved = [logical]
+            if method.__name__ == "rename_file":
+                destination = args[0] if args else kwargs.get("destination")
+                if isinstance(destination, str):
+                    resolved.append(resolve_local_path(self.cwd, destination))
+            if not _nul_rejected(exc, *resolved):
                 raise
-            return Err(_nul_failure(exc, resolve_local_path(self.cwd, path)))
+            return Err(_nul_failure(exc, logical))
 
     functools.update_wrapper(contained, method)
     return contained

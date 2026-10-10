@@ -19,6 +19,7 @@ tool argument / ctx.fs caller
 | Observable value / field | Pi wire/source repr | Pi runtime repr | Python repr | Rust repr | Canonical/wire serialization | Lossless across all? | Risk / witness needed |
 |---|---|---|---|---|---|---|---|
 | path argument containing U+0000 | JSON string | JS string | `str` | `String` / `OsString` (the L12-D001 projection) | `{utf16:[units]}` | YES. The operation sees the string unchanged | Canonical: 6 NUL positions |
+| `file://` URL whose `%00` decodes to U+0000 (`L12D006-C001`) | URL string | the decoded string (Pi `resolvePath`, `fileURLToPath`) | `resolve_local_path` (L12-D001) | the same | `{file_url_tail}` | YES. Containment must test the **resolved** arguments | Canonical `url-*` cases, URL controls; control `argument-only-containment` |
 | path argument with a lone surrogate **and** a NUL | JSON string (`\ud800`) | JS string | `str` (surrogatepass) | `JsString` (UTF-16) | units | YES for the error path, which is logical and never projected. The projection applies only to the native argument | Canonical `lone-surrogate-and-nul`; control `projected-fallback-path` |
 | error `code` | `FileError.code` | `"unknown"` | `FsErrorCode.UNKNOWN` | `FsErrorCode::Unknown` | `error` | YES | Canonical: every case; control `nul-mapped-to-invalid` |
 | error `path` (fallback) | — | the resolved logical string; the **source** for rename; absent for temp dir | `FsError.path` (`str` or `None`) | `Option<…>` | components or `null` | YES | Canonical (rename-destination); binding (temp) |

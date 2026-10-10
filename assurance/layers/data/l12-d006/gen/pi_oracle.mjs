@@ -13,7 +13,8 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { resolve } from "node:path";
 import { stripTypeScriptTypes } from "node:module";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { homedir } from "node:os";
 
 const [piDir, casesPath, outPath] = process.argv.slice(2);
 const { NodeExecutionEnv } = await import(pathToFileURL(`${piDir}/packages/agent/src/harness/env/nodejs.ts`).href);
@@ -26,6 +27,15 @@ const getMutationQueueKey = new Function("realpath", "resolve", stripTypeScriptT
 
 const units = (s) => Array.from({ length: s.length }, (_, i) => s.charCodeAt(i));
 const text = (u) => String.fromCharCode(...u);
+// Pi's own resolvePath (nodejs.ts), sliced unmodified: `file://` URLs through fileURLToPath, then resolve.
+const envSource = fs.readFileSync(`${piDir}/packages/agent/src/harness/env/nodejs.ts`, "utf8");
+const envSlice = (from, to) => { const a = envSource.indexOf(from), b = envSource.indexOf(to, a);
+  if (a < 0 || b < 0) throw new Error(`slice ${from}`); return envSource.slice(a, b); };
+const piResolvePath = new Function("homedir", "join", "fileURLToPath", "isAbsolute", "resolve", stripTypeScriptTypes(
+  envSlice("function resolvePath(", "function fileKindFromStats(")) + "\nreturn resolvePath;")(
+  homedir, path.join, fileURLToPath, path.isAbsolute, path.resolve);
+// A step path as the fs_path_domain runner builds it: UTF-16 text, or the case directory's file URL + a tail.
+const argument = (cwd, spec) => ("utf16" in spec ? text(spec.utf16) : `${pathToFileURL(cwd).href}/${text(spec.file_url_tail)}`);
 function observePath(cwd, value) {
   const rel = path.relative(cwd, value);
   if (rel === "") return { components: [] };
@@ -45,15 +55,15 @@ async function primitive(cwd, logical, call) {
 }
 
 async function run(env, cwd, step) {
-  const p = text(step.path.utf16);
-  const resolved = path.resolve(cwd, p);
+  const p = argument(cwd, step.path);
+  const resolved = piResolvePath(cwd, p);
   switch (step.op) {
     case "write_file": return okOr(cwd, await env.writeFile(p, text(step.content), aborted(step)), () => ({ ok: null }));
     case "append_file": return okOr(cwd, await env.appendFile(p, text(step.content)), () => ({ ok: null }));
     case "read_text_file": return okOr(cwd, await env.readTextFile(p, aborted(step)), (v) => ({ ok: units(v) }));
     case "read_text_lines": return okOr(cwd, await env.readTextLines(p, { maxLines: step.max_lines, abortSignal: aborted(step) }), (v) => ({ ok: v.map(units) }));
     case "read_binary_file": return okOr(cwd, await env.readBinaryFile(p, aborted(step)), (v) => ({ ok: Array.from(v) }));
-    case "rename_file": return okOr(cwd, await env.renameFile(p, text(step.to.utf16), aborted(step)), () => ({ ok: null }));
+    case "rename_file": return okOr(cwd, await env.renameFile(p, argument(cwd, step.to), aborted(step)), () => ({ ok: null }));
     case "file_info": return okOr(cwd, await env.fileInfo(p), (v) => ({ kind: v.kind, name: units(v.name) }));
     case "exists": return okOr(cwd, await env.exists(p), (v) => ({ ok: v }));
     case "list_dir": return okOr(cwd, await env.listDir(p, aborted(step)), (v) => ({ names: v.map((i) => units(i.name)).sort() }));

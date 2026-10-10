@@ -47,7 +47,7 @@ def node(case_id: str) -> str:
 # (name, file, old, new, intended witnesses, platforms)
 CONTROLS_ALL = [
     ("nul-value-error-escapes", FS,
-     "            if not _nul_rejected(exc, path, *args, *kwargs.values()):\n                raise\n",
+     "            if not _nul_rejected(exc, *resolved):\n                raise\n",
      "            raise\n",
      [node("nul/middle/read_text_file"), node("nul/middle/file_info")], BOTH),
     ("nul-mapped-to-invalid", FS,
@@ -62,18 +62,24 @@ CONTROLS_ALL = [
      [node("nul/under-new-parent/write_file"), node("nul/middle/read_text_lines-max0"),
       node("nul/aborted/read_text_file")], BOTH),
     ("projected-fallback-path", FS,
-     "            return Err(_nul_failure(exc, resolve_local_path(self.cwd, path)))\n",
-     "            return Err(_nul_failure(exc, native_path(resolve_local_path(self.cwd, path))))\n",
+     "            return Err(_nul_failure(exc, logical))\n",
+     "            return Err(_nul_failure(exc, native_path(logical)))\n",
      [node("nul/lone-surrogate-and-nul/read_text_file")], BOTH),
     ("rename-names-the-destination", FS,
-     "            return Err(_nul_failure(exc, resolve_local_path(self.cwd, path)))\n",
-     "            named = args[0] if args and isinstance(args[0], str) else path\n"
-     "            return Err(_nul_failure(exc, resolve_local_path(self.cwd, named)))\n",
+     "            return Err(_nul_failure(exc, logical))\n",
+     "            return Err(_nul_failure(exc, resolved[-1]))\n",
      [node("nul/middle/rename_file-destination")], BOTH),
     ("every-value-error-contained", FS,
      '    return "embedded null" in str(exc) and any(\n',
      "    return True or any(\n",
      [BINDING + "test_an_unrelated_value_error_still_raises"], BOTH),
+    # L12D006-C001: containment that tests the caller's RAW arguments misses a `file://` URL whose
+    # `%00` decodes to the NUL the native call rejects.
+    ("argument-only-containment", FS,
+     "            if not _nul_rejected(exc, *resolved):\n",
+     "            if not _nul_rejected(exc, path, *args, *kwargs.values()):\n",
+     [node("nul/url-final/read_text_file"), node("nul/url-final/exists"),
+      node("nul/url-control/rename_file-to-url-nul")], BOTH),
     ("canonical-path-walks-first", FS,
      "        if _NUL in resolved:\n            return Err(_nul_failure(ValueError(\"embedded null character in path\"), resolved))\n",
      "",

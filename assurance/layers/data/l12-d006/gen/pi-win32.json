@@ -3636,6 +3636,2072 @@
    ]
   },
   {
+   "id": "nul/url-final/absolute_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "components": [
+      [
+       102,
+       0,
+       120
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/read_text_lines-max0",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": []
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/rename_file-destination",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    },
+    {
+     "ok": [
+      120
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/rename_file-both",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/target_key",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/create_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/remove-recursive-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/list_dir_raw",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/probe_dir_entry",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/check_readable",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-final/check_read_write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102,
+        0,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/absolute_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "components": [
+      [
+       112,
+       0,
+       113
+      ],
+      [
+       99,
+       104,
+       105,
+       108,
+       100
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/read_text_lines-max0",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": []
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/rename_file-destination",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    },
+    {
+     "ok": [
+      120
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/rename_file-both",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/target_key",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/create_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/remove-recursive-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/list_dir_raw",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/probe_dir_entry",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/check_readable",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-in-parent-component/check_read_write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        112,
+        0,
+        113
+       ],
+       [
+        99,
+        104,
+        105,
+        108,
+        100
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/absolute_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "components": [
+      [
+       110,
+       101,
+       119
+      ],
+      [
+       97,
+       0,
+       98
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/read_text_lines",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/read_text_lines-max0",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": []
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/read_binary_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/append_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    },
+    {
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/rename_file-source",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/rename_file-destination",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    },
+    {
+     "ok": [
+      120
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/rename_file-both",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/file_info",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/exists",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/list_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/canonical_path",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/target_key",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/create_dir",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/create_dir-nonrecursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/remove",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/remove-recursive",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/remove-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/remove-recursive-force",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/list_dir_raw",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/probe_dir_entry",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/check_readable",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-under-new-parent/check_read_write",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        110,
+        101,
+        119
+       ],
+       [
+        97,
+        0,
+        98
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-control/plain-read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": [
+      120
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-control/percent-2500-read_text_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "not_found",
+     "path": {
+      "components": [
+       [
+        102,
+        37,
+        48,
+        48,
+        120
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nul/url-control/percent-2500-write_file",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "ok": [
+      119
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nul/url-control/rename_file-to-url-nul",
+   "observed": [
+    {
+     "ok": null
+    },
+    {
+     "ok": null
+    },
+    {
+     "error": "unknown",
+     "path": {
+      "components": [
+       [
+        102
+       ]
+      ]
+     }
+    },
+    {
+     "ok": [
+      120
+     ]
+    }
+   ]
+  },
+  {
    "id": "nul/aborted/read_text_file",
    "observed": [
     {

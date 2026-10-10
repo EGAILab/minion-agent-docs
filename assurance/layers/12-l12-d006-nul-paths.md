@@ -149,3 +149,40 @@ Results: see §8 (appended when run).
 - **Windows:** baseline **8 intended witnesses PASS**; **6/6 KILLED**. `canonical-path-walks-first` is NOT RUN, because it is observable on Linux only.
 - **Linux** (uid 1000): baseline **9 PASS**; **7/7 KILLED**, including `canonical-path-walks-first`.
 - A first Linux attempt reported pytest exit 4 because `pytest-cov` was missing for the driver's `--no-cov`. It was discarded and rerun with `pytest-cov` installed.
+
+## 9. Contract review 1 and remediation 1
+
+**Review 1** (Codex; #194 issuecomment-6093062123; verdict sha256 `4e22cf8b6a033a016e6a24e34bb3c6cd36a8b1f3a3413cea834ab9a08d8055e0`).
+It reviewed code `1b014860` and docs `160dd5bb`. Verdict: **CHANGES REQUESTED**.
+
+**`L12D006-C001`** (high, `CONTRACT_ASSURANCE_DEFECT`): the decoded-NUL `file://` composition was missing from the acceptance evidence.
+- A valid URL ending in `%00x` carries no literal U+0000. L12-D001's certified URL resolution decodes it into the NUL that the native call rejects.
+- The planned fix's containment tested the caller's **raw** arguments, so it re-raised the host `ValueError`. Codex observed this on both platforms for `read_text_file` and `exists`.
+- `canonical_path` agreed, because it checks the resolved path explicitly.
+- All 158 cases used literal NUL strings, so the controls and corpus could not see the gap.
+
+**Remediation 1:**
+- **Spec §18.1:** the rule now names the argument "**after** the existing L12-D001 resolution". It says explicitly that `file://` `%00` decoding is a source of the NUL and that the fallback is the decoded logical path. The normative rule is otherwise unchanged.
+- **Cases** (`gen/make_cases.py`): the operation set now also runs on `file_url_tail` paths (the schema's existing URL form):
+  - `url-final` (`f%00x`), `url-in-parent-component` (`p%00q/child`) and `url-under-new-parent` (`new/a%00b`, with the parent-creation follow-up);
+  - the controls: a plain URL succeeds; `%2500` decodes to the literal `%00`, giving an ordinary `not_found`, and a write succeeds, read back through the literal name; a rename to a `%00` URL destination names the source.
+  - The corpus is now **237** cases.
+- **Oracle** (`gen/pi_oracle.mjs`):
+  - URL arguments are built exactly as the shared runner builds them (`pathToFileURL(cwd).href + "/" + tail`);
+  - the Minion-only primitives and `target_key` now resolve with **pinned Pi's own `resolvePath`**, sliced unmodified from `nodejs.ts`, instead of `path.resolve`;
+  - re-run on Windows and Linux: identical, enforced by the generator.
+- **Planned fix:** `_contain_nul` tests the **resolved** path arguments (`resolve_local_path`): the operation's path, plus `rename_file`'s destination. Other arguments, such as `write_file`'s content, are never treated as paths. The error path stays the operation's decoded logical path, which for `rename_file` is the source.
+- **Control:** the new `argument-only-containment` restores the raw-argument test. Its intended witnesses are `url-final/read_text_file`, `url-final/exists` and `url-control/rename_file-to-url-nul`. The three anchors the change moved were re-pointed.
+- **Feasibility matrix:** a new row for the `file://` `%00` route.
+- **Contract-stage pending rule:**
+  - URL cases follow the literal-NUL rule, apart from the URL controls, of which only the rename to a `%00` URL is pending;
+  - Windows check: the rule reproduces the measured 174 failures exactly.
+
+**Remediation 1, fresh results:**
+- **Windows** (3.13.5): **5579 passed / 50 skipped / 199 xfailed**, coverage **100%**; ruff and mypy clean.
+- **Linux** (Docker `python:3.13`):
+  - full suite as root: **5498 passed / 0 failed**;
+  - the NUL surfaces as uid 1000: **191 passed / 196 xfailed**.
+- **Controls** (planned-fix overlay):
+  - Windows: baseline **11 PASS**, **7/7 KILLED**, including `argument-only-containment` (3 URL witnesses); `canonical-path-walks-first` NOT RUN (Linux only);
+  - Linux (uid 1000): baseline **12 PASS**, **8/8 KILLED**.

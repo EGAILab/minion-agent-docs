@@ -3108,7 +3108,7 @@ Record: `assurance/layers/12-l12-d005-readonly-remove.md`.
 
 ### 18.1 Rule
 
-For every filesystem-touching operation, **the native call whose path argument contains U+0000 fails**.
+For every filesystem-touching operation, **the native call whose path argument contains U+0000 fails**. The argument meant is the one the native call receives, **after** the existing L12-D001 resolution. A NUL can therefore also arrive through certified `file://` decoding (`%00` decodes to U+0000), with no literal U+0000 in the caller's string (`L12D006-C001`). The fallback path is then the decoded logical path.
 - **Where it fails:** at that call, in the operation's own call order.
 - **Result:** `Err(FsError(code = unknown))`.
 - **Path:** the operation's **logical** fallback path. That is the resolved JavaScript string, lone surrogates included. It is **never projected**, never replaced and never a native spelling.
@@ -3162,9 +3162,11 @@ Each result is an error tool result; no host exception text reaches the model.
 
 ### 18.4 Evidence
 
-- **Canonical:** `conformance/agent/fs-path-domain/fs-path-nul.json`, 158 cases, generated from pinned Pi (`assurance/layers/data/l12-d006/gen`).
+- **Canonical:** `conformance/agent/fs-path-domain/fs-path-nul.json`, 237 cases, generated from pinned Pi (`assurance/layers/data/l12-d006/gen`).
   - Observations are identical on Windows and Linux.
   - NUL positions covered: beginning, middle, end, the final component under a new parent, a parent component, and with a lone surrogate.
+  - The same final, parent-component and new-parent positions are also reached through a `file://` URL decoding `%00`.
+  - URL controls: an ordinary URL succeeds; `%2500` decodes to the three characters `%00`, not a NUL, so it gives an ordinary `not_found`/success; a rename to a `%00` URL destination names the source.
   - The cases also cover rename source, destination and both; abort; `max_lines: 0`; and lexical controls.
   - Follow-up steps observe the side effects.
   - The `fs-path-domain` schema gains, additively, the EXEC-007/008/009 operations and the `max_lines`, `force` and `aborted` step fields.

@@ -39,11 +39,23 @@ def case(case_id: str, *steps: dict) -> dict:
     return {"id": case_id, "steps": [*FIXTURE, *steps]}
 
 
-cases = []
-for where, text in PATHS.items():
-    path = p(text)
-    after_write = [{"op": "exists", "path": p("new")}] if where == "under-new-parent" else []
-    cases += [
+def url(tail: str) -> dict:
+    """A `file://` URL for the case directory plus `tail` (the fs_path_domain `file_url_tail` form)."""
+    return {"file_url_tail": u(tail)}
+
+
+# L12D006-C001: a NUL reaching the native call through certified file-URL decoding (`%00`), with no
+# literal U+0000 in the caller's string.
+URL_TAILS = {
+    "url-final": "f%00x",
+    "url-in-parent-component": "p%00q/child",
+    "url-under-new-parent": "new/a%00b",
+}
+
+
+def operations(where: str, path: dict, under_new_parent: bool) -> list:
+    after_write = [{"op": "exists", "path": p("new")}] if under_new_parent else []
+    return [
         case(f"nul/{where}/absolute_path", {"op": "absolute_path", "path": path}),
         case(f"nul/{where}/read_text_file", {"op": "read_text_file", "path": path}),
         case(f"nul/{where}/read_text_lines", {"op": "read_text_lines", "path": path}),
@@ -73,6 +85,23 @@ for where, text in PATHS.items():
         case(f"nul/{where}/check_readable", {"op": "check_readable", "path": path}),
         case(f"nul/{where}/check_read_write", {"op": "check_read_write", "path": path}),
     ]
+
+
+cases = []
+for where, text in PATHS.items():
+    cases += operations(where, p(text), where == "under-new-parent")
+for where, tail in URL_TAILS.items():
+    cases += operations(where, url(tail), where == "url-under-new-parent")
+cases += [
+    # Positive controls for the URL form: an ordinary URL, and `%2500` (decodes to the three characters
+    # "%00", NOT a NUL), so a blanket rejection of percent spellings cannot pass.
+    case("nul/url-control/plain-read_text_file", {"op": "read_text_file", "path": url("f")}),
+    case("nul/url-control/percent-2500-read_text_file", {"op": "read_text_file", "path": url("f%2500x")}),
+    case("nul/url-control/percent-2500-write_file", {"op": "write_file", "path": url("f%2500x"), "content": CONTENT},
+         {"op": "read_text_file", "path": p("f%00x")}),
+    case("nul/url-control/rename_file-to-url-nul", {"op": "rename_file", "path": url("f"), "to": url("g%00x")},
+         {"op": "read_text_file", "path": p("f")}),
+]
 middle = p(PATHS["middle"])
 cases += [
     # Abort precedence: a pre-aborted signal wins before any filesystem access (Pi's signal-taking operations).
