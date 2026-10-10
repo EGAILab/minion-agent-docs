@@ -1,0 +1,1038 @@
+{
+ "python": "3.13.5",
+ "parameters": "raw-schema",
+ "results": [
+  {
+   "id": "hook-sets-into-nested-object",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "z",
+          {
+           "n": "1"
+          }
+         ],
+         [
+          "y",
+          {
+           "n": "2"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"z\":1}}"
+  },
+  {
+   "id": "hook-pushes-object-into-nested-array",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "a",
+       {
+        "a": [
+         {
+          "o": [
+           [
+            "1",
+            {
+             "n": "1"
+            }
+           ],
+           [
+            "b",
+            {
+             "n": "2"
+            }
+           ]
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "a",
+      {
+       "a": []
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "a",
+      {
+       "a": [
+        {
+         "o": [
+          [
+           "1",
+           {
+            "n": "1"
+           }
+          ],
+          [
+           "b",
+           {
+            "n": "2"
+           }
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "a",
+      {
+       "a": [
+        {
+         "o": [
+          [
+           "1",
+           {
+            "n": "1"
+           }
+          ],
+          [
+           "b",
+           {
+            "n": "2"
+           }
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"a\":[]}"
+  },
+  {
+   "id": "hook-nested-existing-gains-index",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "0",
+          {
+           "n": "0"
+          }
+         ],
+         [
+          "z",
+          {
+           "n": "1"
+          }
+         ],
+         [
+          "y",
+          {
+           "n": "2"
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "0",
+         {
+          "n": "0"
+         }
+        ],
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "0",
+         {
+          "n": "0"
+         }
+        ],
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"z\":1,\"y\":2}}"
+  },
+  {
+   "id": "hook-replaces-and-deletes-nested",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "k",
+          {
+           "n": "9"
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       "l",
+       {
+        "a": [
+         {
+          "n": "1"
+         },
+         {
+          "a": [
+           {
+            "n": "2"
+           },
+           {
+            "n": "3"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "d",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "l",
+      {
+       "a": [
+        {
+         "n": "1"
+        },
+        {
+         "a": [
+          {
+           "n": "2"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "9"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "l",
+      {
+       "a": [
+        {
+         "n": "1"
+        },
+        {
+         "a": [
+          {
+           "n": "2"
+          },
+          {
+           "n": "3"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "9"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "l",
+      {
+       "a": [
+        {
+         "n": "1"
+        },
+        {
+         "a": [
+          {
+           "n": "2"
+          },
+          {
+           "n": "3"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"k\":1,\"d\":2},\"l\":[1,[2]]}"
+  },
+  {
+   "id": "prepared-alias-stays-shared-in-clone",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": []
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "p",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "q",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "p",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "q",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": {
+    "p_is_q": true,
+    "p_is_prepared_p": false
+   },
+   "raw_after": {
+    "o": []
+   },
+   "raw_text": "{}"
+  },
+  {
+   "id": "prepared-cycle-survives-clone",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": []
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "k",
+      {
+       "n": "1"
+      }
+     ],
+     [
+      "self",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "self",
+         {
+          "cycle": true
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "k",
+      {
+       "n": "1"
+      }
+     ],
+     [
+      "self",
+      {
+       "o": [
+        [
+         "k",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "self",
+         {
+          "cycle": true
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": {
+    "self_is_args": false,
+    "args_is_prepared": false
+   },
+   "raw_after": {
+    "o": []
+   },
+   "raw_text": "{}"
+  },
+  {
+   "id": "values-survive-clone",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "z",
+       {
+        "n": "-0"
+       }
+      ],
+      [
+       "s",
+       {
+        "u": [
+         55296,
+         120
+        ]
+       }
+      ],
+      [
+       "t",
+       {
+        "u": [
+         56320
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "z",
+      {
+       "n": "-0"
+      }
+     ],
+     [
+      "s",
+      {
+       "u": [
+        55296,
+        120
+       ]
+      }
+     ],
+     [
+      "t",
+      {
+       "u": [
+        56320
+       ]
+      }
+     ],
+     [
+      "nan",
+      {
+       "n": "NaN"
+      }
+     ],
+     [
+      "inf",
+      {
+       "n": "Infinity"
+      }
+     ],
+     [
+      "ninf",
+      {
+       "n": "-Infinity"
+      }
+     ],
+     [
+      "nz",
+      {
+       "n": "-0"
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "z",
+      {
+       "n": "-0"
+      }
+     ],
+     [
+      "s",
+      {
+       "u": [
+        55296,
+        120
+       ]
+      }
+     ],
+     [
+      "t",
+      {
+       "u": [
+        56320
+       ]
+      }
+     ],
+     [
+      "nan",
+      {
+       "n": "NaN"
+      }
+     ],
+     [
+      "inf",
+      {
+       "n": "Infinity"
+      }
+     ],
+     [
+      "ninf",
+      {
+       "n": "-Infinity"
+      }
+     ],
+     [
+      "nz",
+      {
+       "n": "-0"
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "z",
+      {
+       "n": "-0"
+      }
+     ],
+     [
+      "s",
+      {
+       "u": [
+        55296,
+        120
+       ]
+      }
+     ],
+     [
+      "t",
+      {
+       "u": [
+        56320
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"z\":-0,\"s\":\"\\ud800x\",\"t\":\"\\udc00\"}"
+  },
+  {
+   "id": "validation-failure",
+   "kind": "immediate",
+   "error": "invalid arguments: 'missing' is a required property",
+   "hook_entry": null,
+   "execute": null,
+   "execute_is_hook_args": null,
+   "hook_args_is_raw": null,
+   "hook_tool_call_arguments_is_raw": null,
+   "hook_o_is_raw_o": null,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"z\":1}}"
+  },
+  {
+   "id": "blocked-after-nested-mutation",
+   "kind": "immediate",
+   "error": "no",
+   "hook_entry": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "execute": null,
+   "execute_is_hook_args": null,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "y",
+         {
+          "n": "2"
+         }
+        ]
+       ]
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"z\":1}}"
+  },
+  {
+   "id": "prepare-receives-raw-object",
+   "kind": "prepared",
+   "update_args": [
+    {
+     "o": [
+      [
+       "o",
+       {
+        "o": [
+         [
+          "z",
+          {
+           "n": "1"
+          }
+         ],
+         [
+          "shim",
+          {
+           "n": "1"
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       "t",
+       {
+        "n": "1"
+       }
+      ]
+     ]
+    }
+   ],
+   "update_args_is_raw": true,
+   "hook_entry": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "shim",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "extra",
+      {
+       "n": "1"
+      }
+     ]
+    ]
+   },
+   "execute": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "shim",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "extra",
+      {
+       "n": "1"
+      }
+     ]
+    ]
+   },
+   "execute_is_hook_args": true,
+   "hook_args_is_raw": false,
+   "hook_tool_call_arguments_is_raw": true,
+   "hook_o_is_raw_o": false,
+   "facts": null,
+   "raw_after": {
+    "o": [
+     [
+      "o",
+      {
+       "o": [
+        [
+         "z",
+         {
+          "n": "1"
+         }
+        ],
+        [
+         "shim",
+         {
+          "n": "1"
+         }
+        ]
+       ]
+      }
+     ],
+     [
+      "t",
+      {
+       "n": "1"
+      }
+     ]
+    ]
+   },
+   "raw_text": "{\"o\":{\"z\":1},\"t\":1}"
+  }
+ ]
+}

@@ -955,6 +955,85 @@ ToolExecutionContext              -- immutable snapshot; no setter; no agent ref
 - exposure to hooks;
 - any consumer's use of the context. WP-13.3's `MINION_*` projection is certified there.
 
+### Validated-argument isolation (`TOOL-003`, post-certification delta `L0506-D005`)
+
+**Status (`minion-agent#190`; provenance #129):** CONTRACT_DRAFT.
+
+- **Authorization:** Owner decision on #129, Option 1, "deep-copy like pinned Pi" (recorded verbatim on #129). It authorizes this targeted, non-additive Layer 06 correction. It is a Pi-parity correction, **not** a divergence. The routine lifecycle is delegated under #75.
+- **Finding:** `L06-VALIDATION-SHALLOW-COPY`. A raw-schema tool's validation copied the arguments **shallowly**, so a hook's nested mutation reached the raw `ToolCall.arguments` and every later raw observation.
+- **Pinned Pi:** `validateToolArguments` (`ai/src/utils/validation.ts:317-320`, `b7bb00b9`) validates `structuredClone(toolCall.arguments)`, where `toolCall` is the *prepared* call. `prepareToolCall` passes that clone to `beforeToolCall` and `execute`, and keeps the original `toolCall` for `tool_execution_update` (`agent-loop.ts:600-668, 688-691`).
+
+**Two graphs:**
+
+```text
+RAW arguments        ToolCall.arguments as constructed; what tool_execution_start/update/end carry,
+                     what sessions persist. Raw-event listeners keep their certified access to it.
+VALIDATED arguments  ONE independent structured clone of the PREPARED arguments (the raw arguments
+                     when the tool has no prepare_arguments). Validation checks it; every
+                     tools/pre-execute listener and execute receive it.
+```
+
+**Rules:**
+1. **Clone point.** The validated arguments are a structured clone of the prepared arguments, taken once, at validation. It is never taken again at a hook boundary (Owner scope 7).
+2. **Isolation.** The validated graph shares **no** object or array with the raw arguments, at any depth.
+   - No mutation through the validated graph changes the raw arguments or a `tools/update` payload. That covers a listener's or `execute`'s set, delete, push or nested replacement.
+   - This holds whether the call executes, is blocked by a listener, or fails validation.
+3. **One logical graph** (Owner scopes 5 and 7). Listeners run in order and receive the same validated graph. A listener's in-place mutation is visible to later listeners and to `execute`, under the certified waterfall rules.
+   - A listener's *replacement* arguments are a Minion mapping (Per-call pipeline), unchanged by this delta.
+   - Pinned Pi has one `beforeToolCall`. Minion's listener chain maps onto it; this is a mapping, not a direct Pi parity claim.
+4. **Graph structure survives.**
+   - Every object and array reachable from the prepared arguments is cloned **exactly once**. A container reached twice (an alias) is one container in the clone.
+   - **Certified domain: acyclic prepared graphs** (Owner decision `L0506D005-Q001`, #190 issuecomment-6091246259). A cyclic prepared graph passing through validation is **outside** this delta's certification. Both bindings' clone keeps a cycle, but certified Rust validation is not cycle-safe. That is recorded as finding #193; it is neither accepted behaviour nor a Pi divergence. The pinned-Pi cycle case stays as characterization-only evidence.
+   - Every other value is carried unchanged: numbers including `-0`, NaN and ±Infinity (`L0506-D001`); strings including lone surrogates (`L0506-D002`); booleans; null.
+   - Objects enumerate as their source does: K1 ECMAScript order, `L0206-D001`. Clone containers are the graph's own containers: Python `JsObject`/`JsArray`, carrying K1's seams.
+5. **Unchanged by this delta:**
+   - preparation, validation (`TOOL-003` raw-schema `jsonschema` and pydantic mappings, `TOOL-041`), abort, hook, execution and live-update ordering;
+   - raw-event listener behaviour (the raw object is not frozen);
+   - TypeBox coercion dispositions.
+
+**Interaction with K1 (`L0206-D001-R007`, `CE-L0206-D001-01-R4-C001`; `spec/llm.md`).** A container a `prepare_arguments` shim takes from the raw arguments is still the pipeline's own at the prepare boundary.
+- Observers now receive its **clone**, so it is no longer the raw arguments' object. R4-C001's identity-with-raw consequence ("kept as is") is superseded for observers by rule 2, as Owner scope 6 requires.
+- R4-C001's aliasing rule stands: a container the shim places twice, or reaches both through the retained graph and through a new parent, is **one** container in the validated graph (rule 4).
+- K1 ordering, R007's seams and the Q1/Q2 bounded divergence are unchanged.
+
+**Binding paths audited:**
+
+| Path | Before | After |
+|---|---|---|
+| Raw JSON-Schema `parameters` (Python) | shallow `JsObject(arguments)`: nested containers shared with raw; a top-level cycle split | structured clone (this delta) |
+| Pydantic-model `parameters` (Python) | `model_dump` rebuilds every container, so already isolated | **AUDITED — NO CHANGE.** Characterization also records that `model_dump` re-serializes, so a shim-produced alias is split and a cycle cannot validate. That is part of the certified pydantic mapping, which Owner scope 10 excludes from reopening. |
+| Rust | `PreparedValue::structured_clone()` (identity memo) after prepare | audit by the Rust owner: confirm through the canonical corpus; production change only if not conformant |
+
+**Adjacent boundary, characterized and not changed.** Pinned Pi hands `prepareArguments` the raw arguments object itself, so a shim's in-place writes change the raw arguments. Minion passes the shim a fresh top-level `dict`: the certified design-spec §6 nonmutation mapping. So a shim's *top-level* writes do not reach the raw arguments, while its nested writes do, as in Pi. This delta does not change that boundary (Owner: "do not silently widen").
+
+**Canonical evidence:** `conformance/agent/arg-isolation/*.json`, 21 documents (`arg-isolation-scenario.schema.json`), generated from pinned Pi.
+- Numbers are constructed through `JSON.parse`'s binary64 decoding, including overflow to ±Infinity for integer-shaped and exponent literals alike (`CE-L0506-D005-01`), and observed as the certified prepared-runtime token (ECMAScript `Number::toString`, with `-0`/`NaN`/`+Infinity`/`-Infinity` named).
+- The cross-language feasibility matrix is `assurance/layers/l0506-d005-feasibility-matrix.md`.
+- Named shims are part of the fixture vocabulary. `cycle` is used only by the characterization-only case:
+
+| Shim | Returns |
+|---|---|
+| `alias` | `x = {k: 1}`, then `{p: x, q: x}` |
+| `cycle` | `o = {k: 1}`, `o.self = o`, then `o` |
+| `non-finite` | `{...raw, nan: NaN, inf: +Infinity, ninf: -Infinity, nz: -0}` |
+| `reuse-raw-child` | `{o: raw.o, extra: 1}`, without mutating `raw` |
+
+**Witnesses** (Owner A–J):
+- **A, B, E** (nested set, push of an object, `execute` sees the hook's change): canonical.
+- **C, D** (raw unchanged; `tools/update` carries original values): canonical, in every executed case.
+- **F** (several listeners, one graph): canonical, plus a binding identity witness.
+- **G** (aliases shared within the clone, not with raw): canonical alias and reused-raw-child cases. The cycle case is characterization-only (`L0506D005-Q001`).
+- **H** (K1 order): canonical index-key case, plus the K1 suites as regression.
+- **I** (`-0`, ±Infinity, NaN, lone surrogates, `1e300`, a raw integer past 2^53, integers spelled by `Number::toString`): canonical.
+- **J** (validation failure, blocked call): canonical.
+
+**Negative controls** (each must fail an intended witness):
+- shallow copying restored;
+- a clone that forgets aliases;
+- a clone that shares containers reached through the shim with raw;
+- a clone taken again per listener;
+- a JSON round trip in place of the clone (the Owner forbids it).
+
 ### Explicitly not certified by Layer 06
 
 Cancellation/abort propagation through `execute`/hooks was assurance Layer 09's territory, not
