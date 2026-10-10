@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **CHARACTERIZATION COMPLETE; contract draft in progress** (`spec/execution.md` §19).
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented, pending independent implementation review** (§11). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -328,3 +328,75 @@ Closure review 1 (#199 comment 6101778434; `.tmp/codex-scratch/l12d007-ce01-clos
 - Windows 240, Linux 160 (uid 1000);
 - no restore failed;
 - the corpus is **byte-identical** again.
+
+## 11. Python implementation (candidate for independent implementation review)
+
+The contract and integration were approved at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549 and -6101973718). The Python implementation is a single commit series on top of that code head. Rust is out of scope for this section.
+
+### 11.1 What changed
+
+- **Mapper (`execution/errors.py`, `to_pi_fs_error`).** On Windows, the `FsErrorCode` is keyed on the ORIGINAL Win32 code of the failing call (`winerror`), through the pinned libuv 1.49.2 `uv_translate_sys_error` table (`src/win/error.c`, blob `7abf906b`). It is reduced by Pi's `toFileError`, and any code not listed is `unknown`. Elsewhere it is the existing `to_fs_error`. EXEC-007/008/009 keep `to_fs_error`.
+- **libuv-equivalent Win32 seam (`execution/_libuv_win32.py`, new, Windows only).** It reproduces the calls pinned libuv makes (`src/win/fs.c`, blob `f2215bb3`):
+  - `fs__open`: `CreateFileW` with full sharing and backup semantics, Node's `r` / `w` / `a` access and disposition, and `ERROR_FILE_EXISTS` under create giving `EISDIR`. A directory opens, and its read fails `EISDIR` with no path (#67).
+  - `fs__read` / `fs__write`: `ReadFile` / `WriteFile` keep the Win32 code (for example 33 under a byte-range lock).
+  - `fs__scandir`'s own directory open.
+  - `fs__unlink_rmdir`: the entry is opened as itself and deleted through that handle (POSIX-semantics disposition, with libuv's `FileDispositionInfo` fallback and read-only clearing).
+  - A path containing U+0000 is rejected before `ctypes` could truncate it, so L12-D006 (§18) is unchanged.
+- **Operations (`execution/filesystem.py`).**
+  - The Pi-derived operations route through that seam on Windows.
+  - Per-operation overrides: non-recursive `create_dir` of 123/267 gives `invalid`; non-recursive `remove` of a directory gives `unknown` on every platform (#125).
+  - `remove(force)` swallows exactly the translated `not_found`.
+  - The rimraf `fixWinEPERM` retry is kept above the libuv unlink (L12-D005).
+- **Recursive `remove` now follows pinned rimraf's own order on both platforms** (§11.2).
+- **Divergences closed:** #69 (Windows error map), #125 (rm directory code) and #67 (Windows directory read).
+  - `conformance/agent/fs-path-domain/fs-path-error-origin.json`: the 10 L12-D001 `#67` cases now hold on both platforms. The completeness test expects no platform-limited case and 80 Windows-only cases.
+  - The #69 `xfail` in `test_filesystem_canonical_path_eloop.py` and the W-3 divergence in `test_w_g11` are removed.
+- **Manifest:** `fs_error_codes_pinned_pi_literal` reads "Python: implemented ..., pending implementation review".
+
+### 11.2 Implementation-stage defect found by the Linux gate, and its fix
+
+`L12D007-PY-I001` (found by me, before review): the first Linux run failed `errors/directory-denied/remove-recursive`. Pinned Pi (Linux oracle) gives **ok**; Python gave `permission_denied`.
+
+- **Cause.** Pinned Node's recursive `rm` is `rimraf` (v22.15.1 `lib/internal/fs/rimraf.js`, blob `24bf3f46`, `_rmdir` / `_rmchildren`).
+  - It calls `rmdir` FIRST.
+  - Only an ENOTEMPTY / EEXIST / EPERM failure lists the directory and removes its children; then it calls `rmdir` again.
+  - So an EMPTY directory whose listing is denied is removed.
+  - Python's POSIX branch used `shutil.rmtree`, which opens and lists the directory first. The Windows branch also listed first.
+- **Fix.** One `_rimraf` serves both platforms:
+  - `rmdir` first.
+  - Descend only on ENOTEMPTY / EEXIST / EPERM. On Windows these are the libuv Win32 codes 145, 80, 183, 5 and 1314, per the same `error.c` table.
+  - Children: directories by the same walk; everything else (links and junctions as themselves) by `unlink` with the `fixWinEPERM` retry.
+  - ENOENT anywhere counts as removed (on Windows libuv's ENOENT, which includes 123/161/267). A POSIX `rmdir` ENOTDIR answers `lstat`'s absent error, i.e. success.
+  - A failure names the entry whose call failed (`CE-L12-D001-01`, unchanged).
+  - Bounded difference, not observable in any canonical case: pinned Node removes the children concurrently and reports the first failure to settle. Python walks sequentially in enumeration order.
+- **Removed with `rmtree`:** its failure carrier (`_RemovalFailure`, `_name_the_failing_path`), their unit tests, and the POSIX-only CE-L12-D001-01 control `rmtree-reraises-without-the-carrier`, which no longer has a seam. The removal witness's other control (`remove-names-the-target`) remains, and so do the inner-entry naming witnesses.
+- **Pi witness for Windows** (`data/l12-d007/rm-unlistable-probe.mjs`, output `rm-unlistable-win32.jsonl`, pinned Node v22.15.1, CE-01 guard, sandbox cleaned):
+  - an empty directory with a deny-`(RD)` ACE gives `ok`;
+  - a non-empty one gives `EPERM` naming the directory.
+  - The canonical `deny_access` fixture denies `(RD,REA,RA,S)`, so on Windows libuv's `rmdir` open is refused and both shapes fail there. The Windows `(RD)`-only shape is therefore covered by the Python test `test_an_empty_unlistable_directory_is_removed` and this oracle output, not by the corpus.
+- **Recommendation for the Rust implementation:** check its recursive removal against the same order. A list-first walk such as `std::fs::remove_dir_all` would fail this case on Linux.
+
+### 11.3 Tests
+
+- New: `tests/execution/test_libuv_win32.py` covers the seam's branches: the read failure keeps its code with no path; EOF / broken pipe end the data; missing handle information; rmdir of a file gives 267; unlink of a directory gives 5; the POSIX-delete fallback, and each of its failures keeping its Win32 code.
+- New: `tests/execution/test_filesystem_rimraf.py` has the real-host witness above (both platforms) and the order's branches.
+- Retargeted to the libuv seam: the L12-D005 read-only removal witnesses (`_libuv_unlink`) and the CE-L12-D001-01 inner-entry witness (`fs_module._libuv_unlink` on Windows).
+- POSIX-only lines carry `pragma: no cover -- POSIX only`, as before. Coverage is gated on Windows, as in every Layer 12 pass.
+- `_libuv_win32.py` asserts `sys.platform == "win32"` at module level, and its two `filesystem.py` entry points are platform-scoped. So `mypy --platform linux` reports only the 14 platform-attribute findings already present on the base, and none from this change.
+
+### 11.4 Fresh gates
+
+On the final candidate tree (code `f851ea03`), run sequentially with the scripts in `data/l12-d007/impl/`:
+
+- **Windows** (Python 3.13.5, pinned ICU 78.3):
+  - ruff 0 and format clean; mypy clean (117 files);
+  - full pytest **6188 passed / 40 skipped / 19 xfailed**;
+  - coverage **100%** (9575 statements).
+- **Linux** (container `python:3.13`, pinned ICU 78.3 built in the container from the verified tarball, PyICU compiled against it; tests as uid 1000):
+  - full pytest **5821 passed / 0 failed / 407 skipped / 19 xfailed** (`--no-cov`; coverage is gated on Windows).
+  - Linux `mypy` is not a gate. It reports 17 findings: the 14 Windows-attribute findings already present on base `8cc91cde` (verified on a detached checkout with `mypy --platform linux`: 14), plus 3 from the container lacking `types-jsonschema`. None comes from this change.
+- **Earlier runs in this pass, disclosed:**
+  - Windows coverage was first 99.66%, then 99.99%, before the seam tests were completed.
+  - The first Linux runs failed because of the harness. `set -e` aborted on pytest's exit before the log was copied. Then a cached PyICU wheel carried another ICU prefix: 221 failures, 146 of them `libicui18n.so.78` not loadable.
+  - The run after the PyICU fix found `L12D007-PY-I001` (§11.2).
+  - One rerun failed at `pip` (PyPI lookup) and was repeated unchanged.
