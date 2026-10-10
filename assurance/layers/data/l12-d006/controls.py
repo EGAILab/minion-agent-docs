@@ -100,6 +100,16 @@ CONTROLS_ALL = [
      [node("nul/under-new-parent/canonical_path")], ("linux",)),
 ]
 ACTIVE = [c[:5] for c in CONTROLS_ALL if PLATFORM in c[5]]
+
+# Driver self-test (L12D006-I002): a deliberately broken mutant, the stale form of
+# argument-only-containment with the removed name `path`, which the driver must reject as INVALID.
+SELF_TEST = [
+    ("selftest-broken-mutant-is-invalid", FS,
+     "            if not _nul_rejected(exc, *resolved):\n",
+     "            if not _nul_rejected(exc, path, *args, *kwargs.values()):\n",
+     [node("nul/url-final/read_text_file"), node("nul/url-final/exists"),
+      node("nul/url-control/rename_file-to-url-nul")]),
+]
 for c in CONTROLS_ALL:
     if PLATFORM not in c[5]:
         print(f"NOT RUN  {c[0]} (observable on {', '.join(c[5])} only)")
@@ -134,21 +144,17 @@ def main() -> int:
             print(f"INVALID  baseline: exit {baseline.returncode}; not selected/green: {missing}")
             return 1
         print(f"BASELINE {len(passed)} intended witnesses selected and PASS")
-        failures = 0
-        for name, relative, old, new, nodes in ACTIVE:
+        def verdict(name: str, relative: str, old: str, new: str, nodes: list[str]) -> str:
+            """KILLED / SURVIVED / INVALID for one mutant, with its reason."""
             fs_path = copy / relative
             original = fs_path.read_text(encoding="utf-8")
             if original.count(old) != 1:
-                print(f"INVALID  {name}: anchor count {original.count(old)}")
-                failures += 1
-                continue
+                return f"INVALID  {name}: anchor count {original.count(old)}"
             fs_path.write_text(original.replace(old, new), encoding="utf-8")
             try:
                 imported = subprocess.run([python, "-c", "import minion_agent.execution"], cwd=copy, env=env, capture_output=True)
                 if imported.returncode != 0:
-                    print(f"INVALID  {name}: mutant does not import")
-                    failures += 1
-                    continue
+                    return f"INVALID  {name}: mutant does not import"
                 run = pytest(python, copy, env, root / f"bt-{name}", nodes, "-rfE")
             finally:
                 fs_path.write_text(original, encoding="utf-8")
@@ -157,15 +163,25 @@ def main() -> int:
             failed = [line.split()[1] for line in run.stdout.splitlines() if line.startswith("FAILED")]
             summary = run.stdout.strip().splitlines()[-1] if run.stdout.strip() else ""
             if run.returncode == 0:
-                print(f"SURVIVED {name}")
-                failures += 1
-            elif (run.returncode == 1 and " error" not in summary and "XPASS" not in out
-                  and not any(b in out for b in BROKEN_MUTANT)
-                  and any(s in out for s in SIGNATURES) and set(failed) == set(nodes)):
-                print(f"KILLED   {name} ({len(failed)} intended witnesses failed)")
-            else:
-                print(f"INVALID  {name}: exit {run.returncode}; failed={failed}; summary={summary!r}")
-                failures += 1
+                return f"SURVIVED {name}"
+            if (run.returncode == 1 and " error" not in summary and "XPASS" not in out
+                    and not any(b in out for b in BROKEN_MUTANT)
+                    and any(s in out for s in SIGNATURES) and set(failed) == set(nodes)):
+                return f"KILLED   {name} ({len(failed)} intended witnesses failed)"
+            return f"INVALID  {name}: exit {run.returncode}; failed={failed}; summary={summary!r}"
+
+        failures = 0
+        for control in ACTIVE:
+            line = verdict(*control)
+            print(line)
+            failures += not line.startswith("KILLED")
+        # L12D006-I002 runner-rejection witness: the stale, NameError-raising mutant (every intended
+        # node FAILS and the chained traceback still contains the native ValueError) MUST be INVALID.
+        for name, relative, old, new, nodes in SELF_TEST:
+            line = verdict(name, relative, old, new, nodes)
+            accepted = line.startswith("INVALID")
+            print(f"SELF-TEST {'PASS' if accepted else 'FAIL'}: {line}")
+            failures += not accepted
         return 1 if failures else 0
 
 

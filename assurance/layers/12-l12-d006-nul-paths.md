@@ -244,3 +244,20 @@ It reviewed code `1b014860` and docs `160dd5bb`. Verdict: **CHANGES REQUESTED**.
   - **Windows:** baseline 13 PASS, **8/8 KILLED**. `argument-only-containment` is now killed by `ValueError: embedded null character` / `lstat: embedded null character in path` / `replace: embedded null character in dst`.
   - **Linux** (uid 1000): baseline 14 PASS, **9/9 KILLED**, with no `NameError` in any control log.
 - **Codex's independent check of I001 at `202d4ed5`:** the 57-test binding module passes; all 46 keyword witnesses fail with `TypeError` at the rejected `0f4f1b11`.
+
+## 12. Implementation review 2 and remediation 2 (`L12D006-I002`)
+
+**Review 2** (Codex; #194 issuecomment-6095915906; verdict sha256 `b8304c1869d4c3326f985aa1e483de79eee8b534e60ae047d56c17ad7ba2aad6`): `L12D006-I001` PROVISIONALLY CLOSED at code `202d4ed5`.
+- Codex's independent check: the 57-test binding module passes; all 46 keyword witnesses fail with `TypeError` at the rejected `0f4f1b11`.
+- New **`L12D006-I002`** (medium, `CONTRACT_ASSURANCE_DEFECT`): the stale `argument-only-containment` mutant raised `NameError`, and its "kill" satisfied the driver through a broad `ValueError` signature in the chained traceback. That violates §9.7's expected-reason requirement.
+
+**Erratum to §11:** §11's `argument-only-containment` kills (Windows 8/8, Linux 9/9 overall) are **withdrawn for that control**. The other controls' §11 kills stand.
+
+**Remediation 2** (evidence only; code `202d4ed5` unchanged):
+- **Mutant:** `_nul_rejected(exc, *args, *kwargs.values())`, using valid raw-argument names.
+- **Driver:**
+  - `ValueError` narrowed to `ValueError: embedded null`;
+  - any `NameError` / `UnboundLocalError` / `SyntaxError` / `ImportError` in a mutant's output makes it INVALID.
+- **Runner-rejection witness** (`SELF_TEST` in `controls.py`): the stale broken mutant is executed against the same three intended nodes, which all FAIL with the native `ValueError` in the chained traceback. The driver must report it **INVALID**; anything else fails the run.
+- **Windows** (fresh): baseline 13 PASS, **8/8 KILLED**, including `argument-only-containment` by `ValueError: embedded null character…`. **SELF-TEST PASS:** the broken mutant is rejected as INVALID with all three intended nodes failed.
+- **Linux** (uid 1000, fresh): baseline 14 PASS, **9/9 KILLED**, including `canonical-path-walks-first`. **SELF-TEST PASS:** the broken mutant is rejected as INVALID.
