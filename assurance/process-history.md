@@ -4,6 +4,41 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layers 11–14 and Minion-Memory retrospective: Minion-Process, a reusable process kit — direction approved 2026-10-11
+
+**Record:** `process/2026-10-11-reusable-workflow-retrospective.md` (Owner request; direction approved by
+the Owner in chat on 2026-10-11, recorded in its §7.1).
+
+**The problem.** The process is reliable: every HIGH-value semantic finding in Layers 11–13 was caught by
+independent review before certification, and Layer 14 (first layer under the Layer-13 Phase A rules) closed
+each work package in under two days with no convergence episode. The remaining cost is coordination volume
+and rigor that is not proportional to the kind of work: Layers 11–14 produced about 1,274 GitHub comments,
+192 of them Claude relaying Codex's verdicts because Codex has no GitHub write path, 131 review-record PRs
+(44 bulk-closed as stale), and 39 status-only PRs; the convergence protocol was applied at full strength to
+its own tooling (`CE-PROC-L13-01`, Minion-Memory `WP-P01`); routing questions still reached the Owner
+(Minion-Memory `G-018`, `G-019`, `G-024`, `G-027`); and the second project adopted the process by
+copy-and-adapt (pinned-SHA reference, re-derived taxonomy and hazard families, forked CLI).
+
+**The direction (approved).** A versioned, project-neutral process kit, **Minion-Process**
+(`EGAILab/minion-process`), consumed through a per-project `profile.yaml` validated in CI; work-package
+**kinds** (`semantic`, `delta`, `process`, `scoping`, `status`) with a route per kind, where `process`-kind
+work gets tests plus one independent review and never enters convergence; a routing table so that "how
+should I proceed" is answered by policy under the standing delegations, with a closed Owner-only list;
+hand-offs generated from state; review records with a machine-readable header so the tool computes
+convergence triggers and the §14.6 metrics; side effects only through the tool; one writable control plane
+per project; and a lessons annex plus incident replay suite, so a new rule enters the normative text only
+with a lesson record and a replay test. The Warp Factories model supplied the packaging and routing shape
+(definition as code, foreman routing with stage skipping, humans reserved for spec approval and genuine
+ambiguity, metrics per item); Minion's gates (exact-SHA review, negative controls, convergence for
+semantic surfaces) are kept because they are stronger than Warp's advisory review.
+
+**Still open.** Decision 5 of the record (Minion-Agent's control-plane backend: a GitHub write path for
+Codex, or the `state-file` backend Minion-Memory already uses). Migration phases P1–P4 are `process`-kind
+work packages and the first test of the proportionality rule.
+
+**Not changed by this entry.** No normative text in `process/agent-workflow.md` or
+`process/coordination-state.md` changes here; those changes land as separate reviewed PRs per §14.3.
+
 ## Layer 13 retrospective: earlier semantic discovery and deterministic workflow mechanics — proposed 2026-10-01
 
 **The problem.** WP-13.1, WP-13.2, WP-12.E3 and L0506-D001 showed the same two costs (`assurance/process-friction-layer13.md`):
