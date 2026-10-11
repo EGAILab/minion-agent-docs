@@ -7,9 +7,11 @@ the semantic/certification detail for the layer itself stays in that layer's own
 ## Layers 11–14 and Minion-Memory retrospective: Minion-Process, a reusable process kit — direction approved 2026-10-11
 
 **Record:** `process/2026-10-11-reusable-workflow-retrospective.md` (Owner request). The Owner approved the
-**direction and the project name** in chat on 2026-10-11 (quoted verbatim in the record's §7.1). The
-record's five decisions are each still open and land only through the existing review and authorization
-gates. Coordination: `minion-agent#205` (PROC-KIT). Independent review of the first draft: Codex
+**direction and the project name** in chat on 2026-10-11 (quoted verbatim in the record's §7.1). Later
+the same day, after the record was approved and merged, the Owner **decided all five decisions** (go, a
+new project; adopt as revised; decision 3 in three parts as Claude recommended; unify; stay on GitHub
+issues), quoted verbatim in §7.1 and durably on `minion-agent#205`. Each still lands only through the
+existing review and authorization gates, after `#199` is CLOSED. Coordination: `minion-agent#205` (PROC-KIT). Independent review of the first draft: Codex
 `PROC-KIT-R001`–`R004` and a second Claude session's `K1`–`K9` on `minion-agent-docs#287`.
 
 **The problem.** The process is reliable: the HIGH-value semantic findings of Layers 11–13 were caught by
