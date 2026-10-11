@@ -1,0 +1,2 @@
+{"platform":"win32","case":"empty","result":"ok","exists":false}
+{"platform":"win32","case":"nonempty","result":"EPERM","path":"nonempty"}

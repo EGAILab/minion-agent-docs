@@ -1,0 +1,1546 @@
+{
+ "platform": "win32",
+ "python": "3.13.5",
+ "results": [
+  {
+   "condition": "missing",
+   "op": "readTextFile",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "readTextLines",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "writeFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "appendFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "fileInfo",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "listDir",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "createDir-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "remove",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "remove-force",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "missing",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "file",
+   "op": "readTextFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "readTextLines",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "readBinaryFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "writeFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "appendFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "renameFile-source",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "listDir",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "file",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "file",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "file",
+   "op": "remove",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "remove-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "remove-force",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "file",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "file",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "readTextFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "readTextLines",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "writeFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "appendFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "renameFile-source",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "listDir",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "createDir-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "remove",
+   "observed": {
+    "error": "is_directory"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "remove-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "remove-force",
+   "observed": {
+    "error": "is_directory"
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-empty",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "readTextFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "readTextLines",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "writeFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "appendFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "renameFile-source",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "listDir",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "createDir-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "remove",
+   "observed": {
+    "error": "is_directory"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "remove-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "remove-force",
+   "observed": {
+    "error": "is_directory"
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "directory-nonempty",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "readTextFile",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "readTextLines",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "writeFile",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "appendFile",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "fileInfo",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "listDir",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "remove",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "remove-force",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "non-directory-component",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "not_found"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "readTextFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "readTextLines",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "writeFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "appendFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "renameFile-source",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "listDir",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "remove",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "remove-recursive",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "remove-force",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "symlink-loop",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "readTextFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "readTextLines",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "writeFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "appendFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "fileInfo",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "exists",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "listDir",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "remove",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "remove-force",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "name-too-long",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "readTextFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "readTextLines",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "writeFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "appendFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "fileInfo",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "exists",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "listDir",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "remove",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "remove-force",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "invalid-name",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "readTextFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "readTextLines",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "writeFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "appendFile",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "fileInfo",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "exists",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "listDir",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "canonicalPath",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "remove",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "remove-force",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "ntfs-stream-syntax",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "invalid"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "readTextFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "readTextLines",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "writeFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "appendFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "listDir",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "remove-force",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "check_readable(access R)",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "sharing-violation",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readTextFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readTextLines",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "readBinaryFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "writeFile",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "appendFile",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "renameFile-source",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "renameFile-destination-onto",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "fileInfo",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "exists",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "listDir",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "canonicalPath",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "createDir-recursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "createDir-nonrecursive",
+   "observed": {
+    "error": "unknown"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove-recursive",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "remove-force",
+   "observed": {
+    "error": "permission_denied"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "list_dir_raw(readdir)",
+   "observed": {
+    "error": "not_directory"
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "probe_dir_entry(lstat)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "check_readable(access R)",
+   "observed": {
+    "ok": true
+   }
+  },
+  {
+   "condition": "lock-violation",
+   "op": "check_read_write(access RW)",
+   "observed": {
+    "ok": true
+   }
+  }
+ ]
+}

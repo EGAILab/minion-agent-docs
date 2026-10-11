@@ -1,0 +1,3 @@
+{"platform":"win32","scenario":"dir-to-file","result":"ok","fired":true,"treeRemains":false}
+{"platform":"win32","scenario":"file-to-dir","result":"ok","fired":true,"treeRemains":false}
+{"platform":"win32","scenario":"dir-to-link","result":"ok","fired":true,"treeRemains":false,"outsideKeep":"k"}
