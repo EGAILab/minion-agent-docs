@@ -122,18 +122,27 @@ behavior is unchanged. No production or oracle change was made. That failed
 run is retained and not credited; the corrected candidate receives fresh
 Windows-then-Linux gates and controls.
 
+The subsequent Linux full suite at `485f5e85` stopped at the existing NUL
+temp-creation witness: `std::env::temp_dir()` was `/tmp`, while the explicitly
+declared fixture base was `/tmp/l12d007/fixtures`. This was a recipe prerequisite
+failure, not a provider outcome mismatch. The recipe now sets TMP/TEMP/TMPDIR
+to that contained fixture base after creating it. Its source copy preserves
+timestamps so the shared Cargo target can reuse unchanged inputs. The failed
+log is retained; neither this incomplete G3 nor its unexecuted controls is
+credited. No Rust production, test assertion, or oracle change was made.
+
 The first disposable control copy omitted three neutral corpus files included
 by existing Rust unit tests. Recompiling its first mutant failed at compile
 time; that attempt was INVALID, not a kill. The copy recipe now includes the
 frontmatter, ignore and ADA oracle files, and the control driver rewrites the
 unmutated sources before checking every baseline, forcing a fresh build.
 
-During that corrected-head control rebuild, a separate Minion-Memory batch
+During the historical `3235a897` control rebuild, a separate Minion-Memory batch
 occupied the host from 18:24 to 18:33 on 2026-10-11. No intended witness or
 mutant result had completed during the overlap: the first baseline result
 was written at 18:34:42, after the coordinator's HOST CLEAR at 18:33:29.
 The credited control observations run in isolation after that clearance.
-The corrected-head Windows G3 had already completed at 18:08 and was not
+That historical Windows G3 had already completed at 18:08 and was not
 overlapped. Linux starts only after the Windows controls finish.
 
 ## 5. Reproduction environment
