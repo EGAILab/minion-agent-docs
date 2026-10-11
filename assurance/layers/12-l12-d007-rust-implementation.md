@@ -194,23 +194,53 @@ No named volume or host location outside the project is writable.
 
 ## 6. Fresh gates
 
-Interim draft: the Windows results below are at
-`3235a8974f3dd7ed11da30ca5758b38904eaca77`. The subsequent Unix fixture-literal
-correction is `4ee8938b98bcfb46b390b85a0408cf678d5ea7bf`; focused Linux fmt/clippy
-passed there. Its full Windows G3, 41-row probe, 17 controls and 921 shared
-validation tests passed. Its Linux full tests exposed the probe-fixture defect
-described in section 4, so the corrected final-head gates remain pending. These draft
-results do not hand off or certify the later head.
+Final code candidate: `a2fa8333060b350b0f2cb1697fc1a8c9d563121a`
+(minion-agent PR #206, branch `layer/12-d007-rust`). The evidence below was
+run at that exact head, Windows then Linux sequentially, on 2026-10-11/12.
+The assurance candidate is minion-agent-docs PR #289, branch
+`assurance/12-d007-rust`; its exact final head is in the handoff on #199.
+Earlier incomplete batches described in section 4 are not credited.
 
 - Windows full workspace/all-features tests: **669 passed, 0 failed, 0 ignored**.
   fmt, clippy (all targets/features, `-D warnings`), rustdoc (`-D warnings`)
   and xtask conformance verify passed. The real path-domain adapter compares
   all **604** applicable cases (240 error codes + 237 NUL + 127 prior path/tool
   cases); no Windows case is excluded. The 21-document read-only corpus passes
-  its Windows-applicable cases.
+  its **19** Windows-applicable documents.
 - Windows controls: **17/17 KILLED**, all 17 intended unmutated witnesses selected
   and passed, then the restored baseline passed.
+- Linux full workspace/all-features tests (including doctests): **662 passed,
+  0 failed, 1 ignored**. fmt, strict clippy/rustdoc and xtask conformance verify
+  passed. The ignored `recursive_remove_single_failure_reports_the_inner_native_call`
+  requires an unprivileged host: it was additionally run explicitly as uid/gid
+  1000 with `--exact --ignored --nocapture`, and passed (**1/1**).
+- Linux uid-1000 real-provider path corpus: **524 applicable cases**,
+  including **160** error-code and **237** NUL cases, with **0** privileged
+  exclusions. The **80** Windows-only error-code conditions are explicitly
+  excluded on Linux, not credited. The real read-only corpus passed all **9**
+  Linux-applicable documents out of the shared 21-document set.
+- Standalone CE-02 probe: **41/41 MATCH on Windows and Linux** (13 routing,
+  18 recovery, 10 validation), with zero binding-side unfired injections.
+  Origins, calls, remaining entries and read-only state match the pinned-Pi
+  blobs through the real LocalFileSystem removal seam.
+- Linux controls: **10/10 KILLED**, all 10 intended baselines selected and
+  passed, followed by a passing restored baseline. Windows-only controls
+  are recorded NOT_APPLICABLE on Linux, never counted as kills.
 - Shared manifest/schema validation: **921 passed** on the candidate.
-- Linux results and the final standalone CE-02 results are recorded at handoff
-  after sequential runs. Independent review, merge and certification remain
-  required.
+
+The Windows control process completed with exit 0 at 23:49 on 2026-10-11;
+its full output and restored-baseline log were checked before crediting it.
+The subsequent Linux recipe and controls completed with exit 0, including
+the uid-1000 corpora. No overlapped or partial run is credited. The final
+shared validation refresh passed after Linux finished.
+
+Local evidence is under `<project>/.tmp/codex-scratch/l12d007/`:
+`windows-final-{fmt,clippy,test,doc,xtask,ce02}.log`, `windows-controls/`,
+`shared-validation.log`, and `linux-logs/` (full gate logs, CE-02,
+uid-1000 corpus logs, `permission-origin-uid1000.log`, and `control-details/`).
+The non-root ignored witness uses the full-suite binary from its Cargo log
+and a fresh private tmpfs sandbox; it does not reuse earlier fixtures.
+
+Rust L12-D007: **IMPLEMENTED, INDEPENDENT REVIEW PENDING; NOT CERTIFIED**.
+Python is approved and merged. Cross-language: **NOT CLOSED**. Independent
+exact-pair closure review, merge and status synchronization remain required.
