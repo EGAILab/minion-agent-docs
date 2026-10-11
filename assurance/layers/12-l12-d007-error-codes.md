@@ -710,3 +710,21 @@ On code `dcaf75bf`, run sequentially:
 - Python L12-D007: remediation 3 pending targeted closure of `L12D007-I006`; then the complete final review of the changed pair.
 - Rust: NOT_IMPLEMENTED.
 - Cross-language: NOT CLOSED.
+
+## 16. Rust implementation candidate
+
+The subsequent Python final approval and guarded merges are recorded by the
+Rust handoff on #199, issuecomment-6104299937: code #202 merged as
+`51e53ba711d2cd4ecfdce7e7478016646397978b`, docs #284 merged as
+`e652cc8a61ed2cd63743db17b453ce0c5dc26283`. Section 15's pending labels above
+are historical, not the current Python disposition.
+
+The Rust candidate implements the merged contract and Owner O001 ADOPT PI.
+Its source mapping, real-provider corpus adapter, 41-row pinned-Pi probe,
+I004/I005 witnesses, negative controls, exclusions and fresh gates are in
+[12-l12-d007-rust-implementation.md](12-l12-d007-rust-implementation.md).
+No shared semantic rule or canonical expectation changes in the Rust pair.
+
+Status: Python approved and merged; Rust candidate awaiting independent
+closure review; L12-D007 cross-language **NOT CLOSED**. #127 and #133-F2 remain
+excluded. This implementation record does not certify itself.
