@@ -1,8 +1,9 @@
 # Workflow retrospective: Layers 11–14 and the Minion-Memory adoption — towards Minion-Process, a reusable process kit
 
 **Status:** direction and name APPROVED by the Owner (chat, 2026-10-11; record in §7.1); decisions 1–5
-open. Revision 2 after independent review (`PROC-KIT-R001`–`R004`, `K1`–`K9` on `minion-agent-docs#287`),
-awaiting re-review. Process-only. It reopens no semantic finding, no certification and no
+DECIDED by the Owner later on 2026-10-11 (§7.1, revision 3; durable record on `minion-agent#205`).
+Revision 2 was APPROVED (record-only) by Codex's re-review and merged as `5c562008`; revision 3 is
+documentary (§10). Process-only. It reopens no semantic finding, no certification and no
 governance decision. Adoption follows `agent-workflow.md` §14.3: independent process review, then
 the normative changes land as separate reviewed PRs.
 **Author:** Claude (Python/shared-contract owner), at the Owner's request.
@@ -50,9 +51,14 @@ transplanted to Minion-Memory:
    fixes reaches Minion-Memory without a manual pin bump and re-adaptation.
 3. **Routing still goes through the Owner.** In Minion-Memory the Owner answered four routing
    questions in nine hours (`G-018`, `G-019`, `G-024`, `G-027`): all were "how should I proceed?"
-   questions whose answers the convergence protocol already prescribes. Warp's foreman model puts
-   routing in policy and reserves the human for spec approval, genuine ambiguity and merge. Minion
-   should do the same, and reserve the Owner for path-C semantic choices, scope, and risk acceptance.
+   questions. For each of them the convergence protocol already prescribed the mechanical next step
+   (which checkpoint to enter, when to re-dispatch, when a fix pass is allowed), and that is the part a
+   routing table can answer without the Owner. What the Owner actually decided in those four answers
+   was different and stays with the Owner: the scoped authorizations `G-018`–`G-027` set distinct
+   conditions (which paths, which stages, which evidence) that a route default does not replace
+   (§2.4, §6.4). Warp's foreman model puts routing in policy and reserves the human for spec approval,
+   genuine ambiguity and merge. Minion should do the same: routing by rule, and the Owner reserved for
+   path-C semantic choices, scope, risk acceptance and the conditions of any scoped authorization.
 4. **The control plane was only half writable for most of the period.** The workflow assumes
    agent-to-agent hand-off through GitHub, but for most of Layers 11–13 Codex's session had no working
    GitHub write path, so 192 Codex verdicts were Claude relays with a file hash, and Owner decisions
@@ -84,7 +90,8 @@ annex that takes the incident narratives out of the normative text. §7 lists th
 | 14 (prompt assembly, skills) | 9 | first full layer under feasibility matrix + gate tiers |
 
 Counting predicate: Markdown files directly under `assurance/layers/` in the tree of `cbb2873`
-(`git ls-tree origin/master assurance/layers/`), 330 in total. The rows above account for 323 of them;
+(reproducible as `git ls-tree --name-only cbb2873:assurance/layers` filtered to `.md` names; the
+listing is of that tree, not of a moving `origin/master`), 330 in total. The rows above account for 323 of them;
 the remaining seven are five `l12-*` delta records (`l12-d001-*` ×4, `l12-d006-feasibility-matrix`) and
 two uncategorized files (`exec002-r1-rust-append.md`, `fs-path-jsstring-scoping.md`). Layer 14's row
 is an observation, not proof that Phase A caused it: two WPs, two deltas, no convergence episode,
@@ -637,22 +644,30 @@ anything that changes authority, acceptance or a delegation.
    seeded from `minion-agent-docs/process/**` and `process/tools/`, with Minion-Agent as its first
    consumer and Minion-Memory as the second. The alternative, keeping the kit inside
    `minion-agent-docs` and having other projects pin a path, keeps the current copy-and-adapt cost.
-   *Status: direction and name approved; creating the repository and the `Minions/Minion-Process`
-   checkout still needs the Owner's explicit confirmation under the filesystem-containment rule.*
+   *Status: DECIDED 2026-10-11, "go, a new project" (§7.1). Creating the repository and the
+   `Minions/Minion-Process` checkout are outside-root actions and still need the Owner's explicit
+   confirmation at execution time under the filesystem-containment rule; P1 starts after `#199` is
+   CLOSED.*
 2. **Adopt work-package kinds with consequence classes** (§6.2) and the measured stage-skip rule
    (§6.3). As revised, this changes no route for governing work and removes only the convergence
    checkpoint ceremony for mechanical work, with independent review and the final review of the
    changed candidate kept. It still needs an explicit decision because it adds a classification step to
-   the state schema and makes the class upgrade automatic. *Status: open.*
+   the state schema and makes the class upgrade automatic. *Status: DECIDED 2026-10-11, "adopt as
+   revised" (§7.1); lands through the P2 process PR on the full route.*
 3. **Extend the standing delegations** (`minion-agent#75`, Minion-Memory `G-009`) to cover routing per
-   the kit's routing table (§6.4), and confirm the closed Owner-only list. *Status: open; until decided,
-   the current delegation scope and all existing scoped authorizations apply unchanged.*
+   the kit's routing table (§6.4), and confirm the closed Owner-only list. *Status: DECIDED 2026-10-11
+   in three parts (§7.1): routing delegated for five of the six §6.4 rows, with the convergence-trigger
+   row as a notify-and-proceed carve-out; the Owner-only list stays open-ended and gains four items,
+   closing it is revisited after P2 and P3; Minion-Memory `G-009` decides separately in P4. Until the
+   `#75` amendment is confirmed by the Owner, the current delegation scope and all existing scoped
+   authorizations apply unchanged.*
 4. **Unify the two CLIs** into the kit's `minion_process` with `github-issue` and `state-file` backends;
-   retire `mneme-process` once the kit passes Minion-Memory's existing tool tests. *Status: open;
-   mechanics under the existing delegations once decision 1 is enacted.*
+   retire `mneme-process` once the kit passes Minion-Memory's existing tool tests. *Status: DECIDED
+   2026-10-11, "unify" (§7.1); mechanics under the existing delegations, after P3.*
 5. **Choose Minion-Agent's control-plane backend** (§6.8), framed on current evidence: the measured
    reliability of Codex's present GitHub write path through `minion_process` against the `state-file`
-   backend Minion-Memory uses. *Status: open.*
+   backend Minion-Memory uses. *Status: DECIDED 2026-10-11, "stay on GitHub issues" (§7.1); the
+   `github-issue` backend remains Minion-Agent's control plane and no second surface is adopted.*
 
 ### 7.1 Decision record
 
@@ -692,7 +707,65 @@ What these settle, and what they do not (the first draft of this section claimed
   the filesystem-containment rule.
 - Claude's recommendation on decision 5, for the Owner to accept or reject: measure first. One or two
   WPs of Codex posting through `minion_process` under the github-issue backend, counted per §9, decide
-  whether a second surface is worth its sync cost.
+  whether a second surface is worth its sync cost. *(Superseded the same day: the Owner chose "stay on
+  GitHub issues" below.)*
+
+The bullets above are the state as of revision 2. The decisions were taken later on 2026-10-11, after
+revision 2 was approved and merged; they are recorded below and durably on `minion-agent#205`.
+
+**Owner, in chat, 2026-10-11**, after Claude listed the five open decisions one by one with their
+options (quoted verbatim; durable record: `minion-agent#205` issuecomment-6104625203):
+
+> Decision 1: go, a new project; Decision 2: adopt as revised; Decision 3: need further clarify and
+> discussion; Decision 4: unify; Decision 5: stay on GitHub issues
+
+**Owner, in chat, 2026-10-11**, on decision 3, after Claude split it into three parts and gave a
+recommendation for each (quoted verbatim; durable record: `minion-agent#205` issuecomment-6104953933):
+
+> What's your suggestions
+
+> As you suggested
+
+What these settle:
+
+- **Decision 1 — go.** Minion-Process is a new project (`EGAILab/minion-process`,
+  `Minions/Minion-Process`). The decision does not substitute for the containment confirmation: the
+  repository creation and the local checkout are outside-root actions and each is confirmed by the
+  Owner at execution time. P1 starts after `#199` is CLOSED.
+- **Decision 2 — adopt as revised.** §6.2 and §6.3 as written in revision 2: five kinds; governing vs
+  mechanical by consequence predicate; reviewer-confirmed class; automatic recorded upgrade; two-party
+  downgrade; the final review of the changed candidate on every route; stage skip only with measured
+  rows and reviewer consent. Lands through the P2 process PR on the full route.
+- **Decision 3 — as Claude recommended, in three parts.**
+  - *3.1 Routing by rule: extend, with one carve-out.* Five of the six §6.4 rows are delegated under
+    `minion-agent#75`, each route recorded by its rule ID: the targeted-closure fix pass with §11.8.10
+    invalidation; progressing a semantically independent WP; `HANDOFF_BLOCKED` with unchanged
+    re-dispatch; the mechanical-WP risk question filed with a stated default after two rounds without
+    new discriminating evidence; and the automatic class upgrade (which only adds review). The
+    convergence-trigger row (A/B/C triggers and the governing-WP §11.8 trigger check) is **not** a
+    silent route: when it fires, Claude records the counters, notifies the Owner with the default route,
+    and proceeds on that default unless the Owner objects within the round. Rationale: §2.3 and §9; the
+    Layer 12–14 long episodes were productive in every round, so a counted trigger is a signal, not
+    proof that review has stalled.
+  - *3.2 Owner-only list: not closed yet.* `#75`'s list stays open-ended (its item 10 is kept). Four
+    items are added rather than substituted: consequence-class downgrades, remote creation, risk
+    acceptance, and amending the delegation itself. Closing the list is revisited after P2 and P3 have
+    shipped, using the §9 metric "Owner questions per WP, split into routing vs semantic vs risk".
+  - *3.3 Minion-Memory `G-009`: separate, later.* No change to `G-009` or `G-018`–`G-027` now;
+    Minion-Memory decides its own extension when it re-adopts the kit in P4.
+- **Decision 4 — unify.** One `minion_process` with `github-issue` and `state-file` backends;
+  `mneme-process` retired after the kit passes Minion-Memory's tool tests. Mechanics after P3.
+- **Decision 5 — stay on GitHub issues.** The `github-issue` backend remains Minion-Agent's control
+  plane; no second surface is adopted; Claude's measure-first recommendation is withdrawn; the §9
+  metrics are still collected as data.
+- **What remains Owner-only here.** The `#75` amendment that enacts 3.1 and 3.2 is edited or confirmed
+  by the Owner (only the Owner amends the delegation); the driving session (`w1:p1`) prepares its exact
+  text. Until that amendment is in `#75`, the current delegation scope applies unchanged.
+
+Sequencing and ownership are unchanged by these decisions: nothing in P1–P4 starts before `#199` is
+CLOSED; Claude `w1:p1` drives; Codex is the independent reviewer. The Owner asked on 2026-10-11 for this
+revision (the §7.1 record and Codex's two editorial notes) to be made ahead of that cut; it is a
+documentary change to the record and introduces none of the P1–P4 mechanics.
 
 ---
 
@@ -702,7 +775,7 @@ What these settle, and what they do not (the first draft of this section claimed
 |---|---|---|
 | P0 (this PR) | this retrospective; `process-history.md` entry | independent process review (Codex), second review (`w1:p1`), final review of the changed candidate |
 | P1 | `EGAILab/minion-process` created and seeded from current `process/**` and `process/tools/`; `profile.yaml` for Minion-Agent; `WORKFLOW.md` split into core + lessons with text preserved; `profile validate` | decision 1 enacted; Owner confirmation for the repository and the `Minions/Minion-Process` checkout; `#199` closed (Owner sequencing) |
-| P2 | consequence classes and kinds in the state schema and transitions table; routing table; delegation amendments | explicit Owner decisions 2 and 3, recorded before the PR |
+| P2 | consequence classes and kinds in the state schema and transitions table; routing table; delegation amendments | Owner decisions 2 and 3 (recorded, §7.1); the `#75` amendment text confirmed by the Owner before or with the PR; `#199` closed |
 | P3 | structured review-record header; `metrics` and `convergence counters`; composite verbs; `session start` and `cleanup`; `handoff`/`dispatch` with reply-to; launchers; fault-fired rule | P1 |
 | P4 | Minion-Memory re-adopts by profile; `mneme-process` retired; incident replay suite seeded from both projects' lessons | decision 4, P3 |
 
@@ -738,6 +811,17 @@ every round found something is not.
 ---
 
 ## 10. Revision history
+
+### Revision 3 (2026-10-11): Owner decisions recorded; Codex's editorial notes
+
+Documentary revision after revision 2 was APPROVED (record-only) by Codex's re-review at `5cda5347` and
+merged as `5c562008`. No normative or proposal text changes.
+
+| Item | Change in this revision |
+|---|---|
+| Owner decisions 1–5 (chat, 2026-10-11; durable on `minion-agent#205`, issuecomments 6104625203 and 6104953933) | §7.1 appended with the two Owner messages quoted verbatim and what each decision settles; §7 status lines; §8 P2 dependency row; status line; `process-history.md` entry |
+| Codex re-review editorial note 1: §1 item 3 compressed | item 3 expanded with the §2.4/§6.4 qualification that route defaults do not replace the conditions of the scoped authorizations `G-018`–`G-027` |
+| Codex re-review editorial note 2: §2.1 counting command | the illustrative `origin/master` listing replaced by the reproducible recipe `git ls-tree --name-only cbb2873:assurance/layers` filtered to `.md`, which gives 330 |
 
 ### Revision 2 (2026-10-11): remediation of review 1 on `minion-agent-docs#287` @ `e54335da`
 
