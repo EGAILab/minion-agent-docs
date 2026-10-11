@@ -6,6 +6,10 @@ ROOT=/e/AI/Projects/OpenMinds/Minions/Minion-Agent
 source "$ROOT/.tmp/claude-env.sh"
 CE02=$ROOT/review-worktrees/l12d007-docs/assurance/layers/data/l12-d007/ce02
 CODE=$ROOT/review-worktrees/l12d007-code
+if [ -n "$(git -C "$CODE" status --porcelain -- minion-agent-python)" ]; then
+  echo "refused: the code worktree has uncommitted changes, so its outputs cannot be labelled with a SHA" >&2
+  exit 1
+fi
 SHA=$(git -C "$CODE" rev-parse --short=8 HEAD)
 P=$ROOT/review-worktrees/ri001-code/minion-agent-python/.venv/Scripts/python.exe
 S=E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/claude-scratch/l12d007/probe-scratch

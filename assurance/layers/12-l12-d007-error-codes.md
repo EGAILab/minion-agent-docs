@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). **Final complete review pending** (§11.8.8). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). Final complete review 1 found `L12D007-I004` and `L12D007-I005` (§14). **Remediation 2 pending targeted closure, then a final complete review of the changed pair.** Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -587,3 +587,71 @@ On the final tree (code `0887a50d`), run sequentially:
 - spec §19.5's status line still read "proposed … not yet agreed". It now records the agreement and the closure.
 - §19's own status line ("for independent contract review") was also stale; it is aligned too.
 - Both are docs-only edits. The code is unchanged at `0887a50d`, so the §13.3 gates stand for it.
+
+## 14. Final complete review 1 (Codex) and remediation 2
+
+Final complete review 1 (§11.8.8; #199 issuecomment-6103873801, `.tmp/codex-scratch/l12d007-python-final-review-1.md`) was **CHANGES REQUESTED** at code `0887a50d` / docs `cf9c264e`.
+- **Fresh reviewer gates:**
+  - Windows: 6278 passed, coverage 100%, static gates clean;
+  - Linux uid 1000: 6111 passed;
+  - the 41 matrix rows MATCH.
+- **Two new Case A findings.** The earlier closures stand.
+
+**Trigger check** (§11.8, before this pass):
+- **A:** not fired. Neither finding has survived a review.
+- **B:** not fired. I004 is on the I/O error translation (the mapper surface, not removal). I005 is the walk's interpreter-stack use, not the classification / routing / propagation rules CE-02 settled; the reviewer classifies both as independent of those rules.
+- **C:** not fired. This is the first complete final review of the implemented pair.
+
+### `L12D007-I004` (medium): an I/O access-denied is EBADF under libuv
+
+- **Defect.** `_HandleIO.readinto` / `write` forwarded `ReadFile` / `WriteFile`'s raw 5 (`permission_denied`). Pinned libuv `fs__read` / `fs__write` (`fs.c` lines 870-873 / 1075-1079) report it as `ERROR_INVALID_FLAGS` (1004 → `UV_EBADF`), which Pi's `toFileError` names `unknown`.
+  - The read side does this before its EOF / broken-pipe check.
+  - The write side's own translator (`uv_translate_write_sys_error`) changes only 109 / 232 (→ EPIPE), which are `unknown` either way.
+- **Fix.** `_io_error_code` (5 → 1004) is applied at those two calls only. A failed open keeps its own 5 → `permission_denied`.
+- **Docs.**
+  - Spec §19.1 gains the operation-specific row for it (documentary, under the already-normative literal-Pi rule).
+  - Feasibility row 3 now says that preserving `raw_os_error` alone is **not** enough. The cell first read "likely already equivalent", and the revision is marked.
+- **Witnesses** (`test_libuv_win32.py`), through the real `LocalFileSystem`, with only the kernel32 I/O entry point failing:
+  - `read_text_file`, `read_binary_file`, `read_text_lines`, `write_file` and `append_file` each give `unknown` with the logical path;
+  - a denied open still gives `permission_denied` naming the file;
+  - the override maps only 5.
+  - **Control:** raw-code forwarding fails the witness with `permission_denied`.
+- The reviewer's pinned-Pi observation is `.tmp/codex-scratch/l12d007-final-ebadf-pi.mjs`: a real EBADF through the real provider gives `unknown` with the logical path.
+
+### `L12D007-I005` (high): the removal walk recursed once per tree level
+
+- **Defect.** `_rimraf_entry` and `_rimraf` recursed alternately per directory level. A valid 550-deep tree (Linux, uid 1000, within PATH_MAX) raised `RecursionError` out of `LocalFileSystem.remove`. Pinned Pi removes it: `{"ok": true}` (`l12d007-final-depth.py` / `-pi.mjs`).
+- **Fix.** `_rimraf` drives an **explicit stack** of directories being emptied.
+  - `_rimraf_entry`, `_unlink_routed` and `_fix_win_eperm` return the directory still to remove, with its original error, instead of recursing.
+  - `_rmdir_first` and `_rmdir_last` are rule 3's two `rmdir` steps.
+  - Unchanged: the call order (children in listing order, each fully emptied before the next sibling), rmdir-first, fresh per-entry classification, sequential siblings, first-failure propagation and recovery.
+  - There is no depth limit, and the process recursion limit is not touched.
+- **Spec §19.5 rule 4** states the depth property (documentary): a successful removal succeeds at any depth the filesystem allows.
+- **Witnesses** (`test_filesystem_rimraf.py`):
+  - **all platforms:** the deepest interpreter stack at any `rmdir` is **equal** for a 2-deep and a 60-deep chain;
+  - **POSIX:** a real 550-deep tree is removed.
+  - **Control:** the pre-I005 recursive walk fails both, with the stack growing with depth and `RecursionError` at 550.
+- **The routing controls N1 to N14** follow the return-request protocol, each still mutating only its intended dimension:
+  - N2 (retry a failed directory `rmdir`) and N5 (list before `rmdir`) now act at `_rmdir_first`;
+  - the cached-type control returns requests.
+
+### Fresh gates
+
+On the final tree (code `f17390f8`), run sequentially:
+
+- **Windows** (3.13.5, pinned ICU 78.3):
+  - ruff, format and mypy clean (117 files);
+  - full pytest **6289 passed / 43 skipped / 19 xfailed**;
+  - coverage **100%** (9601 statements).
+- **Linux** (`python:3.13`, uid 1000):
+  - full pytest **5897 passed / 0 failed / 422 skipped / 19 xfailed**, including the 550-deep witness and its control;
+  - non-gating mypy: 15 findings, unchanged.
+- **CE-02 agreed gate at `f17390f8`:** 13/13, 18/18 and 10/10 MATCH on both platforms, with zero binding-side UNFIRED. On Linux, pinned Pi replayed byte-identical. The outputs are `ce02-*-py-impl-f17390f8-{win32,linux}.jsonl`.
+- **Disclosed:**
+  - **The first I005 control was wrong.** It recursed through one function, one frame per level, so on Linux the 550-deep tree fit the default recursion limit and the control "passed" as a removal. It now restores the reviewed alternating shape, a frame pair per level, and fails as intended. That was the test-only commit `f17390f8`. `998965ee` carried the fixes, and its Windows acceptance also matched.
+  - **The Windows acceptance script once labelled outputs from an uncommitted tree with the HEAD SHA.** The outputs were byte-identical to the recorded ones, and the files were restored. The script now refuses an uncommitted code tree.
+
+**Status:**
+- Python L12-D007: remediation 2 pending targeted closure of `L12D007-I004` and `L12D007-I005`; then a complete final review of the changed pair.
+- Rust: NOT_IMPLEMENTED.
+- Cross-language: NOT CLOSED.
