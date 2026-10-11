@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). Final complete review 1 found `L12D007-I004` and `L12D007-I005` (§14). **Remediation 2 pending targeted closure, then a final complete review of the changed pair.** Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). Final complete review 1 found `L12D007-I004` and `L12D007-I005` (§14). Remediation 2's targeted review provisionally closed I004 and I005 and found the test-evidence finding `L12D007-I006` (§15). **Remediation 3 is pending targeted closure, then a final complete review of the changed pair.** Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -653,5 +653,60 @@ On the final tree (code `f17390f8`), run sequentially:
 
 **Status:**
 - Python L12-D007: remediation 2 pending targeted closure of `L12D007-I004` and `L12D007-I005`; then a complete final review of the changed pair.
+- Rust: NOT_IMPLEMENTED.
+- Cross-language: NOT CLOSED.
+
+## 15. Remediation-2 targeted review (Codex) and remediation 3: `L12D007-I006` (test evidence)
+
+The targeted review of remediation 2 (#199 issuecomment-6104129105) was at code `f17390f8` / docs `007f30f4`.
+
+**Dispositions:**
+- `L12D007-I004`: **PROVISIONALLY CLOSED**.
+- `L12D007-I005`: **PROVISIONALLY CLOSED**. Against the old source, the reviewer measured 159 against 43 frames; on Linux, both the stack witness and the 550-deep tree raise `RecursionError` at `0887a50d`.
+- New **`L12D007-I006`** (medium, CONTRACT_ASSURANCE_DEFECT, narrow Case A; test and control evidence only).
+
+**Fresh reviewer gates:**
+- Windows: 6289 passed, coverage 100%, static gates clean;
+- Linux uid 1000: 6115 passed / 0 failed;
+- 41/41 MATCH on both platforms;
+- the 240 canonical cases regenerate identically.
+
+### The defect, and a correction to §14
+
+§14 said that "N1 to N14 follow the return-request protocol, each still mutating only its intended dimension". **That was wrong for N3.**
+- `_n3_swallow` (`with suppress(OSError): real(path)`) also discarded a *successful* entry's descent request.
+- So under N3 the walk never entered the child, and E2's and E10's intended unlink failures never fired (UNFIRED).
+- The rows "failed" because the tree was skipped, not because an error was swallowed.
+- The control test accepted any inequality and did not check that the injections fired, so N3's two credits were invalid. The reviewer withdrew them, and this record withdraws them too.
+
+### Remediation 3 (test-only; code `dcaf75bf`)
+
+- **N3** swallows only an entry's failure, and returns a successful entry's descent request unchanged. Under it, E2 and E10's injections now fire. The swallowed failure then surfaces as the child or subdirectory's final-`rmdir` ENOTEMPTY (`unknown` at that directory), which is distinct from Pi's child-file error.
+- **Fire check.** `test_control_fails_its_intended_row` credits a control only when its intended row's planned injections **fire under the mutant**. The exception is the calls that the mutation itself removes, and these are listed explicitly (`UNFIRED_ALLOWED`):
+
+  | Control | Calls allowed to stay unfired |
+  |---|---|
+  | N6 | recovery `chmod` / `stat` after an `lstat` EPERM |
+  | N8 | the retry `unlink` |
+  | N11 | recovery `chmod` / `stat` (the target bypasses the routing) |
+  | N13 | the classification `lstat` |
+
+  Any other unfired injection fails the control test. All 34 Windows and 21 Linux intended (control, row) pairs pass it.
+- **The check is itself tested.** `test_the_fire_check_refuses_a_control_that_skips_the_walk` applies the descent-dropping N3 to E2 and E10 and asserts that the fire check refuses it: the intended injection is unfired, and N3 has no allowance for it.
+- **Production code** is unchanged since `998965ee` (I004 / I005).
+
+### Fresh gates
+
+On code `dcaf75bf`, run sequentially:
+
+- **Windows:**
+  - ruff, format and mypy clean;
+  - full pytest **6291 passed / 43 skipped / 19 xfailed**;
+  - coverage **100%** (9601 statements).
+- **Linux** (uid 1000): full pytest **5899 passed / 0 failed / 422 skipped / 19 xfailed**.
+- **CE-02 gate:** 13/13, 18/18 and 10/10 MATCH on both platforms, with zero binding-side UNFIRED. Pinned Pi replayed byte-identical on Linux. The outputs are `ce02-*-py-impl-dcaf75bf-*.jsonl`.
+
+**Status:**
+- Python L12-D007: remediation 3 pending targeted closure of `L12D007-I006`; then the complete final review of the changed pair.
 - Rust: NOT_IMPLEMENTED.
 - Cross-language: NOT CLOSED.
