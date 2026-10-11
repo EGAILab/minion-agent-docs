@@ -3198,7 +3198,6 @@ Record: `assurance/layers/12-l12-d006-nul-paths.md`.
 - **Python:** code #202 → `51e53ba7`, docs #284 → `e652cc8a`. Final Python review: #199 issuecomment-6104278034.
 - **Rust:** code #206 → `68793a31`, docs #289 → `a6bc5555`. Closure review: #199 issuecomment-6112553875.
 - **Tracked gap, not a divergence** (Owner decision, #199 issuecomment-6113189438): Windows reparse points that libuv's `fs__readlink_handle` does not accept as links are outside the characterized surface in both bindings. Examples are a junction to `\??\Volume{…}`, a non-link reparse tag, and a malformed APPEXECLINK. → `L12-D010`, `minion-agent#207`.
-- Not yet certified.
 
 Provenance, each keeping its own identity and closure evidence:
 - `L12-WINDOWS-ERROR-MAP` (#69);
@@ -3323,8 +3322,8 @@ These rules produce, among others:
 **Status:** **agreed** in convergence episode `CE-L12D007-02`:
 - revision 3, approved in checkpoint review 3, #199 issuecomment-6103236644; CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION;
 - the Python implementation's targeted closure was APPROVED (issuecomment-6103724176);
-- final complete review pending.
-- (This line read "proposed … not yet agreed" until the targeted closure's documentary note.)
+- implemented and certified in both bindings: Python final review issuecomment-6104278034, Rust closure review issuecomment-6112553875 (L12-D007 CERTIFIED_CLOSED, §19 status);
+- history: this status read "proposed … not yet agreed" until the targeted closure's documentary note, and "final complete review pending" until the certification status sync.
 
 **Authority:** pinned Pi `remove` → `fs.promises.rm` → Node v22.15.1 `rimraf` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`): `_rimraf`, `fixWinEPERM`, `_rmdir`, `_rmchildren`. Every `remove` that reaches the filesystem, recursive or not, goes through it. This section states pinned Pi's observable outcomes. It prescribes no call sequence.
 
