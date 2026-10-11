@@ -220,9 +220,14 @@ Earlier incomplete batches described in section 4 are not credited.
   excluded on Linux, not credited. The real read-only corpus passed all **9**
   Linux-applicable documents out of the shared 21-document set.
 - Standalone CE-02 probe: **41/41 MATCH on Windows and Linux** (13 routing,
-  18 recovery, 10 validation), with zero binding-side unfired injections.
+  18 recovery, 10 validation), with zero binding-only unfired injections.
   Origins, calls, remaining entries and read-only state match the pinned-Pi
   blobs through the real LocalFileSystem removal seam.
+  Windows fires every planned injection. Nine Linux recovery rows have
+  unfired Windows-only chmod/stat injections on **both Pi and Rust**; these
+  are the shared comparator's explicit NOT_APPLICABLE calls, not missed
+  binding coverage. Their result/call/origin/remaining-state comparisons
+  still MATCH, and the complete unfired sets also match Pi exactly.
 - Linux controls: **10/10 KILLED**, all 10 intended baselines selected and
   passed, followed by a passing restored baseline. Windows-only controls
   are recorded NOT_APPLICABLE on Linux, never counted as kills.
