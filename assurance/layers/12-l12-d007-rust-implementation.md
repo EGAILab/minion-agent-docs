@@ -105,6 +105,12 @@ helper lacked Windows cfg guards. Both are now guarded, without changing the
 active Windows code or any provider behavior. That failed batch is not credited;
 final Windows and Linux gates are rerun sequentially at the corrected head.
 
+The next Linux clippy pass identified a Unix-only fixture literal: permission
+mode `0` must be written as `0o0` under the current clippy lint. The value is
+unchanged. This pass also stopped before tests or native fixtures; its result
+is not credited. The corrected source receives a focused Linux clippy check
+before the final Windows-then-Linux G3 runs.
+
 The first disposable control copy omitted three neutral corpus files included
 by existing Rust unit tests. Recompiling its first mutant failed at compile
 time; that attempt was INVALID, not a kill. The copy recipe now includes the
@@ -167,6 +173,12 @@ The container root is read-only; `/tmp` is a private executable tmpfs.
 No named volume or host location outside the project is writable.
 
 ## 6. Fresh gates
+
+Interim draft: the Windows results below are at
+`3235a8974f3dd7ed11da30ca5758b38904eaca77`. The subsequent Unix fixture-literal
+correction is `4ee8938b98bcfb46b390b85a0408cf678d5ea7bf`; focused Linux fmt/clippy
+passed there, and its final Windows-then-Linux G3 is in progress. These draft
+results do not hand off or certify the later head.
 
 - Windows full workspace/all-features tests: **669 passed, 0 failed, 0 ignored**.
   fmt, clippy (all targets/features, `-D warnings`), rustdoc (`-D warnings`)
