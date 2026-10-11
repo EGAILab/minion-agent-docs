@@ -1,5 +1,5 @@
 #!/bin/bash
-# CE-L12D007-02 acceptance on Linux: replay pinned Pi and the implementation over the three agreed matrices
+# CE-L12D007-02 acceptance on Linux: replay pinned Pi and the implementation over the agreed matrices
 # (run-linux-ce02.sh), then compare. Pinned Pi's replay must be identical to the committed outputs.
 set -u
 ROOT=/e/AI/Projects/OpenMinds/Minions/Minion-Agent
@@ -10,10 +10,10 @@ mkdir -p "$OUT"
 cd "$CE02"
 bash run-linux-ce02.sh l12d007-code > "$OUT/run.out" 2>&1
 echo "run rc=$?; rows $(grep -c '"id"' "$OUT/run.out")"
-for s in pi py pi-recovery py-recovery pi-validation py-validation; do
+for s in pi py pi-recovery py-recovery pi-validation py-validation pi-dirlink py-dirlink; do
   awk -v s="== $s" '$0==s{f=1;next}/^== /{f=0}f' "$OUT/run.out" > "$OUT/$s.jsonl"
 done
-for m in core recovery validation; do
+for m in core recovery validation dirlink; do
   if [ $m = core ]; then pi=ce02-pi-linux.jsonl; rp=pi; py=py; else pi=ce02-$m-pi-linux.jsonl; rp=pi-$m; py=py-$m; fi
   if cmp -s <(tr -d '\r' < "$pi") "$OUT/$rp.jsonl"; then echo "$m pinned Pi replay identical"; else echo "$m pinned Pi replay DIFFERS"; fi
   "$P" ce02_compare.py "$pi" "$OUT/$py.jsonl" > "$OUT/compare-$m.txt"

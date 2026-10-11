@@ -14,6 +14,8 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
+**Current status: CERTIFIED_CLOSED (cross-language)**, §17. The status paragraph below is the history up to §15.
+
 Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). Final complete review 1 found `L12D007-I004` and `L12D007-I005` (§14). Remediation 2's targeted review provisionally closed I004 and I005 and found the test-evidence finding `L12D007-I006` (§15). **Remediation 3 is pending targeted closure, then a final complete review of the changed pair.** Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
@@ -728,3 +730,73 @@ No shared semantic rule or canonical expectation changes in the Rust pair.
 Status: Python approved and merged; Rust candidate awaiting independent
 closure review; L12-D007 cross-language **NOT CLOSED**. #127 and #133-F2 remain
 excluded. This implementation record does not certify itself.
+
+## 17. Rust closure, shared evidence for the directory-link rows, and certification status sync
+
+**Rust closure.** Claude's independent closure review 1 found three issues at code `a2fa8333` (issuecomment-6111409107):
+- `L12D007-R001` (high): a directory symlink or junction entering Windows EPERM recovery was not removed;
+- `L12D007-R002` (medium): the L12-D005 disappearance witnesses were lost;
+- `L12D007-R003` (low): a per-package build failure.
+
+Codex remediated them, and re-review 2 APPROVED the pair `cc742fbe` / `b29dec8c` (issuecomment-6112553875). The exact-head guarded merges were code #206 → `68793a31` and docs #289 → `a6bc5555`. The Rust evidence is in [12-l12-d007-rust-implementation.md](12-l12-d007-rust-implementation.md) §§ R001-R003.
+
+### 17.1 The directory-link rows join the shared CE-02 evidence
+
+R001 was found with four rows the agreed CE-02 matrices did not hold. In each, a **directory link child** gets an injected `EPERM` (from `unlink`, or from the classification `lstat`) and enters Windows `fixWinEPERM` recovery. Recovery's following `stat` finds a directory, so §19.5 rule 5 applies `rmdir` to the link itself; the link target and its content must survive.
+
+| Row | Link | Injected | Platforms |
+|---|---|---|---|
+| `U8-dirlink-unlink-eperm` | directory symlink | `unlink tree/child` EPERM | Windows, Linux |
+| `L10-dirlink-lstat-eperm` | directory symlink | `lstat tree/child` EPERM | Windows, Linux |
+| `U9-junction-unlink-eperm` | junction | `unlink tree/child` EPERM | Windows only |
+| `L11-junction-lstat-eperm` | junction | `lstat tree/child` EPERM | Windows only |
+
+They are now shared evidence, in the same data directory as the agreed matrices:
+
+| File | What |
+|---|---|
+| `ce02/ce02-dirlink-matrix.json` | The four rows. Their content is identical to the Rust crate's `ce02-data/dirlink-matrix.json`. |
+| `ce02/ce02-recovery-pi-probe.mjs`, `ce02/ce02_recovery_py_probe.py` | Extended with `dirlink` / `junction` fixtures. A junction row is skipped off Windows. |
+| `ce02/ce02-dirlink-pi-{win32,linux}.jsonl` | The pinned-Pi oracle. It is **identical** to the Rust crate's `dirlink-pi-*.jsonl` and to the closure reviewer's measurements. |
+| `ce02/ce02-dirlink-py-impl-51e53ba7-{win32,linux}.jsonl` | Python at merged `main` `51e53ba7`. |
+| `ce02/dirlink-acceptance-win.sh`; `run-linux-ce02.sh` / `linux-acceptance.sh` (extended) | The Windows and Linux runs |
+
+**Acceptance with `ce02_compare.py`, both bindings:**
+- **Python, at `51e53ba7`:**
+  - Windows 4/4 MATCH; Linux (uid 1000) 2/2 MATCH; zero binding-side UNFIRED.
+  - Pinned Pi was run twice on Windows (identical) and replayed byte-identically on Linux.
+  - On Linux, U8 is `permission_denied` at `tree/child` and the link remains, because `fixWinEPERM` is Windows-only. L10 is `ok`.
+- **Rust:** `directory_link_recovery_matches_pinned_pi` compares every call of the four rows against the same oracle. It passed in the closure reviewer's fresh run at `cc742fbe`.
+
+**No regression from the probe changes.** On Windows, the extended probes reproduce the committed recovery (18) and validation (10) outputs byte-for-byte, for pinned Pi and for Python at `51e53ba7`. That output is identical to the `dcaf75bf` outputs, and `51e53ba7` is that head squash-merged. The full Linux replay at `51e53ba7` matched 13 + 18 + 10, and every pinned-Pi replay was identical.
+
+Python needed no change. Its `fs__unlink_rmdir` routing (`_libuv_win32.unlink_like_libuv`) already classifies from the opened handle's raw attributes.
+
+### 17.2 Tracked gap: exotic Windows reparse points (Owner decision)
+
+Review 2 found a characterization gap in both bindings, outside L12-D007's characterized surface. libuv gates reparse points through `fs__readlink_handle`, in `lstat` and before unlinking a directory reparse point. It accepts only:
+- a SYMLINK;
+- a junction to `\??\<drive>:`;
+- a well-formed APPEXECLINK.
+
+Any other reparse point is an ordinary directory or file to libuv. Both bindings treat every name-surrogate reparse point as a link. Rust's `delete_entry` now has the unlink-side gate; Python's `unlink_like_libuv` does not.
+
+The Owner decided **track separately** (issuecomment-6113189438):
+- L12-D007 closes for its characterized surface;
+- the gap is **`L12-D010`, `minion-agent#207`**: characterization against pinned Pi first, then both bindings together;
+- it is a tracked gap, not an approved divergence.
+
+Ordinary symlinks and drive-letter junctions are characterized and match in both bindings.
+
+### 17.3 Status
+
+| Item | Status |
+|---|---|
+| Python L12-D007 | CERTIFIED (code #202 → `51e53ba7`; final review issuecomment-6104278034) |
+| Rust L12-D007 | CERTIFIED (code #206 → `68793a31`; closure review issuecomment-6112553875) |
+| L12-D007 cross-language | **CERTIFIED_CLOSED** on this status sync's independent review and merge |
+| Spec | `spec/execution.md` §19 status updated |
+| Manifest | `fs_error_codes_pinned_pi_literal`, synced in the paired code PR |
+| Excluded | #127 and #133-F2 |
+| Tracked gap | `L12-D010` / #207 |
+| Provenance issues | #69, #125 and #67 close with #199 |
