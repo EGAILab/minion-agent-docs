@@ -74,6 +74,9 @@ intentionally bypass an injection; all other matrix controls must fire it.
 Windows-only recovery controls are NOT_APPLICABLE on Linux, not credited there.
 The Owner-adopted recovery controls replace the historical L12-D005 synthetic
 conditional-retry controls; those old anchors do not certify this new policy.
+Closure review 1 found that this replacement also dropped four still-governing
+disappearance witnesses. That was an evidence defect, not an obsolete policy:
+section 7 restores readdir, first/final rmdir and recovery-unlink ENOENT coverage.
 
 ## 4. Development findings
 
@@ -156,6 +159,8 @@ shell; use its project-local Cargo home and Windows target, with
 `RUSTDOCFLAGS=-D warnings -L native=<same lib64 directory>`.
 Set `MINION_AGENT_ICU_IDENTITY` to that build's `pinned-icu-identity.txt` and
 `MINION_SEARCH_ENGINE_ARTIFACTS=<project>/.toolchain/search-engines/dl`.
+Run `cargo check -p minion-agent-native-fs` independently (before any workspace
+check, so feature unification cannot mask undeclared native dependencies).
 Run fmt, clippy (all targets/features, `-D warnings`), full workspace tests,
 rustdoc and xtask conformance verify; run the CE-02 test with `--nocapture`.
 The Windows linker emits the pre-existing ICU LIBCMT/LNK4098 warning; it is
@@ -249,3 +254,88 @@ and a fresh private tmpfs sandbox; it does not reuse earlier fixtures.
 Rust L12-D007: **IMPLEMENTED, INDEPENDENT REVIEW PENDING; NOT CERTIFIED**.
 Python is approved and merged. Cross-language: **NOT CLOSED**. Independent
 exact-pair closure review, merge and status synchronization remain required.
+
+## 7. Rust closure review 1 remediation
+
+Claude's independent review of `a2fa8333` / `aba1664d` was CHANGES REQUESTED
+on [#199 comment 6111409107](https://github.com/EGAILab/minion-agent/issues/199#issuecomment-6111409107).
+Section 6 is the historical candidate-1 evidence, not approval or evidence for
+this changed candidate. R001/R002/R003 each survived one Rust review; none has
+survived two reviews, no successor Rust finding on this root has accumulated,
+and there is one rejected complete Rust review. Ordinary targeted remediation
+is appropriate; the shared CE-02 agreement and exclusions are unchanged.
+
+### R001: raw Windows directory/reparse classification
+
+`delete_entry` now reads raw FILE_ATTRIBUTE_DIRECTORY / REPARSE_POINT from the
+opened no-follow handle's metadata. It does not infer those bits from std's
+`is_dir` / `is_symlink` view, which hides DIRECTORY on name-surrogate links.
+This follows pinned libuv `fs__unlink_rmdir`, blob
+`f2215bb3082178193d37f8429536bfe7b707dd0d`.
+The neighborhood source audit also retains that function's subsequent
+`fs__readlink_handle` validation for a directory reparse unlink: the payload
+is queried from the same handle, valid symlinks / drive-path junctions /
+application execution links are accepted, and unsupported tags are denied.
+Rmdir itself does not apply this unlink-only validation. Portable payload
+units cover accepted/rejected tags, a volume junction, malformed offset and
+application-link string count. No target is followed or changed by validation.
+
+Permanent real-provider probe `directory_link_recovery_matches_pinned_pi`
+adds U8/L10 (directory symlink) and U9/L11 (junction) on Windows; Linux runs
+U8/L10, with junction rows explicitly inapplicable. The separate matrix and
+oracle files in `filesystem/ce02-data/dirlink-*` transcribe the review's
+pinned-Pi outputs; no original shared matrix/oracle is changed. These rows
+compare every call, origin, remaining entry, read-only state and fired injection.
+Both link and its fixed target are positively proven inside the fixture sandbox;
+`outside/keep` means outside the removed TREE, not outside the sandbox.
+Four Windows controls restore both old std classification predicates and are
+each assigned to their own U8/L10/U9/L11 witness. An additional portable control
+accepts unsupported reparse tags and must fail the payload witness.
+
+### R002: restore still-governing disappearance evidence
+
+The prior replacement of conditional L12-D005 recovery controls wrongly
+dropped four disappearance stages. They are now permanent witnesses through
+the real LocalFileSystem removal walk and its existing Operations collaborator:
+readdir, first rmdir, final rmdir, and the Windows recovery retry unlink.
+At the injected call a concurrent remover actually deletes the contained entry,
+then reports ENOENT. Each witness asserts the injection fired, success, exact
+call counts and no remaining entries. Only empty directories or a single file
+are removed by the injection; it never recursively removes a computed target.
+The first three stages execute on both platforms; the recovery-unlink stage
+is Windows-only because POSIX does not enter fixWinEPERM. Each has a separate
+control returning the missing error at that exact branch; no production
+removal-policy change is required. The earlier child-lstat disappearance and
+top-level no-force missing-target witness remain in place.
+
+### R003: independent native-package feature hygiene
+
+The native-fs crate explicitly declares Win32_Security, required by CreateFileW.
+The new same-handle reparse query also declares System_IO / System_Ioctl locally.
+Both platform recipes run `cargo check -p minion-agent-native-fs` independently;
+a workspace check cannot substitute for it. The disposable-copy known-bad
+check without Win32_Security fails with E0425 (CreateFileW unavailable), while
+the corrected package check passes. This is build evidence, not a semantic kill.
+
+### Development disclosure
+
+The first focused Windows run passed both symlink rows and all disappearance
+witnesses but junction creation failed before the provider: `mklink` parsed
+forward slashes in the fixture path as a switch. The fixture now passes proven
+Windows-separator paths. The failure was investigated and preserved; it is
+not credited as a witness or negative-control kill. The corrected focused run
+passed all nine selected removal tests. All historical logs were copied to
+`history-a2fa8333/` before new evidence replaced the active log paths.
+
+Fresh final-head gates and intended-witness controls will be recorded here
+before handoff. Rust remains NOT CERTIFIED; findings require Claude's targeted
+independent closure review at the new exact pair.
+
+The first full Windows remediation batch at `5c676db0` stopped at strict
+clippy's `items_after_test_module` lint, before its tests: the new payload test
+module preceded `clear_readonly_entry`. Tests were moved to a separate
+`native-fs/src/tests.rs` module declared after production items. The failed
+log is retained and not credited; the complete batch restarts at `cc742fbe`.
+An interim 25-control run at `caf5725` completed with all intended kills and
+a restored green baseline; its logs are preserved, but the final-head run
+also includes the payload control and is the handoff evidence.
