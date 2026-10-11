@@ -3190,7 +3190,14 @@ Record: `assurance/layers/12-l12-d006-nul-paths.md`.
 
 ## 19. Layer-12 post-certification delta `L12-D007` — filesystem error codes are pinned Pi's literal `toFileError` results (`EXEC-002`)
 
-**Status:** contract delta, for independent contract review (`minion-agent#199`). Provenance, each keeping its own identity and closure evidence:
+**Status (`minion-agent#199`):**
+- Contract and integration APPROVED (issuecomment-6101924549, -6101973718).
+- §19.5 was agreed in convergence episode `CE-L12D007-02` (checkpoint review 3, issuecomment-6103236644).
+- Python implementation: targeted closure APPROVED (issuecomment-6103724176); **final complete review pending**.
+- Rust: not implemented.
+- Not yet certified.
+
+Provenance, each keeping its own identity and closure evidence:
 - `L12-WINDOWS-ERROR-MAP` (#69);
 - `L12-RM-DIRECTORY-CODE` (#125);
 - `L12-WINDOWS-DIRECTORY-READ` (#67).
@@ -3309,7 +3316,11 @@ These rules produce, among others:
 
 ### 19.5 `remove`: entry classification, failure routing and Windows `EPERM` recovery (`CE-L12D007-02`)
 
-**Status:** proposed in convergence episode `CE-L12D007-02` (revision 3), for checkpoint review. It is not yet agreed.
+**Status:** **agreed** in convergence episode `CE-L12D007-02`:
+- revision 3, approved in checkpoint review 3, #199 issuecomment-6103236644; CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION;
+- the Python implementation's targeted closure was APPROVED (issuecomment-6103724176);
+- final complete review pending.
+- (This line read "proposed … not yet agreed" until the targeted closure's documentary note.)
 
 **Authority:** pinned Pi `remove` → `fs.promises.rm` → Node v22.15.1 `rimraf` (`lib/internal/fs/rimraf.js`, blob `24bf3f46`): `_rimraf`, `fixWinEPERM`, `_rmdir`, `_rmchildren`. Every `remove` that reaches the filesystem, recursive or not, goes through it. This section states pinned Pi's observable outcomes. It prescribes no call sequence.
 

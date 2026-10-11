@@ -14,7 +14,7 @@ Requirement: `EXEC-002`. Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`.
 - Characterization comes first.
 - No global EINVAL/InvalidInput remap.
 
-Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). **The CE-02 implementation is pending targeted closure** (§13). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
+Status: **contract and integration APPROVED** at code `8cc91cde` / docs `bc5f0a21` (#199 issuecomment-6101924549, -6101973718); **Python implemented** (§11); implementation review 1 CHANGES REQUESTED (`L12D007-I001`, `L12D007-I002`); remediation 1 (§12) re-reviewed: I001/I002 provisionally closed, new `L12D007-I003` and convergence episode `CE-L12D007-02` (§13: checkpoint AGREED at revision 3; Owner decision ADOPT PI for Windows EPERM recovery). The CE-02 implementation's targeted closure was APPROVED (§13.4). **Final complete review pending** (§11.8.8). Rust: pending. (Earlier status: characterization complete, contract draft in progress, `spec/execution.md` §19.)
 
 ## 1. Method and safety
 
@@ -564,3 +564,26 @@ On the final tree (code `0887a50d`), run sequentially:
 - Python L12-D007, with CE-L12D007-02 implemented: **pending independent targeted closure** of `L12D007-I003` and `CE-L12D007-02-C003` (§11.8.7).
 - Rust: NOT_IMPLEMENTED.
 - Cross-language: NOT CLOSED.
+
+### 13.4 Targeted closure (Codex): APPROVED
+
+#199 issuecomment-6103724176, at exactly code `0887a50d` / docs `a39e4285`. #199 is now `FINAL_CONTRACT_REVIEW` with no open findings.
+
+| Finding | Disposition |
+|---|---|
+| `L12D007-I003` | PROVISIONALLY CLOSED |
+| `CE-L12D007-02-C003` | PROVISIONALLY CLOSED |
+| `CE-L12D007-02-C001` | PROVISIONALLY CLOSED |
+| `CE-L12D007-02-C002` | CLOSED (governance disposition: the Owner's ADOPT PI) |
+
+**The reviewer's independent evidence:**
+- All three matrices MATCH on Windows and Linux (41/41 each), with pinned Pi reproduced byte-for-byte.
+- The rejected `b8062daa` still fails the core rows (and the Windows E11 recovery row).
+- The applicable controls N1-N14 fail their intended rows: 34 on Windows, 21 on Linux.
+- Focused suites: Windows 1277 passed / 23 skipped; Linux uid 1000, 1103 passed / 184 skipped.
+- An additional neighbour was checked: a read-attributes-denied read-only child with classification EPERM. Pi and the binding agree.
+
+**The nonblocking documentary note, addressed in the final pair:**
+- spec §19.5's status line still read "proposed … not yet agreed". It now records the agreement and the closure.
+- §19's own status line ("for independent contract review") was also stale; it is aligned too.
+- Both are docs-only edits. The code is unchanged at `0887a50d`, so the §13.3 gates stand for it.
