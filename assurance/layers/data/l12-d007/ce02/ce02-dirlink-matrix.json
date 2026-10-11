@@ -1,0 +1,9 @@
+{
+  "about": "CE-L12D007-02 directory-link rows (added by the Rust closure review, minion-agent#199 issuecomment-6111409107, finding L12D007-R001): a DIRECTORY LINK child (directory symlink; junction, Windows only) entering Windows fixWinEPERM recovery. Recovery's following stat finds a directory, so rmdir is applied to the link itself; the link target and its content must survive. Run with ce02-recovery-pi-probe.mjs / ce02_recovery_py_probe.py (third argument); junction rows are skipped off Windows. Same rows as the Rust crate's ce02-data/dirlink-matrix.json.",
+  "rows": [
+    {"id": "U8-dirlink-unlink-eperm", "fixture": ["tree/", "outside/", "outside/keep", {"dirlink": "tree/child", "to": "outside"}], "inject": [{"op": "unlink", "rel": "tree/child", "nth": 1, "code": "EPERM"}]},
+    {"id": "L10-dirlink-lstat-eperm", "fixture": ["tree/", "outside/", "outside/keep", {"dirlink": "tree/child", "to": "outside"}], "inject": [{"op": "lstat", "rel": "tree/child", "nth": 1, "code": "EPERM"}]},
+    {"id": "U9-junction-unlink-eperm", "fixture": ["tree/", "outside/", "outside/keep", {"junction": "tree/child", "to": "outside"}], "inject": [{"op": "unlink", "rel": "tree/child", "nth": 1, "code": "EPERM"}]},
+    {"id": "L11-junction-lstat-eperm", "fixture": ["tree/", "outside/", "outside/keep", {"junction": "tree/child", "to": "outside"}], "inject": [{"op": "lstat", "rel": "tree/child", "nth": 1, "code": "EPERM"}]}
+  ]
+}

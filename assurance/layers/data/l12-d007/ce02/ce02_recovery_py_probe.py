@@ -92,6 +92,9 @@ async def main() -> None:
     global row
     matrix = json.loads((HERE / MATRIX).read_text(encoding="utf-8"))
     for spec in matrix["rows"]:
+        # A junction is a Windows-only fixture: its rows do not apply elsewhere.
+        if sys.platform != "win32" and any(isinstance(e, dict) and "junction" in e for e in spec["fixture"]):
+            continue
         root = fs_guard.make_sandbox(os.path.join(scratch, f"ce02r-py-{spec['id']}-{os.getpid()}"))
         late: list[str] = []
         for entry in spec["fixture"]:
@@ -102,6 +105,18 @@ async def main() -> None:
                     Path(fs_guard.assert_inside(root, entry)).write_text("x")
             elif "link" in entry:
                 os.symlink(fs_guard.assert_inside(root, entry["to"]), fs_guard.assert_entry(root, entry["link"]))
+            elif "dirlink" in entry:
+                os.symlink(
+                    fs_guard.assert_inside(root, entry["to"]),
+                    fs_guard.assert_entry(root, entry["dirlink"]),
+                    target_is_directory=True,
+                )
+            elif "junction" in entry:
+                import _winapi  # Windows only; junction rows are skipped elsewhere
+
+                _winapi.CreateJunction(
+                    fs_guard.assert_inside(root, entry["to"]), fs_guard.assert_entry(root, entry["junction"])
+                )
             else:
                 late.append(entry["ro"])
         for rel in late:

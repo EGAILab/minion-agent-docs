@@ -2,7 +2,8 @@
 // fixWinEPERM recovery). As ce02-pi-probe.mjs, but each row may inject several failures, fixtures may hold
 // read-only attributes and file symlinks, and the output also lists every entry left read-only (so a recovery that
 // clears a link TARGET's attribute is visible). Usage:
-//   node --experimental-strip-types --no-warnings ce02-recovery-pi-probe.mjs <pi> <scratch dir in the project>
+//   node --experimental-strip-types --no-warnings ce02-recovery-pi-probe.mjs <pi> <scratch dir in the project> [matrix]
+// The matrix defaults to ce02-recovery-matrix.json (also: ce02-validation-matrix.json, ce02-dirlink-matrix.json).
 import fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -54,6 +55,8 @@ function state(root) {
 }
 
 for (const spec of matrix.rows) {
+  // A junction is a Windows-only fixture: its rows do not apply elsewhere.
+  if (process.platform !== "win32" && spec.fixture.some((entry) => entry.junction)) continue;
   const root = makeSandbox(path.join(scratch, `ce02r-pi-${spec.id}-${Date.now()}`));
   const late = [];
   for (const entry of spec.fixture) {
@@ -62,6 +65,10 @@ for (const spec of matrix.rows) {
       else fs.writeFileSync(assertInside(root, entry), "x");
     } else if (entry.link) {
       fs.symlinkSync(assertInside(root, entry.to), assertEntry(root, entry.link), "file");
+    } else if (entry.dirlink) {
+      fs.symlinkSync(assertInside(root, entry.to), assertEntry(root, entry.dirlink), "dir");
+    } else if (entry.junction) {
+      fs.symlinkSync(assertInside(root, entry.to), assertEntry(root, entry.junction), "junction");
     } else if (entry.ro) {
       late.push(entry.ro);
     }

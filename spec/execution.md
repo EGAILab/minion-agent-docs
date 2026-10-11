@@ -3192,11 +3192,12 @@ Record: `assurance/layers/12-l12-d006-nul-paths.md`.
 
 ## 19. Layer-12 post-certification delta `L12-D007` — filesystem error codes are pinned Pi's literal `toFileError` results (`EXEC-002`)
 
-**Status (`minion-agent#199`):**
+**Status:** CERTIFIED_CLOSED (cross-language), `minion-agent#199`.
 - Contract and integration APPROVED (issuecomment-6101924549, -6101973718).
 - §19.5 was agreed in convergence episode `CE-L12D007-02` (checkpoint review 3, issuecomment-6103236644).
-- Python implementation: targeted closure APPROVED (issuecomment-6103724176); **final complete review pending**.
-- Rust: not implemented.
+- **Python:** code #202 → `51e53ba7`, docs #284 → `e652cc8a`. Final Python review: #199 issuecomment-6104278034.
+- **Rust:** code #206 → `68793a31`, docs #289 → `a6bc5555`. Closure review: #199 issuecomment-6112553875.
+- **Tracked gap, not a divergence** (Owner decision, #199 issuecomment-6113189438): Windows reparse points that libuv's `fs__readlink_handle` does not accept as links are outside the characterized surface in both bindings. Examples are a junction to `\??\Volume{…}`, a non-link reparse tag, and a malformed APPEXECLINK. → `L12-D010`, `minion-agent#207`.
 - Not yet certified.
 
 Provenance, each keeping its own identity and closure evidence:
