@@ -327,9 +327,9 @@ not credited as a witness or negative-control kill. The corrected focused run
 passed all nine selected removal tests. All historical logs were copied to
 `history-a2fa8333/` before new evidence replaced the active log paths.
 
-Fresh final-head gates and intended-witness controls will be recorded here
-before handoff. Rust remains NOT CERTIFIED; findings require Claude's targeted
-independent closure review at the new exact pair.
+Rust remains NOT CERTIFIED; R001/R002/R003 require Claude's targeted independent
+closure review. The final-head evidence below supports that handoff; it is not
+the implementer's closure verdict.
 
 The first full Windows remediation batch at `5c676db0` stopped at strict
 clippy's `items_after_test_module` lint, before its tests: the new payload test
@@ -339,3 +339,61 @@ log is retained and not credited; the complete batch restarts at `cc742fbe`.
 An interim 25-control run at `caf5725` completed with all intended kills and
 a restored green baseline; its logs are preserved, but the final-head run
 also includes the payload control and is the handoff evidence.
+
+### Fresh remediation evidence at `cc742fbe`
+
+All code evidence below is for remote code head
+`cc742fbe37c4a77c49ab99bbe08d71a13bc64c61`, not the rejected or interim heads.
+The host window was granted from 04:00 on 2026-10-12; Minion-Memory held its
+batches. Windows ran first, then Linux, with two Cargo jobs and no overlapping
+gate batch. Both drivers completed with exit 0. E: retained over 1.3 TB free.
+
+| Gate | Windows | Linux |
+| --- | --- | --- |
+| Standalone `cargo check -p minion-agent-native-fs` | PASS | PASS |
+| fmt / strict workspace clippy / strict rustdoc / xtask verify | PASS | PASS |
+| Full workspace/all-features tests | 675 passed, 0 failed, 0 ignored | 667 passed, 0 failed, 1 ignored |
+| Original CE-02 routing/recovery/validation probe | 41/41 MATCH | 41/41 MATCH |
+| Additional directory-link recovery rows | 4/4 MATCH, no unfired injection | 2/2 MATCH, no unfired injection; junction rows N/A |
+| Intended-witness negative controls | 26/26 KILLED | 14/14 KILLED |
+
+Every control's intended unmutated witness was selected and passed before
+mutation, and both restored baselines passed. The four old-std-classification
+controls failed their respective directory-link row comparisons on Windows.
+The readdir / first-rmdir / final-rmdir disappearance controls were killed on
+both platforms; the recovery-retry-unlink control was killed on Windows and
+is N/A on Linux. The portable unsupported-reparse-tag control failed its
+assigned payload assertion on both platforms. Compile/setup errors are INVALID,
+not kills. R003's separate known-bad package check restored the original missing
+Security feature in the disposable copy: exit 101, E0425 at `CreateFileW`;
+the corrected final-head standalone checks pass.
+
+The Linux focused removal run passed all seven selected tests, including the
+two additional link rows, three restored disappearance stages, all 41 original
+rows, and the stack-independent walk. The full-suite ignored permission-origin
+witness was then run explicitly as uid 1000 and passed. The uid-1000 canonical
+filesystem corpus passed all **524** applicable cases, including **160**
+L12-D007 cases, with **zero privileged exclusions**; 80 Windows-only cases are
+platform-excluded. The uid-1000 read-only-removal corpus passed all nine
+applicable documents. Windows' full-suite adapter passed all 604 filesystem
+cases and 19 applicable read-only-removal documents. Shared manifest/schema
+validation subsequently passed **921 tests**.
+
+The Linux environment and commands are the section-5 recipe, with Node
+`v22.15.1`, Rust `1.97.1`, pinned ICU, the recorded Rust image digest, project
+E: bind mounts, private tmpfs fixtures and dynamically discovered uid-1000 test
+binaries. The updated committed recipe includes the standalone package check,
+focused removal run and explicit ignored permission witness. No named volume,
+C: cache, new shared rule, Python change or canonical expectation change is used.
+
+Fresh local evidence: `windows-final-{fmt,native-fs-check,clippy,test,doc,xtask,ce02}.log`,
+`windows-controls-output.log`, `windows-controls/`, `shared-validation.log`, and
+`linux-logs/{native-fs-check,fmt,clippy,test,doc,xtask,ce02,remediation-focused,controls}.log`
+under `<project>/.tmp/codex-scratch/l12d007/`. Linux uid-1000 logs are
+`fs_path_domain_conformance-uid1000.log`, `fs_remove_readonly_conformance-uid1000.log`
+and `fs_path_domain-uid1000.log`; fresh control details are in
+`linux-logs/control-details/`. The prior detail directory was preserved as
+`control-details-history-a2fa8333/` before export, so no stale control log is
+credited. The Linux driver printed its final PASS marker and the container exited
+cleanly before shared validation. The batch-done notice released the host
+reservation; the exact-pair independent targeted review is the sole next step.
