@@ -4,6 +4,52 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Layers 11–14 and Minion-Memory retrospective: Minion-Process, a reusable process kit — direction approved 2026-10-11
+
+**Record:** `process/2026-10-11-reusable-workflow-retrospective.md` (Owner request). The Owner approved the
+**direction and the project name** in chat on 2026-10-11 (quoted verbatim in the record's §7.1). The
+record's five decisions are each still open and land only through the existing review and authorization
+gates. Coordination: `minion-agent#205` (PROC-KIT). Independent review of the first draft: Codex
+`PROC-KIT-R001`–`R004` and a second Claude session's `K1`–`K9` on `minion-agent-docs#287`.
+
+**The problem.** The process is reliable: the HIGH-value semantic findings of Layers 11–13 were caught by
+independent review before the candidates under review were certified (three defects escaped an earlier
+certified baseline and were fixed as deltas: `#144`, `#147`, `#163`). The remaining cost is coordination
+volume: about 1,280 GitHub comments across Layers 11–14, 192 of them Claude relaying Codex's verdicts during
+the period when Codex's session had no GitHub write path, 131 review-record PRs (50 closed unmerged, 44 in
+one batch), and 39 status-only PRs; routing questions still reached the Owner (Minion-Memory `G-018`,
+`G-019`, `G-024`, `G-027`, each with its own scoped authorization); and the second project adopted the
+process by copy-and-adapt (pinned-SHA reference, re-derived taxonomy and hazard families, forked CLI).
+
+**What review corrected.** The first draft proposed a lighter, never-convergence route for all
+"process"-kind work and cited `CE-PROC-L13-01` as ceremony. Review traced real authority, acceptance and
+containment defects to the later rounds of exactly those episodes (`CE-PROC-L13-01` checkpoint 4,
+`PROC-AUTHDEP-R001`, `PROC-L256-R001`, `#272`, `CE-L12D007-01`). The record now routes by **consequence**
+(containment, acceptance, transitions, authority, execution, evidence interpretation) rather than by label,
+upgrades the class automatically on a matching finding, keeps the final review of the changed candidate on
+every route, and measures **rounds without new discriminating evidence** instead of round counts.
+
+**The direction (approved).** A versioned, project-neutral process kit, **Minion-Process**
+(`EGAILab/minion-process`), consumed through a per-project `profile.yaml` validated in CI; kinds plus
+consequence classes with a route per class; a routing table and closed Owner-only list, proposed for the
+Owner to enact through the delegations; hand-offs generated from state with reply-to recorded per
+dispatch and a send-once, verify, never-blind-retry dispatch protocol; review records with a
+machine-readable header so the tool computes convergence triggers and the §14.6 metrics; side effects
+only through the tool, with cleanup that proves disposability before deleting; verified gate launchers;
+a fault-fired rule for probes; one writable control plane per project; and a lessons annex plus incident
+replay suite, so a new rule enters the normative text only with a lesson record and a replay test. The
+Warp Factories model supplied the packaging and routing shape; Minion's gates (exact-SHA review, negative
+controls, convergence for governing surfaces) are kept because they are stronger than Warp's advisory
+review.
+
+**Still open.** Decisions 1–5 of the record, including Minion-Agent's control-plane backend, now framed
+on the measured reliability of Codex's present GitHub path through `minion_process`. Owner sequencing:
+process changes start after `L12-D007` (`#199`) is closed; the `w1:p1` Claude session drives them.
+
+**Not changed by this entry.** No normative text in `process/agent-workflow.md` or
+`process/coordination-state.md` changes here; those changes land as separate reviewed PRs per §14.3,
+under the current rules, not the proposed ones.
+
 ## Layer 13 retrospective: earlier semantic discovery and deterministic workflow mechanics — proposed 2026-10-01
 
 **The problem.** WP-13.1, WP-13.2, WP-12.E3 and L0506-D001 showed the same two costs (`assurance/process-friction-layer13.md`):
