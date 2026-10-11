@@ -111,6 +111,17 @@ unchanged. This pass also stopped before tests or native fixtures; its result
 is not credited. The corrected source receives a focused Linux clippy check
 before the final Windows-then-Linux G3 runs.
 
+The first full Linux test run at `4ee8938b` stopped on recovery row
+`L9-link-to-readonly-target`: result, origin, calls and remaining entries
+matched Pi, but the binding probe reported an empty read-only list. The probe
+had wrongly restricted both read-only fixture setup and its observer to
+Windows. Pi's recovery probe uses `chmod(0444)` and observes the owner-write
+bit on both platforms. The Rust test now creates mode-0444 entries on Unix
+and observes their owner-write bit without following links; Windows fixture
+behavior is unchanged. No production or oracle change was made. That failed
+run is retained and not credited; the corrected candidate receives fresh
+Windows-then-Linux gates and controls.
+
 The first disposable control copy omitted three neutral corpus files included
 by existing Rust unit tests. Recompiling its first mutant failed at compile
 time; that attempt was INVALID, not a kill. The copy recipe now includes the
@@ -177,7 +188,9 @@ No named volume or host location outside the project is writable.
 Interim draft: the Windows results below are at
 `3235a8974f3dd7ed11da30ca5758b38904eaca77`. The subsequent Unix fixture-literal
 correction is `4ee8938b98bcfb46b390b85a0408cf678d5ea7bf`; focused Linux fmt/clippy
-passed there, and its final Windows-then-Linux G3 is in progress. These draft
+passed there. Its full Windows G3, 41-row probe, 17 controls and 921 shared
+validation tests passed. Its Linux full tests exposed the probe-fixture defect
+described in section 4, so the corrected final-head gates remain pending. These draft
 results do not hand off or certify the later head.
 
 - Windows full workspace/all-features tests: **669 passed, 0 failed, 0 ignored**.
