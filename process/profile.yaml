@@ -1,13 +1,16 @@
 # Minion-Agent's Minion-Process profile: the one project-specific process file (live copy).
-# Kit: EGAILab/minion-process, pinned version below (tag v0.1.0 = merge 0876e11d731ff7ad0869f03c464fa69a8de0786f).
-# Validate: python -m minion_process profile validate process/profile.yaml   (from the kit checkout)
-# Adoption state (P1, 2026-10-12): the profile and pin are adopted; agent-workflow.md remains the in-force
-# normative text for Minion-Agent until the P2 cut-over switches it to the kit's WORKFLOW.md (same rules,
-# same section numbers). The kit's reference copy of this profile is profiles/minion-agent.profile.yaml.
-kit: {version: "0.1.0", source: EGAILab/minion-process}
+# Kit: EGAILab/minion-process, pinned version below (tag v0.2.0).
+# Cut-over (P2, 2026-10-12, minion-agent#212): the kit's WORKFLOW.md at the pinned tag is Minion-Agent's
+# in-force normative text; this repository's process/*.md files are pointers; process/tools is retired.
+# Running the CLI at the pinned tag (one-time per pin, inside the Minion-Agent root):
+#   git -C E:\AI\Projects\OpenMinds\Minions\Minion-Process worktree add E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.2.0 v0.2.0
+#   cd E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.2.0 && python -m minion_process --repo EGAILab/minion-agent status <issue>
+# Validate this file: python -m minion_process profile validate <path to this file>
+# The kit's reference copy of this profile is profiles/minion-agent.profile.yaml.
+kit: {version: "0.2.0", source: EGAILab/minion-process}
 project: minion-agent
 
-authority:                                # agent-workflow.md section 3: adopted Pi source -> parity manifest -> spec -> conformance
+authority:                                # WORKFLOW.md section 3: adopted Pi source -> parity manifest -> spec -> conformance
   - {kind: source, name: pi, pin: b7bb00b936dbe21b8e160b3e89efdec361846699, verify: git-sha}
   - {kind: manifest, path: ../minion-agent/pi-parity-manifest.yaml}
   - {kind: spec, path: spec/}
@@ -21,7 +24,7 @@ repos:
 
 coordination: {backend: github-issue, repo: EGAILab/minion-agent}   # Owner decision 5 (2026-10-11): stay on GitHub issues
 
-conformance:                              # agent-workflow.md section 9: exactly three canonical behavior families
+conformance:                              # WORKFLOW.md section 9: exactly three canonical behavior families
   families: [runtime, session, agent]
   support: [schema]                       # conformance/schema is support infrastructure, not a fourth family
 
@@ -41,6 +44,6 @@ gates:                                    # free-text until the kit launchers la
   python: {launcher: "minion-agent-python: eval build.sh --env; pytest, coverage 100%, ruff, mypy, schema + manifest validation, canonical suites (pinned ICU)", tiers: [g0, g1, g2, g3]}
   rust:   {launcher: ".agents/gate-preflight.ps1 then cargo fmt/clippy/test/doc, xtask conformance verify (CARGO_BUILD_JOBS=4, shared target per platform)", tiers: [g0, g1, g2, g3]}
 
-delegation: {source: "https://github.com/EGAILab/minion-agent/issues/75", routing: false}   # routing: true once the #75 amendment (decision 3.1) is confirmed by the Owner
-wp_kinds_enabled: [semantic, delta, process, scoping, status]   # Owner decision 2 (2026-10-11); schema enforcement lands in P2
+delegation: {source: "https://github.com/EGAILab/minion-agent/issues/75", routing: true}   # #75 Amendment 2 (Owner, 2026-10-12): routes RT-1..RT-6 delegated (kit routing.md)
+wp_kinds_enabled: [semantic, delta, process, scoping, status]   # Owner decision 2 (2026-10-11); enforced by kit 0.2.0 (coordination-state.md section 14)
 environment: ../.agents/project-environment.ps1

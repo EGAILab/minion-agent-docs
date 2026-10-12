@@ -779,7 +779,7 @@ documentary change to the record and introduces none of the P1–P4 mechanics.
 |---|---|---|
 | P0 (this PR) | this retrospective; `process-history.md` entry | independent process review (Codex), second review (`w1:p1`), final review of the changed candidate |
 | P1 | `EGAILab/minion-process` created and seeded from current `process/**` and `process/tools/`; `profile.yaml` for Minion-Agent; `WORKFLOW.md` split into core + lessons with text preserved; `profile validate` | decision 1 enacted; Owner confirmation for the repository and the `Minions/Minion-Process` checkout; `#199` closed (Owner sequencing). **DONE 2026-10-12:** kit 0.1.0 (`minion-process#1` APPROVED by Codex at `645d9120`, merged `0876e11d`, tag `v0.1.0`; coordination `minion-agent#211`); Minion-Agent profile and pin in `process/profile.yaml`; `agent-workflow.md` stays in force until the P2 cut-over |
-| P2 | consequence classes and kinds in the state schema and transitions table; routing table; delegation amendments | Owner decisions 2 and 3 (recorded, §7.1); the `#75` amendment text confirmed by the Owner before or with the PR; `#199` closed |
+| P2 | consequence classes and kinds in the state schema and transitions table; routing table; delegation amendments | Owner decisions 2 and 3 (recorded, §7.1); the `#75` amendment text confirmed by the Owner before or with the PR; `#199` closed. **DONE 2026-10-12:** `#75` Amendment 2 posted by the Owner (issuecomment-6115715796); kit 0.2.0 (`minion-process#2` APPROVED by Codex at `f026ea1c`, merged `38c2845d`, tag `v0.2.0`; coordination `minion-agent#212`); Minion-Agent cut over: `process/profile.yaml` pin 0.2.0 with `routing: true`, process files are pointers to the kit, `process/tools` retired |
 | P3 | structured review-record header; `metrics` and `convergence counters`; composite verbs; `session start` and `cleanup`; `handoff`/`dispatch` with reply-to; launchers; fault-fired rule | P1 |
 | P4 | Minion-Memory re-adopts by profile; `mneme-process` retired; incident replay suite seeded from both projects' lessons | decision 4, P3 |
 
@@ -815,6 +815,16 @@ every round found something is not.
 ---
 
 ## 10. Revision history
+
+### Revision 5 (2026-10-12): P2 complete; Minion-Agent cut over to the kit
+
+Documentary. §8 P2 row marked DONE: the Owner posted `minion-agent#75` Amendment 2 (routing by rule
+`RT-1`–`RT-6`, Owner-only additions 11–14, list open-ended); kit 0.2.0 landed kinds, consequence
+classes, measured stage skips, the routing table and the trigger-notification rule (`minion-process#2`
+@ `f026ea1c`, merged `38c2845d`, tag `v0.2.0`; coordination `minion-agent#212`). Companion changes in
+this PR: `process/profile.yaml` (pin 0.2.0, `routing: true`), `process/agent-workflow.md` and the other
+process files become pointers to the kit (full text at `4dd10da5`), `process/tools/` retired in favour
+of the kit CLI, and the process-history entry. This record itself stays in this repository as history.
 
 ### Revision 4 (2026-10-12): P1 complete; ownership, repository and checkout decisions recorded
 
