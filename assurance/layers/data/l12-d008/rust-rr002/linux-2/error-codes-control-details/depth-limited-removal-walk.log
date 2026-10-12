@@ -1,0 +1,22 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.76s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+
+thread '<unnamed>' (24256) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:168:18:
+called `Result::unwrap()` on an `Err` value: FsError { code: Unknown, message: "mutant depth bound", path: Some(ResultString { units: JsString([47, 116, 109, 112, 47, 108, 49, 50, 100, 48, 48, 56, 47, 102, 105, 120, 116, 117, 114, 101, 115, 47, 46, 116, 109, 112, 51, 90, 51, 54, 74, 48, 47, 116, 114, 101, 101]), scalar: Some("/tmp/l12d008/fixtures/.tmp3Z36J0/tree") }) }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'execution::filesystem::rimraf::tests::removal_walk_uses_constant_interpreter_stack_for_deep_trees' (24255) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:172:10:
+called `Result::unwrap()` on an `Err` value: Any { .. }
+test execution::filesystem::rimraf::tests::removal_walk_uses_constant_interpreter_stack_for_deep_trees ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::removal_walk_uses_constant_interpreter_stack_for_deep_trees
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

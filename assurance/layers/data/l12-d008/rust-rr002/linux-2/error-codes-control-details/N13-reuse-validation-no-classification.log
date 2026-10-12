@@ -1,0 +1,22 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.06s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"V2-classification-eperm-file","result":"ok","path":null,"calls":{"lstat tree":1,"unlink tree":1},"remains":[],"unfired":["lstat tree #2"],"readonly":[]}
+
+thread 'execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire' (23365) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:591:13:
+assertion `left == right` failed: binding-only UNFIRED: "V2-classification-eperm-file"
+  left: Array [String("lstat tree #2")]
+ right: Array []
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

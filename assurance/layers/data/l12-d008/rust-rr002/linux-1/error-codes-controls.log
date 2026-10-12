@@ -1,0 +1,58 @@
+NOT_APPLICABLE N6-classification-eperm-skips-recovery: platform-specific native witness
+NOT_APPLICABLE N7-correction-error-replaces-original: platform-specific native witness
+NOT_APPLICABLE N8-correction-required-to-retry: platform-specific native witness
+NOT_APPLICABLE N9-retry-keeps-original: platform-specific native witness
+NOT_APPLICABLE N10-correction-follows-link: platform-specific native witness
+NOT_APPLICABLE N12-validation-routed-to-recovery: platform-specific native witness
+NOT_APPLICABLE handle-denial-keeps-access-code: platform-specific native witness
+NOT_APPLICABLE raw-code-collapses-to-error-kind: platform-specific native witness
+NOT_APPLICABLE std-classification-U8-dirlink-unlink-eperm: platform-specific native witness
+NOT_APPLICABLE std-classification-L10-dirlink-lstat-eperm: platform-specific native witness
+NOT_APPLICABLE std-classification-U9-junction-unlink-eperm: platform-specific native witness
+NOT_APPLICABLE std-classification-L11-junction-lstat-eperm: platform-specific native witness
+NOT_APPLICABLE retry-unlink-missing-is-error: platform-specific native witness
+ANCHOR PASS N1-directory-error-caught-as-classification
+ANCHOR PASS N2-retry-child-rmdir
+ANCHOR PASS N3-swallow-child-unlink-failure
+ANCHOR PASS N4-ancestor-error-origin
+ANCHOR PASS N5-enumerate-before-rmdir
+ANCHOR PASS N6-classification-eperm-skips-recovery
+ANCHOR PASS N7-correction-error-replaces-original
+ANCHOR PASS N8-correction-required-to-retry
+ANCHOR PASS N9-retry-keeps-original
+ANCHOR PASS N10-correction-follows-link
+ANCHOR PASS N11-nonrecursive-file-bypasses-shared-routing
+ANCHOR PASS N12-validation-routed-to-recovery
+ANCHOR PASS N13-reuse-validation-no-classification
+ANCHOR PASS N14-force-validation-returns-early
+ANCHOR PASS child-vanish-windows-only
+ANCHOR PASS handle-denial-keeps-access-code
+ANCHOR PASS raw-code-collapses-to-error-kind
+ANCHOR PASS depth-limited-removal-walk
+ANCHOR PASS std-classification-U8-dirlink-unlink-eperm
+ANCHOR PASS std-classification-L10-dirlink-lstat-eperm
+ANCHOR PASS std-classification-U9-junction-unlink-eperm
+ANCHOR PASS std-classification-L11-junction-lstat-eperm
+ANCHOR PASS readdir-missing-is-error
+ANCHOR PASS first-rmdir-missing-is-error
+ANCHOR PASS final-rmdir-missing-is-error
+ANCHOR PASS retry-unlink-missing-is-error
+ANCHOR PASS reparse-any-tag-is-link
+ANCHORS: 27 mutations uniquely resolved (all platforms)
+FRESH WORKSPACE SOURCES 212: /tmp/l12d007/control-code/minion-agent-rust
+CONTROL TARGET /control-target
+BASELINE: 14 intended witnesses selected and passed
+KILLED N1-directory-error-caught-as-classification by E1-child-rmdir-fails
+KILLED N2-retry-child-rmdir by E1-child-rmdir-fails
+KILLED N3-swallow-child-unlink-failure by E2-inner-unlink-fails
+KILLED N4-ancestor-error-origin by E2-inner-unlink-fails
+KILLED N5-enumerate-before-rmdir by E5-child-rmdir-busy
+KILLED N11-nonrecursive-file-bypasses-shared-routing by T1-single-file-recovered
+KILLED N13-reuse-validation-no-classification by V2-classification-eperm-file
+KILLED N14-force-validation-returns-early by V9-validation-enoent-force
+KILLED child-vanish-windows-only by @execution::filesystem::rimraf::tests::a_child_vanishing_between_enumeration_and_lstat_is_removed_on_every_platform
+KILLED depth-limited-removal-walk by @execution::filesystem::rimraf::tests::removal_walk_uses_constant_interpreter_stack_for_deep_trees
+KILLED readdir-missing-is-error by @execution::filesystem::rimraf::tests::disappearance_at_readdir_is_accepted
+KILLED first-rmdir-missing-is-error by @execution::filesystem::rimraf::tests::disappearance_at_first_rmdir_is_accepted
+KILLED final-rmdir-missing-is-error by @execution::filesystem::rimraf::tests::disappearance_at_final_rmdir_is_accepted
+KILLED reparse-any-tag-is-link by @native:tests::directory_reparse_payloads_keep_libuv_readlink_acceptance

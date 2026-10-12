@@ -1,0 +1,8 @@
+FRESH WORKSPACE SOURCES 212: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr002\control-code\minion-agent-rust
+baseline PASS
+mutant EXPECTED FAIL
+known-bad-shared-target-old-mtime EXPECTED FAIL
+KNOWN-BAD mutant reused after byte restoration without source freshness
+FRESH WORKSPACE SOURCES 212: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d008-rust-code\minion-agent-rust
+candidate-isolated-fresh-gate PASS
+RR002 CACHE REGRESSION PASS: control=E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows-controls, gate=E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows; older checkout runs no mutant

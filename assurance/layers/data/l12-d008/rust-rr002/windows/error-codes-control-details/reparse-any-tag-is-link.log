@@ -1,0 +1,19 @@
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr002\control-code\minion-agent-rust\crates\minion-agent-native-fs)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.11s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows-controls\debug\deps\minion_agent_native_fs-0dee5cac2895df67.exe)
+
+running 1 test
+
+thread 'tests::directory_reparse_payloads_keep_libuv_readlink_acceptance' (2168) panicked at crates\minion-agent-native-fs\src\tests.rs:29:5:
+assertion failed: !valid_directory_link(&link(0x9000001a, "cloud"))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test tests::directory_reparse_payloads_keep_libuv_readlink_acceptance ... FAILED
+
+failures:
+
+failures:
+    tests::directory_reparse_payloads_keep_libuv_readlink_acceptance
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p minion-agent-native-fs --lib`

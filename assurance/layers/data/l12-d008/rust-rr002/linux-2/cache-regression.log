@@ -1,0 +1,8 @@
+FRESH WORKSPACE SOURCES 212: /tmp/l12d007/control-code/minion-agent-rust
+baseline PASS
+mutant EXPECTED FAIL
+known-bad-shared-target-old-mtime EXPECTED FAIL
+KNOWN-BAD mutant reused after byte restoration without source freshness
+FRESH WORKSPACE SOURCES 212: /tmp/l12d008/work/minion-agent-rust
+candidate-isolated-fresh-gate PASS
+RR002 CACHE REGRESSION PASS: control=/control-target, gate=/target; older checkout runs no mutant

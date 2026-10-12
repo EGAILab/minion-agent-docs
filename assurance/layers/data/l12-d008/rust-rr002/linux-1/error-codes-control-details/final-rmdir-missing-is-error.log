@@ -1,0 +1,22 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.93s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+DISAPPEARANCE {"platform":"linux","id":"D3-final-rmdir","result":"not_found","path":"tree","calls":{"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":2,"unlink tree/child":1},"remains":[],"unfired":[]}
+
+thread 'execution::filesystem::rimraf::tests::disappearance_at_final_rmdir_is_accepted' (34501) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:664:5:
+assertion `left == right` failed: concurrent disappearance must succeed
+  left: String("not_found")
+ right: "ok"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::disappearance_at_final_rmdir_is_accepted ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::disappearance_at_final_rmdir_is_accepted
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

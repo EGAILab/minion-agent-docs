@@ -1,0 +1,193 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling libc v0.2.189
+   Compiling anyhow v1.0.104
+   Compiling jobserver v0.1.35
+   Compiling hashbrown v0.17.1
+   Compiling syn v3.0.4
+   Compiling syn v2.0.119
+   Compiling cc v1.4.6
+   Compiling libm v0.2.16
+   Compiling indexmap v2.14.2
+   Compiling wasmtime-internal-core v49.0.0
+   Compiling generic-array v0.14.7
+   Compiling synstructure v0.13.2
+   Compiling thiserror v2.0.21
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling serde_derive v1.0.229
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling zerovec-derive v0.11.6
+   Compiling zerofrom v0.1.8
+   Compiling displaydoc v0.2.7
+   Compiling yoke v0.8.3
+   Compiling thiserror-impl v2.0.21
+   Compiling zerovec v0.11.8
+   Compiling digest v0.10.7
+   Compiling pulley-macros v49.0.0
+   Compiling smallvec v1.16.2
+   Compiling semver v1.0.28
+   Compiling cranelift-bitset v0.136.0
+   Compiling gimli v0.33.0
+   Compiling sha2 v0.10.9
+   Compiling target-lexicon v0.13.5
+   Compiling cranelift-entity v0.136.0
+   Compiling wasmparser v0.258.0
+   Compiling cobs v0.3.0
+   Compiling tinystr v0.8.4
+   Compiling wasmtime-internal-versioned-export-macros v49.0.0
+   Compiling futures-macro v0.3.31
+   Compiling errno v0.3.14
+   Compiling cranelift-isle v0.136.0
+   Compiling icu_locale_core v2.3.0
+   Compiling futures-util v0.3.31
+   Compiling crc32fast v1.5.2
+   Compiling signal-hook-registry v1.4.8
+   Compiling pulley-interpreter v49.0.0
+   Compiling postcard v1.1.3
+   Compiling cranelift-bforest v0.136.0
+   Compiling potential_utf v0.1.6
+   Compiling zerotrie v0.2.5
+   Compiling tokio-macros v2.5.0
+   Compiling ring v0.17.14
+   Compiling mio v1.2.2
+   Compiling socket2 v0.5.10
+   Compiling cranelift-codegen-meta v0.136.0
+   Compiling icu_collections v2.3.0
+   Compiling icu_normalizer_data v2.3.0
+   Compiling tokio v1.44.2
+   Compiling icu_provider v2.3.1
+   Compiling rust_icu_release v5.8.0
+   Compiling cpp_demangle v0.5.1
+   Compiling zstd-sys v2.1.0+zstd.1.5.7
+   Compiling cranelift-codegen v0.136.0
+   Compiling serde_json v1.0.140
+   Compiling rust_icu_sys v5.8.0
+   Compiling object v0.40.0
+   Compiling getrandom v0.4.3
+   Compiling wasm-encoder v0.258.0
+   Compiling getrandom v0.2.17
+   Compiling wasmprinter v0.258.0
+   Compiling icu_normalizer v2.3.0
+   Compiling icu_properties v2.3.0
+   Compiling regalloc2 v0.15.2
+   Compiling thiserror-impl v1.0.69
+   Compiling crossbeam-epoch v0.9.21
+   Compiling wasmtime-environ v49.0.0
+   Compiling thiserror v1.0.69
+   Compiling rustls v0.23.45
+   Compiling idna_adapter v1.2.2
+   Compiling rustls-webpki v0.103.15
+   Compiling uuid v1.25.0
+   Compiling ref-cast v1.0.27
+   Compiling crossbeam-deque v0.8.8
+   Compiling zerocopy v0.8.56
+   Compiling hyper v1.11.0
+   Compiling getrandom v0.3.4
+   Compiling wasm-metadata v0.258.0
+   Compiling idna v1.1.0
+   Compiling rust_icu_common v5.8.0
+   Compiling wit-parser v0.258.0
+   Compiling ref-cast-impl v1.0.27
+   Compiling ittapi-sys v0.4.0
+   Compiling zstd-safe v7.3.0
+   Compiling socket2 v0.6.5
+   Compiling wasmtime-internal-unwinder v49.0.0
+   Compiling rayon-core v1.13.0
+   Compiling wit-component v0.258.0
+   Compiling hyper-util v0.1.20
+   Compiling tower v0.5.3
+   Compiling url v2.5.8
+   Compiling tokio-rustls v0.26.5
+   Compiling parking_lot_core v0.9.10
+   Compiling wasmtime-internal-fiber v49.0.0
+   Compiling wasmtime-internal-jit-debug v49.0.0
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling serde_spanned v1.1.1
+   Compiling dirs-sys-next v0.1.2
+   Compiling wasmtime-internal-component-macro v49.0.0
+   Compiling fluent-uri v0.3.2
+   Compiling directories-next v2.0.0
+   Compiling ahash v0.8.12
+   Compiling derive_more-impl v1.0.0
+   Compiling wasmtime-internal-cranelift v49.0.0
+   Compiling ada-url v3.1.0
+   Compiling petgraph v0.6.5
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling hyper-rustls v0.27.9
+   Compiling parking_lot v0.12.3
+   Compiling tower-http v0.6.11
+   Compiling zstd v0.13.3
+   Compiling cranelift-frontend v0.136.0
+   Compiling cranelift-native v0.136.0
+   Compiling wasmtime-internal-wit-bindgen v49.0.0
+   Compiling rust_icu_ustring v5.8.0
+   Compiling rust_icu_uenum v5.8.0
+   Compiling serde_urlencoded v0.7.1
+   Compiling debugid v0.8.0
+   Compiling futures-executor v0.3.31
+   Compiling wasmtime v49.0.0
+   Compiling uuid-simd v0.8.0
+   Compiling tempfile v3.27.0
+   Compiling futures v0.3.31
+   Compiling fxprof-processed-profile v0.8.1
+   Compiling reqwest v0.12.28
+   Compiling rust_icu_ucol v5.8.0
+   Compiling wasm-compose v0.258.0
+   Compiling wasmtime-internal-cache v49.0.0
+   Compiling derive_more v1.0.0
+   Compiling rayon v1.12.0
+   Compiling referencing v0.33.0
+   Compiling ittapi v0.4.0
+   Compiling addr2line v0.26.1
+   Compiling wasmtime-internal-jit-icache-coherence v49.0.0
+   Compiling email_address v0.2.9
+   Compiling async-trait v0.1.92
+   Compiling jsonschema v0.33.0
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling nix v0.30.1
+   Compiling minion-agent-pinned-icu v0.1.0 (/tmp/l12d008/control-code/minion-agent-rust/crates/minion-agent-pinned-icu)
+   Compiling minion-agent v0.1.0 (/tmp/l12d008/control-code/minion-agent-rust/crates/minion-agent)
+warning: variable does not need to be mutable
+   --> crates/minion-agent/src/execution/filesystem/rimraf.rs:143:9
+    |
+143 |     let mut first_error = None;
+    |         ----^^^^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `failures` is never read
+   --> crates/minion-agent/src/execution/filesystem/rimraf.rs:146:13
+    |
+146 |             failures += 1;
+    |             ^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `minion-agent` (lib test) generated 2 warnings (run `cargo fix --lib -p minion-agent --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 46s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-30f01ba75be520f5)
+
+running 1 test
+
+thread 'execution::filesystem::rimraf::tests::div008::div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed' (26921) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests/div008.rs:270:5:
+assertion `left == right` failed: continue siblings, retaining only the failed subtree and ancestors
+  left: Array [String("tree/"), String("tree/a/"), String("tree/a/x"), String("tree/b/"), String("tree/b/y")]
+ right: Array [String("tree/"), String("tree/a/"), String("tree/a/x")]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::div008::div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::div008::div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

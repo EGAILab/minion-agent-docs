@@ -1,0 +1,19 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.47s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+
+thread 'execution::filesystem::rimraf::tests::a_child_vanishing_between_enumeration_and_lstat_is_removed_on_every_platform' (23958) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:114:48:
+called `Result::unwrap()` on an `Err` value: FsError { code: NotFound, message: "No such file or directory (os error 2)", path: Some(ResultString { units: JsString([47, 116, 109, 112, 47, 108, 49, 50, 100, 48, 48, 56, 47, 102, 105, 120, 116, 117, 114, 101, 115, 47, 46, 116, 109, 112, 71, 84, 65, 101, 71, 71, 47, 116, 114, 101, 101, 47, 99, 104, 105, 108, 100]), scalar: Some("/tmp/l12d008/fixtures/.tmpGTAeGG/tree/child") }) }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::a_child_vanishing_between_enumeration_and_lstat_is_removed_on_every_platform ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::a_child_vanishing_between_enumeration_and_lstat_is_removed_on_every_platform
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

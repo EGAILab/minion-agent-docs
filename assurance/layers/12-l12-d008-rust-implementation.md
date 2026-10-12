@@ -1,6 +1,6 @@
 # L12-D008 Rust implementation — DIV-008
 
-Status: L12D008-RR001 remediation complete; independent Rust closure re-review pending.
+Status: L12D008-RR001 CLOSED; L12D008-RR002 remediation complete, independent closure review pending.
 Not certified. Coordination: minion-agent#215; provenance: #127.
 
 ## Baselines and authority
@@ -333,3 +333,128 @@ comparator observations are committed under `data/l12-d008/rust-rr001/`.
 
 RR001 remains an independent-review finding until Claude closes it at the new
 exact pair. No provisional closure, self-certification or merge is claimed.
+
+## RR002: isolate mutant artifacts and refresh workspace-source mtimes
+
+The paragraph above is historical: independent closure re-review 2
+(#215 issuecomment-6130383125) CLOSED RR001. It also found HIGH RR002.
+Cargo's workspace-member artifact identity is shared across checkouts, while
+local freshness uses source mtimes. The old Linux recipe's `cp -rp` retained
+checkout mtimes older than the last control build. Restoring the source bytes
+did not restore the native-fs test binary: the final C0 baseline rebuilt only
+the minion-agent package. A later G3 reused the reparse-any-tag-is-link mutant.
+A separate fresh checkout also reused a foreign CARGO_MANIFEST_DIR embedded
+in integration binaries. Rebuilding after restoration alone cannot address
+cross-checkout reuse. No prior observation is rewritten or credited anew.
+
+The remediation is scripts only. No Rust production, Python, shared rule,
+canonical expectation or manifest disposition changes. The code candidate is
+`4335d3aeb1ca83315924b45911e35b20f3b942c9` (#219).
+
+### Cache and freshness boundaries
+
+- Gates retain `.tmp/cache/cargo-target/windows` and `linux`.
+- BOTH control drivers require a different per-platform mutant target:
+  `.tmp/cache/cargo-target/windows-controls` or the `/control-target` bind
+  from `.tmp/cache/cargo-target/linux-controls`. Missing configuration,
+  a gate target, a foreign path or another unexpected spelling refuses.
+  Controls cannot silently inherit the gate's CARGO_TARGET_DIR, even when
+  invoked outside the gate launcher. There is one target per platform per
+  purpose, not one per mutant or checkout. Neither target is cleaned.
+- `cargo-cache-safety.py` makes content-neutral mtime updates to every
+  workspace-member Rust source, Cargo manifest and lockfile before G3.
+  It excludes target and .git, refuses link/reparse ancestry and unknown
+  inspection failures, and proves each file before touching it.
+- Windows calls that same helper before its gate command list. Linux
+  copies source with `cp -r` WITHOUT `-p`, then runs the helper. Controls
+  also refresh their disposable workspace before their baseline, so the
+  control target cannot reuse a foreign checkout's baked-in fixture path.
+- Five intercepted target-refusal controls require zero mkdir calls.
+  The static 27-anchor precheck is unchanged and still runs before Cargo.
+
+This implements the requested interim rule under the #215 dispatch while
+the general #209 shared-target policy decision remains with the Owner.
+It does not claim an Owner decision on that broader policy.
+
+### Permanent real-Cargo regression
+
+`cargo-cache-regression.py`, run after BOTH full control batches, uses the
+actual native-fs directory-reparse witness and the exact reparse-any-tag-is-link
+mutation. It requires a green baseline, a compiled mutant failing for the
+named assertion, byte restoration with an artificially old source mtime,
+and the same failure again WITHOUT a package rebuild. This is the known-bad
+shared-target/no-freshness behavior, deliberately confined to the control cache.
+
+It then makes the gate checkout's Rust files old too, refreshes them using
+the SAME G3 helper, and runs the same witness in the separate gate cache.
+Acceptance requires a rebuilt native-fs package, selected witness passing,
+zero failures and no compile/setup error. A regression that does not actually
+reproduce mutant reuse is INVALID, not a credit. Source bytes are restored
+in finally; leaving a mutant artifact in the isolated control target is safe
+because ordinary gates never select it and every later control baseline refreshes.
+
+### Fresh RR002 evidence
+
+Windows and then TWO Linux recipe runs completed sequentially under the released
+host reservation. Four Cargo jobs; no foreign native batch, no target cleanup.
+Preflights: Windows 27.97 GB free memory; Linux run 1 28.41 GB, run 2 27.88 GB;
+no active builds before each. E: remained above 1200 GB free. The two Linux
+containers used the SAME gate/control binds with another freshly copied source
+tree for each run. Both containers exited and were removed normally; only the
+unrelated long-lived pgvector container remained.
+
+| Fresh gate | Windows | Linux run 1 | Linux run 2 |
+| --- | --- | --- | --- |
+| Full workspace/all-features tests | 678 passed / 0 failed / 0 ignored | 670 / 0 / 1 | 670 / 0 / 1 |
+| Native-fs package check, fmt, clippy, rustdoc, xtask | all exit 0 | all exit 0 | all exit 0 |
+| Focused real removal regressions | 12 passed | 10 passed | 10 passed |
+| All-platform static anchors | 27/27 | 27/27 | 27/27 |
+| Cache-target refusal check, intercepted | 5/5, zero mkdir | 5/5, zero mkdir | 5/5, zero mkdir |
+| L12-D007 controls | 26/26 KILLED | 14/14 KILLED | 14/14 KILLED |
+| DIV-008 controls | 4/4 KILLED | 4/4 KILLED | 4/4 KILLED |
+| Selected/passing and restored control baselines | green | green | green |
+| Real Cargo old-mtime regression | known-bad RED, isolated/fresh GREEN | RED / GREEN | RED / GREEN |
+| Overall recipe exit | 0 | 0 | 0 |
+
+Both Linux runs explicitly executed the ignored real permission witness as
+uid 1000: 1/1. Path-domain and read-only-removal corpora each passed 2/2 under
+that uid. Each fresh external DIV-008 probe ran all 45 rows: 19 MATCH + 26 DIV-008,
+zero FAIL/INVALID; comparator self-test 23/23 and real-row controls 15/15.
+The unchanged Windows real-provider matrix and 41 CE-02 routing rows ran again
+in the fresh full suite/focused run. No new external Windows or pinned-Pi replay
+is claimed; previously accepted oracle evidence remains history.
+
+The Windows target-refusal check ran as a separate fresh invocation (5/5),
+because the already-running launcher had loaded its command list before that
+additional read-only check was added. The Rust source tree and all other
+executed gate/control commands equal the frozen code tree. The final committed
+launcher includes that same check; both Linux recipes executed it inline.
+All compiled production/test Rust source bytes were unchanged throughout G3.
+The pre-existing Windows linker-message warning remains disclosed in the logs.
+No setup, unmatched anchor, compiler error, wrong witness or unexpected unfired
+injection was credited as a kill.
+
+Raw native outputs, selected baselines, mutant signatures, restored baselines,
+all three real-Cargo regression stages and native exit files are committed under
+`assurance/layers/data/l12-d008/rust-rr002/{windows,linux-1,linux-2}/` (226 files).
+The known-bad logs explicitly show the restored old-mtime source reusing the
+mutant WITHOUT compiling native-fs; the candidate logs show native-fs rebuilding
+in the gate target and its named reparse witness passing. Source bytes in the
+candidate checkout are git-clean after the content-neutral mtime proof.
+
+Reproduction: Windows uses the committed launcher command in the RR001 history
+above, with fresh log and disposable copy paths. Its two targets are configured
+explicitly by the launcher. Linux uses the same pinned image
+`sha256:b1b3c9c0d921d7fa0a6d1f9ec7e4eab87f8c8ec97644c3d791450f131dec813f`,
+source/data/node/ICU/search-artifact read-only E: binds, and E: Cargo home,
+gate target, control target and logs. Add the writable bind
+`.tmp/cache/cargo-target/linux-controls:/control-target`. Every host bind source
+is resolved and real-path/link-hop proven immediately before Docker. Container
+root is read-only; private `--tmpfs /tmp:exec,size=6g`, TMP/TEMP/TMPDIR there;
+no named volume. Run `scripts/div008-linux-gates.sh` twice sequentially, each
+in a new container with fresh logs; do NOT preserve copy mtimes or clean targets.
+Rust 1.97.1, Node 22.15.1, pinned ICU 78.3 and official search artifacts.
+
+RR002 remains OPEN pending Claude's independent closure at the exact pushed pair.
+Rust L12-D008 is NOT CERTIFIED; #127 is not closed. The next step is independent
+RR002 closure and changed-candidate review, not self-certification or merge.

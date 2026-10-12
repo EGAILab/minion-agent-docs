@@ -1,0 +1,10 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.13s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"C0-no-error","result":"ok","path":null,"calls":{"lstat tree":2,"lstat tree/child":1,"lstat tree/child/f":1,"lstat tree/g":1,"readdir tree":1,"readdir tree/child":1,"rmdir tree":2,"rmdir tree/child":2,"unlink tree/child/f":1,"unlink tree/g":1},"remains":[],"unfired":[]}
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.05s
+

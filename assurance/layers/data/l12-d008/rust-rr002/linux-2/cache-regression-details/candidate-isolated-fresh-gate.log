@@ -1,0 +1,9 @@
+   Compiling minion-agent-native-fs v0.1.0 (/tmp/l12d008/work/minion-agent-rust/crates/minion-agent-native-fs)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.44s
+     Running unittests src/lib.rs (/target/debug/deps/minion_agent_native_fs-832d7f43f75468d7)
+
+running 1 test
+test tests::directory_reparse_payloads_keep_libuv_readlink_acceptance ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

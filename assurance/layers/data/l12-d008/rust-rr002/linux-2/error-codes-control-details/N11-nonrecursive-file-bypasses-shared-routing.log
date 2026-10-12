@@ -1,0 +1,22 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.10s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"T1-single-file-recovered","result":"permission_denied","path":"tree","calls":{"lstat tree":1,"unlink tree":1},"remains":["tree"],"unfired":[],"readonly":[]}
+
+thread 'execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire' (23068) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:597:13:
+assertion `left == right` failed: Pi routing: "T1-single-file-recovered"
+  left: Object {"result": String("permission_denied"), "path": String("tree"), "remains": Array [String("tree")], "calls": Object {"unlink tree": Number(1)}, "readonly": Array []}
+ right: Object {"result": String("permission_denied"), "path": String("tree"), "remains": Array [String("tree")], "calls": Object {"rmdir tree": Number(1), "unlink tree": Number(1)}, "readonly": Array []}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p minion-agent --lib`
