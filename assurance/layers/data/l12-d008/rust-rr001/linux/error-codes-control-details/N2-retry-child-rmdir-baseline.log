@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.56s
+     Running unittests src/lib.rs (/target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"E1-child-rmdir-fails","result":"unknown","path":"tree/child","calls":{"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":1,"rmdir tree/child":1},"remains":["tree/","tree/child/"],"unfired":[]}
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.05s
+

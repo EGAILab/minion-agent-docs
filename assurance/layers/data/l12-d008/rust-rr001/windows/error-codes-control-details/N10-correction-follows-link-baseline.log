@@ -1,0 +1,14 @@
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.41s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 1 test
+CE02 {"platform":"win32","id":"U7-link-to-readonly-target","result":"ok","path":null,"calls":{"chmod tree/child":1,"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":2,"stat tree/child":1,"unlink tree/child":2},"remains":["outside/","outside/t"],"unfired":[],"readonly":["outside/t"]}
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 203 filtered out; finished in 0.01s
+

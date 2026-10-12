@@ -1,0 +1,16 @@
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr001\control-code\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr001\control-code\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.69s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 1 test
+CE02 {"platform":"win32","id":"C0-no-error","result":"ok","path":null,"calls":{"lstat tree":2,"lstat tree/child":1,"lstat tree/child/f":1,"lstat tree/g":1,"readdir tree":1,"readdir tree/child":1,"rmdir tree":2,"rmdir tree/child":2,"unlink tree/child/f":1,"unlink tree/g":1},"remains":[],"unfired":[]}
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 203 filtered out; finished in 0.01s
+

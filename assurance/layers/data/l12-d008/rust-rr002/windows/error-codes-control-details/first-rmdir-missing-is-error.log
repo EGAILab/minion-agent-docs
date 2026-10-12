@@ -1,0 +1,27 @@
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr002\control-code\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.00s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows-controls\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 1 test
+DISAPPEARANCE {"platform":"win32","id":"D2-first-rmdir","result":"not_found","path":"tree","calls":{"lstat tree":2,"rmdir tree":1},"remains":[],"unfired":[]}
+
+thread 'execution::filesystem::rimraf::tests::disappearance_at_first_rmdir_is_accepted' (74376) panicked at crates\minion-agent\src\execution\filesystem\rimraf\tests.rs:664:5:
+assertion `left == right` failed: concurrent disappearance must succeed
+  left: String("not_found")
+ right: "ok"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::disappearance_at_first_rmdir_is_accepted ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::disappearance_at_first_rmdir_is_accepted
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 203 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

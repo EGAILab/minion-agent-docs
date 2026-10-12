@@ -1,0 +1,14 @@
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows-controls\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 1 test
+CE02 {"platform":"win32","id":"U8-dirlink-unlink-eperm","result":"ok","path":null,"calls":{"chmod tree/child":1,"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":2,"rmdir tree/child":1,"stat tree/child":1,"unlink tree/child":1},"remains":["outside/","outside/keep"],"unfired":[],"readonly":[]}
+test execution::filesystem::rimraf::tests::directory_link_recovery_matches_pinned_pi ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 203 filtered out; finished in 0.01s
+

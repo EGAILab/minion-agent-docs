@@ -1,0 +1,7 @@
+FRESH WORKSPACE SOURCES 212: /tmp/l12d008/control-code/minion-agent-rust
+CONTROL TARGET /control-target
+KILLED stop-at-first-terminal: div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed: continue siblings, retaining only
+KILLED report-last-terminal: div008_reports_first_terminal_error_unchanged_not_last: first terminal origin, not last
+KILLED global-failure-skips-unaffected-directory: div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed: continue siblings, retaining only
+KILLED final-rmdir-after-failed-descendant: div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed: no final rmdir of failed subtree
+DIV008 CONTROLS PASS 4/4; restored baseline green

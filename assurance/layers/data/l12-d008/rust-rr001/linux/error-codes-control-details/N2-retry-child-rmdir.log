@@ -1,0 +1,22 @@
+   Compiling minion-agent v0.1.0 (/tmp/l12d007/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.92s
+     Running unittests src/lib.rs (/target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"E1-child-rmdir-fails","result":"ok","path":null,"calls":{"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":2,"rmdir tree/child":2},"remains":[],"unfired":[]}
+
+thread 'execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire' (20560) panicked at crates/minion-agent/src/execution/filesystem/rimraf/tests.rs:597:13:
+assertion `left == right` failed: Pi routing: "E1-child-rmdir-fails"
+  left: Object {"result": String("ok"), "path": Null, "remains": Array [], "calls": Object {"lstat tree/child": Number(1), "readdir tree": Number(1), "rmdir tree": Number(2), "rmdir tree/child": Number(2)}}
+ right: Object {"result": String("unknown"), "path": String("tree/child"), "remains": Array [String("tree/"), String("tree/child/")], "calls": Object {"lstat tree/child": Number(1), "readdir tree": Number(1), "rmdir tree": Number(1), "rmdir tree/child": Number(1)}}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.78s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-335d1094328aafbe)
+
+running 1 test
+CE02 {"platform":"linux","id":"V9-validation-enoent-force","result":"ok","path":null,"calls":{"lstat tree":2,"unlink tree":1},"remains":[],"unfired":[],"readonly":[]}
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+

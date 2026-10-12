@@ -1,0 +1,69 @@
+   Compiling serde_core v1.0.229
+   Compiling wasmtime v49.0.0
+   Compiling serde v1.0.229
+   Compiling hashbrown v0.17.1
+   Compiling semver v1.0.28
+   Compiling indexmap v2.14.2
+   Compiling smallvec v1.16.2
+   Compiling wasmparser v0.258.0
+   Compiling wasmtime-internal-core v49.0.0
+   Compiling postcard v1.1.3
+   Compiling cranelift-bitset v0.136.0
+   Compiling gimli v0.33.0
+   Compiling object v0.40.0
+   Compiling cranelift-entity v0.136.0
+   Compiling cranelift-bforest v0.136.0
+   Compiling wasm-encoder v0.258.0
+   Compiling wasmprinter v0.258.0
+   Compiling pulley-interpreter v49.0.0
+   Compiling serde_json v1.0.140
+   Compiling regalloc2 v0.15.2
+   Compiling icu_normalizer v2.3.0
+   Compiling idna_adapter v1.2.2
+   Compiling wasmtime-environ v49.0.0
+   Compiling cranelift-codegen v0.136.0
+   Compiling wasm-metadata v0.258.0
+   Compiling wit-parser v0.258.0
+   Compiling idna v1.1.0
+   Compiling hyper v1.11.0
+   Compiling hyper-util v0.1.20
+   Compiling wit-component v0.258.0
+   Compiling url v2.5.8
+   Compiling parking_lot_core v0.9.10
+   Compiling serde_spanned v1.1.1
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling parking_lot v0.12.3
+   Compiling wasmtime-internal-wit-bindgen v49.0.0
+   Compiling tower-http v0.6.11
+   Compiling hyper-rustls v0.27.9
+   Compiling petgraph v0.6.5
+   Compiling serde_urlencoded v0.7.1
+   Compiling fluent-uri v0.3.2
+   Compiling ahash v0.8.12
+   Compiling reqwest v0.12.28
+   Compiling referencing v0.33.0
+   Compiling wasm-compose v0.258.0
+   Compiling wasmtime-internal-component-macro v49.0.0
+   Compiling cranelift-native v0.136.0
+   Compiling cranelift-frontend v0.136.0
+   Compiling wasmtime-internal-unwinder v49.0.0
+   Compiling wasmtime-internal-cache v49.0.0
+   Compiling wasmtime-internal-fiber v49.0.0
+   Compiling wasmtime-internal-cranelift v49.0.0
+   Compiling fxprof-processed-profile v0.8.1
+   Compiling wasmtime-internal-jit-debug v49.0.0
+   Compiling addr2line v0.26.1
+   Compiling wasmtime-internal-jit-icache-coherence v49.0.0
+   Compiling email_address v0.2.9
+   Compiling jsonschema v0.33.0
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling minion-agent v0.1.0 (/tmp/l12d008/control-code/minion-agent-rust/crates/minion-agent)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 10s
+     Running unittests src/lib.rs (/control-target/debug/deps/minion_agent-30f01ba75be520f5)
+
+running 1 test
+test execution::filesystem::rimraf::tests::div008::div008_reports_first_terminal_error_unchanged_not_last ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.06s
+
