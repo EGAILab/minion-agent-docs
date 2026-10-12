@@ -4,6 +4,55 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Minion-Process P3a: kit 0.3.0 (review header schema 2, convergence counters, metrics, composite verbs); Minion-Agent pin 0.3.0 — 2026-10-13
+
+**Kit 0.3.0** (`EGAILab/minion-process#3`, Codex FINAL_REVIEW APPROVED at `03fad3916b0cb32c59ea17b7a48a73eab1eba236`,
+merged `43f878c1daa3da00d0a0293c7340a6c2c7be7213`, tag `v0.3.0`; coordination `minion-agent#213`, classified
+`process`/governing `CP-6`). Record §6.6. Contents: the structured `review:` header (schema version 2:
+identity `(wp, reviewer, round)`, `round` required) that every review record opens with and
+`minion-process review-check` validates offline; `convergence counters` (§11.8 triggers A/B/C from the
+published headers of an issue and its candidate PRs, mirrors counted once, conflicts reported with their
+differing fields and excluded, invalid headers by reason, unorderable and unread comments making the
+statement INCOMPLETE); `metrics`; composite `handoff` and `close` verbs with pre-write checks (issue OPEN,
+status, candidate merged at the recorded head and reachable from the default branch); the CommonMark
+publication domain for review fences (`markdown-it-py`, `commonmark` preset, nesting cutoff unreachable,
+parser failures contained per comment); `coordination-state.md` and `templates/review-record.md` updated.
+Gates at the approved head (CI run 38320253124): pytest 680 passed, 6 skipped, coverage 100%, ruff, mypy
+strict, both profiles VALID.
+
+**Convergence episode `CE-PROC-P3A-01`** (the first run of §11.8 on the kit's own work; this entry carries
+the history that `minion-agent#213` kept in its state block, which exceeded the lean budget):
+
+- Trigger A fired after two independent reviews on `PROC-KIT-P3-R001` (review-event identity/chronology)
+  and `R003` (discovery of review-bearing fences); `R002` (composite pre-write checks) was closed by a
+  targeted fix with a zero-write refusal witness.
+- Checkpoint revisions 1–4 characterized YAML-side discovery; revision 4 (AGREED, Codex round 6) defined a
+  review claim over the YAML scanner's token stream instead of a hand-written prefix list.
+- Targeted closures 1 and 2 (rounds 7, 8) left `R003` NOT CLOSED on Markdown-side witnesses (an example
+  inside an outer code block; a fence inside an HTML comment), added `R004` (comments without publication
+  metadata were silently dropped), and provisionally closed `R001`/`R004` at `e96d350d`. §11.8.10
+  **fired**: the checkpoint returned to characterization.
+- Checkpoint revisions 5–7 (rounds 9–11): the Markdown publication domain defined over a CommonMark
+  parser's block structure; `C004` (the parser's nesting limit truncates silently; detecting it from the
+  output is defeatable, so the limit is made unreachable and the only remaining resource boundary raises
+  and is contained) and `C005` (a matrix row contradicting the YAML rule) closed; revision 7 AGREED.
+- Targeted closure 3 (round 12): `R003` PROVISIONALLY CLOSED at `e61fcb9f`; new `R005` (the CI installer's
+  own package list did not provision the new dependency; exact-head CI red). Revision 6 made CI install
+  the project from `pyproject.toml`. Round 13: `R005` closed, all dispositions carried, APPROVED.
+- Codex records (verbatim on the PR/issue, whole-file sha256 in each publication header): rounds 1–13;
+  probes `proc-p3a-*.py` in `.tmp/codex-scratch/`.
+
+**Lessons for the kit** (to be recorded as `lessons/` entries with kit 0.3.1 or P3b): a rule that names
+an external syntax ("fenced block") must name the grammar or parser that decides it, or each review finds
+a legal form the hand-written rule missed; a completeness check that reads a parser's output can be
+defeated by input the parser drops without a trace, so remove the silent mechanism rather than detect it;
+a CI installer with its own dependency list diverges from the project's declaration on the first new
+runtime dependency.
+
+**What Minion-Agent adopts in P3a:** `process/profile.yaml` pin `0.3.0`; the CLI runs from the worktree
+`.tmp/kit/v0.3.0`. Review records published from now on carry the schema-2 header. No rule in force,
+certification or delegation changes.
+
 ## Minion-Process P2: kit 0.2.0 (kinds, consequence classes, routing); Minion-Agent cut over to the kit — 2026-10-12
 
 **Authority.** Owner decisions 2 and 3 (`minion-agent#205`, 2026-10-11) and `minion-agent#75`
