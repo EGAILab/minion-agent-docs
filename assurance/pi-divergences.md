@@ -16,6 +16,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-005` | Invalid skill-discovery entry does not abort the entire discovery | WP-14.1 (`HAR-001`) | APPROVED |
 | `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
 | `DIV-007` | Frontmatter block collections nest at most 64 deep | WP-14.1 (`HAR-010`) | APPROVED |
+| `DIV-008` | Recursive remove with several failing children: first-encountered failure, sequential traversal | L12-D008 (`EXEC-002`) | APPROVED |
 
 ---
 
@@ -245,3 +246,46 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Manifest:** row `HAR-010-DIV-007`, disposition `intentional divergence`.
 - **Governance:** Owner decision, WP141-R003 Option 1 (`minion-agent#158` issuecomment-6058827431).
 - **Reconsideration trigger:** none expected.
+
+---
+
+## DIV-008 — Recursive remove with several failing children: first-encountered failure, sequential traversal
+
+- **Affected:** recursive `remove` (Layer 12, `EXEC-002`), spec `execution.md` §19.5 rule 4 as amended by L12-D008 (§20). Coordination `minion-agent#215`; provenance `#127` (`L12-RM-MULTI-FAILURE-SELECTION`).
+- **Pi behaviour** (pinned Pi, Node v22.15.1 `rimraf` `_rmchildren`, blob `24bf3f46`):
+  - Every child's removal starts before any settles.
+  - The first child failure to **settle** is reported, through the `done` guard.
+  - The other started removals continue, and `remove()` can return before they finish.
+  - A directory's final `rmdir` runs only if every child succeeded.
+  - Which failure settles first depends on scheduling. The set left behind once everything drains does not depend on it:
+    - every reachable removable entry is gone;
+    - a failed entry remains with its ancestors;
+    - a directory that could not be listed, or whose first `rmdir` failed with a non-descending error, keeps its unvisited subtree (`L12D008-C001`).
+- **Minion behaviour** (Python and Rust):
+  - Traversal is sequential, depth first, in the host's enumeration order, which is never re-sorted.
+  - A failure does not stop the remaining siblings.
+  - The **first failure encountered** in that traversal is reported, unchanged.
+  - The call returns only after every child has been attempted.
+  - When it returns, the same set remains as in Pi's drained state. The composition is above; witnessed by rows M, S and the boundary rows B1–B7.
+- **Classification:** intentional practical-parity divergence. It covers only:
+  - (1) first-encountered versus first-settled **selection** when more than one entry fails, including the reported code and origin path;
+  - (2) the **absence of sibling concurrency**: Pi may return before outstanding removals finish, and the order in which entries disappear differs.
+
+  It does **not** cover the final removed set, which is required parity and is witnessed against Pi's drained state. It does not weaken single-failure error origin (L12-D001), successful recursive deletion, symlink non-traversal, error classification (L12-D007), or `force`/`recursive` semantics.
+- **Practical-parity assessment (Owner):** reproducing Node's scheduling would mean redesigning both bindings' removal for a timing-dependent choice. Only the final removed set is operationally meaningful, and it matches.
+- **Divergence band:** a removal with two or more failing entries whose traversal order differs from Pi's settlement order. In the characterized rows that is M2, M4, M6, M8 and M10 on Windows, and the rows whose Linux enumeration order differs. In these the reported path, and possibly the code, differ. With one failing entry, the selection is the same.
+- **Platforms:** all. The enumeration order is the host's: alphabetical on NTFS; on Linux tmpfs, reverse creation order.
+- **Permanent witnesses:**
+  - **Data:** `assurance/layers/data/l12-d008/`, holding the matrix of 13 controlled rows plus 2 natural Linux rows × 10 runs. It has pinned-Pi outputs with a settlement snapshot and a drained snapshot on Windows and Linux, the bindings' outputs, and `div008_compare.py`. The comparator requires extent parity against Pi's drained state, completeness, and the binding's own first-encountered selection. Its self-test rejects a false first-settled claim, a skipped sibling, an extent difference, late calls and an outcome difference.
+  - **Python:** `tests/execution/test_filesystem_remove_multi_failure.py`, through the real `LocalFileSystem.remove`, with a pinned-Pi oracle on both platforms. Its controls are the pre-L12-D008 stop-at-first walk (killed on completeness and extent) and a report-the-last-failure walk (killed on selection, including the false first-settled claim).
+  - **Rust:** the equivalent witnesses, in the Rust implementation pass of L12-D008.
+- **Manifest:** row `EXEC-002-DIV-008`, disposition `intentional divergence`.
+- **Governance:**
+  - Owner decision on `#127` ("APPROVE OPTION 1, WITH CORRECTED SCOPE, INTENTIONAL DIVERGENCE: DIV-008", recorded verbatim, sha256 `f135e947…6fe`).
+  - Amended on new evidence by the Owner's extent decision "Continue siblings" (`#215` issuecomment-6118734550): the divergence then covers selection and timing only, not extent.
+- **Reconsideration trigger:**
+  - a real Minion consumer needs Pi-compatible first-settled or in-flight semantics;
+  - sequential traversal causes a material operational problem;
+  - the removal architecture changes for an independent reason.
+
+  A contrived scheduling mismatch alone is not a trigger.

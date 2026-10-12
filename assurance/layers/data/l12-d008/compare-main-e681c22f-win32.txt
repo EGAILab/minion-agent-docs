@@ -1,0 +1,37 @@
+FAIL     M1-two-files-settle-ab run 1: Pi tree/a / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M2-two-files-settle-ba run 1: Pi tree/b / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M3-diff-codes-settle-ab run 1: Pi tree/a / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M4-diff-codes-settle-ba run 1: Pi tree/b / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M5-sibling-between-settle-az run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a', 'tree/m', 'tree/z'], Pi after drain ['tree/', 'tree/a', 'tree/z']
+           complete: binding never made ['unlink tree/z #1']
+FAIL     M6-sibling-between-settle-za run 1: Pi tree/z / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a', 'tree/m', 'tree/z'], Pi after drain ['tree/', 'tree/a', 'tree/z']
+           complete: binding never made ['unlink tree/z #1']
+FAIL     M7-nested-settle-deep-first run 1: Pi tree/a/x / binding tree/a/x
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M8-nested-settle-shallow-first run 1: Pi tree/b / binding tree/a/x
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M9-dir-child-and-file-settle-dir-first run 1: Pi tree/a / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     M10-dir-child-and-file-settle-file-first run 1: Pi tree/b / binding tree/a
+           complete: binding never made ['unlink tree/b #1']
+FAIL     S1-single-failure-before-sibling run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a', 'tree/b'], Pi after drain ['tree/', 'tree/a']
+MATCH    S2-single-failure-after-sibling run 1: Pi tree/b / binding tree/b
+FAIL     S3-single-nested-failure run 1: Pi tree/a/x / binding tree/a/x
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+FAIL     B1-child-listing-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+MATCH    B2-child-classification-fails run 1: Pi None / binding None
+FAIL     B3-child-first-rmdir-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+FAIL     B4-child-final-rmdir-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/b'], Pi after drain ['tree/', 'tree/a/']
+MATCH    B5-target-listing-fails run 1: Pi tree / binding tree
+MATCH    B6-target-first-rmdir-fails run 1: Pi tree / binding tree
+MATCH    B7-target-final-rmdir-fails run 1: Pi tree / binding tree

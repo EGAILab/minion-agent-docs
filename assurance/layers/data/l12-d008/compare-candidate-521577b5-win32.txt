@@ -1,0 +1,13 @@
+MATCH    M1-two-files-settle-ab run 1: Pi tree/a / binding tree/a
+DIV-008  M2-two-files-settle-ba run 1: Pi tree/b / binding tree/a
+MATCH    M3-diff-codes-settle-ab run 1: Pi tree/a / binding tree/a
+DIV-008  M4-diff-codes-settle-ba run 1: Pi tree/b / binding tree/a
+MATCH    M5-sibling-between-settle-az run 1: Pi tree/a / binding tree/a
+DIV-008  M6-sibling-between-settle-za run 1: Pi tree/z / binding tree/a
+MATCH    M7-nested-settle-deep-first run 1: Pi tree/a/x / binding tree/a/x
+DIV-008  M8-nested-settle-shallow-first run 1: Pi tree/b / binding tree/a/x
+MATCH    M9-dir-child-and-file-settle-dir-first run 1: Pi tree/a / binding tree/a
+DIV-008  M10-dir-child-and-file-settle-file-first run 1: Pi tree/b / binding tree/a
+MATCH    S1-single-failure-before-sibling run 1: Pi tree/a / binding tree/a
+MATCH    S2-single-failure-after-sibling run 1: Pi tree/b / binding tree/b
+MATCH    S3-single-nested-failure run 1: Pi tree/a/x / binding tree/a/x
