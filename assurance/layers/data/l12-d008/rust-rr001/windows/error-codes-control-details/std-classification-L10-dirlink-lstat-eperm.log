@@ -1,0 +1,28 @@
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr001\control-code\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\l12d008-rr001\control-code\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.75s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 1 test
+CE02 {"platform":"win32","id":"L10-dirlink-lstat-eperm","result":"unknown","path":"tree","calls":{"chmod tree/child":1,"lstat tree":2,"lstat tree/child":1,"readdir tree":1,"rmdir tree":2,"rmdir tree/child":1,"stat tree/child":1},"remains":["outside/","outside/keep","tree/","tree/child@"],"unfired":[],"readonly":[]}
+
+thread 'execution::filesystem::rimraf::tests::directory_link_recovery_matches_pinned_pi' (74116) panicked at crates\minion-agent\src\execution\filesystem\rimraf\tests.rs:637:9:
+assertion `left == right` failed: Pi directory-link recovery: "L10-dirlink-lstat-eperm"
+  left: Object {"platform": String("win32"), "id": String("L10-dirlink-lstat-eperm"), "result": String("unknown"), "path": String("tree"), "calls": Object {"chmod tree/child": Number(1), "lstat tree": Number(2), "lstat tree/child": Number(1), "readdir tree": Number(1), "rmdir tree": Number(2), "rmdir tree/child": Number(1), "stat tree/child": Number(1)}, "remains": Array [String("outside/"), String("outside/keep"), String("tree/"), String("tree/child@")], "unfired": Array [], "readonly": Array []}
+ right: Object {"platform": String("win32"), "id": String("L10-dirlink-lstat-eperm"), "result": String("ok"), "path": Null, "calls": Object {"chmod tree/child": Number(1), "lstat tree": Number(2), "lstat tree/child": Number(1), "readdir tree": Number(1), "rmdir tree": Number(2), "rmdir tree/child": Number(1), "stat tree/child": Number(1)}, "remains": Array [String("outside/"), String("outside/keep")], "readonly": Array [], "unfired": Array []}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::filesystem::rimraf::tests::directory_link_recovery_matches_pinned_pi ... FAILED
+
+failures:
+
+failures:
+    execution::filesystem::rimraf::tests::directory_link_recovery_matches_pinned_pi
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 203 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

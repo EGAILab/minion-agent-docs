@@ -1,6 +1,6 @@
 # L12-D008 Rust implementation — DIV-008
 
-Status: Rust closure review 1 requested changes (L12D008-RR001); control-anchor remediation in progress below.
+Status: L12D008-RR001 remediation complete; independent Rust closure re-review pending.
 Not certified. Coordination: minion-agent#215; provenance: #127.
 
 ## Baselines and authority
@@ -270,6 +270,66 @@ L12-D007 control copy is under private `/tmp/l12d007`. Control path proofs use
 throwing no-follow lstat from the drive/root, reject reparse points and unknown
 inspection errors, and check lexical and real containment before every write.
 
-Fresh native results and exact candidate heads will be appended after the
-isolated Windows-then-Linux batch finishes. No provisional closure or
-certification is claimed by this in-progress author entry.
+### Fresh remediation evidence at the frozen code head
+
+Code: `b8c96b5f64b9e6dc82e407e0bf923a14f5cab0ce` (#219). Docs: #296,
+the exact pushed head is recorded in the coordination handoff after this
+evidence commit. The crates, canonical data and shared rules are byte-unchanged
+from the rejected code head: only the control/gate scripts changed. Exact old
+and new source-anchor literals are preserved in the code diff
+`git diff 856cab3d b8c96b5 -- minion-agent-rust/scripts/error-codes-negative-controls.py`.
+
+Claude explicitly granted the isolated #215 RR001 host window. Windows finished
+before the Linux container started. Four Cargo jobs; project-local cache/target,
+source/temp and logs only; private container tmpfs; no named volume or shared
+target cleanup. The Windows preflight had 28.13 GB free, no active builds and
+1218 GB free on E:. The Linux preflight had 28.11 GB free, no active builds and
+1219 GB free on E:. Only the unrelated pgvector container remained after the
+Linux batch exited. All native gate/control launchers exited **0**.
+
+| Fresh gate | Windows | Linux |
+| --- | --- | --- |
+| Full `cargo test --workspace --all-features` | 678 passed / 0 failed / 0 ignored | 670 passed / 0 failed / 1 ignored |
+| Native-fs package check, fmt, clippy, rustdoc, xtask | all exit 0 | all exit 0 |
+| Focused real removal regressions | 12 passed | 10 passed |
+| Static anchor precheck | 27/27 all-platform mutations resolved | 27/27 all-platform mutations resolved |
+| Full L12-D007 intended-control batch | 26/26 KILLED; 26 selected/passing baselines | 14/14 KILLED; 14 selected/passing baselines |
+| DIV-008 compiled controls | 4/4 KILLED | 4/4 KILLED |
+| Restored baselines (both control runners) | green | green |
+
+Windows-only correction/raw-handle/directory-link controls are explicitly
+NOT_APPLICABLE on Linux. The child-vanishing Windows-only-gate regression is
+explicitly NOT_APPLICABLE on Windows and **KILLED on Linux** by its real walk
+witness. No setup, compile, unmatched anchor, wrong-witness or unfired-injection
+failure was credited. The N6/N8/N11/N13 intended interruption allowances already
+specified by L12-D007's certified driver are retained, not broadened.
+
+Linux's ignored permission witness was explicitly run as uid 1000: **1/1 passed**.
+The uid-1000 path-domain and read-only-removal corpora each passed **2/2**. The
+fresh uid-1000 DIV-008 external probe executed **45 rows**: comparator v3
+**19 MATCH + 26 DIV-008**, zero FAIL/INVALID; comparator self-test **23/23**;
+real-row controls **15/15**. The unchanged Windows unit matrix and all 41
+L12-D007 routing rows ran through the real seam again in the fresh suite and
+focused run. The previously committed Windows external probe/comparator output
+is preserved as historical evidence, not relabelled as a new external replay.
+
+Fresh manifest validation: **8/8** on Windows with the real project-local config,
+explicit root/cache/basetemp. An earlier optional invocation selected the
+nonexistent `test_manifest_ids.py` and collected no tests (exit 4); it is INVALID
+setup evidence and not a credit. Inspection identified the actual
+`test_manifest_validation.py`; the corrected selection passed.
+
+Reproduction: source `.agents/project-environment.ps1`, run the preflight,
+make a fresh containment-proven disposable copy containing Rust/conformance and
+the three fixture stores described above. Windows Python **3.12.8**:
+`python scripts/div008-windows-gates.py --logs <fresh E: log directory>
+--control-tree <project-local control-code/minion-agent-rust>`. The launcher
+sets the pinned ICU/version/identity and captures each native return code.
+Linux uses the same pinned image/environment and bind setup described above,
+with the amended `scripts/div008-linux-gates.sh`; it copies the tree into private
+tmpfs and runs controls under `/tmp/l12d007` and `/tmp/l12d008`, never in the
+candidate checkout. Raw native logs, baseline/mutant assertion output and
+comparator observations are committed under `data/l12-d008/rust-rr001/`.
+
+RR001 remains an independent-review finding until Claude closes it at the new
+exact pair. No provisional closure, self-certification or merge is claimed.
