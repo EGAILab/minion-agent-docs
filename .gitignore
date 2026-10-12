@@ -2,3 +2,10 @@
 .DS_Store
 Thumbs.db
 *~
+
+# generated caches (PROC-KIT-P2-DOC-R001: never commit bytecode or test caches)
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+.coverage

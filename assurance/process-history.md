@@ -4,6 +4,30 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Minion-Process P2: kit 0.2.0 (kinds, consequence classes, routing); Minion-Agent cut over to the kit — 2026-10-12
+
+**Authority.** Owner decisions 2 and 3 (`minion-agent#205`, 2026-10-11) and `minion-agent#75`
+**Amendment 2** (Owner, 2026-10-12, issuecomment-6115715796): routes `RT-1`–`RT-6` delegated, `RT-6`
+(convergence trigger) notify-and-proceed, Owner-only list open-ended with items 11–14 added (class
+downgrade, remote creation, risk acceptance, amending the delegation).
+
+**Kit 0.2.0** (`EGAILab/minion-process#2` @ `f026ea1c`, Codex APPROVED, merged `38c2845d`, tag
+`v0.2.0`; coordination `minion-agent#212`, classified `process`/governing `CP-3`): `consequence-classes.md`
+(kinds, predicates `CP-1`–`CP-6`, intake classification, reviewer confirmation, automatic recorded
+upgrade, Owner-only downgrade, measured stage skips, the no-new-evidence signal); `routing.md`;
+`coordination-state.md` §14 with `kind`, `consequence`, `skipped`, `history.routes`; validator shape
+rules and the `apply` guard (intake, fixed kind, downgrade, closure by kind); `WORKFLOW.md` §4.3, §11.4,
+§11.7, §11.8; `lessons/PROC-KIT-ROUTE-BY-CONSEQUENCE.md`.
+
+**Cut-over.** The kit's `WORKFLOW.md` at the pinned tag is Minion-Agent's in-force normative text (same
+section numbers as `agent-workflow.md`). `process/agent-workflow.md`, `coordination-state.md`,
+`gate-tiers.md`, `hazard-families.md`, `authority-dependencies.md`, `requirement-id-convention.md`,
+`templates/cross-language-feasibility-matrix.md`, `minion-process-cli-design.md` and
+`certification-registry-design.md` become pointers; their full text is at `4dd10da5`. `process/tools/`
+is retired; the CLI runs from a worktree of the pinned tag (`process/profile.yaml` header). Role files
+in `Minions/Minion-Agent` point at the kit. Open work packages keep their current state; the
+classification fields are required from intake for new work packages (schema v2 and later).
+
 ## Minion-Process P1: kit 0.1.0 released; Minion-Agent profile and pin adopted — 2026-10-12
 
 **Kit:** `EGAILab/minion-process` (public; protect-default-branch ruleset mirrored from this repository),
