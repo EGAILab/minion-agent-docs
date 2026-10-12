@@ -1,6 +1,6 @@
 # L12-D008 Rust implementation — DIV-008
 
-Status: implementation in progress; independent Rust closure review pending.
+Status: implementation candidate complete; independent Rust closure review pending.
 Not certified. Coordination: minion-agent#215; provenance: #127.
 
 ## Baselines and authority
@@ -32,7 +32,7 @@ Target validation, missing-entry acceptance, fresh classification, directory
 routing and Windows EPERM recovery are unchanged. Non-entered subtrees are never
 scheduled. The first error's code and origin remain unchanged.
 
-## Evidence under construction
+## Real-provider evidence
 
 `rimraf/tests/div008.rs` invokes the real `LocalFileSystem.remove` with the
 existing private native-operation seam. Its trace records actual native calls,
@@ -47,7 +47,7 @@ failure propagation. Controls are compiled in a disposable `control-code` copy
 and credit only their intended witness's assertion after a passing baseline.
 
 Fresh complete gates, probe/comparator outputs, intended-control results and
-remote candidate heads will be appended before the independent-review handoff.
+remote candidate heads are recorded below. Draft milestones remain history.
 
 ### Windows development evidence
 
@@ -84,3 +84,135 @@ The first PowerShell G3 launcher stopped on Cargo's normal stderr progress becau
 PowerShell's `NativeCommandError` interacted with `ErrorActionPreference=Stop`.
 It was replaced with hidden `Start-Process`, separate stdout/stderr capture and an
 explicit exit-code check. That interrupted launcher is not G3 evidence.
+
+The Start-Process launcher subsequently did not return after Cargo had exited.
+Only that verified owned launcher was stopped, with no Cargo/rustc still active;
+no other process was stopped. Its captured 678 passing tests were preserved but
+not credited as complete G3 without a confirmed native exit. A revised
+Start-Process wait exposed a null ExitCode and failed closed at native-fs-check.
+The final Windows launcher uses Python subprocess execution with regular-file
+stdout/stderr capture and a separate recorded native return code per gate.
+That rerun confirmed exit 0 for every gate (678 passed, 0 failed, 0 ignored).
+
+### Manifest-check containment incident
+
+The first optional manifest-check command used `pytest -c NUL --noconftest`.
+Pytest inferred a device-path root, attempted cache creation below
+`\\.\NUL\.pytest_cache`, and Windows refused those attempts with error 87.
+Collection also performed a read-only stat outside the project (`E:\WpSystem`),
+which failed with error 1337. This was an uncontained cache-write attempt in the
+launcher, not an executed test or a credited result. The cache creation failures
+are explicit in the captured output; no outside cache creation succeeded.
+
+The check was stopped and investigated. The corrected recipe uses a real config
+file under project scratch and explicit project-local `--rootdir`, `cache_dir`
+and `--basetemp`; these paths are proven before execution. Never use a Windows
+device (`NUL`) as a pytest configuration file. Linux has not started at this point.
+
+The corrected contained manifest check passed **8/8** before the Linux batch.
+No cache was created at a device path. The final Linux batch ran afterwards,
+sequentially, and exited 0.
+
+## Fresh complete gates and acceptance
+
+Frozen code candidate: minion-agent PR **#219**,
+`856cab3df3f5f810ea1513d0406f7f0383d14a75`, branch `layer/12-d008-rust`.
+Companion docs PR: **#296**, branch `assurance/12-d008-rust`; the exact final
+assurance SHA is recorded in the SHA-bound handoff on #215. No shared rule,
+canonical expectation, or Python production file changes in this pair.
+
+Windows completed before Linux started. The host reservation excluded other
+gate/build batches; the unrelated long-lived pgvector container was not a gate.
+Linux container `b34d8feecae6` exited **0** and was removed before batch-done.
+
+| Gate / witness | Windows | Linux |
+|---|---|---|
+| `cargo check -p minion-agent-native-fs` | exit 0 | exit 0 |
+| `cargo fmt --all -- --check` | exit 0 | exit 0 |
+| strict workspace/all-target/all-feature clippy | exit 0 | exit 0 |
+| workspace/all-feature tests | **678 passed, 0 failed, 0 ignored** | **670 passed, 0 failed, 1 ignored** |
+| warning-strict rustdoc, workspace/no-deps | exit 0 | exit 0 |
+| xtask conformance verify | exit 0 | exit 0 |
+| focused removal regressions | 12 passed | 10 passed |
+| real-provider matrix probe | 25 controlled rows | 45 rows, uid/gid 1000 (25 controlled + 20 natural) |
+| shared comparator v3 | 20 MATCH + 5 DIV-008; 0 FAIL/INVALID | 19 MATCH + 26 DIV-008; 0 FAIL/INVALID |
+| comparator self-test | 23/23 | 23/23 |
+| real-row comparator controls | 9/9 | 15/15 |
+| compiled Rust controls | **4/4 KILLED**, restored baseline green | **4/4 KILLED**, restored baseline green |
+| shared manifest validation | 8 passed | same manifest; no separate Python validation claimed |
+
+All planned binding injections fired. The probe compares every expected
+`(id, run)` with the matrix and refuses omissions/duplicates; the comparator
+checks trace readiness/completeness, declared terminality against Pi, unchanged
+selected code/origin, and exact drained extent. No partial, failed, setup-error or
+unfired run is credited. The four Rust mutant assertions and baseline recipes are
+the same on both platforms (`scripts/div008-negative-controls.py`). The controls
+compile their mutations; source-anchor failures, compilation failures, absent
+witnesses or unrelated assertions are INVALID, not kills.
+
+The Linux ignored full-suite test is the real POSIX permission witness
+`recursive_remove_single_failure_reports_the_inner_native_call`; it was rerun
+explicitly as uid/gid 1000 and passed **1/1**. The permission-sensitive
+`fs_path_domain_conformance` and `fs_remove_readonly_conformance` binaries also
+passed unprivileged (**2/2** each). Their caught containment-test panics in raw
+`--nocapture` logs are intended rejecting witnesses, not failures. The 41 CE-02
+routing/recovery/validation rows, directory-link rows, concurrent-disappearance
+and explicit-stack witnesses remain covered by the focused/full regressions.
+
+Raw probe, comparator, full-test and intended-control logs are committed in
+`data/l12-d008/rust/`. Earlier L12-D007 mutation scripts are historical,
+source-anchored evidence; this pass does not claim they were rerun unchanged
+against the refactored step function.
+
+## Environment and reproduction
+
+Windows: Windows 11 Pro x86-64, build 26200; Rust 1.97.1; Node v22.15.1;
+pinned ICU4C 78.3, official search-engine artifacts. Dot-source the project's
+`.agents/project-environment.ps1` in each shell and run `gate-preflight.ps1`
+before the batch. Four Cargo jobs; the shared Windows target/home remain on E:.
+Set `RUST_ICU_MAJOR_VERSION_NUMBER=78`,
+`RUSTFLAGS=-L native=<project>/.toolchain/icu-78.3-src/icu/lib64`,
+`RUSTDOCFLAGS=-D warnings -L native=<same directory>`, ICU `bin64` on PATH,
+`MINION_AGENT_ICU_IDENTITY=<project>/.toolchain/icu-78.3-src/pinned-icu-identity.txt`,
+and `MINION_SEARCH_ENGINE_ARTIFACTS=<project>/.toolchain/search-engines/dl`.
+Run the seven Cargo commands above sequentially and capture native return codes.
+The pre-existing ICU LIBCMT/LNK4098 linker warning is disclosed, not suppressed.
+
+Run `python scripts/div008-probe.py --tree <Rust workspace> --data <approved
+docs data/l12-d008> --logs <project-local fresh log directory>` for the Windows
+probe/comparator/controls. Run `python scripts/div008-negative-controls.py
+--tree <project-local disposable control-code/minion-agent-rust> --logs <fresh
+contained logs>` for compiled controls. Copy the tracked Rust/conformance trees
+and the same three Python fixture stores named in the Linux recipe; prove each
+copy destination, and never mutate the candidate or shared targets.
+
+Linux: cached `rust:1.97.1-trixie`, image
+`sha256:b1b3c9c0d921d7fa0a6d1f9ec7e4eab87f8c8ec97644c3d791450f131dec813f`;
+Debian 13.6 x86-64, Python 3.13.5, Rust 1.97.1, Node v22.15.1;
+kernel `6.18.40.1-microsoft-standard-WSL2`. No privileged mode or added capability.
+Exact container recipe: `scripts/div008-linux-gates.sh` at the frozen code head.
+The launcher uses a read-only container root, private executable `--tmpfs /tmp`
+(6 GiB), and resolved/real-path-proven project-root bind sources immediately
+before Docker: source/data/ICU/Node/search artifacts read-only, Linux Cargo
+home/target and logs writable. No named volumes. The source is copied to private
+tmpfs and CR stripped from `*.sh`. Four Cargo jobs and
+`RUSTFLAGS/RUSTDOCFLAGS -L native=/build/icu/lib`, with Node on PATH.
+The uid-1000 probe executes Cargo's built test binary via `--binary --natural`,
+with supplementary groups cleared; no root permission result stands in for it.
+
+The byte-copied shared data matched the approved docs worktree SHA-256 values:
+
+- `div008-matrix.json`: `de25c7953fbcb50815bc157a971b42f4b5399c3debda6afbc52a7b8b9eec5da6`.
+- `div008-pi-win32.jsonl`: `200e041f543f7e3763e161aaddcc633f143b10852b7d7cc63fdf9175e97f0d10`.
+- `div008-pi-linux.jsonl`: `49ee131340fdeecac0bef0d52165730cc6f35d5f0fbfd8de6c5cd9183b6a38d4`.
+
+## Handoff and exclusions
+
+Rust implementation candidate only: **not certified**, independent closure review
+pending. Python/shared baseline is approved and merged; cross-language L12-D008
+and provenance #127 are **not closed** by this author record. No new divergence
+is proposed; only approved DIV-008 selection/timing differs from Pi. Extent parity
+is required and observed. The existing exotic reparse-point gap (#207 / L12-D010)
+and native-name decoding #133-F2 are not expanded or repaired here.
+
+Next action: Claude's independent Rust closure review at the exact pushed pair.
