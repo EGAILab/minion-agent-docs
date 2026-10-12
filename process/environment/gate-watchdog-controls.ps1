@@ -24,9 +24,12 @@ $targets = [ordered]@{
     }
     guard = @{
         file = 'gate-guard-selftest.ps1'; mutates = 'gate-guard.ps1'; args = @(); pass = 'GUARD SELFTEST PASSED'; fail = 'GUARD SELFTEST FAILED'
-        cases = @('contained path, real inspection', 'contained path, simulated plain ancestors', 'outside path', 'project root itself',
-            'sibling with root prefix', 'dot-dot escape', 'drive-relative', 'UNC', 'empty', 'junction ancestor (.tmp)',
-            'junction above the root (Minions)', 'link at the target itself', 'inspection throws', 'inspection returns nothing')
+        cases = @('contained path, real inspection', 'contained path, simulated plain ancestors',
+            'true missing target below proven parent', 'true missing directory below proven parent', 'outside path',
+            'project root itself', 'sibling with root prefix', 'dot-dot escape', 'drive-relative', 'UNC', 'empty',
+            'junction ancestor (.tmp)', 'junction above the root (Minions)', 'link at the target itself',
+            'access denied on an existing ancestor (.tmp)', 'access denied on the target', 'other I/O error on an ancestor',
+            'inspection returns nothing', 'missing project root')
     }
     preflight = @{
         file = 'gate-preflight.ps1'; args = @('-SelfTest'); pass = 'PREFLIGHT SELFTEST PASSED'; fail = 'PREFLIGHT SELFTEST FAILED'
@@ -43,10 +46,15 @@ $mutants = @(
     @{ name = 'missing-log-exit-0'; target = 'watchdog'; intended = @('missing log, launcher ended')
        old = 'if ($len -lt 0) { "watchdog: launcher $watchPid ended and $log never appeared"; return 3 }'; new = 'if ($len -lt 0) { return 0 }' },
     @{ name = 'guard-ignores-links'; target = 'guard'; intended = @('junction ancestor (.tmp)', 'junction above the root (Minions)', 'link at the target itself')
-       old = 'if ($attrs -band [IO.FileAttributes]::ReparsePoint) { throw "containment: $probe is a junction or link" }'; new = '' },
-    @{ name = 'guard-inspection-failure-passes'; target = 'guard'; intended = @('inspection throws')
-       old = 'try { $attrs = Get-GuardAttributes $probe } catch { throw "containment: cannot inspect $probe ($($_.Exception.Message))" }'
-       new = 'try { $attrs = Get-GuardAttributes $probe } catch { continue }' },
+       old = 'if ($state -eq ''reparse'') { throw "containment: $probe is a junction or link" }'; new = '' },
+    @{ name = 'guard-any-error-means-missing'; target = 'guard'
+       intended = @('access denied on an existing ancestor (.tmp)', 'access denied on the target', 'other I/O error on an ancestor')
+       old = 'throw "containment: cannot inspect $path ($($_.Exception.Message))"'; new = 'return ''missing''' },
+    @{ name = 'guard-exists-boolean-proof'; target = 'guard'; intended = @('link at the target itself', 'access denied on the target')
+       old = '    try { $attrs = Get-GuardAttributes $path }'
+       new = '    if (-not ([IO.File]::Exists($path) -or [IO.Directory]::Exists($path))) { return ''missing'' }; try { $attrs = Get-GuardAttributes $path }' },
+    @{ name = 'guard-missing-root-allowed'; target = 'guard'; intended = @('missing project root')
+       old = 'if ($i -lt $rootLen) { throw "containment: $probe (at or above the project root) does not exist" }'; new = '' },
     @{ name = 'preflight-rounds-before-compare'; target = 'preflight'; intended = @('15.96 GiB below 16', 'one KiB below 16 GiB')
        old = 'return ([decimal]$freeKB * 1024) -ge ([decimal]$minGB * 1GB)'
        new = 'return [math]::Round([double]$freeKB * 1024 / 1GB, 1) -ge $minGB' }

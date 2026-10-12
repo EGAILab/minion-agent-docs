@@ -50,11 +50,27 @@ All of this tooling's own writes (the self-test logs and the control mutants) go
 
 1. **Form.** Empty paths, UNC/device paths (`\\…`), drive-relative forms (`X:foo`) and `..` segments are refused.
 2. **Lexical.** The full path must lie strictly below the project root. The root itself is refused, and so is a sibling such as `Minion-Agent-backup`.
-3. **Real path.** Every existing component from the drive root down to the target is inspected. A junction or link anywhere on the path, including above the project root, refuses the operation. So does a failed or empty inspection.
+3. **Real path.** Every component from the drive root down to the target is inspected with a **throwing, no-follow** attribute read, and each result is classified:
+   - **plain:** continue to the next component;
+   - **reparse point** (junction or link), anywhere on the path including above the project root: **refuse**;
+   - **missing:** *only* a `FileNotFound` / `DirectoryNotFound` error, for a component whose parent was just proven plain. Nothing below it can exist yet, so the walk ends there. A missing project root, or a missing ancestor of it, is refused;
+   - **anything else** (access denied, a sharing or other I/O error, an empty result): **refuse**.
+
+   No error-suppressing boolean (`File.Exists`, `Directory.Exists`, `Test-Path`) is used as the proof. Those return false on inspection errors as well as on missing entries, which was the fail-open path in revision 2 (TOOL209-R001, review 2).
 
 `remove` deletes exactly one entry and is never recursive. Watch mode of the watchdog and the preflight perform no writes at all.
 
-The self-test is `gate-guard-selftest.ps1`, 14 cases, and never touches disk. It replaces the mutation with a counter and simulates links and inspection failures. Each refusal case must throw **and** reach zero mutation calls; each positive must reach exactly one. One positive inspects the real path, which also shows that no component of the actual project-root path is a link today.
+The self-test is `gate-guard-selftest.ps1`, with **19 cases**, and it never touches disk. It replaces the mutation with a counter and simulates plain entries, links, true not-found errors and inspection failures. **Every case runs all four operations** (`mkdir`, `write`, `append`, `remove`): each refusal must throw **and** reach zero mutation calls for each operation, and each positive must reach exactly one call per operation.
+
+- **Positives:**
+  - real inspection, which also shows that no component of the actual project-root path is a link today and that a genuinely missing file is recognized through PowerShell's exception wrapping;
+  - simulated plain ancestors;
+  - a true missing target, and a true missing directory, each below a proven parent.
+- **Refusals:**
+  - forms and paths: outside the root, the root itself, a sibling with the root's prefix, `..`, drive-relative, UNC, empty;
+  - links: a junction at `.tmp`, a junction above the root, a link at the target;
+  - inspection: **access denied on an existing ancestor** (the reviewer's Exists-false witness), access denied on the target, another I/O error, an empty result;
+  - a missing project root.
 
 ## `gate-watchdog.ps1`
 
@@ -91,7 +107,7 @@ Kit `WORKFLOW.md` §9.7 rules, enforced by the driver:
 - **Everything else is INVALID, never a kill:** setup, parse or usage errors (for example exit 64), missing cases, unrelated failures, wrong exit codes, timeouts. A timed-out child is reported and left to finish; nothing is killed.
 - **Exit codes:** 0 only for a green baseline with every mutant KILLED; 1 when a mutant survived or was invalid; 2 for an invalid baseline.
 
-The seven mutants, each with its intended failing case or cases:
+The nine mutants, each with its intended failing case or cases:
 
 | Mutant | Target | Intended failing case(s) |
 |---|---|---|
@@ -100,7 +116,9 @@ The seven mutants, each with its intended failing case or cases:
 | `ignores-gate-end` | watchdog | GATE-END ends the watch |
 | `missing-log-exit-0` | watchdog | missing log, launcher ended |
 | `guard-ignores-links` | guard | junction ancestor (.tmp); junction above the root (Minions); link at the target itself |
-| `guard-inspection-failure-passes` | guard | inspection throws |
+| `guard-any-error-means-missing` | guard | access denied on an existing ancestor (.tmp); access denied on the target; other I/O error on an ancestor |
+| `guard-exists-boolean-proof` | guard (the revision-2 R001 defect: an error-suppressing `Exists` as the proof) | link at the target itself; access denied on the target |
+| `guard-missing-root-allowed` | guard | missing project root |
 | `preflight-rounds-before-compare` | preflight (the R003 defect) | 15.96 GiB below 16; one KiB below 16 GiB |
 
 **`-DriverSelfTest`** checks the driver's own rules with a fake child and no disk writes, in seven scenarios:
@@ -110,14 +128,21 @@ The seven mutants, each with its intended failing case or cases:
 - the intended case failing while another case is missing;
 - a baseline missing a case;
 - a timeout;
-- positive: exactly the intended cases fail, and all 7 are killed.
+- positive: exactly the intended cases fail, and all 9 are killed.
 
 Every scenario except the last must credit zero kills.
 
 ## Evidence (Windows 11, 2026-10-12)
 
+**Revision 3**, remediating review 2 (#214 issuecomment-6118189567: TOOL209-R001 not closed; R002 and R003 provisionally closed):
+- `gate-guard-selftest.ps1`: **19/19 PASS**, each across all four operations.
+- The reviewer's witness `tool209-r2-guard-probe.ps1` was run against this guard, using a copy pointed at this candidate with the reviewer's file unchanged. It shows **refused=True with 0 mutation calls for mkdir, write, append and remove**. The witness's `Test-GuardExists` override no longer has any effect, because the guard never consults an error-suppressing existence check.
+- `gate-watchdog-controls.ps1 -DriverSelfTest`: **7/7 PASS**; the positive scenario credits 9.
+- `gate-watchdog-controls.ps1`: three baselines **GREEN**, including the native watchdog self-test writing through the revised guard. Mutants **9/9 KILLED**, with 0 survived and 0 invalid.
+- After the runs, nothing the tooling wrote remains under `.tmp/gate-logs`.
+
 **Revision 2**, remediating review 1 (#214 issuecomment-6116581685, findings TOOL209-R001–R003):
-- `gate-guard-selftest.ps1`: **14/14 PASS**.
+- `gate-guard-selftest.ps1`: **14/14 PASS**. This is superseded: review 2 showed the revision-2 guard failed open when an inspection error surfaced as `Exists = false`.
 - `gate-preflight.ps1 -SelfTest`: **6/6 PASS**.
   - The fail-closed witness exits 2.
   - A normal run exits 0.
