@@ -129,4 +129,37 @@ All of this ran in an isolated window, after the reviewer released the host (the
 
 **Output controls:** 5/5 (above).
 
-Status: remediation 1, **for targeted re-review** of R001 and R002 and the review of the changed candidate. The Rust runner follows, on the approved candidate.
+*Status at that point:* remediation 1, for targeted re-review. Review 2 follows in §6.
+
+## 6. Review 2 (Codex) and remediation 2
+
+Review 2 (#217 issuecomment-6126544438):
+- **`WP133D001-R001`** is **provisionally closed**. The rejected runner aborted on lookup output, and the candidate does not.
+- **`WP133D001-R002`** is **not closed**. My new control script's **own fixture writes** used an ad-hoc **lexical-only** check (`path.resolve` + prefix + a `..` substring) before `mkdirSync` ×2, `symlinkSync`, and the cleanup `unlink`/`rmdir`. There was no real-path or link-hop proof, so a pre-existing outward ancestor would have redirected them. That is the very containment rule this finding enforces.
+  - The reviewer showed it with every mutation intercepted: 3 attempts, 0 inspections, 0 native mutations.
+  - The derivation also imported the guard from another worktree, so it was not reproducible from the candidate alone.
+
+**Trigger A** fired for R002, which survived two reviews; B and C did not. RT-6: the Owner was notified in the Claude session. The route taken is the **narrow targeted-fix exception**: the remaining surface is finite, the reviewed fs-guard operations replace the ad-hoc check, and the guard comes from the candidate's own tree. If the next review does not close R002, the route is `CONTRACT_CONVERGENCE` with no further point fix. This is recorded in #217 `history.routes`.
+
+**Remediation 2:**
+- **Fixtures through the reviewed guard only** (CE-L12D007-01 operation classes, each proven immediately before its operation):
+  - `makeSandbox` proves the REFERENT ancestry before its `mkdir`;
+  - `assertInside` for each directory and for the junction's target;
+  - `assertEntry` for the junction itself;
+  - `cleanupSandbox` (TRAVERSAL) removes the junction as an entry, never following it.
+
+  The ad-hoc check survives only as the regression control. The guard is imported relative to the script, from the candidate's own copy. The narrowed-boundary `assertOutput` comes from a second guard instance, loaded under a distinct module URL.
+- **Part B witnesses**, over the setup's **actual** mutation calls, with every `mkdir`/`symlink` intercepted and the guard's inspections steered in memory (no outward link is ever created):
+  - an outward-link ancestor: refused, **0 attempts**;
+  - an inspection-failure (EACCES) ancestor: refused, **0 attempts**;
+  - the **lexical-only control** under the outward-link ancestor makes **3 attempts**, so it is caught by the zero-attempt assertion.
+- **Part A** (unchanged): legitimate 1 attempt; outside, foreign and junction-parent refused with 0; proof-removed control caught.
+- The fixture is removed by `cleanupSandbox`. **9/9 PASS.**
+- **The derivation** imports the guard (`../l12-d007/fs-guard`) and reads the WP-13.3 probe (`../13-wp133/harness/bash_probe.mjs`) relative to **its own checkout**.
+  - Run in an **independent detached checkout** of docs `2b469948`, it regenerated `abort_trigger_probe.mjs` **byte-identically**: SHA-256 `0adee1d6…` equals the committed blob, with an empty `git diff`.
+  - Git flagged the file only because `core.autocrlf=true` had materialized it with CRLF.
+  - The check worktree was removed afterwards.
+
+No product, expectation or other code change. Code is unchanged at `2266c4b6`.
+
+**Status:** remediation 2, **for targeted re-review** of R002 and the review of the changed candidate. The Rust runner follows, on the approved candidate.
