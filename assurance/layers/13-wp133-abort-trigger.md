@@ -61,4 +61,15 @@ Windows result: 3/3 runs, both directions.
 
 **Focused Windows run:** the 37 bash scenarios passed 5/5 consecutive runs.
 
-*(Full gates and Linux: pending.)*
+**Full gates at code `48c4dba8196a6566b1720521a594c63624ec1a1f`:**
+- **Windows** (pinned ICU 78.3; preflight clean; no concurrent batch):
+  - ruff: clean;
+  - format (the 2 changed Python files): clean;
+  - mypy: clean (117 source files);
+  - pytest: **6294 passed, 43 skipped, 19 xfailed**;
+  - coverage: **100.00%** (9601 statements).
+
+  This full-load run includes `builtin-bash-abort-during`, the scenario that flaked under exactly this load before; it passed.
+- **Linux** (`python:3.13`, uid 1000): pytest **5902 passed, 422 skipped, 19 xfailed**. The container mypy shows the same 15 pre-existing platform/stub errors as every Linux run, none in the changed files.
+
+**Status:** candidate, for independent review. The Rust runner follows: Codex implements `abort_on_output` at its `ctx.subprocess` seam. Not merged until both runners consume the field, because the Rust runner would otherwise run this scenario without an abort.
