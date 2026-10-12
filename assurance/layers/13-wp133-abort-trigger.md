@@ -72,4 +72,44 @@ Windows result: 3/3 runs, both directions.
   This full-load run includes `builtin-bash-abort-during`, the scenario that flaked under exactly this load before; it passed.
 - **Linux** (`python:3.13`, uid 1000): pytest **5902 passed, 422 skipped, 19 xfailed**. The container mypy shows the same 15 pre-existing platform/stub errors as every Linux run, none in the changed files.
 
-**Status:** candidate, for independent review. The Rust runner follows: Codex implements `abort_on_output` at its `ctx.subprocess` seam. Not merged until both runners consume the field, because the Rust runner would otherwise run this scenario without an abort.
+**Status at that point:** candidate, for independent review. Review 1 follows in §5.
+
+## 5. Review 1 (Codex) and remediation 1
+
+Review 1 (#217 issuecomment-6123874116) gave **CHANGES REQUESTED** at code `48c4dba8` / docs `2b552bd4`, class delta / governing (CP-6, and CP-1 for the oracle's writes). The remedy's design was found sound, the slow-start witness discriminating, and the Rust tap feasible. The Rust runner is deferred to the approved candidate.
+
+### `WP133D001-R001` (medium): the tap watched every spawn, including the shell lookup
+
+`_AbortOnOutput` wrapped every successful spawn. The certified shell selection (`bash_shell.lookup`, `where`/`which`) spawns through the same capability, so a lookup path containing the marker aborted the call **before any command process existed**. The reviewer's in-memory witness showed `signal_aborted=True` with only the lookup spawned.
+
+**Fix:** the tap watches a spawn only when its options carry **the call's own signal**. That is the certified distinction: the command spawn passes `signal=` (`bash.py`), and the lookup passes none (`bash_shell.py`). The lookup is passed through untouched.
+
+**Witnesses** (scripted in-memory subprocess; no native process):
+- the lookup negative, through the **real** `bash_shell.lookup`: a lookup path containing `before` does not abort, and ordinary collection is kept;
+- the command positive: a marker split across chunks fires only after delivery, on the next loop turn;
+- the **control** restoring the all-spawns tap is caught by the lookup witness, for its intended reason (the abort fires).
+
+43 bash conformance and trigger tests pass at code `2266c4b6`.
+
+### `WP133D001-R002` (high): the authority probe's output write was unguarded
+
+`abort_trigger_probe.mjs` wrote its result with `writeFileSync(outPath, …)`. `outPath` came from the command line with **no containment proof**, against the Owner's containment rule and kit 9.8. The reviewer demonstrated the attempted outside write with the writer intercepted, so nothing was written. *The author's recorded runs wrote their outputs inside the project; the defect is that nothing enforced it.*
+
+**Fix:**
+- The derivation script (`derive_abort_trigger_probe.py`) now makes the probe import fs-guard `assertOutput` and write only through `writeFileSync(assertOutput(outPath), …)`. The proof runs immediately before the write: inside the project root, or `FS_GUARD_OUTPUT`, failing closed through links.
+- The derivation's own write goes through `fs_guard.assert_output`.
+- The Linux recipe sets `FS_GUARD_OUTPUT=/tmp/w`, the container's private output directory.
+- The probe is regenerated from the derivation, not hand-edited.
+
+**Controls** (`abort_trigger_output_controls.mjs`). The probe's **actual writer statement** is extracted from its source and executed with `writeFileSync` **intercepted**, using the real `assertOutput`, under a guard boundary narrowed to a fixture directory **inside** the project:
+- legitimate output: 1 attempt;
+- output outside the boundary: refused, **0 attempts**;
+- foreign absolute path: refused, **0 attempts**;
+- output under a **junction parent** leading outside: refused, **0 attempts**;
+- **control** with the proof removed: the outside case makes a write attempt, so the control is caught.
+
+Result: PASS 5/5. Every fixture path derives from one literal base and is containment-checked before each mutation; cleanup removes the junction itself, never its target.
+
+### Remediation-1 evidence
+
+*(Pending: the authority replays from the repaired probe, on Windows and Linux, and the full gates run in an isolated window after the current host reservation, which is the L12-D008 Rust batch.)*

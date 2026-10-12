@@ -22,7 +22,9 @@ MSYS_NO_PATHCONV=1 docker run --rm --tmpfs /tmp:exec,size=1g \
     cp /node/node /tmp/node && chmod +x /tmp/node
     chown -R 1000:1000 /tmp/guard-root /tmp/home /tmp/w
     cd /tmp/w/13-wp133-abort-trigger
-    setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/tmp/home TMPDIR=/tmp FS_GUARD_ROOT=/tmp/guard-root \
+    # The probe proves its output path with fs-guard assertOutput (WP133D001-R002): the container output directory
+    # /tmp/w (private tmpfs) is the one extra output root it may write to.
+    setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/tmp/home TMPDIR=/tmp FS_GUARD_ROOT=/tmp/guard-root FS_GUARD_OUTPUT=/tmp/w \
       /tmp/node --experimental-strip-types --no-warnings abort_trigger_probe.mjs /pi /tmp/guard-root/scratch /tmp/w/out.json "$REPEAT" >&2
     cat /tmp/w/out.json
   '

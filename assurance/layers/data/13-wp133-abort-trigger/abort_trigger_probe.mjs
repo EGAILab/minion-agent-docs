@@ -8,13 +8,14 @@
 // Each case runs the real tool execute in a fresh working directory; observations: the result (or thrown error) text
 // with the temp path normalized, details, the temp file's bytes (sha256/size) when present, and the update sequence.
 // Derived for TEST-BASH-ABORT-TIMING (minion-agent#197): only the abort cases, with the output-event trigger
-// `abortOnOutput` beside the original timer; sandboxes inside the project root through the reviewed fs-guard.
+// `abortOnOutput` beside the original timer; sandboxes inside the project root through the reviewed fs-guard;
+// the output file is proven by fs-guard assertOutput immediately before it is written (WP133D001-R002).
 //   node --experimental-strip-types abort_trigger_probe.mjs <pi checkout> <scratch dir in the project> <out.json> [repeat]
 import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
-import { makeSandbox, cleanupSandbox } from "../l12-d007/fs-guard/fs-guard.mjs";
+import { makeSandbox, cleanupSandbox, assertOutput } from "../l12-d007/fs-guard/fs-guard.mjs";
 import { delimiter, join } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { stripTypeScriptTypes } from "node:module";
@@ -101,6 +102,6 @@ for (const [id, command, opt = {}] of CASES) for (let run = 1; run <= REPEAT; ru
   if (!cleanupSandbox(base)) process.exitCode = 1;
 }
 const shellConfig = shell.getShellConfig(undefined);
-writeFileSync(outPath, JSON.stringify({ platform: process.platform, node: process.versions.node,
+writeFileSync(assertOutput(outPath), JSON.stringify({ platform: process.platform, node: process.versions.node,
   shell: shellConfig, results }, null, 1) + "\n");
 console.log(`bash probe: ${process.platform}, ${results.length} cases, shell ${shellConfig.shell}`);
