@@ -257,13 +257,16 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - The first child failure to **settle** is reported, through the `done` guard.
   - The other started removals continue, and `remove()` can return before they finish.
   - A directory's final `rmdir` runs only if every child succeeded.
-  - Which failure settles first depends on scheduling. The set left behind once everything drains does not: it is exactly the failing entries and their ancestors.
+  - Which failure settles first depends on scheduling. The set left behind once everything drains does not depend on it:
+    - every reachable removable entry is gone;
+    - a failed entry remains with its ancestors;
+    - a directory that could not be listed, or whose first `rmdir` failed with a non-descending error, keeps its unvisited subtree (`L12D008-C001`).
 - **Minion behaviour** (Python and Rust):
   - Traversal is sequential, depth first, in the host's enumeration order, which is never re-sorted.
   - A failure does not stop the remaining siblings.
   - The **first failure encountered** in that traversal is reported, unchanged.
   - The call returns only after every child has been attempted.
-  - When it returns, exactly the failing entries and their ancestors remain: the same set as Pi's drained state.
+  - When it returns, the same set remains as in Pi's drained state. The composition is above; witnessed by rows M, S and the boundary rows B1–B7.
 - **Classification:** intentional practical-parity divergence. It covers only:
   - (1) first-encountered versus first-settled **selection** when more than one entry fails, including the reported code and origin path;
   - (2) the **absence of sibling concurrency**: Pi may return before outstanding removals finish, and the order in which entries disappear differs.

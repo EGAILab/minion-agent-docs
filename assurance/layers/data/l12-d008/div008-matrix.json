@@ -1,5 +1,6 @@
 {
-  "about": "L12-D008 / DIV-008 (minion-agent#215, provenance #127): recursive remove of `tree` with several failing children. Covers the Owner's case list: two failing children, Pi settlement order reversed, different failure codes, a removable sibling between failing children, nested failing descendants, a single failure before/after a removable sibling (L12-D001 regression), a failing directory child, and natural (uninjected) Linux host failures. Pi: div008-pi-probe.mjs; Python: div008_py_probe.py (no settlement control: Python is sequential).",
+  "about": "L12-D008 / DIV-008 (minion-agent#215, provenance #127): recursive remove of `tree` with several failing children. Covers the Owner's case list: two failing children, Pi settlement order reversed, different failure codes, a removable sibling between failing children, nested failing descendants, a single failure before/after a removable sibling (L12-D001 regression), a failing directory child, natural (uninjected) Linux host failures, and the failure boundaries B1-B7 (L12D008-C001): a failure that prevents entering a subtree -- listing, classification, the first rmdir -- keeps that subtree, a final rmdir failure keeps the emptied directory, for a child (with a removable sibling) and for the target. Pi: div008-pi-probe.mjs; Python: div008_py_probe.py (no settlement control: Python is sequential).",
+  "codes": {"$comment": "The FsErrorCode each injected failure is reported as when it is the selected failure (L12D008-C002). div008_compare.py checks this table against pinned Pi's own reported code on every row where Pi selected that failure, so it cannot drift from the oracle.", "EACCES": "permission_denied", "EBUSY": "unknown"},
   "rows": [
     {"id": "M1-two-files-settle-ab", "fixture": ["tree/", "tree/a", "tree/b"], "inject": [{"op": "unlink", "rel": "tree/a", "nth": 1, "code": "EACCES"}, {"op": "unlink", "rel": "tree/b", "nth": 1, "code": "EACCES"}], "settle": ["tree/a", "tree/b"]},
     {"id": "M2-two-files-settle-ba", "fixture": ["tree/", "tree/a", "tree/b"], "inject": [{"op": "unlink", "rel": "tree/a", "nth": 1, "code": "EACCES"}, {"op": "unlink", "rel": "tree/b", "nth": 1, "code": "EACCES"}], "settle": ["tree/b", "tree/a"]},
@@ -15,6 +16,13 @@
     {"id": "S2-single-failure-after-sibling", "fixture": ["tree/", "tree/a", "tree/b"], "inject": [{"op": "unlink", "rel": "tree/b", "nth": 1, "code": "EACCES"}]},
     {"id": "S3-single-nested-failure", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "unlink", "rel": "tree/a/x", "nth": 1, "code": "EACCES"}]},
     {"id": "N1-natural-two-locked-dirs", "platforms": ["linux"], "repeat": 10, "fixture": ["tree/", "tree/a/", "tree/a/locked", "tree/b/", "tree/b/locked", {"ro_dir": "tree/a"}, {"ro_dir": "tree/b"}]},
-    {"id": "N2-natural-locked-around-sibling", "platforms": ["linux"], "repeat": 10, "fixture": ["tree/", "tree/a/", "tree/a/locked", "tree/m", "tree/z/", "tree/z/locked", {"ro_dir": "tree/a"}, {"ro_dir": "tree/z"}]}
+    {"id": "N2-natural-locked-around-sibling", "platforms": ["linux"], "repeat": 10, "fixture": ["tree/", "tree/a/", "tree/a/locked", "tree/m", "tree/z/", "tree/z/locked", {"ro_dir": "tree/a"}, {"ro_dir": "tree/z"}]},
+    {"id": "B1-child-listing-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "readdir", "rel": "tree/a", "nth": 1, "code": "EACCES"}]},
+    {"id": "B2-child-classification-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "lstat", "rel": "tree/a", "nth": 1, "code": "EACCES"}]},
+    {"id": "B3-child-first-rmdir-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "rmdir", "rel": "tree/a", "nth": 1, "code": "EACCES"}]},
+    {"id": "B4-child-final-rmdir-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "rmdir", "rel": "tree/a", "nth": 2, "code": "EACCES"}]},
+    {"id": "B5-target-listing-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "readdir", "rel": "tree", "nth": 1, "code": "EACCES"}]},
+    {"id": "B6-target-first-rmdir-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "rmdir", "rel": "tree", "nth": 1, "code": "EACCES"}]},
+    {"id": "B7-target-final-rmdir-fails", "fixture": ["tree/", "tree/a/", "tree/a/x", "tree/b"], "inject": [{"op": "rmdir", "rel": "tree", "nth": 2, "code": "EACCES"}]}
   ]
 }

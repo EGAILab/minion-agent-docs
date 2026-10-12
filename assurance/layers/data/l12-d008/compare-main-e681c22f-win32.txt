@@ -25,3 +25,13 @@ FAIL     S1-single-failure-before-sibling run 1: Pi tree/a / binding tree/a
 MATCH    S2-single-failure-after-sibling run 1: Pi tree/b / binding tree/b
 FAIL     S3-single-nested-failure run 1: Pi tree/a/x / binding tree/a/x
            extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+FAIL     B1-child-listing-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+MATCH    B2-child-classification-fails run 1: Pi None / binding None
+FAIL     B3-child-first-rmdir-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/a/x', 'tree/b'], Pi after drain ['tree/', 'tree/a/', 'tree/a/x']
+FAIL     B4-child-final-rmdir-fails run 1: Pi tree/a / binding tree/a
+           extent: binding leaves ['tree/', 'tree/a/', 'tree/b'], Pi after drain ['tree/', 'tree/a/']
+MATCH    B5-target-listing-fails run 1: Pi tree / binding tree
+MATCH    B6-target-first-rmdir-fails run 1: Pi tree / binding tree
+MATCH    B7-target-final-rmdir-fails run 1: Pi tree / binding tree

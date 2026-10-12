@@ -3356,7 +3356,12 @@ Rules. The `remove` target passes **two separate stages**. An "entry" in rules 1
    - **Siblings continue.** Each listed child is removed by these rules, sequentially, in the host's enumeration order, depth first. A child's failure does not stop its siblings: every remaining sibling, with its own subtree, is still removed.
    - **Failure.** A directory with a failed child or descendant is not removed: its final `rmdir` does not run. The failure reported is the **first failure encountered** in that traversal, unchanged (code and origin path). A listing failure is the directory's failure.
    - **Final `rmdir`.** It runs only after every child has been removed.
-   - **Extent.** When `remove` returns, exactly the failing entries and their ancestor directories, up to the target, remain. That is the set pinned Pi leaves once its in-flight child removals have drained (rimraf `_rmchildren` starts every child before any settles, and runs a directory's final `rmdir` only after all children succeed).
+   - **Extent** (corrected by `L12D008-C001`). When `remove` returns:
+     - every entry the traversal could reach and remove is gone;
+     - an entry whose own removal failed remains, with its ancestor directories up to the target;
+     - an entry the traversal could not enter remains **with its whole unvisited subtree**. That is a directory whose listing or first `rmdir` failed with a non-descending error (rule 3). A failed final `rmdir` keeps the emptied directory itself.
+
+     This is the state pinned Pi leaves once its in-flight child removals have drained. rimraf `_rmchildren` starts every listed child before any settles. It returns at once when the listing fails, and it runs a directory's final `rmdir` only after all children succeed. "Exactly the failing entries and their ancestors" holds only when no failure prevented entering a subtree (rows M and S); rows B1–B7 witness the boundaries.
    - **Intentional divergence `DIV-008`** (#127; `assurance/pi-divergences.md`):
      - **Pi:** starts sibling removals concurrently, reports the first failure to **settle**, and can return before its other removals finish.
      - **Minion:** traverses sequentially, reports the first failure **encountered**, and returns only after every child has been attempted.
@@ -3399,7 +3404,13 @@ Record: `assurance/layers/12-l12-d007-error-codes.md`.
 - The directory's final `rmdir` runs only when every child succeeded (`numFiles` reaches zero).
 
 **Rule:** §19.5 rule 4 as amended, in two parts.
-- **Extent (required parity).** The removal continues past failures. When `remove` returns, exactly the failing entries and their ancestor directories remain.
+- **Extent (required parity).** The removal continues past failures. When `remove` returns:
+  - every reachable removable entry is gone;
+  - an entry whose own removal failed remains, with its ancestors;
+  - a failure that prevents entering a subtree keeps that whole unvisited subtree: a listing failure, or a first `rmdir` that fails with a non-descending error;
+  - a failed final `rmdir` keeps the emptied directory.
+
+  This equals pinned Pi's drained state (§19.5 rule 4).
 - **Selection and timing (`DIV-008`, registered in `assurance/pi-divergences.md`).** The first failure **encountered** in the sequential, host-ordered, depth-first traversal is reported, and `remove` returns after every child has been attempted.
 
 Everything else in §19.5 is unchanged. That includes:

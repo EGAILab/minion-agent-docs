@@ -2,8 +2,10 @@
 (recursive) over div008-matrix.json, with the same injection seams as CE-L12D007-02 (ce02_recovery_py_probe.py).
 Python removes sequentially, so a row's `settle` order does not apply: the probe records the ACTUAL traversal
 (`seq`, every intercepted call below `tree` in call order) and what the binding reports, and the comparator
-(div008_compare.py) checks DIV-008's rule against it: the reported failure is the first failure encountered in the
-traversal, and no sibling is started after it. Python has nothing in flight when remove() returns, so `at_settle`
+(div008_compare.py) checks the rule against it: the reported failure is the first failure encountered in the
+traversal, with that failure's code (DIV-008), and the remaining siblings are still removed after a failure, so what
+remains equals pinned Pi's drained state (Owner decision #215 issuecomment-6118734550; spec section 19.5 rule 4 as
+amended). Python has nothing in flight when remove() returns, so `at_settle`
 and `after_drain` are the same snapshot and `late_calls` is empty by construction; both are emitted so Pi's and
 Python's rows have one shape. Natural rows (Linux) use real host failures from a directory chmod 0555.
 Every fixture write, chmod and cleanup goes through the reviewed fs-guard (CE-L12D007-01).
