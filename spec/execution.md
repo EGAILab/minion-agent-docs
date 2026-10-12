@@ -3391,7 +3391,11 @@ Record: `assurance/layers/12-l12-d007-error-codes.md`.
 
 ## 20. Layer-12 post-certification delta `L12-D008` — recursive `remove` with several failing children (`EXEC-002`, `DIV-008`)
 
-**Status:** contract delta, for independent contract review (`minion-agent#215`). Provenance: `#127` (`L12-RM-MULTI-FAILURE-SELECTION`).
+**Status:** CERTIFIED_CLOSED (cross-language), `minion-agent#215`. Provenance: `#127` (`L12-RM-MULTI-FAILURE-SELECTION`).
+- The extent was agreed in convergence episode `CE-L12D008-01`, revision 1 (checkpoint review 1, #215 issuecomment-6122626197).
+- **Python:** code #216 → `e925266b`, docs #294 → `4eba7f6a`. Final review: #215 issuecomment-6123253770.
+- **Rust:** code #219 → `f7400987`, docs #296 → `299dba21`. Closure review 3: #215 issuecomment-6134407241. Closure findings `L12D008-RR001` (stranded L12-D007 control anchors) and `L12D008-RR002` (mutant artifacts in the shared build target) are CLOSED. Non-blocking follow-up `L12D008-RR003`: the gate launchers take their build targets as parameters.
+- **Intentional divergence `DIV-008`** (selection and timing only) is unchanged. It is registered in `assurance/pi-divergences.md`.
 
 **Owner decisions:**
 - **`#127`:** "APPROVE OPTION 1, WITH CORRECTED SCOPE, INTENTIONAL DIVERGENCE: DIV-008". Recorded verbatim; it supersedes the earlier "recorded, remediation not authorized" disposition.

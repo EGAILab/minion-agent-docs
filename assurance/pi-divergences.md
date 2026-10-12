@@ -278,7 +278,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 - **Permanent witnesses:**
   - **Data:** `assurance/layers/data/l12-d008/`, holding the matrix of 13 controlled rows plus 2 natural Linux rows × 10 runs. It has pinned-Pi outputs with a settlement snapshot and a drained snapshot on Windows and Linux, the bindings' outputs, and `div008_compare.py`. The comparator requires extent parity against Pi's drained state, completeness, and the binding's own first-encountered selection. Its self-test rejects a false first-settled claim, a skipped sibling, an extent difference, late calls and an outcome difference.
   - **Python:** `tests/execution/test_filesystem_remove_multi_failure.py`, through the real `LocalFileSystem.remove`, with a pinned-Pi oracle on both platforms. Its controls are the pre-L12-D008 stop-at-first walk (killed on completeness and extent) and a report-the-last-failure walk (killed on selection, including the false first-settled claim).
-  - **Rust:** the equivalent witnesses, in the Rust implementation pass of L12-D008.
+  - **Rust:** `crates/minion-agent/src/execution/filesystem/rimraf/tests/div008.rs` against byte-copies of the shared matrix and pinned-Pi oracles, `scripts/div008-probe.py`, which feeds the shared comparator, and `scripts/div008-negative-controls.py` (the same two control walks, killed by the named witnesses). Merged at code #219 → `f7400987`, record `assurance/layers/12-l12-d008-rust-implementation.md`.
+- **Status:** CERTIFIED_CLOSED cross-language (`#215`, Rust closure review 3, issuecomment-6134407241).
 - **Manifest:** row `EXEC-002-DIV-008`, disposition `intentional divergence`.
 - **Governance:**
   - Owner decision on `#127` ("APPROVE OPTION 1, WITH CORRECTED SCOPE, INTENTIONAL DIVERGENCE: DIV-008", recorded verbatim, sha256 `f135e947…6fe`).

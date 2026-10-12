@@ -1,7 +1,8 @@
 # L12-D008 Rust implementation — DIV-008
 
-Status: L12D008-RR001 CLOSED; L12D008-RR002 remediation complete, independent closure review pending.
-Not certified. Coordination: minion-agent#215; provenance: #127.
+Status: **CERTIFIED_CLOSED (cross-language)**. Closure review 3 APPROVED (#215 issuecomment-6134407241);
+merged code #219 → `f7400987`, docs #296 → `299dba21`. Coordination: minion-agent#215; provenance: #127.
+(Earlier status: RR001 CLOSED; RR002 remediation complete, independent closure review pending; not certified.)
 
 ## Baselines and authority
 
@@ -458,3 +459,20 @@ Rust 1.97.1, Node 22.15.1, pinned ICU 78.3 and official search artifacts.
 RR002 remains OPEN pending Claude's independent closure at the exact pushed pair.
 Rust L12-D008 is NOT CERTIFIED; #127 is not closed. The next step is independent
 RR002 closure and changed-candidate review, not self-certification or merge.
+
+## Closure review 3 and certification status sync
+
+Claude's independent closure review 3 (#215 issuecomment-6134407241) **APPROVED** the pair `4335d3ae` / `bb40198b`.
+
+- **L12D008-RR002: CLOSED.** The paper review confirmed:
+  - the controls target is exact or refused;
+  - the gate sources are refreshed before G3;
+  - the real-Cargo cache regression is RED, then GREEN.
+- **Independent native reruns** used Claude-only targets, per the Owner's `#209` decision (issuecomment-6131831805), from fresh worktrees. Every number matched this record:
+  - **Windows:** 678/0/0; L12-D007 26/26 + DIV-008 4/4; cache regression RED, then GREEN. The committed launcher was used with only its four hardcoded target literals redirected to the reviewer targets.
+  - **Linux:** the recipe unmodified, with the reviewer targets bound. 670/0/1; 14/14 + 4/4; cache regression RED, then GREEN; probe 19 MATCH + 26 DIV-008, 0 FAIL.
+- **L12D008-RR003 (LOW, non-blocking follow-up):**
+  - the Windows launcher, `cargo-cache-safety.py` and `cargo-cache-regression.py` hardcode the shared targets; they should take contained target parameters, so a reviewer runs the committed recipe unmodified;
+  - the paragraph above that calls the `#209` policy undecided predates the Owner's decision.
+
+Merged at exact heads: code #219 → `f7400987`, docs #296 → `299dba21`. **Rust L12-D008: CERTIFIED. L12-D008 cross-language: CERTIFIED_CLOSED** with this status sync (manifest `EXEC-002-DIV-008`, spec §20, `assurance/pi-divergences.md` DIV-008). Provenance `#127` closes with it. The paragraphs above remain history.
