@@ -54,8 +54,15 @@ def _wrap(op: str, real: Any) -> Any:
                 for plan in row["plans"]:
                     if (plan["op"], plan["rel"], plan["nth"]) == (op, rel, row["calls"][key]):
                         plan["fired"] = True
-                        row["seq"].append(f"settle {key}")
+                        row["seq"].append(f"settle {key} {plan['code']}")
                         raise _error(plan["code"], os.fspath(p))
+                try:
+                    return real(p, *args, **kwargs)
+                except OSError as exc:
+                    # A NATIVE failure (not injected), recorded with its errno name so a natural row's origin is
+                    # observed at the real call (CE-L12D008-01); the exception propagates unchanged.
+                    row["seq"].append(f"fail {key} {errno.errorcode.get(exc.errno or 0, 'E?')}")
+                    raise
         return real(p, *args, **kwargs)
 
     return call

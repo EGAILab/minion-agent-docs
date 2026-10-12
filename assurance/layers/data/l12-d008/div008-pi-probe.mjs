@@ -37,7 +37,7 @@ function releaseHeld(r) {
     if (i >= order.length) return;
     const h = r.held[order[i]];
     delete r.held[order[i]];
-    r.seq.push(`settle ${h.key}`);
+    r.seq.push(`settle ${h.key} ${h.error.code}`);
     h.callback(h.error);
     setImmediate(() => deliver(i + 1));
   };
@@ -63,7 +63,7 @@ for (const op of OPS) {
             if (row.settle.every((s) => row.held[s])) releaseHeld(row);
             return;
           }
-          queueMicrotask(() => { row.seq.push(`settle ${key}`); callback(error); });
+          queueMicrotask(() => { row.seq.push(`settle ${key} ${plan.code}`); callback(error); });
           return;
         }
         if (typeof callback === "function") {
@@ -71,6 +71,9 @@ for (const op of OPS) {
           const r = row;
           args[args.length - 1] = function (...cbArgs) {
             r.inflight--;
+            // A NATIVE failure (not injected): recorded with its code, so a natural row's origin is observed at
+            // the real call rather than inferred from what remains (CE-L12D008-01).
+            if (cbArgs[0]) r.seq.push(`fail ${key} ${cbArgs[0].code}`);
             return callback.apply(this, cbArgs);
           };
         }
