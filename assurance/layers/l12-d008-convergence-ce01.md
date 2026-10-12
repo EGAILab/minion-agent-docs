@@ -2,7 +2,7 @@
 
 Convergence episode for `L12D008-C002` on `minion-agent#215` (L12-D008 / DIV-008). Trigger A fired: C002 survived review 1 (issuecomment-6119284467) and the remediation-1 review (issuecomment-6119651732). Default route under RT-6; the Owner was notified and the route is recorded in #215 `history.routes`.
 
-**Revision 1: PROPOSED** checkpoint, for independent review (Codex). No implementation pass follows until the checkpoint is agreed.
+**Revision 1: AGREED FOR IMPLEMENTATION.** Codex's checkpoint review 1 (#215 issuecomment-6122626197) approved it at docs `101febec`. Its one non-blocking wording note (F2) is applied below. *(This line originally read "PROPOSED checkpoint, for independent review".)* Implementation: §7.
 
 **Unchanged and out of scope:**
 - the production walk, which the reviews found correct;
@@ -38,7 +38,7 @@ Data: `data/l12-d008/ce01/ce01-{pi,py-1339078d}-{win32,linux}.jsonl`.
 
 **Findings:**
 - **F1.** A recovered fault is never the reported failure, in Pi or Python, on either platform. The terminal faults in these rows (`unlink` EACCES/EBUSY; and in B1/B3–B7, `readdir` and `rmdir`) are reported, and **their entries remain**.
-- **F2.** Native failures are **mostly routine**. Every row has `fail rmdir tree ENOTEMPTY`, rimraf's rmdir-first step (§19.5 rule 3). Recovering a directory child adds `fail unlink tree/a EPERM` (Windows) or `EISDIR` (Linux), then `fail rmdir tree/a ENOTEMPTY`. The **first native failure is therefore not the terminal failure.** Natural rows (Linux, a `chmod 0555` directory) carry their real origin as `fail unlink tree/<d>/locked EACCES`.
+- **F2.** Native failures are **mostly routine**. Where the target's rmdir-first step runs on a non-empty target, the trace has `fail rmdir tree ENOTEMPTY` (§19.5 rule 3). That is most rows, but not B5/B6, which inject at the target boundary first; *corrected wording, checkpoint review 1*. Recovering a directory child adds `fail unlink tree/a EPERM` (Windows) or `EISDIR` (Linux), then `fail rmdir tree/a ENOTEMPTY`. The **first native failure is therefore not the terminal failure.** Natural rows (Linux, a `chmod 0555` directory) carry their real origin as `fail unlink tree/<d>/locked EACCES`.
 - **F3.** Raw native **codes are per-layer labels**, not observables. For the same directory unlink on Windows, libuv reports `EPERM` and Python's errno name is `EACCES`. Both are Win32 access-denied, which the binding routes as libuv `EPERM` by its Win32 code. Raw codes are recorded for provenance and never compared.
 
 ## 3. Proposed model (checkpoint)
@@ -104,3 +104,64 @@ The checkpoint is agreed when the reviewer accepts R1–R5 and the control list.
 - fresh Windows and Linux runs and gates.
 
 After that comes the targeted closure of C002 and the final review of the changed pair.
+
+## 7. Implementation of the agreed checkpoint
+
+**R1 — declarations** (`div008-matrix.json`).
+- Every injection has `outcome`. A child's classification `lstat` is `recovered` (B2 and X1–X5); every other injection is `terminal`.
+- The natural rows N1/N2 have `signature: {op: unlink, code: EACCES}`.
+- A `declarations` note records that they are verified against Pi on every row.
+
+**R1–R4 — comparator v3** (`div008_compare.py`). It is rewritten to the agreed model:
+- parses the trace grammar;
+- verifies the declarations against Pi (a)–(d);
+- requires complete traces by row kind;
+- selects the first terminal failure;
+- keeps readiness, extent, completeness and outcome.
+
+The verdicts: MATCH, DIV-008 (selection only), FAIL, INVALID.
+
+**Controls**, each credited only for its intended verdict **and** reason:
+- **`--self-test`, 19 synthetic cases:**
+  - positives: recovered then terminal; natural first matching failure;
+  - recovered fault selected → FAIL;
+  - wrong code with the right origin → FAIL;
+  - controlled trace omitted, settlement duplicated, settlement code forged → INVALID;
+  - natural ancestor origin → FAIL;
+  - natural row with no matching failure → INVALID;
+  - two declaration contradictions → INVALID;
+  - the kept checks: extent, honest skip (completeness FAIL), late calls, outcome, binding or oracle undrained, timeout-settled, unfired oracle.
+- **`--controls` on real rows, after a green baseline:**
+  - X1-based, on both platforms: recovered selected, binding trace omitted, duplicated, forged, oracle trace omitted, wrong code, binding undrained, oracle timeout-settled, declaration flipped;
+  - N1-based, Linux only (natural rows run only there): ancestor origin, no matching failure.
+
+  Result: **9/9 on Windows, 11/11 on Linux.**
+
+*One expectation corrected during implementation:* the self-test case "stop at first failure" had expected INVALID on the trace. An honest skip has a **consistent** trace (the skipped injection is reported unfired), so its correct verdict is FAIL on completeness. That is what v3 returns, and the expectation was corrected.
+
+**R5 — one model** (`tests/execution/test_filesystem_remove_multi_failure.py`).
+- `_Run` records `(op, rel, code)` per injected fault.
+- `_violations` selects the first fault whose injection is declared `terminal`, from the same declarations, copied into the oracle `div008_pi.json` (25 rows) by the generator.
+- New witness `test_recovered_fault_is_never_the_selection`: the real X1 run is accepted, and the same observation reporting the recovered `tree/a` is rejected on selection.
+- 30 witnesses.
+
+**F2 wording:** corrected in §2.
+
+### Evidence (code `c479e6f49db724979befdbadd49fc78a4afb4ab9`; production unchanged since `521577b5`)
+
+- **Pinned Pi over the 27-row matrix:** `div008-pi-{win32,linux}.jsonl`, which equal the CE-01 runs `ce01/ce01-pi-*`. All rows are drained, with no timeout settlement and no unfired injection.
+- **Comparator v3, candidate `c479e6f4`, Windows:** exit 0. 20 MATCH, 5 DIV-008, 0 FAIL, 0 INVALID.
+- **Comparator v3 on the CE-01 Python runs at `1339078d`:** Windows 20 + 5; Linux 19 + 26. This matches the checkpoint reviewer's independent replay.
+- **Windows gates at `c479e6f4`:**
+  - ruff, format (changed files) and mypy: clean;
+  - pytest: **6321 passed, 43 skipped, 19 xfailed**;
+  - coverage: **100.00%**.
+- **Disclosure:** the Windows candidate probe ran while the Linux container gates were running. It is deterministic fault injection, so the concurrency does not affect its rows.
+### 7.1 Linux (uid 1000, `python:3.13`, pinned ICU 78.3)
+
+- **Gates at `c479e6f4`:** pytest **5929 passed, 422 skipped, 19 xfailed**. Container mypy shows the same 15 pre-existing platform/stub errors as every earlier Linux run.
+- **Pinned-Pi replay:** a fresh run is identical to the committed `div008-pi-linux.jsonl` on **45/45** row-runs (result, path, drained extent).
+- **Comparator v3, candidate `c479e6f4`:** exit 0. **19 MATCH, 26 DIV-008, 0 FAIL, 0 INVALID**. The X5 and natural-row DIV-008 selections are each the binding's own first terminal failure with its correct code.
+- **Real-row controls:** **11/11** (`controls-candidate-c479e6f4-linux.txt`).
+
+**Status:** the CE-L12D008-01 implementation is complete. `L12D008-C002` is ready for **targeted closure** by the reviewer, followed by the mandatory complete exact-SHA review. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.

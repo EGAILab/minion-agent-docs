@@ -1,0 +1,13 @@
+baseline passed; 11 controls on real rows
+PASS recovered fault selected: FAIL (expected FAIL, selection: binding reports)
+PASS controlled trace omitted: INVALID (expected INVALID, trace:)
+PASS settlement duplicated: INVALID (expected INVALID, trace:)
+PASS settlement code forged: INVALID (expected INVALID, trace:)
+PASS oracle trace omitted: INVALID (expected INVALID, trace:)
+PASS wrong code, right terminal origin: FAIL (expected FAIL, selection: binding code)
+PASS binding did not drain: INVALID (expected INVALID, binding:)
+PASS oracle settled by timeout: INVALID (expected INVALID, oracle:)
+PASS declaration contradicts Pi (recovered declared terminal): INVALID (expected INVALID, declaration:)
+PASS natural origin is an ancestor: FAIL (expected FAIL, selection: binding reports)
+PASS natural trace has no matching failure: INVALID (expected INVALID, trace:)
+REAL-ROW CONTROLS PASSED
