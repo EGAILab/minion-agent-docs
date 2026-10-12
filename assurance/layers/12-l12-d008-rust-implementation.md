@@ -1,6 +1,6 @@
 # L12-D008 Rust implementation — DIV-008
 
-Status: implementation candidate complete; independent Rust closure review pending.
+Status: Rust closure review 1 requested changes (L12D008-RR001); control-anchor remediation in progress below.
 Not certified. Coordination: minion-agent#215; provenance: #127.
 
 ## Baselines and authority
@@ -216,3 +216,60 @@ is required and observed. The existing exotic reparse-point gap (#207 / L12-D010
 and native-name decoding #133-F2 are not expanded or repaired here.
 
 Next action: Claude's independent Rust closure review at the exact pushed pair.
+
+## Closure review 1 and L12D008-RR001 remediation
+
+Claude's independent review (#215 issuecomment-6126355394) rejected the pair
+`856cab3d` / `9f781d0d`: the production walk and the committed comparator outputs
+were sound, but 11 certified L12-D007 control anchors were stranded by the
+`step()` extraction. The earlier disclosure that those controls were not rerun
+is history, not an acceptance of this assurance regression. No production,
+shared-contract, canonical-expectation or Python change is made in this repair.
+
+The read-only review audit found each of the following old anchors once at
+`e925266b` and zero times at the rejected head. The repaired control script
+resolves the equivalent branches in `step()`:
+
+| Control | Old anchor / mutation site | New anchor / mutation site (same intended defect) |
+| --- | --- | --- |
+| N1 | Directory terminal `Err` before `FinalDirectory` | Same terminal `Err` before the new guarded `FinalDirectory(_, before)`; attempt unlink after directory failure |
+| N2 | Same old Directory terminal `Err` | Same new Directory terminal `Err`; retry rmdir after directory failure |
+| N3 | Entry unlink terminal `Err` before Directory | Same Entry unlink terminal `Err` at `step` indentation; swallow failure, keep descent return intact |
+| N4 | Same Entry unlink terminal `Err`, origin `path` | Same terminal `Err`, origin `root_path`; thread the original remove target into `step` in this mutant only |
+| N5 | Indented `Work::Directory(p, original)` arm | Same arm in `step`; enumerate before first rmdir |
+| N6 | Classification EPERM, `recover(..., &mut stack); continue` | Classification EPERM, `recover(..., stack); return Ok(())`; skip recovery |
+| N11 | Entry arm with in-scope `recursive` and `path` | After validation, before the stack is constructed; nonrecursive file goes straight to unlink and bypasses shared routing |
+| child-vanish-windows-only | Missing classification `continue` | Missing classification `return Ok(())`; accept only on Windows and report not_found off Windows |
+| readdir-missing-is-error | Missing readdir `continue` | Missing readdir `return Ok(())`; report not_found instead |
+| first-rmdir-missing-is-error | Missing first rmdir at old indentation | Same missing branch in Directory; report not_found instead |
+| final-rmdir-missing-is-error | `Work::FinalDirectory(p)` | `Work::FinalDirectory(p, _)`; report not_found instead |
+
+The read-only audit's other literal anchors still matched. A further scope audit
+found that N13's cached `validation` value is now in `remove()` but its replacement
+classification expression is in `step()`. Merely retaining its old literals
+would compile-fail, an INVALID control rather than a kill. That mutant now
+threads the cached value into `step()` and reuses it for classification, retaining
+its original wrong behavior. This argument exists only in the mutated scratch
+source, never in production. N4 likewise retains the original *target* origin,
+not an easier-to-detect immediate-parent variant.
+
+`error-codes-negative-controls.py --tree <Rust workspace> --check-anchors` is a
+read-only gate: it applies every registered mutation to in-memory source text,
+including platform-inapplicable controls and helper mutations with several
+anchors. Each exact replacement must match once and change the source. It exits
+before log-directory creation, Cargo or source writes. The ordinary batch also
+runs this check before any baseline or mutation. Both committed
+`div008-windows-gates.py` and `div008-linux-gates.sh` run it before Cargo G3.
+Static result: **27/27 mutations uniquely resolved**, on all-platform source.
+
+The new Windows launcher captures native exits in regular files, uses the
+project's shared four-job target, and runs both the full certified L12-D007
+control batch and the four DIV-008 controls in a disposable copy. The Linux
+recipe does the same, sequentially after G3 and uid-1000 corpora/probes; its
+L12-D007 control copy is under private `/tmp/l12d007`. Control path proofs use
+throwing no-follow lstat from the drive/root, reject reparse points and unknown
+inspection errors, and check lexical and real containment before every write.
+
+Fresh native results and exact candidate heads will be appended after the
+isolated Windows-then-Linux batch finishes. No provisional closure or
+certification is claimed by this in-progress author entry.
