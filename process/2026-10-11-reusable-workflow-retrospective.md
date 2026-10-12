@@ -704,7 +704,11 @@ What these settle, and what they do not (the first draft of this section claimed
   do not use the rules they would introduce to approve their own adoption.
 - **Not settled: P1's outside-root actions.** Creating the repository and its local checkout is
   outside the Minion-Agent project root and happens only with the Owner's explicit confirmation under
-  the filesystem-containment rule.
+  the filesystem-containment rule. *(Settled 2026-10-12, recorded on `minion-agent#205`: repository
+  "public is fine"; checkout "Option 3 is ok", a second allowed root `Minions/Minion-Process` in the
+  guard hook, literal path; ownership "I want you to be the owner of the process repo and main
+  driver", with `w1:p1` as the consumer that pulls each release into Minion-Agent; sequencing "get all
+  new/improved process in before starting other Minion-Agent work".)*
 - Claude's recommendation on decision 5, for the Owner to accept or reject: measure first. One or two
   WPs of Codex posting through `minion_process` under the github-issue backend, counted per §9, decide
   whether a second surface is worth its sync cost. *(Superseded the same day: the Owner chose "stay on
@@ -774,7 +778,7 @@ documentary change to the record and introduces none of the P1–P4 mechanics.
 | Phase | Content | Depends on |
 |---|---|---|
 | P0 (this PR) | this retrospective; `process-history.md` entry | independent process review (Codex), second review (`w1:p1`), final review of the changed candidate |
-| P1 | `EGAILab/minion-process` created and seeded from current `process/**` and `process/tools/`; `profile.yaml` for Minion-Agent; `WORKFLOW.md` split into core + lessons with text preserved; `profile validate` | decision 1 enacted; Owner confirmation for the repository and the `Minions/Minion-Process` checkout; `#199` closed (Owner sequencing) |
+| P1 | `EGAILab/minion-process` created and seeded from current `process/**` and `process/tools/`; `profile.yaml` for Minion-Agent; `WORKFLOW.md` split into core + lessons with text preserved; `profile validate` | decision 1 enacted; Owner confirmation for the repository and the `Minions/Minion-Process` checkout; `#199` closed (Owner sequencing). **DONE 2026-10-12:** kit 0.1.0 (`minion-process#1` APPROVED by Codex at `645d9120`, merged `0876e11d`, tag `v0.1.0`; coordination `minion-agent#211`); Minion-Agent profile and pin in `process/profile.yaml`; `agent-workflow.md` stays in force until the P2 cut-over |
 | P2 | consequence classes and kinds in the state schema and transitions table; routing table; delegation amendments | Owner decisions 2 and 3 (recorded, §7.1); the `#75` amendment text confirmed by the Owner before or with the PR; `#199` closed |
 | P3 | structured review-record header; `metrics` and `convergence counters`; composite verbs; `session start` and `cleanup`; `handoff`/`dispatch` with reply-to; launchers; fault-fired rule | P1 |
 | P4 | Minion-Memory re-adopts by profile; `mneme-process` retired; incident replay suite seeded from both projects' lessons | decision 4, P3 |
@@ -811,6 +815,15 @@ every round found something is not.
 ---
 
 ## 10. Revision history
+
+### Revision 4 (2026-10-12): P1 complete; ownership, repository and checkout decisions recorded
+
+Documentary. §8 P1 row marked DONE with the kit release (`minion-process#1` @ `645d9120`, merged
+`0876e11d`, tag `v0.1.0`; coordination `minion-agent#211`, Codex review 1 CHANGES REQUESTED
+`PROC-KIT-P1-R001`–`R003`, re-review APPROVED). §7.1 outside-root bullet annotated with the 2026-10-12
+Owner decisions (`minion-agent#205`). Companion changes in this PR: `process/profile.yaml` (the live
+Minion-Agent profile, kit pin 0.1.0), the kit paragraph in `agent-workflow.md`'s header, and the
+process-history entry.
 
 ### Revision 3 (2026-10-11): Owner decisions recorded; Codex's editorial notes
 

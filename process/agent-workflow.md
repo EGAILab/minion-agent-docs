@@ -2,6 +2,16 @@
 
 **Canonical location:** `minion-agent-docs/process/agent-workflow.md`
 
+**Process kit (adopted 2026-10-12, P1):** Minion-Agent consumes **Minion-Process**
+(`EGAILab/minion-process`) at the version pinned in `process/profile.yaml` (`0.1.0`, tag `v0.1.0`,
+merge `0876e11d`). The profile is the only project-specific process file: authority chain,
+repositories, agents and panes, taxonomy aliases, conformance families, gates and delegation. The
+kit's `WORKFLOW.md` carries this file's rules with the same section numbers; its `lessons/` and
+`seed-history/` preserve the incident narratives and the Minion-Agent-specific sentences verbatim.
+**Until the P2 cut-over** (kinds, consequence classes, routing table, `minion-agent#75` amendment),
+this file remains the in-force normative text for Minion-Agent and the two are kept identical in
+substance; a rule change lands in the kit first and is pulled here by a pin bump (§14.3).
+
 **Workspace layout:**
 
 ```text
