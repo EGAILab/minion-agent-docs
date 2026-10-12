@@ -8,19 +8,19 @@ Changes, each asserted to apply exactly once:
 - trigger: onUpdate aborts the signal the first time an update's text contains the marker;
 - repeat: each case runs `repeat` times so timing sensitivity is visible.
 This script's own output (the derived probe, next to it) is written through fs_guard.assert_output as well.
+
+Everything it reads or imports is relative to its OWN checkout (remediation 2, WP133D001-R002): the reviewed
+fs-guard at ../l12-d007/fs-guard and the WP-13.3 probe at ../13-wp133/harness/bash_probe.mjs. It therefore
+reproduces from any checkout of this commit, byte-identically, without any other worktree.
 """
-import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path("E:/AI/Projects/OpenMinds/Minions/Minion-Agent")
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / "review-worktrees/l12d008-docs/assurance/layers/data/l12-d007/fs-guard"))
+sys.path.insert(0, str(HERE.parent / "l12-d007" / "fs-guard"))
 import fs_guard  # noqa: E402
 
-src = subprocess.run(
-    ["git", "-C", str(ROOT / "minion-agent-docs"), "show", "origin/master:assurance/layers/data/13-wp133/harness/bash_probe.mjs"],
-    capture_output=True, text=True, encoding="utf-8", check=True).stdout
+src = (HERE.parent / "13-wp133" / "harness" / "bash_probe.mjs").read_text(encoding="utf-8")
 
 
 def once(text: str, old: str, new: str) -> str:
