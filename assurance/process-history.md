@@ -4,6 +4,28 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Minion-Process P1: kit 0.1.0 released; Minion-Agent profile and pin adopted — 2026-10-12
+
+**Kit:** `EGAILab/minion-process` (public; protect-default-branch ruleset mirrored from this repository),
+seeded from this repository's `process/**` and `process/tools/` at `dd9fd15`. PR `minion-process#1`:
+Codex review 1 CHANGES REQUESTED (`PROC-KIT-P1-R001` validator totality, `R002` schema/validator
+equivalence, `R003` canonical-family invariant preserved), revision 2 APPROVED at `645d9120`, merged
+`0876e11d`, tag `v0.1.0`. Coordination `minion-agent#211`. Owner decisions of 2026-10-12 on
+`minion-agent#205`: repository public; checkout `Minions/Minion-Process` as a second allowed root of the
+guard hook; Claude `w1:p8` owns and drives the kit, `w1:p1` consumes releases; process work completes
+before other Minion-Agent work resumes.
+
+**What Minion-Agent adopts in P1:** `process/profile.yaml` (kit pin 0.1.0; authority chain,
+repositories, agents, conformance families, taxonomy aliases, gates, delegation with `routing: false`)
+and the kit paragraph in `agent-workflow.md`. `agent-workflow.md` remains the in-force normative text
+until the P2 cut-over; the kit's `WORKFLOW.md` carries the same rules with the same numbering, its
+`lessons/` the incident narratives, and `seed-history/minion-agent-specifics.md` the Minion-Agent
+sentences that became profile values. Nothing in P1 changes a rule in force, a certification or a
+delegation.
+
+**Gates:** kit at `645d9120`: pytest 467 passed, 6 skipped (consumer-side copy checks), coverage 100%,
+ruff and mypy strict clean, `profile validate` VALID; `process/profile.yaml` VALID.
+
 ## Layers 11–14 and Minion-Memory retrospective: Minion-Process, a reusable process kit — direction approved 2026-10-11
 
 **Record:** `process/2026-10-11-reusable-workflow-retrospective.md` (Owner request). The Owner approved the
