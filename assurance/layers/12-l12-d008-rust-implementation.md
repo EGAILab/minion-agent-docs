@@ -300,7 +300,7 @@ Linux batch exited. All native gate/control launchers exited **0**.
 Windows-only correction/raw-handle/directory-link controls are explicitly
 NOT_APPLICABLE on Linux. The child-vanishing Windows-only-gate regression is
 explicitly NOT_APPLICABLE on Windows and **KILLED on Linux** by its real walk
-witness. No setup, compile, unmatched anchor, wrong-witness or unfired-injection
+witness. No setup, compile, unmatched anchor, wrong-witness or unexpected unfired-injection
 failure was credited. The N6/N8/N11/N13 intended interruption allowances already
 specified by L12-D007's certified driver are retained, not broadened.
 
