@@ -112,4 +112,21 @@ Result: PASS 5/5. Every fixture path derives from one literal base and is contai
 
 ### Remediation-1 evidence
 
-*(Pending: the authority replays from the repaired probe, on Windows and Linux, and the full gates run in an isolated window after the current host reservation, which is the L12-D008 Rust batch.)*
+All of this ran in an isolated window, after the reviewer released the host (the L12-D008 Rust batch was done), sequentially: Windows replay, Linux replay, Windows gates, Linux gates. The preflight before the replays showed 27.54 GB free and no active builds.
+
+**Authority replays from the repaired, guarded probe** (`pi-{win32,linux}.json`, regenerated):
+- Windows: both triggers give `before\n\n\nCommand aborted`, is_error, **5/5 each**.
+- Linux (uid 1000; the output went through the explicit `FS_GUARD_OUTPUT=/tmp/w`): **5/5 each**, identical.
+
+**Gates at code `2266c4b6b53991dbeded96bf7e5f33d9b76e4371`:**
+- **Windows:**
+  - ruff: clean;
+  - format (changed files): clean;
+  - mypy: clean (117 files);
+  - pytest: **6297 passed, 43 skipped, 19 xfailed**;
+  - coverage: **100.00%** (9601 statements).
+- **Linux** uid 1000: **5905 passed, 422 skipped, 19 xfailed**. The container mypy shows the same 15 pre-existing errors as every run.
+
+**Output controls:** 5/5 (above).
+
+Status: remediation 1, **for targeted re-review** of R001 and R002 and the review of the changed candidate. The Rust runner follows, on the approved candidate.
