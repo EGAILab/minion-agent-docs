@@ -3352,7 +3352,18 @@ Rules. The `remove` target passes **two separate stages**. An "entry" in rules 1
    - ENOTDIR: the original error, if one routed here; otherwise removed.
    - ENOENT: removed.
    - Anything else: that failure, with no listing and no retry.
-4. **Propagation.** A listing failure, or the first child failure from any depth, is the directory's failure, unchanged. The final `rmdir` runs only after every child is removed. Siblings are handled sequentially; multi-failure selection stays with DIV-008 / #127.
+4. **Propagation** (amended by L12-D008, §20; Owner decision on DIV-008's extent, #215 issuecomment-6118734550).
+   - **Siblings continue.** Each listed child is removed by these rules, sequentially, in the host's enumeration order, depth first. A child's failure does not stop its siblings: every remaining sibling, with its own subtree, is still removed.
+   - **Failure.** A directory with a failed child or descendant is not removed: its final `rmdir` does not run. The failure reported is the **first failure encountered** in that traversal, unchanged (code and origin path). A listing failure is the directory's failure.
+   - **Final `rmdir`.** It runs only after every child has been removed.
+   - **Extent.** When `remove` returns, exactly the failing entries and their ancestor directories, up to the target, remain. That is the set pinned Pi leaves once its in-flight child removals have drained (rimraf `_rmchildren` starts every child before any settles, and runs a directory's final `rmdir` only after all children succeed).
+   - **Intentional divergence `DIV-008`** (#127; `assurance/pi-divergences.md`):
+     - **Pi:** starts sibling removals concurrently, reports the first failure to **settle**, and can return before its other removals finish.
+     - **Minion:** traverses sequentially, reports the first failure **encountered**, and returns only after every child has been attempted.
+
+     When more than one entry fails, which failure is reported, and when the call returns, may therefore differ. The final removed set does not.
+
+   *History: until L12-D008 this rule stopped at the first child failure ("the first child failure from any depth is the directory's failure"), so siblings visited after it were never attempted.*
    - **Depth:** a successful removal succeeds at any depth the filesystem allows (pinned Node's callback walk has no stack bound). A binding's walk must not exhaust its own call stack (`L12D007-I005`, stated in remediation 2).
 5. **Windows `EPERM` recovery** (`fixWinEPERM`):
    - **a.** Clear the entry's own read-only attribute, without following links. It is a success whether or not the attribute was set. If the correction fails: ENOENT means removed; anything else gives the **original** error.
@@ -3372,3 +3383,49 @@ Rules. The `remove` target passes **two separate stages**. An "entry" in rules 1
 - Fault injection has no language-neutral fixture, so this is binding-level evidence with a pinned-Pi oracle in both languages, compared by `ce02_compare.py`.
 
 Record: `assurance/layers/12-l12-d007-error-codes.md`.
+
+## 20. Layer-12 post-certification delta `L12-D008` — recursive `remove` with several failing children (`EXEC-002`, `DIV-008`)
+
+**Status:** contract delta, for independent contract review (`minion-agent#215`). Provenance: `#127` (`L12-RM-MULTI-FAILURE-SELECTION`).
+
+**Owner decisions:**
+- **`#127`:** "APPROVE OPTION 1, WITH CORRECTED SCOPE, INTENTIONAL DIVERGENCE: DIV-008". Recorded verbatim; it supersedes the earlier "recorded, remediation not authorized" disposition.
+- **`#215` issuecomment-6118734550:** "Continue siblings". This amends the Minion behaviour on new evidence: the final removed set must match Pi's drained state.
+
+**Authority:** pinned Pi `remove` → Node v22.15.1 `rimraf` `_rmchildren` (blob `24bf3f46`).
+- Every child's `rimraf` starts in one loop, before any settles.
+- The first error callback sets `done` and is reported.
+- Later callbacks are ignored, but their removals run on.
+- The directory's final `rmdir` runs only when every child succeeded (`numFiles` reaches zero).
+
+**Rule:** §19.5 rule 4 as amended, in two parts.
+- **Extent (required parity).** The removal continues past failures. When `remove` returns, exactly the failing entries and their ancestor directories remain.
+- **Selection and timing (`DIV-008`, registered in `assurance/pi-divergences.md`).** The first failure **encountered** in the sequential, host-ordered, depth-first traversal is reported, and `remove` returns after every child has been attempted.
+
+Everything else in §19.5 is unchanged. That includes:
+- rule 0 target validation;
+- rule 1 classification;
+- rules 2 and 3 routing;
+- the rule 5 Windows `EPERM` recovery, each child's outcome being that child's;
+- the rule 6 error identity;
+- the depth rule.
+
+**What the divergence does not cover:** the final removed set; single-failure error origin (L12-D001, §14.8); successful deletion; symlink non-traversal; error classification (§19).
+
+**Evidence** (`assurance/layers/data/l12-d008/`, Windows and Linux):
+- **The matrix:** `div008-matrix.json` has 13 controlled rows:
+  - two failing children, in both settlement orders;
+  - different codes;
+  - a removable sibling between failures;
+  - nested failures;
+  - a failing directory child;
+  - single failures before, after and below a sibling.
+
+  It also has 2 natural Linux rows × 10 runs with real `EACCES`.
+- **The pinned-Pi probe** (`div008-pi-probe.mjs`) controls settlement order and records Pi's state both at settlement and after its in-flight removals drain.
+- **The binding probes** record their own traversal.
+- **`div008_compare.py`** requires extent parity against Pi's drained state, completeness (no skipped sibling, no late call) and first-encountered selection.
+
+The comparison point is Pi's **drained** state, not its settlement state. The L12-D007 CE-02 matrices compared remaining entries at settlement, which does not establish drained-extent parity (record §3). L12-D008 measures the drained state.
+
+Record: `assurance/layers/12-l12-d008-div008.md`.

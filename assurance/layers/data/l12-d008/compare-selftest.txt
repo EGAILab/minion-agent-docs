@@ -1,0 +1,7 @@
+PASS positive: first encountered, extent equal (DIV-008 selection): DIV-008 (expected DIV-008)
+PASS false first-settled claim: binding reports Pi's path, not its own first: FAIL (expected FAIL)
+PASS stop at first failure: sibling skipped: FAIL (expected FAIL)
+PASS extent differs: FAIL (expected FAIL)
+PASS late calls after return: FAIL (expected FAIL)
+PASS outcome differs: FAIL (expected FAIL)
+COMPARATOR SELFTEST PASSED
