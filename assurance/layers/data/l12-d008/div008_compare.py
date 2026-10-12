@@ -63,12 +63,20 @@ def ancestor_of_remaining(remains: list[str], rel: str) -> bool:
     return any(r.rstrip("/").startswith(rel + "/") for r in remains)
 
 
+def matches_signature(sig: dict, op: str, code: str) -> bool:
+    """A native failure matches a natural row's declared signature only on BOTH its operation and its code
+    (closure review 1). The code is the native label as this row's platform reports it; the natural rows run on
+    Linux only, where pinned Pi and the Python probe both label this failure EACCES, so no normalization applies
+    within a row. Raw labels are never compared across runtimes (F3)."""
+    return op == sig["op"] and code == sig["code"]
+
+
 def selection(spec: dict, codes: dict, row: dict) -> tuple[str, str] | None:
     """R3: (origin rel, code) of the row's own first terminal failure, or None."""
     if natural(spec):
         sig = spec["signature"]
-        for op, rel, _ in events(row, "fail"):
-            if op == sig["op"]:
+        for op, rel, code in events(row, "fail"):
+            if matches_signature(sig, op, code):
                 return rel, codes[sig["code"]]
         return None
     terminal = {(q["op"], q["rel"]): q["code"] for q in spec["inject"] if q["outcome"] == "terminal"}
@@ -95,8 +103,8 @@ def trace_problems(spec: dict, row: dict, side: str) -> list[str]:
     """R2, by the matrix row's kind."""
     if natural(spec):
         sig = spec["signature"]
-        if not any(op == sig["op"] for op, _, _ in events(row, "fail")):
-            return [f"trace: {side} has no native {sig['op']} failure for the natural signature"]
+        if not any(matches_signature(sig, op, code) for op, _, code in events(row, "fail")):
+            return [f"trace: {side} has no native {sig['op']} {sig['code']} failure matching the natural signature"]
         return []
     unfired = set(row.get("unfired", []))
     expected = Counter((q["op"], q["rel"], q["code"]) for q in spec["inject"]
@@ -114,8 +122,8 @@ def declaration_problems(spec: dict, codes: dict, pi: dict) -> list[str]:
     if natural(spec):
         if pi["result"] != "ok":
             sig = spec["signature"]
-            if not any(op == sig["op"] and rel == pi["path"] for op, rel, _ in events(pi, "fail")):
-                problems.append(f"declaration: Pi's origin {pi['path']} is not a native {sig['op']} failure")
+            if not any(matches_signature(sig, op, code) and rel == pi["path"] for op, rel, code in events(pi, "fail")):
+                problems.append(f"declaration: Pi's origin {pi['path']} is not a native {sig['op']} {sig['code']} failure")
             if pi["result"] != codes[sig["code"]]:
                 problems.append(f"declaration: Pi reports {pi['result']}, the signature's code is {codes[sig['code']]}")
         return problems
@@ -222,10 +230,24 @@ def _controls(matrix: dict, pi_rows: dict, b_rows: dict) -> list[tuple[str, dict
     n1 = next((k for k in b_rows if k[0].startswith("N1")), None)
     if n1:
         spec, pi, b = specs[n1[0]], pi_rows[n1], b_rows[n1]
+        pi_leaf_eio = {**pi, "seq": [f"fail unlink {pi['path']} EIO" if s == f"fail unlink {pi['path']} EACCES" else s
+                                     for s in pi["seq"]]}
         out += [
             ("natural origin is an ancestor", spec, pi, {**b, "path": "tree"}, "FAIL", "selection: binding reports"),
             ("natural trace has no matching failure", spec, pi, _drop(b, "fail"), "INVALID", "trace:"),
+            # Closure review 1 witnesses: the signature is op AND code.
+            ("natural: matching op, wrong code only (reviewer's EIO witness)", spec, pi,
+             {**_drop(b, "fail"), "seq": [s for s in b["seq"] if not s.startswith("fail unlink ")] + ["fail unlink tree EIO"],
+              "path": "tree"}, "INVALID", "trace:"),
+            ("natural: an earlier same-op non-matching failure reported", spec, pi,
+             {**b, "seq": ["unlink tree/zz", "fail unlink tree/zz EIO"] + b["seq"], "path": "tree/zz"}, "FAIL",
+             "selection: binding reports"),
+            ("natural: oracle origin event's code corrupted", spec, pi_leaf_eio, b, "INVALID", "declaration:"),
         ]
+        # Positive: an earlier same-op non-matching failure does not change the selection.
+        positive = {**b, "seq": ["unlink tree/zz", "fail unlink tree/zz EIO"] + b["seq"]}
+        out.append(("positive: earlier same-op non-matching failure skipped", spec, pi, positive,
+                    check(spec, matrix["codes"], pi, b)[0], ""))
     return out
 
 
@@ -233,7 +255,8 @@ def run_controls(controls, codes: dict) -> int:
     bad = 0
     for name, spec, pi, row, expect, reason in controls:
         verdict, problems = check(spec, codes, pi, row)
-        ok = verdict == expect and any(x.startswith(reason) for x in problems)
+        # A positive control (empty reason) must get its verdict with no problems at all.
+        ok = verdict == expect and (any(x.startswith(reason) for x in problems) if reason else not problems)
         bad += not ok
         print(f"{'PASS' if ok else 'FAIL'} {name}: {verdict} (expected {expect}, {reason})")
     return bad
@@ -279,6 +302,18 @@ def self_test() -> int:
         ("settlement code forged", spec, pi, {**good, "seq": [s.replace("EBUSY", "EIO") for s in trace]}, "INVALID", "trace:"),
         ("natural origin is an ancestor", nspec, npi, {**nb, "path": "tree"}, "FAIL", "selection: binding reports"),
         ("natural trace has no matching failure", nspec, npi, _drop(nb, "fail"), "INVALID", "trace:"),
+        # Closure review 1: the natural signature is op AND code.
+        ("natural: matching op, wrong code only (reviewer's EIO witness)", nspec, npi,
+         {**_drop(nb, "fail"), "seq": [s for s in ntrace if not s.startswith("fail ")] + ["fail unlink tree EIO"],
+          "path": "tree"}, "INVALID", "trace:"),
+        ("positive: an earlier same-op non-matching failure is skipped", nspec, npi,
+         {**nb, "seq": ["unlink tree/z", "fail unlink tree/z EIO"] + ntrace}, "MATCH", None),
+        ("natural: the earlier same-op non-matching failure reported", nspec, npi,
+         {**nb, "seq": ["unlink tree/z", "fail unlink tree/z EIO"] + ntrace, "path": "tree/z"}, "FAIL",
+         "selection: binding reports"),
+        ("natural: oracle origin does not match the signature", nspec,
+         {**npi, "seq": ["unlink tree/b/locked", "fail unlink tree/b/locked EACCES",
+                         "unlink tree/a/locked", "fail unlink tree/a/locked EIO"]}, nb, "INVALID", "declaration:"),
         ("declaration: recovered declared terminal (entry removed in Pi)", flipped, pi, good, "INVALID", "declaration:"),
         ("declaration: Pi selects a recovered injection", removed, {**pi, "path": "tree/a", "result": "permission_denied"},
          good, "INVALID", "declaration:"),

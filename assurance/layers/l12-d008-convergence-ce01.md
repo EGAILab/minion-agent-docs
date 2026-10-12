@@ -164,4 +164,32 @@ The verdicts: MATCH, DIV-008 (selection only), FAIL, INVALID.
 - **Comparator v3, candidate `c479e6f4`:** exit 0. **19 MATCH, 26 DIV-008, 0 FAIL, 0 INVALID**. The X5 and natural-row DIV-008 selections are each the binding's own first terminal failure with its correct code.
 - **Real-row controls:** **11/11** (`controls-candidate-c479e6f4-linux.txt`).
 
-**Status:** the CE-L12D008-01 implementation is complete. `L12D008-C002` is ready for **targeted closure** by the reviewer, followed by the mandatory complete exact-SHA review. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
+**Status at that point:** the implementation was complete and handed over for targeted closure (§7.2 follows).
+
+### 7.2 Targeted closure review 1 and its remediation
+
+Closure review 1 (#215 issuecomment-6122868334): **C002 not closed.** The natural signature was matched on its **operation only**. Trace validation, oracle declaration verification and selection all ignored the native event's code. So `fail unlink tree EIO`, with path `tree`, was accepted against the declared `unlink`/`EACCES` signature, as was an oracle whose origin event carried `EIO`.
+
+The reviewer also required the Windows candidate probe to be **rerun in an isolated window**: kit WORKFLOW 9.8 grants no "deterministic injection" exception to the overlap. It also disclosed that the earlier detached checkouts of `review-worktrees/l12d008-docs` were its own, and that it now uses its own worktrees.
+
+**Remediation** (`div008_compare.py`; the agreed R1–R3, fully implemented):
+- `matches_signature(sig, op, code)` requires **both** operation and code. It is used at all three points: trace validation (R2), oracle verification (R1(d)) and first-matching selection (R3).
+- The code is the native label as the row's platform reports it. The natural rows run on Linux only, where both pinned Pi and the Python probe label this failure `EACCES`, so no normalization applies within a row. Raw labels are still never compared across runtimes (F3).
+- Self-test: 23 cases. New:
+  - the reviewer's EIO witness (matching op, wrong code only) → INVALID, trace;
+  - **positive**: an earlier same-op non-matching failure is skipped;
+  - that earlier failure reported as the selection → FAIL, selection;
+  - an oracle origin that does not match the signature → INVALID, declaration.
+- **Real-row controls on Linux N1, after a green baseline, 15/15.** They include:
+  - the reviewer's EIO witness → INVALID, trace;
+  - an earlier same-op non-matching failure reported → FAIL, selection;
+  - the oracle's origin event code corrupted to EIO → INVALID, declaration;
+  - the positive: an earlier non-matching failure does not change the real verdict.
+
+  On Windows: 9/9 (no natural rows run there).
+
+**Isolated Windows rerun** (preflight: 27.95 GB free, no active builds, no other pytest, probe or container process). The candidate `c479e6f4` probe ran alone at 21:58:24–21:58:26. Comparator: exit 0, **20 MATCH, 5 DIV-008, 0 FAIL, 0 INVALID**, identical to the overlapped run, which is not credited. The Linux candidate probe (§7.1) ran after the Linux gates in the same sequential container session, with no concurrent batch.
+
+The code head is unchanged: `c479e6f4`. The remediation is docs-only, in the comparator and this record.
+
+**Status:** C002 is ready for **targeted closure review 2**, then the complete exact-SHA review. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
