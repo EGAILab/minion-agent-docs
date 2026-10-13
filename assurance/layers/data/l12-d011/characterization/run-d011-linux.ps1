@@ -1,3 +1,5 @@
+# HISTORICAL (L12D011-C001, #224 issuecomment-6139260011): this characterization script ran once, in a contained scratch run directory, and its outputs here are its record. Its computed writes were not proven per operation, so it is disabled. The guarded, reproducible evidence is gen/ (run-gen.mjs, gen_spawn_nul.mjs, merge_spawn_nul.mjs, containment-controls.mjs).
+throw 'historical characterization script: disabled (L12D011-C001); use ../gen'
 # Launch d011-linux.sh in python:3.13. Every bind source is proven inside the project root (no reparse on any
 # ancestor) immediately before Docker; only /pipcache and /out are writable.
 $ErrorActionPreference = 'Stop'

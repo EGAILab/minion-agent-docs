@@ -1,3 +1,5 @@
+// HISTORICAL (L12D011-C001, #224 issuecomment-6139260011): this characterization script ran once, in a contained scratch run directory, and its outputs here are its record. Its computed writes were not proven per operation, so it is disabled. The guarded, reproducible evidence is gen/ (run-gen.mjs, gen_spawn_nul.mjs, merge_spawn_nul.mjs, containment-controls.mjs).
+throw new Error('historical characterization script: disabled (L12D011-C001); use ../gen');
 // L12-D011 (#224) characterization, pinned side: Node v22.15.1 child_process.spawn (the authority for the message)
 // and pinned Pi b7bb00b9's real find and bash tool execute bodies (sliced unmodified, exactly as the WP-13.4 search
 // probe and the WP-13.3 bash probe do; ensureTool -> the pinned fd 10.4.2, getBinDir stubbed).

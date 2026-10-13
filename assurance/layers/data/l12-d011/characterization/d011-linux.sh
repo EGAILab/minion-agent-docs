@@ -1,4 +1,6 @@
 #!/bin/sh
+# HISTORICAL (L12D011-C001, #224 issuecomment-6139260011): this characterization script ran once, in a contained scratch run directory, and its outputs here are its record. Its computed writes were not proven per operation, so it is disabled. The guarded, reproducible evidence is gen/ (run-gen.mjs, gen_spawn_nul.mjs, merge_spawn_nul.mjs, containment-controls.mjs).
+echo 'historical characterization script: disabled (L12D011-C001); use ../gen' >&2; exit 1
 # L12-D011 characterization on Linux (python:3.13). Read-only mounts: /src (Claude's main worktree), /icu-src,
 # /pi, /node, /artifacts, /probes. Writable: /pipcache and /out (a new run dir), both inside the project root.
 # All work in the private tmpfs /tmp; probes run as uid 1000. No deletes on host paths.

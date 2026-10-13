@@ -1,3 +1,5 @@
+# HISTORICAL (L12D011-C001, #224 issuecomment-6139260011): this characterization script ran once, in a contained scratch run directory, and its outputs here are its record. Its computed writes were not proven per operation, so it is disabled. The guarded, reproducible evidence is gen/ (run-gen.mjs, gen_spawn_nul.mjs, merge_spawn_nul.mjs, containment-controls.mjs).
+raise SystemExit('historical characterization script: disabled (L12D011-C001); use ../gen')
 """L12-D011 (#224) characterization, Minion Python side (current main): ctx.subprocess.spawn and the find/bash tools
 with NUL in the executable, argv, cwd, env name/value, plus a pre-aborted signal. Records the answer, the raised
 exception or the tool result. Writes only <run>/py-<platform>.json (proven inside the run dir); the engine store and
