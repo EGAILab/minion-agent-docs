@@ -1,13 +1,14 @@
 # Minion-Agent's Minion-Process profile: the one project-specific process file (live copy).
-# Kit: EGAILab/minion-process, pinned version below (tag v0.2.0).
+# Kit: EGAILab/minion-process, pinned version below (tag v0.3.0).
 # Cut-over (P2, 2026-10-12, minion-agent#212): the kit's WORKFLOW.md at the pinned tag is Minion-Agent's
-# in-force normative text; this repository's process/*.md files are pointers; process/tools is retired.
+# in-force normative text. P3a (2026-10-13, minion-agent#213): pin 0.3.0 (review header schema 2, convergence
+# counters, metrics, composite verbs, CommonMark publication domain). This repository's process/*.md files are pointers; process/tools is retired.
 # Running the CLI at the pinned tag (one-time per pin, inside the Minion-Agent root):
-#   git -C E:\AI\Projects\OpenMinds\Minions\Minion-Process worktree add E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.2.0 v0.2.0
-#   cd E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.2.0 && python -m minion_process --repo EGAILab/minion-agent status <issue>
+#   git -C E:\AI\Projects\OpenMinds\Minions\Minion-Process worktree add E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.0 v0.3.0
+#   cd E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.0 && python -m minion_process --repo EGAILab/minion-agent status <issue>
 # Validate this file: python -m minion_process profile validate <path to this file>
 # The kit's reference copy of this profile is profiles/minion-agent.profile.yaml.
-kit: {version: "0.2.0", source: EGAILab/minion-process}
+kit: {version: "0.3.0", source: EGAILab/minion-process}
 project: minion-agent
 
 authority:                                # WORKFLOW.md section 3: adopted Pi source -> parity manifest -> spec -> conformance
@@ -40,10 +41,10 @@ taxonomy_aliases:
 
 hazard_families: [F1-js-number, F2-js-string-utf16, F3-unicode-icu, F4-async-order, F5-error-coercion, F6-object-order, F7-schema-runtime-domain]
 
-gates:                                    # free-text until the kit launchers land (P3)
+gates:                                    # free-text until the kit launchers land (P3b)
   python: {launcher: "minion-agent-python: eval build.sh --env; pytest, coverage 100%, ruff, mypy, schema + manifest validation, canonical suites (pinned ICU)", tiers: [g0, g1, g2, g3]}
   rust:   {launcher: ".agents/gate-preflight.ps1 then cargo fmt/clippy/test/doc, xtask conformance verify (CARGO_BUILD_JOBS=4, shared target per platform)", tiers: [g0, g1, g2, g3]}
 
 delegation: {source: "https://github.com/EGAILab/minion-agent/issues/75", routing: true}   # #75 Amendment 2 (Owner, 2026-10-12): routes RT-1..RT-6 delegated (kit routing.md)
-wp_kinds_enabled: [semantic, delta, process, scoping, status]   # Owner decision 2 (2026-10-11); enforced by kit 0.2.0 (coordination-state.md section 14)
+wp_kinds_enabled: [semantic, delta, process, scoping, status]   # Owner decision 2 (2026-10-11); enforced since kit 0.2.0 (coordination-state.md section 14)
 environment: ../.agents/project-environment.ps1

@@ -4,7 +4,7 @@
 
 **Cut over to the Minion-Process kit on 2026-10-12 (PROC-KIT-P2, `minion-agent#212`).** The normative
 workflow text for Minion-Agent is now the kit's `WORKFLOW.md` at the version pinned in
-`process/profile.yaml` (`EGAILab/minion-process`, tag `v0.2.0`). It carries this file's rules with the
+`process/profile.yaml` (`EGAILab/minion-process`, at the pinned tag). It carries this file's rules with the
 **same section numbers**, so every reference of the form `agent-workflow.md §11.8.7.1` resolves in
 `WORKFLOW.md §11.8.7.1`. Read it with the profile, which supplies everything project-specific:
 
