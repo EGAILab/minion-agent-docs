@@ -3573,7 +3573,7 @@ The effective environment is composed as today (EXEC-005; §15.3): with `inherit
   - pinned Pi's `resolvePath` for the effective cwd;
   - the §21.1/§21.3 selection, with Node's own whole-call outcome recorded as contrast.
 
-  Every computed write goes through the reviewed fs-guard, and its containment controls and selection self-test are committed.
+  Every computed write goes through the reviewed fs-guard (`gen/io.mjs`). That includes the container's one host-bound write, the guarded transfer of the Linux partial to `/out`. The other container writes are fixed literals in the private tmpfs. The containment controls (with a mechanical writer inventory over every `gen/` script, shell included) and the selection self-test are committed.
 - **Spawn cases cover:**
   - every name: `file`, `args[j]`, `options.cwd`, an environment name and an environment value;
   - first versus later invalid arguments, and the precedence pairs;

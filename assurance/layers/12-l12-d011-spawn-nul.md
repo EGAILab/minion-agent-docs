@@ -189,7 +189,7 @@ FEASIBILITY (revision 1)
   - `spawn_nul_cases.mjs` holds the single input definition;
   - `gen_spawn_nul.mjs` runs on each platform. It records Node's literal diagnostic for each NUL input **in isolation**, the effective cwd through pinned Pi's `resolvePath`, and Node's own whole-call outcome; it runs Pi's sliced `find`, `grep` and `bash`;
   - `merge_spawn_nul.mjs` applies the §21.1/§21.3 selection and writes `conformance/agent/spawn-nul/spawn-nul.json`. Its `--self-test` holds the C002 and F2 controls.
-- **Containment (C001):** every computed write is in `io.mjs`, behind the reviewed fs-guard (`../l12-d007/fs-guard`). `containment-controls.mjs` runs those exact statements with mutations intercepted (§6).
+- **Containment (C001):** every computed write is in `io.mjs`, behind the reviewed fs-guard (`../l12-d007/fs-guard`): `makeRun`, `writeOutput`, and `transfer`, the container's one host-bound write to `/out`. Every other container write is a fixed private-tmpfs literal. `containment-controls.mjs` runs those exact statements with mutations intercepted, and mechanically inventories every `gen/` script, shell included (§6, §7).
 - **Canonical runners:** both bindings get a thin `spawn-nul` runner. It constructs the real provider (`provider_cwd`, and the configured `baseline` as a fixture), calls the real `spawn` once or the real tool through the pipeline, and compares.
 - **Binding witnesses:** listed in spec §21.7.
 - **Negative controls:** the §3.4 wrong implementations.
@@ -242,3 +242,34 @@ Review 1 (issuecomment-6139260011) is accepted in full.
 - **Canonical regeneration.** It ran in two Owner/Codex-coordinated host windows, into new contained run dirs, through `run-gen.mjs`.
   - **First run (`gen-r1`): not credited.** Post-run validation found 2 schema errors on `env/proto-name-own-property`. The generator had stored per-entry diagnostics in a plain object, so the `__proto__` name set its prototype: the very hazard the case exists for. The generator now records an ordered pair list, and the merge rejects plain-object records and malformed selections (self-test 16/16).
   - **Rerun (`gen-r2`): credited.** It produced 57 spawn cases and 7 tool cases, and its partials are in `gen/out/revision-1/`; candidate 1's are kept in `gen/out/candidate-1/`. The schema check has 0 errors. The targeted schema and manifest tests pass: 939, including 18 for `spawn-nul`. Containment controls 20/20.
+
+## 7. Review 2 and revision 2
+
+Review 2 (issuecomment-6144836852) closed F1, F2, C002 and C003 at contract level. It refined **L12D011-C001** to one residual writer: the Linux recipe's last line, `cp /tmp/guard-root/w/linux-partial.json /out/linux-partial.json`. That copy had no proof of the final host-bound entry, and the controls' writer inventory omitted the shell recipe. Section 6's universal writer claim was therefore broader than the code established.
+
+**Route (trigger A, RT-6).** C001 survived two reviews on the same surface. The counters are recorded in `history.routes` on #224, and the Owner was notified with the default route, CONTRACT_CONVERGENCE. The route taken is the **narrow targeted-fix exception**, on a finite, enumerable dimension:
+- the generation evidence's writers are exactly `io.mjs` plus fixed private-tmpfs shell literals;
+- the residual is one statement;
+- a mechanical inventory now closes the dimension.
+
+If C001 survives the next review, the route is CONTRACT_CONVERGENCE with no further point fix.
+
+**Fix:**
+- `io.transfer(guard, source, destination)` performs the container's **one** host-bound write through `writeOutput`, so `assertOutput` proves the **final** `/out/linux-partial.json` entry (`FS_GUARD_OUTPUT=/out`) immediately before the write. `transfer.mjs` is its container entry point; it accepts exactly that source and destination.
+- `gen-linux.sh` no longer copies to `/out`.
+
+**Controls (`containment-controls.mjs`, 33/33):**
+- **The real `io.transfer`**, run under a guard instance whose two roots emulate the container's (an empty fixture made and removed only through `makeSandbox` / `cleanupSandbox`), with the write intercepted:
+  - the legitimate `/out` destination makes **one** attempt;
+  - an outward **final** entry, an outward `/out` ancestor and an inspection-failure `/out` ancestor are each refused with **zero** attempts;
+  - the proof-removed mutant is caught.
+- **The complete inventory:**
+  - every `gen/*.mjs` except `io.mjs` and the controls file makes no filesystem mutation;
+  - every write target in every `gen/*.sh` (`mkdir`, `tar -C`, `cp`/`mv`/…, `chmod`/`chown`, redirections) is a `/tmp/` literal, and `/out` appears only as `transfer.mjs`'s argument;
+  - inventory controls flag the review-2 bare `cp`, and a redirect or an extraction into `/out`.
+
+**Claims corrected:** spec §21.7 and record §4 now name the transfer, and the private-tmpfs literals, explicitly.
+
+**Evidence.** The canonical content is unchanged: the transfer copies the same bytes.
+- **End-to-end rerun (`gen-r3`)** of the revised recipe, in the host window Codex granted after Memory's batch-done. The container's guarded transfer printed `TRANSFER DONE`, and the merge completed.
+- **Byte-identical:** both partials and `spawn-nul.json` equal `gen-r2`'s (`cmp`; the code worktree is unchanged). The committed partials in `gen/out/revision-1/` therefore stand for both runs.

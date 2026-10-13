@@ -21,3 +21,10 @@ export function makeRun(guard, scratchBase, name) {
 export function writeOutput(guard, file, data) {
   fs.writeFileSync(guard.assertOutput(file), data);
 }
+
+// The container's ONE host-bound write (L12D011-C001, review 2): the generator's private-tmpfs output is transferred to
+// the host-bound output through writeOutput, so the FINAL destination entry is proven (assertOutput, with the guard's
+// FS_GUARD_OUTPUT naming the bind root) immediately before the write. Reading the private source needs no proof.
+export function transfer(guard, source, destination) {
+  writeOutput(guard, destination, fs.readFileSync(source));
+}

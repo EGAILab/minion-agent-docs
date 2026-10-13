@@ -76,11 +76,78 @@ report(m2.attempts.length >= 1, `control: makeRun without its proofs is caught (
 if (!ioSource.includes("fs.writeFileSync(guard.assertOutput(file), data);") || !ioSource.includes("guard.makeSandbox(path.join(scratchBase, name))")) {
   report(false, "the mutated statements were not found in io.mjs (INVALID controls)");
 }
-// Every writer goes through io.mjs: no direct write or mkdir elsewhere in the generation scripts.
-for (const f of ["gen_spawn_nul.mjs", "merge_spawn_nul.mjs", "run-gen.mjs"]) {
-  const s = fs.readFileSync(path.join(here, f), "utf8");
-  report(!/\b(writeFileSync|mkdirSync|appendFileSync|rmSync|unlinkSync|renameSync|copyFileSync)\s*\(/.test(s),
-    `${f}: no direct filesystem mutation outside io.mjs`);
+// ---- The container's host-bound transfer (review 2): io.transfer, the ONE write to /out ----------------------------
+// A second guard instance with the container's two roots emulated inside the project (FS_GUARD_ROOT, FS_GUARD_OUTPUT).
+// The emulated roots exist, as /tmp/guard-root and /out do in the container: an empty fixture made ONLY through the
+// reviewed guard (makeSandbox: ancestry proven before mkdir) and removed by cleanupSandbox at the end.
+const FIXTURE = guard.makeSandbox(path.join(SCRATCH, `transfer-controls-${process.pid}`));
+const CTL_ROOT = guard.makeSandbox(path.join(FIXTURE, "root"));
+const CTL_OUT = guard.makeSandbox(path.join(FIXTURE, "out"));
+process.env.FS_GUARD_ROOT = CTL_ROOT;
+process.env.FS_GUARD_OUTPUT = CTL_OUT;
+const tguard = await import(pathToFileURL(path.join(here, "../../l12-d007/fs-guard/fs-guard.mjs")).href + "?transfer");
+delete process.env.FS_GUARD_ROOT;
+delete process.env.FS_GUARD_OUTPUT;
+const SRC = path.join(CTL_ROOT, "w", "linux-partial.json");
+const DST = path.join(CTL_OUT, "linux-partial.json");
+const outDir = { path: path.join(CTL_OUT, ".unused"), lstat: () => ({ isSymbolicLink: () => false, isDirectory: () => true }) };
+function transferCase(steer, mod = io) {
+  const savedRead = fs.readFileSync;
+  fs.readFileSync = (p, ...rest) => (eq(p, SRC) ? Buffer.from("partial") : savedRead(p, ...rest));
+  try { return intercepted(steer, () => mod.transfer(tguard, SRC, DST)); } finally { fs.readFileSync = savedRead; }
 }
+const legitT = transferCase([outDir]);
+report(legitT.refused === null && legitT.attempts.length === 1 && eq(legitT.attempts[0].slice(6), DST),
+  `transfer: legitimate /out destination: one attempt (${legitT.attempts.length}), nothing written natively`);
+for (const [label, steer] of [
+  ["an outward final /out entry", [outDir, outward(DST)]],
+  ["an outward /out ancestor", [outward(CTL_OUT)]],
+  ["an inspection-failure /out ancestor", [eacces(CTL_OUT)]],
+]) {
+  const r = transferCase(steer);
+  report(refusedNone(r), `transfer refuses ${label} with zero mutations (attempts=${r.attempts.length})`);
+}
+const noTransferProof = await load(ioSource.replace("writeOutput(guard, destination, fs.readFileSync(source));",
+  "fs.writeFileSync(destination, fs.readFileSync(source));"), "m3");
+const m3 = transferCase([outDir, outward(DST)], noTransferProof);
+report(m3.attempts.length === 1, `control: transfer without its proof is caught (attempts=${m3.attempts.length})`);
+if (!ioSource.includes("writeOutput(guard, destination, fs.readFileSync(source));")) report(false, "transfer statement not found (INVALID control)");
+
+// ---- Complete writer inventory of gen/ (review 2: the shell recipe included) --------------------------------------
+// JavaScript: no filesystem mutation outside io.mjs. containment-controls.mjs itself is excluded: its only mutation
+// texts are the interceptors' assignments and the mutants' source-string replacements, never a native call.
+const JS_WRITE = /\b(writeFileSync|mkdirSync|appendFileSync|rmSync|rmdirSync|unlinkSync|renameSync|copyFileSync|symlinkSync|cpSync|writeFile|mkdir|appendFile|rm|rmdir|unlink|rename|copyFile|symlink|cp)\s*\(/;
+const files = fs.readdirSync(here).filter((f) => !fs.lstatSync(path.join(here, f)).isDirectory());
+for (const f of files.filter((f) => f.endsWith(".mjs") && f !== "io.mjs" && f !== "containment-controls.mjs")) {
+  report(!JS_WRITE.test(fs.readFileSync(path.join(here, f), "utf8")), `inventory: ${f} makes no filesystem mutation outside io.mjs`);
+}
+// Shell: every write target is a fixed literal under /tmp/; /out appears only as transfer.mjs's argument.
+export function shellViolations(text) {
+  const lines = text.replace(/\\\r?\n/g, " ").split(/\r?\n/).map((l) => l.replace(/#.*$/, "").trim()).filter(Boolean);
+  const bad = [];
+  for (const line of lines) {
+    for (const cmd of line.split(/&&|;|\|/).map((c) => c.trim()).filter(Boolean)) {
+      const t = cmd.split(/\s+/);
+      const targets = [];
+      if (t[0] === "mkdir" || t[0] === "chmod" || t[0] === "chown") targets.push(...t.slice(1).filter((x) => x.startsWith("/")));
+      if (t[0] === "tar") { const i = t.indexOf("-C"); targets.push(i >= 0 ? t[i + 1] : "<cwd>"); }
+      if (["cp", "mv", "install", "ln", "tee", "dd", "rsync"].includes(t[0])) targets.push(t[t.length - 1]);
+      for (const m of cmd.matchAll(/(?:^|[^0-9&])>>?\s*(\S+)/g)) targets.push(m[1]);
+      for (const x of targets) if (!x.startsWith("/tmp/") && x !== "/dev/null") bad.push(`${t[0]} -> ${x}`);
+    }
+    if (line.includes("/out") && !/\/data\/l12-d011\/gen\/transfer\.mjs/.test(line)) bad.push(`/out outside the transfer: ${line.slice(0, 80)}`);
+  }
+  return bad;
+}
+for (const f of files.filter((f) => f.endsWith(".sh"))) {
+  const v = shellViolations(fs.readFileSync(path.join(here, f), "utf8"));
+  report(v.length === 0, `inventory: ${f} writes only private /tmp literals and /out only via transfer.mjs${v.length ? ` (${v.join("; ")})` : ""}`);
+}
+const oldRecipe = "cp /tmp/guard-root/w/linux-partial.json /out/linux-partial.json\n";
+report(shellViolations(oldRecipe).length > 0, "control: the review-2 bare cp to /out is flagged by the inventory");
+report(shellViolations("echo x > /out/f\n").length > 0 && shellViolations("tar -xzf a.tgz -C /out\n").length > 0,
+  "control: a redirect or extraction into /out is flagged");
+report(files.includes("gen-linux.sh") && files.includes("transfer.mjs"), "inventory covers gen-linux.sh and transfer.mjs");
+report(guard.cleanupSandbox(FIXTURE), "transfer fixture removed by cleanupSandbox (two empty directories)");
 console.log(failed ? `CONTAINMENT CONTROLS FAILED (${failed})` : "CONTAINMENT CONTROLS PASSED");
 process.exitCode = failed ? 1 : 0;
