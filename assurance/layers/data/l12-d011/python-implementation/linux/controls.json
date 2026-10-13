@@ -1,0 +1,302 @@
+{
+ "os": "linux",
+ "results": [
+  {
+   "name": "check-after-native-spawn",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv0-options0]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[name/file]"
+   ],
+   "expected": "the native spawn is reached (the spy fires; Python's ValueError leaks)",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv0-options0]": "AssertionError: native spawn reached",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[name/file]": "ValueError: embedded null byte"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-absolute]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/provider-default-nul]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/unicode-lossless]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/collision-nul-lower-valid-upper]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/collision-nul-upper-valid-lower]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/collision-valid-upper-nul-lower]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/name-before-value-same-entry]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/name]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-AZ-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-ZA-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-AZ]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-utf16-vs-utf8]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-integer-index-names]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-mixed-overlay-and-baseline-only]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-non-index-controls]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-A-then-Z]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-Z-then-A]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-utf16-vs-utf8]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/proto-name-own-property]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/value]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/backslash]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/controls]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/lone-high-surrogate]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/lone-low-surrogate]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/over-100-units-escape-path]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/over-100-units-quote]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/pair-and-bmp]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-and-double]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-double-backtick]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-double-dollar-brace]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-quote]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-127]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-129]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/newline-not-split-under-77]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/newline-split-over-76]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/over-max-string-length]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/surrogate-pair-straddles-128]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[name/args-first-argument]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-env]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-first-invalid-wins]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/file-before-args]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/file-before-cwd]",
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv1-options1]",
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv2-options2]",
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv3-options3]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/over-max-string-length] - ValueError: embedded null byte"
+  },
+  {
+   "name": "baseline-first-posix-order",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms"
+   ],
+   "expected": "POSIX order follows baseline presentation, not overlay-first",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": "AssertionError: assert ['A', 'Z', 'K...0', '01', ...] == ['2', '10', '...4967295', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-AZ-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-utf16-vs-utf8]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-integer-index-names]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-mixed-overlay-and-baseline-only]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-utf16-vs-utf8] - assert \"The property...llwidth\\\\x00'\" == \"The property...'astral\\\\x00'\""
+  },
+  {
+   "name": "sort-all-posix-order",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms"
+   ],
+   "expected": "POSIX order sorts every name",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": "AssertionError: assert ['01', '10', ...'A', 'K', ...] == ['2', '10', '...4967295', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-AZ-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-ZA-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-integer-index-names]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-mixed-overlay-and-baseline-only]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-non-index-controls]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-Z-then-A]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-utf16-vs-utf8]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-utf16-vs-utf8] - assert \"The property...'astral\\\\x00'\" == \"The property...llwidth\\\\x00'\""
+  },
+  {
+   "name": "naive-integer-index",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms"
+   ],
+   "expected": "01 / 4294967295 are taken for integer indices",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": "AssertionError: assert ['01', '2', '...4967295', ...] == ['2', '10', '...4967295', ...]"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-integer-index-names]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-non-index-controls]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-non-index-controls] - assert \"The property...ero-one\\\\x00'\" == \"The property...ed 'max\\\\x00'\""
+  },
+  {
+   "name": "superseded-baseline-value",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control]"
+   ],
+   "expected": "the superseded baseline value is checked instead of the effective one",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control]": "AssertionError: a control must reach the OS, not the NUL check"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-AZ-overlay-ZA]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-ZA-overlay-ZA]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control] - AssertionError: a control must reach the OS, not the NUL check"
+  },
+  {
+   "name": "raw-cwd-not-resolved",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative]"
+   ],
+   "expected": "the raw spelling is checked: %00 is missed, a relative cwd is reported unresolved",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00]": "ValueError: embedded null byte",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative]": "assert \"The property...ived 'd\\\\x00'\" == \"The property...d '/x/d\\\\x00'\""
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/unicode-lossless]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env] - assert \"The property...ived 'd\\\\x00'\" == \"The property...d '/x/d\\\\x00'\""
+  },
+  {
+   "name": "double-url-decode",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-2500-control]"
+   ],
+   "expected": "%2500 is decoded twice into a NUL",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-2500-control]": "AssertionError: a control must reach the OS, not the NUL check"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback] - assert \"The property...le:/a/b\\\\x00'\" == \"The property...:/a%2Fb\\\\x00'\""
+  },
+  {
+   "name": "default-cwd-unchecked",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/provider-default-nul]"
+   ],
+   "expected": "a NUL in the provider default cwd reaches the native spawn",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/provider-default-nul]": "ValueError: embedded null byte"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-absolute]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/unicode-lossless]",
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env]",
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv2-options2]",
+    "tests/execution/test_spawn_nul.py::test_spawn_rejection_precedence_and_superseded_value"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env] - assert \"The property...ived 'v\\\\x00'\" == \"The property...d '/x/d\\\\x00'\""
+  },
+  {
+   "name": "cwd-before-args",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd]"
+   ],
+   "expected": "the cwd is reported before an invalid argument",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd]": "assert \"The property...d '/x/d\\\\x00'\" == \"The argument...ived 'a\\\\x00'\""
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/file-before-cwd]"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd] - assert \"The property...d '/x/d\\\\x00'\" == \"The argument...ived 'a\\\\x00'\""
+  },
+  {
+   "name": "cut-at-or-above-128",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128]"
+   ],
+   "expected": "an inspected value of exactly 128 units is cut",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128]": "assert \"The argument...aaaa\\\\x00'...\" == \"The argument...aaaaaaa\\\\x00'\""
+   },
+   "other_failures": [
+    "tests/execution/test_spawn_nul.py::test_diagnostic_kind_reason_and_cut"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128] - assert \"The argument...aaaa\\\\x00'...\" == \"The argument...aaaaaaa\\\\x00'\""
+  },
+  {
+   "name": "quote-selection",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-quote]"
+   ],
+   "expected": "a value with ' is single-quoted and escaped",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-quote]": "assert \"The argument...'it\\\\'s\\\\x00'\" == 'The argument... \"it\\'s\\\\x00\"'"
+   },
+   "other_failures": [
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/over-100-units-quote]",
+    "tests/execution/test_spawn_nul.py::test_inspect_quotes_escapes_and_trailer"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/over-100-units-quote] - assert \"The argument...zzzzzzz\\\\x00'\" == 'The argument...zzzzzzz\\\\x00\"'"
+  },
+  {
+   "name": "tool-string-matching",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_engine_keeps_its_prefix_for_a_non_nul_failure"
+   ],
+   "expected": "an OS message starting with 'The ' loses its prefix",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_engine_keeps_its_prefix_for_a_non_nul_failure": "AssertionError: "
+   },
+   "other_failures": [
+    "tests/execution/test_spawn_nul.py::test_engine_surfaces_a_seam_nul_rejection_unchanged"
+   ],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_engine_surfaces_a_seam_nul_rejection_unchanged - AssertionError: "
+  },
+  {
+   "name": "tool-checks-projected-argv",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value"
+   ],
+   "expected": "the diagnostic shows U+FFFD for a lone surrogate",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value": "AssertionError: Regex pattern did not match."
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value - AssertionError: Regex pattern did not match."
+  },
+  {
+   "name": "bash-checks-stdin-command",
+   "killed": true,
+   "intended_witnesses": [
+    "tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv"
+   ],
+   "expected": "a stdin-transported command is rejected as argv",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv": "assert \"The argument...'echo a\\\\x00'\" == 'Failed to st...hell wsl-bash'"
+   },
+   "other_failures": [],
+   "collection_or_setup_errors": [],
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv - assert \"The argument...'echo a\\\\x00'\" == 'Failed to st...hell wsl-bash'"
+  }
+ ]
+}

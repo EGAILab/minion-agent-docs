@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract draft, revision 1** (remediation of independent contract review 1, §6), for re-review (Codex). Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: implementation candidate** (§8), for independent implementation review. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -273,3 +273,57 @@ If C001 survives the next review, the route is CONTRACT_CONVERGENCE with no furt
 **Evidence.** The canonical content is unchanged: the transfer copies the same bytes.
 - **End-to-end rerun (`gen-r3`)** of the revised recipe, in the host window Codex granted after Memory's batch-done. The container's guarded transfer printed `TRANSFER DONE`, and the merge completed.
 - **Byte-identical:** both partials and `spawn-nul.json` equal `gen-r2`'s (`cmp`; the code worktree is unchanged). The committed partials in `gen/out/revision-1/` therefore stand for both runs.
+
+## 8. Python implementation (candidate)
+
+Review 3 (issuecomment-6145618255) **APPROVED** the contract for implementation at code `387b81fb` / docs `fb68cde0`, with C001 closed. It was merged by guarded exact-head merges: code #225 → `be02f9f3`, docs #301 → `a080af46`. The Python candidate is on `layer/12-d011-python`.
+
+**The seam:**
+- `execution/spawn_nul.py` holds Node's `util.inspect` string subset, the §21.2 diagnostic, the §21.3 check order (Windows: UTF-16 sort of every retained name; POSIX: integer-index names, then overlay names, then baseline-only names in UTF-16 order) and **one** validator.
+- `LocalSubprocess.spawn` reads the baseline once, composes the effective environment as before, then checks argv, the effective cwd (the certified resolver, or the provider default) and the effective entries (name before value). This happens after the pre-abort check and before any native call.
+- A rejection is `Err(SubprocessError(spawn_error, <diagnostic>, nul_input=True))`. `nul_input` is a new optional field, `False` by default, and the narrow distinction of §21.5.
+
+**The tools:**
+- `_search.spawn_engine` (`find`, `grep`) and `bash` check their **unprojected** assembled argv with the same validator, immediately before the certified WP-13.3 scalar projection (`WP133-AUD-R001`). The diagnostic therefore shows the JavaScript-string value, including `\udXXX`, while the certified projection of non-NUL spawns is unchanged.
+- A marked seam rejection (cwd or environment) is surfaced unchanged; every other failure keeps `Failed to run …` / `Failed to start the shell …`.
+- A stdin-transported `bash` command is not argv and is not checked.
+
+**Witnesses (`tests/execution/test_spawn_nul.py`, `tests/conformance/test_spawn_nul_conformance.py`):**
+- the 57 spawn and 7 tool canonical cases, run through a thin runner (a configured `baseline` is installed as a fixture);
+- the pure functions, on **both** platforms;
+- a native-spawn spy proving zero calls for every rejected input;
+- an unrelated `ValueError` still propagating;
+- the tools' narrow distinction: a non-NUL OS message starting with "The " keeps its prefix, and a marked rejection does not;
+- the diagnostic showing the unprojected lone surrogate;
+- stdin transport not checked;
+- the §15.5 consumer arbitration dropping the colliding entry before the check.
+
+**Changed existing test (disclosed):** the WP-12.E4 control `test_control_changing_inherit_env_false_fails` patched `_effective_env` with a two-argument lambda. `_effective_env` now receives the baseline the provider read once, so the control takes the third argument and supplies the real baseline. Its intent and witness are unchanged.
+
+**Negative controls (`scripts/l12_d011_negative_controls.py`, 14):** each runs the spawn-NUL suites against a mutated copy of `src` in a NEW work directory. Every target is proven inside the project root, with no link or reparse ancestor and its real path inside, before each mkdir and write; nothing is deleted. Each mutant must be killed by its **intended** witness:
+- check after the native spawn;
+- baseline-first POSIX order;
+- sort-all POSIX order;
+- naive integer index;
+- the superseded baseline value;
+- the raw, unresolved cwd;
+- double URL decoding;
+- the default cwd unchecked;
+- cwd before args;
+- a cut at 128 or above;
+- quote selection;
+- the tool string-matching;
+- the tool checking the projected argv;
+- `bash` checking the stdin command.
+
+**Gates.** Host window granted by Codex, Windows then Linux, logs in `data/l12-d011/python-implementation/`:
+
+| Gate | Windows (head `1a887464`) | Linux (`python:3.13`, uid 1000, pinned ICU 78.3) |
+|---|---|---|
+| pytest | **6428 passed**, 43 skipped, 19 xfailed, 0 failed | **6254 passed**, 204 skipped, 19 xfailed, 0 failed |
+| coverage | **100%** | 96.89%: the platform-only branches, none in this change's lines (`spawn_nul.py` and `_search.py` 100%; the remaining lines are the Windows `taskkill` path, the Windows error mapping and a bash cleanup branch) |
+| mypy | clean (118 files) | the 15 pre-existing platform/stub errors (Windows APIs, `jsonschema` stubs, unused ignores) |
+| ruff | clean; changed files formatted (whole-tree format drift of 7 untouched files is pre-existing, informational) | clean |
+| negative controls | **14/14 killed** | **14/14 killed** |
+
+The first Windows run, at `7d8612eb`, is not credited: it had 1 failure, the E4 control above. It was fixed in `1a887464`, and the Windows gates were rerun in full. The head adds `70573a53`, a manifest status line only, which passes manifest validation (8/8).
