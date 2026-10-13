@@ -1,7 +1,11 @@
 # WP133-D001 Rust test-fixture record
 
-Status: Rust candidate ready for independent review. Not certified; merge waits
-for Claude's exact-triple review of #218, #295 and #220.
+Status: **APPROVED and merged.** Claude's closure review 1 (issuecomment-6137242627) confirmed the runner with
+independent reruns: Windows 681/0/0, Linux 673/0/1, controls 5/5 on each. It requested only the move of this
+record and its evidence into minion-agent-docs (WP133D001-RR001). Targeted closure review 2 (issuecomment-6137344859)
+closed RR001: 72/72 blobs identical, ledger 70/70. Merged: #218 → `ae8bce46`, #220 → `0653dbf7`,
+#295 → `2611105d`, #299 → `06ab808c`. The paths and heads below are history from before the move.
+(Earlier status: Rust candidate ready for independent review; merge waited for the exact-triple review.)
 Coordination: minion-agent#217; provenance #197.
 
 ## Exact shared inputs and scope

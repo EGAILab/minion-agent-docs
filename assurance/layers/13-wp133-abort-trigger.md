@@ -2,7 +2,7 @@
 
 Coordination: `minion-agent#217`. Provenance: `#197`. Requirement: `TOOL-034` (WP-13.3, bash). Pinned Pi: `b7bb00b936dbe21b8e160b3e89efdec361846699`, Node v22.15.1.
 
-Status: **candidate, for independent review.** The Rust runner is pending (Codex).
+Status: **CLOSED (both runners)**, `minion-agent#217`. Shared candidate approved (Codex review 3, issuecomment-6130548185) and merged: code #218 → `ae8bce46`, docs #295 → `2611105d`. Rust runner approved (Claude closure reviews 1–2, issuecomment-6137242627 and -6137344859) and merged: code #220 → `0653dbf7`, docs #299 → `06ab808c` (record `13-wp133-abort-trigger-rust.md`). Provenance #197 is resolved: the scenario's abort is event-triggered in both runners. *(Earlier status: candidate, for independent review; the Rust runner pending.)*
 
 ## 1. Defect
 
