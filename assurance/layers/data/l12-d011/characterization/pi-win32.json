@@ -1,0 +1,338 @@
+{
+ "platform": "win32",
+ "node": "22.15.1",
+ "shell": "C:\\Program Files\\Git\\bin\\bash.exe",
+ "transport": "argv",
+ "rows": [
+  {
+   "id": "file",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'file' must be a string without null bytes. Received 'x\\x00y'",
+   "message_units": 74
+  },
+  {
+   "id": "args0",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'a\\x00'",
+   "message_units": 76
+  },
+  {
+   "id": "args-first-vs-later",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[1]' must be a string without null bytes. Received 'b\\x00'",
+   "message_units": 76
+  },
+  {
+   "id": "file-and-args",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'file' must be a string without null bytes. Received 'x\\x00'",
+   "message_units": 73
+  },
+  {
+   "id": "cwd",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.cwd' must be a string, Uint8Array, or URL without null bytes. Received 'd\\x00'",
+   "message_units": 100
+  },
+  {
+   "id": "args-and-cwd",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'a\\x00'",
+   "message_units": 76
+  },
+  {
+   "id": "env-value",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.env['K']' must be a string without null bytes. Received 'v\\x00'",
+   "message_units": 85
+  },
+  {
+   "id": "env-name",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.env['A\u0000B']' must be a string without null bytes. Received 'A\\x00B'",
+   "message_units": 88
+  },
+  {
+   "id": "env-two-insertion-Z-then-A",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.env['A']' must be a string without null bytes. Received 'a\\x00'",
+   "message_units": 85
+  },
+  {
+   "id": "env-case-dupe-win",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.env['K']' must be a string without null bytes. Received 'upper\\x00'",
+   "message_units": 89
+  },
+  {
+   "id": "env-integer-like-keys",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.env['10']' must be a string without null bytes. Received 'ten\\x00'",
+   "message_units": 88
+  },
+  {
+   "id": "args-and-env",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'a\\x00'",
+   "message_units": 76
+  },
+  {
+   "id": "cwd-and-env",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.cwd' must be a string, Uint8Array, or URL without null bytes. Received 'd\\x00'",
+   "message_units": 100
+  },
+  {
+   "id": "argv0",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The property 'options.argv0' must be a string without null bytes. Received 'z\\x00'",
+   "message_units": 82
+  },
+  {
+   "id": "fmt-single-quote",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received \"it's\\x00\"",
+   "message_units": 79
+  },
+  {
+   "id": "fmt-single-and-double",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received `it's \"q\"\\x00`",
+   "message_units": 83
+  },
+  {
+   "id": "fmt-single-double-backtick",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'it\\'s \"q\" `b`\\x00'",
+   "message_units": 88
+  },
+  {
+   "id": "fmt-single-double-dollarbrace",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'it\\'s \"q\" ${x}\\x00'",
+   "message_units": 89
+  },
+  {
+   "id": "fmt-backslash",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'C:\\\\dir\\\\f\\x00'",
+   "message_units": 85
+  },
+  {
+   "id": "fmt-controls",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received '\\b\\t\\n\\x0B\\f\\r\\x01\\x1F\\x7F\\x80\\x9F \\x00'",
+   "message_units": 110
+  },
+  {
+   "id": "fmt-lone-high",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received '\\ud800\\x00'",
+   "message_units": 81
+  },
+  {
+   "id": "fmt-lone-low",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received '\\udc00\\x00'",
+   "message_units": 81
+  },
+  {
+   "id": "fmt-pair-and-bmp",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received '😀é中\\x00'",
+   "message_units": 79
+  },
+  {
+   "id": "fmt-regex-path-over-100",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received '\\tzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\x00'",
+   "message_units": 176
+  },
+  {
+   "id": "fmt-quote-in-regex-path",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received \"'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\\x00\"",
+   "message_units": 181
+  },
+  {
+   "id": "len-inspected-127",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x00'",
+   "message_units": 196
+  },
+  {
+   "id": "len-inspected-128",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x00'",
+   "message_units": 197
+  },
+  {
+   "id": "len-inspected-129",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x00...",
+   "message_units": 200
+  },
+  {
+   "id": "len-surrogate-straddles-128",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\ud83d...",
+   "message_units": 200
+  },
+  {
+   "id": "len-newline-split-over-76",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'line1\\n' +\n  'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\x00'",
+   "message_units": 169
+  },
+  {
+   "id": "len-newline-under-77",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'l\\nxxxxxxxxxx\\x00'",
+   "message_units": 88
+  },
+  {
+   "id": "len-over-maxStringLength",
+   "kind": "direct",
+   "outcome": "sync_throw",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "name": "TypeError",
+   "message": "The argument 'args[0]' must be a string without null bytes. Received 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy...",
+   "message_units": 200
+  },
+  {
+   "id": "control-nonexistent-binary",
+   "kind": "direct",
+   "outcome": "async_error",
+   "code": "ENOENT",
+   "message": "spawn minion-d011-nonexistent-binary ENOENT"
+  },
+  {
+   "id": "pi-find-nul-search-path",
+   "kind": "tool",
+   "outcome": "error",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "message": "The argument 'args[8]' must be a string without null bytes. Received 'E:\\\\AI\\\\Projects\\\\OpenMinds\\\\Minions\\\\Minion-Agent\\\\.tmp\\\\claude-scratch\\\\i195\\\\d011-win-2\\\\cwd\\\\x\\x00y'"
+  },
+  {
+   "id": "pi-find-nul-pattern",
+   "kind": "tool",
+   "outcome": "error",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "message": "The argument 'args[7]' must be a string without null bytes. Received 'a\\x00b'"
+  },
+  {
+   "id": "pi-find-nul-pattern-pre-aborted",
+   "kind": "tool",
+   "outcome": "error",
+   "code": null,
+   "message": "Operation aborted"
+  },
+  {
+   "id": "pi-bash-nul-command",
+   "kind": "tool",
+   "outcome": "error",
+   "code": "ERR_INVALID_ARG_VALUE",
+   "message": "The argument 'args[1]' must be a string without null bytes. Received 'echo a\\x00b'"
+  },
+  {
+   "id": "pi-bash-nul-command-pre-aborted",
+   "kind": "tool",
+   "outcome": "error",
+   "code": null,
+   "message": "Command aborted"
+  }
+ ]
+}

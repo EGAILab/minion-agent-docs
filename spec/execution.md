@@ -3444,3 +3444,157 @@ Everything else in §19.5 is unchanged. That includes:
 The comparison point is Pi's **drained** state, not its settlement state. The L12-D007 CE-02 matrices compared remaining entries at settlement, which does not establish drained-extent parity (record §3). L12-D008 measures the drained state.
 
 Record: `assurance/layers/12-l12-d008-div008.md`.
+
+## 21. Layer-12 post-certification delta `L12-D011` — a NUL-containing spawn input fails with pinned Node's literal diagnostic (`EXEC-013`; `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`)
+
+**Status:** contract draft, revision 1, after independent contract review 1 (`minion-agent#224` issuecomment-6139260011). Provenance: `#195` (`L12-SPAWN-NUL`).
+
+**Owner decisions** (each recorded verbatim on the issue with its sha256):
+- **`#195` issuecomment-6137514688:** "APPROVE OPTION 1: PINNED PI LITERAL NUL-SPAWN DIAGNOSTIC". This is a targeted parity correction, not a divergence.
+- **`#224` issuecomment-6137796390:** "APPROVE OPTION 1: VALIDATE ALL RETAINED ENTRIES". This is the Windows case-collision boundary (§21.4).
+- **`#224` issuecomment-6141307443:**
+  - **F2:** "APPROVE OPTION 1: OVERLAY-FIRST POSIX ENVIRONMENT ORDER" (§21.3);
+  - **C003:** "APPROVE OPTION 1: VALIDATE EFFECTIVE RESOLVED CWD" (§21.1).
+
+**Authority:** Node v22.15.1, read at tag `v22.15.1`, as reached by pinned Pi `b7bb00b9`:
+- `lib/child_process.js` `normalizeSpawnArguments` and `validateArgumentNullCheck`;
+- `lib/internal/errors.js` `ERR_INVALID_ARG_VALUE`;
+- `lib/internal/util/inspect.js` `strEscape`, `formatPrimitive` and `meta`.
+
+Pi's `find` (`find.ts` `spawn(fdPath, args, …)`), `grep` (`grep.ts` `spawn(rgPath, args, …)`) and `bash` (`bash.ts` `createLocalBashOperations` `exec`) each call `spawn` inside a `try` and surface its **synchronous** throw unchanged. The effective cwd resolution is pinned Pi's `agent/src/harness/env/nodejs.ts` `resolvePath`, the rule §6 already requires (`absolute_path`'s). Characterization and the record: `assurance/layers/12-l12-d011-spawn-nul.md`.
+
+### 21.1 Rule
+
+`ctx.subprocess.spawn(argv, options)` checks its inputs for U+0000 **before** the native spawn. The check runs **after** the existing pre-abort check: an already-aborted signal still answers `Err(aborted)` first.
+
+The inputs are checked in this order, and the **first** one containing U+0000 decides:
+
+| Order | Input | Name in the message |
+|---|---|---|
+| 1 | `argv[0]` (the executable) | `file` |
+| 2 | `argv[j]` for `j = 1, 2, …`, in order | `args[j-1]`, so N is counted on the **actual assembled argv**, never hard-coded |
+| 3 | the **effective** working directory (Owner, C003) | `options.cwd` |
+| 4 | each **effective** environment entry, in §21.3 order; within one entry, the **name before the value** | `options.env['<name>']`, with `<name>` inserted raw (a NUL in the name stays raw in the message) |
+
+**The effective working directory** is determined by the existing certified rule (§6; `absolute_path`'s `resolvePath`), and only then checked:
+- **A supplied cwd** is resolved: `~` / `~/` expand; a valid `file://` URL goes through the certified URL conversion, so `%00` decodes to U+0000 **once**; a **malformed** `file://` URL keeps its existing literal-path fallback; a relative path resolves lexically against the provider's own cwd.
+- **With no supplied cwd**, the provider's own default cwd is the operand, and it is checked the same way. Naming it `options.cwd` is an explicit Minion mapping, not a claim that Node validates an absent option.
+- **The raw spelling is never what is checked.** A raw `file://…%00` string is not checked, and neither is `%2500`, which decodes to the three characters `%00`. The decision is made on the resolved **logical** path, never on a lossy native projection of it.
+
+The result is `Err(SubprocessError(code = spawn_error, message = <the diagnostic>))`:
+- **No process starts.** No native call that could start one is made.
+- **No native exception escapes the `Result` boundary.** Python's `ValueError` is not raised, and Rust's `InvalidInput` is not wrapped.
+- **Everything else is unchanged:** a spawn whose inputs contain no U+0000 keeps its existing behaviour and error taxonomy, including `spawn_error` with the OS's own text for a missing executable. The certified resolver, its malformed-URL fallback and the pre-abort precedence are unchanged too.
+
+### 21.2 The diagnostic
+
+```text
+message = "The " + kind + " '" + name + "' " + reason + ". Received " + received
+kind    = "property" if name contains "." else "argument"
+reason  = "must be a string, Uint8Array, or URL without null bytes"   for options.cwd
+          "must be a string without null bytes"                       otherwise
+received = inspect(value); if received has more than 128 UTF-16 code units:
+           received = its first 128 code units + "..."                (exactly 128: unchanged)
+```
+
+`value` is the input's **JavaScript-string value**, before the JavaScript-string → OS projection that turns a lone surrogate into U+FFFD (§15.5, "Strings to OS"). For `options.cwd` it is the effective resolved logical path. A lone surrogate is therefore reported as `\udXXX`. Lengths are in UTF-16 code units, and the 128-unit cut may split a surrogate pair, leaving a lone high surrogate in the message.
+
+`inspect(value)` is the subset of Node's `util.inspect` that a string reaches, with default options (`breakLength` 80, `maxStringLength` 10000, indentation 0):
+
+1. **Long values.** When `value` has more than 10000 units, keep its first 10000 and set `trailer = "... " + r + " more character" + ("s" if r > 1)`, where `r` is the number cut off. Otherwise `trailer` is empty.
+2. **Line splitting.** When the kept value has **more than 76** units (`breakLength − 4`), split it **after** every `\n`, so each piece but the last ends with `\n` and no empty piece is produced. The result is the quoted pieces joined by `" +\n  "` (space, plus, newline, two spaces), followed by `trailer`. Otherwise the result is `quote(kept) + trailer`.
+3. **`quote(piece)`**, each piece separately:
+   - **The quote character:**
+     - `'` by default;
+     - `"` if the piece contains `'` but not `"`;
+     - a backtick if it contains `'` and `"` but neither a backtick nor `${`;
+     - otherwise `'`.
+   - **Escapes, per UTF-16 unit:**
+     - `'` becomes `\'`, only when `'` is the quote;
+     - `\` becomes `\\`;
+     - 0x08, 0x09, 0x0A, 0x0C and 0x0D become `\b \t \n \f \r`;
+     - every other unit below 0x20, and 0x7F–0x9F, becomes `\x` + two **uppercase** hex digits;
+     - a high surrogate not followed by a low one, or a low surrogate not preceded by a high one, becomes `\u` + its **lowercase** hex;
+     - everything else is kept, including U+00A0 and paired surrogates.
+
+### 21.3 Effective-environment order
+
+The effective environment is composed as today (EXEC-005; §15.3): with `inherit_env`, the provider's baseline with the call's `env` overlay applied; without it, exactly the overlay. Its **entries** (names and effective values) are unchanged by this delta. Only the order in which they are **checked** is defined here.
+
+- **Windows** (Owner, `#224` 6137796390): every retained entry in **ascending UTF-16 code-unit order** of its name. There is no duplicate arbitration (§21.4).
+- **POSIX** (Owner F2, `#224` 6141307443), in this order:
+  1. integer-index names (canonical decimal strings of 0 … 2³²−2; so neither `01` nor `4294967295` is one), ascending numerically;
+  2. the remaining names **supplied by the call's overlay**, in the overlay's insertion order;
+  3. the remaining **baseline-only** names, in ascending UTF-16 code-unit order.
+- **Overlay ownership.** An overlay name that also exists in the baseline is overlay-owned: it takes the overlay's insertion position, never its former baseline position, and it is checked with its **effective** (overlay) value, never the superseded baseline value.
+- **§15.3 is preserved.** No result depends on the snapshot's presentation order.
+- **The parity classification.** With two or more NUL-invalid entries on POSIX, Node's own selection follows JavaScript object insertion history and may differ. Minion's order is a deterministic architectural mapping required by §15.3; first-error selection parity is **not** claimed for that combination. No divergence registration is required for the Minion-specific raw subprocess seam.
+- **Rust representation** (binding note, F2): the call order needs an ordered overlay carrier, additive and shared with F1's lossless input. A caller using the legacy `BTreeMap` overlay gets that map's defined iteration order as its insertion order; this is not a claim that the map preserves caller insertion order.
+
+### 21.4 The Windows case-collision boundary (Owner decision on `#224`)
+
+- **Every retained entry is checked.** Node's Windows `spawn` keeps only the first of the names that collide under `toUpperCase`, and checks only that one. Minion's raw `ctx.subprocess.spawn` keeps every effective entry (the certified EXEC-005/EXEC-010 model) and checks every one, in §21.3 order.
+  - So with `K=ok` and `k=bad\0`, in either insertion order, Minion reports `options.env['k']`. Node discards `k`, passes its own validation and goes on to the native spawn; in the canonical cases that spawn fails asynchronously with `ENOENT`, because the executable does not exist.
+  - This is a scoped consequence of Minion's environment model. It is **not** claimed as Pi parity, and it is **not** registered as a divergence.
+- **The §15.5 consumer arbitration is unchanged.** A consumer reproducing Pi's `process.env`, such as `bash`, still applies Node's duplicate arbitration before spawning. The subprocess check then sees only the entries that consumer kept: an entry it already dropped is never reported.
+- **Linux** has no arbitration; names are exact.
+
+### 21.5 Tool boundary (Layer 13)
+
+| Tool | NUL input reaching the spawned argv | Result |
+|---|---|---|
+| `find` | the pattern, or the resolved search path | an error result whose text is exactly the §21.2 diagnostic. There is **no** `Failed to run fd:` prefix |
+| `grep` | the pattern, or the glob. A NUL search path still fails earlier, at the directory probe, with `Path not found: …` (L12-D006) | an error result whose text is exactly the diagnostic. There is **no** `Failed to run ripgrep:` prefix |
+| `bash` | the command, with `-c` argv transport (`bash_shell` / Pi `getBashShellConfig`) | an error result whose text is exactly the diagnostic, **not** the generic shell start-failure text |
+
+- **The distinction is narrow.** Each tool recognizes **this** failure by a binding-internal distinction carried with the error, never by matching message text. It keeps its existing prefix or wrapper for every other spawn failure.
+- **Stdin transport is not argv.** The canonical `bash` case assumes the `-c` argv transport, which every non-legacy-WSL shell uses. A command sent on stdin (legacy WSL bash, `-s`) is not an argument and is not checked; a binding witness covers this.
+- **Precedence is unchanged.** A pre-aborted signal answers `Operation aborted` through the pipeline before any tool runs (`builtin-bash-abort-before-spawn`). `grep`'s directory probe and `bash`'s working-directory check keep their precedence.
+
+### 21.6 Unchanged and out of scope
+
+- Unchanged:
+  - non-NUL spawn behaviour and error taxonomy;
+  - process ownership, cancellation and disposal;
+  - the certified cwd resolver and its malformed-URL fallback;
+  - the §15.5 environment decode and arbitration;
+  - the EXEC-010 snapshot and its unordered entries;
+  - non-NUL environment composition and child-process behaviour;
+  - argument normalization;
+  - filesystem error codes (L12-D006, L12-D007);
+  - the general error-text policy.
+- Python must contain **only** the host's NUL rejection of these inputs; an unrelated `ValueError` still propagates as before.
+
+### 21.7 Evidence
+
+**Canonical:** `conformance/agent/spawn-nul/spawn-nul.json` (`spawn-nul-scenario.schema.json`), generated on Windows and Linux by `assurance/layers/data/l12-d011/gen`.
+- **How it is generated:**
+  - Node's literal diagnostic for each NUL input in isolation;
+  - pinned Pi's `resolvePath` for the effective cwd;
+  - the §21.1/§21.3 selection, with Node's own whole-call outcome recorded as contrast.
+
+  Every computed write goes through the reviewed fs-guard (`gen/io.mjs`). That includes the container's one host-bound write, the guarded transfer of the Linux partial to `/out`. The other container writes are fixed literals in the private tmpfs. The containment controls (with a mechanical writer inventory over every `gen/` script, shell included) and the selection self-test are committed.
+- **Spawn cases cover:**
+  - every name: `file`, `args[j]`, `options.cwd`, an environment name and an environment value;
+  - first versus later invalid arguments, and the precedence pairs;
+  - effective cwd: literal relative and absolute, `file://` `%00`, the `%2500` control, malformed-URL fallback, a NUL provider default, a normal default, Unicode, and the precedence pairs;
+  - environment order: both overlay orders, both baseline presentations, overlays of baseline names, baseline-only, mixed, integer-index names, the `01` / `4294967295` controls, UTF-16-versus-UTF-8 names, the superseded-value control and `__proto__`;
+  - the Windows case collisions;
+  - every §21.2 formatting rule;
+  - pre-abort precedence;
+  - a non-NUL control.
+- **Tool cases:** `find` (pattern, absolute search path), `grep` (pattern, glob) and `bash` (command), plus pre-aborted controls.
+
+**Binding witnesses:**
+- no native spawn after a rejection, using a spy at the native spawn;
+- an unrelated `ValueError` (Python) or `InvalidInput` (Rust) unchanged;
+- the §15.5 consumer arbitration feeding `bash`;
+- the raw-subprocess collision path;
+- stdin transport not checked;
+- the Rust ordered and legacy-`BTreeMap` carriers.
+
+**Bindings today (`#195`):**
+- **Python** raises `ValueError` (`embedded null character` on Windows, `embedded null byte` on Linux), and the tools surface that text.
+- **Rust** answers `spawn_error` with the OS text, and its tools add their wrappers.
+
+Record: `assurance/layers/12-l12-d011-spawn-nul.md`.

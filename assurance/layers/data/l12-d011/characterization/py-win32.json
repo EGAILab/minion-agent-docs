@@ -1,0 +1,95 @@
+{
+ "platform": "win32",
+ "rows": [
+  {
+   "id": "file",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "args0",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "args-first-vs-later",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "cwd",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "env-value",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "env-name",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null character",
+   "where": "^^^^^^^^^^^^"
+  },
+  {
+   "id": "control-nonexistent-binary",
+   "kind": "direct",
+   "outcome": "err",
+   "code": "spawn_error",
+   "message": "[WinError 2] The system cannot find the file specified"
+  },
+  {
+   "id": "find-nul-search-path",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null character"
+  },
+  {
+   "id": "find-nul-pattern",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null character"
+  },
+  {
+   "id": "find-nul-pattern-pre-aborted",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "Operation aborted"
+  },
+  {
+   "id": "bash-nul-command",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null character"
+  },
+  {
+   "id": "bash-nul-command-pre-aborted",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "Operation aborted"
+  }
+ ]
+}
