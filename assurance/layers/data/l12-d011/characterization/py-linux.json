@@ -1,0 +1,95 @@
+{
+ "platform": "linux",
+ "rows": [
+  {
+   "id": "file",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "args0",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "args-first-vs-later",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "cwd",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "env-value",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "env-name",
+   "kind": "direct",
+   "outcome": "exception",
+   "type": "ValueError",
+   "message": "embedded null byte",
+   "where": "^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "id": "control-nonexistent-binary",
+   "kind": "direct",
+   "outcome": "err",
+   "code": "spawn_error",
+   "message": "[Errno 2] No such file or directory: 'minion-d011-nonexistent-binary'"
+  },
+  {
+   "id": "find-nul-search-path",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null byte"
+  },
+  {
+   "id": "find-nul-pattern",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null byte"
+  },
+  {
+   "id": "find-nul-pattern-pre-aborted",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "Operation aborted"
+  },
+  {
+   "id": "bash-nul-command",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "embedded null byte"
+  },
+  {
+   "id": "bash-nul-command-pre-aborted",
+   "kind": "tool",
+   "outcome": "result",
+   "is_error": true,
+   "text": "Operation aborted"
+  }
+ ]
+}
