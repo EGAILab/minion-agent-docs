@@ -48,12 +48,12 @@ Provider cwd is `C:\x` (win32) and `/x` (posix):
 **The observable rules, as Node implements them:**
 - **win32.** A component's colon is an ordinary character **except** in a leading `X:` device prefix of the whole input.
   - A drive-relative input on the cwd's own drive resolves against the cwd.
-  - A drive-relative input on **another** drive `D:` (revised in revision 1, §7) resolves against the **first** of these that Node's `win32.resolve` finds:
-    1. the process's **inherited per-drive cwd entry** `=D:` (looked up as `process.env['=D:']`), when it names a path on `D:`;
-    2. otherwise `process.cwd()`, when that is on `D:`;
-    3. otherwise `D:\`.
+  - A drive-relative input on **another** drive `D:` (**revision 2**, §7): the rule is Node's own branch, quoted below (§3.1). It is not a paraphrase; revision 1's "first source that matches the drive" paraphrase was wrong (C001).
+    - The base is **selected first**: the inherited `=D:` entry if it is a non-empty string, otherwise `process.cwd()`.
+    - The selected base is **then** replaced by `D:\` only when it is missing, or when its first two characters differ from `D:` (case-insensitively) **and** its third character is `\`.
+    - Any other selected value is used literally, as the next path of the resolution, even when it is relative, rooted, on another drive, or bare.
 
-    Rows 12 and 15 above are case 3: there was no inherited `=A:`/`=X:` entry, and the process cwd is on `E:`.
+    Rows 12 and 15 above have no inherited `=A:`/`=X:` entry. The selected base is the process cwd on `E:`, which fails the device check and has `\` third, so the result is the drive root.
   - Interior `X:` components are never devices.
 - **posix.** `:` and `\` are ordinary characters.
 
@@ -73,11 +73,66 @@ Two observations matter for implementations and runners:
 
 A Python child sees the inherited entry through `GetEnvironmentVariableW('=A:')` but **not** through `os.environ` or `os.getenv` (`py_drive_env.mjs`). That is relevant to F002's fix.
 
+### 3.1 The branch, verbatim (Node v22.15.1 `lib/path.js` `win32.resolve`, read from the running Node by `path.win32.resolve.toString()`, the `i === -1` iteration with a drive but no absolute path yet)
+
+```js
+        path = process.env[`=${resolvedDevice}`] || process.cwd();
+
+        // Verify that a cwd was found and that it actually points
+        // to our drive. If not, default to the drive's root.
+        if (path === undefined ||
+            (StringPrototypeToLowerCase(StringPrototypeSlice(path, 0, 2)) !==
+            StringPrototypeToLowerCase(resolvedDevice) &&
+            StringPrototypeCharCodeAt(path, 2) === CHAR_BACKWARD_SLASH)) {
+          path = `${resolvedDevice}\\`;
+        }
+```
+
+The selected `path` then goes through the same root and device parsing as any argument in the loop, so a selected value on another device is skipped, as Node skips any such argument. Bindings implement this branch **as written**, including:
+- `||`: an empty entry selects the process cwd;
+- the conjunction: a non-matching device without `\` third is kept;
+- the subsequent parsing.
+
+### 3.2 Native partition (revision 2; `drive_partition.mjs`, output `partition-win32.json`)
+
+Pinned Pi `resolvePath` (sliced unmodified) runs in **32 real child processes**. Each child's environment block carries the crafted `=D:` entry or omits it, and each child runs from the project root on `E:`. Provider cwd `C:\x`, input `d:leaf`. The entry values are strings only: nothing is accessed, created or used as a cwd. The probe ran in a host window granted by Codex.
+
+| Inherited `=D:` value | D = E (the process cwd's drive) | D = A (another drive) | Class (selected base → predicate) |
+|---|---|---|---|
+| absent | `e:\AI\…\Minion-Agent\leaf` | `a:\leaf` | process cwd → E: keeps it; for A:, mismatch with `\` third → root |
+| `""` (empty) | `e:\AI\…\Minion-Agent\leaf` | `a:\leaf` | `\|\|` selects the process cwd (as above) |
+| `D:\deep` | `e:\deep\leaf` | `a:\deep\leaf` | match → kept |
+| `d:\deep` (lower case) | `e:\deep\leaf` | `a:\deep\leaf` | case-insensitive match → kept |
+| `D:/deep` | `e:\deep\leaf` | `a:\deep\leaf` | match → kept |
+| `D:rel` | `e:rel\leaf` | `a:rel\leaf` | match → kept; drive-relative result |
+| `D:` | `e:leaf` | `a:leaf` | match → kept; result **not absolute** |
+| `X:\other` | `e:\leaf` | `a:\leaf` | mismatch and `\` third → **root**, with **no** fallback to the process cwd (the reviewer's witness) |
+| `X:/other` | `e:leaf` | `a:leaf` | mismatch, but `/` third → kept; then skipped as another device |
+| `X:other` | `e:leaf` | `a:leaf` | mismatch, `o` third → kept, then skipped |
+| `X:` | `e:leaf` | `a:leaf` | mismatch, no third char → kept, then skipped |
+| `relative` | `e:relative\leaf` | `a:relative\leaf` | no device, `l` third → kept literally |
+| `\deep` | `e:\deep\leaf` | `a:\deep\leaf` | `e` third → kept; rooted on D: |
+| `/deep` | `e:\deep\leaf` | `a:\deep\leaf` | as above |
+| `\\srv\share` | `e:leaf` | `a:leaf` | `s` third → kept; a UNC device, skipped |
+| `r` | `e:r\leaf` | `a:r\leaf` | single character → kept literally |
+
+The reviewer's seven rows (`#229` 6166182330) are reproduced exactly. The partition is enumerated **from the predicate**:
+- selection source: entry or cwd, with empty versus absent;
+- the device test: match versus mismatch, with case;
+- the third character: `\`, `/`, another character, or absent;
+- the subsequent parse of a kept value: absolute on D:, drive-relative, bare device, other device, UNC, relative, rooted.
+
 **The finite evidence set controls this host state explicitly.** It is a limitation of these examples, not of the contract:
 - **Baseline cases** (rows 12 and 15 style) carry **preconditions**: no inherited `=A:`/`=X:` entry, and a process cwd not on `A:`/`X:`. The generator and every runner verify the preconditions at entry, through the same lookup the binding uses, and **refuse** to run (fail closed) when they do not hold. A host-dependent expected value is never silently rewritten.
 - **Controlled cases** run the real resolver seam in a **child process launched with a crafted environment block** (`=A:=A:\deep`, `=X:=X:\q`) and a crafted cwd. They exercise branch 1 for each binding.
 - **Branch 2**, the process cwd's own drive, is a controlled case too. The child's cwd is a contained sandbox directory, and the expectation is expressed relative to that cwd, through a placeholder the runner fills from the cwd it set itself.
 - **Controls:** each case's precondition check must refuse a run where the entry is inherited, which is a missing-precondition control. Each controlled case pairs with its baseline (entry absent versus entry present), which is the discriminating pair.
+- **Revision 2 controlled classes** (§3.2):
+  - the **wrong-drive entry with `\` third on the process cwd's drive** (`=E:` = `X:\other` → `e:\leaf`). It pairs with the absent-entry row (`e:\…\leaf` under the process cwd), and its control is an implementation that falls through to the process cwd;
+  - **empty versus absent** at precondition entry, which stay distinct;
+  - one each of: the matching drive-relative entry, the bare device, the mismatch without `\` third, relative, rooted, and UNC.
+
+  An implementation that "searches for the first source matching the drive" fails the first pair. One that treats any mismatch as root fails the `/`-third row.
 
 ## 4. Current bindings
 
@@ -128,6 +183,20 @@ The original §3 text, kept for history:
    - controlled child-process cases for branches 1 and 2;
    - a missing-precondition control and the discriminating pairs.
 3. §5 adds the Rust characterization inside scoping.
+
+**Scoping review 2** (Codex, `#229` issuecomment-6166182330) was CHANGES REQUESTED at `e3b97682`. **C001 was refined, not closed.** Revision 1's §2 described a "first source matching the drive" search. Node instead **selects** the inherited value (or the process cwd) **before** its device check. So a wrong-drive entry suppresses the process-cwd fallback, and relative, rooted and drive-relative entries are used literally. The reviewer's native seven-value child partition is the witness.
+
+**Trigger A fired** (C001 survived reviews 1 and 2). The route is recorded in `#229` `history.routes` (RT-6): the Owner was notified with the default CONTRACT_CONVERGENCE route, and the narrow targeted-fix exception was taken on a finite dimension, namely one verbatim source branch whose predicate enumerates the partition. If C001 survives review 3, the work package moves to CONTRACT_DRAFT and enters CONTRACT_CONVERGENCE with no further point fix. The kit has no SCOPING → CONTRACT_CONVERGENCE transition.
+
+The revision-1 text of §2, kept for history:
+
+> "resolves against the **first** of these that Node's `win32.resolve` finds: 1. the process's inherited per-drive cwd entry `=D:` …, when it names a path on `D:`; 2. otherwise `process.cwd()`, when that is on `D:`; 3. otherwise `D:\`."
+
+**Revision 2:**
+1. §2 states the selection-then-check rule.
+2. §3.1 quotes Node's branch verbatim, read from the running v22.15.1.
+3. §3.2 is the native **32-child partition**, which reproduces the reviewer's seven rows exactly and extends them by predicate class.
+4. §3 adds the revision-2 controlled classes, including the wrong-drive-entry/process-cwd pair with its fall-through control, and the empty versus absent distinction.
 
 
 #224's Rust handback waits on this work package's merge (`#224` `blocked_by` `#229`).
