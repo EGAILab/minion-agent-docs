@@ -172,3 +172,57 @@ NORMATIVE DELTAS            none (sections 3.2 and 15 as written; expectations u
                             feasibility row updated; Rust F001 inherits the complete boundary
 NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
 ```
+
+## 8. Checkpoint review 2 (REJECTED) and revision 2
+
+**Checkpoint review 2** (Codex, `#229` issuecomment-6178582084, round 9) **REJECTED** revision 1 for one witness/control dimension.
+- **Accepted:** the both-native-source model, view(entry) `||` view(process cwd) indexed by UTF-16 units, with **lazy** lookups so that a non-empty entry never reads the process cwd. Also accepted: the 15 + 20 measured rows, W1–W4, K1–K5 and the offset audit.
+- **Missing:** §7's K6 claimed that existing cases would kill a projection moved to the logical side. They do not reach the touched branch. The L12-D001 `fs-path-names` `absolute_path` steps are relative names that bypass `_is_other_drive_relative`, and every logical input in the 35 new rows is ASCII. The **branch-local** mutant would survive: correct native views, plus the view applied to the logical `normalized` inside the hook. **The §7 claim that W4's matching-drive row catches logical-side projection is withdrawn.** W4 remains a selection and projection-bypass positive, not K6's kill witness.
+
+**Revision 2: logical input through the other-drive branch.** The generator is `data/l12-d012/ce01/logical_partition.py`.
+- **Children.** A Python parent launches pinned-Pi Node and real-binding Python children with identical blocks (plus exactly `=E:`).
+- **Lossless logical transport.** The **logical input** travels as JSON UTF-16 units and is rebuilt **inside** each child (`String.fromCharCode` / `surrogatepass`), so no OS argv conversion turns it into another native-read test.
+- **Checks.** The binding's native read of `=E:` must equal the crafted entry. Provider cwd `C:\x`.
+
+**Rows and the source-predicted Pi value** (§3.1: a matching non-empty entry is selected; the caller's tail stays a raw logical component; the native entry takes the §15 view):
+
+| Row | Native `=E:` | Logical input | Predicted Pi result (UTF-16) |
+|---|---|---|---|
+| scalar-positive | `E:\deep` | `e:leaf` | `e:\deep\leaf` |
+| logical-lone-high | `E:\deep` | `e:leaf\uD800` | `e:\deep\leaf\uD800` (raw) |
+| logical-lone-low | `E:\deep` | `e:leaf\uDE00` | `e:\deep\leaf\uDE00` (raw) |
+| logical-pair | `E:\deep` | `e:leaf😀` | `e:\deep\leaf😀` |
+| native-and-logical-nonscalar | `E:\de\uD83Dp` | `e:leaf\uD800` | `e:\de<FFFD×3>p\leaf\uD800`: native part decoded, logical tail raw |
+
+The generator runs as the **first step of the implementation pass**, in a granted window. **If any Node observation differs from the prediction, implementation stops** and the checkpoint returns to characterization. The observed rows are frozen as a Node-derived fixture.
+
+**New witnesses and controls:**
+- **W5 (the logical tail through the touched branch).** The five rows are checked:
+  - through the **real hook**: `resolve_local_path` / `LocalFileSystem.absolute_path`, with `_libuv_win32.inherited_drive_cwd` returning the row's raw native entry and the hook applying the view;
+  - through the **pure port**, with Node-view inputs;
+  - on win32, through **real-binding children** carrying exactly the crafted `=E:`.
+
+  Each asserts Node's frozen result, including the raw logical `\uD800` / `\uDE00` units.
+- **K6 (revised, branch-local).** The correct native views and unit indexing are **kept**, and the view is **additionally** applied to `normalized` only inside the other-drive hook. Against a green baseline, it must fail W5's raw-logical-tail assertions on `logical-lone-high`, `logical-lone-low` and `native-and-logical-nonscalar`, where it gives three U+FFFD at the caller's surrogate. It must pass `scalar-positive` and `logical-pair`, which delimit the domain.
+- **K6b (global early projection).** The §14.1 one-U+FFFD fs projection applied to the logical argument before resolution is killed both by the existing L12-D001 cases and by W5. This keeps the one-replacement fs projection distinct from the three-replacement native view.
+- **Retained:** W1–W4 and K1–K5 as §7; K4 (ASCII and PY-I001 controls) green; the 80 canonical cases unchanged.
+
+**Checkpoint (step 1, revision 2, proposed):**
+
+```text
+CONVERGENCE CHECKPOINT      PROPOSED FOR IMPLEMENTATION   (CE-L12D012-01, revision 2)
+OPEN FINDINGS               L12D012-PY-I002 (UTF-16 unit indexing; Node's section 15 view of both native
+                            selected-value operands, read lazily; logical caller input preserved raw through
+                            the touched branch)
+ACCEPTANCE WITNESSES        sections 1 and 7 native partitions (15 + 20 rows) and section 8 logical rows (5;
+                            Node-observed at implementation step 1, stopping on any disagreement with the
+                            stated predictions) frozen as Node-derived fixtures; W1 entry children, W4 cwd
+                            children, W5 logical tail through the real hook, the pure port and real-binding
+                            children; W2 port; W3 projection; controls K1 code-point indexing, K2 raw entry,
+                            K3 per-surrogate replacement, K5 raw process cwd, K6 branch-local logical
+                            projection, K6b global fs projection of the logical argument; K4 ASCII and
+                            PY-I001 controls green; the 80 canonical cases unchanged
+NORMATIVE DELTAS            none (sections 3.2, 14.1 and 15 as written; expectations unchanged); record
+                            section 10 feasibility row updated; Rust F001 inherits the complete boundary
+NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
+```
