@@ -1,0 +1,19 @@
+head 705d57af682dd22862bbe4c6401f885cd076a77d dirty=0
+preflight 0
+icu 78.3
+ruff 0
+format(changed files: 10) 0
+format(whole tree, informational): 7 files would be reformatted, 339 files already formatted
+mypy 0
+Success: no issues found in 118 source files
+pytest 0
+6430 passed, 43 skipped, 19 xfailed in 264.02s (0:04:24)
+TOTAL                                                9748      0   100%
+Required test coverage of 100.0% reached. Total coverage: 100.00%
+controls self-test 0
+DRIVER SELF-TEST PASSED
+controls 0
+baseline GREEN exit 0 passed 85
+15 / 15 KILLED
+mutant exits [1] errors 0
+GATE-END

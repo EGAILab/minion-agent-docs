@@ -1,0 +1,15 @@
+PASS a valid intended kill is credited
+PASS a counterfeit failure reason is not credited
+PASS pytest exit 2 is INVALID even with a matching FAILED line
+PASS pytest exit 3 is INVALID even with a matching FAILED line
+PASS pytest exit 4 is INVALID even with a matching FAILED line
+PASS pytest exit 5 is INVALID even with a matching FAILED line
+PASS an ERROR line makes the run INVALID
+PASS a witness missing from the baseline is INVALID
+PASS a timeout is INVALID
+PASS a surviving mutant is NOT KILLED
+PASS a green baseline with every witness PASSED is accepted
+PASS a red baseline is INVALID
+PASS a filtered/missing witness makes the baseline INVALID
+PASS the -rA report is parsed
+DRIVER SELF-TEST PASSED

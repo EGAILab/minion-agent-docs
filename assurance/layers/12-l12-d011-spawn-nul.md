@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: implementation candidate** (§8), for independent implementation review. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: contract draft, revision 1.)*
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: implementation candidate, remediation 1** (§9), for independent implementation review 2. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -327,3 +327,51 @@ Review 3 (issuecomment-6145618255) **APPROVED** the contract for implementation 
 | negative controls | **14/14 killed** | **14/14 killed** |
 
 The first Windows run, at `7d8612eb`, is not credited: it had 1 failure, the E4 control above. It was fixed in `1a887464`, and the Windows gates were rerun in full. The head adds `70573a53`, a manifest status line only, which passes manifest validation (8/8).
+
+## 9. Implementation review 1 and remediation 1
+
+**Review 1** (Codex, #224 issuecomment-6146503957, round 4) was CHANGES REQUESTED against code `70573a53` / docs `1e924c2d`. The contract stays approved and unchanged.
+- **L12D011-I001** (blocking): `_is_index` converted the whole decimal name with `int(name)` before comparing it with the index bound. A POSIX baseline or overlay name of more than 4300 digits therefore hit Python's integer-string conversion limit, and the spawn raised `ValueError` instead of ordering the name as an ordinary one.
+- **L12D011-I002** (blocking): the negative-control driver credited a kill by node name only. It ran no unmutated baseline, did not validate the pytest exit code or error lines, and did not check that the failure was the witness's discriminating reason. Under workflow §9.7 its 14/14 was not creditable.
+- **L12D011-N001** (non-blocking): the Linux gate table reported the platform limitations without the commands' exit codes or a comparison with the base commit.
+
+**Route (RT-6).** Convergence trigger C fired: three rejected complete events on this work package (rounds 1, 2 and 4). Triggers A and B did not fire. The counters and the route are recorded in the #224 state (`history.routes`), and the Owner was notified with the default route, CONTRACT_CONVERGENCE. The route taken is the narrow targeted-fix exception. Both findings are implementation and evidence defects against an approved, unchanged contract, and each has a finite dimension: I001 is one predicate, and I002 is the driver's credit rules. If either survives review 2, the route becomes CONTRACT_CONVERGENCE with no further point fix.
+
+**Remediation (code `0bc99fb`, `705d57af`):**
+- **I001.** `_is_index(name)` now requires the length to be at most 10 **before** converting: `len(name) <= 10 and fullmatch("0|[1-9][0-9]*") and int(name) <= 4294967294`. The ASCII-only `[0-9]` class already excludes non-ASCII digits. Two new witnesses:
+  - `test_index_domain_neighborhood_and_long_names` (pure, both platforms) covers a 4301-digit name, the maximum index `4294967294`, the first excluded value `4294967295`, 10 and 11 digits, a 12-digit name, `0`, a leading zero (`007`) and Arabic-Indic digits;
+  - `test_long_numeric_env_name_is_an_ordinary_name_at_the_provider` drives the real `LocalSubprocess.spawn` on its POSIX branch with a 4301-digit overlay name. Its spy at the native boundary proves that the call reaches the OS ordered as an ordinary name. The discriminating message is `LONG NAME CONVERTED`.
+- **I002.** `scripts/l12_d011_negative_controls.py` now applies the §9.7 credit rules:
+  - an **unmutated baseline** runs first, and must exit 0 with every intended witness node `PASSED` (`-rA` report). Otherwise every control is INVALID;
+  - each mutant's text is compiled in memory before it is written, and an anchor must match exactly once;
+  - a kill is credited only for **pytest exit 1** with **no ERROR line**, and only when an **intended** witness `FAILED` with a message matching that witness's **discriminating reason** regex. Exits 0/2/3/4/5, a timeout, collection or setup errors, a counterfeit reason and a witness missing from the baseline are each NOT KILLED or INVALID;
+  - the report records each mutant's pytest exit, error count and observed witness reasons (`705d57af`), so the credit can be checked from the evidence alone;
+  - `--self-test` exercises these rules on 14 counterfeit outcomes;
+  - a 15th control, `unbounded-index-conversion`, restores the I001 defect;
+  - the witnesses carry discriminating assertion messages (`PREFIX LOST`, `PROJECTED DIAGNOSTIC`, `INDEX DOMAIN`, `LONG NAME CONVERTED`, `native spawn reached`);
+  - containment is unchanged: every target is proven inside the project root (lexical, no link or reparse ancestor, real path) before each write, in a NEW work directory, and nothing is deleted.
+- **N001.** The Linux gate records every command's exit code and runs the same pytest/coverage and mypy commands on base `be02f9f3` (the merge-base) in the same container.
+
+**Gates at `705d57af`** (host window granted by Codex, Windows then Linux; evidence in `data/l12-d011/python-implementation/remediation-1/{windows,linux}`, each with a `gates-summary.txt`):
+
+| Gate | Windows | Linux (`python:3.13`, uid 1000, pinned ICU 78.3): candidate | Linux: base `be02f9f3` |
+|---|---|---|---|
+| pytest | **6430 passed**, 43 skipped, 19 xfailed, 0 failed; exit 0 | **6256 passed**, 204 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) | 6171 passed, 204 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) |
+| coverage | **100%** (9748 statements) | 96.89%: 303 missed | 96.85%: 303 missed |
+| mypy | clean (118 files); exit 0 | 15 errors in 5 files; exit 1 | the same 15 errors (two `unused-ignore` lines in `subprocess.py` shifted by +2); exit 1 |
+| ruff | clean; the 10 changed files formatted (whole-tree drift of 7 untouched files, informational) | clean; exit 0 | — |
+| driver self-test | PASSED (14 checks) | PASSED; exit 0 | — |
+| negative controls | baseline GREEN (exit 0, 85 passed); **15/15 KILLED**; every mutant exit 1, 0 errors | baseline GREEN (exit 0, 85 passed); **15/15 KILLED**; every mutant exit 1, 0 errors; exit 0 | — |
+
+**Linux limitations.** The Linux limitations are equal to base. The per-file missed-line counts are identical between candidate and base. In this change's files they are the same Windows-only constructs, shifted by the inserted lines:
+- `subprocess.py` 174-182 and 201 (base 172-180 and 199): the `taskkill` path and the helper settle;
+- `errors.py` 135 (base 132): the Windows error mapping;
+- `bash.py` 397 (base 386): a cancellation branch.
+
+`spawn_nul.py` and `_search.py` are at 100% on Linux.
+
+**Runs not credited** (disclosed):
+- the Windows run at `0bc99fb` (green, 15/15). It was superseded when `705d57af` added the per-mutant exit to the report;
+- a Linux run at `0bc99fb`, stopped by Claude during package installation.
+
+Both platforms were rerun in full at `705d57af`.
