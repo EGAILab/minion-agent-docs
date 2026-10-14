@@ -364,3 +364,11 @@ NEXT_OWNER                  Codex (independent checkpoint review of exactly this
 **Development runs (disclosed, not credited):** a Windows self-test and a contained development run of the 15 controls at the same tooling (`controls-dev-ce01`), made before the window to check the declarations. Both were green.
 
 **Open:** L12D011-I002 awaits the **targeted convergence closure review** (§11.8.7), with I001's control as the previously closed dependency. After that comes the one final complete exact-SHA review (§11.8.8).
+
+## 9. Episode outcome
+
+- **Targeted closure.** Targeted closure review 1 (issuecomment-6163660656) **PROVISIONALLY CLOSED** L12D011-I002 at code `f27b915e` / docs `746ff9a5`. The reviewer re-executed D1–D10 and W3 and ran a fresh 15-control batch.
+- **Final review.** The final complete review (issuecomment-6163739593) **APPROVED** the same frozen pair and **CLOSED** I001 and I002.
+- **Merged.** Code #226 → `f9935672`, docs #302 → `f065a0c0`.
+
+**Episode CE-L12D011-01 is settled.** The kit lesson proposed in §6, "credit a negative control from the observed exception identity and origin, never from its rendering or a marker substring", is to be filed against `EGAILab/minion-process` at the work-package retrospective.

@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`** (§10). The checkpoint was agreed (revision 1) and implemented at `f27b915e`; it awaits the targeted I002 closure. I001 is provisionally closed, N001 is closed, and I002 is open. *(Earlier: implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: APPROVED and merged** (§11): final complete review issuecomment-6163739593 at code `f27b915e` / docs `746ff9a5`, merged code #226 → `f9935672`, docs #302 → `f065a0c0`. I001, I002 and N001 are closed. *(Earlier: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`, §10; implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -402,3 +402,24 @@ Gates on both platforms:
 - Linux shows the unchanged base-equal limitations.
 
 The details are in episode record §8. The next step is the targeted I002 closure review.
+
+## 11. Targeted closure, final complete review and merge
+
+- **Targeted closure review 1** (Codex, issuecomment-6163660656, round 8) was **APPROVED** for targeted closure at code `f27b915e` / docs `746ff9a5`:
+  - **L12D011-I002 PROVISIONALLY CLOSED**, with I001's closure holding;
+  - Codex re-executed D1–D10 (11 mutation rows) and W3 12/12 on Windows;
+  - a fresh 15-control run gave 15/15 KILLED with 18/18 GENUINE, a fresh unbounded-index control failed both I001 witnesses at their declared origins, and 169 focused tests passed.
+- **The final pair was frozen** at the same heads (issuecomment-6163681408). This outcome was deliberately not written into the frozen docs head.
+- **The final complete review** (Codex, issuecomment-6163739593, round 9) was **APPROVED** at code `f27b915e` / docs `746ff9a5`. **I001 and I002 are CLOSED; N001's closure holds.** The Linux configured coverage/mypy limitation stays disclosed and base-equal. It is not waived, and those commands are not claimed to pass.
+- **Guarded exact-SHA merges**, each verified reachable from the default branch:
+  - code #226 → `f99356729468400190a83c3ab4ea4885d4d4666b`;
+  - docs #302 → `f065a0c0aaa1aea1e823d88108fb925f83e4e1ce`.
+- **Editorial carryovers noted by the final review** are corrected in this post-merge status update; neither is a semantic change:
+  - the EXEC-013 manifest pointer said 14 controls, and now says 15;
+  - the frozen status sentences said that I002 awaited closure.
+
+**Status:**
+- Python L12-D011: **APPROVED and MERGED**;
+- shared L12-D011 contract: approved and merged (unchanged since `be02f9f3` / `a080af46`);
+- Rust L12-D011: **NOT_IMPLEMENTED**, with the Rust implementation to be dispatched separately from the merged baseline;
+- L12-D011 cross-language: **NOT CLOSED**.
