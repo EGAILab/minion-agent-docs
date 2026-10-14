@@ -1,6 +1,6 @@
 # L12-D012 — path resolution of colon-bearing components and the malformed `file:` literal fallback
 
-Status: **contract APPROVED and merged** (code #230 → `5a244f13`, docs #304 → `b0b3de6c`). **Python: implementation candidate** (§11, F002 fix), for independent implementation review. *(Earlier: CONTRACT_DRAFT; Python REVALIDATE_REQUIRED on Windows, F002.)* Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
+Status: **contract APPROVED and merged** (code #230 → `5a244f13`, docs #304 → `b0b3de6c`). **Python: APPROVED and merged** (§14): final complete review 2 issuecomment-6179335846 at code #232 `b7d046fe` / docs #306 `482d0c32`; merged code → `8bb165e5`, docs → `b2e8148c`. *(Earlier: CONTRACT_DRAFT; Python REVALIDATE_REQUIRED on Windows, F002; then implementation candidate and convergence episode CE-L12D012-01.)* Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
 Provenance: `#224` L12D011-RUST-F001 (issuecomment-6164614623); triage issuecomment-6164695679; scoping 1 `#229` issuecomment-6164885136.
 Requirements: `EXEC-002` (`ctx.fs` path resolution, §3.2), `EXEC-005` (the spawn cwd, which uses the same resolver). `TOOL-026` is a neighbor: it reuses the Layer-12 resolver and is not reopened (§5).
 
@@ -344,7 +344,7 @@ The tests also cover the drive-relative classification, the hook (lookup used fo
 - Windows at `c905ec0a`, run 1: one failure in `test_bash_shell.py::test_lookup_lifecycle_rows[timeoutWhileAlive]`, a timing row unrelated to this change. The run took 621 s against the usual 263 s, under the load of four long-running VS Code ripgrep indexing processes (not ours, not touched). The file passed 5/5 in isolation, and the full gate was rerun at the same head: the credited run above.
 - Development runs before the windows.
 
-**Status:** F002 is an implementation candidate for independent implementation review. F001 (Rust) is next, from the merged contract. The manifest's EXEC-002/EXEC-005 status lines are updated in the post-merge status sync. Cross-language: NOT CLOSED.
+**Status:** *(superseded by §14: Python APPROVED and merged)* F002 is an implementation candidate for independent implementation review. F001 (Rust) is next, from the merged contract. The manifest's EXEC-002/EXEC-005 status lines are updated in the post-merge status sync. Cross-language: NOT CLOSED.
 
 ## 12. Implementation review 1 and remediation 1 (PY-I001)
 
@@ -380,3 +380,25 @@ Codex's final complete review 1 (`#229` issuecomment-6177822640) was CHANGES REQ
 - **L12D012-PY-I002** (AUTHORITY_PARITY_DEFECT): `_select_drive_base` indexes Python characters where Node's branch indexes UTF-16 units.
 - **The route.** Trigger C fired (four rejected complete reviews). The default route was taken: CONTRACT_CONVERGENCE, episode **CE-L12D012-01**.
 - **The episode record**, with the native 15-row characterization, the second dimension (Node's §15 view of the inherited entry), the offset audit and the **proposed** checkpoint, is `12-l12-d012-convergence-ce01.md`. No fix happens before the checkpoint is agreed.
+
+## 14. Final complete review 2 and merge
+
+- **Episode CE-L12D012-01** (`12-l12-d012-convergence-ce01.md` §§1–10) settled PY-I002:
+  - checkpoint revision 2 was agreed (round 10, issuecomment-6178665172);
+  - implementation came at code `b7d046fe` / docs `482d0c32`;
+  - the targeted closure (round 11, issuecomment-6179169609) found **L12D012-PY-I002 PROVISIONALLY CLOSED**.
+- **Final complete review 2** (Codex, issuecomment-6179335846, round 12) was **APPROVED** at code #232 `b7d046fe406eb2db3b05a6112ed05bcbd289870e` / docs #306 `482d0c32af1d67a835b0ea117db2caf9417eb2b6`:
+  - **L12D012-F002, PY-I001 and PY-I002 are CLOSED**;
+  - no new finding, and neither Case A nor Case B was triggered.
+- **Guarded exact-SHA merges** (kit `merge`, each verified reachable from the default branch):
+  - code #232 → `8bb165e583d49b949a7ce11146497bc716b33b71`;
+  - docs #306 → `b2e8148c8b428466926a4bd30f87906160fce19e`.
+- **Editorial carryovers corrected in this post-merge status update** (none is a semantic change):
+  - the frozen status sentences (header, §11) said "implementation candidate";
+  - the manifest's EXEC-002/EXEC-005 L12-D012 test entries said `CONTRACT_DRAFT` and "REVALIDATE_REQUIRED: Python on win32".
+
+**Status:**
+- Python L12-D012: **APPROVED and MERGED**. The Linux configured coverage/mypy limitation is base-equal and disclosed, not waived.
+- Shared L12-D012 contract: approved and merged (unchanged since `5a244f13` / `b0b3de6c`).
+- Rust L12-D012 (**L12D012-F001**): **REVALIDATE_REQUIRED**, to be dispatched separately from the merged baseline. #224 RUST-F001 stays blocked on it.
+- L12-D012 cross-language: **NOT CLOSED**.

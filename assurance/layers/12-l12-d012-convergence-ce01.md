@@ -289,3 +289,18 @@ FINDING                     L12D012-PY-I002 -- requested: PROVISIONALLY CLOSED @
 REGRESSIONS                 PY-I001 controls, the C001 select-then-check closure, the 80 canonical cases
 NEXT_OWNER                  Codex (targeted convergence closure; then the one final complete review)
 ```
+
+## 10. Episode outcome
+
+- **Targeted closure** (Codex, `#229` issuecomment-6179169609, round 11): **L12D012-PY-I002 PROVISIONALLY CLOSED** at code `b7d046fe` / docs `482d0c32`.
+  - A fresh run of 250 tests passed.
+  - Old code-point indexing plus the raw native view, substituted in memory, failed exactly 4 intended assertions (21 passed, no errors).
+  - The original native 8-row probe gave 8/8 MATCH, against 3 mismatches at `8119d0ab`.
+- **The final complete review 2** (issuecomment-6179335846, round 12) was **APPROVED** at the same frozen pair. PY-I002 is CLOSED. Merged code #232 → `8bb165e5`, docs #306 → `b2e8148c`.
+
+**Episode CE-L12D012-01 is settled.** The shared contract is unchanged. Rust L12D012-F001 inherits the complete boundary of §§7–8: view(entry) `||` view(process cwd), read lazily, indexed by UTF-16 code units, with the logical caller input kept raw.
+
+**Kit retrospective candidates** (WORKFLOW §14, to be filed against `EGAILab/minion-process`):
+- **Every operand.** A characterization of a selected value covers every operand of the selection, the fallback as well as the primary; checkpoint review 1 rejected the omission of `process.cwd()`.
+- **Origin through the touched branch.** A control claimed to protect logical-versus-native origin must be shown to reach the touched branch; checkpoint review 2 rejected kill witnesses that bypassed it.
+- **Confirm before editing.** Run an oracle-confirmation step before the fix is edited into the measured worktree, so that its binding column is pre-fix evidence (§9 disclosure).
