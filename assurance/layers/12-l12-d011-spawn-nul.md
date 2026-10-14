@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: implementation candidate, remediation 1** (§9), for independent implementation review 2. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`** (§10). The checkpoint is proposed and awaits independent review. I001 is provisionally closed, N001 is closed, and I002 is open. *(Earlier: implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -375,3 +375,14 @@ The first Windows run, at `7d8612eb`, is not credited: it had 1 failure, the E4 
 - a Linux run at `0bc99fb`, stopped by Claude during package installation.
 
 Both platforms were rerun in full at `705d57af`.
+
+## 10. Implementation review 2 and convergence episode CE-L12D011-01
+
+**Review 2** (Codex, #224 issuecomment-6162425940, round 5) was CHANGES REQUESTED at `705d57af` / `5ceb9130`:
+- **I001** PROVISIONALLY CLOSED @ `705d57af`: the real provider and pure ordering pass, and restoring the old unbounded predicate in memory raises `ValueError` on the same name;
+- **N001** CLOSED (documentary);
+- **I002** refined and still open: a FAILED reason carrying the marker inside an unrelated `NameError`/`ImportError`/`UnboundLocalError`/`ModuleNotFoundError` is still credited as a kill.
+
+I002 has now survived two independent reviews, so **trigger A fired**. Trigger C was already recorded, and the round-4 targeted-fix exception was conditional on no survivor, so it is exhausted. The route is the default **CONTRACT_CONVERGENCE**, under RT-6, with the Owner notified. `minion-process convergence counters 224` reports A and C fired and B not fired, over 5 events with none excluded.
+
+The episode record, with the challenge, the pytest rendering characterization, the behavior matrix M1–M14, the per-control declared forms, witnesses W1–W4, driver meta-controls D1–D7 and the **proposed** checkpoint, is `12-l12-d011-convergence-ce01.md`. Implementation is frozen until the checkpoint is independently reviewed.
