@@ -1,0 +1,13 @@
+head 8119d0abf77bf29f6b9bb1adb9684cc123abf630 dirty=0
+preflight 0
+icu 78.3
+ruff 0
+format(changed files: 5) 0
+format(whole tree, informational): 7 files would be reformatted, 344 files already formatted
+mypy 0
+Success: no issues found in 118 source files
+pytest 0
+6709 passed, 43 skipped, 19 xfailed in 373.80s (0:06:13)
+TOTAL                                                9876      0   100%
+Required test coverage of 100.0% reached. Total coverage: 100.00%
+GATE-END

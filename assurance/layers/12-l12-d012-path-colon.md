@@ -317,7 +317,7 @@ FEASIBILITY   READY   every row AUDITED / NOT_APPLICABLE; F001 and F002 are impl
 | fall-through (revision 1's rejected paraphrase) | the first source naming the device, else the root | `cwd-drive/08` (`=E:` = `X:\other`) |
 | mismatch-always-root | any device mismatch selects the root | `cwd-drive/09` (`X:/other`) |
 | empty-is-a-value | an empty entry is used instead of the process cwd | `cwd-drive/02` |
-| missing precondition | present entries (including **empty**) and a process cwd on a forbidden drive | must REFUSE; absent passes |
+| missing precondition | present entries (including **empty**) and a process cwd on a forbidden drive | must REFUSE; absent passes. *Correction (review 1, PY-I001):* this row exercised only the `precondition_refusal` **helper** (a truth table, supporting evidence), never the runner entry points. The entry-point enforcement controls are §12 |
 
 A pair test asserts that `01` equals `02` and differs from `08`. A child-environment test asserts that the crafted block carries exactly the case's entry.
 
@@ -345,3 +345,30 @@ The tests also cover the drive-relative classification, the hook (lookup used fo
 - Development runs before the windows.
 
 **Status:** F002 is an implementation candidate for independent implementation review. F001 (Rust) is next, from the merged contract. The manifest's EXEC-002/EXEC-005 status lines are updated in the post-merge status sync. Cross-language: NOT CLOSED.
+
+## 12. Implementation review 1 and remediation 1 (PY-I001)
+
+**Implementation review 1** (Codex, `#229` issuecomment-6176585550, round 5) was CHANGES REQUESTED at code `c905ec0a` / docs `824b07c1`.
+- **No production defect was found.** Codex's independent Node v22.15.1 comparison against the port matched **950/950**, and the 167 focused tests passed.
+- **L12D012-PY-I001** (MEDIUM, blocking, CONTRACT_ASSURANCE_DEFECT): the missing-precondition control called the helper only. The reviewer's in-memory mutant, with both entry points' refusal branches set to `if False:`, passed the whole added suite **167/167**. So a runner that silently ignores a failed precondition was credited.
+
+**Remediation (code `8119d0ab`, tests only; the `src/**` diff from `c905ec0a` is empty):**
+- **Scriptable host state.** The runner's host-state lookups are module-level and scriptable: `real_inherited` (the inherited-entry observation) and `process_cwd()`. A host case's child cwd is its `sandbox` argument. No scripted cwd or case path is ever created, accessed or used as a real cwd.
+- **Spies.** `_Observed` wraps the real `LocalFileSystem.absolute_path` (recording, then delegating) and replaces `subprocess.run` with a spy that records and stops the run (`_Reached`).
+- **Entry-point refusal witnesses**, each asserting `PRECONDITION REFUSED` **and** that the seam was never reached:
+  - `run_baseline_case` on `baseline/12`, with a present **empty** `=A:`, a present `A:\deep`, and a process cwd on `A:`, `X:` and `C:`. The provider is never invoked.
+  - `run_host_case` on `a-drive/01` with the child cwd on `C:`, `a-drive/08` with the child cwd on `A:`, and `cwd-drive/01` with the child cwd on `C:`. The child is never launched.
+- **Positive controls.** Admissible baseline state reaches the real provider exactly once (on win32 with the expected value). An admissible child cwd reaches the child launch.
+- **Omission controls (§11.8.7.1: known-bad → FAIL).** The runner is compiled in memory with ONE entry point's refusal branch removed; nothing is written. The **same** refusal witness is false on it, and the seam was reached: the provider on `a::/b`, or the child launch.
+- **The reviewer's own probe** (`.tmp/codex-scratch/l12d012-python-precondition-probe.py`), run unchanged against `8119d0ab`: the mutated runner now **fails** the suite, with exit 1. All **8** entry-point refusal witnesses fail on the mutant: 5 baseline cases and 3 host cases. At `c905ec0a` the same probe passed 167/167.
+- Focused development run: 1011 passed, 4 skipped.
+
+**Gates at `8119d0ab`** (host window granted by Codex; `data/l12-d012/python-implementation/remediation-1/{windows,linux}`):
+
+| Gate | Windows | Linux (`python:3.13`, uid 1000) |
+|---|---|---|
+| pytest | **6709 passed**, 43 skipped, 19 xfailed, 0 failed; exit 0 | **6502 passed**, 208 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) |
+| coverage | **100%** | 96.76%, per-file identical to §11 (`_libuv_win32.py` +15, `filesystem.py` +2 against the base-equal set; both Windows-only) |
+| mypy / ruff | clean / clean | the base's 15 errors (set-equal); exit 1 / clean; exit 0 |
+
+**Not credited (disclosed):** the first Windows run at `8119d0ab` had one failure, `test_bash_shell.py::test_lookup_releases_its_pipes_when_collection_ends`: the child's `outcome` file was not yet written. It is unrelated to this change. The run took 742 s under the load of a VS Code ripgrep indexing process (not ours, not touched). The bash file passed 5/5 in isolation, and the full gate was rerun at the same head: the credited run above.
