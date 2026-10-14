@@ -386,3 +386,9 @@ Both platforms were rerun in full at `705d57af`.
 I002 has now survived two independent reviews, so **trigger A fired**. Trigger C was already recorded, and the round-4 targeted-fix exception was conditional on no survivor, so it is exhausted. The route is the default **CONTRACT_CONVERGENCE**, under RT-6, with the Owner notified. `minion-process convergence counters 224` reports A and C fired and B not fired, over 5 events with none excluded.
 
 The episode record, with the challenge, the pytest rendering characterization, the behavior matrix M1–M14, the per-control declared forms, witnesses W1–W4, driver meta-controls D1–D7 and the **proposed** checkpoint, is `12-l12-d011-convergence-ce01.md`. Implementation is frozen until the checkpoint is independently reviewed.
+
+Checkpoint review 1 (issuecomment-6162669604, round 6) REJECTED the proposal on two missing dimensions:
+- C001, failure origin: a same-text setup `ValueError` was accepted;
+- C002, identity: a rendered prefix was treated as the exception class.
+
+Revision 1, in the episode record §7, credits from an evidence reporter. The reporter records exact exception identity, the innermost raising frame and the seam frame, and the revision is proposed for review.

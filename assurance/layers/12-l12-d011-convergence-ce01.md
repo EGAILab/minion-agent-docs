@@ -173,3 +173,141 @@ After implementation, the episode proceeds as follows:
 At close, a general lesson ("credit a negative control by the failure's form, not a marker substring") is proposed to the kit as a `lessons/` record.
 
 Probe provenance: `.tmp/claude-scratch/i195/ce01-probe/`, copied to `data/l12-d011/ce01/`.
+
+## 7. Checkpoint review 1 (REJECTED) and revision 1
+
+**Checkpoint review 1** (Codex, #224 issuecomment-6162669604, round 6) **REJECTED** the §6 proposal at docs `fc148e5e`, code `705d57af`. §§1–6 above are kept as written; this section supersedes their rules where it says so.
+- **CE-L12D011-01-C001** (HIGH): `NATIVE_NUL` accepted a same-text setup `ValueError`. For example, a helper that raises `ValueError('embedded null character')` with zero native calls renders identically to a genuine boundary rejection. The "accepted residual" in §3 had no governance basis. **Missing dimension: the observed failure origin, i.e. whether the intended boundary fired.**
+- **CE-L12D011-01-C002** (MEDIUM): a rendered prefix is not exception identity. `type('AssertionError', (Exception,), {'__module__': 'builtins'})` renders `AssertionError: PREFIX LOST: The fake`, byte-identical to the real assertion. `type("assert ['A', 'Z']", …)` renders `assert ['A', 'Z']: setup helper failed`. §2's two universal claims, that no other exception has the exact `AssertionError: ` prefix and that nothing else can start with `assert `, are **false** and are withdrawn. **Missing dimension: the actual exception kind versus the rendered name.**
+
+Both are accepted without dispute. The root cause is the same in each: §§2–3 inferred identity and origin from the human-facing rendering. Revision 1 stops inferring and **observes** them.
+
+### 7.1 Characterization (revision 1)
+
+**The mechanism probe** (`data/l12-d011/ce01/evidence_probe_plugin.py`, `test_origin.py`, output `origin-output.txt`; Windows, pytest 9.1.1, CPython 3.13.5). It is a pytest plugin, loaded with `-p`, whose `pytest_runtest_makereport` hookwrapper records, for each failed report:
+- `when`;
+- the exception **kind by identity**: `type(exc) is builtins.AssertionError`, `type(exc) is builtins.ValueError`, or otherwise OTHER. The identities are captured at plugin import;
+- the first line of `str(exc)`;
+- the **innermost raising frame** (file, function, line), taken from `exc.__traceback__`, with the stdlib `subprocess` module recognized by comparing resolved `subprocess.__file__`;
+- whether the seam frame `minion_agent/execution/subprocess.py:spawn` is on the traceback stack.
+
+It writes one `L12D011-EVIDENCE <json>` line per record, through the terminal reporter after capture ends, and makes no file writes. Observed:
+
+| Test body | Rendered `-rA` reason | Recorded kind / innermost frame / seam frame |
+|---|---|---|
+| `assert …, "PREFIX LOST: The fake"` | `AssertionError: PREFIX LOST: The fake` | **ASSERTION** / `test_genuine_assertion` / no |
+| C002 fake class `type('AssertionError', …)` | `AssertionError: PREFIX LOST: The fake` (identical) | **OTHER** / `test_fake_assertion_class` / no |
+| C002 `type("assert ['A', 'Z']", …)` | `assert ['A', 'Z']: setup helper failed` | **OTHER** |
+| C001 helper `raise ValueError('embedded null character')` | `ValueError: embedded null character` | VALUE_ERROR / **`_helper`** / no |
+| genuine native fire through the seam (check bypassed, as in the mutants) | `ValueError: embedded null character` (identical) | VALUE_ERROR / **`stdlib:subprocess` `_execute_child`** / **yes** |
+| a native fire that bypasses the seam (`asyncio.create_subprocess_exec` directly) | `ValueError: embedded null character` (identical) | VALUE_ERROR / `stdlib:subprocess` `_execute_child` / **no** |
+| a rewritten elided assertion | `assert "The property...ived …"` | ASSERTION / the test function; the first line of `str(exc)` equals the rendered elided text |
+| an `AssertionError` subclass / `pytest.fail` / a fixture `NameError` | qualified name / `Failed: …` / ERROR | OTHER / OTHER / OTHER with `when: setup` |
+
+Every pair that renders identically is distinguished by kind, origin or seam frame.
+
+The origin probe `origin_probe.py` (output `origin-probe-output.txt`) drives the real `LocalSubprocess.spawn` with the check removed in memory. NULs in argv, cwd, an env value and an env name all raise exact `ValueError` (`embedded null character`), innermost at stdlib `subprocess._execute_child`, with the seam frame present, on Windows.
+
+**Linux (from source; to be confirmed executably).** In CPython 3.13 `Lib/subprocess.py`'s POSIX `_execute_child`:
+- `os.fsencode` does not reject a NUL;
+- the NUL is rejected in C, by `_fork_exec` (called from `_execute_child`) or by `os.posix_spawn` (called from `_posix_spawn`).
+
+So the innermost Python frame is stdlib `subprocess`'s `_execute_child` or `_posix_spawn`, and the message is CPython's `embedded null byte`/`character`. W3 (§7.4) confirms this on the Linux gate before any control is credited there. If it disagrees, implementation stops and the checkpoint returns to characterization. If you want this confirmed **before** approval instead, a sub-minute `python:3.13` container probe in a host window does it.
+
+### 7.2 Revised rule (replaces §3's form rules)
+
+The credit uses only the **evidence records**. The `-rA` rendering is kept for human reading and for baseline PASSED selection, and is never used to decide a kill.
+
+Each intended witness declares one **kind** and one **origin**:
+- **ASSERTION(origin = file, function, statement anchor; reason)**:
+  - kind ASSERTION by identity, `when == "call"`;
+  - the innermost frame is in the declared file and function, at a line inside the declared assertion statement. The anchor source text is resolved to its line span by reading the test file, and must be unique within that function;
+  - the reason regex is anchored (`re.match`) on the first line of `str(exc)`.
+- **NATIVE_NUL(reason)**:
+  - kind VALUE_ERROR by identity, `when == "call"`;
+  - the innermost frame is in stdlib `subprocess` (`_execute_child` or `_posix_spawn`);
+  - the seam frame `LocalSubprocess.spawn` is on the stack;
+  - the first line fully matches `embedded null (character|byte)`.
+
+How a run is judged:
+- **Plugin presence.** Each pytest run (baseline and mutants) carries a fresh random token in the environment, and the plugin echoes it in every record. A run whose output lacks the plugin's start line, or holds a record with the wrong token, is INVALID.
+- **Every intended node must be accounted for.** If an intended node is FAILED in `-rA` but has no matching evidence record, the run is INVALID.
+
+| # | Observation (green, selected baseline) | Verdict |
+|---|---|---|
+| R1 | intended ASSERTION: identity, declared origin and anchored reason all hold; exit 1; no ERROR | KILLED |
+| R2 | intended NATIVE_NUL: identity, stdlib origin, seam on stack, full-match text | KILLED (genuine native observations are never blanket-rejected) |
+| R3 | C001: an exact `ValueError` with the NUL text whose innermost frame is not stdlib `subprocess` (a helper) | INVALID |
+| R4 | a native fire without the seam frame on the stack | INVALID |
+| R5 | C002: the fake `type('AssertionError', …)`, the `type("assert ['A', 'Z']", …)` class, an `AssertionError` subclass, `pytest.fail`, `NameError`/`UnboundLocalError`/`ImportError`/`ModuleNotFoundError` with or without the marker, an exception group | INVALID (kind is not the declared identity) |
+| R6 | genuine ASSERTION raised in a different statement or function than declared (a helper's assert, another assert in the same test) | INVALID (the intended assertion did not fire) |
+| R7 | right kind and origin, reason not matching, or the marker not at the start | NOT KILLED |
+| R8 | mixed: one intended witness valid (R1/R2), another intended witness R3–R6 | INVALID |
+| R9 | an intended node FAILED in `-rA` without an evidence record; a missing or foreign token; a duplicate record for a node | INVALID |
+| R10 | `when != "call"` on an intended node; any ERROR entry; a timeout; exit 2/3/4/5 | INVALID |
+| R11 | no intended node failed (only unrelated nodes) | NOT KILLED |
+| R12 | an intended node not PASSED in the baseline; a red baseline | INVALID before any mutant credit |
+| R13 | exit 0 | NOT KILLED |
+| R14 | declaration table: each of the 15 controls' witnesses has one kind; every ASSERTION anchor is unique within its declared function in the current test source | self-test FAILS if violated |
+
+**There is no residual.** The §3 `NATIVE_NUL` residual is withdrawn: R3 rejects a same-text pre-boundary `ValueError`.
+
+**Trust boundary (stated, not a residual).** This is an assurance distinction between cooperating test components, as the reviewer framed it, and does not defend against hostile processes. A test that deliberately rebinds `builtins.AssertionError`, forges a traceback or prints a token-bearing record is out of scope. An accidental echo is excluded, because tests run under capture and records carry the per-run token.
+
+### 7.3 Declared kind and origin for the 15 controls (witness nodes unchanged)
+
+Abbreviations: U = `tests/execution/test_spawn_nul.py`, C = `tests/conformance/test_spawn_nul_conformance.py::test_spawn_case`.
+
+| Control | Witness → declaration |
+|---|---|
+| check-after-native-spawn | U `test_no_native_spawn_after_rejection[argv0-options0]` → ASSERTION in `spy`, `raise AssertionError("native spawn reached")`, `native spawn reached`; C `[name/file]` → NATIVE_NUL |
+| baseline-first-posix-order / sort-all-posix-order / naive-integer-index | U `test_env_check_order_both_platforms` → ASSERTION, `assert env_check_order(baseline, overlay, Platform.POSIX) == [`, with reasons `assert \['A', 'Z'` / `assert \['01', '10'` / `assert \['01', '2'` respectively |
+| unbounded-index-conversion | U `test_index_domain_neighborhood_and_long_names` and U `test_long_numeric_env_name_is_an_ordinary_name_at_the_provider` → ASSERTION, each `raise AssertionError(f"LONG NAME CONVERTED: {error}") from error` in its own function, `LONG NAME CONVERTED` |
+| superseded-baseline-value / double-url-decode | C `[env/superseded-baseline-value-control]` / C `[cwd/file-url-percent-2500-control]` → ASSERTION, `assert not observed["nul_input"], "a control must reach the OS, not the NUL check"`, `a control must reach the OS` |
+| raw-cwd-not-resolved | C `[cwd/file-url-percent-00]` → NATIVE_NUL; C `[cwd/literal-relative]` → ASSERTION, `assert observed["message"] == text(expected["message"])`, `assert .*ived 'd\\\\x00'` |
+| default-cwd-unchecked | C `[cwd/provider-default-nul]` → NATIVE_NUL (now origin-proved; C001's specific concern) |
+| cwd-before-args / cut-at-or-above-128 / quote-selection | C `[precedence/args-before-cwd]` / `[len/inspected-128]` / `[fmt/single-quote]` → ASSERTION, the same `observed["message"]` statement, with reasons `assert "The property` / `assert .*x00'\.\.\." ==` / `assert .*'it\\\\'s` |
+| tool-string-matching | U `test_engine_keeps_its_prefix_for_a_non_nul_failure` → ASSERTION, `assert str(caught.value) == "Failed to run fd: The fake"`, `PREFIX LOST` |
+| tool-checks-projected-argv | U `test_engine_diagnostic_shows_the_unprojected_value` → ASSERTION, `assert str(caught.value).endswith(`, `PROJECTED DIAGNOSTIC` |
+| bash-checks-stdin-command | U `test_bash_stdin_transport_command_is_not_argv` → ASSERTION, `assert await _run_bash(fake, tmp_path, "echo a" + N) == "Failed to start the shell wsl-bash"`, `assert .*'Failed to st` |
+
+The reason regexes are carried over from the committed driver, rewritten as `re.match` on the first line of `str(exc)`. This first line equals the rendered elided text for a rewritten assertion (§7.1). The exact regex strings are finalized in the implementation and checked by R14 and by the baseline/mutant runs.
+
+### 7.4 Witnesses and controls (replace §4)
+
+- **W1 (`--self-test`).** Rows R1–R13 on synthetic evidence records, including each C001/C002 counterexample and Codex's round-5 counterfeits.
+- **W2 (`--self-test`).** R14 over the 15 declarations against the current test source.
+- **W3 (end-to-end, both gate platforms).** A committed fixture module, outside `testpaths` and in the shape of `data/l12-d011/ce01/test_origin.py` plus `test_forms.py`'s forms, is run with the driver's own pytest command and evidence plugin. Its nodes are: a genuine assertion; the fake `AssertionError` class; the `assert …`-named class; a subclass; `pytest.fail`; a marker-bearing `NameError`/`ImportError`; a helper `ValueError` with the NUL text; a genuine native fire through the real `LocalSubprocess.spawn` with `spawn_rejection` monkeypatched to `None` inside that test only; a native fire without the seam; and a wrong-statement assertion. The driver's real parser and credit must give each its R-row verdict. **On Linux this is also the executable confirmation of §7.1's origin.**
+- **W4.** A pytest test in the full suite, `tests/scripts/test_l12_d011_control_driver.py`, runs W1 and W2.
+- **Driver meta-controls (known-bad → FAIL on the named row; candidate → PASS)**, each an in-memory mutation of the driver or plugin:
+  - **D1** kind by class **name** instead of identity → R5, the fake `AssertionError`;
+  - **D2** blanket rejection of `ValueError` → R2;
+  - **D3** an unanchored reason (`re.search`) → R7, the marker not at the start;
+  - **D4** the innermost-origin check dropped → R3 (C001) and R6;
+  - **D5** the seam-frame check dropped → R4;
+  - **D6** any-match masking (no void on a forbidden witness) → R8;
+  - **D7** a fallback to the rendered `-rA` reason when a record is missing → R9;
+  - **D8** the token check dropped → R9, the foreign token;
+  - **D9** the exit code ignored → R10;
+  - **D10** baseline selection skipped → R12.
+- **The 15 real controls,** rerun on both platforms: baseline GREEN; 15/15 KILLED; each credited witness reported with its recorded kind, origin, seam flag and first line; every mutant exit 1 with 0 errors.
+
+**Constraints (revised).**
+- The evidence reporter is a test-support plugin. It may be loaded only by the control driver and the W3/W4 runs, and is not loaded by the normal suite.
+- No runtime (`src/**`) change. No witness node is renamed. Witness test bodies are unchanged, unless R14 shows that an anchor is not unique; any such evidence-only witness edit is disclosed.
+- The protections for baseline, selection, exit, timeout, compile, unique anchor and containment stay as they are.
+
+### 7.5 Checkpoint (step 1, revision 1, proposed)
+
+```text
+CONVERGENCE CHECKPOINT      PROPOSED FOR IMPLEMENTATION   (CE-L12D011-01, revision 1)
+OPEN FINDINGS               L12D011-I002 (checkpoint dimensions CE-L12D011-01-C001 origin,
+                            CE-L12D011-01-C002 identity)
+ACCEPTANCE WITNESSES        evidence reporter (identity, innermost origin, seam frame, token);
+                            rows R1-R14 + the section 7.3 declaration table; W1-W4 (W3 on both
+                            gate platforms, including the C001/C002 pairs and the Linux origin
+                            confirmation); driver meta-controls D1-D10; the 15 real controls rerun
+                            on both platforms with recorded kind/origin
+NORMATIVE DELTAS            none (spec section 21, EXEC-013, canonical cases unchanged)
+NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
+```
