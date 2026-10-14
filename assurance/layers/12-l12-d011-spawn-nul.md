@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract draft, revision 1** (remediation of independent contract review 1, §6), for re-review (Codex). Python: NOT_IMPLEMENTED. Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED.
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`** (§10). The checkpoint was agreed (revision 1) and implemented at `f27b915e`; it awaits the targeted I002 closure. I001 is provisionally closed, N001 is closed, and I002 is open. *(Earlier: implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -273,3 +273,132 @@ If C001 survives the next review, the route is CONTRACT_CONVERGENCE with no furt
 **Evidence.** The canonical content is unchanged: the transfer copies the same bytes.
 - **End-to-end rerun (`gen-r3`)** of the revised recipe, in the host window Codex granted after Memory's batch-done. The container's guarded transfer printed `TRANSFER DONE`, and the merge completed.
 - **Byte-identical:** both partials and `spawn-nul.json` equal `gen-r2`'s (`cmp`; the code worktree is unchanged). The committed partials in `gen/out/revision-1/` therefore stand for both runs.
+
+## 8. Python implementation (candidate)
+
+Review 3 (issuecomment-6145618255) **APPROVED** the contract for implementation at code `387b81fb` / docs `fb68cde0`, with C001 closed. It was merged by guarded exact-head merges: code #225 → `be02f9f3`, docs #301 → `a080af46`. The Python candidate is on `layer/12-d011-python`.
+
+**The seam:**
+- `execution/spawn_nul.py` holds Node's `util.inspect` string subset, the §21.2 diagnostic, the §21.3 check order (Windows: UTF-16 sort of every retained name; POSIX: integer-index names, then overlay names, then baseline-only names in UTF-16 order) and **one** validator.
+- `LocalSubprocess.spawn` reads the baseline once, composes the effective environment as before, then checks argv, the effective cwd (the certified resolver, or the provider default) and the effective entries (name before value). This happens after the pre-abort check and before any native call.
+- A rejection is `Err(SubprocessError(spawn_error, <diagnostic>, nul_input=True))`. `nul_input` is a new optional field, `False` by default, and the narrow distinction of §21.5.
+
+**The tools:**
+- `_search.spawn_engine` (`find`, `grep`) and `bash` check their **unprojected** assembled argv with the same validator, immediately before the certified WP-13.3 scalar projection (`WP133-AUD-R001`). The diagnostic therefore shows the JavaScript-string value, including `\udXXX`, while the certified projection of non-NUL spawns is unchanged.
+- A marked seam rejection (cwd or environment) is surfaced unchanged; every other failure keeps `Failed to run …` / `Failed to start the shell …`.
+- A stdin-transported `bash` command is not argv and is not checked.
+
+**Witnesses (`tests/execution/test_spawn_nul.py`, `tests/conformance/test_spawn_nul_conformance.py`):**
+- the 57 spawn and 7 tool canonical cases, run through a thin runner (a configured `baseline` is installed as a fixture);
+- the pure functions, on **both** platforms;
+- a native-spawn spy proving zero calls for every rejected input;
+- an unrelated `ValueError` still propagating;
+- the tools' narrow distinction: a non-NUL OS message starting with "The " keeps its prefix, and a marked rejection does not;
+- the diagnostic showing the unprojected lone surrogate;
+- stdin transport not checked;
+- the §15.5 consumer arbitration dropping the colliding entry before the check.
+
+**Changed existing test (disclosed):** the WP-12.E4 control `test_control_changing_inherit_env_false_fails` patched `_effective_env` with a two-argument lambda. `_effective_env` now receives the baseline the provider read once, so the control takes the third argument and supplies the real baseline. Its intent and witness are unchanged.
+
+**Negative controls (`scripts/l12_d011_negative_controls.py`, 14):** each runs the spawn-NUL suites against a mutated copy of `src` in a NEW work directory. Every target is proven inside the project root, with no link or reparse ancestor and its real path inside, before each mkdir and write; nothing is deleted. Each mutant must be killed by its **intended** witness:
+- check after the native spawn;
+- baseline-first POSIX order;
+- sort-all POSIX order;
+- naive integer index;
+- the superseded baseline value;
+- the raw, unresolved cwd;
+- double URL decoding;
+- the default cwd unchecked;
+- cwd before args;
+- a cut at 128 or above;
+- quote selection;
+- the tool string-matching;
+- the tool checking the projected argv;
+- `bash` checking the stdin command.
+
+**Gates.** Host window granted by Codex, Windows then Linux, logs in `data/l12-d011/python-implementation/`:
+
+| Gate | Windows (head `1a887464`) | Linux (`python:3.13`, uid 1000, pinned ICU 78.3) |
+|---|---|---|
+| pytest | **6428 passed**, 43 skipped, 19 xfailed, 0 failed | **6254 passed**, 204 skipped, 19 xfailed, 0 failed |
+| coverage | **100%** | 96.89%: the platform-only branches, none in this change's lines (`spawn_nul.py` and `_search.py` 100%; the remaining lines are the Windows `taskkill` path, the Windows error mapping and a bash cleanup branch) |
+| mypy | clean (118 files) | the 15 pre-existing platform/stub errors (Windows APIs, `jsonschema` stubs, unused ignores) |
+| ruff | clean; changed files formatted (whole-tree format drift of 7 untouched files is pre-existing, informational) | clean |
+| negative controls | **14/14 killed** | **14/14 killed** |
+
+The first Windows run, at `7d8612eb`, is not credited: it had 1 failure, the E4 control above. It was fixed in `1a887464`, and the Windows gates were rerun in full. The head adds `70573a53`, a manifest status line only, which passes manifest validation (8/8).
+
+## 9. Implementation review 1 and remediation 1
+
+**Review 1** (Codex, #224 issuecomment-6146503957, round 4) was CHANGES REQUESTED against code `70573a53` / docs `1e924c2d`. The contract stays approved and unchanged.
+- **L12D011-I001** (blocking): `_is_index` converted the whole decimal name with `int(name)` before comparing it with the index bound. A POSIX baseline or overlay name of more than 4300 digits therefore hit Python's integer-string conversion limit, and the spawn raised `ValueError` instead of ordering the name as an ordinary one.
+- **L12D011-I002** (blocking): the negative-control driver credited a kill by node name only. It ran no unmutated baseline, did not validate the pytest exit code or error lines, and did not check that the failure was the witness's discriminating reason. Under workflow §9.7 its 14/14 was not creditable.
+- **L12D011-N001** (non-blocking): the Linux gate table reported the platform limitations without the commands' exit codes or a comparison with the base commit.
+
+**Route (RT-6).** Convergence trigger C fired: three rejected complete events on this work package (rounds 1, 2 and 4). Triggers A and B did not fire. The counters and the route are recorded in the #224 state (`history.routes`), and the Owner was notified with the default route, CONTRACT_CONVERGENCE. The route taken is the narrow targeted-fix exception. Both findings are implementation and evidence defects against an approved, unchanged contract, and each has a finite dimension: I001 is one predicate, and I002 is the driver's credit rules. If either survives review 2, the route becomes CONTRACT_CONVERGENCE with no further point fix.
+
+**Remediation (code `0bc99fb`, `705d57af`):**
+- **I001.** `_is_index(name)` now requires the length to be at most 10 **before** converting: `len(name) <= 10 and fullmatch("0|[1-9][0-9]*") and int(name) <= 4294967294`. The ASCII-only `[0-9]` class already excludes non-ASCII digits. Two new witnesses:
+  - `test_index_domain_neighborhood_and_long_names` (pure, both platforms) covers a 4301-digit name, the maximum index `4294967294`, the first excluded value `4294967295`, 10 and 11 digits, a 12-digit name, `0`, a leading zero (`007`) and Arabic-Indic digits;
+  - `test_long_numeric_env_name_is_an_ordinary_name_at_the_provider` drives the real `LocalSubprocess.spawn` on its POSIX branch with a 4301-digit overlay name. Its spy at the native boundary proves that the call reaches the OS ordered as an ordinary name. The discriminating message is `LONG NAME CONVERTED`.
+- **I002.** `scripts/l12_d011_negative_controls.py` now applies the §9.7 credit rules:
+  - an **unmutated baseline** runs first, and must exit 0 with every intended witness node `PASSED` (`-rA` report). Otherwise every control is INVALID;
+  - each mutant's text is compiled in memory before it is written, and an anchor must match exactly once;
+  - a kill is credited only for **pytest exit 1** with **no ERROR line**, and only when an **intended** witness `FAILED` with a message matching that witness's **discriminating reason** regex. Exits 0/2/3/4/5, a timeout, collection or setup errors, a counterfeit reason and a witness missing from the baseline are each NOT KILLED or INVALID;
+  - the report records each mutant's pytest exit, error count and observed witness reasons (`705d57af`), so the credit can be checked from the evidence alone;
+  - `--self-test` exercises these rules on 14 counterfeit outcomes;
+  - a 15th control, `unbounded-index-conversion`, restores the I001 defect;
+  - the witnesses carry discriminating assertion messages (`PREFIX LOST`, `PROJECTED DIAGNOSTIC`, `INDEX DOMAIN`, `LONG NAME CONVERTED`, `native spawn reached`);
+  - containment is unchanged: every target is proven inside the project root (lexical, no link or reparse ancestor, real path) before each write, in a NEW work directory, and nothing is deleted.
+- **N001.** The Linux gate records every command's exit code and runs the same pytest/coverage and mypy commands on base `be02f9f3` (the merge-base) in the same container.
+
+**Gates at `705d57af`** (host window granted by Codex, Windows then Linux; evidence in `data/l12-d011/python-implementation/remediation-1/{windows,linux}`, each with a `gates-summary.txt`):
+
+| Gate | Windows | Linux (`python:3.13`, uid 1000, pinned ICU 78.3): candidate | Linux: base `be02f9f3` |
+|---|---|---|---|
+| pytest | **6430 passed**, 43 skipped, 19 xfailed, 0 failed; exit 0 | **6256 passed**, 204 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) | 6171 passed, 204 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) |
+| coverage | **100%** (9748 statements) | 96.89%: 303 missed | 96.85%: 303 missed |
+| mypy | clean (118 files); exit 0 | 15 errors in 5 files; exit 1 | the same 15 errors (two `unused-ignore` lines in `subprocess.py` shifted by +2); exit 1 |
+| ruff | clean; the 10 changed files formatted (whole-tree drift of 7 untouched files, informational) | clean; exit 0 | — |
+| driver self-test | PASSED (14 checks) | PASSED; exit 0 | — |
+| negative controls | baseline GREEN (exit 0, 85 passed); **15/15 KILLED**; every mutant exit 1, 0 errors | baseline GREEN (exit 0, 85 passed); **15/15 KILLED**; every mutant exit 1, 0 errors; exit 0 | — |
+
+**Linux limitations.** The Linux limitations are equal to base. The per-file missed-line counts are identical between candidate and base. In this change's files they are the same Windows-only constructs, shifted by the inserted lines:
+- `subprocess.py` 174-182 and 201 (base 172-180 and 199): the `taskkill` path and the helper settle;
+- `errors.py` 135 (base 132): the Windows error mapping;
+- `bash.py` 397 (base 386): a cancellation branch.
+
+`spawn_nul.py` and `_search.py` are at 100% on Linux.
+
+**Runs not credited** (disclosed):
+- the Windows run at `0bc99fb` (green, 15/15). It was superseded when `705d57af` added the per-mutant exit to the report;
+- a Linux run at `0bc99fb`, stopped by Claude during package installation.
+
+Both platforms were rerun in full at `705d57af`.
+
+## 10. Implementation review 2 and convergence episode CE-L12D011-01
+
+**Review 2** (Codex, #224 issuecomment-6162425940, round 5) was CHANGES REQUESTED at `705d57af` / `5ceb9130`:
+- **I001** PROVISIONALLY CLOSED @ `705d57af`: the real provider and pure ordering pass, and restoring the old unbounded predicate in memory raises `ValueError` on the same name;
+- **N001** CLOSED (documentary);
+- **I002** refined and still open: a FAILED reason carrying the marker inside an unrelated `NameError`/`ImportError`/`UnboundLocalError`/`ModuleNotFoundError` is still credited as a kill.
+
+I002 has now survived two independent reviews, so **trigger A fired**. Trigger C was already recorded, and the round-4 targeted-fix exception was conditional on no survivor, so it is exhausted. The route is the default **CONTRACT_CONVERGENCE**, under RT-6, with the Owner notified. `minion-process convergence counters 224` reports A and C fired and B not fired, over 5 events with none excluded.
+
+The episode record, with the challenge, the pytest rendering characterization, the behavior matrix M1–M14, the per-control declared forms, witnesses W1–W4, driver meta-controls D1–D7 and the **proposed** checkpoint, is `12-l12-d011-convergence-ce01.md`. Implementation is frozen until the checkpoint is independently reviewed.
+
+Checkpoint review 1 (issuecomment-6162669604, round 6) REJECTED the proposal on two missing dimensions:
+- C001, failure origin: a same-text setup `ValueError` was accepted;
+- C002, identity: a rendered prefix was treated as the exception class.
+
+Revision 1, in the episode record §7, credits from an evidence reporter. The reporter records exact exception identity, the innermost raising frame and the seam frame, and the revision is proposed for review.
+
+Checkpoint review 2 (issuecomment-6163015575) **APPROVED** revision 1, giving AGREED FOR IMPLEMENTATION. The implementation is at code `f27b915e`: evidence tooling only, with no `src` change.
+
+Gates on both platforms:
+- W3 confirmed the native origin on Linux;
+- the 15 controls were killed, with all 18 intended-witness observations GENUINE;
+- Windows coverage is 100%;
+- Linux shows the unchanged base-equal limitations.
+
+The details are in episode record §8. The next step is the targeted I002 closure review.

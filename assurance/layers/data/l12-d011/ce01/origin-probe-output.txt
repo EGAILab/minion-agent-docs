@@ -1,0 +1,13 @@
+argv: builtins.ValueError is ValueError=True msg='embedded null character'
+   innermost: subprocess.py:_execute_child:1554 is_stdlib_subprocess=True
+   seam frame present: True
+cwd: builtins.ValueError is ValueError=True msg='embedded null character'
+   innermost: subprocess.py:_execute_child:1554 is_stdlib_subprocess=True
+   seam frame present: True
+env-value: builtins.ValueError is ValueError=True msg='embedded null character'
+   innermost: subprocess.py:_execute_child:1554 is_stdlib_subprocess=True
+   seam frame present: True
+env-name: builtins.ValueError is ValueError=True msg='embedded null character'
+   innermost: subprocess.py:_execute_child:1554 is_stdlib_subprocess=True
+   seam frame present: True
+3.13.5 win32
