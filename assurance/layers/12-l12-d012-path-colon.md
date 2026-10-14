@@ -1,6 +1,6 @@
 # L12-D012 — path resolution of colon-bearing components and the malformed `file:` literal fallback
 
-Status: **SCOPING** (`minion-agent#229`). Python: REVALIDATE_REQUIRED on Windows (F002). Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
+Status: **CONTRACT_DRAFT** (`minion-agent#229`; shared cases §9, feasibility §10; scoping approved). Python: REVALIDATE_REQUIRED on Windows (F002). Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
 Provenance: `#224` L12D011-RUST-F001 (issuecomment-6164614623); triage issuecomment-6164695679; scoping 1 `#229` issuecomment-6164885136.
 Requirements: `EXEC-002` (`ctx.fs` path resolution, §3.2), `EXEC-005` (the spawn cwd, which uses the same resolver). `TOOL-026` is a neighbor: it reuses the Layer-12 resolver and is not reopened (§5).
 
@@ -200,3 +200,93 @@ The revision-1 text of §2, kept for history:
 
 
 #224's Rust handback waits on this work package's merge (`#224` `blocked_by` `#229`).
+
+**Scoping review 3** (Codex, `#229` issuecomment-6166718345) was **targeted APPROVED** at `6422f558`: C001 is closed at scoping/proposal level. The missing-precondition and fall-through runtime controls remain required at the canonical-runner stage.
+
+## 8. Pre-fix Rust characterization (Codex) and Claude's independent inspection
+
+The Rust owner's pre-fix characterization is docs #305 @ `e8a201ec` (`12-l12-d012-rust-scoping.md`). It covers all 23 inputs and the 32 host-state classes, through the real `absolute_path`, logical, native scalar and draft lossless seams, on both platforms, with no correction.
+- **Windows:** every seam gives 9/23 on the baseline and 10/32 on the host-state classes.
+- **Linux:** 13/23, except native scalar at 23/23.
+
+Claude recomputed every comparison from the archived arrays against **Claude's own** Pi observations (§§2, 3.2): **0 disagreements**, with the integrity ledger at 17/17 (`#229` issuecomment-6167853233). On every host-state row, every Rust seam returns the drive-relative input unresolved. Its 10/32 matches are exactly the classes where Node also returns `D:leaf`.
+
+## 9. Shared cases (contract draft)
+
+**The document:** `conformance/agent/path-resolution/path-resolution.json`, with schema `conformance/schema/path-resolution-scenario.schema.json`. It has its own directory, because the L12-D001 `fs-path-domain/` schema test validates every file there. It holds 80 cases:
+
+| Set | Cases | Observable |
+|---|---|---|
+| `win32/baseline/01-23` | the §2 inputs, provider cwd `C:\x` | in-process `absolute_path` under **verified preconditions**: no inherited `=A:`/`=X:` entry, and a process cwd not on `A:`/`X:`/`C:` |
+| `win32/host/cwd-drive/01-16` | the §3.2 values on the child cwd's own drive | a **child process** with a crafted environment block (exactly that `=D:` entry, no other `=`-entry) and a contained sandbox cwd; precondition: the child cwd is not on `C:` |
+| `win32/host/a-drive/01-16` | the §3.2 values on `A:` | as above; precondition: the child cwd is not on `A:`/`C:` |
+| `linux/baseline/01-25` | the §2 inputs plus `e:leaf` and `a:leaf`, provider cwd `/x` | in-process; no host state (NOT_APPLICABLE) |
+
+**Templates.** A cwd-dependent value is a template of parts: literal UTF-16 text, `cwd_drive` (upper or lower case), or `cwd_tail` (the child cwd after its device). The runner fills them from the cwd it set for the child. The generator **proves** each template: every host case runs from two different sandbox cwds, and the template derived from the first must reproduce the second exactly.
+
+**Generation:** `data/l12-d012/gen/` (`run-gen.mjs`, `gen_path_resolution.mjs`, `merge_path_resolution.mjs`, `io.mjs`), run in a host window granted by Codex:
+- **Pi.** Pinned Pi `resolvePath`, sliced unmodified, on native Node v22.15.1: Windows natively, and Linux in one read-only `node:22.15.1-bookworm-slim` container with read-only binds and private `/tmp` only.
+- **Writes.** The generator writes nothing, only stdout. Every file is written by the launcher through the fs-guard (`makeRun`, `writeOutput`), and nothing is deleted.
+- **Missing-precondition controls.** The generator launched with an inherited `=A:` or `=X:` entry **refuses** with exit 3 and writes nothing. Both refused (`precondition-controls.json`).
+
+**Agreement with the reviewed characterization:**
+- win32 baseline equals §2 at 23/23, and linux baseline equals the native Linux column at 23/23; the two extra POSIX spellings give `/x/e:leaf` and `/x/a:leaf`;
+- the a-drive host cases equal §3.2 at 16/16;
+- the cwd-drive templates, filled with the scoping probe's cwd, equal §3.2 at 16/16.
+
+The schema tests in `tests/conformance/test_schema_validation.py` (15 tests: well-formedness, validation, 12 malformed variants, corpus shape) pass.
+
+**Required of every binding's runner** (the canonical-runner stage, to be independently reviewed):
+1. **Verify the preconditions at entry** through the binding's own lookup (Python: `GetEnvironmentVariableW`; Rust: `std::env::var_os`), and the process cwd's drive. **Refuse** otherwise; never rewrite an expectation.
+2. **Run host cases in a child process** whose environment block is built from scratch: the parent's ordinary variables, minus every `=`-prefixed entry, plus exactly the case's entry. Its cwd is a contained sandbox directory. Fill the templates from that cwd.
+3. **Permanent controls:**
+   - a missing-precondition refusal;
+   - the wrong-drive-entry/process-cwd pair (`cwd-drive/08` against `cwd-drive/01`) killing a fall-through implementation;
+   - the `/`-third row (`/09`) killing an implementation that treats any mismatch as the root;
+   - the absent/empty distinction (`/01`, `/02`).
+4. **Never** pass any case path to a filesystem operation or use it as a cwd.
+
+## 10. Cross-language feasibility matrix (kit template, WORKFLOW §4.1.1)
+
+**1. Runtime value domain**
+
+| Observable value | Pi | Python | Rust | Canonical | Lossless? | Evidence |
+|---|---|---|---|---|---|---|
+| input path, provider cwd | JS string | `str` | `String` / `JsString` | `utf16` | YES: the corpus is ASCII only; no lone surrogates in this WP (the Unicode domain is L12-D001's, unchanged) | AUDITED |
+| resolved absolute path (`absolute_path` result) | JS string | `str` | the provider's existing lossless logical result | `utf16` / template | YES | AUDITED |
+| inherited `=D:` entry | `process.env['=D:']` (hidden, not enumerable, not assignable in-process) | `GetEnvironmentVariableW` (not `os.environ`): §3, `py_drive_env.mjs` | `std::env::var_os`: #305 matched Node's values exactly | template `entry` | YES | AUDITED |
+| process cwd | `process.cwd()` | `os.getcwd()` | `std::env::current_dir` | `cwd_drive` / `cwd_tail` parts | YES | AUDITED |
+| non-absolute result (`D:leaf`, `D:rel\leaf`) | returned as is | `str` | string | `utf16` / template | YES; bindings must not "complete" it | AUDITED |
+
+**2. Lower-layer capability**
+
+| Operation | Layer | Seam | Exact Pi semantics today? | Python sufficient? | Rust sufficient? | Additive? | Reopen? |
+|---|---|---|---|---|---|---|---|
+| lexical resolution (§3.2) | L12 EXEC-002 / EXEC-005 | `ctx.fs.absolute_path`; spawn cwd resolver | NO: F002 (Python, win32 other-drive), F001 (Rust, all its seams) | yes (implementation fix) | yes (implementation fix) | no new seam | **none**: implementation defects against the unchanged contract (§1) |
+| reading the inherited per-drive entry | OS environment | none today | Python reads `os.environ` only; Rust does not read it | `GetEnvironmentVariableW` via `ctypes` | `var_os` | binding-internal | none |
+
+**3. Hazard checklist**
+
+| Hazard | State | Reason / evidence |
+|---|---|---|
+| platform-specific path handling (separators, drive letters, case) | **AUDITED** | §§2, 3, 3.2; the subject of this WP |
+| external runtime versions | AUDITED | Node v22.15.1 native on both platforms; Pi `b7bb00b9`; images named in §9 |
+| `String.length` / UTF-16 units | AUDITED | ASCII corpus; `utf16` canonical form |
+| Unicode / ICU | NOT_APPLICABLE | no case mapping or normalization: the device comparison is ASCII `toLowerCase` |
+| `JSON.parse` / `JSON.stringify`, `Number`, `Math`, negative zero, non-finite values | NOT_APPLICABLE | no numeric or JSON values |
+| `RegExp` | NOT_APPLICABLE | none in the path |
+| Array / Object ordering | NOT_APPLICABLE | no collections observed |
+| Promises, `AbortSignal`, timers | NOT_APPLICABLE | synchronous lexical resolution |
+| Node/libuv error mapping | NOT_APPLICABLE | resolution never errors (malformed URLs fall back literally) |
+| filesystem access semantics | NOT_APPLICABLE | lexical only; case paths are never accessed (§9 runner rule 4) |
+
+**4. Concurrency / order:** NOT_APPLICABLE. Resolution is synchronous; host cases are independent child processes.
+
+**5. Neighborhood:** colon components and the malformed-URL fallback (§2, 23 rows); the inherited-entry partition (§3.2, 32 classes by selection source × device test × third character × subsequent parse); POSIX drive-looking spellings (2). The F-family "platform path handling" is covered; no new family applies.
+
+**6. Verdict:**
+
+```text
+FEASIBILITY   READY   every row AUDITED / NOT_APPLICABLE; F001 and F002 are implementation findings with a
+                      binding-local fix and no lower-layer reopen; no open contract finding
+```
