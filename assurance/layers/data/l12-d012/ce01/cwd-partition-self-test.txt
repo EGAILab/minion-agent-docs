@@ -1,0 +1,17 @@
+PASS a foreign MINION_PROJECT_ROOT refuses
+PASS MINION_PROJECT_ROOT naming the fixed root is accepted
+PASS a reparse point at E:\AI\Projects\OpenMinds\Minions\Minion-Agent refuses
+PASS an inspection failure at E:\AI\Projects\OpenMinds\Minions\Minion-Agent refuses
+PASS a reparse point at E:\AI\Projects\OpenMinds\Minions refuses
+PASS an inspection failure at E:\AI\Projects\OpenMinds\Minions refuses
+PASS a reparse point at E:\ refuses
+PASS an inspection failure at E:\ refuses
+PASS a root whose real path is elsewhere refuses
+PASS a contained positive reaches mkdir (intercepted)
+PASS '..' refuses before mkdir
+PASS a drive-relative name refuses
+PASS a separator refuses
+PASS a reparse parent refuses before mkdir
+PASS a created directory whose real path escapes refuses
+PASS an existing target refuses
+SELF-TEST PASSED
