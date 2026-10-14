@@ -39,7 +39,7 @@ Codex's round-5 characterization (issuecomment-6162425940, "Compact characteriza
 
 ## 2. Characterization probe: how this pytest renders failures
 
-The probe is `data/l12-d011/ce01/test_forms.py`, run with the driver's flags: `-q -rA -p no:cacheprovider --no-header`, `COLUMNS=4000`. The environment was pytest 9.1.1 and Python 3.13.5 on Windows. The output is `data/l12-d011/ce01/forms-output.txt`, sha256 `00793168…cafe8`; the probe file is `5587b0e4…829c`.
+The probe is `data/l12-d011/ce01/test_forms.py`, run with the driver's flags: `-q -rA -p no:cacheprovider --no-header`, `COLUMNS=4000`. The environment was pytest 9.1.1 and Python 3.13.5 on Windows. The output is `data/l12-d011/ce01/forms-output.txt`. The probe file's committed blob has sha256 `5587b0e4…829c`. The output's committed blob, LF-normalized by git, has sha256 `7f84a5a6…9786`; the CRLF original was `00793168…cafe8`.
 
 | Raised in the test body | `-rA` reason (first line) |
 |---|---|
