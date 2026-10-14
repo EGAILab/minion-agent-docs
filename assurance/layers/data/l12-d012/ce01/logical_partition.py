@@ -69,9 +69,36 @@ def units(text: str | None) -> list[int] | None:
     return None if text is None else list(memoryview(text.encode("utf-16-le", "surrogatepass")).cast("H"))
 
 
+PI_COMMIT = "b7bb00b936dbe21b8e160b3e89efdec361846699"
+PI_FILE = "packages/agent/src/harness/env/nodejs.ts"
+
+
+def text(units_: list[int]) -> str:
+    return b"".join(u.to_bytes(2, "little") for u in units_).decode("utf-16-le", "surrogatepass")
+
+
+# The record's source predictions (section 8): checked explicitly after the run; any disagreement stops.
+PREDICTED = {
+    "scalar-positive": "e:\\deep\\leaf",
+    "logical-lone-high": "e:\\deep\\leaf\ud800",
+    "logical-lone-low": "e:\\deep\\leaf\ude00",
+    "logical-pair": "e:\\deep\\leaf\U0001f600",
+    "native-and-logical-nonscalar": "e:\\de\ufffd\ufffd\ufffdp\\leaf\ud800",
+}
+
+
 def main(node: str, pi: str, src: str) -> None:
     if sys.platform != "win32":
         raise SystemExit("win32 only")
+    version = subprocess.run([node, "--version"], capture_output=True, text=True, check=True).stdout.strip()
+    if version != "v22.15.1":
+        raise SystemExit(f"node is {version}, not v22.15.1")
+    pinned = subprocess.run(["git", "-C", pi, "rev-parse", f"{PI_COMMIT}:{PI_FILE}"],
+                            capture_output=True, text=True, check=True).stdout.strip()
+    actual = subprocess.run(["git", "-C", pi, "hash-object", PI_FILE],
+                            capture_output=True, text=True, check=True).stdout.strip()
+    if pinned != actual:
+        raise SystemExit(f"{PI_FILE} is not the pinned blob ({actual} != {pinned})")
     base = {k: v for k, v in os.environ.items() if not k.startswith("=")}
     base["PYTHONDONTWRITEBYTECODE"] = "1"
     rows = []
@@ -85,8 +112,11 @@ def main(node: str, pi: str, src: str) -> None:
         if binding["entry"] != units(entry):
             raise SystemExit(f"{label}: the binding child's =E: entry is not the crafted one")
         rows.append({"label": label, "entry": units(entry), "node_entry": oracle["entry"], "logical": units(logical),
-                     "node": oracle["out"], "binding": binding["out"], "match": oracle["out"] == binding["out"]})
-    print(json.dumps({"platform": sys.platform, "rows": rows}, indent=1))
+                     "node": oracle["out"], "binding": binding["out"], "match": oracle["out"] == binding["out"],
+                     "node_equals_prediction": text(oracle["out"]) == PREDICTED[label]})
+    print(json.dumps({"platform": sys.platform, "node": version, "pi_blob_verified": True,
+                      "all_predictions_confirmed": all(r["node_equals_prediction"] for r in rows), "rows": rows},
+                     indent=1))
 
 
 if __name__ == "__main__":

@@ -226,3 +226,66 @@ NORMATIVE DELTAS            none (sections 3.2, 14.1 and 15 as written; expectat
                             section 10 feasibility row updated; Rust F001 inherits the complete boundary
 NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
 ```
+
+## 9. Checkpoint agreement and the implementation pass
+
+**Agreement.** Checkpoint review 3 (Codex, `#229` issuecomment-6178665172, round 10) gave **APPROVED / AGREED FOR IMPLEMENTATION** of exactly §8 (revision 2) at docs `32bf3b4a` and code `8119d0ab`. It is not the closure of PY-I002.
+
+**Step 1: oracle confirmation** (Codex's grant, scheduled window). The generator `data/l12-d012/ce01/logical_partition.py` (sha256 of output `23d5607c…`) produced `logical-partition-win32.json`:
+- Node `v22.15.1`, and `nodejs.ts` equal to the pinned blob at Pi `b7bb00b9` (`git rev-parse` vs `hash-object`).
+- **All five predictions confirmed** (`all_predictions_confirmed: true`): each Node result equals the §8 prediction unit for unit. That includes `logical-lone-high` → `…leaf` + `0xD800` and `logical-lone-low` → `…leaf` + `0xDE00` (both raw), and `native-and-logical-nonscalar` → `e:\de` + `0xFFFD ×3` + `p\leaf` + `0xD800` (native part decoded, logical tail raw).
+- The binding child's own read of `=E:` equaled the crafted entry on every row.
+- **Disclosure:** the `binding` column was produced from the code worktree with the fix already edited in but not yet committed. That differs from `b7d046fe`'s `filesystem.py` only by the later `ruff format` line wrapping. It is therefore **not** `8119d0ab` evidence. The oracle confirmation is the **Node** column against the predictions, which does not depend on the binding.
+- **No disagreement, so no stop.**
+
+**The fixture.** `data/l12-d012/ce01/build_fixture.mjs` freezes the three Node-observed partitions as the binding fixture `tests/execution/data/node_selected_value.json`: 15 entry rows, 5 cwd names (name and Node view) and 5 logical rows. Rebuilding it from the committed outputs is byte-identical (sha256 `634ceeb8…`). It reads only committed JSON; it runs no process and does no resolution.
+
+**The fix** (code PR #232 @ `b7d046fe406eb2db3b05a6112ed05bcbd289870e`, `filesystem.py`):
+- `_select_drive_base` compares the first **two UTF-16 code units** and tests the **third code unit** for `\`.
+- `node_native_string_view` is §15's view: the generalized UTF-8 of the UTF-16 units, then a decode with replacement.
+- The other-drive hook passes `_native_inherited_view` (view of `_libuv_win32.inherited_drive_cwd`) and `_native_process_cwd_view` (view of `os.getcwd`) as the two lazy operands. `cwd` and `normalized` are passed raw.
+- No contract or expectation change.
+
+**Witnesses** (`tests/execution/test_path_resolution_selected_value.py`, 70 tests on Windows; every expectation comes from the Node fixture):
+
+| ID | What it checks | Where |
+|---|---|---|
+| W1 | 15 entry rows, real-binding children with exactly the crafted `=A:` | win32 |
+| W2 | the pure port with Node's entry view (15 rows) and the logical rows (5) | all platforms |
+| W3 | the view against §15's authority, and against WP-13.3's certified `node_environment_view` | all platforms |
+| W4 | the 5 cwd names × entry absent/empty, in contained `tmp_path` children (refuses A:/C:), plus the matching-entry and other-drive neighbors | win32 |
+| W5 | the 5 logical rows through the real hook (in-process, scripted raw entry) and through real-binding children (logical input as UTF-16 units rebuilt in the child) | win32 |
+
+**Negative controls (§11.8.7.1).** Each control first asserts a green baseline and then the **exact** set of failing rows. The kill is the observed set of failing row labels, never a rendering, and a setup error would surface as an exception, not as a row set.
+
+| Control | Method (substitution at the seam) | Expected / observed failing rows | Candidate (`b7d046fe`) |
+|---|---|---|---|
+| K1 | `_select_drive_base` counting Python characters (the `8119d0ab` indexing) | the 3 astral rows / the same 3 | pass |
+| K2 | `node_native_string_view` → identity (raw entry; the `8119d0ab` entry handling) | the 3 lone-surrogate entry rows / the same 3 | pass |
+| K3 | `node_native_string_view` → `scalar_value_string` (one U+FFFD per surrogate) | the 3 lone-surrogate entry rows / the same 3 | pass |
+| K5 | `_native_process_cwd_view` → raw `os.getcwd` (the `8119d0ab` cwd handling) | `lone-high`, `lone-low`, `lone-high-then-ascii` / the same 3 | pass |
+| K6 | the correct views, **plus** `node_native_string_view(normalized)` inside the hook only | the 3 raw-tail rows; `scalar-positive` and `logical-pair` stay green / the same 3 | pass |
+| K6b | §14.1's `native_path` applied to the logical argument before `absolute_path` | the `logical-lone-high` tail and L12-D001's raw `a\uD800` name / both changed | pass |
+
+K1 + K2 + K5 together reconstruct the `8119d0ab` behavior component by component. K4, the ASCII rows and the PY-I001 entry-point refusal controls, stays green, and the 80 canonical cases are unchanged.
+
+**Fresh gates** at `b7d046fe` (window granted by Codex; evidence in `data/l12-d012/python-implementation/remediation-2/`):
+
+| Gate | Windows (pinned ICU 78.3) | Linux `python:3.13` (uid 1000, private tmpfs `/tmp`, E: binds inside the root) |
+|---|---|---|
+| focused (6 files) | 1081 passed, 4 skipped | — |
+| pytest | 6779 passed, 43 skipped, 19 xfailed (+70 vs `8119d0ab`) | 6531 passed, 249 skipped, 19 xfailed (+29, the platform-neutral tests); exit 1 from coverage only |
+| coverage | **100.00%** | 96.72%. Missed lines vs the base reference: `_libuv_win32` +15 and `filesystem.py` +6, all Windows-only (the base delta plus the win32 bodies of the two native-view helpers) |
+| ruff check | 0 | 0 |
+| ruff format (changed files) | 0 (whole tree: the 7 pre-existing files, unchanged) | — |
+| mypy | 0 (118 files) | the base's 15 errors, an identical set |
+
+Preflight was clear before each platform: 36.39 GB free (Codex), then 35.85 GB, with no active builds.
+
+```text
+CONVERGENCE IMPLEMENTATION  CE-L12D012-01 revision 2 implemented
+CANDIDATE                   code #232 b7d046fe406eb2db3b05a6112ed05bcbd289870e; docs #306 (this commit)
+FINDING                     L12D012-PY-I002 -- requested: PROVISIONALLY CLOSED @ b7d046fe (WORKFLOW 11.8.7)
+REGRESSIONS                 PY-I001 controls, the C001 select-then-check closure, the 80 canonical cases
+NEXT_OWNER                  Codex (targeted convergence closure; then the one final complete review)
+```
