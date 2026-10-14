@@ -1,0 +1,5 @@
+source: hat drive, or the process cwd if // the drive cwd is not available. We're sure the device is not // a UNC path at this points, because UNC paths are always absolute. path = process.env[`=${resolvedDevice}`] || process.cwd(); // Verify that a cwd was found and that it actually points // to our drive. If not, default to the drive's root. if (path === undefined || (StringPrototypeToLowerCase(StringPrototypeSlice(path, 0, 2)) !== StringPrototypeToLowerCase(resolvedDevice) && StringPrototypeCharCodeAt(path, 2) === CHAR_BACKW
+inherited =A:/=a:/=X:/=x: present: [ false, false, false, false ]
+baseline ["a:\\:\\b","x:\\y:z\\w"]
+set =A:: env lookup =a: -> undefined ["a:\\:\\b","x:\\y:z\\w"]
+set =a:: env lookup =a: -> undefined ["a:\\:\\b","x:\\y:z\\w"]

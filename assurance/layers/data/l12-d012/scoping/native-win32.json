@@ -1,0 +1,146 @@
+{
+ "node": "v22.15.1",
+ "platform": "win32",
+ "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+ "pi": "b7bb00b9",
+ "rows": [
+  {
+   "input": "file:///C:/a%2Fb",
+   "win32": "C:\\x\\file:\\C:\\a%2Fb",
+   "posix": "/x/file:/C:/a%2Fb",
+   "native": "C:\\x\\file:\\C:\\a%2Fb"
+  },
+  {
+   "input": "file:/C:/a%2Fb",
+   "win32": "C:\\x\\file:\\C:\\a%2Fb",
+   "posix": "/x/file:/C:/a%2Fb",
+   "native": "C:\\x\\file:\\C:\\a%2Fb"
+  },
+  {
+   "input": "file:a%2Fb",
+   "win32": "C:\\x\\file:a%2Fb",
+   "posix": "/x/file:a%2Fb",
+   "native": "C:\\x\\file:a%2Fb"
+  },
+  {
+   "input": "file:///tmp/a%2Fb",
+   "win32": "C:\\x\\file:\\tmp\\a%2Fb",
+   "posix": "/x/file:/tmp/a%2Fb",
+   "native": "C:\\x\\file:\\tmp\\a%2Fb"
+  },
+  {
+   "input": "file:x/y%2Fz",
+   "win32": "C:\\x\\file:x\\y%2Fz",
+   "posix": "/x/file:x/y%2Fz",
+   "native": "C:\\x\\file:x\\y%2Fz"
+  },
+  {
+   "input": "x/c:/d",
+   "win32": "C:\\x\\x\\c:\\d",
+   "posix": "/x/x/c:/d",
+   "native": "C:\\x\\x\\c:\\d"
+  },
+  {
+   "input": "x\\c:\\d",
+   "win32": "C:\\x\\x\\c:\\d",
+   "posix": "/x/x\\c:\\d",
+   "native": "C:\\x\\x\\c:\\d"
+  },
+  {
+   "input": "c:d",
+   "win32": "c:\\x\\d",
+   "posix": "/x/c:d",
+   "native": "c:\\x\\d"
+  },
+  {
+   "input": "x/c:",
+   "win32": "C:\\x\\x\\c:",
+   "posix": "/x/x/c:",
+   "native": "C:\\x\\x\\c:"
+  },
+  {
+   "input": "x/c:/",
+   "win32": "C:\\x\\x\\c:",
+   "posix": "/x/x/c:",
+   "native": "C:\\x\\x\\c:"
+  },
+  {
+   "input": "x/c:d/e",
+   "win32": "C:\\x\\x\\c:d\\e",
+   "posix": "/x/x/c:d/e",
+   "native": "C:\\x\\x\\c:d\\e"
+  },
+  {
+   "input": "a::/b",
+   "win32": "a:\\:\\b",
+   "posix": "/x/a::/b",
+   "native": "a:\\:\\b"
+  },
+  {
+   "input": "x/:/y",
+   "win32": "C:\\x\\x\\:\\y",
+   "posix": "/x/x/:/y",
+   "native": "C:\\x\\x\\:\\y"
+  },
+  {
+   "input": ":",
+   "win32": "C:\\x\\:",
+   "posix": "/x/:",
+   "native": "C:\\x\\:"
+  },
+  {
+   "input": "x:y:z/w",
+   "win32": "x:\\y:z\\w",
+   "posix": "/x/x:y:z/w",
+   "native": "x:\\y:z\\w"
+  },
+  {
+   "input": "x/C:/y",
+   "win32": "C:\\x\\x\\C:\\y",
+   "posix": "/x/x/C:/y",
+   "native": "C:\\x\\x\\C:\\y"
+  },
+  {
+   "input": "x/C:\\y",
+   "win32": "C:\\x\\x\\C:\\y",
+   "posix": "/x/x/C:\\y",
+   "native": "C:\\x\\x\\C:\\y"
+  },
+  {
+   "input": "x//C:/y",
+   "win32": "C:\\x\\x\\C:\\y",
+   "posix": "/x/x/C:/y",
+   "native": "C:\\x\\x\\C:\\y"
+  },
+  {
+   "input": "a:/b",
+   "win32": "a:\\b",
+   "posix": "/x/a:/b",
+   "native": "a:\\b"
+  },
+  {
+   "input": "C:\\y",
+   "win32": "C:\\y",
+   "posix": "/x/C:\\y",
+   "native": "C:\\y"
+  },
+  {
+   "input": "C:y",
+   "win32": "C:\\x\\y",
+   "posix": "/x/C:y",
+   "native": "C:\\x\\y"
+  },
+  {
+   "input": "file:///C:/a/b",
+   "win32": "C:\\a\\b",
+   "posix": "/C:/a/b",
+   "native": "C:\\a\\b"
+  },
+  {
+   "input": "file:///tmp/a",
+   "win32": "C:\\x\\file:\\tmp\\a",
+   "posix": "/tmp/a",
+   "native": "C:\\x\\file:\\tmp\\a"
+  }
+ ]
+}

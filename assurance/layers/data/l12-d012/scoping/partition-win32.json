@@ -1,0 +1,231 @@
+{
+ "node": "v22.15.1",
+ "pi": "b7bb00b9",
+ "branch_source": "path = process.env[`=${resolvedDevice}`] || process.cwd();\r\n\r\n        // Verify that a cwd was found and that it actually points\r\n        // to our drive. If not, default to the drive's root.\r\n        if (path === undefined ||\r\n            (StringPrototypeToLowerCase(StringPrototypeSlice(path, 0, 2)) !==\r\n            StringPrototypeToLowerCase(resolvedDevice) &&\r\n            StringPrototypeCharCodeAt(path, 2) === CHAR_BACKWARD_SLASH)) {\r\n          path = `${resolvedDevice}\\\\`;\r\n        }\r\n      }\r\n\r\n      const len",
+ "rows": [
+  {
+   "drive": "E",
+   "value": null,
+   "entry": null,
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "",
+   "entry": "",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "E:\\deep",
+   "entry": "E:\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\deep\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "e:\\deep",
+   "entry": "e:\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\deep\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "E:/deep",
+   "entry": "E:/deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\deep\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "E:rel",
+   "entry": "E:rel",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:rel\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "E:",
+   "entry": "E:",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:leaf"
+  },
+  {
+   "drive": "E",
+   "value": "X:\\other",
+   "entry": "X:\\other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "X:/other",
+   "entry": "X:/other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:leaf"
+  },
+  {
+   "drive": "E",
+   "value": "X:other",
+   "entry": "X:other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:leaf"
+  },
+  {
+   "drive": "E",
+   "value": "X:",
+   "entry": "X:",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:leaf"
+  },
+  {
+   "drive": "E",
+   "value": "relative",
+   "entry": "relative",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:relative\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "\\deep",
+   "entry": "\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\deep\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "/deep",
+   "entry": "/deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:\\deep\\leaf"
+  },
+  {
+   "drive": "E",
+   "value": "\\\\srv\\share",
+   "entry": "\\\\srv\\share",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:leaf"
+  },
+  {
+   "drive": "E",
+   "value": "r",
+   "entry": "r",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "e:r\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": null,
+   "entry": null,
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "",
+   "entry": "",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "A:\\deep",
+   "entry": "A:\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\deep\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "a:\\deep",
+   "entry": "a:\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\deep\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "A:/deep",
+   "entry": "A:/deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\deep\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "A:rel",
+   "entry": "A:rel",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:rel\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "A:",
+   "entry": "A:",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:leaf"
+  },
+  {
+   "drive": "A",
+   "value": "X:\\other",
+   "entry": "X:\\other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "X:/other",
+   "entry": "X:/other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:leaf"
+  },
+  {
+   "drive": "A",
+   "value": "X:other",
+   "entry": "X:other",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:leaf"
+  },
+  {
+   "drive": "A",
+   "value": "X:",
+   "entry": "X:",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:leaf"
+  },
+  {
+   "drive": "A",
+   "value": "relative",
+   "entry": "relative",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:relative\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "\\deep",
+   "entry": "\\deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\deep\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "/deep",
+   "entry": "/deep",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:\\deep\\leaf"
+  },
+  {
+   "drive": "A",
+   "value": "\\\\srv\\share",
+   "entry": "\\\\srv\\share",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:leaf"
+  },
+  {
+   "drive": "A",
+   "value": "r",
+   "entry": "r",
+   "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+   "out": "a:r\\leaf"
+  }
+ ]
+}
