@@ -1,0 +1,271 @@
+{
+ "os": "linux",
+ "fixture": {
+  "verdict": "PASS",
+  "rows": [
+   "PASS W3 test_genuine_assertion: GENUINE (expected GENUINE) FIXTURE MARK: genuine",
+   "PASS W3 test_marker_not_at_start: MISMATCH (expected MISMATCH) reason 'wrapper: FIXTURE MARK'",
+   "PASS W3 test_wrong_statement: FORBIDDEN (expected FORBIDDEN) raised at test_wrong_statement:35, not the declared statement",
+   "PASS W3 test_fake_assertion_class: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.AssertionError)",
+   "PASS W3 test_assert_named_class: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.assert ['A', 'Z'])",
+   "PASS W3 test_assertion_subclass: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed l12_d011_evidence_fixture.test_assertion_subclass.<locals>.Sub)",
+   "PASS W3 test_pytest_fail: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.Failed)",
+   "PASS W3 test_marker_name_error: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.NameError)",
+   "PASS W3 test_rewritten_elided: GENUINE (expected GENUINE) assert \"The property... Received 'd'\" == \"The property... Received 'e'\"",
+   "PASS W3 test_helper_value_error: FORBIDDEN (expected FORBIDDEN) raised at _helper, not the native call",
+   "PASS W3 test_genuine_native_through_seam: GENUINE (expected GENUINE) embedded null byte at Popen._execute_child",
+   "PASS W3 test_native_without_seam: FORBIDDEN (expected FORBIDDEN) the seam LocalSubprocess.spawn is not on the stack"
+  ]
+ },
+ "baseline": {
+  "exit": 0,
+  "passed": 85,
+  "failed": [],
+  "errors": [],
+  "evidence": "present",
+  "summary": "PASSED tests/conformance/test_spawn_nul_conformance.py::test_every_case_runs_on_both_platforms",
+  "verdict": "GREEN"
+ },
+ "results": [
+  {
+   "name": "check-after-native-spawn",
+   "expected": "the native spawn is reached (the spy fires; Python's ValueError leaks)",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv0-options0]": {
+     "classification": "GENUINE",
+     "detail": "native spawn reached",
+     "type": "builtins.AssertionError"
+    },
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[name/file]": {
+     "classification": "GENUINE",
+     "detail": "embedded null byte at Popen._execute_child",
+     "type": "builtins.ValueError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/over-max-string-length] - ValueError: embedded null byte"
+  },
+  {
+   "name": "baseline-first-posix-order",
+   "expected": "POSIX order follows baseline presentation, not overlay-first",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": {
+     "classification": "GENUINE",
+     "detail": "assert ['A', 'Z', 'K...0', '01', ...] == ['2', '10', '...4967295', ...]",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-baseline-only-utf16-vs-utf8] - assert \"The property...llwidth\\\\x00'\" == \"The property...'astral\\\\x00'\""
+  },
+  {
+   "name": "sort-all-posix-order",
+   "expected": "POSIX order sorts every name",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": {
+     "classification": "GENUINE",
+     "detail": "assert ['01', '10', ...'A', 'K', ...] == ['2', '10', '...4967295', ...]",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-overlay-utf16-vs-utf8] - assert \"The property...'astral\\\\x00'\" == \"The property...llwidth\\\\x00'\""
+  },
+  {
+   "name": "naive-integer-index",
+   "expected": "01 is taken for an integer index",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms": {
+     "classification": "GENUINE",
+     "detail": "assert ['01', '2', '...4967295', ...] == ['2', '10', '...4967295', ...]",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/order-non-index-controls] - assert \"The property...ero-one\\\\x00'\" == \"The property...ed 'max\\\\x00'\""
+  },
+  {
+   "name": "unbounded-index-conversion",
+   "expected": "a long numeric name is converted and raises (L12D011-I001)",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_index_domain_neighborhood_and_long_names": {
+     "classification": "GENUINE",
+     "detail": "LONG NAME CONVERTED: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_str_digits() to increase the limi",
+     "type": "builtins.AssertionError"
+    },
+    "tests/execution/test_spawn_nul.py::test_long_numeric_env_name_is_an_ordinary_name_at_the_provider": {
+     "classification": "GENUINE",
+     "detail": "LONG NAME CONVERTED: Exceeds the limit (4300 digits) for integer string conversion: value has 4301 digits; use sys.set_int_max_str_digits() to increase the limi",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_long_numeric_env_name_is_an_ordinary_name_at_the_provider - AssertionError: LONG NAME CONVERTED: Exceeds the limit (4300 digits) for integer string conversion: value has 4301 digits; use sys.set_int_max_str_digits() to increase the limit"
+  },
+  {
+   "name": "superseded-baseline-value",
+   "expected": "the superseded baseline value is checked instead of the effective one",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control]": {
+     "classification": "GENUINE",
+     "detail": "a control must reach the OS, not the NUL check",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control] - AssertionError: a control must reach the OS, not the NUL check"
+  },
+  {
+   "name": "raw-cwd-not-resolved",
+   "expected": "the raw spelling is checked: %00 is missed, a relative cwd is reported unresolved",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00]": {
+     "classification": "GENUINE",
+     "detail": "embedded null byte at Popen._execute_child",
+     "type": "builtins.ValueError"
+    },
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative]": {
+     "classification": "GENUINE",
+     "detail": "assert \"The property...ived 'd\\\\x00'\" == \"The property...d '/x/d\\\\x00'\"",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env] - assert \"The property...ived 'd\\\\x00'\" == \"The property...d '/x/d\\\\x00'\""
+  },
+  {
+   "name": "double-url-decode",
+   "expected": "%2500 is decoded twice into a NUL",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-2500-control]": {
+     "classification": "GENUINE",
+     "detail": "a control must reach the OS, not the NUL check",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/malformed-file-url-literal-fallback] - assert \"The property...le:/a/b\\\\x00'\" == \"The property...:/a%2Fb\\\\x00'\""
+  },
+  {
+   "name": "default-cwd-unchecked",
+   "expected": "a NUL in the provider default cwd reaches the native spawn",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/provider-default-nul]": {
+     "classification": "GENUINE",
+     "detail": "embedded null byte at Popen._execute_child",
+     "type": "builtins.ValueError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/cwd-before-env] - assert \"The property...ived 'v\\\\x00'\" == \"The property...d '/x/d\\\\x00'\""
+  },
+  {
+   "name": "cwd-before-args",
+   "expected": "the cwd is reported before an invalid argument",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd]": {
+     "classification": "GENUINE",
+     "detail": "assert \"The property...d '/x/d\\\\x00'\" == \"The argument...ived 'a\\\\x00'\"",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd] - assert \"The property...d '/x/d\\\\x00'\" == \"The argument...ived 'a\\\\x00'\""
+  },
+  {
+   "name": "cut-at-or-above-128",
+   "expected": "an inspected value of exactly 128 units is cut",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128]": {
+     "classification": "GENUINE",
+     "detail": "assert \"The argument...aaaa\\\\x00'...\" == \"The argument...aaaaaaa\\\\x00'\"",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128] - assert \"The argument...aaaa\\\\x00'...\" == \"The argument...aaaaaaa\\\\x00'\""
+  },
+  {
+   "name": "quote-selection",
+   "expected": "a value with ' is single-quoted and escaped",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-quote]": {
+     "classification": "GENUINE",
+     "detail": "assert \"The argument...'it\\\\'s\\\\x00'\" == 'The argument... \"it\\'s\\\\x00\"'",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/over-100-units-quote] - assert \"The argument...zzzzzzz\\\\x00'\" == 'The argument...zzzzzzz\\\\x00\"'"
+  },
+  {
+   "name": "tool-string-matching",
+   "expected": "an OS message starting with 'The ' loses its prefix",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_engine_keeps_its_prefix_for_a_non_nul_failure": {
+     "classification": "GENUINE",
+     "detail": "PREFIX LOST: The fake",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_engine_surfaces_a_seam_nul_rejection_unchanged - AssertionError: "
+  },
+  {
+   "name": "tool-checks-projected-argv",
+   "expected": "the diagnostic shows U+FFFD for a lone surrogate",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value": {
+     "classification": "GENUINE",
+     "detail": "PROJECTED DIAGNOSTIC: BuiltinToolError(\"The argument 'args[0]' must be a string without null bytes. Received '\\ufffd\\\\x00'\")",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value - AssertionError: PROJECTED DIAGNOSTIC: BuiltinToolError(\"The argument 'args[0]' must be a string without null bytes. Received '\\ufffd\\\\x00'\")"
+  },
+  {
+   "name": "bash-checks-stdin-command",
+   "expected": "a stdin-transported command is rejected as argv",
+   "verdict": "KILLED",
+   "observed": {
+    "tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv": {
+     "classification": "GENUINE",
+     "detail": "assert \"The argument...'echo a\\\\x00'\" == 'Failed to st...hell wsl-bash'",
+     "type": "builtins.AssertionError"
+    }
+   },
+   "exit": 1,
+   "errors": 0,
+   "summary": "FAILED tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv - assert \"The argument...'echo a\\\\x00'\" == 'Failed to st...hell wsl-bash'"
+  }
+ ]
+}

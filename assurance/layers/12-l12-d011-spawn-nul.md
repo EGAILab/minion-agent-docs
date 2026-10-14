@@ -1,6 +1,6 @@
 # L12-D011 — a NUL-containing spawn input fails with pinned Node's literal diagnostic
 
-Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`** (§10). The checkpoint is proposed and awaits independent review. I001 is provisionally closed, N001 is closed, and I002 is open. *(Earlier: implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
+Status: **contract APPROVED for implementation** (Codex review 3, #224 issuecomment-6145618255) and merged (code #225 → `be02f9f3`, docs #301 → `a080af46`). **Python: CONTRACT_CONVERGENCE, episode `CE-L12D011-01`** (§10). The checkpoint was agreed (revision 1) and implemented at `f27b915e`; it awaits the targeted I002 closure. I001 is provisionally closed, N001 is closed, and I002 is open. *(Earlier: implementation candidate, remediation 1, §9.)* Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. *(Earlier status: implementation candidate §8; implementation review 1 CHANGES REQUESTED; earlier still: contract draft, revision 1.)*
 Coordination: `minion-agent#224`. Provenance: `#195`. Requirements: `EXEC-013` (new); `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`.
 
 **Owner decisions** (each recorded verbatim on the issue):
@@ -392,3 +392,13 @@ Checkpoint review 1 (issuecomment-6162669604, round 6) REJECTED the proposal on 
 - C002, identity: a rendered prefix was treated as the exception class.
 
 Revision 1, in the episode record §7, credits from an evidence reporter. The reporter records exact exception identity, the innermost raising frame and the seam frame, and the revision is proposed for review.
+
+Checkpoint review 2 (issuecomment-6163015575) **APPROVED** revision 1, giving AGREED FOR IMPLEMENTATION. The implementation is at code `f27b915e`: evidence tooling only, with no `src` change.
+
+Gates on both platforms:
+- W3 confirmed the native origin on Linux;
+- the 15 controls were killed, with all 18 intended-witness observations GENUINE;
+- Windows coverage is 100%;
+- Linux shows the unchanged base-equal limitations.
+
+The details are in episode record §8. The next step is the targeted I002 closure review.

@@ -311,3 +311,56 @@ ACCEPTANCE WITNESSES        evidence reporter (identity, innermost origin, seam 
 NORMATIVE DELTAS            none (spec section 21, EXEC-013, canonical cases unchanged)
 NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
 ```
+
+## 8. Checkpoint review 2 (APPROVED) and the implementation pass
+
+**Checkpoint review 2** (Codex, #224 issuecomment-6163015575, round 7) **APPROVED** exactly revision 1 (§7, checkpoint §7.5) at docs `3766d23f` / code `705d57af`. C001 and C002 are closed at proposal level. Recorded by the reviewer: **CONVERGENCE CONTRACT AGREED FOR IMPLEMENTATION**. The approval carried four cautions:
+- resolve full source identities, not basenames;
+- bind node, phase, kind, origin, token and reason together, with no fallback to the rendered summary;
+- keep statement spans, not function-name-only matching;
+- the Linux origin must be confirmed by W3 before any Linux credit.
+
+**Implementation:** code #226 `f27b915e`, one commit on `705d57af`. It is evidence tooling only; the `src/**` diff is **0 lines**, so the runtime contract, I001's fix and EXEC-013 are untouched.
+- **`scripts/l12_d011_evidence.py`, the reporter.** Its `observe(exc)` records type identity against the builtin `AssertionError`/`ValueError` captured at import, the first line of `str(exc)`, and every traceback frame as a **fully resolved** file with its code `co_qualname` and line. A `pytest_runtest_makereport` hookwrapper records every failed report, writing `error` when an observation is impossible. `pytest_terminal_summary` emits `START`/`RECORD`/`END` lines carrying the per-run token.
+- **`scripts/l12_d011_negative_controls.py`, the driver.**
+  - The witness declarations are `Assertion(file, qualname, anchor, reason)` and `NativeNul()`.
+  - `statement_span` resolves an anchor with `ast`, scoped to the declared function by qualname, nested definitions excluded, unique.
+  - `classify` returns GENUINE / MISMATCH / FORBIDDEN using full-path `normcase(resolve())` identity. Native origins are stdlib `subprocess` `Popen._execute_child`/`Popen._posix_spawn`, with the run's own `…/minion_agent/execution/subprocess.py` `LocalSubprocess.spawn` on the stack.
+  - `credit` voids on any FORBIDDEN intended witness; accounts for every node (a FAILED node without a record is INVALID, as is a record without a FAILED line); and never reads the rendered reason.
+  - W3 runs before the baseline; a W3 failure credits nothing.
+  - The run report records each intended witness's classification, detail and observed type.
+- **`scripts/l12_d011_evidence_fixture.py` (W3):** 12 nodes. They pair a genuine assertion, the marker not at the start, a wrong statement, the fake `AssertionError` class, the `assert`-named class, a subclass, `pytest.fail`, a marker-bearing `NameError`, an elided rewritten assertion, a helper `ValueError`, a genuine native fire through the seam, and a native fire without the seam.
+- **`tests/scripts/test_l12_d011_control_driver.py` (W4):** 84 suite tests. They cover W1 (R1–R13, 41 rows, on real in-process observations, including an R3 variant with the same-text `ValueError` raised **inside the seam before the native call**), W2 (R14, 31 checks: 18 control witnesses, 12 fixture declarations and the 15-control count) and the 11 meta-control rows.
+- **The witness test bodies and nodes are unchanged.** Every anchor resolved uniquely, so no evidence-only witness edit was needed.
+
+**I002 negative-control evidence (§11.8.7.1).** Method: deterministic in-memory mutation of the driver or reporter source, so the known-bad state FAILS its named row while the candidate PASSES it. In addition, the old credit of `705d57af` is the known-bad prior state for the C001/C002 pairs: Codex's round-5/6 probes show it crediting them as KILLED.
+
+| Meta-control | Known-bad mutation | Expected / observed failure | Candidate `f27b915e` |
+|---|---|---|---|
+| D1 | the reporter decides kind by class **name** | R5 "C002 fake AssertionError class" fails / failed | PASS |
+| D2 | every `ValueError` rejected | R2 genuine native fails / failed | PASS |
+| D3 | `re.search` instead of `re.match` | R7 marker not at start fails / failed | PASS |
+| D4 | native origin check dropped | R3 C001 (inside-seam variant) fails / failed | PASS |
+| D4 | statement-span check dropped | R6 another statement fails / failed | PASS |
+| D5 | seam check dropped | R4 native without seam fails / failed | PASS |
+| D6 | a genuine witness masks a forbidden one | R8 fails / failed | PASS |
+| D7 | fallback to the rendered `-rA` reason | R9 FAILED without record fails / failed | PASS |
+| D8 | token check dropped | R9 foreign token fails / failed | PASS |
+| D9 | exit code ignored | R10 exit 2 fails / failed | PASS |
+| D10 | baseline selection skipped | R12 missing from baseline fails / failed | PASS |
+
+**Gates at `f27b915e`.** The host window was granted by Codex, Windows then Linux. Evidence is in `data/l12-d011/python-implementation/ce01/{windows,linux}`, each with `gates-summary.txt` and the Linux `*.exit` files.
+
+| Gate | Windows | Linux (`python:3.13`, pytest 9.1.1, uid 1000, pinned ICU 78.3) |
+|---|---|---|
+| pytest | **6514 passed** (6430 + 84 W4), 43 skipped, 19 xfailed, 0 failed; exit 0 | **6340 passed** (6256 + 84 W4), 204 skipped, 19 xfailed, 0 failed; exit 1 (coverage only) |
+| coverage | **100%** (9748 statements) | 96.89%, 303 missed: **identical per file and per line** to the remediation-1 candidate (`src` unchanged), i.e. the established base-equal platform limitation (§9 of the work package record) |
+| mypy | clean (118 files); exit 0 | the same 15 errors, byte-identical to the remediation-1 run; exit 1 |
+| ruff | clean; the 14 changed files formatted (whole-tree drift of 7 untouched files, informational) | clean; exit 0 |
+| driver self-test | PASSED: 83 in-process checks (W1, W2, D1–D10), W3 12/12 | PASSED: 83 checks, W3 12/12; exit 0 |
+| **W3 native origin** | genuine: `embedded null character` at `Popen._execute_child`, seam on stack | **genuine: `embedded null byte` at `Popen._execute_child`, seam on stack**, the executable Linux confirmation of §7.1 |
+| negative controls | W3 PASS first; baseline GREEN (exit 0, 85 passed, evidence present); **15/15 KILLED**, every mutant exit 1 with 0 errors; **18/18 intended-witness observations GENUINE** (3 native, 15 assertion) | identical: W3 PASS, baseline GREEN, **15/15 KILLED**, 18/18 GENUINE; exit 0 |
+
+**Development runs (disclosed, not credited):** a Windows self-test and a contained development run of the 15 controls at the same tooling (`controls-dev-ce01`), made before the window to check the declarations. Both were green.
+
+**Open:** L12D011-I002 awaits the **targeted convergence closure review** (§11.8.7), with I001's control as the previously closed dependency. After that comes the one final complete exact-SHA review (§11.8.8).

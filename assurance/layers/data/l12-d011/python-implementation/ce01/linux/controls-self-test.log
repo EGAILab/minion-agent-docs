@@ -1,0 +1,96 @@
+PASS R1 genuine assertion at the declared statement is KILLED
+PASS R2 genuine native fire through the seam (real, in-process) is KILLED
+PASS R3 C001 same-text helper ValueError is INVALID
+PASS R3 C001 same-text ValueError inside the seam before the native call is INVALID
+PASS R4 native fire without the seam frame is INVALID
+PASS R5 C002 fake AssertionError class is observed as no assertion and is INVALID
+PASS R5 C002 assert-named class is observed as no assertion and is INVALID
+PASS R5 AssertionError subclass is observed as no assertion and is INVALID
+PASS R5 NameError with the marker is observed as no assertion and is INVALID
+PASS R5 ModuleNotFoundError (real text) is observed as no assertion and is INVALID
+PASS R5 UnboundLocalError with the marker is observed as no assertion and is INVALID
+PASS R5 ImportError with the marker is observed as no assertion and is INVALID
+PASS R6 a genuine assertion in another statement is INVALID
+PASS R6 a genuine assertion in another function is INVALID
+PASS R7 the marker not at the start is NOT KILLED
+PASS R7 another reason is NOT KILLED
+PASS R8 a genuine witness does not mask a forbidden one (mixed is INVALID)
+PASS R1/R2 both witnesses genuine is KILLED
+PASS R9 FAILED without an evidence record is INVALID (no rendered fallback)
+PASS R9 a record without a FAILED line is INVALID
+PASS R9 framed evidence with the run's token parses
+PASS R9 a foreign token makes the evidence INVALID
+PASS R9 a missing START makes the evidence INVALID
+PASS R9 a missing END makes the evidence INVALID
+PASS R9 a wrong END count makes the evidence INVALID
+PASS R9 a duplicate record makes the evidence INVALID
+PASS R10 a non-call phase on an intended node is INVALID
+PASS R10 an unobservable failure is INVALID
+PASS R10 an ERROR entry is INVALID
+PASS R10 pytest exit 2 is INVALID even with a genuine record
+PASS R10 pytest exit 3 is INVALID even with a genuine record
+PASS R10 pytest exit 4 is INVALID even with a genuine record
+PASS R10 pytest exit 5 is INVALID even with a genuine record
+PASS R10 a timeout is INVALID
+PASS R11 no intended failure (only unrelated nodes) is NOT KILLED
+PASS R12 a witness missing from the baseline is INVALID
+PASS R12 a green, selected baseline with evidence is accepted
+PASS R12 a red baseline is INVALID
+PASS R12 a filtered witness is INVALID
+PASS R12 a baseline without evidence is INVALID
+PASS R13 exit 0 is NOT KILLED
+PASS R14 check-after-native-spawn: tests/execution/test_spawn_nul.py::test_no_native_spawn_after_rejection[argv0-options0] resolves to one statement
+PASS R14 check-after-native-spawn: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[name/file] declares NATIVE_NUL
+PASS R14 baseline-first-posix-order: tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms resolves to one statement
+PASS R14 sort-all-posix-order: tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms resolves to one statement
+PASS R14 naive-integer-index: tests/execution/test_spawn_nul.py::test_env_check_order_both_platforms resolves to one statement
+PASS R14 unbounded-index-conversion: tests/execution/test_spawn_nul.py::test_index_domain_neighborhood_and_long_names resolves to one statement
+PASS R14 unbounded-index-conversion: tests/execution/test_spawn_nul.py::test_long_numeric_env_name_is_an_ordinary_name_at_the_provider resolves to one statement
+PASS R14 superseded-baseline-value: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[env/superseded-baseline-value-control] resolves to one statement
+PASS R14 raw-cwd-not-resolved: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-00] declares NATIVE_NUL
+PASS R14 raw-cwd-not-resolved: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/literal-relative] resolves to one statement
+PASS R14 double-url-decode: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/file-url-percent-2500-control] resolves to one statement
+PASS R14 default-cwd-unchecked: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[cwd/provider-default-nul] declares NATIVE_NUL
+PASS R14 cwd-before-args: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[precedence/args-before-cwd] resolves to one statement
+PASS R14 cut-at-or-above-128: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[len/inspected-128] resolves to one statement
+PASS R14 quote-selection: tests/conformance/test_spawn_nul_conformance.py::test_spawn_case[fmt/single-quote] resolves to one statement
+PASS R14 tool-string-matching: tests/execution/test_spawn_nul.py::test_engine_keeps_its_prefix_for_a_non_nul_failure resolves to one statement
+PASS R14 tool-checks-projected-argv: tests/execution/test_spawn_nul.py::test_engine_diagnostic_shows_the_unprojected_value resolves to one statement
+PASS R14 bash-checks-stdin-command: tests/execution/test_spawn_nul.py::test_bash_stdin_transport_command_is_not_argv resolves to one statement
+PASS R14 fixture test_genuine_assertion resolves to one statement
+PASS R14 fixture test_marker_not_at_start resolves to one statement
+PASS R14 fixture test_wrong_statement resolves to one statement
+PASS R14 fixture test_fake_assertion_class resolves to one statement
+PASS R14 fixture test_assert_named_class resolves to one statement
+PASS R14 fixture test_assertion_subclass resolves to one statement
+PASS R14 fixture test_pytest_fail resolves to one statement
+PASS R14 fixture test_marker_name_error resolves to one statement
+PASS R14 fixture test_rewritten_elided resolves to one statement
+PASS R14 fixture test_helper_value_error declares NATIVE_NUL
+PASS R14 fixture test_genuine_native_through_seam declares NATIVE_NUL
+PASS R14 fixture test_native_without_seam declares NATIVE_NUL
+PASS R14 all 15 controls are declared
+PASS D1 kind by class name: known-bad FAILS on 'R5 C002 fake AssertionError class'
+PASS D2 blanket ValueError rejection: known-bad FAILS on 'R2 genuine native'
+PASS D3 unanchored reason: known-bad FAILS on 'R7 the marker not at the start'
+PASS D4 origin dropped: known-bad FAILS on 'R3 C001'
+PASS D4 statement origin dropped: known-bad FAILS on 'R6 a genuine assertion in another statement'
+PASS D5 seam dropped: known-bad FAILS on 'R4 native fire without the seam'
+PASS D6 masking: known-bad FAILS on 'R8 a genuine witness does not mask'
+PASS D7 rendered fallback: known-bad FAILS on 'R9 FAILED without an evidence record'
+PASS D8 token dropped: known-bad FAILS on 'R9 a foreign token'
+PASS D9 exit ignored: known-bad FAILS on 'R10 pytest exit 2'
+PASS D10 baseline selection skipped: known-bad FAILS on 'R12 a witness missing from the baseline'
+PASS W3 test_genuine_assertion: GENUINE (expected GENUINE) FIXTURE MARK: genuine
+PASS W3 test_marker_not_at_start: MISMATCH (expected MISMATCH) reason 'wrapper: FIXTURE MARK'
+PASS W3 test_wrong_statement: FORBIDDEN (expected FORBIDDEN) raised at test_wrong_statement:35, not the declared statement
+PASS W3 test_fake_assertion_class: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.AssertionError)
+PASS W3 test_assert_named_class: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.assert ['A', 'Z'])
+PASS W3 test_assertion_subclass: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed l12_d011_evidence_fixture.test_assertion_subclass.<locals>.Sub)
+PASS W3 test_pytest_fail: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.Failed)
+PASS W3 test_marker_name_error: FORBIDDEN (expected FORBIDDEN) type is not the builtin AssertionError (observed builtins.NameError)
+PASS W3 test_rewritten_elided: GENUINE (expected GENUINE) assert "The property... Received 'd'" == "The property... Received 'e'"
+PASS W3 test_helper_value_error: FORBIDDEN (expected FORBIDDEN) raised at _helper, not the native call
+PASS W3 test_genuine_native_through_seam: GENUINE (expected GENUINE) embedded null byte at Popen._execute_child
+PASS W3 test_native_without_seam: FORBIDDEN (expected FORBIDDEN) the seam LocalSubprocess.spawn is not on the stack
+DRIVER SELF-TEST PASSED (83 in-process checks, W3 PASS)

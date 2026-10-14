@@ -1,0 +1,28 @@
+candidate f27b915e62279169e6e789bd337830821e0e9c48
+icu build 0
+icu 78.3
+pytest 9.1.1
+uid 1000
+pytest exit 1
+6340 passed, 204 skipped, 19 xfailed in 164.13s (0:02:44)
+TOTAL                                                9748    303    97%
+FAIL Required test coverage of 100.0% not reached. Total coverage: 96.89%
+ERROR: Coverage failure: total of 97 is less than fail-under=100
+0
+mypy exit 1
+Found 15 errors in 5 files (checked 118 source files)
+ruff exit 0
+controls-self-test exit 0
+PASS W3 test_helper_value_error: FORBIDDEN (expected FORBIDDEN) raised at _helper, not the native call
+PASS W3 test_genuine_native_through_seam: GENUINE (expected GENUINE) embedded null byte at Popen._execute_child
+PASS W3 test_native_without_seam: FORBIDDEN (expected FORBIDDEN) the seam LocalSubprocess.spawn is not on the stack
+DRIVER SELF-TEST PASSED (83 in-process checks, W3 PASS)
+controls exit 0
+W3 fixture PASS (12/12 rows)
+baseline GREEN exit 0 passed 85 evidence present
+15 / 15 KILLED
+mutant exits [1] errors 0
+intended-witness observations {'GENUINE': 18}
+native origins ['Popen._execute_child'] 3
+LINUX GATES DONE
+docker exit 0
