@@ -346,6 +346,14 @@ The tests also cover the drive-relative classification, the hook (lookup used fo
 
 **Status:** F002 is an implementation candidate for independent implementation review. F001 (Rust) is next, from the merged contract. The manifest's EXEC-002/EXEC-005 status lines are updated in the post-merge status sync. Cross-language: NOT CLOSED.
 
+## 13. Final complete review 1 and convergence episode CE-L12D012-01
+
+Codex's final complete review 1 (`#229` issuecomment-6177822640) was CHANGES REQUESTED at `8119d0ab` / `96e08234`.
+- **PY-I001** stays provisionally closed.
+- **L12D012-PY-I002** (AUTHORITY_PARITY_DEFECT): `_select_drive_base` indexes Python characters where Node's branch indexes UTF-16 units.
+- **The route.** Trigger C fired (four rejected complete reviews). The default route was taken: CONTRACT_CONVERGENCE, episode **CE-L12D012-01**.
+- **The episode record**, with the native 15-row characterization, the second dimension (Node's §15 view of the inherited entry), the offset audit and the **proposed** checkpoint, is `12-l12-d012-convergence-ce01.md`. No fix happens before the checkpoint is agreed.
+
 ## 12. Implementation review 1 and remediation 1 (PY-I001)
 
 **Implementation review 1** (Codex, `#229` issuecomment-6176585550, round 5) was CHANGES REQUESTED at code `c905ec0a` / docs `824b07c1`.
