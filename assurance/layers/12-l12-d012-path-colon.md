@@ -48,16 +48,36 @@ Provider cwd is `C:\x` (win32) and `/x` (posix):
 **The observable rules, as Node implements them:**
 - **win32.** A component's colon is an ordinary character **except** in a leading `X:` device prefix of the whole input.
   - A drive-relative input on the cwd's own drive resolves against the cwd.
-  - A drive-relative input on **another** drive resolves against that drive's root. Node consults the per-drive cwd, and it uses `process.cwd()` when that is on the same drive; see §3.
+  - A drive-relative input on **another** drive `D:` (revised in revision 1, §7) resolves against the **first** of these that Node's `win32.resolve` finds:
+    1. the process's **inherited per-drive cwd entry** `=D:` (looked up as `process.env['=D:']`), when it names a path on `D:`;
+    2. otherwise `process.cwd()`, when that is on `D:`;
+    3. otherwise `D:\`.
+
+    Rows 12 and 15 above are case 3: there was no inherited `=A:`/`=X:` entry, and the process cwd is on `E:`.
   - Interior `X:` components are never devices.
 - **posix.** `:` and `\` are ordinary characters.
 
-## 3. Determinism constraint
+## 3. Host state (revised in revision 1, §7)
 
-For an input that is drive-relative on a drive other than the provider cwd's, Node's `win32.resolve` falls back to `process.cwd()` **when the process cwd is on that drive**. Otherwise it uses the drive root. Setting `=X:` in-process had no effect (`drive_env_probe.mjs`). Therefore the shared cases:
-- use other-drive letters that are **never** the generating or running host's process-cwd drive. The generators and runners on this project run from `E:`, so the cases use `a:` and `x:`;
-- record the host-drive assumption in the case notes;
-- leave any other-drive case on the process's own drive out of the contract's observable surface. It is host state, not a lexical rule.
+The win32 other-drive rule above is part of the **existing, unchanged §3.2 contract**, including its two host dependencies: the inherited `=D:` entry and the process cwd's drive. **Nothing is removed from the contract.** An implementation that always resolves against the drive root is **not** conformant.
+
+Native characterization (`drive_env_child.mjs`): a child Node launched with `=A:=A:\deep` and `=X:=X:\q` in its environment block resolves:
+- `a::/b` to `a:\deep\:\b`;
+- `x:y:z/w` to `x:\q\y:z\w`.
+
+The same child without those entries gives `a:\:\b` and `x:\y:z\w`. A drive-relative input on the process cwd's own drive (`e:leaf`) resolves under the process cwd.
+
+Two observations matter for implementations and runners:
+- The entries are **not enumerable**: `Object.keys(process.env)` does not show them, but the lookup reads them.
+- Assigning them in-process has no effect: `process.env['=a:'] = …` reads back `undefined` (`drive_env_probe2.mjs`).
+
+A Python child sees the inherited entry through `GetEnvironmentVariableW('=A:')` but **not** through `os.environ` or `os.getenv` (`py_drive_env.mjs`). That is relevant to F002's fix.
+
+**The finite evidence set controls this host state explicitly.** It is a limitation of these examples, not of the contract:
+- **Baseline cases** (rows 12 and 15 style) carry **preconditions**: no inherited `=A:`/`=X:` entry, and a process cwd not on `A:`/`X:`. The generator and every runner verify the preconditions at entry, through the same lookup the binding uses, and **refuse** to run (fail closed) when they do not hold. A host-dependent expected value is never silently rewritten.
+- **Controlled cases** run the real resolver seam in a **child process launched with a crafted environment block** (`=A:=A:\deep`, `=X:=X:\q`) and a crafted cwd. They exercise branch 1 for each binding.
+- **Branch 2**, the process cwd's own drive, is a controlled case too. The child's cwd is a contained sandbox directory, and the expectation is expressed relative to that cwd, through a placeholder the runner fills from the cwd it set itself.
+- **Controls:** each case's precondition check must refuse a run where the entry is inherited, which is a missing-precondition control. Each controlled case pairs with its baseline (entry absent versus entry present), which is the discriminating pair.
 
 ## 4. Current bindings
 
@@ -74,17 +94,40 @@ Python on **Linux equals pinned Pi 23/23** (`python:3.13`; `linux-char.sh`, outp
 1. **Shared cases.** A new canonical document `conformance/agent/fs-path-domain/fs-path-resolution.json`, with a small lexical schema extension or a new `path-resolution-scenario.schema.json`. Each case gives the per-platform provider cwd, the input (UTF-16 units), and the expected absolute path per platform, all **generated from pinned Pi on Windows and Linux natively**.
    - The observable is `ctx.fs.absolute_path` with the provider cwd. It is lexical: no filesystem access, and **no writes to colon components** (on Windows those would create NTFS alternate data streams).
    - A spawn-cwd step reusing the L12-D011 NUL diagnostic is **not** added; #224's existing case covers the spawn path.
-2. **Python:** fix F002, with lower-layer regressions (EXEC-002, EXEC-005 and the TOOL-026 consumers).
-3. **Rust (Codex):** fix F001 in both resolvers, characterize the rest of this matrix, and run the affected lower-layer regressions.
+   - The win32 other-drive rows run as the baseline, precondition-checked cases plus the controlled child-process cases of §3 (revision 1).
+2. **Rust characterization, inside scoping (Codex, scoping review 1).** All 23 inputs and the §3 controlled cases go through the real Rust `absolute_path` seam on both platforms. The native scalar resolver used by consumers and the logical/lossless resolver serving the spawn cwd are characterized as well. Agreements and disagreements are both recorded. The pre-fix observations are kept as negative-control evidence. This happens **before** any resolver correction and before the shared case/feasibility freeze. The nearest rooted, drive-relative and colon-with-separator compositions inform the finite case set.
+3. **Python:** fix F002 (all three branches of the other-drive rule), with lower-layer regressions (EXEC-002, EXEC-005 and the TOOL-026 consumers).
+4. **Rust (Codex):** fix F001 in both resolvers, plus whatever the characterization in item 2 finds, with the affected lower-layer regressions.
 
 **Not reopened:** every other path rule; `~` expansion; URL decoding; error codes; the NUL rule (#224); TOOL-026's tool-level rejection of malformed `file:` URLs. Those tool cases (`builtin-*-malformed-file-url-rejected…`) stay as certified.
 
 ## 6. Plan and stop condition
 
 1. ~~Native Linux confirmation of the posix column~~: done (§2, 23/23).
-2. Generation and the cases.
-3. Independent review of the scoping and the cases (Codex).
+2. Scoping review 2 of revision 1, together with the Rust full-matrix characterization (Codex, §5 item 2).
+3. Generation and the cases (baseline with verified preconditions, plus controlled child-process cases), then independent review.
 4. Python F002 (Claude) and Rust F001 (Codex), each through independent review.
 5. Closure.
+
+## 7. Scoping review 1 and revision 1
+
+**Scoping review 1** (Codex, `#229` issuecomment-6165976216) was CHANGES REQUESTED at `dc4eda67`. It accepted the §11.8.11(c) classification, the 23-row neighborhood (reproduced on Windows by the reviewer, Python 21/23), the lexical observable and the routing. Codex also directed that the Rust full-matrix characterization belongs in scoping.
+
+**L12D012-C001** (MEDIUM, blocking): the host-state domain was incomplete. Node's `win32.resolve` reads an **inherited per-drive cwd entry** before falling back to `process.cwd()`. The reviewer's in-memory fixture shows `=a:` and `=x:` changing rows 12 and 15 even with the process cwd on `E:`. The original §3 also placed the process-own-drive case "out of the contract's observable surface", which a test-domain restriction cannot do.
+
+The original §3 text, kept for history:
+
+> "Setting `=X:` in-process had no effect (`drive_env_probe.mjs`). Therefore the shared cases: use other-drive letters that are never the generating or running host's process-cwd drive …; record the host-drive assumption …; leave any other-drive case on the process's own drive out of the contract's observable surface. It is host state, not a lexical rule."
+
+**Revision 1:**
+1. §2 states the full three-branch other-drive rule.
+2. §3 now holds:
+   - both host dependencies, native characterization of the inherited branch (`drive_env_child.mjs`), why in-process assignment shows nothing (`drive_env_probe2.mjs`), and Python's access path (`py_drive_env.mjs`);
+   - the explicit statement that the contract is unchanged and a root-only implementation is non-conformant;
+   - preconditions verified at generator and runner entry, with fail-closed refusal;
+   - controlled child-process cases for branches 1 and 2;
+   - a missing-precondition control and the discriminating pairs.
+3. §5 adds the Rust characterization inside scoping.
+
 
 #224's Rust handback waits on this work package's merge (`#224` `blocked_by` `#229`).

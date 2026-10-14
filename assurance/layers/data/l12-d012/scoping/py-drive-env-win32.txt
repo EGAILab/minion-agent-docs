@@ -1,0 +1,1 @@
+0 {'in_os_environ': False, 'getenv': None, 'GetEnvironmentVariableW': 'A:\\deep'} 

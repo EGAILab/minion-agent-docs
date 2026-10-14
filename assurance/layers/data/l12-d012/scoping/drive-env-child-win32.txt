@@ -1,0 +1,2 @@
+without 0 {"keys":[],"a":"a:\\:\\b","x":"x:\\y:z\\w","sameDriveAsCwd":"e:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\leaf","cwd":"E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent"}
+with =A: =X: 0 {"keys":[],"a":"a:\\deep\\:\\b","x":"x:\\q\\y:z\\w","sameDriveAsCwd":"e:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\leaf","cwd":"E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent"}
