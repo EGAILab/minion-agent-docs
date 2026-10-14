@@ -1,6 +1,6 @@
 # L12-D012 — path resolution of colon-bearing components and the malformed `file:` literal fallback
 
-Status: **SCOPING** (`minion-agent#229`). Python: REVALIDATE_REQUIRED (F002). Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
+Status: **SCOPING** (`minion-agent#229`). Python: REVALIDATE_REQUIRED on Windows (F002). Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
 Provenance: `#224` L12D011-RUST-F001 (issuecomment-6164614623); triage issuecomment-6164695679; scoping 1 `#229` issuecomment-6164885136.
 Requirements: `EXEC-002` (`ctx.fs` path resolution, §3.2), `EXEC-005` (the spawn cwd, which uses the same resolver). `TOOL-026` is a neighbor: it reuses the Layer-12 resolver and is not reopened (§5).
 
@@ -13,11 +13,13 @@ This is WORKFLOW §11.8.11(c): new discriminating evidence that already-certifie
 
 ## 2. Authority behavior (characterization)
 
-The probe is `data/l12-d012/scoping/scope_probe.mjs`: pinned Pi `resolvePath`, sliced unmodified and checked at `ref-repos/pi` HEAD `b7bb00b9`, run on Node v22.15.1. win32 runs natively on Windows 11. The **posix** column is computed with `path.posix` and `fileURLToPath({windows:false})` injected; it is **provisional until native Linux generation**. Output: `scope-node.json`.
+The probe is `data/l12-d012/scoping/scope_probe.mjs`: pinned Pi `resolvePath`, sliced unmodified and checked at `ref-repos/pi` HEAD `b7bb00b9`, run on Node v22.15.1. win32 runs natively on Windows 11. The posix column was first computed with `path.posix` and `fileURLToPath({windows:false})` injected (`scope-node.json`).
+
+That column is **confirmed natively on Linux**. `native_probe.mjs` adds the platform-native column, meaning the same function with the platform's own `path` and `fileURLToPath`, exactly as Pi runs. It was run in `node:22.15.1-bookworm-slim` in a host window granted by Codex (launcher `run-linux-char.ps1`): **native Linux = posix column 23/23** (`native-linux.json`). On Windows, the native column equals the win32 column 23/23 (`native-win32.json`).
 
 Provider cwd is `C:\x` (win32) and `/x` (posix):
 
-| # | Input | win32 | posix (provisional) |
+| # | Input | win32 (native) | linux (native) |
 |---|---|---|---|
 | 1 | `file:///C:/a%2Fb` (malformed: encoded separator) | `C:\x\file:\C:\a%2Fb` | `/x/file:/C:/a%2Fb` |
 | 2 | `file:/C:/a%2Fb` | `C:\x\file:\C:\a%2Fb` | `/x/file:/C:/a%2Fb` |
@@ -64,7 +66,7 @@ For an input that is drive-relative on a drive other than the provider cwd's, No
 | Python certified `resolve_local_path` (win32) | 21/23 | **#12, #15: other-drive drive-relative.** Python gives `a::\b` and `x:y:z\w`. That is **L12D012-F002** |
 | Rust logical `path::resolve`/`normalize` and `filesystem::resolve_local_path` | to be characterized by the Rust owner | #1 (Codex, #224 RUST-F001): `C:\x\file:C:a%2Fb` / `C:a%2Fb`. The separator after any `:`-ending component is dropped, and `PathBuf` pushing interprets embedded drives. That is **L12D012-F001** |
 
-Python POSIX behavior is to be confirmed natively with the Linux generation.
+Python on **Linux equals pinned Pi 23/23** (`python:3.13`; `linux-char.sh`, output `py-linux.txt`), so **F002 is Windows-only**.
 
 ## 5. Proposed scope
 
@@ -79,7 +81,7 @@ Python POSIX behavior is to be confirmed natively with the Linux generation.
 
 ## 6. Plan and stop condition
 
-1. Native Linux confirmation of the posix column, in a host window.
+1. ~~Native Linux confirmation of the posix column~~: done (§2, 23/23).
 2. Generation and the cases.
 3. Independent review of the scoping and the cases (Codex).
 4. Python F002 (Claude) and Rust F001 (Codex), each through independent review.
