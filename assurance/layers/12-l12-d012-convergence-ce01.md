@@ -109,3 +109,66 @@ NORMATIVE DELTAS            none (spec section 3.2 and section 15 apply as writt
                             expectations unchanged); record section 10 feasibility row updated
 NEXT_OWNER                  Codex (independent checkpoint review of exactly this proposal)
 ```
+
+## 7. Checkpoint review 1 (REJECTED) and revision 1
+
+**Checkpoint review 1** (Codex, `#229` issuecomment-6178272131, round 8) **REJECTED** the §6 proposal at docs `214dced4`.
+- **Accepted:** the inherited-entry projection and the UTF-16 indexing model (§§1–3), the offset audit, W1–W3 and K1–K3.
+- **The missing dimension:** the **other selected-value operand**, `process.cwd()`, used when the entry is absent or empty. Node obtains it through libuv `uv_cwd` (GetCurrentDirectoryW, then `uv__copy_utf16_to_utf8`) and `String::NewFromUtf8`, while the port passed raw `os.getcwd()`. §2's DEFERRED disposition was not a scope exclusion: §3.2's parity rule is not restricted to ASCII host state.
+
+§§1–6 are kept as written; this section supersedes §2's process-cwd row and §§3–6 where it says so.
+
+**The fixture plan** (`data/l12-d012/ce01/cwd_partition.py`) was safety-checked before running (issuecomment-6178360188), revised, and its intercepted `--self-test` (16/16, `cwd-partition-self-test.txt`) independently rechecked. It then ran **at docs `efeafd8f`** in a host window granted by Codex.
+- **Authority and ancestry.** The authority is the fixed project root, and its ancestry was proven no-follow to `E:\`.
+- **Preconditions** came before any mkdir: Node v22.15.1, and the pinned Pi `nodejs.ts` blob equal to `b7bb00b9`'s.
+- **The fixture.** A new guarded sandbox `.tmp/claude-scratch/i229/cwd-fixture-1` holds five empty directories, kept, with no cleanup. That is 6 mkdirs, each proven before and after.
+- **The children.** Each row ran a pinned-Pi Node child and a real-binding Python child with identical blocks and the same cwd. The binding's native entry read and its cwd equalled the crafted ones on every row. Output: `cwd-partition-win32.json`.
+
+| Child cwd (in the sandbox) | entry absent | entry empty | entry `E:\deep` | control `a:leaf` |
+|---|---|---|---|---|
+| `plain` | MATCH | MATCH | MATCH | MATCH |
+| `pair-😀` | MATCH | MATCH | MATCH | MATCH |
+| `lone-\uD83D` | **DIFF**: Node `…\lone-<FFFD×3>\leaf`, binding `…\lone-\uD83D\leaf` | **DIFF** (same) | MATCH (cwd not selected) | MATCH (root) |
+| `lone-\uDE00` | **DIFF** (`<FFFD×3>`) | **DIFF** | MATCH | MATCH |
+| `x\uD83Dy` | **DIFF** (`x<FFFD×3>y`) | **DIFF** | MATCH | MATCH |
+
+**6 of 20 rows differ**, exactly where the process cwd is the selected value and holds a lone surrogate. `cwd-view-check.txt` shows that Node's `process.cwd()` view of every crafted name **equals the §15 decode**: the generalized UTF-8 of its UTF-16 units, then WHATWG UTF-8 decoding with replacement. So a lone surrogate becomes three U+FFFD, and ASCII and valid-pair names are unchanged.
+
+**Revised model (supersedes §3):** the selected value is **`view(process.env['=D:']) || view(process.cwd())`**, where `view` is the §15 decode, indexed by **UTF-16 units**. It is projected **only** at this native-read boundary:
+- the caller's logical provider cwd and the path argument are never projected (§14.1's logical domain is unchanged);
+- the decode is §15's, not §14.1's one-U+FFFD-per-surrogate fs projection.
+
+**Revised fix:**
+1. `_select_drive_base` indexes UTF-16 units: the first two units case-insensitively against the device, and unit 2 must be `\`.
+2. The real host dependencies passed by the hook are **both** Node views: `inherited = view ∘ _libuv_win32.inherited_drive_cwd` (absent stays `None`, empty stays `""`) and `process_cwd = view ∘ os.getcwd`.
+3. Nothing else changes; the §2 audit stands. **The DEFERRED row is withdrawn.**
+
+**Witnesses and controls (supersede §4; additions):**
+- **W1–W3 as §4.**
+- **W4 (real binding, win32): a lone-surrogate process cwd.**
+  - A permanent test creates directories with the crafted names inside pytest's contained `tmp_path` on E:. They are only used as a child's cwd and are never written.
+  - It runs the real `LocalFileSystem` in a child there, with the entry absent and empty.
+  - It asserts `<child cwd prefix> + <Node's view of the name, frozen from cwd-partition-win32.json> + \leaf`. The expected name view is Node's recorded output, not computed by the binding.
+  - Positive neighbors: the ASCII and pair names, the matching-drive entry and the other-drive control.
+- **K5, the raw process cwd** (no view): killed by W4's lone-surrogate rows.
+- **K6, the projection moved to the logical side** (the provider cwd or the path argument viewed instead): killed by the existing L12-D001 `fs-path-names` `absolute_path` cases, whose logical lone-surrogate result stays raw, and by W4's matching-drive row.
+- **K1–K4 as §4.**
+
+**Feasibility (§5, revised):** Rust F001 inherits the complete boundary: both operands as §15 views (`var_os`, and `current_dir` as native UTF-16 put through the same decode) and UTF-16 unit indexing.
+
+**Checkpoint (step 1, revision 1, proposed):**
+
+```text
+CONVERGENCE CHECKPOINT      PROPOSED FOR IMPLEMENTATION   (CE-L12D012-01, revision 1)
+OPEN FINDINGS               L12D012-PY-I002 (UTF-16 unit indexing; Node's section 15 view of BOTH
+                            selected-value operands: the inherited entry and the process cwd)
+ACCEPTANCE WITNESSES        section 1 (15 entry rows) and section 7 (20 cwd rows) native partitions frozen as
+                            Node-derived fixtures; W1 entry children, W4 cwd children (contained tmp_path
+                            directories, child cwd only); W2 port with Node-view inputs; W3 projection vs
+                            section 15; controls K1 code-point indexing, K2 raw entry, K3 per-surrogate
+                            replacement, K5 raw process cwd, K6 projection on the logical side; K4 ASCII and
+                            PY-I001 controls green; the 80 canonical cases unchanged
+NORMATIVE DELTAS            none (sections 3.2 and 15 as written; expectations unchanged); record section 10
+                            feasibility row updated; Rust F001 inherits the complete boundary
+NEXT_OWNER                  Codex (independent checkpoint review of exactly this revision)
+```
