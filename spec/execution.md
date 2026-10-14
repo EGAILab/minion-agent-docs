@@ -3447,7 +3447,7 @@ Record: `assurance/layers/12-l12-d008-div008.md`.
 
 ## 21. Layer-12 post-certification delta `L12-D011` — a NUL-containing spawn input fails with pinned Node's literal diagnostic (`EXEC-013`; `EXEC-005`, `TOOL-034`, `TOOL-036`, `TOOL-037`)
 
-**Status:** contract APPROVED for implementation (`minion-agent#224` issuecomment-6145618255; merged code #225 → `be02f9f3`, docs #301 → `a080af46`). Python: implementation candidate, for independent review. Rust: NOT_IMPLEMENTED. Provenance: `#195` (`L12-SPAWN-NUL`).
+**Status:** contract APPROVED for implementation (`minion-agent#224` issuecomment-6145618255; merged code #225 → `be02f9f3`, docs #301 → `a080af46`). Python: APPROVED and merged (final complete review issuecomment-6163739593; code #226 → `f9935672`, docs #302 → `f065a0c0`). Rust: NOT_IMPLEMENTED. Cross-language: NOT CLOSED. This status line is a documentary update only. Provenance: `#195` (`L12-SPAWN-NUL`).
 
 **Owner decisions** (each recorded verbatim on the issue with its sha256):
 - **`#195` issuecomment-6137514688:** "APPROVE OPTION 1: PINNED PI LITERAL NUL-SPAWN DIAGNOSTIC". This is a targeted parity correction, not a divergence.
