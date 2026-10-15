@@ -25,11 +25,14 @@ const doc = {
   ...base,
   authority: base.authority.replace(/\(L12-D012, minion-agent#229\)$/, "(L12-D012, minion-agent#229); rooted "
     + "drive-less and UNC-root cases by assurance/layers/data/l12-d013/gen (L12-D013, minion-agent#235)"),
-  notes: base.notes + " L12-D013 (record 12-l12-d013-rooted.md): host cases may name cwd_form; 'extended' runs the "
+  // L12-D013 amends section 3.2, so the inherited "unchanged" claim is replaced (contract review 2, N001).
+  notes: base.notes.replace(/^spec\/execution\.md section 3\.2 \(DIRECT_PI_PARITY\), unchanged; /,
+    "spec/execution.md section 3.2 (DIRECT_PI_PARITY), as amended by L12-D013; ") + " L12-D013 (record 12-l12-d013-rooted.md): host cases may name cwd_form; 'extended' runs the "
     + "child with cwd \\\\?\\ + the ordinary sandbox path, and every template part is filled from the ORDINARY "
     + "sandbox path.",
   path_resolution: { cases },
 };
 if (!doc.authority.includes("L12-D013")) throw new Error("authority suffix not found");
+if (!doc.notes.includes("as amended by L12-D013") || doc.notes.includes("unchanged;")) throw new Error("notes prefix not found");
 if (!isDeepStrictEqual(doc.path_resolution.cases.slice(0, 80), old)) throw new Error("existing cases changed");
 console.log(JSON.stringify(doc, null, 1));

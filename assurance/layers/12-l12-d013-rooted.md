@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **CONTRACT CANDIDATE for independent contract review** (§7). Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **CONTRACT CANDIDATE 2 for independent contract re-review** (§8). Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -165,3 +165,62 @@ The run was granted by Codex (combined #236/#235 window, 2026-10-15) and is reco
 **Disclosed.** The corpus `notes` keeps its L12-D012 opening ("section 3.2 … unchanged") and gains an L12-D013 suffix. It isn't hand-edited, because the generated document must stay reproducible from the reviewed merger. §3.2 itself is changed by this candidate.
 
 **Expected state of the candidate.** Merged Python does not implement this rule (M1–M3), and its runner does not yet read `cwd_form`. The Python conformance suite is therefore expected to fail the new win32 rows, and its case-count assertion (55/25), on this contract-only head. That is the REVALIDATE_REQUIRED state, not a test-infrastructure defect. The Python correction and runner support are added on the same branches after contract approval (merge plan above). Codex's schema/manifest validation suite is the gate for this contract head.
+
+## 8. Contract review 2 and candidate 2
+
+Codex's independent contract review 2 (`#235` issuecomment-6200287886) **requested changes** at code `dc57331d` / docs `d4adb121`. It found two blocking `CONTRACT_ASSURANCE_DEFECT`s and one non-blocking item. It found the rest of the contract faithful to Pi: the win32 statement, R1–R4, C1–C4, the UNC-cwd port seam, the EXEC-005 requirement and the merge plan. Candidate 2 is the narrow remediation below. Nothing else changes. The 99 case objects are identical to candidate 1, and the 80 inherited cases are still unchanged and in order.
+
+### 8.1 C001: the extended-cwd restriction now covers `input`
+
+- **Defect.** The schema enforced "an extended case uses no `cwd_tail` part" only on `expect`. An extended case with `input` `{"parts": [{"cwd_tail": true}]}` validated with zero errors.
+- **Repair.** The schema has a new `$defs/no_cwd_tail`. The case-level extended conditional applies it to **both** `input` and `expect`. The `drive: cwd` and `entry: null` restrictions are unchanged. No runner compensates for it.
+- **Permanent witnesses** in `test_schema_validation.py`:
+  - **Rejected:** the existing `expect` mutation, and a separate new `input` mutation (Codex's exact witness);
+  - **Accepted:** a `cwd_tail` part in `input` or in `expect` of an ordinary-cwd host case, with `cwd_form: ordinary` and with `cwd_form` absent (4 parametrized positives).
+
+### 8.2 C002: M4 is in scope
+
+- **The authority rule is unchanged.** Pinned Pi resolves an absolute POSIX input as Node's `path.posix.resolve(input)`, which collapses any run of leading `/` to one. The candidate-1 spec sentence "a leading `/` is absolute and used as-is" read as if POSIX needed no normalization. It now says the input is normalized as `path.posix.resolve`, so `//leaf` is `/leaf`. This clarifies the wording and changes no rule.
+- **Merged Python needs a correction there.** "POSIX unchanged" (§2, §6, §7.1's "POSIX no-regression") describes the authority. It does not claim that merged Python is correct on POSIX:
+  - Python's `resolve_local_path` absolute branch uses `os.path.normpath`;
+  - POSIX `normpath` keeps exactly two leading slashes;
+  - so `//leaf` gives `//leaf` where Node gives `/leaf`.
+
+  This is **M4**, found in the `#236` Linux characterization and confirmed independently by contract review 2. It is a required-parity correction, not an accepted divergence.
+
+| Python mismatch class | Example (Node → Python) | Cause |
+|---|---|---|
+| M4: two leading POSIX slashes kept | `//leaf`: `/leaf` → `//leaf` | `posixpath.normpath` preserves exactly two leading `/` |
+
+- **Scope and plan.** §6 step 2 and the §7.2 merge plan now cover M1–**M4**. The Python correction on the same branches fixes M4 in the shared resolver. It also checks the EXEC-005 consumer (the effective spawn `cwd`) for the same resolver.
+- **Revalidation.** Python REVALIDATE_REQUIRED (`L12D013-F001`) covers win32 (M1–M3) **and POSIX (M4)**. Both manifest entries say so now; candidate 1 said "Python on win32" only. The Python revalidation runs the merged corpus natively on win32 and on Linux.
+- **Control.** This adds to §7.2's table. Like C1–C4, it is a requirement of the implementation candidate and is not credited as executed here:
+
+  | Control | Wrong behavior | Killed by | Paired positive |
+  |---|---|---|---|
+  | D013-C5 two POSIX leading slashes kept | an absolute POSIX input keeps exactly two leading `/` | `linux/baseline/rooted-02` (`//leaf` → `/leaf`) | `linux/baseline/rooted-01` (`/leaf`) |
+
+  It runs after a green baseline, as C1–C4 do.
+- **Cases.** `linux/baseline/rooted-02` and its Node-derived expectation are unchanged. No new canonical case is needed.
+
+### 8.3 N001: the corpus `notes` opening
+
+The merger no longer carries the stale L12-D012 opening ("section 3.2 (DIRECT_PI_PARITY), unchanged;"). It now writes "…, as amended by L12-D013;", and refuses if the inherited prefix is not found. The JSON was not hand-edited:
+- the merger was rerun alone (`node merge_rooted.mjs`, host Node v22.15.1), over the code `HEAD^` 80-case corpus and the unchanged, reviewed `run-gen-1` partials;
+- this is pure stdout computation, with no child, resolver run or Docker.
+
+The output differs from candidate 1's corpus only on the `notes` line: every case object and `authority` are identical.
+
+| Artifact | Candidate 1 | Candidate 2 |
+|---|---|---|
+| `gen/merge_rooted.mjs` | `60ad55ea…` | `5884dcd5…` (ledger updated; 6/6 entries verified) |
+| `path-resolution.json` (99 cases) | `da78a095…` | `17aac054…` |
+| `path-resolution-scenario.schema.json` | `cb6c3d58…` | `601f07e0…` |
+
+All hashes are SHA-256 of the committed content, which has LF line endings. Correction: §7.3's schema hash `ffd562dc…` is the CRLF working-copy spelling of the same candidate-1 blob, whose committed content is `cb6c3d58…`. The ledger and corpus hashes in §7.3 were already of LF content.
+
+The §7.3 disclosure about the stale opening is superseded by this item.
+
+### 8.4 Expected state of candidate 2
+
+This is unchanged from §7.3, with M4 added. Merged Python is expected to fail the new win32 rows and `linux/baseline/rooted-02` on this contract-only head. The schema and manifest suites are the gate for the contract head.

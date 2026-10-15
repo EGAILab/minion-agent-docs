@@ -356,8 +356,9 @@ Its root is parsed as follows:
 
 The result is the device, then `\`, then the tail normalized: `.` and empty segments dropped, `..`
 clamped at the root, and `\` emitted. A failure to read the process cwd is the existing typed error;
-nothing is guessed. On POSIX nothing changes: a leading `/` is absolute and used as-is, and a
-leading `\` is an ordinary relative name. The same rule governs the effective spawn `cwd` of
+nothing is guessed. On POSIX the rule is unchanged: a leading `/` is absolute and is normalized as
+Node's `path.posix.resolve(input)`, so any run of leading `/` becomes one (`//leaf` is `/leaf`), and
+a leading `\` is an ordinary relative name. The same rule governs the effective spawn `cwd` of
 `ctx.shell`/`ctx.subprocess` (§5, §6), which uses this resolver.
 
 **Correction record (independent review, `L12-R002`):** an earlier revision of this section stated
