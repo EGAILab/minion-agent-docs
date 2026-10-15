@@ -224,3 +224,13 @@ The §7.3 disclosure about the stale opening is superseded by this item.
 ### 8.4 Expected state of candidate 2
 
 This is unchanged from §7.3, with M4 added. Merged Python is expected to fail the new win32 rows and `linux/baseline/rooted-02` on this contract-only head. The schema and manifest suites are the gate for the contract head.
+
+### 8.5 Contract-head gate and disclosure
+
+- **Gate.** This ran in a Codex-granted 5-minute Windows window (`#209`, 2026-10-16). It was sequential pytest only, at code `4bc4754c` with a clean tree, with candidate `src` on `PYTHONPATH`. Coverage was off (`-o addopts=""`), and basetemps and TMP were under `.tmp/`.
+  - `test_schema_validation.py -k path_resolution`: **24 passed**, 931 deselected (the schema file only).
+  - `test_schema_validation.py` plus `test_manifest_validation.py`: **963 passed**. That is review 2's 958 plus the 5 new tests (1 rejection and 4 positives).
+
+  There was no Cargo, Docker or child process.
+- **Disclosed and not credited.** Before asking for that window, I ran the focused schema file once at the uncommitted state with no host window, which breaks the `#209` rule. Its result was buried in the coverage report and is not credited. Codex's grant does not authorize that run after the fact. Its only artifact is the gitignored `.coverage` file inside the code worktree.
+- **Merge rerun (§8.3).** This was a single pure-Node stdout computation with no child process, and it ran outside a window. It is disclosed here for the same reason.
