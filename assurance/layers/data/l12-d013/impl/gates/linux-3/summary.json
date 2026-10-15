@@ -1,0 +1,30 @@
+{
+ "head": "aefc67e3a090aa1fbbf99dd0145f765d54f585b7",
+ "dockerExit": "0",
+ "results": [
+  {
+   "label": "icu-build",
+   "exit": "0"
+  },
+  {
+   "label": "pip",
+   "exit": "0"
+  },
+  {
+   "label": "versions",
+   "exit": "0"
+  },
+  {
+   "label": "pytest",
+   "exit": "1"
+  },
+  {
+   "label": "mypy",
+   "exit": "1"
+  },
+  {
+   "label": "ruff",
+   "exit": "0"
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **CONTRACT CANDIDATE 2 for independent contract re-review** (§8). Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **PYTHON IMPLEMENTATION CANDIDATE for independent implementation review** (§9). Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -234,3 +234,93 @@ This is unchanged from §7.3, with M4 added. Merged Python is expected to fail t
   There was no Cargo, Docker or child process.
 - **Disclosed and not credited.** Before asking for that window, I ran the focused schema file once at the uncommitted state with no host window, which breaks the `#209` rule. Its result was buried in the coverage report and is not credited. Codex's grant does not authorize that run after the fact. Its only artifact is the gitignored `.coverage` file inside the code worktree.
 - **Merge rerun (§8.3).** This was a single pure-Node stdout computation with no child process, and it ran outside a window. It is disclosed here for the same reason.
+
+## 9. Contract review 3 and the Python implementation
+
+Codex's contract re-review 3 (`#235` issuecomment-6200544181) **APPROVED** contract candidate 2 (code `4bc4754c` / docs `4078f87e`) for the Python implementation, and closed C001, C002 and N001. The implementation is on the same unmerged branches, as the merge plan says. `L12D013-F001` stays open until independent review.
+
+### 9.1 The Python correction
+
+All of it is in `resolve_local_path` (`minion_agent/execution/filesystem.py`), the one resolver behind `ctx.fs` and the `ctx.shell`/`ctx.subprocess` spawn cwd:
+- **win32, M1–M3.** After the `~`/`file://` steps and the L12-D012 drive-relative branch, an input whose first unit is `\` or `/` is `node_win32_resolve([input])`. That is the existing literal port of Node's `win32.resolve`, given the input **alone**.
+  - Its only host operand is the process cwd through the existing native view (CE-L12D012-02).
+  - The inherited-entry hook is passed, but the port never consults it for a single absolute argument.
+  - A complete UNC root is its own device, and every other root takes the process cwd's device.
+- **POSIX, M4.** The result of both branches passes through `node_posix_single_root`, which reduces any run of leading `/` to one, as `path.posix.resolve` does.
+  - The absolute branch is the corpus case `linux/baseline/rooted-02`.
+  - The relative branch (a provider cwd spelled `//x`) is the same Node rule. Its values come from pinned Node itself: the gate's `node-posix` check printed `["/x/a","/leaf","/"]` for `resolve('//x','a')`, `resolve('/x','//leaf')` and `resolve('//x','..')`.
+- **Removed.** `L12-PY-R002`'s bare-root trailing-separator fix-up. A bare UNC root now takes the port, which emits that separator itself, and a bare `C:` is not absolute. The block became unreachable, and run 1 showed it as the one uncovered line.
+
+### 9.2 Runner, witnesses and controls
+
+- **Runner** (`tests/conformance/path_resolution_runner.py`, thin):
+  - For `cwd_form: extended` it launches the child at `\\?\` + the ordinary sandbox path.
+  - It REFUSES unless the child reports exactly that spelling: no case-folding and no other namespace.
+  - It fills templates from the ordinary sandbox path. Ordinary cases are unchanged.
+  - Case counts are 70 on win32 and 29 on linux.
+- **Rooted classes through the real resolver.** On win32, each of the 15 rooted cases runs through `resolve_local_path` with an injected synthetic process cwd. Any inherited-entry read fails the test. The canonical host cases also run in real crafted children.
+- **Node-recorded port fixture** `tests/execution/data/node_rooted_cwd.json` (`ef273b41…`):
+  - It is frozen from the scoping capture `rooted-probe-2.json` by `impl/build_fixture.py`, which refuses if Node's result varies within a cwd form.
+  - It holds 25 inputs × 4 process-cwd forms: drive root, plain, extended, and the UNC admin share `\\localhost\E$\…`. That covers §7.2 item 4 at the pure seam, without the UNC path ever being used as a real cwd.
+  - On win32 the real resolver also reproduces all 100 rows under each of the 4 characterized providers.
+- **EXEC-005 consumer.** `test_exec005_rooted_spawn_cwd_uses_the_process_device` spawns a child with provider cwd `C:\never-used` and the rooted spelling of a contained `tmp_path`. The child must start in `tmp_path`, on the process drive; merged Python's M1 would have chosen `C:`.
+- **Controls**, each with a green baseline and its paired positive green under the wrong behavior:
+
+  | Control | Wrong behavior installed | Killed by | Paired positive |
+  |---|---|---|---|
+  | D013-C1 | the process-cwd operand replaced by the provider `C:\x` | `win32/host/rooted/01` | `win32/baseline/rooted-01` |
+  | D013-C2 | ntpath's UNC split as the root parse | `win32/host/rooted/06` and `/08` | `win32/baseline/rooted-01` |
+  | D013-C3 | the raw server/share separator run kept in the device | `win32/baseline/rooted-03` | `win32/baseline/rooted-02` |
+  | D013-C4 | the extended process cwd's `\\?\` stripped | `win32/host/rooted-extended/01` | `win32/host/rooted/01` |
+  | D013-C5 | `node_posix_single_root` as the identity (two leading `/` kept) | `linux/baseline/rooted-02` | `linux/baseline/rooted-01` |
+
+  There are also runner refusal controls: an extended child reporting the ordinary, case-folded or `\\.\` spelling is REFUSED, and the exact spelling is admitted. The D012 native-boundary controls and regressions are unchanged and still run.
+
+### 9.3 Gate launchers
+
+The Python gate launchers were rebuilt after two Codex paper checks.
+- **First check:** the #229-derived shell launchers were refused because of unchecked run names, a cleanup-capable basetemp, a non-fatal preflight and a writable `/out` bind.
+- **Second check:** the rebuilt launchers were refused because of spawn timeouts and buffer limits that could terminate a gate, and incomplete bundle parsing.
+
+The approved launchers (`impl/gates/`) do the following:
+- They use the reviewed fs-guard only, with plain new run names.
+- Every input is proven before any mkdir, and every Linux bind is re-proven immediately before Docker.
+- Every log is opened `wx` right after its `assertOutput` proof and receives the gate's output directly, with no buffer, no timeout and no automatic termination.
+- pytest's basetemp is proven contained and missing before pytest starts. A failed preflight refuses.
+- Linux has only read-only binds, and its nonce bundle is parsed byte-complete before anything is published.
+
+The intercepted controls passed before the first gate: `win-controls.mjs` 18/18 and `linux-controls.mjs` 29/29 (outputs `gates/*-controls-1.txt`). Runs 2 and 3 carry that execution at the same hashes; it was not rerun.
+
+### 9.4 Gates (Codex-granted windows, 2026-10-16)
+
+| Run | Code head | Windows | Linux (`python:3.13`, uid 1000) |
+|---|---|---|---|
+| 1 | `83481021` | pytest 7330 passed / 0 failed, but coverage 99.99% (the removed line); ruff 4 × E501; format of 1 changed file | 6654 passed / 0 failed; ruff 4 × E501 |
+| 2 | `3265d040` | pytest 7330 / 0, coverage 100%; ruff 1 × E501 (my rewrap moved the overflow) | 6654 / 0; ruff 1 × E501 |
+| **3** | **`aefc67e3`** | **preflight, icu, ruff, format of changed files, mypy (118 files), pytest 7330 passed / 0 failed / 47 skipped / 19 xfailed with coverage 100.00%: all exit 0** | **icu-build, pip, versions, ruff exit 0; pytest 6654 passed / 0 failed / 670 skipped / 19 xfailed** |
+
+Each run recorded every exit as-is, and nothing was fixed or rerun inside a grant. Run 3 is the credited tier. Two Linux exits are nonzero and identical to the accepted `#229` Linux baseline:
+- pytest exits 1 on the coverage gate alone (96.74%), because 100% is gated on Windows;
+- mypy exits 1 with the same 15 errors (win32 `ctypes` attributes and the missing `jsonschema` stubs), line-for-line equal to `#229`'s and to run 2's.
+
+The whole-tree format check lists the same 7 pre-existing files as `#229`, none of them touched here. The logs are in `impl/gates/win-3`, `impl/gates/linux-3` and `impl/gates/history` (ledger `impl/SHA256SUMS`).
+
+### 9.5 Open point for the implementation review: a process-cwd read failure
+
+- **Contract.** Spec §3.2 says a failure to read the process cwd is "the existing typed error", and spec §2 makes normalizing a bare `OSError` the provider's obligation.
+- **Merged Python.** `os.getcwd()` failing inside `resolve_local_path` escapes as a bare `OSError` from every `ctx.fs` operation and from the spawn-cwd resolution. This was already true of the L12-D012 drive-relative branch, and it is now also true of the rooted branch.
+- **Not invented here.** Neither the contract nor CE-L12D012-02 names the code or path of that typed error for Python, so this candidate does not invent one.
+- **Reachability.** On win32 a process cwd cannot be removed while the process holds it, so the read is not expected to fail in practice. POSIX never reads it in this branch.
+- **Proposal.** Record it as a Python finding for the reviewer's disposition: either a separate work package, which specifies the `FsError`/`ShellError`/`SubprocessError` mapping across every operation, or a statement that it is accepted as is.
+
+### 9.6 Disclosures
+
+- The M4 helper is also applied to the relative branch. This goes beyond the one corpus row, and its values are Node-recorded (§9.1).
+- The EXEC-005 witness covers `ctx.subprocess`. `ctx.shell` uses the same `resolve_local_path` call for its cwd (`shell.py`) and has no separate witness here.
+- The two refused launcher designs never executed.
+
+### 9.7 State
+
+- Python Layer-12 delta L12-D013: implemented, **PENDING INDEPENDENT REVIEW** (`L12D013-F001` open).
+- Rust: revalidation against the merged cases after merge.
+- L12-D013 cross-language: **NOT CLOSED**.

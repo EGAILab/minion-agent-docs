@@ -1,0 +1,96 @@
+unformatted: File would be reformatted
+  --> src\minion_agent\session\operations.py:75:40
+   |
+74 |     if boundary > tip:
+   -         raise InvalidForkBoundaryError(
+   -             f"fork boundary {boundary} is beyond committed tip {tip}"
+   -         )
+75 +         raise InvalidForkBoundaryError(f"fork boundary {boundary} is beyond committed tip {tip}")
+76 |     child = SessionLog(
+   |
+
+unformatted: File would be reformatted
+  --> src\minion_agent\tools\registry.py:61:17
+   |
+60 |
+   -     def resolve(
+   -         self, name: str, scope: ScopeKey | Scope | None = None
+   -     ) -> ToolDefinition | None:
+61 +     def resolve(self, name: str, scope: ScopeKey | Scope | None = None) -> ToolDefinition | None:
+62 |         """The definition `name` refers to from `scope`, or None.
+   |
+
+unformatted: File would be reformatted
+   --> tests\agent\test_instance.py:121:23
+    |
+120 |     context = Context()
+    -     a = AgentInstance(
+    -         instance_id="a", definition=definition, log=SessionLog("a"), ctx=context
+    -     )
+    -     b = AgentInstance(
+    -         instance_id="b", definition=definition, log=SessionLog("b"), ctx=context
+    -     )
+121 +     a = AgentInstance(instance_id="a", definition=definition, log=SessionLog("a"), ctx=context)
+122 +     b = AgentInstance(instance_id="b", definition=definition, log=SessionLog("b"), ctx=context)
+123 |
+    |
+
+unformatted: File would be reformatted
+   --> tests\conformance\session_runner.py:209:27
+    |
+208 |         usage=_usage(spec["usage"]) if "usage" in spec else None,
+    -         added_tool_names=(
+    -             tuple(spec["added_tool_names"]) if "added_tool_names" in spec else None
+    -         ),
+209 +         added_tool_names=(tuple(spec["added_tool_names"]) if "added_tool_names" in spec else None),
+210 |     )
+    |
+
+unformatted: File would be reformatted
+   --> tests\conformance\transform_runner.py:332:53
+    |
+331 |     normalizer = (
+    -         _normalizer(spec["normalize_tool_call_ids"])
+    -         if "normalize_tool_call_ids" in spec
+    -         else None
+332 +         _normalizer(spec["normalize_tool_call_ids"]) if "normalize_tool_call_ids" in spec else None
+333 |     )
+    |
+
+unformatted: File would be reformatted
+   --> tests\tools\test_post_execute.py:366:95
+    |
+365 |
+    - async def test_middle_listener_failure_skips_later_listeners_with_a_raw_listener_present() -> (
+    -     None
+    - ):
+366 + async def test_middle_listener_failure_skips_later_listeners_with_a_raw_listener_present() -> None:
+367 |     """The failure short-circuit holds even when a raw listener is mixed into the chain: a
+    |
+
+unformatted: File would be reformatted
+   --> tests\tools\test_updates.py:93:19
+    |
+92  |     seen: list[str] = []
+    -     ctx.events.on(
+    -         TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(call_id)
+    -     )
+93  +     ctx.events.on(TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(call_id))
+94  |
+--------------------------------------------------------------------------------
+136 |     seen: list[ToolPartialResult] = []
+    -     ctx.events.on(
+    -         TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(partial)
+    -     )
+137 +     ctx.events.on(TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(partial))
+138 |
+--------------------------------------------------------------------------------
+298 |     seen: list[ToolPartialResult] = []
+    -     ctx.events.on(
+    -         TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(partial)
+    -     )
+299 +     ctx.events.on(TOOLS_UPDATE, lambda call_id, tool_name, arguments, partial: seen.append(partial))
+300 |     stashed: list[Any] = []
+    |
+
+7 files would be reformatted, 346 files already formatted
