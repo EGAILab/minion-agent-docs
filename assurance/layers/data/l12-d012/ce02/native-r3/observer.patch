@@ -1,0 +1,13 @@
+diff --git a/minion-agent-rust/crates/minion-agent/src/execution/path.rs b/minion-agent-rust/crates/minion-agent/src/execution/path.rs
+index 3f30111..58c06d1 100644
+--- a/minion-agent-rust/crates/minion-agent/src/execution/path.rs
++++ b/minion-agent-rust/crates/minion-agent/src/execution/path.rs
+@@ -1,5 +1,8 @@
+ //! Logical filesystem paths retain the certified UTF-16 string primitive.
+ //! Native projection is explicit and belongs immediately before an OS call.
++#[cfg(all(test, windows))]
++#[path = "ce02_observer.rs"]
++mod ce02_observer;
+ use std::{
+     env,
+     path::{Path, PathBuf},
