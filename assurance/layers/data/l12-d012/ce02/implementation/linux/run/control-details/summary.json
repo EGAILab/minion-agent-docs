@@ -1,0 +1,126 @@
+{
+  "controls": [
+    {
+      "control": "colon-separator-dropped",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::posix_colons_remain_ordinary_components",
+      "reason": "file:/C:/a%2Fb",
+      "fired": true
+    },
+    {
+      "control": "mismatch-always-root",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "bmp-1",
+      "fired": true
+    },
+    {
+      "control": "fall-through-selection",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "bmp-1",
+      "fired": true
+    },
+    {
+      "control": "empty-is-value",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "empty",
+      "fired": true
+    },
+    {
+      "control": "scalar-index-not-unit-index",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "astral-backslash",
+      "fired": true
+    },
+    {
+      "control": "one-replacement-native-view",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "lone-high-backslash",
+      "fired": true
+    },
+    {
+      "control": "raw-native-entry",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    },
+    {
+      "control": "raw-native-cwd",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    },
+    {
+      "control": "logical-projected",
+      "status": "KILLED",
+      "witness": "execution::path::tests::lexical_paths_do_not_project_surrogates",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "entry-preconditions-omitted",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    },
+    {
+      "control": "search-case-sensitive-regression",
+      "status": "KILLED",
+      "witness": "tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "host-unicode-lowercase-regression",
+      "status": "KILLED",
+      "witness": "execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "logical-provider-cwd-projected",
+      "status": "KILLED",
+      "witness": "execution::path::tests::logical_provider_cwd_stays_raw",
+      "reason": "high",
+      "fired": true
+    },
+    {
+      "control": "cwd-read-error-panics",
+      "status": "KILLED",
+      "witness": "execution::path::tests::native_cwd_read_failure_is_an_error_value",
+      "reason": "CONTROL CWD PANIC",
+      "fired": true
+    },
+    {
+      "control": "cwd-read-error-guesses-root",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing",
+      "reason": "called `Result::unwrap_err()` on an `Ok` value",
+      "fired": true
+    },
+    {
+      "control": "CE02-C1",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    },
+    {
+      "control": "CE02-C2",
+      "status": "KILLED",
+      "witness": "execution::path::tests::native_cwd_posix_boundary",
+      "reason": "posix-cwd/trailing",
+      "fired": true
+    },
+    {
+      "control": "CE02-C3",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    },
+    {
+      "control": "CE02-C4",
+      "status": "NOT_APPLICABLE",
+      "reason": "Windows native entry/cwd/precondition branch"
+    }
+  ],
+  "restored": "GREEN"
+}

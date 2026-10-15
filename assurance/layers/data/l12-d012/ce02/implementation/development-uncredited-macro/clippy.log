@@ -1,0 +1,15 @@
+    Checking minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-rust\minion-agent-rust\crates\minion-agent-pinned-icu)
+    Checking minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-rust\minion-agent-rust\crates\minion-agent-native-fs)
+    Checking minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-rust\minion-agent-rust\crates\minion-agent-native-env)
+    Checking xtask v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-rust\minion-agent-rust\xtask)
+    Checking minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-rust\minion-agent-rust\crates\minion-agent)
+error: no rules expected `.`
+   --> crates\minion-agent\src\execution\path.rs:496:46
+    |
+496 | ...   "entry_views":["A", "E", "X"].map(|drive| (drive, inherited_drive_view(&format!("{drive}:").encode_utf16().collect::<Vec<_>>(...
+    |                                    ^ no rules expected this token in macro call
+    |
+    = note: while trying to match end of macro
+
+error: could not compile `minion-agent` (lib test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

@@ -1,0 +1,12 @@
+{
+  "code_head": "666e7365aea2ce216a65e37662da2879273c0945",
+  "source_clean": true,
+  "checkpoint_agreement": "#229 issuecomment-6183538250 R1-R5",
+  "normalized_lf_sha256": {
+    "conformance/agent/path-resolution/path-resolution.json": "196fbd111d7c277f1416ec8aae6d8d7cc53af995992658ef3cba85ac33023d12",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_native_operand.json": "c1911c257c5daa0d1ee3978abe383720eb92919e0d0cd97a4f5b58abb4e4ef29",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_selected_value.json": "634ceeb85ca7477e262ea33e295df772b7ce4ea725e178a82d878efdefa8ee84",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_logical_cwd.json": "525b0782d7d96018a08a5221138cc7974d1f00db3cec3296da70d2da3cd7dc3e"
+  },
+  "development-uncredited": "Observer JSON macro compile error at83bb39e; fixture label decoding failures at3418ec0; no native rows/controls executed in either run."
+}

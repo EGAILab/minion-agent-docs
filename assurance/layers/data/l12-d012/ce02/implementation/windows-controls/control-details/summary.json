@@ -1,0 +1,154 @@
+{
+  "controls": [
+    {
+      "control": "colon-separator-dropped",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::posix_colons_remain_ordinary_components",
+      "reason": "file:/C:/a%2Fb",
+      "fired": true
+    },
+    {
+      "control": "mismatch-always-root",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "bmp-1",
+      "fired": true
+    },
+    {
+      "control": "fall-through-selection",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "bmp-1",
+      "fired": true
+    },
+    {
+      "control": "empty-is-value",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "empty",
+      "fired": true
+    },
+    {
+      "control": "scalar-index-not-unit-index",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "astral-backslash",
+      "fired": true
+    },
+    {
+      "control": "one-replacement-native-view",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows",
+      "reason": "lone-high-backslash",
+      "fired": true
+    },
+    {
+      "control": "raw-native-entry",
+      "status": "KILLED",
+      "witness": "native",
+      "reason": "entry/lone-high-backslash",
+      "fired": true
+    },
+    {
+      "control": "raw-native-cwd",
+      "status": "KILLED",
+      "witness": "native",
+      "reason": "cwd/lone-high/absent",
+      "fired": true
+    },
+    {
+      "control": "logical-projected",
+      "status": "KILLED",
+      "witness": "execution::path::tests::lexical_paths_do_not_project_surrogates",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "entry-preconditions-omitted",
+      "status": "KILLED",
+      "witness": "native",
+      "reason": "refusal/present-empty",
+      "fired": true
+    },
+    {
+      "control": "search-case-sensitive-regression",
+      "status": "KILLED",
+      "witness": "tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "host-unicode-lowercase-regression",
+      "status": "KILLED",
+      "witness": "execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17",
+      "reason": "assertion `left == right` failed",
+      "fired": true
+    },
+    {
+      "control": "logical-provider-cwd-projected",
+      "status": "KILLED",
+      "witness": "execution::path::tests::logical_provider_cwd_stays_raw",
+      "reason": "high",
+      "fired": true
+    },
+    {
+      "control": "cwd-read-error-panics",
+      "status": "KILLED",
+      "witness": "execution::path::tests::native_cwd_read_failure_is_an_error_value",
+      "reason": "CONTROL CWD PANIC",
+      "fired": true
+    },
+    {
+      "control": "cwd-read-error-guesses-root",
+      "status": "KILLED",
+      "witness": "execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing",
+      "reason": "called `Result::unwrap_err()` on an `Ok` value",
+      "fired": true
+    },
+    {
+      "control": "CE02-C1",
+      "status": "KILLED",
+      "witness": "ce02/prefix",
+      "reason": [
+        "extended/absent/cwd_view",
+        "extended/absent/absolute_path/0",
+        "extended/absent/logical/0",
+        "extended/absent/absolute_path/1",
+        "extended/absent/logical/1",
+        "extended/absent/absolute_path/4",
+        "extended/absent/logical/4"
+      ],
+      "fired": true
+    },
+    {
+      "control": "CE02-C2",
+      "status": "KILLED",
+      "witness": "ce02/roots",
+      "reason": [
+        "extended-root/absent/cwd_view"
+      ],
+      "fired": true
+    },
+    {
+      "control": "CE02-C3",
+      "status": "KILLED",
+      "witness": "ce02/entry-prefix",
+      "reason": [
+        "plain/extended/entry_view",
+        "plain/extended/absolute_path/0",
+        "plain/extended/logical/0"
+      ],
+      "fired": true
+    },
+    {
+      "control": "CE02-C4",
+      "status": "KILLED",
+      "witness": "ce02/entry-trim",
+      "reason": [
+        "plain/matching-trailing/entry_view"
+      ],
+      "fired": true
+    }
+  ],
+  "restored": "GREEN"
+}

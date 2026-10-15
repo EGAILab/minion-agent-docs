@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED host-unicode-lowercase-regression
+
+thread 'execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17' (25584) panicked at crates/minion-agent/src/execution/node_lower.rs:68:9:
+assertion `left == right` failed
+  left: [42959, 42963, 55323, 57019, 959, 962, 32, 959, 963, 945, 32, 959, 962, 769, 32, 105, 775]
+ right: [42958, 42962, 55323, 56992, 959, 962, 32, 959, 963, 945, 32, 959, 962, 769, 32, 105, 775]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17 ... FAILED
+
+failures:
+
+failures:
+    execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.02s
+

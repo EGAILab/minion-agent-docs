@@ -1,0 +1,42 @@
+
+running 2 tests
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:249:5:
+fixture parent traversal input
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:249:5:
+fixture parent traversal input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:253:5:
+drive-relative fixture input
+PASS 
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:253:5:
+drive-relative fixture input
+"fs-remove-readonly-nonrec-readonly-target-file
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:253:5:
+drive-relative fixture input
+"
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (18039) panicked at crates/minion-agent/tests/support/fs_containment.rs:257:5:
+colon fixture names require ./
+PASS "fs-remove-readonly-nonrec-symlink-to-external-readonly-filetest containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch ... ok"
+
+PASS "fs-remove-readonly-rec-nested-readonly-files"
+PASS "fs-remove-readonly-rec-posix-readonly-empty-dir"
+PASS "fs-remove-readonly-rec-posix-readonly-subdir"
+PASS "fs-remove-readonly-rec-readonly-child-file"
+PASS "fs-remove-readonly-rec-readonly-target-file"
+PASS "fs-remove-readonly-rec-symlink-to-external-readonly-dir"
+PASS "fs-remove-readonly-rec-symlink-to-external-readonly-file"
+L12-D005: 9/21 documents executed on linux
+test canonical_fs_remove_readonly ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

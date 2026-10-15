@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED logical-projected
+
+thread 'execution::path::tests::lexical_paths_do_not_project_surrogates' (54924) panicked at crates\minion-agent\src\execution\path.rs:530:9:
+assertion `left == right` failed
+  left: [65533, 65533, 65533]
+ right: [56320]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path::tests::lexical_paths_do_not_project_surrogates ... FAILED
+
+failures:
+
+failures:
+    execution::path::tests::lexical_paths_do_not_project_surrogates
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.00s
+
