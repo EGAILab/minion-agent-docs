@@ -1,0 +1,7 @@
+{
+  "gate_target": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\cache\\cargo-target\\windows",
+  "control_target": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\cache\\cargo-target\\windows-controls",
+  "source": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\codex-l12d012-rust\\minion-agent-rust",
+  "cargo_jobs": "4",
+  "phase": "gates"
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "operator transcript summary, not captured raw preflight stdout",
+  "preflight": {
+    "free_memory_gb": 38.03,
+    "active_builds": "none",
+    "free_e_gb": 1093
+  },
+  "cargo_jobs": 4,
+  "fresh_workspace_source_files": 215,
+  "first_attempt": "ICU settings omitted; compile failure; zero native rows; uncredited",
+  "second_attempt": "unsafe Win32 observation rejected by forbid(unsafe_code); zero native rows; uncredited",
+  "credited_characterization": "native-r3; unchanged production expressions; safe Rust observer plus separate ctypes child; 196 states,588 children,980 resolver observations",
+  "batch_done": "All compiler/observer/Node/Python children ended; no Docker ran; host released before documentary packaging",
+  "limits": "Windows characterization only, not G3, not certification or a production-control kill"
+}

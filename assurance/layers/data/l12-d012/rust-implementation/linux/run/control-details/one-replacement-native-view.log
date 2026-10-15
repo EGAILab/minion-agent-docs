@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED one-replacement-native-view
+
+thread 'execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows' (23101) panicked at crates/minion-agent/src/execution/path_resolve.rs:256:13:
+assertion `left == right` failed: "lone-high-backslash"
+  left: ResultString { units: JsString([97, 58, 65533, 92, 100, 101, 101, 112, 92, 108, 101, 97, 102]), scalar: Some("a:�\\deep\\leaf") }
+ right: ResultString { units: JsString([97, 58, 65533, 65533, 65533, 92, 100, 101, 101, 112, 92, 108, 101, 97, 102]), scalar: Some("a:���\\deep\\leaf") }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows ... FAILED
+
+failures:
+
+failures:
+    execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 211 filtered out; finished in 0.03s
+

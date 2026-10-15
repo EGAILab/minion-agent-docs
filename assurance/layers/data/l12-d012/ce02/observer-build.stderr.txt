@@ -1,0 +1,8 @@
+   Compiling ring v0.17.14
+   Compiling zstd-sys v2.1.0+zstd.1.5.7
+   Compiling rust_icu_sys v5.8.0
+   Compiling rustls v0.23.45
+   Compiling zstd-safe v7.3.0
+   Compiling ittapi-sys v0.4.0
+error: could not compile `rust_icu_sys` (lib) due to 34 previous errors
+warning: build failed, waiting for other jobs to finish...

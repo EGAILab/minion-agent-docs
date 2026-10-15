@@ -1,0 +1,7 @@
+{
+  "gate_target": "/target",
+  "control_target": "/control-target",
+  "source": "/tmp/l12d012-gates/work/minion-agent-rust",
+  "cargo_jobs": "4",
+  "phase": "all"
+}

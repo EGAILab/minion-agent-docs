@@ -1,0 +1,5 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-ce02\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-ce02\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-ce02\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d012-ce02\minion-agent-rust\crates\minion-agent)
+error: could not compile `minion-agent` (lib test) due to 3 previous errors
