@@ -1,0 +1,20 @@
+
+running 1 test
+CONTROL FIRED logical-provider-cwd-projected
+CONTROL FIRED logical-provider-cwd-projected
+CONTROL FIRED logical-provider-cwd-projected
+
+thread 'execution::path::tests::logical_provider_cwd_stays_raw' (12492) panicked at crates\minion-agent\src\execution\path.rs:274:17:
+assertion `left == right` failed: real provider "high"
+  left: ResultString { units: JsString([67, 58, 92, 108, 111, 103, 105, 99, 97, 108, 92, 120, 65533, 65533, 65533, 121, 92, 108, 101, 97, 102]), scalar: Some("C:\\logical\\x���y\\leaf") }
+ right: ResultString { units: JsString([67, 58, 92, 108, 111, 103, 105, 99, 97, 108, 92, 120, 55296, 121, 92, 108, 101, 97, 102]), scalar: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path::tests::logical_provider_cwd_stays_raw ... FAILED
+
+failures:
+
+failures:
+    execution::path::tests::logical_provider_cwd_stays_raw
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 217 filtered out; finished in 0.08s
+

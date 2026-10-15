@@ -1,0 +1,11 @@
+{
+  "code_pr": 234,
+  "code_head": "0389a29c59e56f9934f66bf9e13927858c5a65fc",
+  "rust_source_clean": true,
+  "canonical_and_node_fixture_lf_sha256": {
+    "conformance/agent/path-resolution/path-resolution.json": "196fbd111d7c277f1416ec8aae6d8d7cc53af995992658ef3cba85ac33023d12",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_selected_value.json": "634ceeb85ca7477e262ea33e295df772b7ce4ea725e178a82d878efdefa8ee84",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_win32_resolve.json": "c4b7c0ef0dcdf69c3f543136cb303c82caae9524da37d07c2a6a669ef76892eb",
+    "minion-agent-rust/crates/minion-agent/tests/data/node_logical_cwd.json": "525b0782d7d96018a08a5221138cc7974d1f00db3cec3296da70d2da3cd7dc3e"
+  }
+}

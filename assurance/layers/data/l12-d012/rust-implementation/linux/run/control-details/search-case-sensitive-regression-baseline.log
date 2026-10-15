@@ -1,0 +1,6 @@
+
+running 1 test
+test tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 211 filtered out; finished in 0.02s
+

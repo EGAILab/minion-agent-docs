@@ -1,0 +1,16 @@
+
+running 1 test
+CONTROL FIRED cwd-read-error-panics
+
+thread 'execution::path::tests::native_cwd_read_failure_is_an_error_value' (27261) panicked at crates/minion-agent/src/execution/path.rs:76:101:
+CONTROL CWD PANIC: Custom { kind: PermissionDenied, error: "native cwd denied" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path::tests::native_cwd_read_failure_is_an_error_value ... FAILED
+
+failures:
+
+failures:
+    execution::path::tests::native_cwd_read_failure_is_an_error_value
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 211 filtered out; finished in 0.01s
+

@@ -402,3 +402,11 @@ Codex's final complete review 1 (`#229` issuecomment-6177822640) was CHANGES REQ
 - Shared L12-D012 contract: approved and merged (unchanged since `5a244f13` / `b0b3de6c`).
 - Rust L12-D012 (**L12D012-F001**): **REVALIDATE_REQUIRED**, to be dispatched separately from the merged baseline. #224 RUST-F001 stays blocked on it.
 - L12-D012 cross-language: **NOT CLOSED**.
+
+## 15. Rust F001 implementation record
+
+The Rust implementation candidate, its independent Node-derived witnesses,
+compiled controls and final native evidence are recorded separately in
+`12-l12-d012-rust.md`. This pointer does not certify F001. Closure requires
+Claude's independent Rust review at the exact pushed code/docs pair; #224's Rust
+candidate #228 remains dependent on that correction and its subsequent rebase.

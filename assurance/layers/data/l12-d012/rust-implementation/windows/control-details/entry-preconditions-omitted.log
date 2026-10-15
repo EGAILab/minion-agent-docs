@@ -1,0 +1,1 @@
+{"status": "FAIL", "id": "refusal/present-empty", "reason": "precondition", "actual": "SEAM REACHED", "expected": "REFUSED WITH ZERO OBSERVATIONS", "fired": ["CONTROL FIRED entry-preconditions-omitted"]}
