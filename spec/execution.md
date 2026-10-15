@@ -335,6 +335,31 @@ Confirmed concrete resolution rules from the reference implementation (`nodejs.t
 - an absolute result is used as-is (syntactically normalized); a relative result is resolved
   against `cwd`.
 
+**Rooted and UNC-root inputs on win32 (`L12-D013`, `minion-agent#235`; DIRECT_PI_PARITY).** "Absolute"
+above is Node's `path.win32.isAbsolute`. Such an input is resolved as Node's
+`path.win32.resolve(input)`, alone and without the provider `cwd`. This applies to the input as it
+stands after the `~` and `file://` steps above, at Pi's unchanged absolute-or-relative decision.
+Its root is parsed as follows:
+
+- **A complete UNC root** is the result's device: exactly two leading separators, a non-empty server,
+  one or more separators, and a non-empty share, where either separator may be used. The root is
+  emitted with single `\` separators, and gets a final `\` when nothing follows it.
+- **A drive root** (`X:\`, `X:/`) is the device, unchanged by this rule.
+- **No device.** This covers a leading `\` or `/` that does not complete a UNC root, and a
+  double-separator form that is not a complete UNC root (`\\leaf`, `\\srv\`, `\\\leaf`). Such a
+  root takes its device from the **process** cwd, never from the provider `cwd`. Inherited `=X:`
+  entries play no part.
+  - The device is the same root parse applied to the process-cwd native operand of
+    CE-L12D012-02: an `X:` drive, a `\\server\share` root, or a namespace root such as `\\?\E:`.
+  - The tail is the input after its one-unit root. For a double-separator form that is not a
+    complete UNC root, the whole input is the tail.
+
+The result is the device, then `\`, then the tail normalized: `.` and empty segments dropped, `..`
+clamped at the root, and `\` emitted. A failure to read the process cwd is the existing typed error;
+nothing is guessed. On POSIX nothing changes: a leading `/` is absolute and used as-is, and a
+leading `\` is an ordinary relative name. The same rule governs the effective spawn `cwd` of
+`ctx.shell`/`ctx.subprocess` (§5, §6), which uses this resolver.
+
 **Correction record (independent review, `L12-R002`):** an earlier revision of this section stated
 symlinks are "never followed by path resolution or by any operation" except `canonical_path`. That
 claim was wrong -- confirmed against pinned Pi directly: ordinary content operations (`readFile`/
