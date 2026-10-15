@@ -1,6 +1,6 @@
 # L12-D012 — path resolution of colon-bearing components and the malformed `file:` literal fallback
 
-Status: **contract APPROVED and merged** (code #230 → `5a244f13`, docs #304 → `b0b3de6c`). **Python: APPROVED and merged** (§14): final complete review 2 issuecomment-6179335846 at code #232 `b7d046fe` / docs #306 `482d0c32`; merged code → `8bb165e5`, docs → `b2e8148c`. *(Earlier: CONTRACT_DRAFT; Python REVALIDATE_REQUIRED on Windows, F002; then implementation candidate and convergence episode CE-L12D012-01.)* Rust: REVALIDATE_REQUIRED (F001). Cross-language: NOT CLOSED.
+Status: **contract APPROVED and merged** (code #230 → `5a244f13`, docs #304 → `b0b3de6c`). **Python: APPROVED and merged** (§14): final complete review 2 issuecomment-6179335846 at code #232 `b7d046fe` / docs #306 `482d0c32`; merged code → `8bb165e5`, docs → `b2e8148c`. *(Earlier: CONTRACT_DRAFT; Python REVALIDATE_REQUIRED on Windows, F002; then implementation candidate and convergence episode CE-L12D012-01.)* **Rust: APPROVED and merged** (§16): code #234 → `83a78655`, docs #308 → `3cfb7998`. **Cross-language: CLOSED.** *(Earlier: Rust REVALIDATE_REQUIRED, F001; cross-language NOT CLOSED.)*
 Provenance: `#224` L12D011-RUST-F001 (issuecomment-6164614623); triage issuecomment-6164695679; scoping 1 `#229` issuecomment-6164885136.
 Requirements: `EXEC-002` (`ctx.fs` path resolution, §3.2), `EXEC-005` (the spawn cwd, which uses the same resolver). `TOOL-026` is a neighbor: it reuses the Layer-12 resolver and is not reopened (§5).
 
@@ -410,3 +410,12 @@ compiled controls and final native evidence are recorded separately in
 `12-l12-d012-rust.md`. This pointer does not certify F001. Closure requires
 Claude's independent Rust review at the exact pushed code/docs pair; #224's Rust
 candidate #228 remains dependent on that correction and its subsequent rebase.
+
+## 16. Rust outcome (post-merge status sync)
+
+- Rust L12-D012 (**L12D012-F001**): **APPROVED and MERGED**.
+  - The final complete review is `#229` issuecomment-6187144794 at code #234 `666e7365` / docs #308 `8183e103`.
+  - Merged: code → `83a78655`, docs → `3cfb7998`.
+  - Convergence episode CE-L12D012-02 is settled.
+- L12-D012 cross-language: **CLOSED**.
+- Separately tracked: #235 L12-D013 and #236 L12-D014.

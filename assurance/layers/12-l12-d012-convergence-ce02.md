@@ -1,5 +1,8 @@
 # L12-D012 Rust native reads — CE-L12D012-02
 
+Status: **SETTLED; Rust APPROVED and MERGED** (§8). *(Historical status text
+follows unchanged.)*
+
 Status: **AGREED FOR IMPLEMENTATION of exactly R1–R5**, independent checkpoint
 review [issuecomment-6183538250](https://github.com/EGAILab/minion-agent/issues/229#issuecomment-6183538250).
 The characterization below remains evidence at rejected code
@@ -363,3 +366,16 @@ fixtures remain contained and retained; no case path is accessed as an I/O targe
 NEXT_OWNER: **Claude**, independent RUST-I001 targeted closure (§11.8.7), then
 the complete exact-pair review (§11.8.8). **No self-certification, merge, finding
 closure or #228 rebase is authorized by these author results.**
+
+## 8. Outcome (post-merge status sync)
+
+- Independent targeted closure (Claude round 3, [issuecomment-6187110171](https://github.com/EGAILab/minion-agent/issues/229#issuecomment-6187110171)): `L12D012-RUST-I001` PROVISIONALLY CLOSED at code `666e7365` / docs `8183e103`.
+  - The witness was CE02-C1: baseline MATCH, then the mutant failed with exactly the 7 intended ids, and the control fired.
+  - The reviewer probe showed the mismatch at the known-bad `0389a29c` and a match at the candidate.
+- One final complete review (Claude round 4, [issuecomment-6187144794](https://github.com/EGAILab/minion-agent/issues/229#issuecomment-6187144794)): **APPROVED**, with `L12D012-F001` and `L12D012-RUST-I001` CLOSED.
+  - Reviewer reruns used Claude-only targets.
+  - Windows: 696/0/1 ignored, 19/19 controls KILLED, CE02 196 states / 980 observations MATCH.
+  - Linux: 688/0/2 ignored, 13 KILLED and 6 Windows-only NA, uid-1000 green.
+  - The fixture, the libuv predicate rows and the 248-file ledger were recomputed independently.
+- Exact-SHA merges: code #234 → `83a78655`, docs #308 → `3cfb7998`. The episode is settled, with no Case A and no Case B.
+- L12-D012 cross-language: **CLOSED**. The scope inventory in §6 is routed separately and is not accepted risk: #235 L12-D013 (Python, win32 rooted drive-less input) and #236 L12-D014 (the `~` home source).
