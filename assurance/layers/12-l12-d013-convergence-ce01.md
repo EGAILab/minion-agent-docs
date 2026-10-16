@@ -45,7 +45,43 @@ Status: **SETTLED; PYTHON APPROVED AND MERGED.** `L12D013-PY-I001` was provision
 - **All 36 differences are a single class:** a provider `cwd` with **no absolute root of its own** (`\base`, `C:base`, `base`, `""`) combined with an input that supplies none either. There, Node reads the process cwd (30 rows) or the same-drive `=C:` entry (6 `C:base` rows, values differ). Python joins the strings and reads nothing.
 - That is the pre-existing Python success-path difference that spec §22.5 records and does not reopen. Its cells are **unreachable for DIV-009 in Python**. Nothing is moved there and no new disposition is taken.
 
-**POSIX (Node).** 6 of 24 rows read: provider `base` or `""` with input `x`, `""` or `\leaf`. No row with an absolute provider or input reads. Merged Python's POSIX branch contains no read (source). Rust reads in exactly Node's POSIX and win32 cells (review 5, `path.rs:123-147`, `path_resolve.rs:93-122`; source-derived), and its revalidation must witness them by injection.
+**POSIX (Node).** 6 of 24 rows read: provider `base` or `""` with input `x`, `""` or `\leaf`. No row with an absolute provider or input reads. Merged Python's POSIX branch contains no read (source).
+
+**Rust, per entry point** (corrected for `L12D013-RUST-C001`, §2.1).
+- **The lossless logical resolver entry,** with raw provider units, reads in exactly Node's POSIX and win32 cells (review 5, `path.rs:123-147`, `path_resolve.rs:93-122`; source-derived).
+- **The public providers** first apply the certified OS-path provider adapter, which strips an extended `\\?\` prefix.
+- Its revalidation witnesses each entry point's own reading cells by injection.
+
+*(Earlier text: "Rust reads in exactly Node's POSIX and win32 cells … and its revalidation must witness them by injection", stated without the entry-point qualification. Codex found the conflict at the start of the Rust revalidation, #235 issuecomment-6219403726.)*
+
+### 2.1 Rust entry points and the extended provider (`L12D013-RUST-C001`)
+
+**Finding.** `L12D013-RUST-C001`, a `CONTRACT_ASSURANCE_DEFECT` raised by Codex during the Rust revalidation (#235 issuecomment-6219403726; draft diagnostic code #240 `447b7dfa` / docs #315 `9c8e9012`, not to be merged). The revalidation handoff's §B.1 and this section's Rust sentence assigned Node's raw-input matrix to every Rust seam.
+
+**What Rust does.** Rust's public `LocalFileSystem` holds its provider `cwd` as an OS path. CE-L12D012-02 §2 preserves the adapter that maps it before resolution: `native_units`, then `without_extended_prefix`. It also requires that the adapter never be used for a native read.
+
+**Discriminating witness** (Codex diagnostic 3, Windows, injected reader, provider `\\?\C:\base`, input `c:leaf`, `=C:` absent):
+
+| Entry point | Observation |
+|---|---|
+| Rust's raw logical resolver | one read, the injected error |
+| real `LocalFileSystem::absolute_path` | zero reads, `Ok(c:\base\leaf)` |
+| paired ordinary provider `C:\base` | zero reads, `Ok(c:\base\leaf)` |
+| paired complete-UNC provider | one read, the injected error |
+
+**The frozen Node rows** (`rd-1/node.out`) compare provider `\\?\C:\base` with `C:\base`. **36 of 48 rows are equal,** and these include every rooted and incomplete-UNC row, every complete-root row and every other-drive row. **12 differ:**
+- `c:leaf`: Node reads `=c:` in all four entry states, and the process cwd too when the entry is absent or empty. It gives `c:\leaf`, or `c:\deep\leaf` for the same-drive entry. The ordinary provider gives `c:\base\leaf` with no read.
+- `leaf` and `""`: Node keeps the prefix (`\\?\C:\base\leaf`, `\\?\C:\base`). The ordinary provider gives `C:\base\leaf` and `C:\base`.
+
+**Disposition (narrow; proposed for independent agreement):**
+1. **The read-domain requirement is per entry point** (spec §22.1).
+   - Rust's raw logical entry must witness every N cell of this section by injection, the extended-provider `c:leaf` cells included.
+   - Each public seam (`ctx.fs`, `ctx.shell.exec`, `ctx.subprocess.spawn`) must witness the cells where it reads. For an extended provider, those are the cells of its adapted form, characterized by injection at that seam and recorded with value and read count.
+   - Each no-read cell of a seam runs with a fail-if-called reader.
+   - No read is added, moved or forced eager. No prefix is stripped at a native read, and the adapter is not removed.
+2. **DIV-009's outcome rules (spec §22.2–§22.4) apply unchanged** wherever an entry point reads. That includes the caller-path mapping, precedence, the rename order and slot identity, `exists`/`resolve`/NUL propagation, and the exception boundary.
+3. **The success-value difference is an observation, not certified** (spec §22.5). At Rust's public seams an extended provider differs from pinned Pi in the 12 rows above. Python matches Pi there. The difference lies on the drive-relative and base-resolution surface (L12-D012 and the base §3.2 rule), outside L12-D013's rooted rule. It is tracked as a separate delta, which decides whether to align or to diverge. Neither choice is made here.
+4. **Unchanged:** the rooted and UNC-root rule, the corpus, DIV-009's Owner decision and amendment, Python's approval and merge, and the CE-L12D012-02 adapter.
 
 **Consequences for the witnesses (§5).**
 - Python's DIV-009 failure witnesses use every **NP** cell class: rooted and incomplete-UNC inputs under each provider form, and other-drive and same-drive inputs with an absent or empty entry.

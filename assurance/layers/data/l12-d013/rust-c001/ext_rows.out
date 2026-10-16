@@ -1,0 +1,13 @@
+DIFF input='c:leaf'         entries=absent ext='c:\\leaf' reads=1 env=['=c:'] | ord='c:\\base\\leaf' reads=0 env=[]
+DIFF input='c:leaf'         entries=empty  ext='c:\\leaf' reads=1 env=['=c:'] | ord='c:\\base\\leaf' reads=0 env=[]
+DIFF input='c:leaf'         entries=same   ext='c:\\deep\\leaf' reads=0 env=['=c:'] | ord='c:\\base\\leaf' reads=0 env=[]
+DIFF input='c:leaf'         entries=other  ext='c:\\leaf' reads=0 env=['=c:'] | ord='c:\\base\\leaf' reads=0 env=[]
+DIFF input='leaf'           entries=absent ext='\\\\?\\C:\\base\\leaf' reads=0 env=[] | ord='C:\\base\\leaf' reads=0 env=[]
+DIFF input='leaf'           entries=empty  ext='\\\\?\\C:\\base\\leaf' reads=0 env=[] | ord='C:\\base\\leaf' reads=0 env=[]
+DIFF input='leaf'           entries=same   ext='\\\\?\\C:\\base\\leaf' reads=0 env=[] | ord='C:\\base\\leaf' reads=0 env=[]
+DIFF input='leaf'           entries=other  ext='\\\\?\\C:\\base\\leaf' reads=0 env=[] | ord='C:\\base\\leaf' reads=0 env=[]
+DIFF input=''               entries=absent ext='\\\\?\\C:\\base' reads=0 env=[] | ord='C:\\base' reads=0 env=[]
+DIFF input=''               entries=empty  ext='\\\\?\\C:\\base' reads=0 env=[] | ord='C:\\base' reads=0 env=[]
+DIFF input=''               entries=same   ext='\\\\?\\C:\\base' reads=0 env=[] | ord='C:\\base' reads=0 env=[]
+DIFF input=''               entries=other  ext='\\\\?\\C:\\base' reads=0 env=[] | ord='C:\\base' reads=0 env=[]
+rows: 36 same, 12 differ
