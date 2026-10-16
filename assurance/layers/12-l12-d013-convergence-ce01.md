@@ -1,6 +1,6 @@
 # L12-D013 convergence episode CE-L12D013-01: the DIV-009 failure-outcome and precedence surface
 
-Status: **PROPOSED CHECKPOINT for independent agreement.** No production behaviour changes before agreement.
+Status: **AGREED FOR IMPLEMENTATION** (checkpoint review 6, `#235` issuecomment-6206812375, at code `6ac14acf` / docs `5bb8bd4d`). The Python remediation is recorded in `12-l12-d013-rooted.md` §11, pending targeted closure of `L12D013-PY-I001`. *(Earlier: PROPOSED CHECKPOINT for independent agreement.)*
 - Coordination: `minion-agent#235`.
 - Finding: `L12D013-PY-I001` (open).
 - Trigger: A. I001 survived implementation review 4 (issuecomment-6201717410) and contract review 5 (issuecomment-6205917076). Route RT-6's default, as review 5 recorded.

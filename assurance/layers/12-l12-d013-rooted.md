@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **REMEDIATION: DIV-009 contract amendment for independent agreement** (§10), before any change to the affected production behaviour. Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **DIV-009 PYTHON REMEDIATION for targeted closure of `L12D013-PY-I001`** (§11), after checkpoint CE-L12D013-01 was agreed (review 6). *(Earlier: REMEDIATION: DIV-009 contract amendment for independent agreement, §10.)* Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -414,3 +414,61 @@ This is independent agreement on the revised contract (§10.4, decision step 7),
 ### 10.7 Documentary corrections (review 4, non-blocking)
 
 §9.4 says the Linux mypy errors are "line-for-line equal" to `#229`'s. The precise statement: they are the **same 15 diagnostics, modulo source-line offsets**. The `filesystem.py` lines moved by +13, for example 982 → 995. There is no new mypy error.
+
+## 11. The DIV-009 Python remediation (after CE-L12D013-01)
+
+Contract review 5 (issuecomment-6205917076) fired trigger A and opened convergence episode CE-L12D013-01. After the Owner's `rename_file` amendment (issuecomment-6206113367), the checkpoint `12-l12-d013-convergence-ce01.md` was **agreed for implementation** by checkpoint review 6 (issuecomment-6206812375). This section records the remediation. `L12D013-PY-I001` and `L12D013-F001` stay open until targeted closure.
+
+### 11.1 Implementation (code; production modules `filesystem.py`, `shell.py`, `subprocess.py`)
+
+- **The one converted boundary.** `resolve_local_path` passes the port a reader that calls the native process-cwd view.
+  - Only an `OSError` raised by that read becomes `ProcessCwdReadError`. It carries the native error (also chained as `__cause__`) and the caller's argument exactly as passed.
+  - It is not an `OSError` subclass, so no unrelated handler can reclassify it.
+  - Every other exception propagates, as K6 witnesses.
+  - The read point and its laziness are unchanged. The no-read rows run with a fail-if-called reader.
+- **`ctx.fs`.** All 16 resolver-using methods carry `@_typed_cwd_failure`, which returns `Err(to_pi_fs_error(native, raw argument))`. That is the native classification and diagnostic, with the native error as `cause`.
+  - Resolution precedes every abort check and native call, so nothing native follows the failure. A spy on `asyncio.to_thread` witnesses this.
+- **Origin-sensitive propagation.** A private mark on the native error identifies a DIV-009 failure:
+  - `exists` returns it instead of `Ok(False)`;
+  - `resolve` returns it instead of falling back to `absolute_path`;
+  - native `lstat` and `realpath` outcomes keep their behaviour, paired by witnesses.
+- **The NUL error path** (L12-D006) reuses the resolutions the operation recorded during the call, through a per-call context variable. It never resolves again.
+  - A `ValueError` from before any resolution is re-raised unchanged.
+  - Effects made earlier (`write_file`'s and `append_file`'s parent creation) stay.
+- **`rename_file`:** source, destination, abort, rename, by the Owner amendment.
+- **`ctx.shell.exec`** and **`ctx.subprocess.spawn`** return `spawn_error` carrying the native failure, at their resolution step. Neither shell discovery nor a native process creation follows.
+
+### 11.2 Permanent witnesses and controls (`tests/execution/test_div009_cwd_read_failure.py`)
+
+- **Reading rows:** every NP cell class of the checkpoint's §2 matrix (rooted and incomplete-UNC inputs under all seven provider forms, and other-drive and same-drive inputs with an absent or empty entry), each with four native errors:
+  - ENOENT → `not_found`;
+  - permission denied → `permission_denied`;
+  - Win32 87 → `invalid`;
+  - EIO → `unknown`.
+
+  Each row asserts the code, the diagnostic, the raw `path`, `cause` identity and exactly one read.
+- **No-read rows:** every no-read cell class, with a fail-if-called reader. On POSIX, merged Python performs no read in any of the 24 rows, a recorded observation that is not certified.
+- **The caller's path:** a lone surrogate, a `file://srv/` spelling and a trailing-separator spelling are each reported raw.
+- **Every consumer:** all 16 resolver-using methods plus `exists`, through the real seam, with a native-call spy, unsignalled and (for the seven that inspect it) under an aborted signal.
+- **Derived operations:** `exists` and `resolve`, each paired with a real native absence.
+- **Rename:** R1–R10 of checkpoint §4, plus the successful un-aborted positive (a real rename inside `tmp_path`). Each row asserts the outcome and the number and order of reads. The NUL write and append rows keep their parent effect.
+- **Shell and subprocess:** `ctx.shell.exec` with a pre-abort and timeout precedence row; `ctx.subprocess.spawn` with pre-abort, NUL-after-resolution and NUL-only rows, against a spawn spy.
+- **Controls K1–K12**, each run against its named witness: the witness is first asserted green, then the wrong behaviour is installed and the same witness must fail.
+  - K1 leak the raw `OSError`; K2 a fixed code; K3 omit `path`; K4 the provider `cwd` as `path`; K5 an eager read; K6 catch everything; K7 a fabricated cwd;
+  - K8 spawn anyway; K9 the former Python rename order; K10 `exists` returning `false`; K11 the `resolve` fallback; K12 the NUL handler resolving again.
+- **Pinned-Pi side:**
+  - the read-domain run `rd-1` (checkpoint §2);
+  - implementation review 4's executed authority witness (the pinned slice on real Node with a throwing `process.cwd` rejects; reviewer probe `d013-cwd-error-authority-r4.cjs`).
+
+  No new Node probe was added.
+
+### 11.3 Gates (Codex-granted windows, 2026-10-16; launchers unchanged at `7d42b468` / `48b3dbda` / `579b8d52`, their controls carried, not rerun)
+
+| Run | Code head | Windows | Linux (`python:3.13`, uid 1000) |
+|---|---|---|---|
+| 4 | `f37316b1` | pytest 7770 passed / 0 failed / 81 skipped / 19 xfailed, coverage 100.00%; ruff, mypy, icu, node-posix 0; **format-changed 1** (one ruff reformat of a test call) | 6682 passed / 0 failed / 1116 skipped; ruff 0; coverage and mypy exits at the Linux baseline |
+| **5** | **`4cb5b5e2`** | **every gate exit 0**: pytest 7770 passed / 0 failed / 81 skipped / 19 xfailed, coverage 100.00%; ruff, format-changed, mypy (118 files), icu, node-posix | icu-build, pip, versions, ruff 0; pytest **6682 passed / 0 failed** / 1116 skipped (the win32-only rows) / 19 xfailed; coverage-only pytest exit 1 (96.60%, 100% being gated on Windows) and mypy exit 1 (the same 15 diagnostics as runs 3–4, modulo line offsets), both at the established Linux baseline |
+
+Run 5 is the credited tier. The single change from run 4 is that reformat. The whole-tree format check lists the same 7 pre-existing files as `#229`.
+- **Logs:** `data/l12-d013/impl/gates/win-5`, `linux-5`, and the run 4 summaries in `gates/history`. The `impl/SHA256SUMS` ledger now has 86 entries, all verified.
+- **Manifest status.** The `EXEC-002-DIV-009` row still says Python REMEDIATION_REQUIRED, and its witness entry PENDING. Editing it now would move the code head off the gated `4cb5b5e2`, so the row is updated by the post-closure status sync.
