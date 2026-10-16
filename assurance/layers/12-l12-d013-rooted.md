@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **DIV-009 PYTHON REMEDIATION for targeted closure of `L12D013-PY-I001`** (§11), after checkpoint CE-L12D013-01 was agreed (review 6). *(Earlier: REMEDIATION: DIV-009 contract amendment for independent agreement, §10.)* Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **PYTHON APPROVED AND MERGED; RUST REVALIDATION PENDING** (§13). Final complete review 9 approved the frozen pair, and both PRs are merged; L12-D013 cross-language is NOT CLOSED. *(Earlier: DIV-009 PYTHON REMEDIATION for targeted closure of `L12D013-PY-I001`, §11–§12.)* That remediation came after checkpoint CE-L12D013-01 was agreed (review 6). *(Earlier: REMEDIATION: DIV-009 contract amendment for independent agreement, §10.)* Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -321,6 +321,8 @@ The whole-tree format check lists the same 7 pre-existing files as `#229`, none 
 
 ### 9.7 State
 
+*(Superseded by §13.1.)*
+
 - Python Layer-12 delta L12-D013: implemented, **PENDING INDEPENDENT REVIEW** (`L12D013-F001` open).
 - Rust: revalidation against the merged cases after merge.
 - L12-D013 cross-language: **NOT CLOSED**.
@@ -525,3 +527,31 @@ Spec 18.1 requires the resolved source fallback, unprojected. Spec 22.2 requires
 ### 12.5 Review requested
 
 The request is a targeted `L12D013-PY-I001` closure review at the exact pushed pair: code #238 `07731c8b` and the docs head carrying this section. The candidate does not enter FINAL_CONTRACT_REVIEW and does not start Rust revalidation.
+
+## 13. Targeted closure review 8, final complete review 9, merge and state
+
+- **Review 8.** Targeted closure review 8 (issuecomment-6217444941) **APPROVED** code `07731c8b` / docs `7d8fb3cc` and provisionally closed `L12D013-PY-I001`. Its evidence is the unchanged review-7 reduction, now passing, and the R11 partition with K13 installed. The two equal-spelling, varying-read rows fail as intended; the others pass.
+- **F001 route.** Before the final review, the author reconciled `L12D013-F001` from existing evidence only (`#235` history `f001_route_reconciliation`):
+  - F001 is the WP's umbrella finding, not a CE-L12D013-01 finding.
+  - Its M1–M4 success surface was found sound in review 4, which executed controls D013-C1 to C4. C5 is author Linux evidence only.
+  - Its remaining condition was the final complete review. It was not recorded as closed by the author.
+- **Review 9.** Final complete review 9 (issuecomment-6217925725) **APPROVED** the frozen pair for the exact-SHA merge gate and **closed** `L12D013-F001` and `L12D013-PY-I001`.
+  - The reviewer ran D013-C1, C2-06, C2-08, C3 and C4 with their paired positives, and K1–K13.
+  - Its focused Windows integration run had 2203 passed and 38 skipped.
+  - C5 stays credited as author Linux evidence. Linux coverage and mypy remain the disclosed baseline limitations.
+- **Merge.** Both PRs were merged with `minion_process merge` at the approved heads:
+  - code #238 `07731c8b` → `393138f8` on `main`;
+  - docs #310 `7d8fb3cc` → `349bef8b` on `master`.
+
+  Each merge commit is reachable from its default branch. `#235` records the merged baseline and is in RUST_IMPLEMENTATION.
+- **Documentary status sync** (this section, the DIV-009 registry entry and the manifest rows `EXEC-002`, `EXEC-003`, `EXEC-004`, `EXEC-005` and `EXEC-002-DIV-009`):
+  - It marks Python's merged outcome and replaces the PENDING witness markers with the merged witness file.
+  - It keeps Rust REVALIDATE_REQUIRED and the historical approvals and limitations.
+  - It makes no semantic change. It is reviewed separately at its own exact heads, as review 9 required.
+
+### 13.1 State
+
+- Python Layer-12 delta L12-D013, including DIV-009: **APPROVED AND MERGED**.
+- Shared L12-D013 contract (the section 3.2 rooted and UNC-root statement, the 99-case corpus, spec section 22): merged, and **READY FOR INDEPENDENT RUST REVALIDATION**. The surface is narrow: the merged rooted cases, and DIV-009's `ctx.fs` caller-path mapping and `rename_file` order.
+- Rust: **REVALIDATE_REQUIRED**.
+- L12-D013 cross-language: **NOT CLOSED**.
