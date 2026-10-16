@@ -1,0 +1,2923 @@
+{
+  "node": "v22.15.1",
+  "platform": "linux",
+  "pi": "b7bb00b936dbe21b8e160b3e89efdec361846699",
+  "certified_main": "f12d129eb00a18a82a90a18d980d0d2b14a80519",
+  "draft_224": "1790d36fd0f428bbdfb7528c6ab433d2b57a3942",
+  "observations": [
+    {
+      "label": "baseline-23",
+      "oracle": {
+        "cwd": "/tmp/l12d012",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "file:///C:/a%2Fb",
+            "result": [
+              47,
+              120,
+              47,
+              102,
+              105,
+              108,
+              101,
+              58,
+              47,
+              67,
+              58,
+              47,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:/C:/a%2Fb",
+            "result": [
+              47,
+              120,
+              47,
+              102,
+              105,
+              108,
+              101,
+              58,
+              47,
+              67,
+              58,
+              47,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:a%2Fb",
+            "result": [
+              47,
+              120,
+              47,
+              102,
+              105,
+              108,
+              101,
+              58,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:///tmp/a%2Fb",
+            "result": [
+              47,
+              120,
+              47,
+              102,
+              105,
+              108,
+              101,
+              58,
+              47,
+              116,
+              109,
+              112,
+              47,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:x/y%2Fz",
+            "result": [
+              47,
+              120,
+              47,
+              102,
+              105,
+              108,
+              101,
+              58,
+              120,
+              47,
+              121,
+              37,
+              50,
+              70,
+              122
+            ]
+          },
+          {
+            "input": "x/c:/d",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              99,
+              58,
+              47,
+              100
+            ]
+          },
+          {
+            "input": "x\\c:\\d",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              92,
+              99,
+              58,
+              92,
+              100
+            ]
+          },
+          {
+            "input": "c:d",
+            "result": [
+              47,
+              120,
+              47,
+              99,
+              58,
+              100
+            ]
+          },
+          {
+            "input": "x/c:",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              99,
+              58
+            ]
+          },
+          {
+            "input": "x/c:/",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              99,
+              58
+            ]
+          },
+          {
+            "input": "x/c:d/e",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              99,
+              58,
+              100,
+              47,
+              101
+            ]
+          },
+          {
+            "input": "a::/b",
+            "result": [
+              47,
+              120,
+              47,
+              97,
+              58,
+              58,
+              47,
+              98
+            ]
+          },
+          {
+            "input": "x/:/y",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              58,
+              47,
+              121
+            ]
+          },
+          {
+            "input": ":",
+            "result": [
+              47,
+              120,
+              47,
+              58
+            ]
+          },
+          {
+            "input": "x:y:z/w",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              58,
+              121,
+              58,
+              122,
+              47,
+              119
+            ]
+          },
+          {
+            "input": "x/C:/y",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              67,
+              58,
+              47,
+              121
+            ]
+          },
+          {
+            "input": "x/C:\\y",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "x//C:/y",
+            "result": [
+              47,
+              120,
+              47,
+              120,
+              47,
+              67,
+              58,
+              47,
+              121
+            ]
+          },
+          {
+            "input": "a:/b",
+            "result": [
+              47,
+              120,
+              47,
+              97,
+              58,
+              47,
+              98
+            ]
+          },
+          {
+            "input": "C:\\y",
+            "result": [
+              47,
+              120,
+              47,
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "C:y",
+            "result": [
+              47,
+              120,
+              47,
+              67,
+              58,
+              121
+            ]
+          },
+          {
+            "input": "file:///C:/a/b",
+            "result": [
+              47,
+              67,
+              58,
+              47,
+              97,
+              47,
+              98
+            ]
+          },
+          {
+            "input": "file:///tmp/a",
+            "result": [
+              47,
+              116,
+              109,
+              112,
+              47,
+              97
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "/x",
+          "process_cwd": "/tmp/l12d012",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "file:///C:/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                67,
+                58,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:/C:/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                67,
+                58,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///tmp/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:x/y%2Fz",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:/d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                47,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x\\c:\\d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "c:d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:/",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:d/e",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "a::/b",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                47,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": ":",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x:y:z/w",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/C:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/C:\\y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x//C:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "a:/b",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                47,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "C:\\y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "C:y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///C:/a/b",
+              "absolute_path": [
+                47,
+                67,
+                58,
+                97,
+                47,
+                98
+              ],
+              "logical": [
+                47,
+                67,
+                58,
+                97,
+                47,
+                98
+              ],
+              "native_scalar": [
+                47,
+                67,
+                58,
+                47,
+                97,
+                47,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///tmp/a",
+              "absolute_path": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "logical": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "native_scalar": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "/x",
+          "process_cwd": "/tmp/l12d012",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "file:///C:/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                67,
+                58,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:/C:/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                67,
+                58,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:///tmp/a%2Fb",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                47,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                47,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:x/y%2Fz",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                47,
+                121,
+                37,
+                50,
+                70,
+                122
+              ]
+            },
+            {
+              "input": "x/c:/d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                47,
+                100
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ]
+            },
+            {
+              "input": "x\\c:\\d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                92,
+                99,
+                58,
+                92,
+                100
+              ]
+            },
+            {
+              "input": "c:d",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                99,
+                58,
+                100
+              ]
+            },
+            {
+              "input": "x/c:",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ]
+            },
+            {
+              "input": "x/c:/",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58
+              ]
+            },
+            {
+              "input": "x/c:d/e",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                99,
+                58,
+                100,
+                47,
+                101
+              ]
+            },
+            {
+              "input": "a::/b",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                47,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                58,
+                98
+              ]
+            },
+            {
+              "input": "x/:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                58,
+                121
+              ]
+            },
+            {
+              "input": ":",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                58
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                58
+              ]
+            },
+            {
+              "input": "x:y:z/w",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                58,
+                121,
+                58,
+                122,
+                47,
+                119
+              ]
+            },
+            {
+              "input": "x/C:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "x/C:\\y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ]
+            },
+            {
+              "input": "x//C:/y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                47,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "a:/b",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                98
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                98
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                47,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                98
+              ]
+            },
+            {
+              "input": "C:\\y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                92,
+                121
+              ]
+            },
+            {
+              "input": "C:y",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "file:///C:/a/b",
+              "absolute_path": [
+                47,
+                67,
+                58,
+                97,
+                47,
+                98
+              ],
+              "logical": [
+                47,
+                67,
+                58,
+                97,
+                47,
+                98
+              ],
+              "native_scalar": [
+                47,
+                67,
+                58,
+                47,
+                97,
+                47,
+                98
+              ],
+              "draft_lossless": [
+                47,
+                67,
+                58,
+                97,
+                47,
+                98
+              ]
+            },
+            {
+              "input": "file:///tmp/a",
+              "absolute_path": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "logical": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "native_scalar": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ],
+              "draft_lossless": [
+                47,
+                116,
+                109,
+                112,
+                47,
+                97
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "posix-drive-spellings-not-host-state",
+      "oracle": {
+        "cwd": "/tmp/l12d012",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              47,
+              120,
+              47,
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          },
+          {
+            "input": "a:leaf",
+            "result": [
+              47,
+              120,
+              47,
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "/x",
+          "process_cwd": "/tmp/l12d012",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "/x",
+          "process_cwd": "/tmp/l12d012",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            },
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                47,
+                120,
+                47,
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

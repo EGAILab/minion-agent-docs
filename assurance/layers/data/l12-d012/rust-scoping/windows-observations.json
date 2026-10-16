@@ -1,0 +1,7742 @@
+{
+  "node": "v22.15.1",
+  "platform": "win32",
+  "pi": "b7bb00b936dbe21b8e160b3e89efdec361846699",
+  "certified_main": "f12d129eb00a18a82a90a18d980d0d2b14a80519",
+  "draft_224": "1790d36fd0f428bbdfb7528c6ab433d2b57a3942",
+  "observations": [
+    {
+      "label": "baseline-23",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "file:///C:/a%2Fb",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              92,
+              67,
+              58,
+              92,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:/C:/a%2Fb",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              92,
+              67,
+              58,
+              92,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:a%2Fb",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:///tmp/a%2Fb",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              92,
+              116,
+              109,
+              112,
+              92,
+              97,
+              37,
+              50,
+              70,
+              98
+            ]
+          },
+          {
+            "input": "file:x/y%2Fz",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              120,
+              92,
+              121,
+              37,
+              50,
+              70,
+              122
+            ]
+          },
+          {
+            "input": "x/c:/d",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              99,
+              58,
+              92,
+              100
+            ]
+          },
+          {
+            "input": "x\\c:\\d",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              99,
+              58,
+              92,
+              100
+            ]
+          },
+          {
+            "input": "c:d",
+            "result": [
+              99,
+              58,
+              92,
+              120,
+              92,
+              100
+            ]
+          },
+          {
+            "input": "x/c:",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              99,
+              58
+            ]
+          },
+          {
+            "input": "x/c:/",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              99,
+              58
+            ]
+          },
+          {
+            "input": "x/c:d/e",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              99,
+              58,
+              100,
+              92,
+              101
+            ]
+          },
+          {
+            "input": "a::/b",
+            "result": [
+              97,
+              58,
+              92,
+              58,
+              92,
+              98
+            ]
+          },
+          {
+            "input": "x/:/y",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": ":",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              58
+            ]
+          },
+          {
+            "input": "x:y:z/w",
+            "result": [
+              120,
+              58,
+              92,
+              121,
+              58,
+              122,
+              92,
+              119
+            ]
+          },
+          {
+            "input": "x/C:/y",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "x/C:\\y",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "x//C:/y",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              120,
+              92,
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "a:/b",
+            "result": [
+              97,
+              58,
+              92,
+              98
+            ]
+          },
+          {
+            "input": "C:\\y",
+            "result": [
+              67,
+              58,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "C:y",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              121
+            ]
+          },
+          {
+            "input": "file:///C:/a/b",
+            "result": [
+              67,
+              58,
+              92,
+              97,
+              92,
+              98
+            ]
+          },
+          {
+            "input": "file:///tmp/a",
+            "result": [
+              67,
+              58,
+              92,
+              120,
+              92,
+              102,
+              105,
+              108,
+              101,
+              58,
+              92,
+              116,
+              109,
+              112,
+              92,
+              97
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "file:///C:/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:/C:/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///tmp/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                92,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:x/y%2Fz",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:/d",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x\\c:\\d",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "c:d",
+              "absolute_path": [
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "native_scalar": [
+                99,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:/",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "native_scalar": [
+                99,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/c:d/e",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "a::/b",
+              "absolute_path": [
+                97,
+                58,
+                58,
+                98
+              ],
+              "logical": [
+                97,
+                58,
+                58,
+                98
+              ],
+              "native_scalar": [
+                97,
+                58,
+                58,
+                92,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": ":",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x:y:z/w",
+              "absolute_path": [
+                120,
+                58,
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "logical": [
+                120,
+                58,
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "native_scalar": [
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/C:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x/C:\\y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "x//C:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "a:/b",
+              "absolute_path": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "logical": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "native_scalar": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "C:\\y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "C:y",
+              "absolute_path": [
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///C:/a/b",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "draft_lossless": null
+            },
+            {
+              "input": "file:///tmp/a",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                92,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "file:///C:/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:/C:/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                67,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:///tmp/a%2Fb",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                92,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97,
+                37,
+                50,
+                70,
+                98
+              ]
+            },
+            {
+              "input": "file:x/y%2Fz",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                120,
+                92,
+                121,
+                37,
+                50,
+                70,
+                122
+              ]
+            },
+            {
+              "input": "x/c:/d",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ]
+            },
+            {
+              "input": "x\\c:\\d",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100
+              ]
+            },
+            {
+              "input": "c:d",
+              "absolute_path": [
+                99,
+                58,
+                100
+              ],
+              "logical": [
+                99,
+                58,
+                100
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100
+              ],
+              "draft_lossless": [
+                99,
+                58,
+                100
+              ]
+            },
+            {
+              "input": "x/c:",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "native_scalar": [
+                99,
+                58
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ]
+            },
+            {
+              "input": "x/c:/",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ],
+              "native_scalar": [
+                99,
+                58
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58
+              ]
+            },
+            {
+              "input": "x/c:d/e",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "native_scalar": [
+                99,
+                58,
+                100,
+                92,
+                101
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                99,
+                58,
+                100,
+                92,
+                101
+              ]
+            },
+            {
+              "input": "a::/b",
+              "absolute_path": [
+                97,
+                58,
+                58,
+                98
+              ],
+              "logical": [
+                97,
+                58,
+                58,
+                98
+              ],
+              "native_scalar": [
+                97,
+                58,
+                58,
+                92,
+                98
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                58,
+                98
+              ]
+            },
+            {
+              "input": "x/:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                58,
+                121
+              ]
+            },
+            {
+              "input": ":",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                58
+              ]
+            },
+            {
+              "input": "x:y:z/w",
+              "absolute_path": [
+                120,
+                58,
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "logical": [
+                120,
+                58,
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "native_scalar": [
+                121,
+                58,
+                122,
+                92,
+                119
+              ],
+              "draft_lossless": [
+                120,
+                58,
+                121,
+                58,
+                122,
+                92,
+                119
+              ]
+            },
+            {
+              "input": "x/C:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "x/C:\\y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "x//C:/y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                120,
+                92,
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "a:/b",
+              "absolute_path": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "logical": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "native_scalar": [
+                97,
+                58,
+                92,
+                98
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                92,
+                98
+              ]
+            },
+            {
+              "input": "C:\\y",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                121
+              ]
+            },
+            {
+              "input": "C:y",
+              "absolute_path": [
+                67,
+                58,
+                121
+              ],
+              "logical": [
+                67,
+                58,
+                121
+              ],
+              "native_scalar": [
+                67,
+                58,
+                121
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                121
+              ]
+            },
+            {
+              "input": "file:///C:/a/b",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                97,
+                92,
+                98
+              ]
+            },
+            {
+              "input": "file:///tmp/a",
+              "absolute_path": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "logical": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "native_scalar": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                92,
+                116,
+                109,
+                112,
+                92,
+                97
+              ],
+              "draft_lossless": [
+                67,
+                58,
+                92,
+                120,
+                92,
+                102,
+                105,
+                108,
+                101,
+                58,
+                116,
+                109,
+                112,
+                92,
+                97
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": false,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            },
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            },
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": true,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:null",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              65,
+              73,
+              92,
+              80,
+              114,
+              111,
+              106,
+              101,
+              99,
+              116,
+              115,
+              92,
+              79,
+              112,
+              101,
+              110,
+              77,
+              105,
+              110,
+              100,
+              115,
+              92,
+              77,
+              105,
+              110,
+              105,
+              111,
+              110,
+              115,
+              92,
+              77,
+              105,
+              110,
+              105,
+              111,
+              110,
+              45,
+              65,
+              103,
+              101,
+              110,
+              116,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            ""
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              65,
+              73,
+              92,
+              80,
+              114,
+              111,
+              106,
+              101,
+              99,
+              116,
+              115,
+              92,
+              79,
+              112,
+              101,
+              110,
+              77,
+              105,
+              110,
+              100,
+              115,
+              92,
+              77,
+              105,
+              110,
+              105,
+              111,
+              110,
+              115,
+              92,
+              77,
+              105,
+              110,
+              105,
+              111,
+              110,
+              45,
+              65,
+              103,
+              101,
+              110,
+              116,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              ""
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              ""
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"E:\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "E:\\deep"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"e:\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "e:\\deep"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "e:\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "e:\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"E:/deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "E:/deep"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:/deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:/deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"E:rel\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "E:rel"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              114,
+              101,
+              108,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:rel"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:rel"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"E:\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "E:"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "E:"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"X:\\\\other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "X:\\other"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:\\other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:\\other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"X:/other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "X:/other"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:/other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:/other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"X:other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "X:other"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:other"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"X:\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "X:"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "X:"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"relative\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "relative"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              114,
+              101,
+              108,
+              97,
+              116,
+              105,
+              118,
+              101,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "relative"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "relative"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "\\deep"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "\\deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"/deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "/deep"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "/deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "/deep"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"\\\\\\\\srv\\\\share\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "\\\\srv\\share"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "\\\\srv\\share"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "\\\\srv\\share"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "E:\"r\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            "r"
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "e:leaf",
+            "result": [
+              101,
+              58,
+              114,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "r"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              "r"
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "e:leaf",
+              "absolute_path": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                101,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:null",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            null
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              null
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            ""
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              ""
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              ""
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"A:\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "A:\\deep"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"a:\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "a:\\deep"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "a:\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "a:\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"A:/deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "A:/deep"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:/deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:/deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"A:rel\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "A:rel"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              114,
+              101,
+              108,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:rel"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:rel"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"A:\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "A:"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "A:"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"X:\\\\other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "X:\\other"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:\\other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:\\other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"X:/other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "X:/other"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:/other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:/other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"X:other\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "X:other"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:other"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"X:\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "X:"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "X:"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"relative\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "relative"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              114,
+              101,
+              108,
+              97,
+              116,
+              105,
+              118,
+              101,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "relative"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "relative"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"\\\\deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "\\deep"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "\\deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"/deep\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "/deep"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              92,
+              100,
+              101,
+              101,
+              112,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "/deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "/deep"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"\\\\\\\\srv\\\\share\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "\\\\srv\\share"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "\\\\srv\\share"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "\\\\srv\\share"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": true,
+              "logical": true,
+              "native_scalar": true,
+              "draft_lossless": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "A:\"r\"",
+      "oracle": {
+        "cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+        "hidden_env": [
+          [
+            "=E:",
+            null
+          ],
+          [
+            "=A:",
+            "r"
+          ],
+          [
+            "=X:",
+            null
+          ]
+        ],
+        "rows": [
+          {
+            "input": "a:leaf",
+            "result": [
+              97,
+              58,
+              114,
+              92,
+              108,
+              101,
+              97,
+              102
+            ]
+          }
+        ]
+      },
+      "bindings": {
+        "certified_main": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "r"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": null
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": null
+            }
+          ]
+        },
+        "draft_224": {
+          "provider_cwd": "C:\\x",
+          "process_cwd": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent",
+          "hidden_env": [
+            [
+              "=E:",
+              null
+            ],
+            [
+              "=A:",
+              "r"
+            ],
+            [
+              "=X:",
+              null
+            ]
+          ],
+          "rows": [
+            {
+              "input": "a:leaf",
+              "absolute_path": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "logical": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "native_scalar": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ],
+              "draft_lossless": [
+                97,
+                58,
+                108,
+                101,
+                97,
+                102
+              ]
+            }
+          ],
+          "comparisons": [
+            {
+              "absolute_path": false,
+              "logical": false,
+              "native_scalar": false,
+              "draft_lossless": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
