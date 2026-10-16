@@ -1,0 +1,1669 @@
+{
+ "code": "1c0a1783a8109b85d2679eb7a294b1ada640010a",
+ "binary": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\cache\\cargo-target\\windows\\debug\\deps\\minion_agent-3153a08ddee1686e.exe",
+ "binary_sha256": "8464a9965089c760b8e2f2907739ec70fc0a7910262a39e35d694e579bc96c8f",
+ "scope": "observations only, not certification; expected twelve differences tracked in #241; env read names case-normalized",
+ "same": 36,
+ "different": 12,
+ "rows": [
+  {
+   "input": "C:\\x",
+   "entry": "absent",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "C:\\x",
+   "entry": "empty",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "C:\\x",
+   "entry": "same",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "C:\\x",
+   "entry": "other",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\share\\x",
+   "entry": "absent",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\share\\x",
+   "entry": "empty",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\share\\x",
+   "entry": "same",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\share\\x",
+   "entry": "other",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\leaf",
+   "entry": "absent",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\leaf",
+   "entry": "empty",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\leaf",
+   "entry": "same",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\leaf",
+   "entry": "other",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "/leaf",
+   "entry": "absent",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "/leaf",
+   "entry": "empty",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "/leaf",
+   "entry": "same",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "/leaf",
+   "entry": "other",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\leaf",
+   "entry": "absent",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\leaf",
+   "entry": "empty",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\leaf",
+   "entry": "same",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\leaf",
+   "entry": "other",
+   "value": [
+    69,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\",
+   "entry": "absent",
+   "value": [
+    69,
+    58,
+    92,
+    115,
+    114,
+    118
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     115,
+     114,
+     118
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\",
+   "entry": "empty",
+   "value": [
+    69,
+    58,
+    92,
+    115,
+    114,
+    118
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     115,
+     114,
+     118
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\",
+   "entry": "same",
+   "value": [
+    69,
+    58,
+    92,
+    115,
+    114,
+    118
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     115,
+     114,
+     118
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "\\\\srv\\",
+   "entry": "other",
+   "value": [
+    69,
+    58,
+    92,
+    115,
+    114,
+    118
+   ],
+   "cwdReads": 1,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     69,
+     58,
+     92,
+     115,
+     114,
+     118
+    ],
+    "cwdReads": 1,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "a:leaf",
+   "entry": "absent",
+   "value": [
+    97,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [
+    "=A:"
+   ],
+   "envReadCount": 1,
+   "oracle": {
+    "value": [
+     97,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 1,
+    "envReads": [
+     "=A:"
+    ]
+   },
+   "differs": false
+  },
+  {
+   "input": "a:leaf",
+   "entry": "empty",
+   "value": [
+    97,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 1,
+   "envReads": [
+    "=A:"
+   ],
+   "envReadCount": 1,
+   "oracle": {
+    "value": [
+     97,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 1,
+    "envReads": [
+     "=A:"
+    ]
+   },
+   "differs": false
+  },
+  {
+   "input": "a:leaf",
+   "entry": "same",
+   "value": [
+    97,
+    58,
+    92,
+    100,
+    101,
+    101,
+    112,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [
+    "=A:"
+   ],
+   "envReadCount": 1,
+   "oracle": {
+    "value": [
+     97,
+     58,
+     92,
+     100,
+     101,
+     101,
+     112,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 1,
+    "envReads": [
+     "=A:"
+    ]
+   },
+   "differs": false
+  },
+  {
+   "input": "a:leaf",
+   "entry": "other",
+   "value": [
+    97,
+    58,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [
+    "=A:"
+   ],
+   "envReadCount": 1,
+   "oracle": {
+    "value": [
+     97,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 1,
+    "envReads": [
+     "=A:"
+    ]
+   },
+   "differs": false
+  },
+  {
+   "input": "c:leaf",
+   "entry": "absent",
+   "value": [
+    99,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     99,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 1,
+    "envReads": [
+     "=C:"
+    ]
+   },
+   "differs": true
+  },
+  {
+   "input": "c:leaf",
+   "entry": "empty",
+   "value": [
+    99,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     99,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 1,
+    "envReadCount": 1,
+    "envReads": [
+     "=C:"
+    ]
+   },
+   "differs": true
+  },
+  {
+   "input": "c:leaf",
+   "entry": "same",
+   "value": [
+    99,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     99,
+     58,
+     92,
+     100,
+     101,
+     101,
+     112,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 1,
+    "envReads": [
+     "=C:"
+    ]
+   },
+   "differs": true
+  },
+  {
+   "input": "c:leaf",
+   "entry": "other",
+   "value": [
+    99,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     99,
+     58,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 1,
+    "envReads": [
+     "=C:"
+    ]
+   },
+   "differs": true
+  },
+  {
+   "input": "leaf",
+   "entry": "absent",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "leaf",
+   "entry": "empty",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "leaf",
+   "entry": "same",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "leaf",
+   "entry": "other",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101,
+    92,
+    108,
+    101,
+    97,
+    102
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101,
+     92,
+     108,
+     101,
+     97,
+     102
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "",
+   "entry": "absent",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "",
+   "entry": "empty",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "",
+   "entry": "same",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "",
+   "entry": "other",
+   "value": [
+    67,
+    58,
+    92,
+    98,
+    97,
+    115,
+    101
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     63,
+     92,
+     67,
+     58,
+     92,
+     98,
+     97,
+     115,
+     101
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": true
+  },
+  {
+   "input": "file:///C:/x",
+   "entry": "absent",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file:///C:/x",
+   "entry": "empty",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file:///C:/x",
+   "entry": "same",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file:///C:/x",
+   "entry": "other",
+   "value": [
+    67,
+    58,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     67,
+     58,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file://srv/share/x",
+   "entry": "absent",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file://srv/share/x",
+   "entry": "empty",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file://srv/share/x",
+   "entry": "same",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  },
+  {
+   "input": "file://srv/share/x",
+   "entry": "other",
+   "value": [
+    92,
+    92,
+    115,
+    114,
+    118,
+    92,
+    115,
+    104,
+    97,
+    114,
+    101,
+    92,
+    120
+   ],
+   "cwdReads": 0,
+   "envReads": [],
+   "envReadCount": 0,
+   "oracle": {
+    "value": [
+     92,
+     92,
+     115,
+     114,
+     118,
+     92,
+     115,
+     104,
+     97,
+     114,
+     101,
+     92,
+     120
+    ],
+    "cwdReads": 0,
+    "envReadCount": 0,
+    "envReads": []
+   },
+   "differs": false
+  }
+ ]
+}

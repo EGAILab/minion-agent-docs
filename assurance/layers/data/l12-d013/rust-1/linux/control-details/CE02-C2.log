@@ -1,0 +1,19 @@
+
+running 1 test
+CONTROL FIRED CE02-C2
+CONTROL FIRED CE02-C2
+
+thread 'execution::path::tests::native_cwd_posix_boundary' (29130) panicked at crates/minion-agent/src/execution/path.rs:342:13:
+assertion `left == right` failed: posix-cwd/trailing
+  left: ResultString { units: JsString([47, 116, 109, 112, 47, 110, 97, 116, 105, 118, 101, 47]), scalar: Some("/tmp/native/") }
+ right: "/tmp/native"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path::tests::native_cwd_posix_boundary ... FAILED
+
+failures:
+
+failures:
+    execution::path::tests::native_cwd_posix_boundary
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.02s
+

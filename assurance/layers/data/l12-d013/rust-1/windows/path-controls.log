@@ -1,0 +1,102 @@
+PATH CONTROL ANCHORS 33/33 MATCH ONCE (original 15, CE02 four, DIV009 fourteen)
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "colon-separator-dropped", "status": "KILLED", "witness": "execution::path_resolve::tests::posix_colons_remain_ordinary_components", "reason": "file:/C:/a%2Fb", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "mismatch-always-root", "status": "KILLED", "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows", "reason": "bmp-1", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "fall-through-selection", "status": "KILLED", "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows", "reason": "bmp-1", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "empty-is-value", "status": "KILLED", "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows", "reason": "empty", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "scalar-index-not-unit-index", "status": "KILLED", "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows", "reason": "astral-backslash", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "one-replacement-native-view", "status": "KILLED", "witness": "execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows", "reason": "lone-high-backslash", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "raw-native-entry", "status": "KILLED", "witness": "native", "reason": "entry/lone-high-backslash", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "raw-native-cwd", "status": "KILLED", "witness": "native", "reason": "cwd/lone-high/absent", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "logical-projected", "status": "KILLED", "witness": "execution::path::tests::lexical_paths_do_not_project_surrogates", "reason": "assertion `left == right` failed", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "entry-preconditions-omitted", "status": "KILLED", "witness": "native", "reason": "refusal/present-empty", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "search-case-sensitive-regression", "status": "KILLED", "witness": "tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching", "reason": "assertion `left == right` failed", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "host-unicode-lowercase-regression", "status": "KILLED", "witness": "execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17", "reason": "assertion `left == right` failed", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "logical-provider-cwd-projected", "status": "KILLED", "witness": "execution::path::tests::logical_provider_cwd_stays_raw", "reason": "high", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "cwd-read-error-panics", "status": "KILLED", "witness": "execution::path::tests::native_cwd_read_failure_is_an_error_value", "reason": "CONTROL CWD PANIC", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "cwd-read-error-guesses-root", "status": "KILLED", "witness": "execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing", "reason": "called `Result::unwrap_err()` on an `Ok` value", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "CE02-C1", "status": "KILLED", "witness": "ce02/prefix", "reason": ["extended/absent/cwd_view", "extended/absent/absolute_path/0", "extended/absent/logical/0", "extended/absent/absolute_path/1", "extended/absent/logical/1", "extended/absent/absolute_path/4", "extended/absent/logical/4"], "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "CE02-C2", "status": "KILLED", "witness": "ce02/roots", "reason": ["extended-root/absent/cwd_view"], "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "CE02-C3", "status": "KILLED", "witness": "ce02/entry-prefix", "reason": ["plain/extended/entry_view", "plain/extended/absolute_path/0", "plain/extended/logical/0"], "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "CE02-C4", "status": "KILLED", "witness": "ce02/entry-trim", "reason": ["plain/matching-trailing/entry_view"], "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K1", "status": "KILLED", "witness": "execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics", "reason": "DIV009 must return a typed result, not leak/panic", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K2", "status": "KILLED", "witness": "execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path", "reason": "left: Unknown", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K3", "status": "KILLED", "witness": "execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path", "reason": "left: None", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K4", "status": "KILLED", "witness": "execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path", "reason": "absolute", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K5", "status": "KILLED", "witness": "execution::div009_tests::raw_logical_and_public_read_domains", "reason": "cwd count", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K6", "status": "KILLED", "witness": "execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics", "reason": "unrelated reader panic must propagate", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K7", "status": "KILLED", "witness": "execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics", "reason": "native read failure may not fabricate a cwd", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K8", "status": "KILLED", "witness": "execution::div009_tests::shell_and_subprocess_read_domains", "reason": "native spawn count", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K9", "status": "KILLED", "witness": "execution::div009_tests::rename_precedence_and_nul_slots", "reason": "assertion `left == right` failed", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K10", "status": "KILLED", "witness": "execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path", "reason": "exists: ()", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K11", "status": "KILLED", "witness": "execution::div009_tests::resolve_second_read_failure_never_uses_the_saved_absolute_fallback", "reason": "resolve must not fall back", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K12", "status": "KILLED", "witness": "execution::div009_tests::rename_precedence_and_nul_slots", "reason": "left: NotFound", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K13", "status": "KILLED", "witness": "execution::div009_tests::nul_slots_keep_first_resolution", "reason": "source slot owns fallback", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"control": "D013-K13-raw", "status": "KILLED", "witness": "execution::div009_tests::nul_slots_keep_raw_first_resolution", "reason": "source slot owns fallback", "fired": true}
+FRESH WORKSPACE SOURCES 216: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\codex-scratch\d013-rust-runs\win2\control-code\minion-agent-rust
+{"killed": 33, "not_applicable": 0, "restored": "GREEN"}

@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED D013-K12
+
+thread 'execution::div009_tests::rename_precedence_and_nul_slots' (39114) panicked at crates/minion-agent/src/execution/div009_tests.rs:692:5:
+assertion `left == right` failed
+  left: NotFound
+ right: Unknown
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::rename_precedence_and_nul_slots ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::rename_precedence_and_nul_slots
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.04s
+
