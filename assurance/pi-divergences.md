@@ -309,6 +309,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
     - `ctx.shell.exec`: `ShellError(spawn_error)`;
     - `ctx.subprocess.spawn`: `SubprocessError(spawn_error)`, with no process created.
   - Nothing is retried or substituted, and only that read's operational failure is converted.
+  - The failure propagates unchanged through derived operations: `exists` returns the error, never `false`; `resolve` makes no `absolute_path` fallback after it; the NUL error path performs no further read.
+  - `rename_file` follows Pi's order in every binding: source, destination, abort, rename (Owner amendment).
 - **Classification:** intentional practical-parity divergence. It covers only the **outcome** of that failed read: a typed result instead of a rejection. It does **not** cover where or when the read happens, the resolution algorithm, any successful result, the classification of the native error, or any other failure mapping.
 - **Practical-parity assessment** (Claude's analysis, presented with the question the Owner decided; the decision text itself is in Governance):
   - Pi's intentional abstraction: no. Pi's interface says these operations never throw; the throw is an implementation gap.
@@ -324,7 +326,11 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - no filesystem or process side effects, and the existing abort and validation precedence;
   - pinned-Pi-versus-Minion rows.
   - Negative controls for: a leaked raw `OSError`, a wrong code, an omitted caller path, the provider `cwd` substituted for the caller path, an unneeded process-cwd read, indiscriminate catching, a retry with a fabricated cwd, and a process started despite the failure.
+  - From the amendment and review 5: the former Python rename order (destination, abort, source), `exists` returning `false`, `resolve` falling back after the failure, and the NUL error path reading again. Witnesses also assert the number and order of native cwd reads.
 - **Manifest:** row `EXEC-002-DIV-009`, disposition `intentional divergence`, with `EXEC-004`/`EXEC-005` traceability.
-- **Governance:** Owner decision "APPROVE OPTION 1: TYPED FAILURE, DIV-009" (`#235` issuecomment-6205758223, recorded verbatim, sha256 `77cd22f3…`). It includes the Rust reconciliation: Rust's typed handling is kept, its `ctx.fs` mapping gains the caller's logical path, and only that surface is REVALIDATE_REQUIRED.
+- **Governance:**
+  - Owner decision "APPROVE OPTION 1: TYPED FAILURE, DIV-009" (`#235` issuecomment-6205758223, recorded verbatim, sha256 `77cd22f3…`). It includes the Rust reconciliation: Rust's typed handling is kept, its `ctx.fs` mapping gains the caller's logical path, and only that surface is REVALIDATE_REQUIRED.
+  - Owner amendment "APPROVE OPTION 1: ALIGN PYTHON RENAME ORDER TO PINNED PI" (`#235` issuecomment-6206113367, recorded verbatim, sha256 `c49d6f76…`), after contract review 5 (issuecomment-6205917076). It sets the shared `rename_file` order and supersedes "preserve each binding's existing order" for that operation only.
+  - Convergence episode CE-L12D013-01 characterizes the read domain and the derived-operation outcomes: `assurance/layers/12-l12-d013-convergence-ce01.md`.
 - **Status:** APPROVED by the Owner. The contract amendment is pending independent review, and witnesses are pending implementation.
 - **Reconsideration trigger:** pinned Pi is updated to normalize this failure itself, or a real consumer needs Pi's rejection.
