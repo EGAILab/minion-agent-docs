@@ -95,6 +95,12 @@ The governing rule, stated once so it need not be repeated per operation:
 > typed `Result` error. Framework/provider invariant violations and programming errors remain
 > exceptions (Python) / panics (Rust).
 
+**One identified point where pinned Pi's implementation leaves this boundary (`DIV-009`, §22).**
+Pinned Pi's `resolvePath` reads the native process cwd outside any `try`, so a failed read throws out
+of the operation that called it. Minion keeps the boundary above: that failure is an expected
+environmental failure and returns the typed result that §22 specifies. Nothing else in this section
+changes.
+
 **This rule applies per-operation, not uniformly to every method on a seam.** Some operations have
 a documented SUCCESS value that itself reports an otherwise-unsuccessful outcome (§5.6: a shell
 command's own non-zero exit code is not a `Result` error at the `ctx.shell` seam -- it is
@@ -355,8 +361,10 @@ Its root is parsed as follows:
     complete UNC root, the whole input is the tail.
 
 The result is the device, then `\`, then the tail normalized: `.` and empty segments dropped, `..`
-clamped at the root, and `\` emitted. A failure to read the process cwd is the existing typed error;
-nothing is guessed. On POSIX the rule is unchanged: a leading `/` is absolute and is normalized as
+clamped at the root, and `\` emitted. A failure to read the process cwd is the typed failure of
+`DIV-009` (§22); nothing is guessed. *(Corrected at L12-D013 implementation review 4, `L12D013-PY-I001`:
+this sentence said "the existing typed error". Pinned Pi has no typed result here, since its
+`resolvePath` propagates the native exception, and merged Python had no such mapping.)* On POSIX the rule is unchanged: a leading `/` is absolute and is normalized as
 Node's `path.posix.resolve(input)`, so any run of leading `/` becomes one (`//leaf` is `/leaf`), and
 a leading `\` is an ordinary relative name. The same rule governs the effective spawn `cwd` of
 `ctx.shell`/`ctx.subprocess` (§5, §6), which uses this resolver.
@@ -3624,3 +3632,46 @@ The effective environment is composed as today (EXEC-005; §15.3): with `inherit
 - **Rust** answers `spawn_error` with the OS text, and its tools add their wrappers.
 
 Record: `assurance/layers/12-l12-d011-spawn-nul.md`.
+
+## 22. Layer-12 delta `L12-D013` amendment — a failed native process-cwd read during path resolution is a typed failure (`DIV-009`; `EXEC-002`, `EXEC-004`, `EXEC-005`)
+
+**Intentional practical-parity divergence `DIV-009`** (Owner decision, `minion-agent#235` issuecomment-6205758223; provenance `L12D013-PY-I001`, implementation review 4, issuecomment-6201717410). Pinned Pi's `resolvePath` (`nodejs.ts:51-65`) reads the process cwd through Node's `path.resolve` outside any `try`. Its callers (`absolutePath` at `nodejs.ts:359-360`, `exec` at `nodejs.ts:376`, and every filesystem operation that resolves first) do not catch there either. So a failed native read throws, and the operation rejects, contrary to Pi's own interface rule (`types.ts:228-229`) that §2 adopts. Minion keeps the §2 boundary and returns a typed failure instead.
+
+### 22.1 Where the read happens (unchanged)
+
+The certified resolver (§3.2, L12-D012, L12-D013) and the exact point at which it reads the native process cwd are unchanged. The read is **lazy**: it happens only where the algorithm needs the process cwd.
+- **win32, a device-less rooted or incomplete-UNC input** (L12-D013): `\leaf`, `/leaf`, `\\leaf`, `\\srv\`, after the `~` and `file://` steps.
+- **win32, a drive-relative input on another drive than the provider `cwd`** (L12-D012): the read happens only when the inherited `=X:` entry is absent or empty. A non-empty inherited entry is selected without reading the process cwd.
+- **POSIX:** pinned Node's `path.posix.resolve` reads the process cwd only when no argument is absolute, that is, when both the provider `cwd` and the input are relative.
+
+No read happens for a complete UNC root, a drive-letter absolute path (`X:\…`), a POSIX absolute input, or a relative input resolved against an absolute provider `cwd`. A binding must not add one.
+
+### 22.2 The typed failure
+
+When that native read fails with an operational OS error, the operation returns a typed failure **at the point where it resolves the path**. Nothing is retried, and nothing is substituted: no fallback drive, no fabricated cwd, no provider `cwd`.
+
+- **`ctx.fs`**, every operation that resolves a path argument (`absolute_path`, `file_info`, and every other operation using the shared resolver): `Err(FsError)`, where
+  - `code` is the classification of the **original native error** by the binding's existing filesystem mapper (§2.1, §19; on win32, libuv's translation of the original Win32 error). A cwd failure is not collapsed to `not_found`, `permission_denied` or `unknown`; its own cause decides.
+  - `message` is that error's own diagnostic, as the mapper renders it for any other failure.
+  - `path` is the **caller's logical path argument exactly as passed**: before the `~` and `file://` steps, unresolved and unprojected (a lone surrogate stays raw). It is never the provider `cwd` or a guessed resolved or native path.
+  - For `rename_file`, the source is resolved before the destination (Pi's order). The failure names whichever argument's resolution read the cwd and failed first.
+  - The native error stays attached as the cause, where the binding's error type carries one.
+- **`ctx.shell.exec`:** `Err(ShellError(spawn_error))`. Its message and cause carry the native read failure through the existing representation.
+- **`ctx.subprocess.spawn`:** `Err(SubprocessError(spawn_error))`, carrying the failure the same way. No native process creation is attempted.
+
+### 22.3 Precedence (unchanged)
+
+The failure takes the place in each operation's order where that operation already resolves its path. A check that already decides earlier keeps its outcome, and the read never moves earlier.
+- **`ctx.fs`:** resolution precedes the operation's pre-abort check and its native calls (Pi's order: `resolvePath`, then `abortResult`, e.g. `nodejs.ts:503-505`). So a failed read is reported even under an aborted signal, and no filesystem call is made.
+- **`ctx.shell.exec`:** pre-abort, then timeout validation, then cwd resolution, then shell discovery and the cwd existence check (§5.4).
+- **`ctx.subprocess.spawn`:** pre-abort, then cwd resolution, then the §21 U+0000 checks, which need the effective resolved cwd, then the native spawn.
+
+### 22.4 What stays an exception
+
+Only the operational failure of that native read is converted. Invariant violations, programming errors and every unrelated exception keep their current behaviour (§2). A binding must not catch broadly around resolution.
+
+### 22.5 Unchanged
+
+Every successful resolution result, the L12-D012 selection and native-view rules, the L12-D013 root rules, the malformed-URL fallback, and every other failure mapping. Path-resolution, filesystem-error, shell-lifecycle and environment semantics are not otherwise reopened.
+
+Record: `assurance/layers/12-l12-d013-rooted.md` §10.

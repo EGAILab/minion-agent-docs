@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **PYTHON IMPLEMENTATION CANDIDATE for independent implementation review** (§9). Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **REMEDIATION: DIV-009 contract amendment for independent agreement** (§10), before any change to the affected production behaviour. Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -324,3 +324,93 @@ The whole-tree format check lists the same 7 pre-existing files as `#229`, none 
 - Python Layer-12 delta L12-D013: implemented, **PENDING INDEPENDENT REVIEW** (`L12D013-F001` open).
 - Rust: revalidation against the merged cases after merge.
 - L12-D013 cross-language: **NOT CLOSED**.
+
+*(Historical. The phrase "Python is not corrected yet" in the opening status line described the contract phase; §9 is the implementation.)*
+
+## 10. Implementation review 4, `L12D013-PY-I001` and the DIV-009 amendment
+
+Codex's implementation review 4 (`#235` issuecomment-6201717410) **requested changes** at code `aefc67e3` / docs `7094e652`.
+- **Accepted (the success path):** the M1–M4 correction, the runner, the fixture provenance, controls C1–C4 (rerun by the reviewer) and C5 (installed on the production seam).
+- **One blocking finding, `L12D013-PY-I001`** (`CONTRACT_ASSURANCE_DEFECT`): spec §3.2 promised "the existing typed error" for a failed native process-cwd read, but no such typed outcome exists.
+  - Python lets the original `OSError` escape. The reviewer showed this with an injected read failure through `absolute_path`, `file_info`, `ctx.subprocess.spawn` and `ctx.shell.exec`, checking exception identity.
+  - Pinned Pi itself propagates the exception, so a new catch is not `DIRECT_PI_PARITY`.
+
+### 10.1 Correction of a false claim
+
+§7.2 item 4 said: "The process-cwd failure mapping stays covered by the existing L12-D012 witnesses." **That is wrong for Python.** No Python witness covers a failed read, and merged Python has no mapping (§9.5). The sentence stays in §7 as history and is withdrawn here.
+
+### 10.2 Owner decision
+
+The Owner decided the finding as an intentional practical-parity divergence, **`DIV-009`**: "APPROVE OPTION 1: TYPED FAILURE, DIV-009". It is recorded verbatim at `#235` issuecomment-6205758223 (sha256 `77cd22f3…`), superseding the short summary at issuecomment-6205744819. It includes:
+- the normative rule;
+- the Rust reconciliation;
+- scope and precedence;
+- the required witnesses and negative controls;
+- ten governance steps, of which step 7 is independent agreement on the revised contract before any production change.
+
+It is a scoped amendment within L12-D013, with no separate work package.
+
+### 10.3 Characterization (read-only; source, plus the reviewer's executed witnesses)
+
+| Seam | Pinned Pi | Merged Python | Rust (reviewed; not modified) |
+|---|---|---|---|
+| `ctx.fs` (every operation) | `resolvePath` first, outside any `try`; the throw rejects the operation | `resolve_local_path` first, in all 16 resolver-using methods (and again in the NUL wrapper); the `OSError` escapes | `resolved()` → `map_fs_error`: typed `FsError`, **no path** |
+| `ctx.shell.exec` | pre-abort, timeout, then `resolvePath` (`nodejs.ts:376`), before shell config and the `access` catch; the throw rejects | same order; the `OSError` escapes | same order; `ShellError(SpawnError, error.to_string())` |
+| `ctx.subprocess.spawn` | no Pi seam (Minion extension) | pre-abort, then resolution, then the §21 checks; the `OSError` escapes | pre-abort, the empty-argv check, then resolution; `map_spawn_error` → `spawn_error` |
+
+**Where the read happens (lazy).**
+- win32: the rooted or incomplete-UNC branch (L12-D013), and the L12-D012 drive-relative branch when the inherited `=X:` entry is absent or empty.
+- Never: for a complete UNC root, `X:\…`, or a relative input against an absolute provider `cwd`.
+- POSIX:
+  - Pinned Node and Rust read it only when **no argument is absolute**, that is, a relative or empty provider `cwd` with a relative input.
+  - **Merged Python never reads it on POSIX.** It joins the two relative strings instead. That is a separate, pre-existing difference for a non-absolute provider `cwd`. It is recorded here as an observation only and not reopened, per the decision's scope.
+  - The DIV-009 rule applies wherever a binding's resolver reads the cwd. Making Python read it there would be a path-resolution change outside this amendment.
+
+**Observations the implementation must handle.**
+- **The NUL wrapper.** In Python, the L12-D006 NUL wrapper (`_contain_nul`) resolves the arguments a second time, inside its own `ValueError` handler. A failing cwd read there must not escape either.
+- **Empty argv.** With an empty argv and a failing read, the two bindings' subprocess orders differ (Rust's empty-argv check comes first). That edge lies outside this amendment's precedence rule, which keeps each existing earlier check.
+- **Reachability.** On win32 the real process cwd cannot be removed while the process uses it, so every witness injects the failure at the native-read boundary. No real directory is deleted or invalidated.
+
+### 10.4 The amendment (this candidate; docs and manifest only)
+
+- **`spec/execution.md`:**
+  - §2 gains one paragraph that names the only point where pinned Pi's implementation leaves the `Result` boundary, and points to §22.
+  - §3.2's "the existing typed error" is corrected to `DIV-009`'s typed failure, with a correction note.
+  - **New §22** states the rule: where the read happens (unchanged and lazy), the typed failure per seam (code and diagnostic from the original native error; `path` = the caller's logical argument as passed; `rename_file` source before destination; `spawn_error` with no process created), precedence (unchanged), what stays an exception, and what is unchanged.
+- **`assurance/pi-divergences.md`:** a new `DIV-009` entry and table row (APPROVED by the Owner; witnesses pending).
+- **`pi-parity-manifest.yaml`** (code): a new row `EXEC-002-DIV-009`, disposition `intentional divergence`, plus `EXEC-004` and `EXEC-005` traceability lines. Python is REMEDIATION_REQUIRED. Rust is REVALIDATE_REQUIRED for this surface only.
+
+### 10.5 Planned witnesses and controls (the remediation after agreement)
+
+All failures are injected at each binding's native process-cwd read boundary (Python: `_native_process_cwd_view`). Witnesses run through the real public seams and need no destructive fixture.
+
+- **Witnesses:**
+  - win32 rooted (`\leaf`, `\\leaf`) and L12-D012 drive-relative inputs (absent and empty entry), each read failing with ENOENT, with permission denied, and with another OS error;
+  - each observed `code`, diagnostic and `path`;
+  - the caller's path preserved exactly, including a lone-surrogate value and a `file://` or `~` spelling (`path` is the argument as passed);
+  - `absolute_path`, `file_info`, `rename_file` (a failing source, then a failing destination) and the other resolver consumers;
+  - `ctx.shell.exec` and `ctx.subprocess.spawn`, with a fail-if-reached native spawn spy;
+  - abort precedence: `ctx.fs` reports the read failure under an aborted signal; the shell and subprocess pre-abort checks still decide first;
+  - timeout validation first, then the §21 NUL checks after resolution;
+  - no side effects, through filesystem call spies;
+  - lazy-read controls: complete UNC, `X:\`, a non-empty inherited entry, and POSIX absolute inputs never read the cwd;
+  - the NUL-wrapper second resolution;
+  - pinned-Pi-versus-Minion rows: the pinned slice on Node with a throwing `process.cwd` (a rejection) beside the binding's typed result.
+- **Negative controls**, each with a green baseline and a named killing witness:
+  1. leak the raw `OSError`;
+  2. a fixed wrong code (for example everything `unknown`);
+  3. omit `path`;
+  4. substitute the provider `cwd` for the caller path;
+  5. read the cwd for a complete-UNC or `X:\` input;
+  6. catch every exception, so an injected `TypeError` or `AssertionError` would be swallowed;
+  7. retry with a fabricated cwd;
+  8. start a process despite the failure.
+- **Rust:** revalidation of this surface only, after the shared merge. The `ctx.fs` mapping gains the caller's logical path, and existing codes, laziness and typed shell/subprocess handling are preserved.
+
+### 10.6 Review requested
+
+This is independent agreement on the revised contract (§10.4, decision step 7), before the Python remediation changes any production behaviour.
+
+### 10.7 Documentary corrections (review 4, non-blocking)
+
+§9.4 says the Linux mypy errors are "line-for-line equal" to `#229`'s. The precise statement: they are the **same 15 diagnostics, modulo source-line offsets**. The `filesystem.py` lines moved by +13, for example 982 → 995. There is no new mypy error.
