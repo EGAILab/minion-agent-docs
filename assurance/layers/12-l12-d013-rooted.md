@@ -1,6 +1,6 @@
 # L12-D013: win32 rooted drive-less input (scoping 1)
 
-Status: **PYTHON APPROVED AND MERGED; RUST REVALIDATION PENDING** (§13). Final complete review 9 approved the frozen pair, and both PRs are merged; L12-D013 cross-language is NOT CLOSED. *(Earlier: DIV-009 PYTHON REMEDIATION for targeted closure of `L12D013-PY-I001`, §11–§12.)* That remediation came after checkpoint CE-L12D013-01 was agreed (review 6). *(Earlier: REMEDIATION: DIV-009 contract amendment for independent agreement, §10.)* Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
+Status: **CLOSED: PYTHON AND RUST APPROVED AND MERGED** (§15). Rust: Claude closure review 1 (`#235` issuecomment-6225928456) at code #242 `1c0a1783` / docs #317 `862f78bb`, merged as code → `24dfe1ea`, docs → `8d9674d2`. L12-D013 cross-language is CLOSED. *(Earlier: PYTHON APPROVED AND MERGED; RUST REVALIDATION PENDING, §13.)* Final complete review 9 approved the frozen pair, and both PRs are merged; L12-D013 cross-language is NOT CLOSED. *(Earlier: DIV-009 PYTHON REMEDIATION for targeted closure of `L12D013-PY-I001`, §11–§12.)* That remediation came after checkpoint CE-L12D013-01 was agreed (review 6). *(Earlier: REMEDIATION: DIV-009 contract amendment for independent agreement, §10.)* Implementation review 4 found `L12D013-PY-I001`, and the Owner decided it as `DIV-009`. *(Earlier: PYTHON IMPLEMENTATION CANDIDATE for independent implementation review, §9.)* Contract review 3 approved contract candidate 2 (§8). *(Earlier: CONTRACT CANDIDATE 2 for independent contract re-review, §8.)* Contract review 2 requested changes to candidate 1 (§7); §8 records the narrow remediation. Scoping 1 was approved by Codex review 1. Python is not corrected yet. *(Earlier: CONTRACT CANDIDATE for independent contract review, §7. Before that: SCOPING, PROPOSED for independent scoping review.)* Coordination: `minion-agent#235`. Delta of `EXEC-002`/`EXEC-005`. Class: governing, CP-6 (WORKFLOW 11.8.11(c)).
 
 ## 1. Source
 
@@ -579,3 +579,12 @@ The request is a targeted `L12D013-PY-I001` closure review at the exact pushed p
 3. The separate delta issue.
 
 **State:** `L12D013-RUST-C001` is open, with Claude as next owner. Python stays approved and merged. Rust is REVALIDATE_REQUIRED. L12-D013 cross-language is NOT CLOSED.
+
+## 15. Rust outcome (post-merge status sync)
+
+- Rust L12-D013 revalidation, including DIV-009: **APPROVED and MERGED**.
+  - Claude closure review 1 (`#235` issuecomment-6225928456) approved code #242 `1c0a1783` / docs #317 `862f78bb` with no findings. It reran both platforms from a fresh checkout on Claude-only targets in `#209` windows: Windows 710 passed, 0 failed, 2 ignored, 33 controls KILLED; Linux 700 passed, 0 failed, 3 ignored, 27 controls KILLED and 6 NOT_APPLICABLE.
+  - Merged with `minion_process merge` at the approved heads: code → `24dfe1ea`, docs → `8d9674d2`. The Rust record is [`12-l12-d013-rust.md`](12-l12-d013-rust.md).
+  - `L12D013-RUST-C001` is closed with the work package; its clarification was merged as docs #316.
+- L12-D013 cross-language: **CLOSED**.
+- Not certified here: the 48 public extended-provider rows of spec §22.5 stay observations, tracked by `#241` (frozen, Owner cut-over issuecomment-6222791583). `#224` is separate.
