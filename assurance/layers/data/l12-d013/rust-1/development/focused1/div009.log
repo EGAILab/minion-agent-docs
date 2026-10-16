@@ -1,0 +1,32 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent)
+error[E0774]: `derive` may only be applied to `struct`s, `enum`s and `union`s
+   --> crates\minion-agent\src\execution\subprocess.rs:103:1
+    |
+103 |   #[derive(Clone, Debug)]
+    |   ^^^^^^^^^^^^^^^^^^^^^^^ not applicable here
+...
+116 | / pub(super) trait NativeSpawner: Send + Sync {
+117 | |     fn spawn(&self, command: &mut Command) -> io::Result<Child>;
+118 | | }
+    | |_- not a `struct`, `enum` or `union`
+
+error[E0282]: type annotations needed
+   --> crates\minion-agent\src\execution\div009_tests.rs:639:13
+    |
+639 |         let second = if cfg!(windows) {
+    |             ^^^^^^
+...
+653 |             Inputs::new("absent", Read::Value(second.clone())).as_ref(),
+    |                                               ------ type must be known at this point
+    |
+help: consider giving `second` an explicit type
+    |
+639 |         let second: /* Type */ = if cfg!(windows) {
+    |                   ++++++++++++
+
+Some errors have detailed explanations: E0282, E0774.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `minion-agent` (lib test) due to 2 previous errors

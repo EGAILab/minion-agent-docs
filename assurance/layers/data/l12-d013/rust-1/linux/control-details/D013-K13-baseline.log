@@ -1,0 +1,6 @@
+
+running 1 test
+test execution::div009_tests::nul_slots_keep_first_resolution ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.03s
+

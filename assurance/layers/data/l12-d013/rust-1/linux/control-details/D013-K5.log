@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED D013-K5
+
+thread 'execution::div009_tests::raw_logical_and_public_read_domains' (33290) panicked at crates/minion-agent/src/execution/div009_tests.rs:154:5:
+assertion `left == right` failed: cwd count {"platform":"posix","provider":"/base","input":"/x","entries":"n/a","value":"/x","cwdReads":0,"envReads":[]}
+  left: 1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::raw_logical_and_public_read_domains ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::raw_logical_and_public_read_domains
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.05s
+

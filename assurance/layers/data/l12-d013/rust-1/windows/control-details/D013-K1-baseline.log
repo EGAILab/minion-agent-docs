@@ -1,0 +1,10 @@
+
+running 1 test
+
+thread 'execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics' (50976) panicked at crates\minion-agent\src\execution\div009_tests.rs:67:28:
+UNRELATED READER PANIC
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

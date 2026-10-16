@@ -1,0 +1,16 @@
+
+running 1 test
+CONTROL FIRED D013-K11
+
+thread 'execution::div009_tests::resolve_second_read_failure_never_uses_the_saved_absolute_fallback' (38282) panicked at crates/minion-agent/src/execution/div009_tests.rs:514:10:
+resolve must not fall back after cwd read failure: FsTarget { target_key: TargetKey(<opaque>), .. }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::resolve_second_read_failure_never_uses_the_saved_absolute_fallback ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::resolve_second_read_failure_never_uses_the_saved_absolute_fallback
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.04s
+

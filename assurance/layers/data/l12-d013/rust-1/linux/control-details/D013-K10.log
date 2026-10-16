@@ -1,0 +1,16 @@
+
+running 1 test
+CONTROL FIRED D013-K10
+
+thread 'execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path' (37450) panicked at crates/minion-agent/src/execution/div009_tests.rs:472:22:
+exists: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.03s
+
