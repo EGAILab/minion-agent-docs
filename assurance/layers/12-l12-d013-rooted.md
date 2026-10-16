@@ -472,3 +472,56 @@ Contract review 5 (issuecomment-6205917076) fired trigger A and opened convergen
 Run 5 is the credited tier. The single change from run 4 is that reformat. The whole-tree format check lists the same 7 pre-existing files as `#229`.
 - **Logs:** `data/l12-d013/impl/gates/win-5`, `linux-5`, and the run 4 summaries in `gates/history`. The `impl/SHA256SUMS` ledger now has 86 entries, all verified.
 - **Manifest status.** The `EXEC-002-DIV-009` row still says Python REMEDIATION_REQUIRED, and its witness entry PENDING. Editing it now would move the code head off the gated `4cb5b5e2`, so the row is updated by the post-closure status sync.
+
+## 12. Targeted closure review 7 and the slot-identity remediation
+
+Targeted closure review 7 (issuecomment-6216781677, at code `4cb5b5e2` / docs `791eaa10`) returned **CHANGES_REQUESTED**. `L12D013-PY-I001` stays open as the same finding, a `PI_PARITY_DEFECT` on the same NUL-handler surface. `L12D013-F001` stays open for the later complete review. This is the first rejected targeted closure after checkpoint review 6, so the two-failure invalidation threshold of kit §11.8.10 has not fired. The review found no new divergence and needed no Owner decision. §11's record stays as it was.
+
+### 12.1 The defect (review 7)
+
+The §11.1 NUL error path recorded each resolution under the key `(cwd, path)` and looked `rename_file`'s two arguments up by that key. With equal source and destination spellings, the destination's resolution overwrote the source's.
+
+The process cwd is mutable process-wide, so the two reads need not agree. Review 7's witness: rooted `\same<NUL>x` for both arguments, reads `E:\proc` then `F:\proc`, and a spy native rename rejecting the NUL. Pinned Pi (`renameFile`, `nodejs.ts:590-599`) reports `toFileError(error, source)`, so the fallback is `E:\same<NUL>x`. Python reported `F:\same<NUL>x`. The read count stayed two, so R10 and K12 could not see it.
+
+Spec 18.1 requires the resolved source fallback, unprojected. Spec 22.2 requires the resolutions already made, not the first replaced by the last.
+
+### 12.2 Remediation (code `07731c8b`, `filesystem.py`)
+
+- The NUL error path records one `(cwd, path, resolved)` entry per resolution, in call order. An entry is an argument slot, not an argument value.
+- Each wrapped operation resolves its path arguments once each, in argument order. Slot *i* is therefore entry *i*. The handler classifies the rejection only when entry *i* is argument *i*'s own resolution, and otherwise re-raises.
+- Unchanged, as the handback required:
+  - nothing is memoized across the two reads;
+  - no read is added;
+  - the logical fallback is not projected;
+  - the rename order is unchanged.
+
+### 12.3 Permanent witnesses and controls (`tests/execution/test_div009_cwd_read_failure.py`)
+
+- **R11 rows.** Each row covers distinct or equal spellings, with stable (`E:`, `E:`) or varying (`E:`, `F:`) reads:
+  - distinct-stable;
+  - distinct-varying;
+  - equal-stable;
+  - equal-varying;
+  - equal-varying-raw, where both arguments carry a raw lone surrogate.
+
+  Each row goes through the real `rename_file`. A spy replaces `os.replace`, records the two native arguments and raises the host's `ValueError('embedded null character')`, so no filesystem call is made. Each row asserts:
+  - `unknown` with the source slot's own logical path, the surrogate kept raw;
+  - the spy saw the native projections of the source and destination slots' own resolutions;
+  - exactly two reads.
+- **Controls K13 and K13-raw.** Each reinstalls a value-keyed, last-wins lookup of the recorded resolutions, using the existing K-control harness against the equal-varying and equal-varying-raw rows. Each witness is first asserted green on the baseline. The same witness must then fail with the control installed.
+- **Wrong-slot re-raise.** When the first recorded resolution is of another path, the `ValueError` propagates and is not classified.
+
+### 12.4 Gates (run 6, Codex-granted window, 2026-10-17; launchers unchanged at `7d42b468` / `48b3dbda` / `579b8d52`, their controls carried, not rerun)
+
+| Run | Code head | Windows | Linux (`python:3.13`, uid 1000) |
+|---|---|---|---|
+| **6** | **`07731c8b`** | **every gate exit 0**: pytest 7778 passed / 0 failed / 81 skipped / 19 xfailed, coverage 100.00%; ruff, format-changed, mypy, icu, node-posix | icu-build, pip, versions, ruff 0; pytest **6683 passed / 0 failed** / 1123 skipped / 19 xfailed; coverage-only pytest exit 1 (96.60%) and mypy exit 1 (the same 15 diagnostics as run 5, modulo line offsets), both at the established Linux baseline |
+
+- **Counts.** Run 6 adds 8 cases to run 5's 7770 on Windows: R11 ×5, K13, K13-raw and the wrong-slot case. On Linux it adds 1, the wrong-slot case. The other 7 are win32-only and skip.
+- **Format.** The whole-tree format check lists the same 7 pre-existing files as run 5.
+- **Logs.** The logs are `data/l12-d013/impl/gates/win-6` and `linux-6`. The run-5 directories stay as they were. The `impl/SHA256SUMS` ledger now has 122 entries, all verified.
+- **Manifest status** is unchanged and deferred to the post-closure status sync, as in §11.3.
+
+### 12.5 Review requested
+
+The request is a targeted `L12D013-PY-I001` closure review at the exact pushed pair: code #238 `07731c8b` and the docs head carrying this section. The candidate does not enter FINAL_CONTRACT_REVIEW and does not start Rust revalidation.
