@@ -1,0 +1,18 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent)
+error[E0063]: missing field `native_inputs` in initializer of `filesystem::LocalFileSystem`
+    --> crates\minion-agent\src\execution\filesystem.rs:1809:26
+     |
+1809 |         let filesystem = LocalFileSystem {
+     |                          ^^^^^^^^^^^^^^^ missing `native_inputs`
+
+error[E0063]: missing field `native_inputs` in initializer of `filesystem::LocalFileSystem`
+    --> crates\minion-agent\src\execution\filesystem.rs:1835:26
+     |
+1835 |         let filesystem = LocalFileSystem {
+     |                          ^^^^^^^^^^^^^^^ missing `native_inputs`
+
+For more information about this error, try `rustc --explain E0063`.
+error: could not compile `minion-agent` (lib test) due to 2 previous errors

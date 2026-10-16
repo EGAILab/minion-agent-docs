@@ -1,0 +1,28 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 07s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-3153a08ddee1686e.exe)
+
+running 2 tests
+test execution::div009_tests::raw_argument_is_attached_to_the_failed_read ... ok
+
+thread 'execution::div009_tests::extended_provider_read_domain_matches_the_checkpoint' (53012) panicked at crates\minion-agent\src\execution\div009_tests.rs:36:5:
+real provider must reach the checkpoint's N cell: Ok(ResultString { units: JsString([99, 58, 92, 98, 97, 115, 101, 92, 108, 101, 97, 102]), scalar: Some("c:\\base\\leaf") })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::extended_provider_read_domain_matches_the_checkpoint ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::extended_provider_read_domain_matches_the_checkpoint
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 221 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

@@ -1,0 +1,18 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.08s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-3153a08ddee1686e.exe)
+
+running 3 tests
+test execution::div009_tests::extended_provider_read_domain_matches_the_checkpoint ... ignored, CONTRACT_ASSURANCE_DEFECT: explicit diagnostic, not a certification test
+test execution::div009_tests::ordinary_provider_is_the_no_read_positive ... ok
+test execution::div009_tests::unc_provider_is_the_read_positive ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 221 filtered out; finished in 0.00s
