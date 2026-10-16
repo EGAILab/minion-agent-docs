@@ -17,7 +17,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
 | `DIV-007` | Frontmatter block collections nest at most 64 deep | WP-14.1 (`HAR-010`) | APPROVED |
 | `DIV-008` | Recursive remove with several failing children: first-encountered failure, sequential traversal | L12-D008 (`EXEC-002`) | APPROVED |
-| `DIV-009` | A failed native process-cwd read during path resolution is a typed failure, not a throw | L12-D013 (`EXEC-002`, `EXEC-004`, `EXEC-005`) | APPROVED (Owner); Python witnesses merged; Rust REVALIDATE_REQUIRED |
+| `DIV-009` | A failed native process-cwd read during path resolution is a typed failure, not a throw | L12-D013 (`EXEC-002`, `EXEC-004`, `EXEC-005`) | APPROVED (Owner); Python and Rust witnesses merged |
 
 ---
 
@@ -332,7 +332,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
     - K13 and K13-raw, from targeted closure review 7, cover the NUL fallback looked up by argument value rather than by slot.
     - Each control is a green baseline, then the intended witness failure.
     - Approved by final complete review 9 (`#235` issuecomment-6217925725). Code #238 merged as `393138f8`, docs #310 as `349bef8b`.
-  - **Rust:** pending its revalidation.
+  - **Rust, merged:** `minion-agent-rust/crates/minion-agent/src/execution/div009_tests.rs`, with controls D013-K1–K13 and K13-raw in `minion-agent-rust/scripts/div009_controls.py`. Approved by Claude closure review 1 (`#235` issuecomment-6225928456) at code #242 `1c0a1783` / docs #317 `862f78bb`; merged as code → `24dfe1ea`, docs → `8d9674d2`.
 - **Manifest:** row `EXEC-002-DIV-009`, disposition `intentional divergence`, with `EXEC-004`/`EXEC-005` traceability.
 - **Governance:**
   - Owner decision "APPROVE OPTION 1: TYPED FAILURE, DIV-009" (`#235` issuecomment-6205758223, recorded verbatim, sha256 `77cd22f3…`). It includes the Rust reconciliation: Rust's typed handling is kept, its `ctx.fs` mapping gains the caller's logical path, and only that surface is REVALIDATE_REQUIRED.
@@ -340,7 +340,8 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - Convergence episode CE-L12D013-01 characterizes the read domain and the derived-operation outcomes: `assurance/layers/12-l12-d013-convergence-ce01.md`.
 - **Status:** APPROVED by the Owner.
   - The contract amendment and the Python implementation were approved by final complete review 9 (`#235` issuecomment-6217925725) and merged: code `393138f8`, docs `349bef8b`.
-  - Rust is REVALIDATE_REQUIRED for this surface only.
-  - L12-D013 cross-language is NOT CLOSED.
+  - Rust: approved by Claude closure review 1 (`#235` issuecomment-6225928456) and merged as code → `24dfe1ea`, docs → `8d9674d2`.
+  - L12-D013 cross-language is CLOSED.
+  - *(Earlier: Rust REVALIDATE_REQUIRED for this surface only; L12-D013 cross-language NOT CLOSED.)*
   - *(Earlier: the contract amendment pending independent review, witnesses pending implementation.)*
 - **Reconsideration trigger:** pinned Pi is updated to normalize this failure itself, or a real consumer needs Pi's rejection.
