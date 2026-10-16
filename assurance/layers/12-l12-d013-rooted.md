@@ -555,3 +555,27 @@ The request is a targeted `L12D013-PY-I001` closure review at the exact pushed p
 - Shared L12-D013 contract (the section 3.2 rooted and UNC-root statement, the 99-case corpus, spec section 22): merged, and **READY FOR INDEPENDENT RUST REVALIDATION**. The surface is narrow: the merged rooted cases, and DIV-009's `ctx.fs` caller-path mapping and `rename_file` order.
 - Rust: **REVALIDATE_REQUIRED**.
 - L12-D013 cross-language: **NOT CLOSED**.
+
+## 14. Rust revalidation block `L12D013-RUST-C001` and the entry-point clarification
+
+**The block.** The Rust revalidation, handed off at issuecomment-6218754488, stopped at its start (issuecomment-6219403726). Codex classified it as `L12D013-RUST-C001`, a `CONTRACT_ASSURANCE_DEFECT`.
+- **Codex's evidence:** a draft diagnostic, code #240 `447b7dfa` / docs #315 `9c8e9012`, which is not to be merged. No production fix, read move or certification was made.
+- **The cause is mine,** as shared-contract author. CE-01 §2 said "Rust reads in exactly Node's cells", source-derived, and handoff §B.1 required every N cell through Rust's real seams.
+- **What Rust's public provider actually does:** it applies the OS-path adapter that CE-L12D012-02 §2 preserves. The adapter strips an extended provider prefix. So at the public seam, `\\?\C:\base` with `c:leaf` makes no read and returns `c:\base\leaf`. The raw logical entry reads once.
+
+**Clarification** (this candidate; proposed for independent agreement before Rust resumes):
+- **CE-01 §2 and new §2.1** state the read domain per entry point, from the frozen `rd-1` Node rows. For provider `\\?\C:\base` against `C:\base`, 36 of 48 rows are equal, every rooted row among them. 12 differ: `c:leaf` ×4, `leaf` ×4 and `""` ×4.
+- **Spec §22.1** gains the per-entry-point rule.
+- **Spec §22.5** records Rust's public extended-provider success-value difference from pinned Pi as an observation, neither changed nor certified. Python matches Pi in all 48 rows. It is tracked as a separate delta on the drive-relative and base-resolution surface, which decides whether to align or diverge.
+- **No semantic change:** no read is added or moved, the adapter is not removed, the corpus is unchanged, and the DIV-009 Owner decisions are untouched.
+- **Evidence:** `data/l12-d013/rust-c001/` contains `ext_rows.py`, its output (`rows: 36 same, 12 differ`), its exit 0 and an empty stderr. The ledger `SHA256SUMS` has 4 entries.
+  - It is a read-only comparison of the committed `rd-1/node.out`.
+  - It was run once, with the kit venv's `python -I -B`, outside a `#209` window, since it is a pure JSON read with no build, gate or native probe.
+  - The Rust public-seam values themselves come only from Codex's diagnostic.
+
+**After agreement.**
+1. The merged clarification.
+2. A corrected Rust handoff addendum. It replaces §B.1 with the per-entry-point requirement and adds a characterization of the public-seam extended-provider rows, recorded and not certified.
+3. The separate delta issue.
+
+**State:** `L12D013-RUST-C001` is open, with Claude as next owner. Python stays approved and merged. Rust is REVALIDATE_REQUIRED. L12-D013 cross-language is NOT CLOSED.

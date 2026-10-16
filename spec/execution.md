@@ -3644,6 +3644,12 @@ The certified resolver (§3.2, L12-D012, L12-D013) and the exact point at which 
 - **win32, a drive-relative input on another drive than the provider `cwd`** (L12-D012): the read happens only when the inherited `=X:` entry is absent or empty. A non-empty inherited entry is selected without reading the process cwd.
 - **win32 and POSIX, a provider `cwd` that supplies no absolute root** (relative, empty, or on win32 device-less), with an input that supplies none either: Node and Rust read the process cwd. Merged Python does not read it there. That is a separate, pre-existing success-path difference, which this section neither changes nor certifies (§22.5).
 
+The inventory is stated **per entry point** of each binding (`L12D013-RUST-C001`). The matrix is the read domain of the resolver applied to the provider `cwd` exactly as the binding's public provider holds it.
+- **Rust's public providers** (`ctx.fs`, `ctx.shell`, `ctx.subprocess`) pass the provider `cwd` through the certified OS-path provider adapter before resolution. CE-L12D012-02 §2 preserves that adapter, and it strips an extended `\\?\` prefix.
+  - At those seams, an extended provider has the read domain of its adapted form. For example, `\\?\C:\base` with `c:leaf` and an absent entry is read like `C:\base`: no read.
+  - Rust's lossless logical resolver entry keeps the provider units raw, and reads in Node's cells.
+- **A binding's DIV-009 witnesses** cover the cells where each of its entry points reads. No read is added at, or moved to, a seam whose certified pipeline does not make it.
+
 No read happens when an argument supplies a complete absolute root and the algorithm stops there: a complete UNC root, `X:\…`, a POSIX absolute input, or an ordinary relative or same-drive input against a provider `cwd` that has its own device and root. A binding must not add a read.
 
 **DIV-009 governs the outcome wherever a binding's certified resolver performs the read.** It does not authorize adding or moving a read.
@@ -3684,5 +3690,16 @@ Only the operational failure of that native read is converted. Invariant violati
 ### 22.5 Unchanged
 
 Every successful resolution result, the L12-D012 selection and native-view rules, the L12-D013 root rules, the malformed-URL fallback, and every other failure mapping. Path-resolution, filesystem-error, shell-lifecycle and environment semantics are not otherwise reopened. In particular, merged Python's success path for a provider `cwd` with no absolute root of its own (it joins instead of reading the process cwd, §22.1) is neither changed nor certified here. It stays a recorded observation for separate governance.
+
+The same holds for **Rust's public-provider handling of an extended-prefix provider `cwd`** (`L12D013-RUST-C001`).
+- **Pinned Pi** resolves against `\\?\C:\base` as given. With the process cwd `E:\proc`, it gives:
+  - `leaf` → `\\?\C:\base\leaf`;
+  - `""` → `\\?\C:\base`;
+  - `c:leaf` → `c:\leaf`, reading `=c:` and, for an absent or empty entry, the process cwd. A non-empty `=c:` entry is resolved under instead, for example `c:\deep\leaf`.
+
+  These are frozen rows of run `rd-1`. Merged Python matches all 48 extended-provider rows.
+- **Rust's adapter** resolves the stripped `C:\base`. For `c:leaf` it gives `c:\base\leaf` with no read.
+
+This difference is outside the L12-D013 rooted rule, whose extended-provider rows equal their ordinary pairs. It is neither changed nor certified here. It is tracked as a separate delta.
 
 Record: `assurance/layers/12-l12-d013-rooted.md` §10.
