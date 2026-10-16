@@ -4,6 +4,24 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Minion-Process PROC-KIT-L1: kit 0.3.1 (lesson: shared build caches and mtime freshness); Minion-Agent pin 0.3.1 — 2026-10-16
+
+**Kit 0.3.1** (`EGAILab/minion-process#5`, Codex review round 1 APPROVED at
+`90ad1a8d1c7b9eb27d96130dc3c512956c72b2c6`, merged `3164bed47e611e1dedd78362afbce4fc2b0c96b3`, tag `v0.3.1`;
+coordination `minion-agent#222`, classified `process`/mechanical `CP-0`). Contents:
+`lessons/SHARED-BUILD-CACHE-FRESHNESS-2026-10-13.md` (from `minion-process#4`: a shared Cargo target executed
+another checkout's and a mutation control's binaries as a gate in `minion-agent#215`; the mechanism, which is
+path-independent artifact hashes plus mtime freshness; the four-point rule; the consumer-side two-checkout
+replay recipe) and one `WORKFLOW.md` §9.8 paragraph stating that rule. No CLI, schema or state-machine change.
+The tagged `pyproject.toml` still reads version `0.3.0` and the CHANGELOG heading still says "unreleased";
+both are corrected with the next kit candidate.
+
+**What Minion-Agent adopts:** `process/profile.yaml` pin `0.3.1`; the CLI runs from the worktree
+`.tmp/kit/v0.3.1`. The §9.8 paragraph restates the build policy already in force by Owner decision
+(`minion-agent#209` issuecomment-6131831805), so no rule in force, certification or delegation changes. The
+profile's worktree-add comment now names the kit repository's real checkout,
+`Minion-Process\minion-process`.
+
 ## Minion-Process P3a: kit 0.3.0 (review header schema 2, convergence counters, metrics, composite verbs); Minion-Agent pin 0.3.0 — 2026-10-13
 
 **Kit 0.3.0** (`EGAILab/minion-process#3`, Codex FINAL_REVIEW APPROVED at `03fad3916b0cb32c59ea17b7a48a73eab1eba236`,
