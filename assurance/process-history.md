@@ -4,6 +4,37 @@ A running log of workflow/process improvements distilled from layer retrospectiv
 `process/agent-workflow.md` section 14. This file records the improvement and why it was made;
 the semantic/certification detail for the layer itself stays in that layer's own assurance files.
 
+## Minion-Process 0.3.2: guarded first-review closure for process/status work packages; Minion-Agent pin 0.3.2 — 2026-10-16
+
+**Why.** #222 (PROC-KIT-L1) could not close. Its only review was a clean, complete, exact-head APPROVED
+review of an unchanged candidate, and kit 0.3.1 offered a process-only closure only from
+`FINAL_CONTRACT_REVIEW`, which an unchanged candidate may not enter (`WORKFLOW.md` §11.4, §12.6). The Owner
+held the closure rather than fabricate a second review or a changed candidate (#222
+issuecomment-6209854474) and ordered a kit route correction (`EGAILab/minion-process#12`). The kit owner
+session took it as 0.3.2 (minion-process#12 issuecomment-6209921580).
+
+**Kit 0.3.2** (`EGAILab/minion-process#13`, Review-Codex round 3 APPROVED at
+`66094382951c857e524a35dd3f60808691c39cec`, squash-merged into `release/0.3.x` as
+`c7cd3b61baccc5086de723e1c95f03dfd1311998` with the identical tree `4643e3fb`, annotated tag `v0.3.2`;
+`process`/governing `CP-3`). Branched from `v0.3.1`; it carries only this fix, so Minion-Agent moves
+0.3.1 → 0.3.2 without adopting 0.4.0. Contents: a guarded `IMPLEMENTATION_REVIEW -> CLOSED` transition
+(`coordination-state.md` §10.2a) for an explicit `process`/`status` WP with `requirements: []`, no open or
+provisionally closed finding, a latest published complete APPROVED review of the exact final candidate
+(read from every candidate PR in the issue's edit history), no change to the WP identity or a candidate in
+the closing patch, and every candidate merged at its recorded SHA on the default branch; `WORKFLOW.md`
+§11.4 and §12.6 text; the `apply`/`close` guards and their refusal tests. The `FINAL_CONTRACT_REVIEW` and
+`CLOSURE_REVIEW` closure gates are unchanged. The tagged `pyproject.toml` reads `0.3.2`. Release record:
+minion-agent#231 issuecomment-6212608180.
+
+**Consumer witness** (precondition of the kit merge): `close 222 --dry-run` against the exact candidate
+head, run under a #209 slot with the import bound to the candidate checkout, exited 0 with `DRY-RUN OK`
+and made no writes (#222 issuecomment-6211661836).
+
+**What Minion-Agent adopts** (Owner-ordered): `process/profile.yaml` pin `0.3.2`; the CLI runs from the
+worktree `.tmp/kit/v0.3.2`. This bump is not #222's candidate: #222's candidate stays docs #312 with its
+sole approving review, as the Owner decided, and the bump is recorded in #222's history with its own
+review. No certification or delegation changes.
+
 ## Minion-Process PROC-KIT-L1: kit 0.3.1 (lesson: shared build caches and mtime freshness); Minion-Agent pin 0.3.1 — 2026-10-16
 
 **Kit 0.3.1** (`EGAILab/minion-process#5`, Codex review round 1 APPROVED at
