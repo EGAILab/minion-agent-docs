@@ -1,0 +1,19 @@
+src/minion_agent/execution/environment.py:55: error: Module has no attribute "windll"  [attr-defined]
+src/minion_agent/execution/environment.py:136: error: Module has no attribute "windll"  [attr-defined]
+src/minion_agent/tools/builtin/collation.py:92: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/tools/builtin/collation.py:93: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:995: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1017: error: Module has no attribute "get_last_error"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1018: error: Module has no attribute "FormatError"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1068: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1090: error: Module has no attribute "get_last_error"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1091: error: Module has no attribute "FormatError"  [attr-defined]
+src/minion_agent/execution/subprocess.py:186: error: Unused "type: ignore" comment  [unused-ignore]
+src/minion_agent/execution/subprocess.py:189: error: Unused "type: ignore" comment  [unused-ignore]
+src/minion_agent/tools/execute.py:53: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/minion_agent/tools/execute.py:54: error: Library stubs not installed for "jsonschema.exceptions"  [import-untyped]
+src/minion_agent/tools/execute.py:54: note: Hint: "python3 -m pip install types-jsonschema"
+src/minion_agent/tools/execute.py:54: note: (or run "mypy --install-types" to install all missing stub packages)
+src/minion_agent/tools/execute.py:54: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+src/minion_agent/tools/execute.py:234: error: Unused "type: ignore" comment  [unused-ignore]
+Found 15 errors in 5 files (checked 118 source files)

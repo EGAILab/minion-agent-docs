@@ -1,0 +1,571 @@
+coverage: node 360 python 336 (exact key sets verified)
+win32 classes: {'differs/node-no-read': 6, 'differs/node-reads': 30, 'equal/node-no-read': 168, 'equal/node-reads': 132}
+win32 Node rows reading the cwd: 162
+win32 Python rows reading the cwd: 132
+posix Node rows reading the cwd: [('', '', 1), ('', '\\leaf', 1), ('', 'x', 1), ('base', '', 1), ('base', '\\leaf', 1), ('base', 'x', 1)]
+[
+ {
+  "provider": "",
+  "input": "",
+  "entries": "absent",
+  "node": [
+   "E:\\proc",
+   1,
+   []
+  ],
+  "python": [
+   ".",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "",
+  "entries": "empty",
+  "node": [
+   "E:\\proc",
+   1,
+   []
+  ],
+  "python": [
+   ".",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "",
+  "entries": "other",
+  "node": [
+   "E:\\proc",
+   1,
+   []
+  ],
+  "python": [
+   ".",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "",
+  "entries": "same",
+  "node": [
+   "E:\\proc",
+   1,
+   []
+  ],
+  "python": [
+   ".",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "leaf",
+  "entries": "absent",
+  "node": [
+   "E:\\proc\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "leaf",
+  "entries": "empty",
+  "node": [
+   "E:\\proc\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "leaf",
+  "entries": "other",
+  "node": [
+   "E:\\proc\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "",
+  "input": "leaf",
+  "entries": "same",
+  "node": [
+   "E:\\proc\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "",
+  "entries": "absent",
+  "node": [
+   "C:\\base",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "",
+  "entries": "empty",
+  "node": [
+   "C:\\base",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "",
+  "entries": "other",
+  "node": [
+   "C:\\base",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "",
+  "entries": "same",
+  "node": [
+   "C:\\deep\\base",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "c:leaf",
+  "entries": "absent",
+  "node": [
+   "c:\\base\\leaf",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "c:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "c:leaf",
+  "entries": "empty",
+  "node": [
+   "c:\\base\\leaf",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "c:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "c:leaf",
+  "entries": "other",
+  "node": [
+   "c:\\base\\leaf",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "c:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "c:leaf",
+  "entries": "same",
+  "node": [
+   "c:\\deep\\base\\leaf",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "c:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "leaf",
+  "entries": "absent",
+  "node": [
+   "C:\\base\\leaf",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "leaf",
+  "entries": "empty",
+  "node": [
+   "C:\\base\\leaf",
+   1,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "leaf",
+  "entries": "other",
+  "node": [
+   "C:\\base\\leaf",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "C:base",
+  "input": "leaf",
+  "entries": "same",
+  "node": [
+   "C:\\deep\\base\\leaf",
+   0,
+   [
+    "=C:"
+   ]
+  ],
+  "python": [
+   "C:base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "",
+  "entries": "absent",
+  "node": [
+   "E:\\base",
+   1,
+   []
+  ],
+  "python": [
+   "\\base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "",
+  "entries": "empty",
+  "node": [
+   "E:\\base",
+   1,
+   []
+  ],
+  "python": [
+   "\\base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "",
+  "entries": "other",
+  "node": [
+   "E:\\base",
+   1,
+   []
+  ],
+  "python": [
+   "\\base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "",
+  "entries": "same",
+  "node": [
+   "E:\\base",
+   1,
+   []
+  ],
+  "python": [
+   "\\base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "leaf",
+  "entries": "absent",
+  "node": [
+   "E:\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "\\base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "leaf",
+  "entries": "empty",
+  "node": [
+   "E:\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "\\base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "leaf",
+  "entries": "other",
+  "node": [
+   "E:\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "\\base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "\\base",
+  "input": "leaf",
+  "entries": "same",
+  "node": [
+   "E:\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "\\base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "",
+  "entries": "absent",
+  "node": [
+   "E:\\proc\\base",
+   1,
+   []
+  ],
+  "python": [
+   "base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "",
+  "entries": "empty",
+  "node": [
+   "E:\\proc\\base",
+   1,
+   []
+  ],
+  "python": [
+   "base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "",
+  "entries": "other",
+  "node": [
+   "E:\\proc\\base",
+   1,
+   []
+  ],
+  "python": [
+   "base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "",
+  "entries": "same",
+  "node": [
+   "E:\\proc\\base",
+   1,
+   []
+  ],
+  "python": [
+   "base",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "leaf",
+  "entries": "absent",
+  "node": [
+   "E:\\proc\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "leaf",
+  "entries": "empty",
+  "node": [
+   "E:\\proc\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "leaf",
+  "entries": "other",
+  "node": [
+   "E:\\proc\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "base\\leaf",
+   0,
+   []
+  ]
+ },
+ {
+  "provider": "base",
+  "input": "leaf",
+  "entries": "same",
+  "node": [
+   "E:\\proc\\base\\leaf",
+   1,
+   []
+  ],
+  "python": [
+   "base\\leaf",
+   0,
+   []
+  ]
+ }
+]

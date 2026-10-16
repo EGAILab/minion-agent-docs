@@ -1,0 +1,281 @@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc icu-build 0@@
+icu4c-78.3-sources.tgz: OK
+identity recorded in /tmp/icu/pinned-icu-identity.txt
+pinned ICU 78.3 built in /tmp/icu
+export PYICU_INCLUDES='/tmp/icu/install/include'
+export PYICU_LFLAGS='-L/tmp/icu/install/lib:-Wl,-rpath,/tmp/icu/install/lib:-Wl,--disable-new-dtags'
+export PYICU_LIBRARIES='icui18n:icuuc:icudata'
+export PYICU_CFLAGS='-std=c++17'
+export MINION_AGENT_ICU_IDENTITY='/tmp/icu/pinned-icu-identity.txt'
+export ICU_VERSION=78.3
+export UV_NO_CACHE=1  # rebuild PyICU against this ICU rather than reuse a cached wheel
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc icu-build@@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc pip 0@@
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc pip@@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc versions 0@@
+icu 78.3
+pytest 9.1.1
+uid 1000
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc versions@@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc pytest 1@@
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+...................................................xxx.xx....xx..xxxxx.. [  8%]
+.....x......x.............xx.xx...x..................................... [  9%]
+........................................................................ [ 10%]
+..........................................s............................. [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 15%]
+..................................ssssssssssssssssssssssssssssssssssssss [ 16%]
+ssssssssssssssssssssssssss................................ssssssssssssss [ 17%]
+ss...................................................................... [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+....................................................................s..s [ 23%]
+sss...ss.sssss.......................................................... [ 24%]
+................................................................s....... [ 25%]
+..........................ssssssssssssssssssss........................s. [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 29%]
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+....ssssssss.ss.sssss....................s..ssssssssssss.sssssssssssssss [ 61%]
+s...s................................................................... [ 62%]
+........................................................................ [ 63%]
+s......ss..ss..........................sss..................s........... [ 64%]
+...........sss.......................................................... [ 65%]
+..........s.sss.sss..................................................... [ 66%]
+............................................sssss......s................ [ 67%]
+..............................sssssssssssssssssssssssssss............... [ 68%]
+........................................................ss.............. [ 69%]
+........................................................................ [ 70%]
+..............ssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 71%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 72%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 73%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 74%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 75%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssss....s............. [ 76%]
+..............ssssssssssssssssssssssssssssssssssss.sssss................ [ 77%]
+.......................s.s....................................ss........ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+.............................sss.s..ssssss.............................. [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+.......................................................................
+ERROR: Coverage failure: total of 97 is less than fail-under=100
+                                                                         [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.15-final-0 _______________
+
+Name                                                Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------------
+src/minion_agent/agent/__init__.py                     10      0   100%
+src/minion_agent/agent/decisions.py                    45      0   100%
+src/minion_agent/agent/envelope.py                     19      0   100%
+src/minion_agent/agent/events.py                       25      0   100%
+src/minion_agent/agent/identity.py                     24      0   100%
+src/minion_agent/agent/inbox.py                        82      0   100%
+src/minion_agent/agent/instance.py                     88      0   100%
+src/minion_agent/agent/plugin.py                        6      0   100%
+src/minion_agent/agent/projection.py                  147      0   100%
+src/minion_agent/agent/registry.py                     37      0   100%
+src/minion_agent/agent_loop/__init__.py                20      0   100%
+src/minion_agent/agent_loop/driver.py                 385      0   100%
+src/minion_agent/auth/__init__.py                       0      0   100%
+src/minion_agent/auth/context.py                       16      0   100%
+src/minion_agent/auth/credential.py                    46      0   100%
+src/minion_agent/auth/device_code.py                   84      0   100%
+src/minion_agent/auth/http_transport.py               105      0   100%
+src/minion_agent/auth/interaction.py                  103      0   100%
+src/minion_agent/auth/js_json.py                      108      0   100%
+src/minion_agent/auth/openai_codex.py                  53      0   100%
+src/minion_agent/auth/openai_codex_oauth.py           359      0   100%
+src/minion_agent/auth/pkce.py                          19      0   100%
+src/minion_agent/auth/refresh.py                       52      0   100%
+src/minion_agent/auth/signal.py                        18      0   100%
+src/minion_agent/auth/store.py                         72      0   100%
+src/minion_agent/execution/__init__.py                 10      0   100%
+src/minion_agent/execution/_libuv_win32.py            174    174     0%   20-353
+src/minion_agent/execution/environment.py              92     31    66%   53-58, 68, 134-161, 168
+src/minion_agent/execution/errors.py                   61      1    98%   135
+src/minion_agent/execution/filesystem.py              908     67    93%   152, 163, 300-304, 309, 453, 564-577, 587, 593-597, 750-752, 827-829, 859-861, 992-1019, 1065-1092, 1170, 1177, 1185, 1214, 1226, 1325, 1343, 1356-1370, 1827
+src/minion_agent/execution/plugin.py                   15      0   100%
+src/minion_agent/execution/result.py                   14      0   100%
+src/minion_agent/execution/shell.py                   190     14    93%   182-195
+src/minion_agent/execution/spawn_nul.py               109      0   100%
+src/minion_agent/execution/subprocess.py              235      5    98%   174-182, 201
+src/minion_agent/execution/world.py                    30      0   100%
+src/minion_agent/llm/__init__.py                        7      0   100%
+src/minion_agent/llm/adapters/__init__.py               0      0   100%
+src/minion_agent/llm/adapters/mock.py                  77      0   100%
+src/minion_agent/llm/content.py                        40      0   100%
+src/minion_agent/llm/errors.py                          3      0   100%
+src/minion_agent/llm/js_object.py                     174      0   100%
+src/minion_agent/llm/messages.py                      106      0   100%
+src/minion_agent/llm/plugin.py                         20      0   100%
+src/minion_agent/llm/service.py                        69      0   100%
+src/minion_agent/llm/stream.py                         69      0   100%
+src/minion_agent/llm/tools.py                          36      0   100%
+src/minion_agent/llm/transform_messages.py            126      0   100%
+src/minion_agent/runtime/__init__.py                   12      0   100%
+src/minion_agent/runtime/context.py                   136      0   100%
+src/minion_agent/runtime/disposable.py                 38      0   100%
+src/minion_agent/runtime/errors.py                      6      0   100%
+src/minion_agent/runtime/events.py                    125      0   100%
+src/minion_agent/runtime/fiber.py                     110      0   100%
+src/minion_agent/runtime/plugin.py                     30      0   100%
+src/minion_agent/runtime/registry.py                   39      0   100%
+src/minion_agent/runtime/scope.py                      48      0   100%
+src/minion_agent/runtime/scoped_registry.py            24      0   100%
+src/minion_agent/runtime/service.py                    46      0   100%
+src/minion_agent/runtime/signal.py                     19      0   100%
+src/minion_agent/session/__init__.py                    8      0   100%
+src/minion_agent/session/artifacts.py                  24      0   100%
+src/minion_agent/session/derive.py                    160      0   100%
+src/minion_agent/session/events.py                     43      0   100%
+src/minion_agent/session/log.py                        42      0   100%
+src/minion_agent/session/operations.py                 19      0   100%
+src/minion_agent/session/request_header.py             33      0   100%
+src/minion_agent/session/service.py                    26      0   100%
+src/minion_agent/skills/__init__.py                     2      0   100%
+src/minion_agent/skills/_frontmatter.py               312      0   100%
+src/minion_agent/skills/_ignore.py                    303      0   100%
+src/minion_agent/skills/discovery.py                  250      0   100%
+src/minion_agent/system_prompt/__init__.py              3      0   100%
+src/minion_agent/system_prompt/composer.py             27      0   100%
+src/minion_agent/system_prompt/formatting.py           85      0   100%
+src/minion_agent/telemetry/__init__.py                  4      0   100%
+src/minion_agent/telemetry/plugin.py                    9      0   100%
+src/minion_agent/telemetry/sanitize.py                 31      0   100%
+src/minion_agent/telemetry/service.py                  32      0   100%
+src/minion_agent/telemetry/spans.py                    16      0   100%
+src/minion_agent/tools/__init__.py                      9      0   100%
+src/minion_agent/tools/batch.py                        76      0   100%
+src/minion_agent/tools/builtin/__init__.py             10      0   100%
+src/minion_agent/tools/builtin/_js.py                  69      0   100%
+src/minion_agent/tools/builtin/_jsdiff.py             165      0   100%
+src/minion_agent/tools/builtin/_node_path.py           43      0   100%
+src/minion_agent/tools/builtin/_readline.py            36      0   100%
+src/minion_agent/tools/builtin/_search.py              87      0   100%
+src/minion_agent/tools/builtin/_signal.py              42      0   100%
+src/minion_agent/tools/builtin/_utf16.py               18      0   100%
+src/minion_agent/tools/builtin/bash.py                256      1    99%   397
+src/minion_agent/tools/builtin/bash_output.py         130      0   100%
+src/minion_agent/tools/builtin/bash_shell.py          104      0   100%
+src/minion_agent/tools/builtin/collation.py           168     29    83%   79, 84, 90-126, 143, 281
+src/minion_agent/tools/builtin/edit.py                 93      0   100%
+src/minion_agent/tools/builtin/edit_diff.py           225      0   100%
+src/minion_agent/tools/builtin/environment.py          35      0   100%
+src/minion_agent/tools/builtin/find.py                222      0   100%
+src/minion_agent/tools/builtin/grep.py                176      0   100%
+src/minion_agent/tools/builtin/image.py               230      0   100%
+src/minion_agent/tools/builtin/ls.py                   74      0   100%
+src/minion_agent/tools/builtin/mime.py                 64      0   100%
+src/minion_agent/tools/builtin/mutation_queue.py       54      0   100%
+src/minion_agent/tools/builtin/paths.py                34      0   100%
+src/minion_agent/tools/builtin/photon/__init__.py     106      0   100%
+src/minion_agent/tools/builtin/plugin.py               26      0   100%
+src/minion_agent/tools/builtin/read.py                135      0   100%
+src/minion_agent/tools/builtin/search_engines.py      119      0   100%
+src/minion_agent/tools/builtin/truncate.py             55      0   100%
+src/minion_agent/tools/builtin/write.py                38      0   100%
+src/minion_agent/tools/decisions.py                    19      0   100%
+src/minion_agent/tools/definition.py                   61      0   100%
+src/minion_agent/tools/events.py                       24      0   100%
+src/minion_agent/tools/execute.py                     263      0   100%
+src/minion_agent/tools/plugin.py                        8      0   100%
+src/minion_agent/tools/registry.py                     31      0   100%
+src/minion_agent/tools/result.py                       33      0   100%
+---------------------------------------------------------------------------------
+TOTAL                                                9888    322    97%
+FAIL Required test coverage of 100.0% not reached. Total coverage: 96.74%
+6654 passed, 670 skipped, 19 xfailed in 162.89s (0:02:42)
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc pytest@@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc mypy 1@@
+src/minion_agent/execution/environment.py:55: error: Module has no attribute "windll"  [attr-defined]
+src/minion_agent/execution/environment.py:136: error: Module has no attribute "windll"  [attr-defined]
+src/minion_agent/tools/builtin/collation.py:92: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/tools/builtin/collation.py:93: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:995: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1017: error: Module has no attribute "get_last_error"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1018: error: Module has no attribute "FormatError"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1068: error: Module has no attribute "WinDLL"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1090: error: Module has no attribute "get_last_error"  [attr-defined]
+src/minion_agent/execution/filesystem.py:1091: error: Module has no attribute "FormatError"  [attr-defined]
+src/minion_agent/execution/subprocess.py:186: error: Unused "type: ignore" comment  [unused-ignore]
+src/minion_agent/execution/subprocess.py:189: error: Unused "type: ignore" comment  [unused-ignore]
+src/minion_agent/tools/execute.py:53: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/minion_agent/tools/execute.py:54: error: Library stubs not installed for "jsonschema.exceptions"  [import-untyped]
+src/minion_agent/tools/execute.py:54: note: Hint: "python3 -m pip install types-jsonschema"
+src/minion_agent/tools/execute.py:54: note: (or run "mypy --install-types" to install all missing stub packages)
+src/minion_agent/tools/execute.py:54: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+src/minion_agent/tools/execute.py:234: error: Unused "type: ignore" comment  [unused-ignore]
+Found 15 errors in 5 files (checked 118 source files)
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc mypy@@
+@@BEGIN 48cd260a248a1fb58910d7f3cd0c42dc ruff 0@@
+All checks passed!
+
+@@END 48cd260a248a1fb58910d7f3cd0c42dc ruff@@
