@@ -17,7 +17,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
 | `DIV-007` | Frontmatter block collections nest at most 64 deep | WP-14.1 (`HAR-010`) | APPROVED |
 | `DIV-008` | Recursive remove with several failing children: first-encountered failure, sequential traversal | L12-D008 (`EXEC-002`) | APPROVED |
-| `DIV-009` | A failed native process-cwd read during path resolution is a typed failure, not a throw | L12-D013 (`EXEC-002`, `EXEC-004`, `EXEC-005`) | APPROVED (Owner); witnesses pending |
+| `DIV-009` | A failed native process-cwd read during path resolution is a typed failure, not a throw | L12-D013 (`EXEC-002`, `EXEC-004`, `EXEC-005`) | APPROVED (Owner); Python witnesses merged; Rust REVALIDATE_REQUIRED |
 
 ---
 
@@ -327,10 +327,20 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - pinned-Pi-versus-Minion rows.
   - Negative controls for: a leaked raw `OSError`, a wrong code, an omitted caller path, the provider `cwd` substituted for the caller path, an unneeded process-cwd read, indiscriminate catching, a retry with a fabricated cwd, and a process started despite the failure.
   - From the amendment and review 5: the former Python rename order (destination, abort, source), `exists` returning `false`, `resolve` falling back after the failure, and the NUL error path reading again. Witnesses also assert the number and order of native cwd reads.
+  - **Python, merged:** `minion-agent-python/tests/execution/test_div009_cwd_read_failure.py`.
+    - Controls K1–K12 cover the list above.
+    - K13 and K13-raw, from targeted closure review 7, cover the NUL fallback looked up by argument value rather than by slot.
+    - Each control is a green baseline, then the intended witness failure.
+    - Approved by final complete review 9 (`#235` issuecomment-6217925725). Code #238 merged as `393138f8`, docs #310 as `349bef8b`.
+  - **Rust:** pending its revalidation.
 - **Manifest:** row `EXEC-002-DIV-009`, disposition `intentional divergence`, with `EXEC-004`/`EXEC-005` traceability.
 - **Governance:**
   - Owner decision "APPROVE OPTION 1: TYPED FAILURE, DIV-009" (`#235` issuecomment-6205758223, recorded verbatim, sha256 `77cd22f3…`). It includes the Rust reconciliation: Rust's typed handling is kept, its `ctx.fs` mapping gains the caller's logical path, and only that surface is REVALIDATE_REQUIRED.
   - Owner amendment "APPROVE OPTION 1: ALIGN PYTHON RENAME ORDER TO PINNED PI" (`#235` issuecomment-6206113367, recorded verbatim, sha256 `c49d6f76…`), after contract review 5 (issuecomment-6205917076). It sets the shared `rename_file` order and supersedes "preserve each binding's existing order" for that operation only.
   - Convergence episode CE-L12D013-01 characterizes the read domain and the derived-operation outcomes: `assurance/layers/12-l12-d013-convergence-ce01.md`.
-- **Status:** APPROVED by the Owner. The contract amendment is pending independent review, and witnesses are pending implementation.
+- **Status:** APPROVED by the Owner.
+  - The contract amendment and the Python implementation were approved by final complete review 9 (`#235` issuecomment-6217925725) and merged: code `393138f8`, docs `349bef8b`.
+  - Rust is REVALIDATE_REQUIRED for this surface only.
+  - L12-D013 cross-language is NOT CLOSED.
+  - *(Earlier: the contract amendment pending independent review, witnesses pending implementation.)*
 - **Reconsideration trigger:** pinned Pi is updated to normalize this failure itself, or a real consumer needs Pi's rejection.
