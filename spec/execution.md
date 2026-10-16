@@ -95,6 +95,12 @@ The governing rule, stated once so it need not be repeated per operation:
 > typed `Result` error. Framework/provider invariant violations and programming errors remain
 > exceptions (Python) / panics (Rust).
 
+**One identified point where pinned Pi's implementation leaves this boundary (`DIV-009`, §22).**
+Pinned Pi's `resolvePath` reads the native process cwd outside any `try`, so a failed read throws out
+of the operation that called it. Minion keeps the boundary above: that failure is an expected
+environmental failure and returns the typed result that §22 specifies. Nothing else in this section
+changes.
+
 **This rule applies per-operation, not uniformly to every method on a seam.** Some operations have
 a documented SUCCESS value that itself reports an otherwise-unsuccessful outcome (§5.6: a shell
 command's own non-zero exit code is not a `Result` error at the `ctx.shell` seam -- it is
@@ -334,6 +340,34 @@ Confirmed concrete resolution rules from the reference implementation (`nodejs.t
   actually touches it, not as a resolution-time exception;
 - an absolute result is used as-is (syntactically normalized); a relative result is resolved
   against `cwd`.
+
+**Rooted and UNC-root inputs on win32 (`L12-D013`, `minion-agent#235`; DIRECT_PI_PARITY).** "Absolute"
+above is Node's `path.win32.isAbsolute`. Such an input is resolved as Node's
+`path.win32.resolve(input)`, alone and without the provider `cwd`. This applies to the input as it
+stands after the `~` and `file://` steps above, at Pi's unchanged absolute-or-relative decision.
+Its root is parsed as follows:
+
+- **A complete UNC root** is the result's device: exactly two leading separators, a non-empty server,
+  one or more separators, and a non-empty share, where either separator may be used. The root is
+  emitted with single `\` separators, and gets a final `\` when nothing follows it.
+- **A drive root** (`X:\`, `X:/`) is the device, unchanged by this rule.
+- **No device.** This covers a leading `\` or `/` that does not complete a UNC root, and a
+  double-separator form that is not a complete UNC root (`\\leaf`, `\\srv\`, `\\\leaf`). Such a
+  root takes its device from the **process** cwd, never from the provider `cwd`. Inherited `=X:`
+  entries play no part.
+  - The device is the same root parse applied to the process-cwd native operand of
+    CE-L12D012-02: an `X:` drive, a `\\server\share` root, or a namespace root such as `\\?\E:`.
+  - The tail is the input after its one-unit root. For a double-separator form that is not a
+    complete UNC root, the whole input is the tail.
+
+The result is the device, then `\`, then the tail normalized: `.` and empty segments dropped, `..`
+clamped at the root, and `\` emitted. A failure to read the process cwd is the typed failure of
+`DIV-009` (§22); nothing is guessed. *(Corrected at L12-D013 implementation review 4, `L12D013-PY-I001`:
+this sentence said "the existing typed error". Pinned Pi has no typed result here, since its
+`resolvePath` propagates the native exception, and merged Python had no such mapping.)* On POSIX the rule is unchanged: a leading `/` is absolute and is normalized as
+Node's `path.posix.resolve(input)`, so any run of leading `/` becomes one (`//leaf` is `/leaf`), and
+a leading `\` is an ordinary relative name. The same rule governs the effective spawn `cwd` of
+`ctx.shell`/`ctx.subprocess` (§5, §6), which uses this resolver.
 
 **Correction record (independent review, `L12-R002`):** an earlier revision of this section stated
 symlinks are "never followed by path resolution or by any operation" except `canonical_path`. That
@@ -3598,3 +3632,74 @@ The effective environment is composed as today (EXEC-005; §15.3): with `inherit
 - **Rust** answers `spawn_error` with the OS text, and its tools add their wrappers.
 
 Record: `assurance/layers/12-l12-d011-spawn-nul.md`.
+
+## 22. Layer-12 delta `L12-D013` amendment — a failed native process-cwd read during path resolution is a typed failure (`DIV-009`; `EXEC-002`, `EXEC-004`, `EXEC-005`)
+
+**Intentional practical-parity divergence `DIV-009`** (Owner decision, `minion-agent#235` issuecomment-6205758223, amended for `rename_file` by issuecomment-6206113367; provenance `L12D013-PY-I001`, implementation review 4, issuecomment-6201717410; convergence episode CE-L12D013-01 after contract review 5, issuecomment-6205917076). Pinned Pi's `resolvePath` (`nodejs.ts:51-65`) reads the process cwd through Node's `path.resolve` outside any `try`. Its callers (`absolutePath` at `nodejs.ts:359-360`, `exec` at `nodejs.ts:376`, and every filesystem operation that resolves first) do not catch there either. So a failed native read throws, and the operation rejects, contrary to Pi's own interface rule (`types.ts:228-229`) that §2 adopts. Minion keeps the §2 boundary and returns a typed failure instead.
+
+### 22.1 Where the read happens (unchanged)
+
+The certified resolver (§3.2, L12-D012, L12-D013) and the exact point at which it reads the native process cwd are unchanged. The read is **lazy**: it happens only where the algorithm needs the process cwd. In Node's terms, `path.resolve` reads it when, after the `~` and `file://` steps, the effective arguments supply no absolute root of their own (win32: no device with a root; POSIX: no leading `/`). The complete inventory, by binding, platform and argument form, is the CE-L12D013-01 read-domain matrix (`assurance/layers/12-l12-d013-convergence-ce01.md` §2). It includes:
+- **win32, a device-less rooted or incomplete-UNC input** (L12-D013): `\leaf`, `/leaf`, `\\leaf`, `\\srv\`.
+- **win32, a drive-relative input on another drive than the provider `cwd`** (L12-D012): the read happens only when the inherited `=X:` entry is absent or empty. A non-empty inherited entry is selected without reading the process cwd.
+- **win32 and POSIX, a provider `cwd` that supplies no absolute root** (relative, empty, or on win32 device-less), with an input that supplies none either: Node and Rust read the process cwd. Merged Python does not read it there. That is a separate, pre-existing success-path difference, which this section neither changes nor certifies (§22.5).
+
+The inventory is stated **per entry point** of each binding (`L12D013-RUST-C001`). The matrix is the read domain of the resolver applied to the provider `cwd` exactly as the binding's public provider holds it.
+- **Rust's public providers** (`ctx.fs`, `ctx.shell`, `ctx.subprocess`) pass the provider `cwd` through the certified OS-path provider adapter before resolution. CE-L12D012-02 §2 preserves that adapter, and it strips an extended `\\?\` prefix.
+  - At those seams, an extended provider has the read domain of its adapted form. For example, `\\?\C:\base` with `c:leaf` and an absent entry is read like `C:\base`: no read.
+  - Rust's lossless logical resolver entry keeps the provider units raw, and reads in Node's cells.
+- **A binding's DIV-009 witnesses** cover the cells where each of its entry points reads. No read is added at, or moved to, a seam whose certified pipeline does not make it.
+
+No read happens when an argument supplies a complete absolute root and the algorithm stops there: a complete UNC root, `X:\…`, a POSIX absolute input, or an ordinary relative or same-drive input against a provider `cwd` that has its own device and root. A binding must not add a read.
+
+**DIV-009 governs the outcome wherever a binding's certified resolver performs the read.** It does not authorize adding or moving a read.
+
+### 22.2 The typed failure
+
+When that native read fails with an operational OS error, the operation returns a typed failure **at the point where it resolves the path**. Nothing is retried, and nothing is substituted: no fallback drive, no fabricated cwd, no provider `cwd`.
+
+- **`ctx.fs`**, every operation that resolves a path argument (`absolute_path`, `file_info`, and every other operation using the shared resolver): `Err(FsError)`, where
+  - `code` is the classification of the **original native error** by the binding's existing filesystem mapper (§2.1, §19; on win32, libuv's translation of the original Win32 error). A cwd failure is not collapsed to `not_found`, `permission_denied` or `unknown`; its own cause decides.
+  - `message` is that error's own diagnostic, as the mapper renders it for any other failure.
+  - `path` is the **caller's logical path argument exactly as passed**: before the `~` and `file://` steps, unresolved and unprojected (a lone surrogate stays raw). It is never the provider `cwd` or a guessed resolved or native path.
+  - The native error stays attached as the cause, where the binding's error type carries one.
+- **`rename_file`** (Owner amendment, `#235` issuecomment-6206113367). The shared order is pinned Pi's and Rust's: (1) resolve the source, (2) resolve the destination, (3) check abort, (4) the native rename. Python is aligned to it.
+  - A failed source resolution returns the source's DIV-009 error at once. The destination is not resolved and abort is not checked.
+  - Otherwise, a failed destination resolution returns the destination's error.
+  - With both resolved, an aborted signal keeps the existing `aborted` code and resolved-destination path, and every other outcome of the native rename and its error mapping is unchanged.
+  - This amendment reorders no other operation.
+- **Derived operations.** A DIV-009 failure propagates unchanged through every operation composed from others. It is never reinterpreted as evidence about the target:
+  - **`exists`** returns the `Err(FsError)`, never `Ok(False)`, even when the native error is classified `not_found`. Its existing `not_found` → `false` conversion applies only to `file_info`'s own native `lstat` failure. Pi agrees: its `exists` calls `fileInfo`, whose throw propagates.
+  - **`resolve`** (`EXEC-003`) returns `canonical_path`'s DIV-009 failure unchanged. Its `absolute_path` fallback applies only to the native `realpath` failure's `not_found`/`not_supported`. It never runs after a failed read, so nothing is read again.
+  - **The NUL-path error path** (§18, L12-D006) builds its failure from the resolutions the operation already made. It performs **no further native read**, so a read that succeeded first and would fail later cannot change that outcome. Effects the operation certifiably made before (`write_file`'s parent creation) stay. Nothing further happens after a failed read.
+- **`ctx.shell.exec`:** `Err(ShellError(spawn_error))`. Its message and cause carry the native read failure through the existing representation.
+- **`ctx.subprocess.spawn`:** `Err(SubprocessError(spawn_error))`, carrying the failure the same way. No native process creation is attempted.
+
+### 22.3 Precedence (unchanged)
+
+The failure takes the place in each operation's order where that operation already resolves its path. A check that already decides earlier keeps its outcome, and the read never moves earlier.
+- **`ctx.fs`:** resolution precedes the operation's pre-abort check and its native calls (Pi's order: `resolvePath`, then `abortResult`, e.g. `nodejs.ts:503-505`). So a failed read is reported even under an aborted signal, and no **further** filesystem call is made after it.
+- **`ctx.shell.exec`:** pre-abort, then timeout validation, then cwd resolution, then shell discovery and the cwd existence check (§5.4).
+- **`ctx.subprocess.spawn`:** pre-abort, then cwd resolution, then the §21 U+0000 checks, which need the effective resolved cwd, then the native spawn. A binding's existing earlier validation keeps its place: Rust's empty-argv rejection comes before resolution. DIV-009 reorders no validation, and it does not bring the §21 checks to a binding that has not implemented them (Rust's are `#224`'s own work).
+- **`rename_file`:** source, destination, abort, rename, as in §22.2, by the Owner's amendment.
+
+### 22.4 What stays an exception
+
+Only the operational failure of that native read is converted. Invariant violations, programming errors and every unrelated exception keep their current behaviour (§2). A binding must not catch broadly around resolution.
+
+### 22.5 Unchanged
+
+Every successful resolution result, the L12-D012 selection and native-view rules, the L12-D013 root rules, the malformed-URL fallback, and every other failure mapping. Path-resolution, filesystem-error, shell-lifecycle and environment semantics are not otherwise reopened. In particular, merged Python's success path for a provider `cwd` with no absolute root of its own (it joins instead of reading the process cwd, §22.1) is neither changed nor certified here. It stays a recorded observation for separate governance.
+
+The same holds for **Rust's public-provider handling of an extended-prefix provider `cwd`** (`L12D013-RUST-C001`).
+- **Pinned Pi** resolves against `\\?\C:\base` as given. With the process cwd `E:\proc`, it gives:
+  - `leaf` → `\\?\C:\base\leaf`;
+  - `""` → `\\?\C:\base`;
+  - `c:leaf` → `c:\leaf`, reading `=c:` and, for an absent or empty entry, the process cwd. A non-empty `=c:` entry is resolved under instead, for example `c:\deep\leaf`.
+
+  These are frozen rows of run `rd-1`. Merged Python matches all 48 extended-provider rows.
+- **Rust's adapter** resolves the stripped `C:\base`. For `c:leaf` it gives `c:\base\leaf` with no read.
+
+This difference is outside the L12-D013 rooted rule, whose extended-provider rows equal their ordinary pairs. It is neither changed nor certified here. It is tracked as a separate delta.
+
+Record: `assurance/layers/12-l12-d013-rooted.md` §10.

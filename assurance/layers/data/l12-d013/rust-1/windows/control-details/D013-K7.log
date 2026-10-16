@@ -1,0 +1,16 @@
+
+running 1 test
+CONTROL FIRED D013-K7
+
+thread 'execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics' (47192) panicked at crates\minion-agent\src\execution\div009_tests.rs:495:5:
+native read failure may not fabricate a cwd
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

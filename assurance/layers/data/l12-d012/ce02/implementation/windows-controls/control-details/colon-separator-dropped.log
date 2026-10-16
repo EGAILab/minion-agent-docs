@@ -1,0 +1,21 @@
+
+running 1 test
+CONTROL FIRED colon-separator-dropped
+CONTROL FIRED colon-separator-dropped
+CONTROL FIRED colon-separator-dropped
+CONTROL FIRED colon-separator-dropped
+
+thread 'execution::path_resolve::tests::posix_colons_remain_ordinary_components' (38908) panicked at crates\minion-agent\src\execution\path_resolve.rs:280:13:
+assertion `left == right` failed
+  left: ResultString { units: JsString([47, 120, 47, 102, 105, 108, 101, 58, 67, 58, 97, 37, 50, 70, 98]), scalar: Some("/x/file:C:a%2Fb") }
+ right: "/x/file:/C:/a%2Fb"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path_resolve::tests::posix_colons_remain_ordinary_components ... FAILED
+
+failures:
+
+failures:
+    execution::path_resolve::tests::posix_colons_remain_ordinary_components
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.00s
+

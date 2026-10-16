@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED D013-K4
+
+thread 'execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path' (39848) panicked at crates\minion-agent\src\execution\div009_tests.rs:479:17:
+assertion `left == right` failed: absolute
+  left: Some(ResultString { units: JsString([67, 58, 92, 98, 97, 115, 101]), scalar: Some("C:\\base") })
+ right: Some(ResultString { units: JsString([92, 108, 101, 97, 102, 55296, 92]), scalar: None })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

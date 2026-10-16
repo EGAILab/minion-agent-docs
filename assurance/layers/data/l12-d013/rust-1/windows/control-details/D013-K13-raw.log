@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED D013-K13-raw
+
+thread 'execution::div009_tests::nul_slots_keep_raw_first_resolution' (48688) panicked at crates\minion-agent\src\execution\div009_tests.rs:739:5:
+assertion `left == right` failed: source slot owns fallback
+  left: Some(ResultString { units: JsString([70, 58, 92, 108, 101, 97, 102, 0, 120, 55296]), scalar: None })
+ right: Some(ResultString { units: JsString([69, 58, 92, 108, 101, 97, 102, 0, 120, 55296]), scalar: None })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::nul_slots_keep_raw_first_resolution ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::nul_slots_keep_raw_first_resolution
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

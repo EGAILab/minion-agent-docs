@@ -1,0 +1,67 @@
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent)
+warning: function `resolve_local_path` is never used
+    --> crates\minion-agent\src\execution\filesystem.rs:1131:15
+     |
+1131 | pub(crate) fn resolve_local_path(cwd: &Path, raw: &str) -> io::Result<PathBuf> {
+     |               ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `resolve` is never used
+   --> crates\minion-agent\src\execution\path.rs:137:15
+    |
+137 | pub(crate) fn resolve(cwd: &Path, raw: &FsPath) -> std::io::Result<FsPath> {
+    |               ^^^^^^^
+
+warning: `minion-agent` (lib) generated 2 warnings
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (test "execution_rooted") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 40.01s
+     Running tests\execution_rooted.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\execution_rooted-4534bedba4ad37c8.exe)
+
+running 3 tests
+test rooted_cwd_child ... ignored, child observer, explicitly launched by rooted_spawn_uses_process_device
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:249:5:
+fixture parent traversal input
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:249:5:
+fixture parent traversal input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:253:5:
+drive-relative fixture input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:253:5:
+drive-relative fixture input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (50804) panicked at crates\minion-agent\tests\support\fs_containment.rs:257:5:
+colon fixture names require ./
+test containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch ... ok
+
+thread 'rooted_spawn_uses_process_device' (31596) panicked at crates\minion-agent\tests\execution_rooted.rs:65:5:
+assertion `left == right` failed
+  left: "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\process-temp\\d013-rooted-spawn-61d017d9-ba9c-4a21-8391-16f5e026a5d4\\child"
+ right: "E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/process-temp\\d013-rooted-spawn-61d017d9-ba9c-4a21-8391-16f5e026a5d4\\child"
+test rooted_spawn_uses_process_device ... FAILED
+
+failures:
+
+failures:
+    rooted_spawn_uses_process_device
+
+test result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p minion-agent --test execution_rooted`

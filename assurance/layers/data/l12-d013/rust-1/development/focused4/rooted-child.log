@@ -1,0 +1,41 @@
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (test "execution_rooted") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.01s
+     Running tests\execution_rooted.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\execution_rooted-4534bedba4ad37c8.exe)
+
+running 3 tests
+test rooted_cwd_child ... ignored, child observer, explicitly launched by rooted_spawn_uses_process_device
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:249:5:
+fixture parent traversal input
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test rooted_spawn_uses_process_device ... ok
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:249:5:
+fixture parent traversal input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:253:5:
+drive-relative fixture input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:253:5:
+drive-relative fixture input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:245:5:
+absolute fixture mutation input
+
+thread 'containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch' (54532) panicked at crates\minion-agent\tests\support\fs_containment.rs:257:5:
+colon fixture names require ./
+test containment::containment_refuses_unsafe_raw_mutation_names_before_dispatch ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.37s
+

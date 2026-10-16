@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED search-case-sensitive-regression
+
+thread 'tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching' (24765) panicked at crates/minion-agent/src/tools/builtin/search_paths.rs:243:9:
+assertion `left == right` failed
+  left: "c:\\rOOT\\A.ts"
+ right: "A.ts"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching ... FAILED
+
+failures:
+
+failures:
+    tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 211 filtered out; finished in 0.02s
+

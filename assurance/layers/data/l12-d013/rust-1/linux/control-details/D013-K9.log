@@ -1,0 +1,18 @@
+
+running 1 test
+CONTROL FIRED D013-K9
+
+thread 'execution::div009_tests::rename_precedence_and_nul_slots' (36618) panicked at crates/minion-agent/src/execution/div009_tests.rs:646:9:
+assertion `left == right` failed
+  left: Some(ResultString { units: JsString([47, 100, 115, 116]), scalar: Some("/dst") })
+ right: Some(ResultString { units: JsString([108, 101, 97, 102]), scalar: Some("leaf") })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::div009_tests::rename_precedence_and_nul_slots ... FAILED
+
+failures:
+
+failures:
+    execution::div009_tests::rename_precedence_and_nul_slots
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.03s
+

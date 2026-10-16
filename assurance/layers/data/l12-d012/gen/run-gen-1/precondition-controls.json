@@ -1,0 +1,14 @@
+[
+ {
+  "control": "inherited =A: entry",
+  "exit": 3,
+  "stderr": "PRECONDITION REFUSED: inherited =A: entry is present",
+  "refused": true
+ },
+ {
+  "control": "inherited =X: entry",
+  "exit": 3,
+  "stderr": "PRECONDITION REFUSED: inherited =X: entry is present",
+  "refused": true
+ }
+]

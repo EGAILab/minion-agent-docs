@@ -1,0 +1,341 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling xtask v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\xtask)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l12d013-rust-impl\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (test "tool_registry_conformance") generated 1 warning
+warning: `minion-agent` (test "xform_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_schema") generated 1 warning (1 duplicate)
+warning: `minion-agent` (lib test) generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_coordinator") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_result_domain_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_nul") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_readability") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_events") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "schema_domain_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_result_values") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "fs_path_domain") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "skill_discovery") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "session_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "fs_remove_readonly_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_world") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prepared_runtime_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_edit_diff") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_edit_prepare") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "fs_path_domain_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_filesystem") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "arg_isolation_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_failure") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_adapter") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prepared_runtime_value") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_append_completion") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_registry") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "argument_graph_identity") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_fiber") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "auth_pass2") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_environment") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_scope") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_event") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_pump") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_registry_lifecycle") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "auth_device_code_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_mutation_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_shell") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_stream_close") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "session") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_disposable") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_vocabulary") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_execution_context") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "wp132_key_order_independence") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_bash_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_state") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prepared_string_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prepared_runtime_edit_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prompt_assembly_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "prepared_string_edit_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_inbox_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_observer") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_search_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_edit_fuzzy") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "key_order_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "raw_arguments") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "argument_object_performance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_transform") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_execution") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_assistant_stream") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_state") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_tool_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "runtime_service") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_read_write_access") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_loop_tools") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "agent_inbox") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_process") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "auth_foundation") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "raw_arguments_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_edit_apply") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "llm_service_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_model") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_mutation_corpus") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "execution_rooted") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "tool_execution_conformance") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "builtin_mutation_write") generated 1 warning (1 duplicate)
+warning: `minion-agent` (test "argument_object_order") generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12m 35s
+     Running unittests src\lib.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\minion_agent-4c44a4970fb33d60.exe)
+
+running 233 tests
+test agent_loop::driver::tests::active_entry_errors_keep_their_distinct_exact_messages ... ok
+test agent_loop::driver::tests::continuation_validation_is_exact_and_does_not_start_a_run ... ok
+test agent_loop::driver::tests::assistant_last_steering_pre_drain_is_admitted_once_without_a_second_claim ... ok
+test agent_loop::driver::tests::plain_continuation_keeps_history_out_of_the_run_accumulator ... ok
+test agent_loop::driver::tests::exception_after_abort_is_represented_as_aborted_and_uses_live_persistent_model ... ok
+test agent_loop::driver::tests::assistant_last_follow_up_pre_drain_still_performs_the_initial_steering_poll ... ok
+test agent_loop::driver::tests::prompt_accepts_every_typed_message_variant_without_normalizing_it ... ok
+test agent_loop::driver::tests::only_unknown_model_resolution_is_an_eager_llm_start_error ... ok
+test agent_loop::driver::tests::abort_requested_during_agent_end_settles_before_the_signal_clears ... ok
+test agent_loop::driver::tests::pre_step_prepare_and_stopping_observe_the_active_signal ... ok
+test agent_loop::driver::tests::one_signal_reaches_lifecycle_transform_and_provider_then_clears ... ok
+test agent_loop::driver::tests::pre_step_observes_reasons_and_can_replace_admitted_messages ... ok
+test agent_loop::driver::tests::prompt_assembler_empty_override_bypasses_callback ... ok
+test agent_loop::driver::tests::prompt_assembler_absent_keeps_corrected_header ... ok
+test agent_loop::driver::tests::prompt_assembler_failure_settles_without_provider_request ... ok
+test agent_loop::driver::tests::prompt_assembler_preserves_genuine_eager_model_failure ... ok
+test agent_loop::driver::tests::prompt_assembler_uses_snapshot_order_without_mutating_base ... ok
+test agent_loop::driver::tests::represented_error_and_aborted_results_are_classified_without_post_turn_work ... ok
+test agent_loop::driver::tests::prompt_is_reduced_before_dispatch_and_completed_before_steering_is_claimed ... ok
+test agent_loop::driver::tests::provider_turn_uses_the_prepared_snapshot_and_forwards_every_complete_partial ... ok
+test agent_loop::driver::tests::request_header_rejected_step_publishes_nothing ... ok
+test agent_loop::driver::tests::request_header_is_visible_to_transform_and_survives_abort ... ok
+test agent_loop::driver::tests::represented_terminals_skip_every_post_turn_decision_and_leave_queues_unclaimed ... ok
+test agent_loop::driver::tests::request_header_schema_failure_precedes_publication_and_transform ... ok
+test agent_loop::driver::tests::steering_without_tool_continuation_starts_the_next_turn ... ok
+test agent_loop::driver::tests::steering_and_follow_up_use_independently_configurable_all_policies ... ok
+test agent_loop::driver::tests::stop_precedes_queue_claim_and_leaves_follow_up_pending ... ok
+test agent_loop::driver::tests::text_and_images_normalize_to_one_user_message_in_exact_order ... ok
+test agent_loop::driver::tests::tool_listener_failure_preserves_the_raw_listener_message ... ok
+test agent_loop::driver::tests::transform_context_is_provider_local_and_cannot_replace_signal_metadata ... ok
+test agent_loop::driver::tests::wp142_composer_publishes_exact_prompt_and_retained_configuration ... ok
+test argument_object::tests::both_partitions_support_lookup_mutable_entry_and_removal_without_reordering ... ok
+test argument_object::tests::every_mutation_keeps_index_first_and_ordinary_insertion_order ... ok
+test argument_object::tests::recognition_is_canonical_ascii_and_total ... ok
+test agent_loop::driver::tests::tool_events_are_live_and_pending_state_spans_the_update_window ... ok
+test agent_loop::driver::tests::tool_execution_uses_the_run_snapshot_after_live_registry_replacement ... ok
+test agent_loop::driver::tests::per_call_context_is_fresh_in_one_batch_and_prior_snapshot_is_immutable ... ok
+test agent_loop::driver::tests::prompt_assembler_later_failure_keeps_only_the_prior_header ... ok
+test agent_loop::driver::tests::concurrent_agents_share_a_registration_without_sharing_context ... ok
+test agent_loop::driver::tests::added_tool_names_extend_only_the_run_local_snapshot_in_order ... ok
+test agent_loop::driver::tests::prepare_next_turn_replaces_context_model_and_thinking_for_this_run_only ... ok
+test agent_loop::driver::tests::terminate_suppresses_only_tool_driven_continuation ... ok
+test agent_loop::driver::tests::prepare_next_turn_replacement_does_not_leak_to_a_later_run_snapshot ... ok
+test agent_loop::driver::tests::dynamically_added_tool_is_available_to_the_next_turn_only_through_run_growth ... ok
+test agent_loop::driver::tests::wp142_prepare_next_turn_replaces_one_configuration_and_tool_snapshot ... ok
+test auth::http_transport::tests::response_body_is_lazy_bom_stripped_cached_and_discardable ... ok
+test auth::openai_codex::tests::account_projection_uses_open_extra_and_bearer_auth ... ok
+test auth::openai_codex::tests::jwt_decode_rejects_url_alphabet_bad_padding_and_json_constants ... ok
+test agent_loop::driver::tests::wp142_composer_follows_growth_and_replacement_not_live_registry ... ok
+test auth::openai_codex::tests::jwt_decode_uses_forgiving_base64_latin1_and_javascript_numbers ... ok
+test agent_loop::driver::tests::successful_run_continues_for_tools_steering_and_follow_up_in_pi_order ... ok
+test auth::openai_codex_oauth::tests::number_coercion_matches_javascript_discriminators ... ok
+test auth::openai_codex_oauth::tests::invalid_response_error_preserves_javascript_surrogate_rendering ... ok
+test auth::openai_codex_oauth::tests::status_only_branches_do_not_read_bodies_and_non_success_read_failures_fall_back ... ok
+test auth::openai_codex_oauth::tests::parser_preserves_whatwg_boundaries ... ok
+test auth::openai_codex_oauth::tests::device_flow_uses_real_poller_emits_event_and_sends_exact_requests ... ok
+test execution::div009_tests::nul_slots_keep_raw_first_resolution ... ok
+test execution::div009_tests::nul_slots_keep_first_resolution ... ok
+test auth::openai_codex_oauth::tests::strict_response_field_types_cover_all_six_prov_016_fields ... ok
+test execution::div009_tests::nul_slots_paired_stable_and_distinct_positives ... ok
+test execution::div009_tests::every_fs_consumer_preserves_original_error_and_raw_path ... ok
+test execution::div009_tests::resolve_second_read_failure_never_uses_the_saved_absolute_fallback ... ok
+test execution::div009_tests::rename_precedence_and_nul_slots ... ok
+test execution::div009_tests::raw_file_url_and_spawn_precedence ... ok
+test auth::openai_codex_oauth::tests::browser_bind_failure_silently_falls_back_to_manual_input ... ok
+test execution::filesystem::l12d007_handle_tests::literal_win32_mapping_is_not_the_std_error_kind_mapping ... ok
+test auth::openai_codex_oauth::tests::browser_manual_path_notifies_then_prompts_and_exchanges_with_local_pkce ... ok
+test auth::openai_codex_oauth::tests::empty_manual_input_cancels_the_server_and_fails_without_exchange ... ok
+test agent_loop::driver::tests::prompt_assembler_seven_requests_follow_context_snapshots_not_registry_churn ... ok
+test execution::filesystem::l12d007_handle_tests::read_write_handle_denial_is_unknown_but_open_denial_is_permission_denied ... ok
+test execution::filesystem::resolution_read_failure_uses_fs_domain_without_an_addressed_path ... ok
+test auth::openai_codex_oauth::tests::browser_callback_wins_the_race_and_supplies_the_exchange_code ... ok
+test execution::div009_tests::failure_is_a_result_not_a_panic_and_unrelated_panics_stay_panics ... ok
+test execution::div009_tests::frozen_rooted_native_operands_through_real_fs ... ok
+test execution::filesystem::other_classification::entry_probe_unclassified_target_falls_through_to_other_on_every_host ... ok
+test auth::openai_codex_oauth::tests::callback_route_checks_path_state_and_empty_code ... ok
+test execution::filesystem::readonly_tests::readonly_correction_addresses_the_link_not_its_external_target ... ok
+test execution::filesystem::readonly_tests::readonly_directory_nonrecursive_refusal_does_not_clear_the_attribute ... ok
+test agent_loop::driver::tests::twenty_one_tool_turns_are_not_capped ... ok
+test execution::div009_tests::extended_provider_48_observations_not_certification ... ok
+test auth::http_transport::tests::cancellation_drops_an_in_flight_operation_promptly ... ok
+test auth::openai_codex_oauth::tests::browser_notify_failure_remains_before_the_cleanup_boundary ... ok
+test execution::filesystem::rimraf::tests::a_child_vanishing_between_enumeration_and_lstat_is_removed_on_every_platform ... ok
+test execution::filesystem::tests::concrete_tokio_raw_enumerator_has_no_direct_metadata_probe ... ok
+test execution::filesystem::rimraf::tests::actual_provider_handle_failures_are_unknown_before_eof_and_keep_the_logical_path ... ok
+test execution::filesystem::tests::file_url_conversion_applies_node_platform_rules_after_ada_parsing ... ok
+test execution::filesystem::tests::host_read_write_errors_preserve_the_combined_querys_error_class ... ok
+test execution::filesystem::tests::host_readability_errors_never_report_missing_provider_capability ... ok
+test execution::filesystem::tests::l12d006_other_invalid_input_keeps_invalid ... ok
+test execution::filesystem::rimraf::tests::disappearance_at_first_rmdir_is_accepted ... ok
+test execution::filesystem::tests::mkdir_walk_failed_stat_is_enotdir_only_with_pending_children ... ok
+test execution::filesystem::tests::raw_listing_invokes_only_enumeration_and_zero_per_entry_probes ... ok
+test execution::filesystem::tests::exact_ada_292_host_oracle_matches_all_8246_cases ... ok
+test execution::filesystem::tests::windows_call_not_implemented_is_unknown_not_missing_capability ... ok
+test execution::filesystem::tests::windows_combined_access_calls_one_probe_and_rejects_nul_first ... ok
+test execution::node_lower::tests::node_unicode16_lowercase_is_not_host_unicode17 ... ok
+test execution::path::tests::canonical_baseline_through_real_provider ... FAILED
+test execution::path::tests::file_url_has_its_own_scalar_boundary ... ok
+test execution::div009_tests::raw_logical_and_public_read_domains ... ok
+test execution::path::tests::lexical_paths_do_not_project_surrogates ... ok
+test execution::path::tests::logical_provider_cwd_stays_raw ... ok
+test execution::path::tests::native_cwd_posix_boundary ... ok
+test execution::path::tests::native_cwd_read_failure_is_an_error_value ... ok
+test execution::path::tests::inherited_native_boundary_frozen ... ok
+test execution::path::tests::native_observer ... ignored, explicit crafted-environment child, launched by path-resolution-probe.py
+test execution::path::tests::scalar_and_lossless_adapters_share_the_resolver ... ok
+test execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing ... ok
+test execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows ... ok
+test execution::path_resolve::tests::node_frozen_win32_port_rows ... ok
+test execution::path_resolve::tests::node_logical_cwd_is_not_a_native_read ... ok
+test execution::path_resolve::tests::posix_colons_remain_ordinary_components ... ok
+test execution::subprocess::tests::explicit_termination_preserves_the_os_reported_exit_code ... ok
+test execution::path::tests::native_cwd_windows_frozen ... ok
+test execution::subprocess::tests::first_successful_cause_claim_wins_a_signal_natural_exit_race ... ok
+test execution::subprocess::tests::signal_termination_remains_an_aborted_error ... ok
+test execution::subprocess::tests::failed_kill_helper_does_not_reclassify_an_already_claimed_signal ... ok
+test javascript::tests::loads_uses_ieee_754_and_rejects_non_json_constants ... ok
+test javascript::tests::stringify_matches_discriminating_ecmascript_boundaries ... ok
+test javascript::tests::strings_preserve_unpaired_surrogates_and_combine_valid_pairs ... ok
+test javascript::tests::trim_uses_the_ecmascript_set_including_bom ... ok
+test runtime::event::tests::pending_registration_is_never_admitted_while_owner_removal_races_dispatch ... ok
+test execution::filesystem::readonly_tests::readonly_directory_real_remove_handles_target_and_tree ... ok
+test execution::filesystem::rimraf::tests::disappearance_at_readdir_is_accepted ... ok
+test execution::filesystem::rimraf::tests::disappearance_at_final_rmdir_is_accepted ... ok
+test skills::frontmatter::tests::collection_depth_is_exactly_64_and_root_counts ... ok
+test execution::filesystem::tests::list_dir_failure_names_the_vanished_native_entry_not_the_directory ... ok
+test execution::filesystem::tests::real_tokio_raw_listing_invokes_zero_probe_operations ... ok
+test system_prompt::tests::dirname_uses_utf16_not_scalar_indices ... ok
+test system_prompt::tests::metadata_is_additive_and_uses_js_not_rust_whitespace ... ok
+test execution::filesystem::readonly_tests::readonly_directory_correction_keeps_the_existing_long_path_boundary ... ok
+test execution::filesystem::rimraf::tests::disappearance_at_retry_unlink_is_accepted ... ok
+test tools::builtin::bash::tests::abort_output_fixture_split_marker_is_delivered_before_one_abort_and_close_delegates ... ok
+test tools::builtin::bash::tests::abort_output_fixture_utf8_suffix_does_not_trigger_a_premature_replacement ... ok
+test tools::builtin::bash::tests::abort_output_fixture_watches_stderr_and_combines_delivery_order ... ok
+test execution::subprocess::tests::target_exit_settles_without_waiting_for_a_hung_kill_helper ... ok
+test tools::builtin::bash::tests::bash_abort_arriving_during_discovery_is_not_a_spawn_failure ... ok
+test tools::builtin::bash::tests::bash_cancel_drops_the_writer_future_and_no_write_outlives_the_call ... ok
+test tools::builtin::bash::tests::bash_append_failure_uses_own_error_and_prerequisites_are_not_fabricated ... ok
+test execution::div009_tests::shell_and_subprocess_read_domains ... ok
+test tools::builtin::bash::tests::bash_context_env_is_explicit_clean_and_provider_snapshot_is_per_call ... ok
+test tools::builtin::bash::tests::bash_disabled_context_is_removed_signal_delegated_and_worlds_checked ... ok
+test execution::filesystem::rimraf::tests::div008::div008_reports_first_terminal_error_unchanged_not_last ... ok
+test tools::builtin::bash::tests::bash_empty_override_falls_through_custom_missing_fails_and_windows_lookup_probes ... ok
+test tools::builtin::bash::tests::bash_file_failure_kills_before_own_error_and_discards_output ... ok
+test tools::builtin::bash::tests::bash_legacy_stdin_does_not_block_timeout_and_command_uses_usv_projection ... ok
+test tools::builtin::bash::tests::bash_lookup_timeout_after_exit_keeps_zero_and_releases_pipes ... ok
+test tools::builtin::bash::tests::bash_lookup_retains_the_budget_crossing_stdout_chunk ... ok
+test tools::builtin::bash::tests::bash_lookup_combined_budget_keeps_exited_status_and_kills_only_unexited ... ok
+test tools::builtin::bash::tests::bash_lookup_waits_for_exit_and_both_eof_not_command_grace ... ok
+test execution::filesystem::rimraf::tests::div008::div008_failed_subtree_keeps_ancestors_but_successful_sibling_directory_is_removed ... ok
+test tools::builtin::bash::tests::bash_persistence_join_freezes_timeout_and_abort_and_preserves_raw_bytes ... ok
+test execution::filesystem::rimraf::tests::removal_walk_uses_constant_interpreter_stack_for_deep_trees ... ok
+test tools::builtin::bash::tests::bash_precheck_order_timeout_before_abort_before_shell_and_cwd ... ok
+test tools::builtin::bash::tests::bash_settlement_waits_for_output_resets_grace_and_releases_both_pipes ... ok
+test skills::frontmatter::tests::shared_subset_corpus ... ok
+test tools::builtin::bash_output::tests::merged_decoder_bom_eof_and_raw_bytes ... ok
+test tools::builtin::bash::tests::bash_lookup_selection_uses_real_status_truthiness_and_buffer_utf8 ... ok
+test tools::builtin::bash::tests::bash_spawn_failure_has_own_text_and_zero_updates ... ok
+test tools::builtin::bash::tests::bash_command_projection_argv_and_stdin_preserves_pairs_replaces_lone_units ... ok
+test tools::builtin::bash::tests::bash_stdout_stderr_share_one_decoder_in_read_completion_order ... ok
+test tools::builtin::bash_output::tests::raw_threshold_opens_a_log_even_when_bom_stripping_avoids_truncation ... ok
+test tools::builtin::bash_output::tests::rolling_tail_and_total_projection ... ok
+test tools::builtin::bash::tests::bash_nonzero_empty_output_and_notice_precede_the_status ... ok
+test tools::builtin::bash_output::tests::pinned_boundary_probe_all_ten_rolling_rows ... ok
+test tools::builtin::bash::tests::bash_timer_is_whole_ms_minimum_one_and_abort_wins_during_grace ... ok
+test tools::builtin::edit_apply::tests::exact_matching_can_target_one_half_of_an_astral_pair ... ok
+test tools::builtin::edit_apply::tests::unicode16_nfkc_preserves_lone_units_and_composes_valid_runs ... ok
+test tools::builtin::bash::tests::abort_output_fixture_real_lookup_never_aborts_the_command ... ok
+test tools::builtin::image::tests::scale_hint_rounds_exact_binary64_like_ecmascript_to_fixed ... ok
+test tools::builtin::mime::tests::apng_animation_control_before_idat_is_not_a_supported_still_image ... ok
+test tools::builtin::mime::tests::sniff_is_content_not_extension ... ok
+test tools::builtin::mutation_queue::tests::completion_latch_remembers_a_release_before_the_waiter_is_polled ... ok
+test tools::builtin::bash::tests::bash_windows_probe_selection_and_nonfollowing_cwd_are_distinct ... ok
+test tools::builtin::mutation_queue::tests::equal_paths_on_different_provider_instances_do_not_share_a_lock ... ok
+test tools::builtin::mutation_queue::tests::registration_order_survives_reverse_worker_poll_order ... ok
+test tools::builtin::numeric::tests::negative_and_fractional_slice_indices_match_js ... ok
+test tools::builtin::paths::tests::malformed_file_url_rejected_before_any_provider ... ok
+test tools::builtin::mutation_queue::tests::same_key_waits_until_drop_then_drops_its_tail ... ok
+test tools::builtin::paths::tests::unicode_space_and_one_at_only ... ok
+test tools::builtin::paths::tests::windows_drive_shape_is_ascii_only_and_preserves_shell_boundaries ... ok
+test tools::builtin::search_engines::tests::non_local_world_has_exact_text_without_store_consultation ... ok
+test tools::builtin::search_glob::tests::separators_classes_and_alternation_context ... ok
+test tools::builtin::search_paths::tests::logical_surrogate_root_is_not_its_native_replacement ... ok
+test tools::builtin::search_paths::tests::windows_relative_is_case_insensitive_not_prefix_matching ... ok
+test tools::builtin::search_run::tests::completion_requires_exit_and_both_eofs ... ok
+test tools::builtin::search_run::tests::every_exit_and_eof_abort_is_inside_the_window_but_close_is_outside ... ok
+test tools::builtin::search_run::tests::held_limit_stop_acknowledgement_does_not_extend_completion ... ok
+test tools::builtin::search_run::tests::readline_handles_cr_and_utf8_chunks_without_stripping_bom ... ok
+test skills::discovery::tests::invalid_ignore_path_emits_one_diagnostic_and_skips_only_that_entry ... ok
+test execution::filesystem::rimraf::tests::directory_link_recovery_matches_pinned_pi ... ok
+test skills::ignore::tests::utf16_prefix_and_nonunicode_case_folding_are_lossless ... ok
+test tools::builtin::search_engines::tests::staging_cannot_publish_a_partial_binary_at_the_fixed_name ... ok
+test tools::builtin::search_tests::diagnostic_rerun_abort_during_wait_settles_before_stop_ack ... ok
+test tools::builtin::search_tests::diagnostic_rerun_abort_between_runs_prevents_spawn ... ok
+test tools::builtin::search_tests::diagnostic_rerun_completion_excludes_disposal_abort ... ok
+test tools::builtin::search_tests::diagnostic_rerun_without_abort_keeps_diagnostic ... ok
+test tools::builtin::search_tests::grep_counts_uncollected_matches_without_reordering ... ok
+test tools::builtin::search_text::tests::surrogate_cut_and_empty_body_do_not_lossily_serialize ... ok
+test tools::builtin::text::tests::fractional_and_negative_js_slice_domain ... ok
+test tools::builtin::text::tests::user_limit_notice_does_not_fabricate_truncation_details ... ok
+test tools::builtin::truncate::tests::first_line_overflow_and_empty_shape ... ok
+test tools::builtin::truncate::tests::head_truncation_keeps_only_complete_lines_and_selected_counts ... ok
+test tools::execution::live_update_tests::an_update_reserved_before_execute_settles_keeps_the_join_open ... ok
+test tools::prepared::string_tests::non_scalar_keys_are_addressable_and_json_conversion_never_normalizes ... ok
+test tools::prepared::string_tests::scalar_and_non_scalar_strings_have_exact_units_and_explicit_projection ... ok
+test tools::prepared_validation::tests::declared_numeric_and_nullable_positions_are_finite_only ... ok
+test tools::prepared_validation::tests::integer_valued_length_constraints_and_invalid_schemas_keep_engine_behavior ... ok
+test tools::prepared_validation::tests::nested_constraints_references_and_complete_unconstrained_union_branches ... ok
+test tools::prepared_validation::tests::non_finite_does_not_impersonate_null_string_const_or_enum ... ok
+test tools::builtin::search_tests::diagnostic_rerun_is_verified_again_and_preserves_pi_text ... ok
+test tools::builtin::search_tests::find_stream_order_duplicates_and_untrimmed_empty_decision ... ok
+test tools::prepared_validation::tests::numeric_keyword_applicability_survives_composition_references_and_arrays ... ok
+test tools::prepared_validation::tests::private_string_tags_cannot_collide_with_schema_or_runtime_literals ... ok
+test tools::prepared_validation::tests::numeric_keywords_ignore_non_finite_values_but_constrain_finite_values ... ok
+test tools::prepared_validation::tests::older_draft_bound_modifiers_and_finite_siblings_keep_their_rules ... ok
+test tools::prepared_validation::tests::runtime_surrogates_validate_without_scalar_normalization ... ok
+test tools::prepared_validation::tests::tags_do_not_collide_with_real_values_or_schema_constants ... ok
+test tools::prepared_validation::tests::schema_literals_names_regexes_and_local_refs_keep_utf16_identity ... ok
+test tools::prepared_validation::tests::unique_items_preserves_distinct_categories_and_duplicate_detection ... ok
+test execution::filesystem::rimraf::tests::l12d007_all_41_pi_routing_rows_match_and_injections_fire ... ok
+test tools::prepared_validation::tests::runtime_keys_use_real_unicode_patterns_and_nested_reference_validation ... ok
+test tools::builtin::search_tests::real_factories_reproduce_the_fourteen_pi_abort_partition_cells ... ok
+test execution::filesystem::rimraf::tests::div008::div008_controlled_rows_continue_and_preserve_drained_extent ... ok
+test tools::builtin::image::tests::no_resize_fast_path_keeps_exact_input_bytes ... ok
+test tools::builtin::image::tests::real_read_image_serializes_standard_canonical_base64 ... ok
+test tools::builtin::image::tests::bmp_conversion_matches_pinned_photon_bytes ... ok
+test tools::builtin::image::tests::resize_hint_uses_exact_2150_to_2000_scale ... ok
+test tools::builtin::image::tests::bmp_conversion_then_resize_matches_pinned_photon_bytes ... ok
+test tools::builtin::image::tests::exact_base64_ceiling_does_not_use_the_no_resize_fast_path ... ok
+test tools::builtin::search_tests::managed_store_verifies_every_use_and_provisioning_is_idempotent ... ok
+test tools::builtin::image::tests::bmp_to_jpeg_hint_uses_final_mime_and_first_eligible_quality ... ok
+test skills::ignore::tests::ignore_parent_chain_is_stack_independent_and_cache_is_invalidated ... ok
+test skills::ignore::tests::shared_ignore_corpus ... ok
+
+failures:
+
+---- execution::path::tests::canonical_baseline_through_real_provider stdout ----
+
+thread 'execution::path::tests::canonical_baseline_through_real_provider' (42216) panicked at crates\minion-agent\src\execution\path.rs:441:80:
+called `Option::unwrap()` on a `None` value
+
+
+failures:
+    execution::path::tests::canonical_baseline_through_real_provider
+
+test result: FAILED. 231 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 8.94s
+
+error: test failed, to rerun pass `-p minion-agent --lib`

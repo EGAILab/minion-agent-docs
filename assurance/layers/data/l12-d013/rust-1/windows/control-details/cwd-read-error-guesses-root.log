@@ -1,0 +1,16 @@
+
+running 1 test
+CONTROL FIRED cwd-read-error-guesses-root
+
+thread 'execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing' (51732) panicked at crates\minion-agent\src\execution\path_resolve.rs:311:14:
+called `Result::unwrap_err()` on an `Ok` value: ResultString { units: JsString([97, 58, 92, 108, 101, 97, 102]), scalar: Some("a:\\leaf") }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing ... FAILED
+
+failures:
+
+failures:
+    execution::path_resolve::tests::native_cwd_error_is_returned_without_guessing
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

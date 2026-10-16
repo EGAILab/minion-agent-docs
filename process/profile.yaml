@@ -1,14 +1,17 @@
 # Minion-Agent's Minion-Process profile: the one project-specific process file (live copy).
-# Kit: EGAILab/minion-process, pinned version below (tag v0.3.0).
+# Kit: EGAILab/minion-process, pinned version below (tag v0.3.2, commit c7cd3b61 on release/0.3.x).
 # Cut-over (P2, 2026-10-12, minion-agent#212): the kit's WORKFLOW.md at the pinned tag is Minion-Agent's
 # in-force normative text. P3a (2026-10-13, minion-agent#213): pin 0.3.0 (review header schema 2, convergence
-# counters, metrics, composite verbs, CommonMark publication domain). This repository's process/*.md files are pointers; process/tools is retired.
+# counters, metrics, composite verbs, CommonMark publication domain). PROC-KIT-L1 (2026-10-16, minion-agent#222):
+# pin 0.3.1 (lesson: shared build caches do not trust mtime freshness; WORKFLOW.md section 9.8 paragraph), then
+# pin 0.3.2 (guarded IMPLEMENTATION_REVIEW -> CLOSED for a clean process/status WP, minion-process#12).
+# This repository's process/*.md files are pointers; process/tools is retired.
 # Running the CLI at the pinned tag (one-time per pin, inside the Minion-Agent root):
-#   git -C E:\AI\Projects\OpenMinds\Minions\Minion-Process worktree add E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.0 v0.3.0
-#   cd E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.0 && python -m minion_process --repo EGAILab/minion-agent status <issue>
+#   git -C E:\AI\Projects\OpenMinds\Minions\Minion-Process\minion-process worktree add E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.2 v0.3.2
+#   cd E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\kit\v0.3.2 && python -m minion_process --repo EGAILab/minion-agent status <issue>
 # Validate this file: python -m minion_process profile validate <path to this file>
 # The kit's reference copy of this profile is profiles/minion-agent.profile.yaml.
-kit: {version: "0.3.0", source: EGAILab/minion-process}
+kit: {version: "0.3.2", source: EGAILab/minion-process}
 project: minion-agent
 
 authority:                                # WORKFLOW.md section 3: adopted Pi source -> parity manifest -> spec -> conformance

@@ -1,0 +1,47 @@
+{
+ "head": "4cb5b5e26f6b6fdfdacc17e10233a20f68306331",
+ "changed": [
+  "src/minion_agent/execution/filesystem.py",
+  "src/minion_agent/execution/shell.py",
+  "src/minion_agent/execution/subprocess.py",
+  "tests/conformance/path_resolution_runner.py",
+  "tests/conformance/test_path_resolution_conformance.py",
+  "tests/conformance/test_schema_validation.py",
+  "tests/execution/test_div009_cwd_read_failure.py",
+  "tests/execution/test_path_resolution_rooted.py"
+ ],
+ "results": [
+  {
+   "label": "preflight",
+   "exit": "0"
+  },
+  {
+   "label": "icu",
+   "exit": "0"
+  },
+  {
+   "label": "ruff",
+   "exit": "0"
+  },
+  {
+   "label": "format-changed",
+   "exit": "0"
+  },
+  {
+   "label": "format-tree",
+   "exit": "1"
+  },
+  {
+   "label": "mypy",
+   "exit": "0"
+  },
+  {
+   "label": "pytest",
+   "exit": "0"
+  },
+  {
+   "label": "node-posix",
+   "exit": "0"
+  }
+ ]
+}

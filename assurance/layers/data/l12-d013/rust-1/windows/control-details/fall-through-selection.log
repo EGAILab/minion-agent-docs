@@ -1,0 +1,20 @@
+
+running 1 test
+CONTROL FIRED fall-through-selection
+CONTROL FIRED fall-through-selection
+CONTROL FIRED fall-through-selection
+
+thread 'execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows' (23976) panicked at crates\minion-agent\src\execution\path_resolve.rs:256:13:
+assertion `left == right` failed: "bmp-1"
+  left: ResultString { units: JsString([97, 58, 92, 108, 101, 97, 102]), scalar: Some("a:\\leaf") }
+ right: ResultString { units: JsString([97, 58, 233, 92, 100, 101, 101, 112, 92, 108, 101, 97, 102]), scalar: Some("a:é\\deep\\leaf") }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows ... FAILED
+
+failures:
+
+failures:
+    execution::path_resolve::tests::node_frozen_selected_entry_and_logical_rows
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 232 filtered out; finished in 0.00s
+

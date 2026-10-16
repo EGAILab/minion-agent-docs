@@ -1,0 +1,17 @@
+candidate c905ec0aff35b2fd52d157b1f1daae88628322ff
+icu build 0
+icu 78.3
+pytest 9.1.1
+uid 1000
+pytest exit 1
+6489 passed, 208 skipped, 19 xfailed in 306.73s (0:05:06)
+TOTAL                                                9876    320    97%
+FAIL Required test coverage of 100.0% not reached. Total coverage: 96.76%
+ERROR: Coverage failure: total of 97 is less than fail-under=100
+src/minion_agent/execution/_libuv_win32.py            174    174     0%   20-353
+src/minion_agent/execution/filesystem.py              896     65    93%   151-153, 164-166, 411, 522-535, 545, 551-555, 708-710, 785-787, 817-819, 950-977, 1023-1050, 1128, 1135, 1143, 1172, 1184, 1283, 1301, 1314-1328, 1785
+mypy exit 1
+Found 15 errors in 5 files (checked 118 source files)
+ruff exit 0
+LINUX GATES DONE
+docker exit 0

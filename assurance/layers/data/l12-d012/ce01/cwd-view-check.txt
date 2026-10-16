@@ -1,0 +1,5 @@
+ascii                  name units [112,108,97,105,110] node view units [112,108,97,105,110] == section-15 decode: true
+pair                   name units [112,97,105,114,45,55357,56832] node view units [112,97,105,114,45,55357,56832] == section-15 decode: true
+lone-high              name units [108,111,110,101,45,55357] node view units [108,111,110,101,45,65533,65533,65533] == section-15 decode: true
+lone-low               name units [108,111,110,101,45,56832] node view units [108,111,110,101,45,65533,65533,65533] == section-15 decode: true
+lone-high-then-ascii   name units [120,55357,121] node view units [120,65533,65533,65533,121] == section-15 decode: true

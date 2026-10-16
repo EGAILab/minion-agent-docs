@@ -17,6 +17,7 @@ This is the canonical, human-readable registry of **accepted** differences betwe
 | `DIV-006` | An invalid ignore pattern is dropped with a diagnostic instead of aborting discovery | WP-14.1 (`HAR-011`) | APPROVED |
 | `DIV-007` | Frontmatter block collections nest at most 64 deep | WP-14.1 (`HAR-010`) | APPROVED |
 | `DIV-008` | Recursive remove with several failing children: first-encountered failure, sequential traversal | L12-D008 (`EXEC-002`) | APPROVED |
+| `DIV-009` | A failed native process-cwd read during path resolution is a typed failure, not a throw | L12-D013 (`EXEC-002`, `EXEC-004`, `EXEC-005`) | APPROVED (Owner); Python and Rust witnesses merged |
 
 ---
 
@@ -290,3 +291,57 @@ This is the canonical, human-readable registry of **accepted** differences betwe
   - the removal architecture changes for an independent reason.
 
   A contrived scheduling mismatch alone is not a trigger.
+
+---
+
+## DIV-009 — A failed native process-cwd read during path resolution is a typed failure, not a throw
+
+- **Affected:** path resolution for `ctx.fs` (`EXEC-002`), `ctx.shell` (`EXEC-004`) and `ctx.subprocess` (`EXEC-005`). Spec `execution.md` §22, with §2 and §3.2 as corrected. Coordination `minion-agent#235` (L12-D013); provenance `L12D013-PY-I001` (implementation review 4, issuecomment-6201717410).
+- **Pi behaviour** (pinned Pi `b7bb00b9`, Node v22.15.1):
+  - `resolvePath` (`nodejs.ts:51-65`) reaches Node's `path.resolve`, which reads `process.cwd()` where the algorithm needs it.
+  - On win32 that is a device-less rooted or incomplete-UNC input, or a drive-relative input on another drive whose inherited `=X:` entry is absent or empty. On POSIX it is the case where no argument is absolute.
+  - The call sits outside any `try`: `absolutePath` returns `ok(resolvePath(…))` (`nodejs.ts:359-360`), and `exec` resolves its cwd before its later `access` catch (`nodejs.ts:376`).
+  - So a failed read throws and the operation rejects, contrary to Pi's own interface rule (`types.ts:228-229`).
+  - Reviewer witness: the exact pinned slice on real Node with a throwing `process.cwd` propagates that exception (review 4, `d013-cwd-error-authority-r4.cjs`).
+- **Minion behaviour** (Python and Rust), per §22:
+  - The read happens at the same point, lazily. When it fails with an operational OS error, the operation returns a typed failure where it resolves the path:
+    - `ctx.fs`: `FsError` with the native error's own classification and diagnostic, and the caller's logical path argument as `path`;
+    - `ctx.shell.exec`: `ShellError(spawn_error)`;
+    - `ctx.subprocess.spawn`: `SubprocessError(spawn_error)`, with no process created.
+  - Nothing is retried or substituted, and only that read's operational failure is converted.
+  - The failure propagates unchanged through derived operations: `exists` returns the error, never `false`; `resolve` makes no `absolute_path` fallback after it; the NUL error path performs no further read.
+  - `rename_file` follows Pi's order in every binding: source, destination, abort, rename (Owner amendment).
+- **Classification:** intentional practical-parity divergence. It covers only the **outcome** of that failed read: a typed result instead of a rejection. It does **not** cover where or when the read happens, the resolution algorithm, any successful result, the classification of the native error, or any other failure mapping.
+- **Practical-parity assessment** (Claude's analysis, presented with the question the Owner decided; the decision text itself is in Governance):
+  - Pi's intentional abstraction: no. Pi's interface says these operations never throw; the throw is an implementation gap.
+  - Realistic in normal use: no. On win32 a process's cwd cannot be removed while it is in use, and on POSIX a read is reachable only with a relative provider `cwd`.
+  - Exact parity would mean an exception escaping the §2 `Result` boundary, which callers are not designed to handle.
+- **Realistic user impact:** an environment whose process cwd cannot be read gets an ordinary error result from the affected operation instead of an unexpected exception.
+- **Platforms:** all, wherever a binding's resolver reads the native process cwd (§22.1).
+- **Permanent witnesses:** to be added with the implementation. Required by the Owner decision:
+  - injected native-read failures (never a deleted or invalidated real cwd) through the real public seams `absolute_path`, `file_info`, the other resolver consumers, `ctx.shell.exec` and `ctx.subprocess.spawn`;
+  - win32 rooted and L12-D012 drive-relative inputs, with lazy-read and complete-UNC controls, and the POSIX branches where a read is reachable;
+  - native ENOENT, permission-denied and other OS errors, each keeping its own classification;
+  - caller-path preservation, including UTF-16 values;
+  - no filesystem or process side effects, and the existing abort and validation precedence;
+  - pinned-Pi-versus-Minion rows.
+  - Negative controls for: a leaked raw `OSError`, a wrong code, an omitted caller path, the provider `cwd` substituted for the caller path, an unneeded process-cwd read, indiscriminate catching, a retry with a fabricated cwd, and a process started despite the failure.
+  - From the amendment and review 5: the former Python rename order (destination, abort, source), `exists` returning `false`, `resolve` falling back after the failure, and the NUL error path reading again. Witnesses also assert the number and order of native cwd reads.
+  - **Python, merged:** `minion-agent-python/tests/execution/test_div009_cwd_read_failure.py`.
+    - Controls K1–K12 cover the list above.
+    - K13 and K13-raw, from targeted closure review 7, cover the NUL fallback looked up by argument value rather than by slot.
+    - Each control is a green baseline, then the intended witness failure.
+    - Approved by final complete review 9 (`#235` issuecomment-6217925725). Code #238 merged as `393138f8`, docs #310 as `349bef8b`.
+  - **Rust, merged:** `minion-agent-rust/crates/minion-agent/src/execution/div009_tests.rs`, with controls D013-K1–K13 and K13-raw in `minion-agent-rust/scripts/div009_controls.py`. Approved by Claude closure review 1 (`#235` issuecomment-6225928456) at code #242 `1c0a1783` / docs #317 `862f78bb`; merged as code → `24dfe1ea`, docs → `8d9674d2`.
+- **Manifest:** row `EXEC-002-DIV-009`, disposition `intentional divergence`, with `EXEC-004`/`EXEC-005` traceability.
+- **Governance:**
+  - Owner decision "APPROVE OPTION 1: TYPED FAILURE, DIV-009" (`#235` issuecomment-6205758223, recorded verbatim, sha256 `77cd22f3…`). It includes the Rust reconciliation: Rust's typed handling is kept, its `ctx.fs` mapping gains the caller's logical path, and only that surface is REVALIDATE_REQUIRED.
+  - Owner amendment "APPROVE OPTION 1: ALIGN PYTHON RENAME ORDER TO PINNED PI" (`#235` issuecomment-6206113367, recorded verbatim, sha256 `c49d6f76…`), after contract review 5 (issuecomment-6205917076). It sets the shared `rename_file` order and supersedes "preserve each binding's existing order" for that operation only.
+  - Convergence episode CE-L12D013-01 characterizes the read domain and the derived-operation outcomes: `assurance/layers/12-l12-d013-convergence-ce01.md`.
+- **Status:** APPROVED by the Owner.
+  - The contract amendment and the Python implementation were approved by final complete review 9 (`#235` issuecomment-6217925725) and merged: code `393138f8`, docs `349bef8b`.
+  - Rust: approved by Claude closure review 1 (`#235` issuecomment-6225928456) and merged as code → `24dfe1ea`, docs → `8d9674d2`.
+  - L12-D013 cross-language is CLOSED.
+  - *(Earlier: Rust REVALIDATE_REQUIRED for this surface only; L12-D013 cross-language NOT CLOSED.)*
+  - *(Earlier: the contract amendment pending independent review, witnesses pending implementation.)*
+- **Reconsideration trigger:** pinned Pi is updated to normalize this failure itself, or a real consumer needs Pi's rejection.
