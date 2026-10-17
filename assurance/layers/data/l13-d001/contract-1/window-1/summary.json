@@ -1,0 +1,7 @@
+{
+  "head": "ed6c2ee33b7472530aaa9ef054956fe7c04eb159",
+  "ruff-check": 1,
+  "ruff-format": 0,
+  "mypy": 1,
+  "pytest-focused": 1
+}

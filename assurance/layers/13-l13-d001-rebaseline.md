@@ -1,7 +1,9 @@
 # L13-D001 — WP-13.1 (`read`, `ls`) re-baseline on the current Layer-12 tree
 
-Status: **SCOPING 1, PROPOSED** for independent scoping review. Coordination: `minion-agent#244`. Class: `delta`,
-governing, CP-6. Requirements: `TOOL-025`, `TOOL-026`, `TOOL-028`, `TOOL-039`, `TOOL-040`.
+Status: **CONTRACT CANDIDATE 1** for independent contract review (§6). Scoping 1 was approved by Codex scoping
+review 1 (`#244` issuecomment-6228470708). *(Earlier: SCOPING 1, PROPOSED for independent scoping review.)*
+Coordination: `minion-agent#244`. Class: `delta`, governing, CP-6. Requirements: `TOOL-025`, `TOOL-026`, `TOOL-028`,
+`TOOL-039`, `TOOL-040`.
 
 This record is appended. The reviewed Layer-13 scoping records (`13-built-in-tools-scoping*.md`,
 `13-built-in-tools-scope-final-closure.md`) and the certified WP-13.1 contract history stay unedited. Where they are
@@ -120,3 +122,67 @@ against pinned Pi where Pi is the authority:
 
 **Stop.** This scoping stops at Codex's independent scoping review. Nothing is implemented before it is agreed.
 Process rollout takes priority, and this work yields at the next safe boundary.
+
+## 6. Contract candidate 1
+
+**Review 1.** Codex scoping review 1 (`#244` issuecomment-6228470708) **APPROVED** scoping 1 at docs #319 `23eb3e54`
+for bounded contract and witness drafting. It found no blocking finding and confirmed delta / governing / CP-6. It
+required that:
+- the S13 wording maps the existing fallback, with no early return, extra read or reordered call;
+- the real-directory witness reaches the real content read, never an earlier access failure;
+- the bare `file:` witness passes steps 1–4 without strict conversion and is paired with the malformed `file://`
+  rejection;
+- each S13 witness uses its binding's real `ls` seam, observes the preprocessed fallback and the following probe,
+  and fails under a removed or wrong fallback;
+- the L12-D001 JavaScript-string input domain stays distinct from `#133`-F2's native entry names.
+
+**The pair.**
+- **Code #245:** canonical cases, the manifest and the Python witness. The window evidence below is at `3fb6c9a1`.
+- **Docs #319:** this record, the spec text and the evidence.
+- No production source changed, and the `builtin_tool` schema is unchanged.
+
+| Item | Where | What it pins |
+|---|---|---|
+| Real-directory read | `conformance/agent/builtin-read-real-directory-fails-the-read-as-is-a-directory.yaml` | an unscripted directory: `check_readable` passes, `read_binary_file` fails, giving `Cannot read <path>: is a directory`; call order check, read, absolute. It retires W-3 on every platform. |
+| Bare `file:`, `read` | `conformance/agent/builtin-read-bare-file-colon-input-reaches-the-resolver-unconverted.yaml` | `file:missing` reaches `check_readable` as given, giving `Cannot access <abs>: no such file or directory`. The path is missing on purpose, because on NTFS `file:x` names an alternate data stream. |
+| Bare `file:`, `ls` | `conformance/agent/builtin-ls-bare-file-colon-input-reaches-the-resolver-unconverted.yaml` | `absolute_path` then `probe_dir_entry` on `file:missing`, giving `Path not found: <abs>` |
+| S13, Python | `minion-agent-python/tests/tools/builtin/test_tools.py::test_ls_falls_back_to_the_pipeline_path_when_absolute_path_fails` | a failing `absolute_path`, so `<path>` is the step-5 string (`@no such` becomes `no such`), with the probe after it on that string; a file input gives `Not a directory: a file`; the real `absolute_path` is the positive |
+| S13, Rust | Codex, at the agreed contract stage | the same obligations through Rust's real `ls` seam |
+| Manifest | `TOOL-025`, `026`, `028`, `039`, `040` | one appended L13-D001 paragraph and the new tests each; no existing rule or test changed (checked by `rows(old) ⊂ rows(new)` with every other row equal) |
+| Spec | `spec/tools.md` WP-13.1 | the re-baseline subsection (inherited Layer 12 and the five-row no-parity table); W-2/W-3 retired; the newline parenthetical made historical; the `ls` status line; the `ls` step-2 fallback sentence. Earlier text is kept. |
+
+**Windows evidence.** All three windows were granted by Codex under `#209`, run once each from Claude's worktree,
+and used the ri001 venv's Python with the pinned ICU 78.3 runtime. The evidence is in
+[`data/l13-d001/contract-1/`](data/l13-d001/contract-1/), with 98 files in its `SHA256SUMS` ledger.
+
+| Window | Launcher | Code | Result |
+|---|---|---|---|
+| 1 | `l13-gates-1.py` rev 2 `6790c5ac` | `ed6c2ee3` | **Stopped at the gates.** ruff RUF001: literal U+202F in the S13 test, a candidate defect fixed in `3fb6c9a1`. mypy and pytest: launcher environment defects (mypy on a test file outside the configured gate; the ICU runtime not set, so 19 `ls` tests failed with `PinnedIcuError`). No control ran. |
+| 2 | `l13-gates-2.py` rev 3 `4c410fb9` | `3fb6c9a1` | Gates as in window 3. **Refused closed** at the first control's copy: the CRLF working copy did not match the `\n` anchor. No control was credited, and a partial copy is kept. |
+| 3 | `l13-gates-3.py` rev 4 `c9df005c` | `3fb6c9a1` | **Exit 0.** icu-load 0, project ruff 0, changed-file format 0, configured mypy 0, focused pytest 0 (junit 1041 tests, 0 failures, 0 errors, 0 skipped). **Controls 5/5 KILLED.** |
+
+The project-wide `ruff format --check` exited 1 in windows 2 and 3. It reports the same **7 inherited files**,
+none of them a candidate file. It is recorded as-is and is neither fixed nor credited.
+
+**Controls (window 3).** Each control copies the bound source with a link-refusing walker and applies exactly one
+mutation in the file's own line-ending form, with its import origin proven. It counts as KILLED only when all three
+hold:
+- its witness passes on the unmodified source;
+- on the mutated copy, the witness fails with exactly 1 test, 1 failure, 0 errors and 0 skips, and its intended
+  observable appears in the failure text;
+- the witness passes again on the unmodified source.
+
+| Control | Mutation | Witness | Observable |
+|---|---|---|---|
+| K1 | `ls` fallback = the caller's raw path | S13 | `Path not found: @no` |
+| K2 | `ls` fallback = a fabricated `"/" + working` | S13 | `Path not found: /no such` |
+| K3-read | step 4 converts any `file:` prefix | bare `file:` `read` case | `bare-file-colon: ` (the case's own assertion) |
+| K3-ls | the same | bare `file:` `ls` case | `bare-file-colon: ` |
+| K4 | Windows directory read raises `PermissionError` (W-3's old outcome) | real-directory case | `real-directory: text` |
+
+**What this evidence is, and is not.** It is targeted Windows gate and control evidence for the contract candidate.
+It is not an all-project green or a full G3 run. Linux, the full suites in both bindings and the Rust S13 witness
+belong to the revalidation run (§4 item 7).
+
+**Next.** Codex's independent contract review of the exact pair. After agreement come the Rust S13 witness, then
+the revalidation through `#209`, then the closure review.

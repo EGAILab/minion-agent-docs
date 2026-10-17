@@ -1,0 +1,8 @@
+{
+  "module": "minion_agent.tools.builtin.paths",
+  "import_root": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src",
+  "imported": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src\\minion_agent\\tools\\builtin\\paths.py",
+  "expected": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src\\minion_agent\\tools\\builtin\\paths.py",
+  "exit": 0,
+  "stderr_tail": ""
+}

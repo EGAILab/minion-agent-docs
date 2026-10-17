@@ -1,0 +1,8 @@
+{
+  "module": "minion_agent.tools.builtin.ls",
+  "import_root": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k1\\src",
+  "imported": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k1\\src\\minion_agent\\tools\\builtin\\ls.py",
+  "expected": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k1\\src\\minion_agent\\tools\\builtin\\ls.py",
+  "exit": 0,
+  "stderr_tail": ""
+}

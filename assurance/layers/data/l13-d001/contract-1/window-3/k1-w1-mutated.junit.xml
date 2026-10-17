@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.544" timestamp="2026-10-17T14:03:46.635303+11:00" hostname="EGI"><testcase classname="tests.tools.builtin.test_tools" name="test_ls_falls_back_to_the_pipeline_path_when_absolute_path_fails" time="0.008"><failure message="AssertionError: &#10;- Path not found: @no such&#10;?                 -  ^&#10;+ Path not found: no such&#10;?                   ^">tmp_path = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/claude-scratch/l13/gate-3/k1-w1-mutated.basetemp/test_ls_falls_back_to_the_pipe0')
+
+    async def test_ls_falls_back_to_the_pipeline_path_when_absolute_path_fails(
+        tmp_path: Path,
+    ) -&gt; None:
+        """`L13-D001` S13: `ctx.fs.absolute_path` can fail (DIV-009), and `ls`'s `&lt;path&gt;` is then the
+        step-5 string. That is the PREPROCESSED input (`@` stripped, U+202F mapped to a space), never
+        the caller's raw argument, and the probe still runs on that same string after
+        `absolute_path`. The real `absolute_path` is the positive that tells the two branches apart."""
+        (tmp_path / "a file").write_text("x")
+        local = LocalFileSystem(str(tmp_path))
+        calls: list[str] = []
+    
+        async def failing_absolute(path: str, signal: Any = None) -&gt; Any:
+            calls.append(f"absolute_path {path}")
+            return Err(FsError(FsErrorCode.UNKNOWN, "process cwd read failed", path))
+    
+        async def probe(path: str, signal: Any = None) -&gt; Any:
+            calls.append(f"probe_dir_entry {path}")
+            return await local.probe_dir_entry(path, signal)
+    
+        failing = create_ls_tool(
+            _Provider(tmp_path, absolute_path=failing_absolute, probe_dir_entry=probe)  # type: ignore[arg-type]
+        )
+&gt;       with pytest.raises(BuiltinToolError, match=r"^Path not found: no such$"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 
+E       - Path not found: @no such
+E       ?                 -  ^
+E       + Path not found: no such
+E       ?                   ^
+
+tests\tools\builtin\test_tools.py:132: AssertionError</failure></testcase></testsuite></testsuites>

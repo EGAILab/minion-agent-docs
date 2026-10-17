@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.087" timestamp="2026-10-17T14:04:18.051516+11:00" hostname="EGI"><testcase classname="tests.conformance.test_builtin_tool_conformance" name="test_builtin_tool_scenario[builtin-read-real-directory-fails-the-read-as-is-a-directory]" time="0.010"><failure message="AssertionError: real-directory: text&#10;assert 'Cannot read ...ission denied' == 'Cannot read ...s a directory'&#10;  &#10;  Skipping 100 identical leading characters in diff, use -v to show&#10;  - ax1z\sub: is a directory&#10;  + ax1z\sub: permission denied">scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-read-real-directory-fails-the-read-as-is-a-directory.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -&gt; None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+&gt;                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: real-directory: text
+E                   assert 'Cannot read ...ission denied' == 'Cannot read ...s a directory'
+E                     
+E                     Skipping 100 identical leading characters in diff, use -v to show
+E                     - ax1z\sub: is a directory
+E                     + ax1z\sub: permission denied
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError</failure></testcase></testsuite></testsuites>

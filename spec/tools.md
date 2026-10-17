@@ -1107,6 +1107,38 @@ Requirements `TOOL-025`-`TOOL-028` (`minion-agent#48`). No mutation-queue partic
 `ctx.subprocess` dependency, no external-binary dependency -- the lowest-risk, most independently
 certifiable Layer 13 surface (`assurance/layers/13-built-in-tools-scoping-v4.md`).
 
+#### Re-baseline on the current Layer 12 (`L13-D001`)
+
+`L13-D001` (`minion-agent#244`; record `assurance/layers/13-l13-d001-rebaseline.md`) re-baselines the certified
+package on the current lower layers. Nothing below changes a certified `read`/`ls` rule. It states what
+WP-13.1 now inherits, and it limits what WP-13.1 claims.
+
+- **Requirement set:** `TOOL-025`, `TOOL-026`, `TOOL-028`, `TOOL-039`, `TOOL-040`. `TOOL-027` is
+  `NOT_ADOPTED_CORE`. The intro's "`TOOL-025`-`TOOL-028`" and "no external-binary dependency" are historical:
+  `read` needs the pinned Photon 0.3.4 WASM (`R005-A`), and `ls` needs pinned ICU4C 78.3 (`R006-C`).
+- **Inherited Layer 12 behaviour:**
+  - path resolution is `spec/execution.md` §3.2, as amended by `L12-D012` and `L12-D013`, with `DIV-009`'s
+    typed failure (§22);
+  - `EXEC-007` and `EXEC-008`, and `read_binary_file`;
+  - the §2.1 error codes as corrected by `L12-D007` (§19);
+  - the JavaScript-string path domain (§14) and the NUL tool boundary (§18.3).
+
+  These refine what the pipeline below delivers and what `<path>` shows. They do not change the pipeline.
+- **No parity claimed** for the surfaces below. For each one, WP-13.1 inherits the current per-binding Layer 12
+  behaviour, and no Layer 13 case uses it. A case that cannot avoid one is marked against its source, and its
+  expectation is the binding's, not Pi's.
+
+  | Surface | Source | Reaches |
+  |---|---|---|
+  | The home-directory source of `~` | `#236` (frozen) | step 5's resolution, both tools' `<path>` |
+  | An extended `\\?\` provider cwd (Rust) | `#241` (frozen) | relative and empty inputs, including `ls`'s default `"."` |
+  | A relative or empty provider cwd | `spec/execution.md` §22.1 observation; Owner, `#244` issuecomment-6228334676 | the same |
+  | Windows exotic reparse entries: a volume-GUID junction, a non-surrogate tag, a malformed APPEXECLINK | `#207`; the same Owner decision | `ls`'s entry kind (the `/` suffix or skip) |
+  | Non-Unicode native directory-entry names | `#133`-F2 (RECORDED); the same Owner decision | `ls`'s listing, sort keys and joins (`TOOL-028`, `TOOL-040`) |
+
+  The last row covers names that the native directory *returns*. A JavaScript-string *input* path (`L12-D001`)
+  is a different domain and stays witnessed by `fs-path-tools`.
+
 #### Shared path-argument pipeline (`TOOL-026`)
 
 Every `read`/`ls` `path` argument is resolved through one pipeline before reaching `ctx.fs`:
@@ -1574,11 +1606,17 @@ the step-5 string.
   `"Cannot read <path>: permission denied"` -- the site matches Pi, the phrase does not; `read` does
   not work around it. F-1: a provider without `EXEC-008` gets the fallback site mapping above, a
   provider-capability approximation, never Pi-equivalent.
+  - **W-2 and W-3 are retired (`L13-D001`).** `L12-D007` (`spec/execution.md` §19) corrected the Layer 12 mapper
+    to pinned Pi's codes. A readable Windows directory now passes the access stage and fails the read as
+    `"Cannot read <path>: is a directory"`, the same as POSIX and Pi. A Windows link loop is `unknown`, which is
+    Pi's code. The witness is `builtin-read-real-directory-fails-the-read-as-is-a-directory`. W-1 and F-1 stand
+    unchanged.
 - **Text decoding (`IMPL-C005`).** Text is Node's `Buffer.toString("utf-8")`: each maximal invalid
   UTF-8 subpart becomes one U+FFFD, a byte-order mark is kept, and CR / CRLF are NOT translated.
   Lines split on `"\n"` only, so a `"\r"` stays at the end of its line. (Python's text-mode file
   reading translates newlines; see the Layer 12 finding in the assurance record, which is why `read`
-  decodes the bytes of `read_binary_file` itself.)
+  decodes the bytes of `read_binary_file` itself.) *(Historical since `#115`: Python's `read_text_file` now
+  decodes like Node. `read` still decodes the bytes of `read_binary_file` itself; `L13-D001`.)*
 - **Numbers (`IMPL-C006`).** `offset`/`limit` are IEEE-754 doubles (JSON integers included).
   Every number `read` writes into text -- `"Offset N ..."`, `"Showing lines A-B ..."`,
   `"Use offset=N ..."`, `"[N more lines ...]"`, the first-line diagnostic's line number -- uses
@@ -1675,7 +1713,8 @@ filename-encoding quirks" for an arbitrary provider.
 
 #### `ls` (`TOOL-028`)
 
-**Status: `CONTRACT_INTEGRATED`, pending the complete `WP-13.1` final contract-convergence review.**
+**Status: CERTIFIED** (`WP-13.1` `CERTIFIED_CLOSED`, `minion-agent#48`; re-baselined by `L13-D001`).
+*(Earlier status: `CONTRACT_INTEGRATED`, pending the complete `WP-13.1` final contract-convergence review.)*
 This section integrates three settled decisions: `R006-C` for collation (owner-selected,
 `minion-agent#48#issuecomment-5808308811`), `R007-b` for enumeration and the cap, now certified as
 `WP-12.E1`/`EXEC-007`, and `R010-B` for error text, plus the frozen `R003` numeric-domain and
@@ -1715,7 +1754,10 @@ Output (success)
 2. Path: run `path` (or "." when omitted or "") through TOOL-026's shared
    pipeline. <path> in every message below is the resolved absolute path of
    the addressed directory, i.e. what ctx.fs.absolute_path returns for the
-   pipeline's step-5 string. This corresponds to Pi's `dirPath`.
+   pipeline's step-5 string. This corresponds to Pi's `dirPath`. If that
+   call itself fails (possible since DIV-009), <path> is the step-5 string
+   (L13-D001, mirroring read). The probe below still runs on that same
+   string, in the same order: there is no early return and no extra read.
 3. Directory check: ONE ctx.fs.probe_dir_entry(p) call (EXEC-007; follows
    symlinks to classify):
      Ok, kind in {directory, symlink_to_directory}  -> continue
