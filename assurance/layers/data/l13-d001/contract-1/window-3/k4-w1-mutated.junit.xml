@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.920" timestamp="2026-10-17T14:04:10.282583+11:00" hostname="EGI"><testcase classname="tests.conformance.test_builtin_tool_conformance" name="test_builtin_tool_scenario[builtin-ls-bare-file-colon-input-reaches-the-resolver-unconverted]" time="0.005"><failure message="AssertionError: bare-file-colon: text&#10;assert 'Cannot acces... invalid path' == 'Path not fou...\file:missing'&#10;  &#10;  - Path not found: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\claude-scratch\l13\gate-3\tmp\tmpchy9_wvn\file:missing&#10;  + Cannot access file:missing: invalid path">scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-bare-file-colon-input-reaches-the-resolver-unconverted.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -&gt; None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+&gt;                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: bare-file-colon: text
+E                   assert 'Cannot acces... invalid path' == 'Path not fou...\file:missing'
+E                     
+E                     - Path not found: E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\claude-scratch\l13\gate-3\tmp\tmpchy9_wvn\file:missing
+E                     + Cannot access file:missing: invalid path
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError</failure></testcase></testsuite></testsuites>

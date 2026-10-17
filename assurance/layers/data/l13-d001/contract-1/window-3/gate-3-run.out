@@ -1,0 +1,25 @@
+﻿START 2026-10-17T14:03:18.9192637+11:00
+L13-GATES: head 3fb6c9a1642fb3bf7fbd7daeeef3574ec38b95d1 clean
+L13-GATES: icu-load exit 0
+L13-GATES: ruff-check exit 0
+L13-GATES: ruff-format-project exit 1
+L13-GATES: ruff-format exit 0
+L13-GATES: mypy exit 0
+L13-GATES: pytest-focused exit 0
+L13-GATES: k1-w1-baseline exit 0
+L13-GATES: k1-w1-mutated exit 1
+L13-GATES: k1-w1-restored exit 0
+L13-GATES: k2-w1-baseline exit 0
+L13-GATES: k2-w1-mutated exit 1
+L13-GATES: k2-w1-restored exit 0
+L13-GATES: k3-w1-baseline exit 0
+L13-GATES: k3-w1-mutated exit 1
+L13-GATES: k3-w1-restored exit 0
+L13-GATES: k4-w1-baseline exit 0
+L13-GATES: k4-w1-mutated exit 1
+L13-GATES: k4-w1-restored exit 0
+L13-GATES: k5-w1-baseline exit 0
+L13-GATES: k5-w1-mutated exit 1
+L13-GATES: k5-w1-restored exit 0
+L13-GATES: gates GREEN; controls 5/5 KILLED
+END 2026-10-17T14:04:21.8237391+11:00 exit 0

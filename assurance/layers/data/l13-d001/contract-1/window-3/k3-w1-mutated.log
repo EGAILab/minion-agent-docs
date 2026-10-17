@@ -1,0 +1,22 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_builtin_tool_scenario[builtin-read-bare-file-colon-input-reaches-the-resolver-unconverted] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-read-bare-file-colon-input-reaches-the-resolver-unconverted.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: bare-file-colon: text
+E                   assert 'Cannot acces... invalid path' == 'Cannot acces... or directory'
+E                     
+E                     - Cannot access E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\claude-scratch\l13\gate-3\tmp\tmpsld58fu3\file:missing: no such file or directory
+E                     + Cannot access file:missing: invalid path
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-read-bare-file-colon-input-reaches-the-resolver-unconverted]

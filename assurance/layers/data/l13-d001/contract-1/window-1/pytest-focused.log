@@ -1,0 +1,422 @@
+....F...F..............FFFFFFFFF..FFFF..F..FFF.......................... [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 20%]
+........................................................................ [ 27%]
+........................................................................ [ 34%]
+........................................................................ [ 41%]
+........................................................................ [ 48%]
+........................................................................ [ 55%]
+........................................................................ [ 62%]
+........................................................................ [ 69%]
+........................................................................ [ 76%]
+........................................................................ [ 82%]
+........................................................................ [ 89%]
+........................................................................ [ 96%]
+.................................                                        [100%]
+================================== FAILURES ===================================
+_____________ test_ls_skips_an_entry_whose_path_cannot_be_joined ______________
+
+    @functools.cache
+    def pinned_collation() -> Collation:
+        """Load and verify the pinned tuple once per process. Raises `PinnedIcuError` otherwise."""
+        icu_bin = os.environ.get(ICU_BIN_ENV)
+        if sys.platform == "win32" and icu_bin:
+            os.add_dll_directory(icu_bin)
+        try:
+>           import icu
+
+src\minion_agent\tools\builtin\collation.py:283: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+     # ====================================================================
+     # Copyright (c) 2004-2024 Open Source Applications Foundation.
+     #
+     # Permission is hereby granted, free of charge, to any person obtaining a
+     # copy of this software and associated documentation files (the "Software"),
+     # to deal in the Software without restriction, including without limitation
+     # the rights to use, copy, modify, merge, publish, distribute, sublicense,
+     # and/or sell copies of the Software, and to permit persons to whom the
+     # Software is furnished to do so, subject to the following conditions:
+     #
+     # The above copyright notice and this permission notice shall be included
+     # in all copies or substantial portions of the Software.
+     #
+     # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+     # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+     # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+     # DEALINGS IN THE SOFTWARE.
+     # ====================================================================
+    
+    class ICUError(Exception):
+        messages = {}
+    
+        def __str__(self):
+            return "%s, error code: %d" %(self.args[1], self.args[0])
+    
+        def getErrorCode(self):
+            return self.args[0]
+    
+    
+    class InvalidArgsError(Exception):
+        pass
+    
+    
+>   from ._icu_ import *
+E   ImportError: DLL load failed while importing _icu_: The specified module could not be found.
+
+..\..\ri001-code\minion-agent-python\.venv\Lib\site-packages\icu\__init__.py:37: ImportError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/claude-scratch/l13/gate-1/basetemp-focused/test_ls_skips_an_entry_whose_p0')
+
+    async def test_ls_skips_an_entry_whose_path_cannot_be_joined(tmp_path: Path) -> None:
+        (tmp_path / "a").write_text("x")
+        (tmp_path / "b").write_text("x")
+        local = LocalFileSystem(str(tmp_path))
+    
+        async def join_path(parts: list[str], signal: Any = None) -> Any:
+            if parts[-1] == "a":
+                return Err(FsError(FsErrorCode.INVALID, "invalid", None))
+            return await local.join_path(parts, signal)
+    
+        tool = create_ls_tool(_Provider(tmp_path, join_path=join_path))  # type: ignore[arg-type]
+>       result = await tool.execute("id", {}, None)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\tools\builtin\test_tools.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\minion_agent\tools\builtin\ls.py:112: in execute
+    text, details = await race_abort(
+src\minion_agent\tools\builtin\_signal.py:56: in race_abort
+    return await work
+           ^^^^^^^^^^
+src\minion_agent\tools\builtin\ls.py:67: in _list
+    names = pinned_collation().sort(listing.value)
+            ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @functools.cache
+    def pinned_collation() -> Collation:
+        """Load and verify the pinned tuple once per process. Raises `PinnedIcuError` otherwise."""
+        icu_bin = os.environ.get(ICU_BIN_ENV)
+        if sys.platform == "win32" and icu_bin:
+            os.add_dll_directory(icu_bin)
+        try:
+            import icu
+        except ImportError as exc:
+>           raise PinnedIcuError(
+                f"PyICU {PINNED_PYICU} over ICU {PINNED_ICU} is not loadable: {exc}"
+            ) from exc
+E           minion_agent.tools.builtin.collation.PinnedIcuError: PyICU 2.16.2 over ICU 78.3 is not loadable: DLL load failed while importing _icu_: The specified module could not be found.
+
+src\minion_agent\tools\builtin\collation.py:285: PinnedIcuError
+____ test_ls_abort_answers_at_once_and_the_listing_work_runs_to_completion ____
+
+tmp_path = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/.tmp/claude-scratch/l13/gate-1/basetemp-focused/test_ls_abort_answers_at_once_0')
+
+    async def test_ls_abort_answers_at_once_and_the_listing_work_runs_to_completion(
+        tmp_path: Path,
+    ) -> None:
+        """ls.ts has no checkpoints: after the rejection its work carries on through enumeration and
+        every per-entry probe, and the result is discarded (L13-WP131-I001)."""
+        (tmp_path / "a.txt").write_text("x")
+        provider = _Recording(tmp_path, blocked="probe_dir_entry")
+        result = await _abort_while_blocked("ls", provider)
+        assert (result.is_error, result.content) == (True, (TextBlock(text="Operation aborted"),))
+>       await _settle(provider, "done probe_dir_entry")
+
+tests\tools\builtin\test_tools.py:232: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+provider = <tests.tools.builtin.test_tools._Recording object at 0x000001AF6045E850>
+last = 'done probe_dir_entry'
+
+    async def _settle(provider: _Recording, last: str) -> None:
+        provider.release.set()
+        for _ in range(500):
+            if provider.log and provider.log[-1] == last:
+                return
+            await asyncio.sleep(0.01)
+>       raise AssertionError(provider.log)
+E       AssertionError: ['start absolute_path signal=None', 'done absolute_path', 'start probe_dir_entry signal=None', 'done probe_dir_entry', 'start list_dir_raw signal=None', 'done list_dir_raw']
+
+tests\tools\builtin\test_tools.py:204: AssertionError
+________ test_builtin_tool_scenario[builtin-ls-both-notices-in-order] _________
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-both-notices-in-order.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: both: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_____ test_builtin_tool_scenario[builtin-ls-broken-symlink-entry-skipped] _____
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-broken-symlink-entry-skipped.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: skipped: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_____ test_builtin_tool_scenario[builtin-ls-byte-truncation-then-notice] ______
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-byte-truncation-then-notice.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: bytes: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-collation-canonical-equivalents-tie-order-a] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-collation-canonical-equivalents-tie-order-a.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: order-a: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-collation-canonical-equivalents-tie-order-b] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-collation-canonical-equivalents-tie-order-b.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: order-b: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-collation-case-ties-keep-enumeration-order-order-a] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-collation-case-ties-keep-enumeration-order-order-a.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: order-a: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-collation-case-ties-keep-enumeration-order-order-b] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-collation-case-ties-keep-enumeration-order-order-b.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: order-b: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_____ test_builtin_tool_scenario[builtin-ls-collation-r006c-corpus-order] _____
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-collation-r006c-corpus-order.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: corpus: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-entry-limit-checked-before-next-probe] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-entry-limit-checked-before-next-probe.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: cap-before-probe: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+______ test_builtin_tool_scenario[builtin-ls-fractional-limit-verbatim] _______
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-fractional-limit-verbatim.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: fractional: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+__ test_builtin_tool_scenario[builtin-ls-lazy-cap-never-probes-beyond-limit] __
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-lazy-cap-never-probes-beyond-limit.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: cap: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-lowercase-key-post-unicode-15-mappings] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-lowercase-key-post-unicode-15-mappings.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: post-15-pairs: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-lowercase-key-uses-pinned-icu-root-mapping] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-lowercase-key-uses-pinned-icu-root-mapping.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: case-mapping: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-path-symlink-to-directory-is-listed] __
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-path-symlink-to-directory-is-listed.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: alias: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+__ test_builtin_tool_scenario[builtin-ls-special-entry-listed-without-slash] __
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-special-entry-listed-without-slash.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: other: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-symlinked-entries-follow-target-kind] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-symlinked-entries-follow-target-kind.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: follow: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+_ test_builtin_tool_scenario[builtin-ls-zero-limit-on-nonempty-dir-no-details] _
+
+scenario = WindowsPath('E:/AI/Projects/OpenMinds/Minions/Minion-Agent/review-worktrees/claude-l13d001-code/conformance/agent/builtin-ls-zero-limit-on-nonempty-dir-no-details.yaml')
+
+    @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda path: path.stem)
+    async def test_builtin_tool_scenario(scenario: Path) -> None:
+        for outcome in await run_builtin_tool_scenario(_load(scenario)):
+            observed, expected, label = outcome["observed"], outcome["expected"], outcome["id"]
+            for key in ("is_error", "text", "text_sha256", "image", "details", "fs_calls"):
+                if key in expected:
+>                   assert observed[key] == expected[key], f"{label}: {key}"
+E                   AssertionError: limit-0: is_error
+E                   assert True == False
+
+tests\conformance\test_builtin_tool_conformance.py:31: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/tools/builtin/test_tools.py::test_ls_skips_an_entry_whose_path_cannot_be_joined
+FAILED tests/tools/builtin/test_tools.py::test_ls_abort_answers_at_once_and_the_listing_work_runs_to_completion
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-both-notices-in-order]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-broken-symlink-entry-skipped]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-byte-truncation-then-notice]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-collation-canonical-equivalents-tie-order-a]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-collation-canonical-equivalents-tie-order-b]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-collation-case-ties-keep-enumeration-order-order-a]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-collation-case-ties-keep-enumeration-order-order-b]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-collation-r006c-corpus-order]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-entry-limit-checked-before-next-probe]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-fractional-limit-verbatim]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-lazy-cap-never-probes-beyond-limit]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-lowercase-key-post-unicode-15-mappings]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-lowercase-key-uses-pinned-icu-root-mapping]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-path-symlink-to-directory-is-listed]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-special-entry-listed-without-slash]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-symlinked-entries-follow-target-kind]
+FAILED tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-zero-limit-on-nonempty-dir-no-details]

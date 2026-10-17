@@ -1,0 +1,8 @@
+{
+  "module": "minion_agent.execution._libuv_win32",
+  "import_root": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k5\\src",
+  "imported": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k5\\src\\minion_agent\\execution\\_libuv_win32.py",
+  "expected": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\.tmp\\claude-scratch\\l13\\gate-3\\controls\\k5\\src\\minion_agent\\execution\\_libuv_win32.py",
+  "exit": 0,
+  "stderr_tail": ""
+}

@@ -1,0 +1,8 @@
+﻿START 2026-10-17T13:45:56.6763542+11:00
+L13-GATES: head ed6c2ee33b7472530aaa9ef054956fe7c04eb159 clean
+L13-GATES: ruff-check exit 1
+L13-GATES: ruff-format exit 0
+L13-GATES: mypy exit 1
+L13-GATES: pytest-focused exit 1
+L13-GATES: candidate gates RED; controls not run
+END 2026-10-17T13:46:39.7636648+11:00 exit 1

@@ -1,0 +1,127 @@
+{
+  "head": "3fb6c9a1642fb3bf7fbd7daeeef3574ec38b95d1",
+  "icu-load": 0,
+  "ruff-check": 0,
+  "ruff-format-project": 1,
+  "ruff-format": 0,
+  "mypy": 0,
+  "pytest-focused": 0,
+  "pytest-focused-totals": {
+    "tests": 1041,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "controls": [
+    {
+      "id": "K1-ls-fallback-uses-caller-raw-path",
+      "file": "minion_agent\\tools\\builtin\\ls.py",
+      "observable": "Path not found: @no",
+      "witnesses": [
+        {
+          "witness": "tests/tools/builtin/test_tools.py::test_ls_falls_back_to_the_pipeline_path_when_absolute_path_fails",
+          "baseline_green": true,
+          "mutated": {
+            "exit": 1,
+            "tests": 1,
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0,
+            "observable_found": true
+          },
+          "intended_failure": true,
+          "restored_green": true
+        }
+      ],
+      "status": "KILLED"
+    },
+    {
+      "id": "K2-ls-fallback-fabricates-an-absolute-path",
+      "file": "minion_agent\\tools\\builtin\\ls.py",
+      "observable": "Path not found: /no such",
+      "witnesses": [
+        {
+          "witness": "tests/tools/builtin/test_tools.py::test_ls_falls_back_to_the_pipeline_path_when_absolute_path_fails",
+          "baseline_green": true,
+          "mutated": {
+            "exit": 1,
+            "tests": 1,
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0,
+            "observable_found": true
+          },
+          "intended_failure": true,
+          "restored_green": true
+        }
+      ],
+      "status": "KILLED"
+    },
+    {
+      "id": "K3-read-step4-converts-bare-file-colon",
+      "file": "minion_agent\\tools\\builtin\\paths.py",
+      "observable": "bare-file-colon: ",
+      "witnesses": [
+        {
+          "witness": "tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-read-bare-file-colon-input-reaches-the-resolver-unconverted]",
+          "baseline_green": true,
+          "mutated": {
+            "exit": 1,
+            "tests": 1,
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0,
+            "observable_found": true
+          },
+          "intended_failure": true,
+          "restored_green": true
+        }
+      ],
+      "status": "KILLED"
+    },
+    {
+      "id": "K3-ls-step4-converts-bare-file-colon",
+      "file": "minion_agent\\tools\\builtin\\paths.py",
+      "observable": "bare-file-colon: ",
+      "witnesses": [
+        {
+          "witness": "tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-ls-bare-file-colon-input-reaches-the-resolver-unconverted]",
+          "baseline_green": true,
+          "mutated": {
+            "exit": 1,
+            "tests": 1,
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0,
+            "observable_found": true
+          },
+          "intended_failure": true,
+          "restored_green": true
+        }
+      ],
+      "status": "KILLED"
+    },
+    {
+      "id": "K4-win-directory-read-reverts-to-permission-denied",
+      "file": "minion_agent\\execution\\_libuv_win32.py",
+      "observable": "real-directory: text",
+      "witnesses": [
+        {
+          "witness": "tests/conformance/test_builtin_tool_conformance.py::test_builtin_tool_scenario[builtin-read-real-directory-fails-the-read-as-is-a-directory]",
+          "baseline_green": true,
+          "mutated": {
+            "exit": 1,
+            "tests": 1,
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0,
+            "observable_found": true
+          },
+          "intended_failure": true,
+          "restored_green": true
+        }
+      ],
+      "status": "KILLED"
+    }
+  ]
+}

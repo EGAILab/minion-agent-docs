@@ -1,0 +1,30 @@
+RUF001 String contains ambiguous ` ` (NARROW NO-BREAK SPACE). Did you mean ` ` (SPACE)?
+   --> tests\tools\builtin\test_tools.py:133:50
+    |
+131 |     )
+132 |     with pytest.raises(BuiltinToolError, match=r"^Path not found: no such$"):
+133 |         await failing.execute("id", {"path": "@no such"}, None)
+    |                                                  ^
+134 |     assert calls == ["absolute_path no such", "probe_dir_entry no such"]
+135 |     calls.clear()
+    |
+
+RUF001 String contains ambiguous ` ` (NARROW NO-BREAK SPACE). Did you mean ` ` (SPACE)?
+   --> tests\tools\builtin\test_tools.py:137:49
+    |
+135 |     calls.clear()
+136 |     with pytest.raises(BuiltinToolError, match=r"^Not a directory: a file$"):
+137 |         await failing.execute("id", {"path": "@a file"}, None)
+    |                                                 ^
+138 |     assert calls == ["absolute_path a file", "probe_dir_entry a file"]
+    |
+
+RUF001 String contains ambiguous ` ` (NARROW NO-BREAK SPACE). Did you mean ` ` (SPACE)?
+   --> tests\tools\builtin\test_tools.py:144:47
+    |
+142 |     real = create_ls_tool(local)
+143 |     with pytest.raises(BuiltinToolError, match=rf"^Path not found: {re.escape(resolved.value)}$"):
+144 |         await real.execute("id", {"path": "@no such"}, None)
+    |                                               ^
+
+Found 3 errors.

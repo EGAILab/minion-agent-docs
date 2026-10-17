@@ -1,0 +1,8 @@
+{
+  "module": "minion_agent.execution._libuv_win32",
+  "import_root": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src",
+  "imported": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src\\minion_agent\\execution\\_libuv_win32.py",
+  "expected": "E:\\AI\\Projects\\OpenMinds\\Minions\\Minion-Agent\\review-worktrees\\claude-l13d001-code\\minion-agent-python\\src\\minion_agent\\execution\\_libuv_win32.py",
+  "exit": 0,
+  "stderr_tail": ""
+}
