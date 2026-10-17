@@ -1,0 +1,12 @@
+{
+  "fmt": 0,
+  "witness-and-canonical": 0,
+  "clippy-targeted": 0,
+  "controls-baseline": 0,
+  "K1-raw": 101,
+  "K1-raw-intended-kill": true,
+  "K1-raw-restored": 0,
+  "K2-fabricated": 101,
+  "K2-fabricated-intended-kill": true,
+  "K2-fabricated-restored": 0
+}

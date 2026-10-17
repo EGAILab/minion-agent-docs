@@ -186,3 +186,53 @@ belong to the revalidation run (§4 item 7).
 
 **Next.** Codex's independent contract review of the exact pair. After agreement come the Rust S13 witness, then
 the revalidation through `#209`, then the closure review.
+
+## 7. Rust test-only completion (Codex, 2026-10-18)
+
+Code #245 now includes `d223ec10b7e79848fec6c3b69efcab9092fa0308`, based on the agreed `3fb6c9a1`.
+Contract review 2 is `#244` issuecomment-6229086993. No production Rust/Python source, shared rule, canonical
+expectation or schema changed. This is test-only completion, not independent closure or a merge request.
+
+`builtin_tool_conformance.rs` adds an injectable `absolute_path` provider fault and three permanent S13 witnesses.
+They invoke the public `create_ls_tool` through the real Layer-06 `execute_tool_calls` path:
+- failed `absolute_path`, a preprocessed `@no\u{202f}such` input, `Path not found: no such`, then the exact
+  `absolute_path no such` / `probe_dir_entry no such` trace;
+- the same fault with a file-kind probe: `Not a directory: a file`, with the same preprocessing/order;
+- successful real local `absolute_path`, then a scripted not-found probe: the diagnostic retains that absolute
+  result, never the fallback.
+
+Provider results are scripted at the existing filesystem seam; the new S13 witnesses do not mutate native files.
+The existing canonical adapter remains thin and discovers all **53 documents / 166 cases** (the former 50 plus
+the three agreed cases). The three independent binding witnesses are not included in that canonical case count.
+
+**Fresh targeted Windows evidence.** The host window began at 2026-10-18 04:18:34 +11 after the absolute-path
+project preflight (35.32 GiB free memory; no active builds; E: 1075 GiB free). Every child finished by 04:23:57;
+the closing inventory found no cargo/rustc process. Jobs 4, pinned ICU78.3 and search artifacts, shared Windows
+gate cache and disjoint Windows-controls cache; no cleanup, signals or gate retry. The initial formatting-only
+command's relative preflight path failed; the absolute-path preflight passed before any compilation or gate.
+
+The committed reproducible entry point is `minion-agent-rust/scripts/l13-d001-gates.py --logs <fresh path>`, after
+the project environment/preflight and setting `MINION_CONTROL_CARGO_TARGET` to the disjoint controls target.
+Captured logs/exits and `summary.json` are in [`data/l13-d001/rust-test-1/`](data/l13-d001/rust-test-1/), with a
+SHA256 ledger. They correspond to the code bytes committed at `d223ec10`; no source content changed after testing.
+
+| Step | Result |
+|---|---|
+| `cargo fmt --all -- --check` | exit0 |
+| `cargo test --locked --offline -p minion-agent --features conformance --test builtin_tool_conformance -- --nocapture` | exit0, **5 passed**: the 3 new S13 witnesses, existing abort witness, and canonical test (53 documents /166 cases) |
+| targeted `cargo clippy --locked --offline -p minion-agent --all-features --test builtin_tool_conformance -- -D warnings` | exit0 |
+| control-cache unmutated S13 baseline | 3 passed,0 failed |
+| K1: production fallback substituted with the caller's raw `path.clone()` in a contained copy | exit101, the two intended failure-path tests fail at `L13-S13: fallback message`, raw `@...` diagnostic observed; positive stays passing |
+| K1 restored | 3 passed,0 failed |
+| K2: fallback substituted with fabricated `"/" + working` | exit101, the same two intended tests fail at that assertion, `/no such` / `/a file` observed; positive stays passing |
+| K2 restored | 3 passed,0 failed |
+
+Both controls compile and execute; neither import/compile failures nor unrelated suite failures are credited.
+Every gate/control refreshes workspace-source mtimes, and no mutant writes the gate cache. The test-link log has
+the known MSVC LNK4098 warning; it is not claimed warning-free. Source copies, targets and logs are retained.
+
+**Remaining gate boundary.** This is targeted development/discriminating-control evidence and the full WP-13.1
+canonical slice on Windows, not full workspace G3 or Linux evidence. Exact-head Windows/Linux revalidation in both
+bindings, shared schema/manifest validation, and independent closure review still precede merge/status sync/close.
+The manifest's historical pending witness pointer is left for the coordinated post-closure documentary sync.
+No new certification, finding closure, parity claim on frozen surfaces, or later-layer authorization is made.

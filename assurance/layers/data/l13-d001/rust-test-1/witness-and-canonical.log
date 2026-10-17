@@ -1,0 +1,22 @@
+   Compiling minion-agent-pinned-icu v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l13d001-test\minion-agent-rust\crates\minion-agent-pinned-icu)
+   Compiling minion-agent-native-fs v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l13d001-test\minion-agent-rust\crates\minion-agent-native-fs)
+   Compiling minion-agent-native-env v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l13d001-test\minion-agent-rust\crates\minion-agent-native-env)
+   Compiling minion-agent v0.1.0 (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\review-worktrees\codex-l13d001-test\minion-agent-rust\crates\minion-agent)
+warning: linker stdout: LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `minion-agent` (test "builtin_tool_conformance") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 26s
+     Running tests\builtin_tool_conformance.rs (E:\AI\Projects\OpenMinds\Minions\Minion-Agent\.tmp\cache\cargo-target\windows\debug\deps\builtin_tool_conformance-6794fc6bfa20645f.exe)
+
+running 5 tests
+test ls_s13_absolute_failure_keeps_preprocessed_missing_path_and_probe_order ... ok
+test ls_s13_successful_absolute_path_is_not_replaced_by_fallback ... ok
+test ls_s13_absolute_failure_keeps_preprocessed_not_directory_path_and_probe_order ... ok
+test abort_during_read_binary_file_wins_at_worker_settlement ... ok
+WP-13.1 canonical: 53 documents, 166 cases passed
+test every_builtin_scenario_uses_real_rust_tools_and_execution ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.76s
+
